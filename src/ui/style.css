@@ -48,3 +48,16 @@
 
 .xc-generic__title { font-size: 0.8em; opacity: 0.8; }
 .xc-generic__value { font-weight: 600; }
+
+.xc-num {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  line-height: 1.1;
+}
+
+.xc-num__title { font-size: 0.8em; opacity: 0.8; }
+.xc-num__value { font-size: 1.6em; font-weight: 600; }
+.xc-num__unit { font-size: 0.7em; opacity: 0.8; }
