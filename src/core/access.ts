@@ -80,3 +80,90 @@ export function setLiteral(node: JsonNode, key: string, raw: string): void {
 export function setString(node: JsonNode, key: string, raw: string): void {
   setRaw(node, key, { kind: 'string', raw })
 }
+
+/** Vrai si la clé existe dans l'objet. Sert à choisir entre `set…` et `insert…`. */
+export function hasMember(node: JsonNode, key: string): boolean {
+  return getMember(node, key) !== undefined
+}
+
+/**
+ * Position d'insertion d'une clé nouvelle — **mesurée, pas choisie par goût.**
+ *
+ * XCTrack range les clés d'un widget dans l'ordre où son code les déclare. Cet ordre
+ * n'est pas déductible du document, et il n'est pas stable d'une version à l'autre.
+ * Relevé sur 22 fichiers réels (corpus historique 2022→2026, 8 versions de XCTrack,
+ * 2313 objets porteurs de `CLASS`) :
+ *
+ * - sur 41 ajouts de clé observés entre deux versions d'un même type de widget,
+ *   **40 se font au milieu de l'objet** et un seul en queue (`_units` sur `WAltitude`).
+ *   Exemples : `soundMode` s'intercale avant `showSensors` (`WStatusLine`, 2026),
+ *   `_rotation` avant `postponedFloorLimit` (`WAirspaceProximity`, 2026),
+ *   `mapWidget_emergencyZoom` avant `live_ShowNearby` (`WCompMap`, 2024) ;
+ * - pire, XCTrack **déplace** des clés existantes : `showTime` passe de la 1re à la
+ *   dernière option de `WStatusLine`, et le bloc `mapWidget_showRainRadar` … `KK7*`
+ *   quitte le milieu de `WCompMap` pour sa fin en 2026. Sur 80 paires de séquences
+ *   comparées, 14 divergent sur l'ordre relatif de leurs clés communes.
+ *
+ * Deux conséquences, opposées et toutes deux utiles :
+ *
+ * 1. **On ne peut pas deviner « la bonne » place.** Elle vit dans le code de XCTrack,
+ *    change à chaque version, et le fichier n'en porte aucune trace. Toute règle
+ *    déduite du document serait une invention.
+ * 2. **La place ne veut rien dire pour XCTrack.** `mapWidget_showRainRadar` occupe le
+ *    rang 14, 15, 16 ou 43 du même widget selon la version, et l'application lit les
+ *    quatre : elle relit ses réglages par nom, jamais par position.
+ *
+ * D'où la règle retenue, la plus conservatrice : **on insère en fin d'objet.** C'est la
+ * seule position qui ne déplace, ne réécrit et ne réindente aucune clé existante — la
+ * différence textuelle se réduit alors aux caractères ajoutés. L'appelant qui saurait
+ * mieux (un ordre de référence tiré du catalogue de l'APK, par exemple) passe `at`.
+ *
+ * `at` est un rang dans `entries` : 0 insère en tête, `entries.length` en queue. Une
+ * valeur hors bornes est ramenée dans les bornes plutôt que rejetée — un rang calculé
+ * par l'appelant ne doit pas pouvoir faire échouer une édition du pilote.
+ */
+function insertRaw(node: JsonNode, key: string, value: JsonNode, at?: number): void {
+  if (node.kind !== 'object') throw new Error('objet attendu')
+  // Refus d'insérer une clé déjà là : on créerait une clé dupliquée, c'est-à-dire
+  // exactement le défaut que `findDuplicateKeys` signale au pilote. L'appelant tranche
+  // avec `hasMember` entre poser (`set…`) et insérer (`insert…`).
+  if (hasMember(node, key)) throw new Error(`clé déjà présente : ${key}`)
+  const last = node.entries.length
+  const rank = at === undefined ? last : Math.min(Math.max(Math.trunc(at), 0), last)
+  node.entries.splice(rank, 0, [encode(key), value])
+}
+
+/** Insère une clé absente portant un nombre, un booléen ou `null`, sous sa forme source. */
+export function insertLiteral(node: JsonNode, key: string, raw: string, at?: number): void {
+  insertRaw(node, key, { kind: 'literal', raw }, at)
+}
+
+/** Insère une clé absente portant une chaîne. `raw` inclut les guillemets — voir `encode`. */
+export function insertString(node: JsonNode, key: string, raw: string, at?: number): void {
+  insertRaw(node, key, { kind: 'string', raw }, at)
+}
+
+/**
+ * Retire **toutes** les occurrences d'une clé et rend combien ont été retirées.
+ *
+ * Toutes, et pas seulement la dernière que `getMember` retiendrait : après un geste de
+ * suppression, la seule postcondition prévisible est que la clé n'est plus là. N'en
+ * retirer qu'une laisserait le réglage en place avec l'ancienne valeur du doublon, sans
+ * erreur ni signal — le mode de défaillance le plus coûteux du projet.
+ *
+ * Rendre 0 sur une clé absente, sans lever : supprimer ce qui n'existe pas est déjà le
+ * résultat demandé. La valeur de retour existe pour que l'appelant puisse avertir quand
+ * il en a retiré plus d'une.
+ *
+ * **Cette primitive sert un geste explicite du pilote, jamais un ménage automatique.**
+ * `edition-native-exploration.md` §4.4 le montre : un fichier contient légitimement des
+ * clés que l'interface native n'affiche pas dans l'état courant (`thermals_labels` est
+ * absente du panneau tant que `thermals = 0`). On ne supprime jamais une clé au prétexte
+ * qu'on ne l'affiche pas.
+ */
+export function removeMember(node: JsonNode, key: string): number {
+  if (node.kind !== 'object') throw new Error('objet attendu')
+  const before = node.entries.length
+  node.entries = node.entries.filter((entry) => decode(entry[0]) !== key)
+  return before - node.entries.length
+}
