@@ -1,5 +1,6 @@
 import { register } from '../registry'
 import { drawNumeric } from './numeric'
+import { drawStatusLine } from './statusLine'
 
 /**
  * Les 23 types « titre + valeur + unité » du corpus (voir `numeric.ts`). Une boucle
@@ -35,3 +36,5 @@ const NUMERIC_TYPES = [
 for (const shortName of NUMERIC_TYPES) {
   register(shortName, drawNumeric)
 }
+
+register('WStatusLine', drawStatusLine)
