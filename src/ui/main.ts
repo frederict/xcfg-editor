@@ -9,6 +9,7 @@ import { readLayout, type Layout } from '../model/layout'
 import { readRenderSettings, resolveLanguage, type RenderSettings } from '../model/preferences'
 import { buildDeviceSelector } from './deviceSelector'
 import { buildDetail, buildOverview, type Orientation, type ViewContext } from './views'
+import { computeWarnings, warningsAt, type Warning } from './warnings'
 
 interface Session {
   container: Container
@@ -21,6 +22,8 @@ interface Session {
   language: string
   /** Vrai si la langue vient du navigateur, faute d'indication dans le fichier. */
   languageFromBrowser: boolean
+  /** Calculés une fois à l'ouverture : ils ne dépendent pas du gabarit d'affichage. */
+  warnings: Warning[]
 }
 
 type View =
@@ -177,6 +180,44 @@ function metaStrip(current: Session): HTMLElement {
   return strip
 }
 
+/** Familles qui décrivent un défaut, et non un simple fait sur le fichier. */
+const ATTENTION_KINDS = ['structure', 'geometry', 'personal-data']
+
+/**
+ * Un avertissement : ce qu'il dit, pourquoi, et le détail énumérable replié au-delà de
+ * quatre éléments — une liste de trente widgets noierait les six autres avertissements.
+ */
+function warningCard(warning: Warning): HTMLElement {
+  const card = el('article', 'warning')
+  if (ATTENTION_KINDS.includes(warning.kind)) card.classList.add('warning--attention')
+  card.append(
+    el('h3', 'warning__title', warning.title),
+    el('p', 'warning__detail', warning.detail)
+  )
+
+  if (warning.items.length > 0) {
+    const list = el('ul', 'warning__items')
+    for (const item of warning.items) list.append(el('li', 'warning__item', item))
+
+    if (warning.items.length > 4) {
+      const box = el('details', 'warning__more')
+      box.append(el('summary', 'warning__summary', `Voir les ${warning.items.length} éléments`), list)
+      card.append(box)
+    } else {
+      card.append(list)
+    }
+  }
+  return card
+}
+
+function warningPanel(warnings: Warning[]): HTMLElement | undefined {
+  if (warnings.length === 0) return undefined
+  const panel = el('section', 'warnings')
+  panel.append(el('h2', 'warnings__title', 'Ce que dit ce fichier'))
+  for (const warning of warnings) panel.append(warningCard(warning))
+  return panel
+}
+
 function render(): void {
   content.textContent = ''
   exportButton.hidden = session === undefined
@@ -235,9 +276,14 @@ function render(): void {
   }
 
   const title = el('h1', 'sr-only', 'Pages de la configuration')
+  content.append(title, metaStrip(session))
+
+  // Les données personnelles n'ont pas leur place ici : elles ne concernent le pilote
+  // qu'au moment où il s'apprête à donner son fichier — voir l'export.
+  const panel = warningPanel(warningsAt(session.warnings, 'import'))
+  if (panel) content.append(panel)
+
   content.append(
-    title,
-    metaStrip(session),
     buildOverview(session.layout, ctx, (orientation, index) => {
       view = { kind: 'detail', orientation, index }
       render()
@@ -280,14 +326,17 @@ async function load(file: File): Promise<void> {
     // C'est l'interface qui connaît le navigateur : `resolveLanguage` reçoit la langue
     // système en paramètre, le modèle ne la lit jamais lui-même.
     const systemLanguage = catalogLanguage(navigator.language)
+    const layout = readLayout(container.document)
+    const language = resolveLanguage(settings.language, systemLanguage)
     session = {
       container,
-      layout: readLayout(container.document),
+      layout,
       settings,
       device,
       declaredDevice: deviceIsDeclared(declaredDevice, device) ? device.label : undefined,
-      language: resolveLanguage(settings.language, systemLanguage),
-      languageFromBrowser: settings.language.kind === 'system'
+      language,
+      languageFromBrowser: settings.language.kind === 'system',
+      warnings: computeWarnings({ document: container.document, layout, settings, language })
     }
     installDeviceSelector(device)
   } catch (error) {
