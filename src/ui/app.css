@@ -1,0 +1,559 @@
+/*
+ * Le cadre, pas le sujet. Cette feuille habille l'interface qui ENTOURE le rendu d'une
+ * page XCTrack ; le rendu lui-même vit dans `style.css` et n'est jamais touché ici.
+ *
+ * Deux conséquences tenues d'un bout à l'autre :
+ * 1. l'interface suit `prefers-color-scheme`, mais la page rendue reste blanche —
+ *    c'est l'écran de l'instrument, il ne dépend pas des préférences de l'ordinateur.
+ *    Aucune règle de ce fichier ne redéfinit une variable `--xc-*` ;
+ * 2. la couleur appartient à l'instrument. Le cadre est achromatique : la seule teinte
+ *    admise est l'ambre des pages que XCTrack masque hors vol, et le bleu du contour de
+ *    focus, qui est une information et non une décoration.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  --app-bg: #e7e9ec;
+  --app-panel: #f6f7f8;
+  --app-ink: #15181c;
+  --app-ink-soft: #59616a;
+  --app-line: #d3d7dc;
+  --app-line-strong: #b1b8bf;
+  --app-flag-bg: #f7eacd;
+  --app-flag-ink: #7a5410;
+  --app-flag-line: #cf9c2c;
+  --app-focus: #1a5fbe;
+  --app-plate-shadow: 0 1px 2px rgb(0 0 0 / 0.18), 0 10px 28px rgb(0 0 0 / 0.10);
+
+  --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-data: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --app-bg: #101315;
+    --app-panel: #191d20;
+    --app-ink: #e6eaed;
+    --app-ink-soft: #98a1a9;
+    --app-line: #282e33;
+    --app-line-strong: #3b434a;
+    --app-flag-bg: #35290f;
+    --app-flag-ink: #e6bd6b;
+    --app-flag-line: #8a6a20;
+    --app-focus: #6fa8ff;
+    --app-plate-shadow: 0 1px 2px rgb(0 0 0 / 0.6), 0 12px 32px rgb(0 0 0 / 0.45);
+  }
+}
+
+* { box-sizing: border-box; }
+
+/* `.btn` pose `display: inline-flex` : sans cette règle, l'attribut `hidden` d'un
+   bouton resterait sans effet (constaté sur « Enregistrer une copie », visible avant
+   tout import). */
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  background: var(--app-bg);
+  color: var(--app-ink);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app { min-height: 100vh; display: flex; flex-direction: column; }
+
+:focus-visible { outline: 2px solid var(--app-focus); outline-offset: 2px; }
+
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------------ commandes */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  font: inherit;
+  font-size: 13px;
+  padding: 0.35rem 0.8rem;
+  border: 1px solid var(--app-line-strong);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--app-ink);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn:hover:not(:disabled) { border-color: var(--app-ink-soft); }
+.btn:disabled { opacity: 0.35; cursor: default; }
+
+.btn--primary {
+  background: var(--app-ink);
+  border-color: var(--app-ink);
+  color: var(--app-bg);
+  font-weight: 500;
+}
+
+.btn--primary:hover { opacity: 0.88; }
+
+.btn--ghost { border-color: transparent; color: var(--app-ink-soft); padding-inline: 0.35rem; }
+.btn--ghost:hover:not(:disabled) { color: var(--app-ink); border-color: transparent; }
+
+/* --------------------------------------------------------------------- barre de tête */
+
+.app-bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.7rem 1.5rem;
+  background: var(--app-panel);
+  border-bottom: 1px solid var(--app-line);
+}
+
+.brand { display: flex; align-items: baseline; gap: 0.6rem; }
+.brand__name { font-weight: 600; letter-spacing: -0.01em; }
+
+.brand__role {
+  font-family: var(--font-data);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--app-ink-soft);
+}
+
+.app-bar__actions { display: flex; align-items: center; gap: 0.6rem; }
+
+.app-bar__file {
+  font-family: var(--font-data);
+  font-size: 12px;
+  color: var(--app-ink-soft);
+  max-width: 40ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.content {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 5rem;
+  flex: 1;
+}
+
+/* -------------------------------------------------------------------- page d'accueil */
+
+.landing { max-width: 46rem; padding-top: 2.5rem; }
+
+.landing__title {
+  margin: 0;
+  font-size: clamp(1.5rem, 3.4vw, 2rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.landing__lead { margin: 0.9rem 0 0; color: var(--app-ink-soft); max-width: 62ch; }
+
+.dropzone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+  padding: 2.25rem 1.5rem;
+  border: 1px dashed var(--app-line-strong);
+  border-radius: 8px;
+  background: var(--app-panel);
+  color: var(--app-ink-soft);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.dropzone:hover { border-color: var(--app-ink-soft); color: var(--app-ink); }
+.dropzone__strong { color: var(--app-ink); font-weight: 500; }
+
+.landing__steps {
+  list-style: none;
+  margin: 2.25rem 0 0;
+  padding: 0;
+  border-top: 1px solid var(--app-line);
+}
+
+.landing__step {
+  display: grid;
+  grid-template-columns: 11rem 1fr;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--app-line);
+}
+
+.landing__step-title {
+  font-family: var(--font-data);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--app-ink-soft);
+  padding-top: 0.25rem;
+}
+
+.landing__step-text { font-size: 14px; }
+
+@media (max-width: 640px) {
+  .landing__step { grid-template-columns: 1fr; gap: 0.2rem; }
+}
+
+/* ------------------------------------------------------------------------ anomalies */
+
+.problem {
+  max-width: 46rem;
+  border: 1px solid var(--app-line-strong);
+  border-left: 3px solid var(--app-flag-line);
+  border-radius: 6px;
+  background: var(--app-panel);
+  padding: 1.25rem 1.5rem;
+}
+
+.problem__title { margin: 0 0 0.5rem; font-size: 17px; font-weight: 600; }
+.problem__message { margin: 0; font-family: var(--font-data); font-size: 13px; overflow-wrap: anywhere; }
+.problem__hint { margin: 0.9rem 0 0; color: var(--app-ink-soft); font-size: 14px; }
+
+/* -------------------------------------------------------------------- bandeau du fichier */
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 2.25rem;
+  padding: 0.75rem 1.1rem;
+  margin-bottom: 2.5rem;
+  background: var(--app-panel);
+  border: 1px solid var(--app-line);
+  border-radius: 6px;
+}
+
+.meta__item { display: flex; flex-direction: column; gap: 0.1rem; padding: 0.2rem 0; }
+
+.meta__label {
+  font-family: var(--font-data);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--app-ink-soft);
+}
+
+.meta__value { font-size: 13px; }
+
+/* ---------------------------------------------------------------------- vue d'ensemble */
+
+.section + .section { margin-top: 3.5rem; }
+
+.section__title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.85rem;
+  margin: 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--app-line-strong);
+  font-size: 12px;
+}
+
+.section__name { text-transform: uppercase; letter-spacing: 0.16em; font-weight: 700; }
+.section__count { font-family: var(--font-data); font-size: 11px; color: var(--app-ink-soft); }
+
+.section__note {
+  margin: 0.9rem 0 0;
+  padding-left: 0.7rem;
+  border-left: 2px solid var(--app-flag-line);
+  color: var(--app-ink-soft);
+  font-size: 13px;
+  max-width: 62ch;
+}
+
+.empty-note { color: var(--app-ink-soft); font-size: 13px; }
+
+.grid {
+  list-style: none;
+  margin: 1.5rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 1.4rem;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+.section--portrait .grid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+
+.card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.6rem;
+  padding: 0.8rem;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  background: var(--app-panel);
+  border: 1px solid var(--app-line);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.card:hover { border-color: var(--app-ink-soft); transform: translateY(-2px); }
+.card--conditional { border-left: 3px solid var(--app-flag-line); }
+
+.card__head { display: flex; align-items: center; gap: 0.55rem; }
+
+/* Le rang EST l'identité de la page : c'est lui qui décide de ce que « page suivante »
+   affiche en vol. Il se lit donc comme un numéro d'ordre, pas comme une décoration. */
+.card__rank {
+  flex: none;
+  width: 1.6rem;
+  height: 1.6rem;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-data);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid var(--app-line-strong);
+  border-radius: 3px;
+}
+
+.card__label {
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card__screen {
+  display: block;
+  overflow: hidden;
+  background: #ffffff;   /* l'écran de l'instrument, jamais soumis au thème */
+  border: 1px solid var(--app-line-strong);
+}
+
+.card__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-family: var(--font-data);
+  font-size: 10.5px;
+  color: var(--app-ink-soft);
+}
+
+.card__class { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card__count { flex: none; }
+
+.flag {
+  align-self: flex-start;
+  font-family: var(--font-data);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  padding: 0.12rem 0.4rem;
+  border-radius: 3px;
+  background: var(--app-flag-bg);
+  color: var(--app-flag-ink);
+}
+
+/* ----------------------------------------------------------------------- vue détaillée */
+
+.detail__bar {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--app-line-strong);
+}
+
+.detail__identity {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin: 0 auto 0 0;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.detail__rank {
+  font-family: var(--font-data);
+  font-size: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.detail__label { font-size: 14px; font-weight: 600; }
+.detail__steps { display: flex; align-items: center; gap: 0.6rem; }
+
+.detail__position {
+  font-family: var(--font-data);
+  font-size: 11px;
+  color: var(--app-ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.detail__facts {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 1rem 0 0;
+}
+
+.chip {
+  font-family: var(--font-data);
+  font-size: 11px;
+  padding: 0.15rem 0.45rem;
+  border: 1px solid var(--app-line-strong);
+  border-radius: 3px;
+  color: var(--app-ink);
+}
+
+.chip--quiet { color: var(--app-ink-soft); border-color: var(--app-line); }
+
+.detail__note { margin: 0.6rem 0 0; color: var(--app-ink-soft); font-size: 13px; max-width: 66ch; }
+.detail__advice { margin: 0.9rem 0 0; color: var(--app-ink-soft); font-size: 12.5px; max-width: 72ch; }
+
+.zoom { display: flex; align-items: center; gap: 0.7rem; margin: 1.5rem 0 0.4rem; }
+
+.zoom__label {
+  font-family: var(--font-data);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--app-ink-soft);
+}
+
+.zoom__slider { width: min(16rem, 45vw); accent-color: var(--app-ink-soft); }
+
+.zoom__value {
+  font-family: var(--font-data);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  min-width: 4.5ch;
+}
+
+.stage { overflow-x: auto; padding-bottom: 1rem; }
+
+/* La règle graduée est tracée en millimètres, comme la page, et subit le même zoom :
+   c'est ce qui rend l'échelle 1:1 vérifiable avec une vraie règle posée sur l'écran. */
+.ruler {
+  position: relative;
+  height: 26px;
+  margin-left: 1px;   /* le filet gauche de la plaque, qui n'entre pas dans la largeur */
+  width: calc(var(--page-width) * var(--zoom));
+  min-width: calc(var(--page-width) * var(--zoom));
+  border-bottom: 1px solid var(--app-line-strong);
+  margin-bottom: 8px;
+}
+
+.ruler__tick {
+  position: absolute;
+  bottom: 0;
+  width: 1px;
+  height: 5px;
+  background: var(--app-line-strong);
+}
+
+.ruler__tick--major { height: 10px; background: var(--app-ink-soft); }
+
+.ruler__label {
+  position: absolute;
+  bottom: 12px;
+  left: 3px;
+  font-family: var(--font-data);
+  font-size: 9.5px;
+  color: var(--app-ink-soft);
+  white-space: nowrap;
+}
+
+/* `content-box` volontaire : le filet de cadre doit rester HORS de la largeur, sinon il
+   la rognerait de deux pixels et l'échelle ne serait plus tout à fait 1:1. */
+.plate {
+  position: relative;
+  box-sizing: content-box;
+  width: calc(var(--page-width) * var(--zoom));
+  min-width: calc(var(--page-width) * var(--zoom));
+  background: #ffffff;   /* l'écran de l'instrument, jamais soumis au thème */
+  border: 1px solid var(--app-line-strong);
+  box-shadow: var(--app-plate-shadow);
+}
+
+.hotspots { position: absolute; inset: 0; }
+
+.hotspot {
+  position: absolute;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: crosshair;
+}
+
+.hotspot:hover,
+.hotspot:focus-visible {
+  background: color-mix(in srgb, var(--app-focus) 14%, transparent);
+  outline: 1px solid var(--app-focus);
+  outline-offset: -1px;
+}
+
+.readout {
+  display: flex;
+  align-items: baseline;
+  gap: 1.1rem;
+  flex-wrap: wrap;
+  min-height: 1.8rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--app-line);
+}
+
+.readout__hint { color: var(--app-ink-soft); font-size: 13px; }
+.readout__name { font-size: 14px; font-weight: 600; }
+
+.readout__size {
+  font-family: var(--font-data);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.readout__class { font-family: var(--font-data); font-size: 11px; color: var(--app-ink-soft); }
+
+/* ------------------------------------------------------------------- glisser-déposer */
+
+.veil { position: fixed; inset: 0; z-index: 50; display: none; }
+
+body.is-dragging .veil {
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--app-bg) 82%, transparent);
+}
+
+.veil__text {
+  padding: 2rem 3rem;
+  border: 2px dashed var(--app-line-strong);
+  border-radius: 8px;
+  background: var(--app-panel);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
