@@ -1191,7 +1191,11 @@ body.is-dragging .veil {
   overflow-wrap: anywhere;
 }
 
-.dock__toggle { margin-left: auto; flex: none; }
+.dock__toggle { flex: none; }
+
+/* L'interrupteur de la liste précède celui du repli, et pousse les deux à droite : le
+   dernier bouton de la barre reste celui qui ferme le bandeau, à la même place qu'avant. */
+.dock__list-toggle { margin-left: auto; flex: none; }
 
 /*
  * Hauteur bornée, défilement interne au-delà. La borne ne se juge pas à la part de fenêtre
@@ -1212,9 +1216,234 @@ body.is-dragging .veil {
  */
 .dock__body {
   max-height: min(28vh, 13rem);
+  /*
+   * Deux zones côte à côte — la liste des widgets, puis les réglages —, qui **partagent la
+   * hauteur bornée** au lieu de s'ajouter. Chacune défile pour son compte ; le corps, lui,
+   * ne défile pas, sinon les deux glissières se disputeraient la molette.
+   *
+   * Le partage se fait en largeur, ce qui n'entame en rien le troisième principe du
+   * projet : c'est la largeur DU BANDEAU qui est partagée, jamais celle de la page, qui
+   * reste seule dans son cadre au-dessus.
+   */
+  display: flex;
+  align-items: stretch;
+  gap: 0.9rem;
+  overflow: hidden;
+  padding: 0.6rem 0.9rem 0.8rem;
+}
+
+.dock__list {
+  flex: none;
+  display: flex;
+  /* Assez pour un nom de widget entier — « Altitude au-dessus du but » — sans jamais
+     prendre plus du tiers du bandeau, où les réglages perdraient une colonne de trop. */
+  width: min(21rem, 32%);
+  min-width: 13rem;
+  overflow: hidden;
+  padding-right: 0.9rem;
+  border-right: 1px solid var(--app-line);
+}
+
+/* `hidden` ne peut rien contre `display: flex` : il faut le lui redire — pour la liste
+   masquée seule comme pour le corps entier, que le repli du bandeau escamote. */
+.dock__list[hidden],
+.dock__body[hidden] { display: none; }
+
+.dock__panel {
+  flex: 1 1 auto;
+  /* Sans quoi un contenu large — une ligne de réglage indivisible — pousserait la boîte
+     au-delà de la largeur du bandeau au lieu de défiler dedans. */
+  min-width: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 0.6rem 0.9rem 0.8rem;
+}
+
+/* ------------------------------------------------- liste des widgets de la page */
+
+/*
+ * La liste vit dans le bandeau, sous la page, jamais à côté d'elle. Elle répond à un fait
+ * mesuré sur la configuration de référence : six widgets sur 105 sont **inatteignables au
+ * clic**, entièrement recouverts par des rangs supérieurs — et deux d'entre eux dessinent
+ * pourtant quelque chose que le pilote voit sur son instrument. Voir `ui/widgetList.ts`.
+ */
+.wlist {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+  /* Un enfant de boîte flexible refuse de rétrécir sous son contenu sans cette ligne :
+     la glissière des rangs ne se déclencherait jamais. */
+  min-height: 0;
+}
+
+.wlist__head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.wlist__title { margin: 0; font-size: 12px; font-weight: 600; line-height: 1.2; }
+
+.wlist__count {
+  font-family: var(--font-data);
+  font-size: 10px;
+  color: var(--app-ink-soft);
+}
+
+/* Le compte des inatteignables est la raison d'être de la liste : il se voit d'emblée. */
+.wlist__alert {
+  font-family: var(--font-data);
+  font-size: 10px;
+  padding: 0.05rem 0.3rem;
+  border-radius: 3px;
+  background: var(--app-flag-bg);
+  color: var(--app-flag-ink);
+}
+
+/* « au fond » / « au premier plan » : le rang affiché est l'index du fichier, qui va du
+   fond vers l'avant — l'inverse de la convention des logiciels de dessin. Sans ces deux
+   mots, un pilote habitué à Photoshop lit la liste à l'envers. */
+.wlist__edge {
+  margin: 0;
+  font-family: var(--font-data);
+  font-size: 9px;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--app-ink-soft);
+}
+
+.wlist__empty { margin: 0; font-size: 12px; color: var(--app-ink-soft); }
+
+.wlist__rows {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--app-line);
+  border-radius: 4px;
+  background: var(--app-bg);
+}
+
+.wlist__row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  /* Les rangs sont serrés : le bandeau ne dispose que d'une hauteur bornée, partagée avec
+     les réglages, et une ligne de trop en hauteur est une ligne de moins à l'écran. */
+  padding: 0.12rem 0.28rem;
+  border-bottom: 1px solid var(--app-line);
+  cursor: pointer;
+}
+
+.wlist__row:last-child { border-bottom: 0; }
+
+.wlist__row:hover { background: var(--app-panel); }
+
+.wlist__row:focus-visible {
+  outline: 2px solid var(--app-focus);
+  outline-offset: -2px;
+}
+
+.wlist__row--selected {
+  background: color-mix(in srgb, var(--app-focus) 18%, transparent);
+}
+
+.wlist__rank {
+  flex: none;
+  width: 1.4rem;
+  text-align: right;
+  font-family: var(--font-data);
+  font-size: 10px;
+  color: var(--app-ink-soft);
+}
+
+/*
+ * La vignette de repérage : la page en miniature, le widget en plein. C'est le discriminant
+ * de la liste — huit `WAltitude` sur une page ne se distinguent ni par leur nom ni toujours
+ * par leur taille, mais toujours par leur place. Elle est au même rapport de forme que la
+ * page dessinée juste au-dessus, ce qui fait le pont entre la ligne et le rectangle.
+ */
+.wlist__map {
+  position: relative;
+  flex: none;
+  width: 2.3rem;
+  border: 1px solid var(--app-line-strong);
+  border-radius: 2px;
+  background: var(--app-panel);
+}
+
+.wlist__mark {
+  position: absolute;
+  background: var(--app-ink-soft);
+}
+
+.wlist__row--selected .wlist__mark { background: var(--app-focus); }
+
+.wlist__text {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.wlist__name {
+  font-size: 11.5px;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wlist__size {
+  font-family: var(--font-data);
+  font-size: 9px;
+  line-height: 1.1;
+  color: var(--app-ink-soft);
+}
+
+.wlist__flags {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+
+.wlist__flag {
+  font-family: var(--font-data);
+  font-size: 8px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.05rem 0.25rem;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+/* Deux faits distincts, deux marques distinctes. L'inatteignable est un défaut de
+   l'éditeur — la liste est le seul chemin qui y mène — et porte donc la couleur
+   d'attention du reste de l'application. */
+.wlist__flag--blocked {
+  background: var(--app-flag-bg);
+  color: var(--app-flag-ink);
+  border: 1px solid var(--app-flag-line);
+}
+
+/* « Sans dessin » n'est pas un défaut : c'est un fait sur l'appareil, et il se dit à voix
+   basse pour qu'on ne le confonde pas avec le précédent. */
+.wlist__flag--blank {
+  background: transparent;
+  color: var(--app-ink-soft);
+  border: 1px solid var(--app-line-strong);
+}
+
+.wlist__row--blocked .wlist__rank {
+  color: var(--app-flag-ink);
+  font-weight: 700;
 }
 
 /* Le panneau de `properties.ts` entre ici tel quel : son propre cadre ferait une boîte

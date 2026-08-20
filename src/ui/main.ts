@@ -28,6 +28,7 @@ import {
   type DetailEditing, type Orientation, type ViewContext
 } from './views'
 import { computeWarnings, warningsAt, type Warning } from './warnings'
+import { renderWidgetList, type WidgetList } from './widgetList'
 
 interface Session {
   container: Container
@@ -97,11 +98,27 @@ let paletteQuery = ''
  * fois, pas dix. Il vit donc ici, hors de tout ce que `render()` renouvelle.
  */
 let dockCollapsed = false
+
+/**
+ * La liste des widgets, montrée ou masquée. Même durée de vie que `dockCollapsed`, et pour
+ * la même raison : le pilote qui l'a masquée pour donner toute la largeur aux réglages ne
+ * doit pas la voir revenir au widget suivant.
+ *
+ * Elle est montrée par défaut. C'est elle, et elle seule, qui donne accès aux widgets
+ * qu'aucun clic sur la page ne peut atteindre — six sur les 105 de la configuration de
+ * référence : la masquer d'office reviendrait à les cacher.
+ */
+let listHidden = false
+
 let dockElement: HTMLElement | undefined
 let dockTitle: HTMLElement | undefined
 let dockClass: HTMLElement | undefined
 let dockCount: HTMLElement | undefined
 let dockToggle: HTMLButtonElement | undefined
+let dockBody: HTMLElement | undefined
+let listToggle: HTMLButtonElement | undefined
+let widgetList: WidgetList | undefined
+let widgetListHost: HTMLElement | undefined
 
 /**
  * La dernière annonce du carrousel. Le module la pose dans sa propre zone, que la
@@ -498,6 +515,9 @@ function onStructureEdit(edit: WidgetStructureEdit): void {
   session.history.record(edit.description)
   selection = edit.selection
   scheduleRepaint()
+  // Les rangs ont bougé : numéros, vignettes et calcul des inatteignables sont tous à
+  // refaire — un changement d'empilement peut à lui seul dégager un widget muré.
+  refreshWidgetList()
   refreshPanel()
   syncEditControls()
 }
@@ -635,6 +655,8 @@ function addWidgetFromPalette(node: JsonNode, description: string): void {
   // Une modification de structure impose le redessin : le calque ne dessine pas les
   // widgets, c'est `render/canvas.ts` qui s'en charge sous lui.
   repaint()
+  // Un rang de plus, posé au premier plan : il recouvre peut-être quelqu'un.
+  refreshWidgetList()
   editor.select(index)
   editor.refresh()
   syncEditControls()
@@ -765,7 +787,14 @@ function syncDock(): void {
   dockElement.classList.toggle('dock--collapsed', dockCollapsed)
   dockToggle.textContent = dockCollapsed ? 'Déplier les réglages' : 'Replier'
   dockToggle.setAttribute('aria-expanded', String(!dockCollapsed))
-  panelHost.hidden = dockCollapsed
+  // Replié, c'est le corps entier qui disparaît : ses deux zones, et la place qu'il prend.
+  if (dockBody) dockBody.hidden = dockCollapsed
+  if (widgetListHost) widgetListHost.hidden = listHidden
+  if (listToggle) {
+    listToggle.hidden = dockCollapsed
+    listToggle.textContent = listHidden ? 'Afficher la liste' : 'Masquer la liste'
+    listToggle.setAttribute('aria-pressed', String(!listHidden))
+  }
 }
 
 /** Reconstruit le bandeau depuis le rang sélectionné — jamais depuis un nœud retenu. */
@@ -780,6 +809,11 @@ function refreshPanel(): void {
       ? 'Aucun widget sélectionné'
       : `${name} — rang ${(selection ?? 0) + 1} sur ${page?.widgets.length ?? 0}`
   }
+
+  // La liste met en évidence le rang courant, quelle que soit son origine — un clic sur la
+  // page passe par `onSelectionChange`, qui aboutit ici. `select` ne rappelle jamais
+  // `onSelect` : les deux sens de la synchronisation ne peuvent donc pas se relancer.
+  widgetList?.select(selection)
 
   // La barre de tête du bandeau redit ces trois faits : elle reste visible une fois le
   // bandeau replié, où le panneau lui-même a disparu.
@@ -819,13 +853,63 @@ function refreshPanel(): void {
 }
 
 /**
+ * La liste des widgets de la page, reconstruite depuis la mise en page vivante.
+ *
+ * Elle se refait entièrement — jamais mise à jour ligne par ligne — parce que tout ce
+ * qu'elle affiche dépend de **l'ensemble** des rangs : supprimer un widget change les
+ * numéros de tous les suivants, et changer un rang d'empilement peut rendre atteignable
+ * un widget qui ne l'était pas. Une reconstruction coûte une page de DOM ; un calcul
+ * incrémental coûterait la justesse.
+ *
+ * Elle ne survit pas à une annulation : `render()` refait le bandeau entier, et cette
+ * fonction repart du rang mémorisé dans `selection` — le seul repère qui traverse un
+ * arbre JSON renouvelé.
+ */
+function refreshWidgetList(): void {
+  if (!widgetListHost || !session || view.kind !== 'detail') return
+  const page = currentPage()
+  widgetListHost.textContent = ''
+  widgetList = undefined
+  if (page === undefined) return
+
+  const list = renderWidgetList({
+    page,
+    device: session.device,
+    orientation: view.orientation,
+    language: session.language,
+    selection,
+    onSelect: (index) => {
+      // Choisir une ligne, c'est ouvrir les réglages du widget : replié, le bandeau se
+      // déplie — sans quoi le pilote choisirait dans le vide.
+      if (dockCollapsed) {
+        dockCollapsed = false
+        syncDock()
+      }
+      selection = index
+      // Le calque est la référence de la sélection : il pose ses marques sur la page et
+      // rappelle `onSelectionChange`, qui met le panneau à jour. Sans calque — cas
+      // théorique, la liste n'existant qu'en édition —, on rafraîchit nous-mêmes.
+      if (editor) editor.select(index)
+      else refreshPanel()
+    }
+  })
+  widgetList = list
+  widgetListHost.append(list.element)
+}
+
+/**
  * Le bandeau de réglages, sous la page et collant en bas de fenêtre. La barre de tête dit
- * ce qui est réglé ; le corps porte le panneau de `properties.ts` tel quel — c'est le CSS
- * de l'enveloppe qui étale sa liste verticale en colonnes, le module n'en sait rien.
+ * ce qui est réglé ; le corps porte deux choses côte à côte — la liste des widgets de la
+ * page, puis le panneau de `properties.ts` tel quel, c'est le CSS de l'enveloppe qui étale
+ * sa liste verticale en colonnes, le module n'en sait rien.
+ *
+ * Les deux partagent la **hauteur bornée** du corps (`.dock__body`), jamais la largeur de
+ * la page : le bandeau reste exactement aussi haut qu'avant, et le troisième principe du
+ * projet — rien ne partage la largeur avec le rendu — n'est pas entamé.
  */
 function buildDock(): HTMLElement {
   const dock = el('section', 'dock')
-  dock.setAttribute('aria-label', 'Réglages du widget sélectionné')
+  dock.setAttribute('aria-label', 'Widgets de la page et réglages du widget sélectionné')
   // Fin de glissé d'un curseur, sortie d'un champ : le pas en attente est clos ici
   // plutôt qu'au bout du délai.
   dock.addEventListener('change', () => flushRecord())
@@ -834,19 +918,33 @@ function buildDock(): HTMLElement {
   dockTitle = el('h2', 'dock__title', 'Aucun widget sélectionné')
   dockClass = el('span', 'dock__class')
   dockCount = el('span', 'dock__count')
+  listToggle = el('button', 'btn btn--ghost dock__list-toggle', 'Masquer la liste')
+  listToggle.type = 'button'
+  listToggle.addEventListener('click', () => {
+    listHidden = !listHidden
+    syncDock()
+  })
   dockToggle = el('button', 'btn dock__toggle', 'Replier')
   dockToggle.type = 'button'
   dockToggle.addEventListener('click', () => {
     dockCollapsed = !dockCollapsed
     syncDock()
   })
-  head.append(dockTitle, dockClass, dockCount, dockToggle)
+  head.append(dockTitle, dockClass, dockCount, listToggle, dockToggle)
 
-  panelHost = el('div', 'dock__body')
-  panelHost.id = 'dock-body'
-  dockToggle.setAttribute('aria-controls', panelHost.id)
+  const body = el('div', 'dock__body')
+  body.id = 'dock-body'
+  dockBody = body
+  dockToggle.setAttribute('aria-controls', body.id)
 
-  dock.append(head, panelHost)
+  widgetListHost = el('div', 'dock__list')
+  widgetListHost.id = 'dock-list'
+  listToggle.setAttribute('aria-controls', widgetListHost.id)
+
+  panelHost = el('div', 'dock__panel')
+  body.append(widgetListHost, panelHost)
+
+  dock.append(head, body)
   dockElement = dock
   return dock
 }
@@ -908,6 +1006,9 @@ function buildEditing(current: Session, page: Page, orientation: Orientation): D
   // La sélection se retrouve par son rang dans la page neuve. Un rang devenu hors bornes
   // — page changée sous elle — vaut « rien de sélectionné » plutôt qu'un widget au hasard.
   if (selection !== undefined && selection >= page.widgets.length) selection = undefined
+  // La liste avant le calque : `editor.select` aboutit à `refreshPanel`, qui met la ligne
+  // en évidence — encore faut-il que la liste existe.
+  refreshWidgetList()
   if (selection !== undefined) editor.select(selection)
   refreshPanel()
   syncDock()
@@ -1103,6 +1204,10 @@ function render(): void {
   dockClass = undefined
   dockCount = undefined
   dockToggle = undefined
+  dockBody = undefined
+  listToggle = undefined
+  widgetList = undefined
+  widgetListHost = undefined
 
   // La mise en page se relit à chaque dessin depuis le document courant. Après une
   // annulation, ce document est un arbre neuf : rien de ce qui a été lu avant lui ne
