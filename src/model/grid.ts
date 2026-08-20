@@ -1,11 +1,12 @@
 import type { Device } from '../catalog/devices'
-import { physicalSize } from '../catalog/devices'
+import { DEVICES, physicalSize } from '../catalog/devices'
 
 /**
  * XCTrack n'autorise pas des coordonnées de widget libres : en mode édition, un déplacement ou
- * un redimensionnement s'aimante sur une grille invisible à l'écran mais bien réelle — voir
- * `docs/reference/edition-native-exploration.md`, §2.2. La grille dépend de la résolution : elle
- * n'est donc PAS une constante du format, mais une propriété de l'appareil et de l'orientation.
+ * un redimensionnement s'aimante sur une grille tracée à l'écran — voir
+ * `docs/reference/edition-native-exploration.md`, §2.2. La grille n'est donc PAS une constante du
+ * format : c'est une propriété de la **dalle**, que l'orientation d'affichage se contente de faire
+ * pivoter. Toute la mesure est reprise dans `docs/reference/grille-aimantation.md`.
  */
 export type Orientation = 'portrait' | 'landscape'
 
@@ -13,6 +14,18 @@ export type Orientation = 'portrait' | 'landscape'
 export interface Grid {
   cols: number
   rows: number
+}
+
+/**
+ * Le maillage d'une **dalle**, indépendant de l'orientation d'affichage : le nombre de cellules le
+ * long de son grand axe physique et le long de son petit axe.
+ *
+ * C'est la forme sous laquelle la grille se mesure et se stocke. `Grid` s'en déduit en désignant
+ * lequel des deux axes est X — c'est tout ce que change une rotation de l'écran.
+ */
+export interface PanelGrid {
+  longAxisCells: number
+  shortAxisCells: number
 }
 
 /** Une géométrie de widget, dans les mêmes unités que `Widget.x1`/`y1`/`x2`/`y2` (0 à 10000). */
@@ -26,82 +39,120 @@ export interface Rect {
 export const NORMALIZED_MAX = 10000
 
 /**
- * Grilles effectivement mesurées, par identifiant d'appareil (`Device.id`) et orientation.
+ * Grilles de dalle effectivement mesurées, par identifiant d'appareil (`Device.id`).
  *
- * - `air3-7.2` / `landscape` : **mesure solide**, appuyée sur trois preuves concordantes (lignes
- *   de grille chronométrées à l'écran, un déplacement contrôlé donnant X1=2500=12/48 et
- *   Y1=2759=8/29, et les 24+21 valeurs distinctes du corpus utilisateur, toutes multiples de
- *   1/48 et 1/29 — voir la relevé refait dans `tests/model/grid.test.ts`).
- * - `air3-7.2` / `portrait` : **inférence plus faible**. Le corpus portrait ne compte que 10
- *   valeurs X et 11 valeurs Y distinctes. Le document de référence (§6, « Une migration de
- *   schéma se produit à l'import ») constate que les trois pages portrait du corpus ont été
- *   **réécrites par XCTrack 1.0.3-beta à la lecture**, depuis un schéma antérieur — alors que les
- *   cinq pages paysage sont revenues strictement identiques, octet pour octet. Ces pages
- *   portrait viennent donc d'une version plus ancienne de XCTrack, dont la grille d'aimantation
- *   pouvait très bien différer : c'est la raison la plus probable pour laquelle 19 × 31 ne
- *   s'accorde pas avec le 48 × 29 mesuré en paysage sur le même appareil (une cellule physique
- *   constante donnerait ≈4,6 × 5,0 mm en portrait contre ≈3,2 × 3,0 mm en paysage — un facteur
- *   1,5, pas un écart d'arrondi). 19 × 31 reste la meilleure lecture disponible de ce corpus,
- *   mais ce n'est pas une mesure directe au même titre que le paysage, ni forcément la grille du
- *   XCTrack actuel.
+ * `air3-7.2` : **48 cellules le long de l'axe de 1280 px, 29 le long de l'axe de 720 px.**
  *
- * Aucune règle générale dérivée de `Device.widthPx`/`heightPx`/`diagonalInches` ne redonne ces
- * deux couples exactement (voir `approximateGrid` ci-dessous, et le rapport de tâche) : ils sont
- * donc conservés ici comme cas particuliers mesurés, pas comme un exemple de calcul.
+ * En paysage, c'est une mesure directe et redondante : lignes de grille chronométrées à l'écran,
+ * déplacement contrôlé donnant `X1 = 2500 = 12/48` et `Y1 = 2759 = 8/29`, et 98 pages paysage d'un
+ * corpus de 21 fichiers couvrant 8 versions de XCTrack (`versionCode` 90615 → 100030) et deux
+ * installations distinctes, dont **aucune valeur** n'échappe aux multiples de 1/48 en X et de 1/29
+ * en Y.
+ *
+ * En portrait, c'est une **déduction**, appuyée sur le seul échantillon portrait du corpus qui soit
+ * assez varié pour discriminer un maillage (5 pages, 105 widgets, 22 valeurs X et 33 valeurs Y
+ * distinctes) : ses cinq pages, prises une par une, tombent exactement sur **29 en X et 48 en Y**
+ * — la transposée du paysage, cellule pour cellule. Voir `docs/reference/grille-aimantation.md`
+ * pour les chiffres et pour ce qui reste à vérifier sur l'appareil.
+ *
+ * ⚠️ Les 60 autres pages portrait du corpus tombent sur **19 × 31**, incompatible avec 29 × 48
+ * (les deux maillages n'ont que 0 et 10000 en commun). Ce ne sont pas 60 mesures mais **trois
+ * pages recopiées 20 fois** : leur géométrie est strictement identique de février 2022 à
+ * août 2026, à travers huit versions de XCTrack — et identique sur un second appareil, y compris
+ * dans son volet paysage. Elles n'ont donc jamais été posées sur cet appareil ; ce sont des pages
+ * d'origine, jamais rééditées, et 19 × 31 est le maillage de qui les a dessinées, pas celui de la
+ * dalle. C'est la valeur que ce fichier portait à tort jusqu'ici.
  */
-const MEASURED_GRIDS: Partial<Record<string, Partial<Record<Orientation, Grid>>>> = {
-  'air3-7.2': {
-    landscape: { cols: 48, rows: 29 },
-    portrait: { cols: 19, rows: 31 }
-  }
+const MEASURED_PANEL_GRIDS: Partial<Record<string, PanelGrid>> = {
+  'air3-7.2': { longAxisCells: 48, shortAxisCells: 29 }
+}
+
+/** Le grand et le petit côté physique de la dalle, en mm, sans considération d'orientation. */
+function panelSizeMm(device: Device): { longMm: number; shortMm: number } {
+  const { widthMm, heightMm } = physicalSize(device, 'landscape')
+  return { longMm: widthMm, shortMm: heightMm }
 }
 
 /**
- * Taille de cellule physique de référence (mm), calibrée sur l'unique mesure solide dont on
- * dispose : AIR³ 7.2 en paysage, 48 × 29 cellules sur une dalle de 154,97 × 87,17 mm. Retenue via
- * la moyenne géométrique des deux axes (3,228 mm × 3,006 mm) pour ne favoriser ni la largeur ni
- * la hauteur.
- *
- * ⚠️ **Cette hypothèse est vérifiée fausse en toute rigueur, et documentée comme telle.** Une
- * grille à cellules physiquement carrées et à ratio exactement proportionnel à l'écran (16:9 pour
- * l'AIR³ 7.2) donnerait 48 × 27, pas 48 × 29 : l'écart mesuré entre largeur et hauteur de cellule
- * est d'environ 7 % (26,7 px contre 24,8 px), et aucune taille de cellule unique, appliquée
- * indépendamment en X et en Y, ne fait tomber l'arrondi sur 48 **et** 29 à la fois (les deux
- * plages de tolérance ne se recouvrent pas : [3,195 ; 3,263[ mm en X contre [2,955 ; 3,058[ mm en
- * Y). Le paysage et le portrait du même appareil ne sont d'ailleurs pas cohérents entre eux non
- * plus avec une cellule physique constante : 19 × 31 correspondrait à des cellules d'environ
- * 4,59 × 4,99 mm, très différentes des 3,23 × 3,01 mm du paysage.
- *
- * Faute de mieux, `approximateGrid` reste la meilleure approximation disponible pour un appareil
- * sans mesure connue : elle produit un maillage à peu près carré et de densité raisonnable, mais
- * elle ne reproduit PAS exactement 48 × 29 ni 19 × 31, y compris pour l'AIR³ 7.2 lui-même (raison
- * pour laquelle `gridFor` consulte `MEASURED_GRIDS` en priorité). Voir le rapport de tâche pour le
- * détail des pistes explorées et écartées (multiples exacts du ratio d'écran, cellule en dp,
- * recherche du maillage « le plus carré » sous contrainte de densité).
+ * Une grille de dalle vue dans une orientation donnée : la rotation de l'écran ne fait qu'échanger
+ * les deux axes. C'est l'unique endroit où l'orientation intervient — une seule mesure par
+ * appareil suffit désormais pour les deux orientations.
  */
-const REFERENCE_CELL_MM = Math.sqrt(3.228461052098851 * 3.005808565747206)
+function orient(panel: PanelGrid, orientation: Orientation): Grid {
+  return orientation === 'landscape'
+    ? { cols: panel.longAxisCells, rows: panel.shortAxisCells }
+    : { cols: panel.shortAxisCells, rows: panel.longAxisCells }
+}
+
+const REFERENCE_DEVICE_ID = 'air3-7.2'
 
 /**
- * Meilleure approximation disponible pour un appareil sans grille mesurée : un maillage à
- * cellules à peu près carrées, de taille physique constante calibrée sur l'AIR³ 7.2 (voir
- * `REFERENCE_CELL_MM`). **À prendre comme une extrapolation non vérifiée** — un seul appareil de
- * référence, un seul point de calibration.
+ * Densité de cellules (cellules par mm), calibrée sur l'unique dalle mesurée : AIR³ 7.2,
+ * 48 × 29 cellules sur 154,97 × 87,17 mm.
+ *
+ * **Une densité par axe, et non une taille de cellule unique.** Une grille à cellules
+ * physiquement carrées est écartée par la mesure : elle donnerait 48 × 27, pas 48 × 29. Les
+ * cellules mesurées font 3,23 mm le long du grand axe contre 3,01 mm le long du petit — 7 %
+ * d'écart, et les plages d'arrondi ne se recouvrent pas ([3,195 ; 3,263[ mm contre
+ * [2,955 ; 3,058[ mm). Aucune taille de cellule unique ne fait donc tomber l'arrondi sur 48 **et**
+ * sur 29 ; il faut deux densités.
+ *
+ * Ce que ce modèle apporte : il est **exact sur son point de calibration**, dans les deux
+ * orientations (48 × 29 et 29 × 48), là où la version précédente — moyenne géométrique des deux
+ * axes — se trompait sur l'appareil même qui lui servait de référence.
+ *
+ * Ce qu'il ne prouve pas : qu'une densité en mm soit la bonne loi. Un seul appareil est mesuré ;
+ * une loi en pixels, ou des constantes 48/29 codées en dur dans XCTrack, expliqueraient tout aussi
+ * bien cette unique observation et divergeraient sur un autre écran. La densité en mm est retenue
+ * parce qu'une cellule d'aimantation sert un doigt et devrait donc garder une taille physique à
+ * peu près constante — c'est une motivation, pas une vérification.
  */
-export function approximateGrid(device: Device, orientation: Orientation): Grid {
-  const { widthMm, heightMm } = physicalSize(device, orientation)
+const REFERENCE_CELL_DENSITY = ((): { perMmLongAxis: number; perMmShortAxis: number } => {
+  const device = DEVICES.find((d) => d.id === REFERENCE_DEVICE_ID)
+  const measured = MEASURED_PANEL_GRIDS[REFERENCE_DEVICE_ID]
+  if (!device || !measured) {
+    // Repli inatteignable tant que l'AIR³ 7.2 reste au catalogue : densités de l'AIR³ 7.2.
+    return { perMmLongAxis: 48 / 154.97, perMmShortAxis: 29 / 87.17 }
+  }
+  const { longMm, shortMm } = panelSizeMm(device)
   return {
-    cols: Math.max(1, Math.round(widthMm / REFERENCE_CELL_MM)),
-    rows: Math.max(1, Math.round(heightMm / REFERENCE_CELL_MM))
+    perMmLongAxis: measured.longAxisCells / longMm,
+    perMmShortAxis: measured.shortAxisCells / shortMm
+  }
+})()
+
+/**
+ * Le maillage extrapolé d'une dalle sans mesure : la densité de cellules de l'appareil de
+ * référence, appliquée axe par axe à ses dimensions physiques.
+ *
+ * **Extrapolation explicitement non vérifiée** — un seul appareil mesuré, un seul point de
+ * calibration (voir `REFERENCE_CELL_DENSITY`). Elle redonne exactement la mesure sur l'AIR³ 7.2 ;
+ * sur tout autre écran, elle donne un ordre de grandeur plausible et rien de plus.
+ */
+export function approximatePanelGrid(device: Device): PanelGrid {
+  const { longMm, shortMm } = panelSizeMm(device)
+  return {
+    longAxisCells: Math.max(1, Math.round(longMm * REFERENCE_CELL_DENSITY.perMmLongAxis)),
+    shortAxisCells: Math.max(1, Math.round(shortMm * REFERENCE_CELL_DENSITY.perMmShortAxis))
   }
 }
 
+/** `approximatePanelGrid`, vue dans une orientation. Mêmes réserves. */
+export function approximateGrid(device: Device, orientation: Orientation): Grid {
+  return orient(approximatePanelGrid(device), orientation)
+}
+
+/** La grille de dalle à retenir : la mesure si elle existe, sinon l'extrapolation. */
+export function panelGridFor(device: Device): PanelGrid {
+  return MEASURED_PANEL_GRIDS[device.id] ?? approximatePanelGrid(device)
+}
+
 /**
- * Le maillage à utiliser pour aimanter un widget sur cet appareil et cette orientation : la
- * mesure connue si elle existe (`MEASURED_GRIDS`), sinon l'approximation générale
- * (`approximateGrid`), marquée comme telle dans sa documentation.
+ * Le maillage à utiliser pour aimanter un widget sur cet appareil et dans cette orientation.
+ * L'orientation n'ajoute aucune mesure : elle échange les axes de la grille de la dalle.
  */
 export function gridFor(device: Device, orientation: Orientation): Grid {
-  return MEASURED_GRIDS[device.id]?.[orientation] ?? approximateGrid(device, orientation)
+  return orient(panelGridFor(device), orientation)
 }
 
 function clamp(value: number): number {
@@ -111,7 +162,7 @@ function clamp(value: number): number {
 /**
  * Aimante une coordonnée normalisée (0 à 10000) sur le multiple de cellule le plus proche, pour
  * un axe divisé en `cellCount` cellules. Une valeur déjà sur la grille reste inchangée
- * (idempotent) — c'est l'assertion principale vérifiée par le corpus dans `grid.test.ts`.
+ * (idempotent) — c'est l'assertion principale vérifiée par les relevés dans `grid.test.ts`.
  */
 export function snapValue(value: number, cellCount: number): number {
   if (cellCount <= 0) return clamp(value)
