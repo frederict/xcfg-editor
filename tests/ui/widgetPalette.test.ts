@@ -499,7 +499,8 @@ describe('le rappel onChoose', () => {
 
     palette.element.querySelector<HTMLElement>('.palette__entry[data-widget="WQNH"]')!.click()
 
-    // Grille portrait de l'AIR³ 7.2 : 19 × 31 cellules, donc un tout autre rectangle.
+    // Grille portrait de l'AIR³ 7.2 : 29 × 48 cellules — la transposée du paysage, donc un
+    // tout autre rectangle. Voir `docs/reference/grille-aimantation.md`.
     expect(readWidgetBounds(received[0]!)).toEqual(centeredBounds(gridFor(AIR3, 'portrait')))
     expect(readWidgetBounds(received[0]!)).not.toEqual(newWidgetBounds(AIR3, 'landscape'))
   })
