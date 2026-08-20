@@ -5,10 +5,11 @@ import { readLayout } from '../../src/model/layout'
 import { readRenderSettings } from '../../src/model/preferences'
 import { renderPage, widgetHeightPx, widgetStyle } from '../../src/render/canvas'
 import { registerTransparent } from '../../src/render/registry'
-// Effet de bord : enregistre les dessins réels (numériques, barre d'état, zones
-// tactiles) et marque WButtonBrightness/WButtonNavig comme transparents — nécessaire
-// pour les tests d'intégration ci-dessous, qui vérifient le comportement sur les
-// widgets tactiles réels du corpus, pas seulement sur un type de test synthétique.
+// Effet de bord : enregistre les dessins réels (numériques, barre d'état, zone
+// tactile) et marque WButtonBrightness comme transparent — nécessaire pour les tests
+// d'intégration ci-dessous, qui vérifient le comportement sur les widgets réels du
+// corpus, pas seulement sur un type de test synthétique. WButtonNavig n'est plus
+// transparent depuis la correction en vol (rendu-en-vol.md § 4, registry.ts).
 import '../../src/render/widgets'
 
 describe('positionnement', () => {
@@ -150,8 +151,9 @@ describe('widgets tactiles réels du corpus (intégration)', () => {
   const doc = parseJson(readFileSync('/Users/fred/DEV/XCTrack/Exemples/2026-08-20_backup-00.xcfg', 'utf8'))
   const settings = readRenderSettings(doc)
   const brightnessPage = readLayout(doc).landscape[3]!
-  // landscape[4] : deux WButtonNavig avec _border: true dans le fichier — jamais rendu
-  // comme tel sur l'appareil (rendu-observe.md).
+  // landscape[4] : deux WButtonNavig avec _border: true dans le fichier — correction en
+  // vol (rendu-en-vol.md § 4) : contrairement à WButtonBrightness, ce cadre s'affiche
+  // désormais bel et bien, via le mécanisme générique (_border, canvas.ts).
   const navigPage = readLayout(doc).landscape[4]!
 
   it('neutralise le fond opaque de WButtonBrightness (_bg: 100 dans le fichier)', () => {
@@ -164,13 +166,13 @@ describe('widgets tactiles réels du corpus (intégration)', () => {
     }
   })
 
-  it('ignore _border: true du fichier pour WButtonNavig', () => {
+  it('respecte _border: true du fichier pour WButtonNavig — corrigé, n’est plus transparent', () => {
     const element = renderPage(navigPage, 16 / 9, settings, 'fr')
     const widgets = [...element.querySelectorAll('.xc-widget')]
-    const navigWidgets = widgets.filter(w => w.querySelector('.xc-touch') !== null)
+    const navigWidgets = widgets.filter(w => w.querySelector('.xc-navig') !== null)
     expect(navigWidgets).toHaveLength(2)
     for (const w of navigWidgets) {
-      expect(w.classList.contains('xc-widget--border')).toBe(false)
+      expect(w.classList.contains('xc-widget--border')).toBe(true)
     }
   })
 })

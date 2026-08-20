@@ -36,14 +36,20 @@ export function isRegistered(shortName: string): boolean {
 
 /**
  * Types dont le dessin ne doit jamais recevoir le fond ni le cadre génériques que
- * `_bg`/`_border` demanderaient dans le fichier (`src/render/canvas.ts`) — le cas des
- * widgets purement tactiles (`WButtonBrightness`, `WButtonNavig`, voir
- * `widgets/touchZone.ts`) : ils occupent de vastes zones qui, sur l'appareil, ne
- * dessinent rien du tout, quelles que soient leurs valeurs `_bg`/`_border` dans le
- * fichier (constaté sur `WButtonNavig`, `_border: true` sur les 10 occurrences du
- * corpus, jamais rendu comme tel sur l'AIR³ — voir rendu-observe.md, « Widgets sans
- * rendu visible »). Distinct de `register` : un type peut être transparent sans dessin
- * particulier (repli générique) et inversement.
+ * `_bg`/`_border` demanderaient dans le fichier (`src/render/canvas.ts`) — le cas du
+ * widget purement tactile `WButtonBrightness` (voir `widgets/touchZone.ts`) : il
+ * occupe de vastes zones qui, sur l'appareil, ne dessinent rien du tout, quelles que
+ * soient ses valeurs `_bg`/`_border` dans le fichier (rendu-observe.md, « Widgets sans
+ * rendu visible »).
+ *
+ * **Correction en vol (rendu-en-vol.md § 4)** : `WButtonNavig` en est sorti.
+ * Contrairement à ce que montrait le premier relevé au sol, seul `WButtonBrightness`
+ * est réellement invisible sur l'appareil — `WButtonNavig` dessine un pictogramme
+ * visible (voir `widgets/buttonNavig.ts`) et reçoit donc normalement le fond/cadre
+ * génériques comme n'importe quel autre type dessiné.
+ *
+ * Distinct de `register` : un type peut être transparent sans dessin particulier
+ * (repli générique) et inversement.
  */
 const transparentTypes = new Set<string>()
 

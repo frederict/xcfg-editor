@@ -1,40 +1,62 @@
 import type { Widget } from '../../model/widget'
 import type { RenderSettings } from '../../model/preferences'
+import { readBoolean, readString } from '../../core/access'
 import { readRotation } from './rotation'
 
 /**
- * `WCompass` — boussole en plein écran (rendu-observe.md, « Boussole »). Disque à
- * couronne épaisse noire, douze graduations dont les cardinales sont plus longues,
- * lettre **N** en haut, aiguille à facettes donnant du relief sans ombre portée.
+ * `WCompass` — « Boussole et vent » (libellé officiel `fr`, `docs/reference/edition-
+ * native.md`) : le libellé n'était pas une formule, c'est la description exacte du
+ * widget (rendu-en-vol.md § 6bis). **Correction en vol** : le premier relevé, fait au
+ * sol, ne montrait qu'une aiguille grise à facettes ; en vol, le widget a DEUX visages
+ * indépendants, empilés :
  *
- * **Correction par mesure de pixels, sur le modèle de la correction WStatusLine
- * (rendu-observe.md)** : le relevé de tâche annonçait trois facettes de gris sur
- * l'aiguille. Un échantillonnage pixel par pixel de la seule capture fiable en plein
- * écran — `widget-WCompass-en-vol.png`, bandeau diagnostic confirmé « PAGE 3 — WCompass »
- * — ne trouve que DEUX gris distincts sur l'aiguille elle-même : `#808080` (facette
- * contenant la pointe) et `#606060` (facette opposée), séparés par une ligne à peu près
- * verticale passant par le pivot. `#404040` n'apparaît que sur la couronne, les
- * graduations et le N — jamais sur l'aiguille. Rendu ici avec deux facettes, pas trois.
+ * 1. Le cadran d'arrière-plan (couronne, graduations, N) — `showBackground`.
+ * 2. Soit une aiguille de cap classique (`showHeading`) accompagnée, indépendamment,
+ *    d'une aiguille de trajectoire/vent (`showBearing`, troisième zone NOIRE — voir
+ *    plus bas) ; soit, si `windStyle` est renseigné et différent de `"NONE"`, une
+ *    étoile de vent multicolore qui remplace ces deux aiguilles.
  *
- * (Deux fichiers de la planche de diagnostic portent un nom trompeur : `widget-
- * WCompass.png` montre en réalité `WSideView` — bandeau « PAGE 4 — WSideView » — et
- * `widget-WVarioColumn.png` re-montre `WCompass` — bandeau « PAGE 3 — WCompass »,
- * needle sous un angle légèrement différent. Seule `widget-WCompass-en-vol.png` est une
- * capture WCompass fiable ; voir le rapport de tâche.)
+ * Correspondance clé ↔ contrôle établie par `docs/reference/edition-native.md`
+ * (« Gadget: Boussole et vent ») : `showHeading` = « Montrer la flèche de cap »,
+ * `showBearing` = « Montrer la flèche de trajectoire », `showBackground` = « Afficher
+ * le cadran d'arrière-plan », `windStyle` = « Style d'indicateur de vent » (valeurs
+ * `NONE`/`ARROW`/`ARC`/`SOCK`, relevées dans le menu XCTrack).
  *
- * **Couleur selon la taille** : sur `ecran-landscape3-17widgets.png`, la même boussole
- * en petit format (coin d'une page à 17 widgets) a une aiguille ROUGE à deux tons
- * (`#e04040` / `#c02020`, mesurés) là où le plein écran est GRISE à deux tons. Deux
- * mesures indépendantes, un seul palier observé — rien dans le corpus ne fixe un seuil
- * de bascule précis entre les deux ; celui retenu ci-dessous est une estimation qui
- * sépare largement les deux points connus (~15 %/~28 % de large/haut contre ~100 %).
+ * **Défauts** : les quatre clés sont TOUJOURS présentes, avec une valeur explicite,
+ * sur les 15 occurrences du corpus (`Exemples/*.xcfg`, toutes variantes confondues) —
+ * l'absence n'est donc jamais exercée par un fichier réel. `showHeading` y vaut
+ * `false` sur les 15 occurrences, sans une seule exception : rien ne confirme à quoi
+ * ressemble l'aiguille de cap dans le corpus disponible, seulement dans la capture en
+ * vol ci-dessous. Par cohérence avec le reste du projet (une clé absente vaut `false`
+ * — `_title`/`_unit`, numeric.ts ; `showGps` etc., statusLine.ts), les trois booléens
+ * défaillent à `false` et `windStyle` absent équivaut à `"NONE"` quand la clé manque.
+ * `showBackground` seul défaille à `true` : c'est la seule des trois valeurs à valoir
+ * `true` sur la majorité du corpus (3 occurrences sur 4 profils distincts), et un
+ * cadran vide sans aucune aiguille ni étoile (le cas `widget({})` des tests) resterait
+ * un rendu absurde sans lui.
  *
- * **Hors périmètre, faute de capture qui les confirme** : `showWind`, `windStyle`,
- * `newWindArrow`, `showBearing`, `navigation_target` existent dans le corpus (jusqu'à
- * 11/20 occurrences pour `showWind`), mais aucune capture disponible ne montre une
- * flèche de vent ou une ligne de cap superposée au disque — contrairement à
- * `WThermalAssistant`, où le vent est confirmé (map.ts). Ces clés sont donc lues nulle
- * part ici : les implémenter serait inventer un rendu.
+ * **L'étoile de vent, confirmée par les coordonnées** — `widget-WCompass-en-vol.png`
+ * ne suffisait qu'à mesurer l'aiguille grise à deux facettes (voir plus bas) ; c'est le
+ * recoupement avec le corpus qui tranche l'étoile. Sur `2026-08-20_backup-00.xcfg`,
+ * `layout/landscape[3]/widgets[13]` est un `WCompass` `X1:8542,Y1:2414,X2:10000,
+ * Y2:5172`, `rotation:"HEADING"`, `windStyle:"ARROW"` — EXACTEMENT les bornes et la
+ * rotation (N à droite du disque, pas en haut) de la boussole visible en haut à droite
+ * de `vol-landscape3-en-vol.png`, qui y montre l'étoile multicolore. C'est cette
+ * capture, comptée pixel par pixel (voir `buildWindStar`), qui fixe les couleurs.
+ *
+ * **`windStyle` a trois valeurs non-`NONE`** (`ARROW`/`ARC`/`SOCK`), une seule est
+ * confirmée visuellement (`ARROW` → étoile, ci-dessus). Aucune capture ne montre `ARC`
+ * ou `SOCK` isolément — le corpus les porte (`landscape[0]` de plusieurs fichiers :
+ * `windStyle:"ARC"`) mais sans capture correspondante. Les trois valeurs sont donc
+ * rendues IDENTIQUEMENT ici (l'étoile), par défaut de mieux : **NON TRANCHÉ** pour la
+ * distinction ARC/SOCK — voir le rapport de tâche.
+ *
+ * **La troisième zone, noire** — rendu-en-vol.md § 6 : l'aiguille de cap grise (deux
+ * facettes, comme avant) est accompagnée, quand `showBearing` vaut `true`, d'une
+ * aiguille NOIRE distincte, plus large, tournant indépendamment (angle illustratif
+ * différent — aucune donnée de cap/vent réelle n'est modélisée, comme le reste de ce
+ * fichier). Vue sur `vol-numeriques-boussole-variocolumn.png` : un large triangle noir
+ * partage le disque avec l'aiguille grise, sans lui être lié.
  */
 
 const SVG_NS = 'http://www.w3.org/2000/svg'
@@ -87,10 +109,11 @@ function buildDial(): SVGGElement {
 }
 
 /**
- * Aiguille à deux facettes (voir le commentaire de tête) : une pointe et une queue
- * partagent l'axe vertical local, séparées en deux triangles par les points est/ouest du
- * pivot — le triangle contenant la pointe reçoit la facette claire, l'autre la facette
- * sombre. Le groupe entier tourne ensuite selon `angle`, en degrés, autour du pivot.
+ * Aiguille de cap, à deux facettes (mesure pixel par pixel, voir le commentaire de
+ * tête) : une pointe et une queue partagent l'axe vertical local, séparées en deux
+ * triangles par les points est/ouest du pivot — le triangle contenant la pointe reçoit
+ * la facette claire, l'autre la facette sombre. Le groupe entier tourne ensuite selon
+ * `angle`, en degrés, autour du pivot.
  */
 function buildNeedle(small: boolean, angle: number): SVGGElement {
   const needle = svgEl('g', {
@@ -116,24 +139,105 @@ function buildNeedle(small: boolean, angle: number): SVGGElement {
 }
 
 /**
- * Illustrative : aucune donnée de cap réelle n'est modélisée ici (comme la trace fixe de
- * map.ts). L'angle sert seulement à démontrer le mécanisme de rotation ci-dessous.
+ * Aiguille de trajectoire/vent (`showBearing`) : une troisième zone, noire, plus large
+ * que l'aiguille de cap — un triangle simple, une seule teinte, pas de facettes. Tourne
+ * indépendamment de `buildNeedle` (rendu-en-vol.md § 6 : « elles ne bougent pas
+ * ensemble »), à un angle illustratif distinct.
  */
-const ILLUSTRATIVE_BEARING = -35
+function buildBearingNeedle(angle: number): SVGGElement {
+  const bearing = svgEl('g', {
+    class: 'xc-compass__bearing',
+    transform: `rotate(${angle} ${CENTER} ${CENTER})`
+  })
+
+  const tip = `${CENTER},${CENTER - 14}`
+  const baseLeft = `${CENTER - 46},${CENTER + 74}`
+  const baseRight = `${CENTER + 46},${CENTER + 74}`
+
+  bearing.append(svgEl('polygon', {
+    class: 'xc-compass__bearing-shape',
+    points: `${tip} ${baseRight} ${baseLeft}`
+  }))
+
+  return bearing
+}
+
+/**
+ * Étoile de vent multicolore (`windStyle` différent de `"NONE"`) — voir le commentaire
+ * de tête pour la confirmation par coordonnées. Comptage des pixels de
+ * `vol-landscape3-en-vol.png` sur la zone de la boussole (`X1:8542,Y1:2414,X2:10000,
+ * Y2:5172` de `landscape[3]`, `2026-08-20_backup-00.xcfg`) : deux couples de teintes
+ * dominent, en dehors du gris de la couronne (#404040) et du blanc de fond —
+ * `#e04040`/`#c02020` (rouge, 690/562 px) et `#c0c040`/`#a0a020` (jaune-olive, 559/689
+ * px), plus deux teintes de blend (`#b15920`, `#d17940`, ~700 px chacune) qui
+ * n'apparaissent qu'aux zones de recouvrement. Cela ne fait QUE deux branches, pas
+ * trois malgré les trois noms de couleur du relevé de tâche (« rouge, jaune, olive ») —
+ * chaque branche est elle-même bicolore (comme `buildNeedle`, dont elle réutilise la
+ * géométrie), et « jaune »/« olive » décrivent les deux facettes d'une même branche,
+ * pas deux branches distinctes. Le rouge réutilise exactement les teintes déjà
+ * mesurées pour l'aiguille rouge du petit format (`--xc-compass-needle-small-a/b`) —
+ * une coïncidence de mesure, pas une hypothèse.
+ *
+ * Aucune donnée de vent par tranche d'altitude n'existe dans le fichier : les deux
+ * angles sont illustratifs (ils démontrent la superposition, pas une direction réelle),
+ * comme le reste des angles de ce module. Le flou/dégradé qu'on pourrait percevoir sur
+ * la capture aux zones de recouvrement est un mélange alpha de deux aplats, pas un
+ * gradient — reproduit ici avec `fill-opacity`, pas `<linearGradient>`.
+ */
+const WIND_STAR_ANGLE_A = -20
+const WIND_STAR_ANGLE_B = 145
+
+function buildWindBranch(angle: number): SVGGElement {
+  const branch = svgEl('g', { class: 'xc-compass__wind-branch', transform: `rotate(${angle} ${CENTER} ${CENTER})` })
+
+  const tip = `${CENTER},${CENTER - 80}`
+  const east = `${CENTER + 24},${CENTER}`
+  const west = `${CENTER - 24},${CENTER}`
+  const tail = `${CENTER},${CENTER + 80}`
+
+  branch.append(svgEl('polygon', { class: 'xc-compass__wind-facet xc-compass__wind-facet--a', points: `${tip} ${east} ${tail}` }))
+  branch.append(svgEl('polygon', { class: 'xc-compass__wind-facet xc-compass__wind-facet--b', points: `${tip} ${west} ${tail}` }))
+
+  return branch
+}
+
+/** Pas de variante « petit format » : aucune capture ne montre l'étoile de vent à
+ * petite taille — contrairement à l'aiguille de cap (mesurée aux deux tailles), elle
+ * garde donc ses teintes rouge/jaune-olive quelle que soit la taille du widget. */
+function buildWindStar(): SVGGElement {
+  const star = svgEl('g', { class: 'xc-compass__wind-star' })
+  star.append(buildWindBranch(WIND_STAR_ANGLE_A))
+  star.append(buildWindBranch(WIND_STAR_ANGLE_B))
+  return star
+}
+
+/**
+ * Illustratives : aucune donnée de cap, de trajectoire ou de vent réelle n'est
+ * modélisée ici (comme la trace fixe de map.ts). Les angles servent seulement à
+ * démontrer que les éléments tournent, et tournent indépendamment les uns des autres.
+ */
+const ILLUSTRATIVE_HEADING = -35
+const ILLUSTRATIVE_BEARING = 150
 
 /**
  * En-deçà de ce seuil (sur la plus petite des deux dimensions normalisées, 0 à 1), la
- * boussole est en « petit format » et l'aiguille passe au rouge à deux tons — voir le
- * commentaire de tête pour les deux mesures qui fondent ce seuil.
+ * boussole est en « petit format » et l'aiguille de cap passe au rouge à deux tons —
+ * mesuré indépendamment sur l'aiguille grise plein écran et sur le coin de
+ * `ecran-landscape3-17widgets.png` (voir l'historique de ce fichier).
  */
 const SMALL_THRESHOLD = 0.35
 
+function shown(widget: Widget, key: string, fallback: boolean): boolean {
+  return readBoolean(widget.node, key) ?? fallback
+}
+
 /**
  * `rotation` (chaîne nue ici, voir rotation.ts) : `'HEADING'` fait tourner le cadran
- * (graduations + N) pour aligner le cap en haut, l'aiguille restant fixe, pointe en
- * haut ; toute autre valeur (dont `'NORTH'`, la valeur par défaut de `readRotation`)
- * garde le nord en haut et fait tourner l'aiguille. Aucune capture ne montre les deux
- * modes côte à côte : seul le mécanisme — pas l'angle exact — est démontré ici.
+ * (graduations + N) pour aligner le cap en haut, l'aiguille de cap restant fixe,
+ * pointe en haut ; toute autre valeur (dont `'NORTH'`, la valeur par défaut de
+ * `readRotation`) garde le nord en haut et fait tourner l'aiguille. L'étoile de vent et
+ * l'aiguille de trajectoire suivent leurs propres angles illustratifs, indépendants de
+ * `rotation` — aucune capture ne montre leur comportement sous rotation.
  */
 export function drawCompass(widget: Widget, _settings: RenderSettings, _language: string): HTMLElement {
   const element = document.createElement('div')
@@ -141,17 +245,37 @@ export function drawCompass(widget: Widget, _settings: RenderSettings, _language
 
   const svg = svgEl('svg', { class: 'xc-compass__scene', viewBox: `0 0 ${VIEW} ${VIEW}` })
 
-  const dial = buildDial()
-  const rotation = readRotation(widget.node)
-  const headingUp = rotation.value === 'HEADING'
-  if (headingUp) dial.setAttribute('transform', `rotate(${ILLUSTRATIVE_BEARING} ${CENTER} ${CENTER})`)
-  svg.append(dial)
+  const showBackground = shown(widget, 'showBackground', true)
+  if (showBackground) {
+    const dial = buildDial()
+    const rotation = readRotation(widget.node)
+    const headingUp = rotation.value === 'HEADING'
+    if (headingUp) dial.setAttribute('transform', `rotate(${ILLUSTRATIVE_HEADING} ${CENTER} ${CENTER})`)
+    svg.append(dial)
+  }
 
   const width = widget.x2 - widget.x1
   const height = widget.y2 - widget.y1
   const small = Math.min(width, height) / 10000 < SMALL_THRESHOLD
-  const needleAngle = headingUp ? 0 : ILLUSTRATIVE_BEARING
-  svg.append(buildNeedle(small, needleAngle))
+
+  const windStyle = readString(widget.node, 'windStyle')
+  const showWindStar = windStyle !== undefined && windStyle !== 'NONE'
+
+  if (showWindStar) {
+    svg.append(buildWindStar())
+  } else {
+    const rotation = readRotation(widget.node)
+    const headingUp = rotation.value === 'HEADING'
+
+    if (shown(widget, 'showHeading', false)) {
+      const needleAngle = headingUp ? 0 : ILLUSTRATIVE_HEADING
+      svg.append(buildNeedle(small, needleAngle))
+    }
+
+    if (shown(widget, 'showBearing', false)) {
+      svg.append(buildBearingNeedle(ILLUSTRATIVE_BEARING))
+    }
+  }
 
   element.append(svg)
   return element

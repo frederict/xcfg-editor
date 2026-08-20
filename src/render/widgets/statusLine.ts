@@ -7,6 +7,29 @@ import { readBoolean } from '../../core/access'
  * confirmé pixel par pixel sur `ecran-landscape3-17widgets.png` : réception GPS, `LIVE`,
  * état des capteurs, batterie, de gauche à droite, fond gris clair `#e8e8e8`).
  *
+ * **`LIVE`, correction en vol (rendu-en-vol.md § 5)** : le premier relevé, fait au sol,
+ * montrait `LIVE` en texte noir barré de rouge et l'avait pris pour l'état normal. En
+ * vol, `LIVE` s'écrit en VERT VIF avec un point vert à sa gauche quand le suivi
+ * fonctionne (`#1c8e1e`, mesuré au pixel sur `vol-numeriques-boussole-
+ * variocolumn.png` — présent, identique, sur les trois captures en vol disponibles) ;
+ * le trait rouge le barre quand il est indisponible. Le sol montrait donc l'état
+ * dégradé, pris pour l'état normal.
+ *
+ * **État par défaut retenu ici : vert, NON barré** (le point + le texte, sans le
+ * trait). Choix assumé, pas une mesure : les trois captures en vol disponibles montrent
+ * toutes le texte vert MAIS AUSSI le trait rouge en même temps — parce qu'elles ont
+ * toutes été prises pendant le REJEU d'une trace (en-tête du relevé de tâche), un mode
+ * où l'upload réseau réel du suivi en direct est par construction impossible, quelle
+ * que soit la qualité de la connexion. Le trait rouge y est donc probablement un
+ * artefact du rejeu, pas l'état vrai d'un suivi qui fonctionne — aucune capture
+ * disponible ne montre ce à quoi ressemble un `LIVE` réellement actif. Le fichier
+ * `.xcfg` n'a de toute façon aucune clé qui porterait cet état réseau, purement
+ * runtime : `showLive` dit seulement si l'INDICATEUR doit apparaître, pas s'il est
+ * barré. Pour une visionneuse statique, montrer l'apparence NOMINALE du widget — ce à
+ * quoi il ressemble quand tout va bien — est le choix le plus utile ; montrer par
+ * défaut un état d'erreur non piloté par une donnée du fichier serait trompeur. L'état
+ * barré n'est donc pas modélisé ici, faute d'une clé qui le commanderait — NON TRANCHÉ.
+ *
  * Relevé sur les 35 occurrences du corpus (5 fichiers) : chaque indicateur n'apparaît
  * dans le fichier — et donc à l'écran — que si sa clé est présente et vaut `true` ; son
  * absence équivaut à `false`, comme `_title`/`_unit` sur les widgets numériques

@@ -4,14 +4,15 @@ import { readBoolean, readString } from '../../core/access'
 import { readableName } from '../../catalog/widgetNames'
 
 /**
- * `WButtonBrightness` et `WButtonNavig` — les zones tactiles (rendu-observe.md,
- * « Widgets sans rendu visible »). Le fichier leur donne de vastes zones (sur
- * `landscape[3]` de `2026-08-20_backup-00.xcfg`, deux `WButtonBrightness` couvrent la
- * moitié centrale de l'écran), mais **XCTrack n'y dessine rien** : ce sont des zones
- * tactiles transparentes posées par-dessus la carte, qui règlent la luminosité ou
- * changent de page au toucher.
+ * `WButtonBrightness` — zone tactile invisible (rendu-observe.md, « Widgets sans rendu
+ * visible » ; corrigé en vol pour `WButtonNavig`, voir `buttonNavig.ts` : **seul**
+ * `WButtonBrightness` reste dans ce cas, rendu-en-vol.md § 4). Le fichier lui donne de
+ * vastes zones (sur `landscape[3]` de `2026-08-20_backup-00.xcfg`, deux
+ * `WButtonBrightness` couvrent la moitié centrale de l'écran), mais **XCTrack n'y
+ * dessine rien** : c'est une zone tactile transparente posée par-dessus la carte, qui
+ * règle la luminosité au toucher.
  *
- * Notre rendu générique (`generic.ts`) les affiche avec un cadre et un titre, ce qui
+ * Notre rendu générique (`generic.ts`) l'affiche avec un cadre et un titre, ce qui
  * masque la carte et donne une image fausse de la page — d'où ce dessin dédié : rien de
  * visible en rendu normal, seulement un contour discret et une étiquette au survol de la
  * souris, pour que le pilote sache qu'une zone tactile se trouve là.
@@ -25,15 +26,15 @@ import { readableName } from '../../catalog/widgetNames'
 /**
  * Traduction maison des codes d'action lus dans `type` — ce ne sont pas des libellés
  * XCTrack (l'appareil ne dessine rien à cet endroit, il n'y a donc rien à reproduire) :
- * uniquement le texte de notre propre étiquette de survol. Limité aux 4 valeurs
- * observées sur le corpus (voir le relevé dans le rapport de tâche) ; un code inconnu
- * retombe sur `readableName(widget.shortName, language)`.
+ * uniquement le texte de notre propre étiquette de survol. Limité aux deux valeurs
+ * observées pour `WButtonBrightness` dans le corpus ; un code inconnu retombe sur
+ * `readableName(widget.shortName, language)`. `WButtonNavig` a son propre jeu
+ * (`ACTION_NEXT_WAYPOINT`/`ACTION_PREV_WAYPOINT`, voir `buttonNavig.ts`) — les deux
+ * types ne se recoupent jamais dans le corpus.
  */
 const ACTION_LABELS: Record<string, Record<string, string>> = {
   ACTION_PLUS: { fr: 'luminosité +', en: 'brightness +' },
-  ACTION_MINUS: { fr: 'luminosité −', en: 'brightness −' },
-  ACTION_NEXT_WAYPOINT: { fr: 'balise suivante', en: 'next waypoint' },
-  ACTION_PREV_WAYPOINT: { fr: 'balise précédente', en: 'previous waypoint' }
+  ACTION_MINUS: { fr: 'luminosité −', en: 'brightness −' }
 }
 
 const PREFIX: Record<string, string> = { fr: 'Zone tactile', en: 'Touch zone' }
@@ -53,7 +54,7 @@ function touchLabel(widget: Widget, language: string): string {
   const prefix = localize(PREFIX, language, 'Zone tactile')
 
   if (action === undefined) {
-    // `type` absent ou hors des 4 valeurs connues : pas de texte inventé, on retombe sur
+    // `type` absent ou hors des 2 valeurs connues : pas de texte inventé, on retombe sur
     // le nom de widget lisible du catalogue officiel.
     return `${prefix} — ${readableName(widget.shortName, language)}`
   }

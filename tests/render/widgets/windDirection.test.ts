@@ -27,12 +27,17 @@ function widget(params: Record<string, string>): Widget {
   }
 }
 
-// Non observé isolément dans les captures disponibles — voir le commentaire de tête de
-// windDirection.ts. Ces tests verrouillent le comportement voulu, pas un relevé visuel.
-describe('WWindDirection (non confirmé par une capture)', () => {
-  it('dessine une flèche de direction sobre', () => {
+// Correction en vol (rendu-en-vol.md § 3) : WWindDirection affiche la lettre du point
+// cardinal, en très gros — pas une rose ni une flèche, faute de mieux au premier relevé.
+describe('WWindDirection', () => {
+  it('affiche une lettre cardinale géante par défaut, pas une flèche', () => {
     const el = drawWindDirection(widget({}), settings, language)
-    expect(el.querySelector('.xc-wind-dir__arrow')).not.toBeNull()
+    expect(el.querySelector('.xc-wind-dir__arrow')).toBeNull()
+    const value = el.querySelector('.xc-wind-dir__value--letter')
+    expect(value).not.toBeNull()
+    // Exemple statique repris de la capture (vol-numeriques-boussole-variocolumn.png,
+    // « Direction du vent » : S) — aucune direction réelle n'est modélisée.
+    expect(value?.textContent).toBe('S')
   })
 
   it('affiche le titre seulement si `_title` vaut true, avec repli sur le libellé du catalogue', () => {
@@ -49,13 +54,17 @@ describe('WWindDirection (non confirmé par une capture)', () => {
     expect(el.querySelector('.xc-wind-dir__title')?.textContent).toBe('Vent')
   })
 
-  it('n’affiche aucune valeur en degrés quand `degrees` est un booléen (seule forme connue du corpus)', () => {
+  it('n’affiche pas la lettre cardinale quand `degrees` est un booléen (seule forme connue du corpus)', () => {
     const el = drawWindDirection(widget({ degrees: 'false' }), settings, language)
-    expect(el.querySelector('.xc-wind-dir__degrees')).toBeNull()
+    // `degrees: false` n'est pas un nombre lisible par readNumber : la lettre reste affichée.
+    expect(el.querySelector('.xc-wind-dir__value--letter')).not.toBeNull()
+    expect(el.querySelector('.xc-wind-dir__value--degrees')).toBeNull()
   })
 
-  it('affiche la valeur en degrés si `degrees` est un nombre — lecture défensive, non exercée par le corpus connu', () => {
+  it('bascule vers un affichage en degrés quand `degrees` est un nombre — lecture défensive, non exercée par le corpus connu', () => {
     const el = drawWindDirection(widget({ degrees: '270' }), settings, language)
-    expect(el.querySelector('.xc-wind-dir__degrees')?.textContent).toBe('270°')
+    expect(el.querySelector('.xc-wind-dir__value--degrees')?.textContent).toBe('270°')
+    // Bascule, pas ajout : la lettre cardinale disparaît quand les degrés s'affichent.
+    expect(el.querySelector('.xc-wind-dir__value--letter')).toBeNull()
   })
 })

@@ -2,6 +2,7 @@ import { register, registerTransparent } from '../registry'
 import { drawNumeric } from './numeric'
 import { drawStatusLine } from './statusLine'
 import { drawTouchZone } from './touchZone'
+import { drawButtonNavig } from './buttonNavig'
 import { drawCompMap, drawThermalAssistant, drawXCAssistant } from './map'
 import { drawCompass } from './compass'
 import { drawVarioColumn } from './varioColumn'
@@ -66,12 +67,14 @@ register('WVerticalGraph', drawVerticalGraph)
 register('WSideView', drawSideView)
 register('WWindDirection', drawWindDirection)
 
-// Zones tactiles sans rendu visible (rendu-observe.md, « Widgets sans rendu visible ») :
+// Zone tactile sans rendu visible (rendu-observe.md, « Widgets sans rendu visible ») :
 // dessin dédié ET transparence forcée, quelles que soient _bg/_border dans le fichier.
-for (const shortName of ['WButtonBrightness', 'WButtonNavig']) {
-  register(shortName, drawTouchZone)
-  registerTransparent(shortName)
-}
+// WButtonNavig en est sorti — correction en vol, rendu-en-vol.md § 4 : voir
+// buttonNavig.ts, il dessine un pictogramme visible et reçoit le cadre générique.
+register('WButtonBrightness', drawTouchZone)
+registerTransparent('WButtonBrightness')
+
+register('WButtonNavig', drawButtonNavig)
 
 // Tâche 18, les trois derniers types du corpus. WAirspaceProximity est bien documenté
 // (capture réelle, voir airspaceProximity.ts) ; WLiveMessage et WCompTaskSummary ne le

@@ -10,7 +10,7 @@ const settings: RenderSettings = {
   windSpeedUnit: 'm/s', distanceUnit: 'NM', relativeDistanceUnit: 'km', airspaceAltitudeUnit: 'm'
 }
 
-function widget(shortName: string, params: Record<string, string>): Widget {
+function widget(params: Record<string, string>): Widget {
   return {
     node: {
       kind: 'object',
@@ -19,17 +19,20 @@ function widget(shortName: string, params: Record<string, string>): Widget {
         v.startsWith('"') ? { kind: 'string' as const, raw: v } : { kind: 'literal' as const, raw: v }
       ])
     },
-    className: `org.xcontest.XCTrack.widget.w.${shortName}`,
-    shortName, x1: 2292, y1: 1034, x2: 8542, y2: 4483,
+    className: 'org.xcontest.XCTrack.widget.w.WButtonBrightness',
+    shortName: 'WButtonBrightness', x1: 2292, y1: 1034, x2: 8542, y2: 4483,
     border: false, background: 100, theme: ''
   }
 }
 
-describe('zones tactiles — WButtonBrightness / WButtonNavig', () => {
+// Correction en vol (rendu-en-vol.md § 4) : WButtonNavig est sorti de ce mécanisme — il
+// dessine un pictogramme visible (buttonNavig.ts, buttonNavig.test.ts). Seul
+// WButtonBrightness reste une zone tactile invisible.
+describe('zone tactile invisible — WButtonBrightness', () => {
   it('ne dessine ni fond, ni cadre, ni texte visible en rendu normal', () => {
     // « Ce qu'il faut : aucun fond, aucun cadre, aucun texte en rendu normal »
     // (rendu-observe.md, « Widgets sans rendu visible »).
-    const el = drawTouchZone(widget('WButtonBrightness', { type: '"ACTION_PLUS"', longClick: 'false' }), settings, 'fr')
+    const el = drawTouchZone(widget({ type: '"ACTION_PLUS"', longClick: 'false' }), settings, 'fr')
     expect(el.className).toBe('xc-touch')
     // Aucun texte visible par défaut : le seul texte présent est l'étiquette de survol,
     // masquée par CSS (:hover) — voir style.css. On vérifie ici qu'aucun texte n'apparaît
@@ -40,39 +43,29 @@ describe('zones tactiles — WButtonBrightness / WButtonNavig', () => {
   })
 
   it('remplit toute la zone du widget', () => {
-    const el = drawTouchZone(widget('WButtonBrightness', {}), settings, 'fr')
+    const el = drawTouchZone(widget({}), settings, 'fr')
     expect(el.style.width).toBe('100%')
     expect(el.style.height).toBe('100%')
   })
 
   describe('étiquette de survol', () => {
-    it('WButtonBrightness ACTION_PLUS sans longClick', () => {
-      const el = drawTouchZone(widget('WButtonBrightness', { type: '"ACTION_PLUS"', longClick: 'false' }), settings, 'fr')
+    it('ACTION_PLUS sans longClick', () => {
+      const el = drawTouchZone(widget({ type: '"ACTION_PLUS"', longClick: 'false' }), settings, 'fr')
       expect(el.querySelector('.xc-touch__label')?.textContent).toBe('Zone tactile — luminosité +')
     })
 
-    it('WButtonBrightness ACTION_MINUS sans longClick', () => {
-      const el = drawTouchZone(widget('WButtonBrightness', { type: '"ACTION_MINUS"', longClick: 'false' }), settings, 'fr')
+    it('ACTION_MINUS sans longClick', () => {
+      const el = drawTouchZone(widget({ type: '"ACTION_MINUS"', longClick: 'false' }), settings, 'fr')
       expect(el.querySelector('.xc-touch__label')?.textContent).toBe('Zone tactile — luminosité −')
     })
 
-    it('WButtonNavig ACTION_NEXT_WAYPOINT avec longClick ajoute « appui long »', () => {
-      const el = drawTouchZone(widget('WButtonNavig', { type: '"ACTION_NEXT_WAYPOINT"', longClick: 'true' }), settings, 'fr')
-      expect(el.querySelector('.xc-touch__label')?.textContent).toBe('Zone tactile — balise suivante (appui long)')
-    })
-
-    it('WButtonNavig ACTION_PREV_WAYPOINT avec longClick ajoute « appui long »', () => {
-      const el = drawTouchZone(widget('WButtonNavig', { type: '"ACTION_PREV_WAYPOINT"', longClick: 'true' }), settings, 'fr')
-      expect(el.querySelector('.xc-touch__label')?.textContent).toBe('Zone tactile — balise précédente (appui long)')
-    })
-
     it('bascule en anglais avec la langue reçue en paramètre', () => {
-      const el = drawTouchZone(widget('WButtonNavig', { type: '"ACTION_NEXT_WAYPOINT"', longClick: 'true' }), settings, 'en')
-      expect(el.querySelector('.xc-touch__label')?.textContent).toBe('Touch zone — next waypoint (long press)')
+      const el = drawTouchZone(widget({ type: '"ACTION_PLUS"', longClick: 'false' }), settings, 'en')
+      expect(el.querySelector('.xc-touch__label')?.textContent).toBe('Touch zone — brightness +')
     })
 
     it('retombe sur le nom lisible du type quand `type` est absent ou inconnu', () => {
-      const el = drawTouchZone(widget('WButtonBrightness', {}), settings, 'fr')
+      const el = drawTouchZone(widget({}), settings, 'fr')
       // Nom du catalogue officiel (readableName), pas un texte inventé.
       expect(el.querySelector('.xc-touch__label')?.textContent).toBe("Zone tactile — Luminosité de l'écran")
     })
