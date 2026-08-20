@@ -12,6 +12,17 @@
      --xc-ink/du rouge des titres : deux rouges coexistent sur l'appareil. */
   --xc-status-bg: #e8e8e8;
   --xc-status-alert: #ff0000;
+  /* Cartes (WCompMap/WXCAssistant/WThermalAssistant, map.ts) : fond neutre très clair —
+     consigne explicite, sobriété obligatoire, ces widgets se posent souvent sous les
+     autres en semi-transparence. Vert/jaune du taux de montée mesurés à l'écran sur
+     widget-WThermalAssistant-en-spirale.png (vert vif au meilleur, jaune en moyen). */
+  --xc-map-bg: #f4f5f2;
+  --xc-map-trace-far: #1a1a1a;
+  --xc-map-trace-recent: #9a9a9a;
+  --xc-map-climb-strong: #3ddc3d;
+  --xc-map-climb-medium: #e8d34a;
+  --xc-map-thermal-circle: #2b4bdb;
+  --xc-map-label: #f44336;
 }
 
 .xc-page {
@@ -191,3 +202,121 @@
 .xc-touch:hover .xc-touch__label {
   display: block;
 }
+
+/* Cartes — WCompMap / WXCAssistant / WThermalAssistant (map.ts). Évocation sobre, pas
+   une carte réelle : fond neutre, trace d'exemple, symbole du pilote, échelle,
+   étiquette (rendu-observe.md, « Cartes » et « Assistant de thermique »). */
+.xc-map {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.xc-map__scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.xc-map__bg { fill: var(--xc-map-bg); }
+
+.xc-map__trace-far {
+  stroke: var(--xc-map-trace-far);
+  stroke-width: 1;
+}
+
+.xc-map__trace-recent {
+  stroke: var(--xc-map-trace-recent);
+}
+
+.xc-map__trace-climb--strong { stroke: var(--xc-map-climb-strong); stroke-width: 4; }
+.xc-map__trace-climb--medium { stroke: var(--xc-map-climb-medium); stroke-width: 4; }
+
+/* Cercle bleu épais marquant le centre estimé du thermique, point coloré au milieu. */
+.xc-map__thermal-circle {
+  stroke: var(--xc-map-thermal-circle);
+  stroke-width: 2.5;
+}
+
+.xc-map__thermal-dot { fill: var(--xc-map-climb-medium); }
+
+/* Symbole du pilote : petit triangle blanc cerné de noir (rendu-observe.md). */
+.xc-map__pilot polygon {
+  fill: #ffffff;
+  stroke: #101010;
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+}
+
+/* Boussole de coin, en bas à droite — disque discret avec une aiguille. */
+.xc-map__compass circle {
+  fill: rgba(255, 255, 255, 0.85);
+  stroke: var(--xc-line);
+  stroke-width: 1.2;
+}
+
+.xc-map__compass line {
+  stroke: var(--xc-ink);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+/* Échelle, en bas à gauche. */
+.xc-map__scale {
+  position: absolute;
+  left: 0.5em;
+  bottom: 0.4em;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15em;
+  color: var(--xc-ink);
+  pointer-events: none;
+}
+
+.xc-map__scale-bar {
+  display: block;
+  width: 4em;
+  height: 0.3em;
+  border-left: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+}
+
+.xc-map__scale-label { font-size: 0.75em; }
+
+/* Étiquette de balise : texte rouge cerné de blanc, sur deux lignes. */
+.xc-map__label {
+  position: absolute;
+  left: 50%;
+  top: 12%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--xc-map-label);
+  font-weight: 700;
+  text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;
+  line-height: 1.15;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Vent — bas au centre, WThermalAssistant seulement. */
+.xc-map__wind {
+  position: absolute;
+  left: 50%;
+  bottom: 0.4em;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--xc-line);
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.xc-map__wind-arrow { width: 1.4em; height: 1.4em; }

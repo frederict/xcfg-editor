@@ -2,6 +2,7 @@ import { register, registerTransparent } from '../registry'
 import { drawNumeric } from './numeric'
 import { drawStatusLine } from './statusLine'
 import { drawTouchZone } from './touchZone'
+import { drawCompMap, drawThermalAssistant, drawXCAssistant } from './map'
 
 /**
  * Les 23 types « titre + valeur + unité » du corpus (voir `numeric.ts`). Une boucle
@@ -39,6 +40,12 @@ for (const shortName of NUMERIC_TYPES) {
 }
 
 register('WStatusLine', drawStatusLine)
+
+// Les trois cartes (map.ts) : charpente partagée, un module paramétré — voir le
+// commentaire de tête de map.ts pour le choix de mécanisme.
+register('WCompMap', drawCompMap)
+register('WXCAssistant', drawXCAssistant)
+register('WThermalAssistant', drawThermalAssistant)
 
 // Zones tactiles sans rendu visible (rendu-observe.md, « Widgets sans rendu visible ») :
 // dessin dédié ET transparence forcée, quelles que soient _bg/_border dans le fichier.
