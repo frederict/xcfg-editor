@@ -326,6 +326,51 @@ def read_companions(dexes: list[Dex], res_by_id: dict[int, str]) -> dict[str, di
 
 
 # --------------------------------------------------------------------------
+# 3. Service rendu à `extract-widget-labels.py`
+# --------------------------------------------------------------------------
+
+def registry_titles(apk_dir: Path) -> dict[str, str]:
+    """{nom court du widget: clé de ressource de son titre}, lue dans le bytecode.
+
+    `extract-widget-labels.py` devine la clé du libellé par convention de nommage
+    (`WAltitude` -> `wAltitudeTitle`). Six widgets n'obéissent pas à la convention et
+    y restaient sans nom. Le registre, lui, ne devine pas : le `<init>` du `Companion`
+    **passe** la ressource du titre à son constructeur. C'est cette lecture qu'on
+    expose ici, pour que le script des libellés s'en serve en dernier recours.
+
+    Restreint aux widgets **du tableau du registre**, c'est-à-dire à ceux que l'écran
+    d'ajout propose. La restriction n'est pas cosmétique : `WProFallback` possède un
+    `Companion` dont le titre est `wProLabel` — le texte du badge, « Pro », et non un
+    nom de widget. XCTrack le fabrique lui-même à la lecture d'un fichier et ne le
+    propose jamais à l'ajout (§ 3.3 du relevé d'écran) ; il n'est donc pas au registre,
+    et ce filtre l'écarte sans avoir à le nommer.
+    """
+    table = ResourceTable(apk_dir / "resources.arsc")
+    res_by_id: dict[int, str] = {}
+    for off in table.type_chunks:
+        type_id, _locale, entries = table._parse_type_chunk(off)
+        if type_id != table.string_type_id:
+            continue
+        for index, (key_index, _value) in entries.items():
+            res_by_id[0x7F000000 | (type_id << 16) | index] = table.key_pool["strings"][key_index]
+
+    family_res_ids = {
+        rid for rid, name in res_by_id.items() if name.startswith(("wg", "debug_wg"))
+    }
+    dexes = [Dex(path) for path in sorted(apk_dir.glob("classes*.dex"))]
+    dex, code_off, _where = find_registry(dexes, family_res_ids)
+    registered = {
+        class_short(slot[1]) for slot in read_registry_array(dex, code_off) if slot[0] == "widget"
+    }
+    companions = read_companions(dexes, res_by_id)
+    return {
+        class_short(descriptor): info["title"]
+        for descriptor, info in companions.items()
+        if info["title"] is not None and class_short(descriptor) in registered
+    }
+
+
+# --------------------------------------------------------------------------
 # Programme principal
 # --------------------------------------------------------------------------
 

@@ -22,12 +22,17 @@ projet), typiquement `/Users/fred/DEV/XCTrack/XCTrack-<version>/`.
    réellement présentes dans l'APK (`Lorg/xcontest/XCTrack/widget/w/*;` et
    `.../widget/wp/*;`), qui sert de vérité terrain pour la couverture.
 3. Pour chaque classe, retrouve la clé de ressource qui porte son libellé :
-   - règle mécanique déduite empiriquement : `w<Stem>Title` (`WAltitude` ->
-     `wAltitudeTitle`), `wp<Stem>Title` pour le paquet `wp` ;
-   - table d'exceptions ADDITIONAL_KEYS pour les classes où la convention ne
+   - table d'exceptions KEY_OVERRIDES pour les classes où la convention ne
      suffit pas (voir le rapport joint à la livraison pour la justification
      de chaque entrée, notamment la vérification par recoupement dans le
      bytecode .dex) ;
+   - règle mécanique déduite empiriquement : `w<Stem>Title` (`WAltitude` ->
+     `wAltitudeTitle`), `wp<Stem>Title` pour le paquet `wp` ;
+   - en dernier recours, **le registre de l'écran d'ajout**, lu par
+     `extract-widget-catalog.py` : le `<init>` du `Companion` d'un widget
+     passe la ressource de son titre à son constructeur. Rien n'y est
+     deviné. C'est ce qui lève les six widgets dont la clé n'obéit à aucune
+     convention (`WButtonVario` -> `widgetSettingsButtonSensVario2`) ;
    - sinon, la classe est listée comme non résolue plutôt que de deviner.
 4. Écrit `src/catalog/widgetLabels.json` : `{ "WAltitude": {"en": "...",
    "fr": "...", ...}, ... }`.
@@ -38,11 +43,16 @@ les champs utiles à notre usage sont décodés.
 """
 from __future__ import annotations
 
+import importlib.util
 import json
 import re
 import struct
 import sys
 from pathlib import Path
+
+# L'import par chemin de `extract-widget-catalog.py` (voir `_registry_titles`)
+# laisserait sinon un `tools/__pycache__/` dans le dépôt.
+sys.dont_write_bytecode = True
 
 # --------------------------------------------------------------------------
 # Pool de chaînes (ResStringPool) — commun au pool global et aux pools de
@@ -296,32 +306,76 @@ KEY_OVERRIDES = {
 # telle quelle, sans permutation.
 
 # Classes pour lesquelles aucune clé fiable n'a été trouvée : ni la règle
-# mécanique, ni une correspondance non ambiguë dans le pool de clés, ni un
-# littéral d'identifiant de ressource dans le bytecode de leur propre classe
-# .dex (ou de sa classe interne `$Companion`). Documentées explicitement
-# plutôt que devinées.
+# mécanique, ni une correspondance non ambiguë dans le pool de clés, ni le
+# registre de l'écran d'ajout. Documentées explicitement plutôt que devinées.
+#
+# Elles étaient huit avant que le registre ne soit lu (voir `_registry_titles`) :
+# WAltitudeMaximum, WButtonCamera, WButtonVario, WCompPercentage, WExternalData et
+# WWebView portaient bien un titre, mais sous une clé qu'aucune convention ne pouvait
+# deviner (`wAltitudeMaxInFlight`, `widgetSettingsButtonSensVario2`…). Le registre la
+# donne telle que le constructeur la passe. Restent les deux que l'écran ne propose
+# pas — et donc que le registre ne connaît pas non plus.
 KNOWN_UNRESOLVED = {
-    "WAltitudeMaximum": "aucune clé candidate dans le pool de clés",
-    "WButtonCamera": "aucune clé candidate dans le pool de clés",
-    "WButtonVario": "seules des clés d'état existent (wButtonVarioMuted, "
-                     "wButtonVarioOn), pas de titre",
-    "WCompPercentage": "aucune clé candidate dans le pool de clés",
-    "WExternalData": "aucune clé candidate dans le pool de clés",
-    "WProFallback": "aucune clé candidate dans le pool de clés",
-    "WWebView": "ambigu : deux candidats (wWebViewTextTitle, "
-                "wWebViewUrlChangedTitle) sans moyen de trancher",
-    "WPMissing": "aucune clé candidate dans le pool de clés (widget de "
-                 "secours affiché quand une classe est introuvable)",
+    "WProFallback": "absent du registre de l'écran d'ajout : XCTrack le fabrique "
+                    "lui-même en remplacement d'un widget Pro sans licence (§ 3.3). "
+                    "Son Companion porte bien un titre, mais c'est `wProLabel`, le "
+                    "texte du badge « Pro » — pas un nom de widget",
+    "WPMissing": "aucune clé candidate dans le pool de clés, et absent du registre : "
+                 "classe de page de secours, affichée quand une classe est "
+                 "introuvable (§ 3.3)",
 }
 
 
-def resolve_key(class_name: str, package: str, all_keys: set) -> str | None:
+def _registry_titles(apk_dir: Path) -> dict:
+    """Clé de titre lue dans le bytecode, pour les widgets de l'écran d'ajout.
+
+    Import **tardif**, à dessein : `extract-widget-catalog.py` importe ce module-ci
+    dès son chargement — il lui emprunte le parseur `resources.arsc`. L'importer ici
+    au niveau du module ferait un cycle à l'import ; l'appeler depuis une fonction
+    n'en fait pas. On ne duplique donc pas la lecture du registre, qui est longue à
+    écrire et n'a qu'un seul endroit légitime.
+    """
+    path = Path(__file__).resolve().parent / "extract-widget-catalog.py"
+    spec = importlib.util.spec_from_file_location("extract_widget_catalog", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.registry_titles(apk_dir)
+
+
+def resolve_key(
+    class_name: str, package: str, all_keys: set, registry: dict | None = None
+) -> str | None:
+    """Clé de ressource du libellé d'une classe de widget, ou None.
+
+    Trois règles, dans l'ordre :
+
+    1. `KEY_OVERRIDES`, les exceptions établies à la main et vérifiées une à une ;
+    2. la convention de nommage `w<Stem>Title` / `wp<Stem>Title` ;
+    3. **le registre de l'écran d'ajout** — la clé que le `<init>` du `Companion`
+       passe à son constructeur. Lue, pas devinée.
+
+    Le registre vient en dernier alors qu'il est la source la plus sûre : il ne sert
+    qu'à combler ce que les deux autres laissent vide, ce qui garde le catalogue
+    stable là où il l'était déjà. Ce n'est pas une concession — sur les 77 classes que
+    le registre et les deux premières règles résolvent toutes les deux, elles sont
+    **d'accord partout** (`main` le vérifie à chaque exécution et le signale). Cet
+    accord total est précisément ce qui autorise à faire confiance au registre sur les
+    six qu'il est seul à résoudre.
+    """
     if class_name in KEY_OVERRIDES:
         return KEY_OVERRIDES[class_name]
     stem = class_name[2:] if package == "wp" and class_name.startswith("WP") else class_name[1:]
     prefix = "wp" if package == "wp" else "w"
     candidate = f"{prefix}{stem}Title"
-    return candidate if candidate in all_keys else None
+    if candidate in all_keys:
+        return candidate
+    if registry is not None:
+        from_registry = registry.get(class_name)
+        # Une clé que le registre cite mais que les ressources ne portent pas serait
+        # le signe d'une lecture fautive : on préfère ne rien rendre.
+        if from_registry is not None and from_registry in all_keys:
+            return from_registry
+    return None
 
 
 # --------------------------------------------------------------------------
@@ -334,7 +388,9 @@ def main():
     else:
         # Cherche un dossier frère XCTrack-* à côté de xcfg-editor/.
         project_root = Path(__file__).resolve().parents[1]
-        candidates = sorted(project_root.parent.glob("XCTrack-*"))
+        # `is_dir()` n'est pas facultatif : à côté du dossier `XCTrack-<version>/`
+        # traîne le `XCTrack-<version>.apk` dont il est extrait, et il trie *après*.
+        candidates = [c for c in sorted(project_root.parent.glob("XCTrack-*")) if c.is_dir()]
         if not candidates:
             print("Aucun dossier XCTrack-* trouvé à côté de xcfg-editor/. "
                   "Précise le chemin en argument.", file=sys.stderr)
@@ -361,11 +417,34 @@ def main():
     print(f"Classes de widgets trouvées : {len(widget_classes['w'])} (paquet w) "
           f"+ {len(widget_classes['wp'])} (paquet wp) = {total_classes}")
 
-    catalog: dict[str, dict[str, str]] = {}
-    unresolved: list[str] = []
+    registry = _registry_titles(apk_dir)
+    print(f"Titres lus dans le registre de l'écran d'ajout : {len(registry)}")
+
+    # Contrôle croisé, refait à chaque exécution : là où le registre et les deux
+    # premières règles répondent tous les deux, ils doivent dire la même chose. Un
+    # désaccord signalerait que la convention a dérivé, ou que la lecture du registre
+    # s'est décalée — dans les deux cas il faut regarder avant de livrer.
+    agreed = 0
     for package in ("w", "wp"):
         for class_name in widget_classes[package]:
-            key = resolve_key(class_name, package, all_keys)
+            without = resolve_key(class_name, package, all_keys)
+            from_registry = registry.get(class_name)
+            if without is None or from_registry is None:
+                continue
+            if without == from_registry:
+                agreed += 1
+            else:
+                print(f"  DÉSACCORD {class_name} : règles={without} registre={from_registry}")
+    print(f"Accord règles/registre : {agreed} classes vérifiées")
+
+    catalog: dict[str, dict[str, str]] = {}
+    unresolved: list[str] = []
+    resolved_by_registry: list[str] = []
+    for package in ("w", "wp"):
+        for class_name in widget_classes[package]:
+            key = resolve_key(class_name, package, all_keys, registry)
+            if key is not None and resolve_key(class_name, package, all_keys) is None:
+                resolved_by_registry.append(class_name)
             if key is None:
                 unresolved.append(class_name)
                 continue
@@ -391,6 +470,11 @@ def main():
     print(f"Catalogue écrit : {out_path}")
     print(f"Widgets résolus : {len(catalog)} / {total_classes}")
     print(f"Locales trouvées : {len(locales_used)} -> {locales_used}")
+    if resolved_by_registry:
+        print(f"\nRésolues par le registre seul ({len(resolved_by_registry)}) :")
+        for class_name in sorted(resolved_by_registry):
+            print(f"  - {class_name} : {registry[class_name]} "
+                  f"-> fr={catalog[class_name].get('fr')!r}")
     if unresolved:
         print(f"\nClasses NON résolues ({len(unresolved)}) :")
         for c in sorted(unresolved):

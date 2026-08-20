@@ -10,13 +10,16 @@ const WIDGET_LABELS = rawWidgetLabels as Record<string, Record<string, string>>
 
 /**
  * Repli pour les widgets absents du catalogue officiel — `readableName` n'y descend que
- * si `WIDGET_LABELS` n'a pas d'entrée pour le type demandé. 81 des 89 types connus
- * figurent désormais dans `WIDGET_LABELS` (voir KNOWN_UNRESOLVED dans
- * tools/extract-widget-labels.py pour le détail des 8 restants) : la plupart des
- * entrées ci-dessous sont donc masquées en pratique, à l'exception des types que
- * l'extraction n'a pas pu résoudre. On les garde telles quelles plutôt que de les
- * purger — les retirer n'apporterait rien et le fichier documente encore, pour
- * mémoire, la traduction maison d'origine.
+ * si `WIDGET_LABELS` n'a pas d'entrée pour le type demandé. **87 des 89** types connus
+ * y figurent désormais, depuis que la clé de titre est aussi lue dans le registre de
+ * l'écran d'ajout (voir KNOWN_UNRESOLVED dans tools/extract-widget-labels.py pour les
+ * 2 restants, `WProFallback` et `WPMissing`).
+ *
+ * Conséquence : les 37 entrées ci-dessous sont **toutes** masquées en pratique, et
+ * aucune n'est plus atteignable pour un type de widget réel. On les garde plutôt que
+ * de les purger — les retirer n'apporterait rien, et le fichier documente encore, pour
+ * mémoire, la traduction maison d'origine. Le repli qui sert vraiment est celui d'en
+ * dessous : le nom de classe brut, pour les deux types que XCTrack fabrique lui-même.
  */
 export const WIDGET_NAMES: Record<string, string> = {
   WAltitude: 'Altitude',
