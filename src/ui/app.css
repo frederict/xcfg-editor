@@ -818,6 +818,83 @@ body.is-dragging .veil {
   white-space: nowrap;
 }
 
+/*
+ * La barre d'outils de la sélection : supprimer, dupliquer, changer de rang.
+ *
+ * Elle appartient au **cadre**, pas à l'instrument — elle reste donc achromatique, comme
+ * tout le reste de cette feuille, là où les marques ci-dessus font exception pour
+ * reproduire celles de XCTrack. Un pilote reconnaît ses équerres roses ; une barre
+ * d'outils, il la lit.
+ *
+ * Elle flotte juste au-dessus du bord haut du widget, et bascule au-dessous du même bord
+ * — donc à l'intérieur du widget — quand celui-ci touche le haut de la plaque, faute de
+ * quoi elle sortirait du rendu. C'est le seul élément du calque qui reçoive le pointeur.
+ */
+.editor__toolbar {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  transform: translateY(calc(-100% - 6px));
+  border: 1px solid var(--app-line-strong);
+  border-radius: 5px;
+  background: var(--app-panel);
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.28);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.editor__toolbar--below { transform: translateY(6px); }
+
+.editor__tool {
+  appearance: none;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 7px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: none;
+  color: var(--app-ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.editor__tool:hover:not(:disabled) {
+  border-color: var(--app-line);
+  background: var(--app-bg);
+}
+
+.editor__tool:focus-visible { outline: 2px solid var(--app-focus); outline-offset: 1px; }
+
+/* Un mouvement d'empilement déjà au bout de sa course se voit AVANT d'être tenté.
+   L'appareil, lui, laisse appuyer sur un bouton qui ne fera rien. */
+.editor__tool:disabled { opacity: 0.3; cursor: default; }
+
+/* Les quatre flèches d'empilement : un cran plus grandes, sans quoi ⤒ et ↑ ne se
+   distinguent plus à 11 px. */
+.editor__tool--back,
+.editor__tool--lower,
+.editor__tool--raise,
+.editor__tool--front { font-size: 14px; }
+
+/*
+ * Le rang courant, encadré de deux filets : c'est la seule information de cette barre que
+ * l'appareil ne donne nulle part, et elle sépare les mouvements d'empilement — qui la
+ * changent — des deux actions qui changent la page.
+ */
+.editor__rank {
+  margin: 0 3px;
+  padding: 0 9px;
+  border-left: 1px solid var(--app-line);
+  border-right: 1px solid var(--app-line);
+  color: var(--app-ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
 /* Annonce de la sélection et du geste pour les lecteurs d'écran, invisible à l'œil. */
 .editor__live {
   position: absolute;
@@ -1219,4 +1296,285 @@ body.is-dragging .veil {
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
+}
+
+/* ------------------------------------------------------------- gestion des pages */
+
+/*
+ * Le carrousel de `ui/pageManager.ts`. Sa forme vient de l'appareil (§ 5 du relevé) :
+ * un rail HORIZONTAL, une colonne par page, et des points d'insertion ENTRE les pages
+ * plutôt qu'un bouton unique en fin de liste — insérer en 3 n'est pas la même chose
+ * qu'ajouter à la fin, et deux commandes distinctes le disent mieux qu'une seule.
+ *
+ * Rien ici n'introduit de couleur : l'ambre est celui des avertissements déjà en place
+ * (`.section__note`), et la confirmation de suppression se distingue par un aplat encré,
+ * pas par un rouge. Voir l'en-tête de cette feuille.
+ */
+
+.pages { margin-top: 2.5rem; }
+
+.pages__title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.85rem;
+  margin: 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--app-line-strong);
+  font-size: 12px;
+}
+
+.pages__name { text-transform: uppercase; letter-spacing: 0.16em; font-weight: 700; }
+.pages__count { font-family: var(--font-data); font-size: 11px; color: var(--app-ink-soft); }
+
+/* Les conséquences : mêmes marques que les notes de la vue d'ensemble. */
+.pages__advice,
+.pages__choice-advice,
+.pagecard__consequences {
+  list-style: none;
+  margin: 0.9rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.pages__advice-item {
+  padding-left: 0.7rem;
+  border-left: 2px solid var(--app-flag-line);
+  color: var(--app-ink-soft);
+  font-size: 13px;
+  max-width: 72ch;
+}
+
+/* Le rappel de ce que l'appareil ne sait pas faire n'est pas un défaut du fichier :
+   il se lit en retrait, pour ne pas se confondre avec les avertissements de vol. */
+.pages__advice-item--class { border-left-color: var(--app-line-strong); }
+
+.pages__rail {
+  list-style: none;
+  margin: 1.4rem 0 0;
+  padding: 0 0 0.6rem;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+/* --- le point d'insertion, la « feuille + » de l'appareil --- */
+
+.pages__gap {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 2.2rem;
+  width: 2.6rem;
+}
+
+.pages__insert {
+  width: 1.7rem;
+  height: 1.7rem;
+  display: grid;
+  place-items: center;
+  font: inherit;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--app-ink-soft);
+  background: var(--app-bg);
+  border: 1px dashed var(--app-line-strong);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.pages__insert:hover { color: var(--app-ink); border-style: solid; }
+
+/* La liste des quatre classes se pose PAR-DESSUS le rail : elle est plus large qu'une
+   colonne, et l'ouvrir ne doit pas déplacer les vignettes que l'utilisateur vise. */
+.pages__choice {
+  position: absolute;
+  top: 4.2rem;
+  left: 50%;
+  z-index: 10;
+  transform: translateX(-50%);
+  width: min(24rem, 80vw);
+  padding: 0.9rem;
+  background: var(--app-panel);
+  border: 1px solid var(--app-line-strong);
+  border-radius: 6px;
+  box-shadow: var(--app-plate-shadow);
+}
+
+.pages__choice-title {
+  margin: 0 0 0.6rem;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--app-ink-soft);
+}
+
+.pages__choice-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.35rem; }
+
+.pages__choice-item {
+  width: 100%;
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.5rem 0.6rem;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--app-line);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.pages__choice-item:hover { border-color: var(--app-ink-soft); }
+.pages__choice-label { font-size: 13px; font-weight: 600; }
+.pages__choice-note { font-size: 12px; color: var(--app-ink-soft); }
+.pages__choice-advice { margin-top: 0.7rem; }
+.pages__choice-advice .pages__advice-item { font-size: 12px; }
+
+/* --- une page du rail --- */
+
+.pages__slot { flex: none; width: 15rem; }
+.pages--portrait .pages__slot { width: 11rem; }
+
+.pages__slot--dragged { opacity: 0.4; }
+.pages__slot--over .pagecard { border-color: var(--app-focus); }
+
+.pagecard {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.7rem;
+  background: var(--app-panel);
+  border: 1px solid var(--app-line);
+  border-radius: 6px;
+}
+
+.pagecard--conditional { border-left: 3px solid var(--app-flag-line); }
+
+.pagecard__head { display: flex; align-items: center; gap: 0.5rem; }
+
+/* Le rang EST l'identité de la page : même marque que dans la vue d'ensemble. */
+.pagecard__rank {
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-data);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid var(--app-line-strong);
+  border-radius: 3px;
+}
+
+.pagecard__label {
+  font-size: 12.5px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pagecard__screen {
+  display: block;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  background: #ffffff;   /* l'écran de l'instrument, jamais soumis au thème */
+  border: 1px solid var(--app-line-strong);
+  cursor: pointer;
+}
+
+.pagecard__screen:disabled { cursor: default; }
+
+.pagecard__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-family: var(--font-data);
+  font-size: 10.5px;
+  color: var(--app-ink-soft);
+}
+
+.pagecard__class { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pagecard__widgets { flex: none; }
+
+.pagecard__nav,
+.pagecard__thermal {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--app-ink-soft);
+}
+
+.pagecard__thermal { border-left: 2px solid var(--app-line-strong); padding-left: 0.5rem; }
+
+.pagecard__ops {
+  margin-top: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.pagecard__move { padding-inline: 0.4rem; font-size: 12px; }
+.pagecard__duplicate,
+.pagecard__remove { font-size: 12px; }
+
+.pagecard__removal { flex: 1 1 100%; display: grid; gap: 0.4rem; }
+.pagecard__remove { justify-self: start; }
+
+/* Armé, le bouton devient un aplat encré : il change d'aspect au point qu'un second clic
+   distrait est impossible, sans recourir au rouge que cette feuille s'interdit. */
+.pagecard__remove--armed {
+  background: var(--app-ink);
+  border-color: var(--app-ink);
+  color: var(--app-bg);
+  font-weight: 500;
+}
+
+.pagecard__consequences { margin: 0; }
+.pagecard__consequences .pages__advice-item { font-size: 11.5px; }
+
+.pagecard__class-field { display: flex; align-items: center; gap: 0.4rem; }
+
+.pagecard__class-label {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--app-ink-soft);
+}
+
+.pagecard__class-select {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 12px;
+  padding: 0.2rem 0.3rem;
+  color: var(--app-ink);
+  background: var(--app-bg);
+  border: 1px solid var(--app-line-strong);
+  border-radius: 3px;
+}
+
+.pages__empty {
+  margin: 1rem 0 0;
+  color: var(--app-ink-soft);
+  font-size: 13px;
+  max-width: 62ch;
+}
+
+/* L'annonce des opérations pour les lecteurs d'écran : lisible à l'œil aussi, mais
+   discrète — elle redit ce que l'utilisateur vient de faire. */
+.pages__live {
+  margin: 0.8rem 0 0;
+  min-height: 1.2em;
+  font-size: 12px;
+  color: var(--app-ink-soft);
 }
