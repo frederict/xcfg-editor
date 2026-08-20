@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it, vi } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { parseJson } from '../../src/core/parseJson'
 import { serializeJson } from '../../src/core/serializeJson'
@@ -10,6 +10,7 @@ import {
   buildPropertyForm,
   colorToHex,
   colorToLiteral,
+  loadOptionTexts,
   renderProperties,
   setFieldValue,
   type PropertyField,
@@ -23,6 +24,16 @@ import {
  */
 const FILE = '/Users/fred/DEV/XCTrack/Exemples/2026-08-20_backup-00.xcfg'
 const source = readFileSync(FILE, 'utf8')
+
+/**
+ * Le catalogue est désormais partitionné par langue et chargé par `import()` : le module
+ * ne précharge de lui-même que la langue du navigateur — `en` sous happy-dom. Les langues
+ * dont ces tests vérifient les libellés doivent donc être demandées d'abord, exactement
+ * comme le panneau le fait quand un fichier déclare `Display.Language`.
+ */
+beforeAll(async () => {
+  await Promise.all([loadOptionTexts('fr'), loadOptionTexts('de')])
+})
 
 /** Espace insécable : la typographie française du catalogue, à l'octet près. */
 const NBSP = ' '
@@ -161,6 +172,57 @@ describe('description du formulaire', () => {
     expect(fieldAt(form, '_border').label).toBe('Zeichne Rahmen')
     expect(fieldAt(form, 'windStyle').choices.map((c) => c.label))
       .not.toEqual(['Aucun', 'Flèche', 'Arc', 'Manche à air'])
+  })
+})
+
+describe('la langue du panneau suit le fichier, pas seulement le navigateur', () => {
+  /** L'intitulé affiché d'une ligne du panneau rendu. */
+  function rowLabel(element: HTMLElement, key: string): string | undefined {
+    return element.querySelector<HTMLElement>(`[data-key="${key}"] .props__label`)?.textContent
+      ?? undefined
+  }
+
+  it('bâtit dans la langue chargée, le dit, puis répare le panneau', async () => {
+    // Le cas réel : `complète.xcfg` du corpus déclare `Display.Language: fr`. Ouvert
+    // sur un navigateur d'une autre langue, `main.ts` demande une langue que le
+    // préchargement n'avait pas devinée. Ici c'est l'italien, qu'aucun autre test ne
+    // charge, et le navigateur de happy-dom est anglophone.
+    const form = buildPropertyForm(compass(document()), 'it')
+    expect(form.language).toBe('it')
+    // Le formulaire ne ment pas sur ce qu'il a servi.
+    expect(form.textLanguage).toBe('en')
+    expect(fieldAt(form, '_border').label).toBe('Draw border')
+
+    const panel = renderProperties({ form })
+    // Premier rendu : la langue disponible, pas de panneau vide ni de clé brute.
+    expect(rowLabel(panel.element, '_border')).toBe('Draw border')
+
+    // Puis le morceau italien arrive et le panneau se refait, dans la section que
+    // l'appelant a déjà insérée dans le document — `main.ts` n'a rien à rebrancher.
+    await vi.waitFor(() => {
+      expect(rowLabel(panel.element, '_border')).toBe('Disegna bordi')
+    })
+    expect(panel.form.textLanguage).toBe('it')
+    expect(panel.element.querySelectorAll('.props__row')).toHaveLength(9)
+  })
+
+  it('ne refait rien quand la langue demandée est celle qui a servi', async () => {
+    const form = buildPropertyForm(compass(document()), 'fr')
+    expect(form.textLanguage).toBe('fr')
+    const panel = renderProperties({ form })
+    const row = panel.element.querySelector('[data-key="_border"]')
+    await Promise.resolve()
+    // Le même nœud, pas un remplaçant : aucun rendu superflu.
+    expect(panel.element.querySelector('[data-key="_border"]')).toBe(row)
+    expect(rowLabel(panel.element, '_border')).toBe('Tracer frontière')
+  })
+
+  it('sert l’anglais, jamais une clé de ressource, pour une langue inconnue', () => {
+    // `optionsLanguage` ramène `xx` sur l'anglais : le panneau est donc déjà servi et
+    // n'a rien à réparer.
+    const form = buildPropertyForm(compass(document()), 'xx')
+    expect(form.textLanguage).toBe('en')
+    expect(fieldAt(form, '_border').label).toBe('Draw border')
   })
 })
 

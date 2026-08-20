@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
 """Extrait le catalogue des options de widgets XCTrack depuis un APK décompressé.
 
-Régénère `src/catalog/widgetOptions.json` : pour chaque type de widget, la liste
-de ses options réglables, avec la clé du fichier `.xcfg`, le libellé traduit, les
-valeurs permises et le texte d'aide. Aucune dépendance tierce.
+Régénère `src/catalog/widgetOptions/` : pour chaque type de widget, la liste de ses
+options réglables, avec la clé du fichier `.xcfg`, le libellé traduit, les valeurs
+permises et le texte d'aide. Aucune dépendance tierce.
+
+**Deux sortes de fichiers**, et c'est tout le sujet du découpage (voir « La partition
+par langue » plus bas) : `base.json` porte ce qui ne dépend d'aucune langue — les
+options, les widgets, les non-résolues — et `<langue>.json` ne porte que les textes
+d'une langue. La liste des langues disponibles sort à part, dans
+`src/catalog/widgetOptionsLanguages.json`.
 
 Usage :
     python3 tools/extract-widget-options.py [chemin_du_dossier_apk_decompile]
@@ -75,6 +81,32 @@ contrôles ; le catalogue le signale et livre tous les libellés attachés à la
 mais **n'affirme pas** quel libellé va à quel sous-champ : le bytecode ne le dit pas
 de façon exploitable. Une option dont le libellé n'a pas pu être relié est listée
 dans `unresolved` plutôt que devinée.
+
+## La partition par langue
+
+Le catalogue d'un seul tenant pesait 380 Ko minifiés, dont **326 Ko de traductions**
+— 78 % du poids — qu'un pilote donné ne lira jamais : il n'affiche qu'une langue à la
+fois. Il est donc coupé en deux sortes de fichiers.
+
+`base.json` — 65 Ko compacts — porte les 225 descriptions d'options, les 84 listes
+ordonnées de widgets, les options non résolues et les clés du corpus non appariées.
+Rien de tout cela ne dépend de la langue, et **rien n'en est recopié** dans les
+fichiers de langue : c'est l'inverse de ce que fait `extract-widget-catalog.py`, dont
+la part invariante (5 Ko) était assez petite pour être dupliquée 33 fois en échange
+d'une requête au lieu de deux. Ici la part invariante est treize fois plus grosse que
+la part traduite : la dupliquer coûterait 2,2 Mo sur le serveur et ferait retélécharger
+65 Ko à chaque changement de langue. Elle reste donc en un seul morceau, que la palette
+d'ajout (`src/ui/widgetPalette.ts`) charge d'ailleurs de toute façon, pour sa liste des
+84 types.
+
+`<langue>.json` ne porte que `strings` : clé de ressource -> texte, dans une seule
+langue, **repli anglais fusionné** là où la langue ne traduit pas. Le repli n'est pas
+décoratif : sur les 248 ressources du catalogue, l'anglais est la seule langue
+complète — `hi` n'en traduit que 4, `hr` 40, `da` 45. Le résoudre à la génération
+plutôt qu'à l'exécution évite de charger un second fichier de 20 Ko pour retrouver les
+textes manquants, et rend exactement ce que rendait l'ancien
+`texts[langue] ?? texts.en`. Seuls `nativeStringCount` et `fallbackStringCount` gardent
+trace de l'emprunt, pour l'audit.
 """
 from __future__ import annotations
 
@@ -91,6 +123,10 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+# Langue de repli du catalogue : celle des ressources par défaut de l'APK, et la seule
+# des 34 qui traduise les 248 ressources. Voir la partition par langue, en tête.
+FALLBACK_LANGUAGE = "en"
 
 # --------------------------------------------------------------------------
 # Réutilisation du parseur ARSC déjà écrit pour les libellés de widgets.
@@ -1172,7 +1208,11 @@ def main():
             ids.append(option_id)
         widget_index[widget] = ids
 
-    payload = {
+    # -- la part invariante -------------------------------------------------
+    # Tout ce qui ne dépend d'aucune langue, en un seul morceau : c'est ce que
+    # `widgetOptions.ts` importe statiquement, et ce que la palette d'ajout charge
+    # pour dresser sa liste des 84 types. Voir « La partition par langue » en tête.
+    base = {
         "meta": {
             "source": apk_dir.name,
             "generatedBy": "tools/extract-widget-options.py",
@@ -1181,12 +1221,12 @@ def main():
             "optionCount": option_count,
             "distinctKeyCount": len(distinct_keys),
             "pooledOptionCount": len(pool),
+            "stringCount": len(strings),
             "corpusPairs": corpus_pairs,
             "corpusMatched": matched,
             "corpusMissing": missing,
             "unresolvedCount": len(unresolved),
         },
-        "strings": strings,
         "options": pool,
         "widgets": widget_index,
         "unresolved": sorted(unresolved, key=lambda u: (u["definedIn"], u["key"])),
@@ -1195,12 +1235,66 @@ def main():
         # rencontrera : il doit les préserver à l'écriture même sans savoir les régler.
         "unmatchedCorpusKeys": {widget: keys for widget, keys in gaps},
     }
-    out_path = PROJECT_ROOT / "src" / "catalog" / "widgetOptions.json"
-    out_path.write_text(json.dumps(payload, ensure_ascii=False, indent=1) + "\n",
+
+    out_dir = PROJECT_ROOT / "src" / "catalog" / "widgetOptions"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for stale in out_dir.glob("*.json"):
+        stale.unlink()  # une langue retirée de l'APK ne doit pas survivre au fichier
+    # Le catalogue d'un seul tenant, d'avant la partition. Supprimé s'il traîne encore :
+    # 418 Ko que plus personne ne lit, et qui masqueraient le découpage à un lecteur
+    # pressé.
+    legacy = PROJECT_ROOT / "src" / "catalog" / "widgetOptions.json"
+    if legacy.exists():
+        legacy.unlink()
+
+    base_path = out_dir / "base.json"
+    base_path.write_text(json.dumps(base, ensure_ascii=False, indent=1) + "\n",
+                         encoding="utf-8")
+
+    # -- un fichier de textes par langue --------------------------------------
+    # Le repli anglais est fusionné ici, clé par clé, plutôt que chargé à l'exécution :
+    # l'anglais est la seule des 34 langues à traduire les 248 ressources, et charger
+    # un second fichier entier pour compléter la première coûterait le double.
+    #
+    # Le texte anglais emprunté est indiscernable d'une traduction dans le fichier
+    # produit, à dessein : l'ancien `resourceText()` rendait déjà
+    # `texts[langue] ?? texts.en`, la partition rend exactement le même texte.
+    written: list[tuple[str, int, int, int]] = []
+    for language in languages:
+        texts: dict[str, str] = {}
+        borrowed = 0
+        for key, by_language in strings.items():
+            own = by_language.get(language)
+            if own is not None:
+                texts[key] = own
+            elif (fallback := by_language.get(FALLBACK_LANGUAGE)) is not None:
+                texts[key] = fallback
+                borrowed += 1
+        payload = {
+            "language": language,
+            "fallbackLanguage": FALLBACK_LANGUAGE,
+            "nativeStringCount": len(texts) - borrowed,
+            "fallbackStringCount": borrowed,
+            "strings": texts,
+        }
+        path = out_dir / f"{language}.json"
+        path.write_text(json.dumps(payload, ensure_ascii=False, indent=1) + "\n",
                         encoding="utf-8")
+        written.append((language, len(texts) - borrowed, borrowed, path.stat().st_size))
+
+    # La liste des langues doit être connue **avant** de choisir quel fichier charger :
+    # elle ne peut pas vivre dans les fichiers de langue eux-mêmes. Elle sort donc à
+    # part, et reste écrite par ce script comme tout le reste.
+    index_path = PROJECT_ROOT / "src" / "catalog" / "widgetOptionsLanguages.json"
+    index_path.write_text(json.dumps(languages, ensure_ascii=False, indent=1) + "\n",
+                          encoding="utf-8")
 
     print()
-    print(f"Catalogue écrit : {out_path} ({out_path.stat().st_size:,} octets)")
+    print(f"Part invariante : {base_path} ({base_path.stat().st_size:,} octets)")
+    total_bytes = sum(size for _l, _n, _b, size in written)
+    print(f"Textes : {out_dir}/ — {len(written)} fichiers de langue, "
+          f"{total_bytes:,} octets au total")
+    print(f"Liste des langues : {index_path} ({index_path.stat().st_size:,} octets)")
     print(f"Descriptions mutualisées : {len(pool)}")
     print(f"Widgets couverts : {len(per_widget)}")
     print(f"Options : {option_count} ({len(distinct_keys)} clés distinctes), "
@@ -1213,8 +1307,15 @@ def main():
             print(f"  - {widget} : {', '.join(miss)}")
     if unresolved:
         print(f"\nOptions repérées mais non résolues ({len(unresolved)}) :")
-        for u in payload["unresolved"]:
+        for u in base["unresolved"]:
             print(f"  - {u['definedIn']}.{u['key']} ({u['impl']}) : {u['reason']}")
+
+    # Taille de chaque fichier de langue, et part empruntée à l'anglais. C'est le
+    # chiffre qui compte pour le transfert : un pilote n'en charge jamais qu'un, et
+    # il y ajoute la part invariante, une fois.
+    print("\nFichiers de langue (octets indentés / textes propres / empruntés à l'anglais) :")
+    for language, native, borrowed, size in written:
+        print(f"  {language:<6} {size:>8,}  {native:>4} propres  {borrowed:>4} empruntés")
 
 
 if __name__ == "__main__":

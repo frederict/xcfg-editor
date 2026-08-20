@@ -2,8 +2,8 @@ import { decode, encode, getMember, setLiteral, setString } from '../core/access
 import type { JsonNode } from '../core/jsonDocument'
 import { serializeJson } from '../core/serializeJson'
 import { readableName } from '../catalog/widgetNames'
-import { optionHelp, optionLabel, optionValues, optionsFor, resourceText } from '../catalog/widgetOptions'
-import type { WidgetOption } from '../catalog/widgetOptions'
+import { loadWidgetOptions, optionsFor, optionsLanguage } from '../catalog/widgetOptions'
+import type { WidgetOption, WidgetOptionTexts } from '../catalog/widgetOptions'
 
 /**
  * Le panneau de propriétés d'un widget : la description du formulaire, puis son rendu.
@@ -46,6 +46,80 @@ import type { WidgetOption } from '../catalog/widgetOptions'
  * `setString`, qui remplacent **une** valeur dans le nœud d'origine. Une clé qu'on ne
  * touche pas ne change pas d'un octet, y compris son texte source (`3.0` reste `3.0`).
  */
+
+/* ------------------------------------------------------- les textes du catalogue */
+
+/**
+ * Les jeux de textes déjà chargés, par langue résolue.
+ *
+ * `buildPropertyForm` est **synchrone** — `main.ts` l'appelle au milieu d'un rendu — et
+ * les libellés arrivent désormais par un `import()` : le panneau ne peut donc lire que
+ * les langues déjà là. D'où cette table, et le préchargement ci-dessous.
+ */
+const loaded = new Map<string, WidgetOptionTexts>()
+
+/**
+ * Charge les libellés d'une langue et les rend lisibles par `buildPropertyForm`.
+ *
+ * Deux appelants : le préchargement de ce module, et la réparation du panneau quand le
+ * fichier ouvert déclare une autre langue que celle du navigateur.
+ */
+export function loadOptionTexts(language: string): Promise<WidgetOptionTexts> {
+  const code = optionsLanguage(language)
+  const known = loaded.get(code)
+  if (known !== undefined) return Promise.resolve(known)
+  return loadWidgetOptions(code).then((texts) => {
+    loaded.set(code, texts)
+    return texts
+  })
+}
+
+/**
+ * Les seules étiquettes régionales que les catalogues portent. Toutes les autres langues
+ * y sont indexées par code court.
+ *
+ * La liste et la réduction qui suit **répètent volontairement** celles de `main.ts`
+ * (`REGIONAL_LABEL_CODES`, `catalogLanguage`) : c'est la règle qu'il applique à
+ * `navigator.language` avant d'en faire la langue de la session, donc la seule qui
+ * permette à ce module de précharger le bon fichier. Elle est copiée plutôt
+ * qu'importée parce que `main.ts` importe déjà ce module — l'inverse serait circulaire.
+ * Mesuré : sans cette réduction, un navigateur `fr-FR` téléchargeait `en.json` puis
+ * `fr.json`, soit 20 Ko pour rien et un panneau refait.
+ */
+const REGIONAL_CODES = ['zh-TW']
+
+/** La langue que `main.ts` déduira du navigateur, et donc celle qu'il faut précharger. */
+function browserLanguage(): string {
+  const tag = navigator.language
+  if (REGIONAL_CODES.includes(tag)) return tag
+  return tag.split('-')[0] ?? tag
+}
+
+/**
+ * Le catalogue de la langue du navigateur, chargé **pendant** l'import dynamique de ce
+ * module.
+ *
+ * `main.ts` fait `import('./properties')` et n'affiche le panneau qu'une fois la
+ * promesse tenue ; un `await` de haut niveau se glisse dans ce temps-là, et son coût
+ * est celui d'un morceau de 20 Ko qui part en parallèle du reste. Rien à changer chez
+ * l'appelant : c'est la raison d'être de cette construction plutôt que d'une API
+ * asynchrone qui aurait remonté jusqu'à `main.ts`.
+ *
+ * La langue choisie est celle du navigateur, parce que c'est la seule que ce module
+ * puisse connaître : `main.ts` calcule la langue de la session à partir du fichier
+ * ouvert (`Display.Language`) et ne la lui passe qu'à l'appel. Les deux coïncident
+ * pour tout fichier qui ne déclare pas de langue — la moitié du corpus — et pour ceux
+ * qui déclarent celle du navigateur. Sinon, voir `repairLanguage`.
+ */
+const preloaded = await loadOptionTexts(browserLanguage())
+
+/**
+ * Les libellés à employer pour une langue demandée : les siens s'ils sont chargés,
+ * ceux du navigateur sinon — jamais rien, un panneau muet ne rend service à personne.
+ */
+function textsFor(language: string): WidgetOptionTexts {
+  return loaded.get(optionsLanguage(language)) ?? preloaded
+}
 
 /* ------------------------------------------------------------------ description */
 
@@ -110,7 +184,15 @@ export interface PropertyForm {
   shortName: string
   /** « Gadget : Boussole », comme l'intitulé de l'activité native. */
   title: string
+  /** La langue **demandée** par l'appelant : celle de la session, côté `main.ts`. */
   language: string
+  /**
+   * La langue dans laquelle les libellés ont **réellement** été résolus. Elle ne
+   * diffère de `language` que le temps d'un rendu, quand le fichier ouvert déclare une
+   * langue que ce module n'avait pas préchargée : `renderProperties` la charge alors et
+   * refait le panneau (voir `repairLanguage`).
+   */
+  textLanguage: string
   fields: PropertyField[]
   /**
    * Longueur du bloc de tête — les clés universelles `_border`, `_bg`, `_theme`. Le
@@ -322,7 +404,7 @@ function buildField(seed: FieldSeed): PropertyField {
  */
 function expandComposite(
   node: JsonNode, key: string, option: WidgetOption | undefined,
-  parentLabel: string, help: string | undefined, language: string
+  parentLabel: string, help: string | undefined, texts: WidgetOptionTexts
 ): PropertyField[] {
   const subKeys = orderedKeys(node)
   const hasMain = subKeys.includes(MAIN_FIELD)
@@ -337,12 +419,12 @@ function expandComposite(
       field: subKey,
       label: main ? parentLabel : `${key} · ${subKey}`,
       // Le gabarit de libellé (« Echelle Carte: %d m ») appartient au sous-champ principal.
-      ...(main && option !== undefined ? { labelPattern: resourceText(option.label, language) } : {}),
+      ...(main && option !== undefined ? { labelPattern: texts.resourceText(option.label) } : {}),
       ...(option === undefined ? {} : { option }),
       ...(main || option === undefined ? {} : { hint: parentLabel }),
       node: value,
       owner: node,
-      choices: main && option !== undefined ? optionValues(option, language) : [],
+      choices: main && option !== undefined ? texts.optionValues(option) : [],
       ...(main && help !== undefined ? { help } : {}),
       depth: hasMain && !main ? 1 : 0
     }))
@@ -353,11 +435,18 @@ function expandComposite(
 /**
  * La description du formulaire d'un widget : la liste ordonnée de ses contrôles.
  *
- * `language` est un code du catalogue (`fr`, `en`, `de`… 34 en tout) ; un libellé
- * manquant retombe sur l'anglais, puis sur le nom brut de la clé.
+ * `language` est un code du catalogue (`fr`, `en`, `de`… 34 en tout) ; le repli anglais
+ * est déjà fondu dans le fichier de langue, et un libellé qui manquerait jusque-là
+ * retombe sur le nom brut de la clé.
+ *
+ * Reste **synchrone** alors que les libellés arrivent par un `import()` : `main.ts`
+ * l'appelle au milieu d'un rendu. Si la langue demandée n'est pas chargée, le
+ * formulaire est bâti dans celle qui l'est et le dit par `textLanguage` ; c'est
+ * `renderProperties` qui répare.
  */
 export function buildPropertyForm(source: FormSource, language = 'fr'): PropertyForm {
   const { node, shortName } = source
+  const texts = textsFor(language)
   const catalog = new Map<string, WidgetOption>()
   for (const option of optionsFor(shortName)) {
     if (!catalog.has(option.key)) catalog.set(option.key, option)
@@ -375,14 +464,14 @@ export function buildPropertyForm(source: FormSource, language = 'fr'): Property
 
     const option = catalog.get(key)
     if (option === undefined) unknownKeys.push(key)
-    const label = option === undefined ? key : optionLabel(option, language)
-    const help = option === undefined ? undefined : optionHelp(option, language)
+    const label = option === undefined ? key : texts.optionLabel(option)
+    const help = option === undefined ? undefined : texts.optionHelp(option)
 
     const before = fields.length
     if (value.kind === 'object') {
-      fields.push(...expandComposite(value, key, option, label, help, language))
+      fields.push(...expandComposite(value, key, option, label, help, texts))
     } else {
-      const pattern = option === undefined ? undefined : resourceText(option.label, language)
+      const pattern = option === undefined ? undefined : texts.resourceText(option.label)
       fields.push(buildField({
         key,
         label,
@@ -391,7 +480,7 @@ export function buildPropertyForm(source: FormSource, language = 'fr'): Property
         ...(option === undefined ? {} : { option }),
         node: value,
         owner: node,
-        choices: option === undefined ? [] : optionValues(option, language),
+        choices: option === undefined ? [] : texts.optionValues(option),
         ...(help === undefined ? {} : { help }),
         depth: 0
       }))
@@ -402,16 +491,25 @@ export function buildPropertyForm(source: FormSource, language = 'fr'): Property
   }
 
   const className = source.className ?? ''
-  return {
+  const form: PropertyForm = {
     className,
     shortName,
     title: `Gadget : ${readableName(shortName, language)}`,
     language,
+    textLanguage: texts.language,
     fields,
     headCount,
     unknownKeys
   }
+  // Le nœud d'origine, retenu pour pouvoir refaire le formulaire dans la bonne langue
+  // sans que l'appelant ait à le redonner. Une `WeakMap` plutôt qu'un champ : le
+  // formulaire décrit un panneau, il n'a pas à porter le document.
+  formSource.set(form, source)
+  return form
 }
+
+/** Le nœud d'où chaque formulaire a été bâti — voir `repairLanguage`. */
+const formSource = new WeakMap<PropertyForm, FormSource>()
 
 /* --------------------------------------------------------------------- modification */
 
@@ -493,6 +591,41 @@ function normalize(value: string): string {
 }
 
 export function renderProperties(options: PropertiesPanelOptions): PropertiesPanel {
+  const panel = buildPanel(options)
+  repairLanguage(panel, options)
+  return panel
+}
+
+/**
+ * Recharge le panneau dans la langue demandée, quand il a dû être bâti dans une autre.
+ *
+ * Le cas se produit pour un fichier qui déclare `Display.Language` — `complète.xcfg` du
+ * corpus déclare `fr` — ouvert sur un navigateur d'une autre langue : `main.ts` demande
+ * alors une langue que le préchargement n'avait pas devinée. Plutôt que d'afficher des
+ * libellés de la mauvaise langue jusqu'au prochain clic, le panneau se refait lui-même
+ * une fois le bon morceau arrivé : il est le seul à pouvoir le faire sans que `main.ts`
+ * ait à savoir qu'une langue se charge.
+ *
+ * Le contenu est remplacé **dans** la section d'origine, celle que l'appelant a déjà
+ * insérée dans le document : il n'a rien à rebrancher.
+ */
+function repairLanguage(panel: PropertiesPanel, options: PropertiesPanelOptions): void {
+  const { form } = options
+  if (form.textLanguage === optionsLanguage(form.language)) return
+  const source = formSource.get(form)
+  if (source === undefined) return
+  void loadOptionTexts(form.language).then(() => {
+    const repaired = buildPanel({ ...options, form: buildPropertyForm(source, form.language) })
+    panel.element.replaceChildren(...repaired.element.childNodes)
+    panel.form = repaired.form
+    panel.filter = repaired.filter
+  }).catch(() => {
+    // Le morceau de langue n'est pas arrivé : le panneau reste dans la langue qu'il a,
+    // et reste utilisable. Une langue de repli vaut mieux qu'un panneau vidé.
+  })
+}
+
+function buildPanel(options: PropertiesPanelOptions): PropertiesPanel {
   const { form } = options
   const prefix = `props-${++panelCount}`
 

@@ -1,0 +1,3567 @@
+{
+ "meta": {
+  "source": "XCTrack-1.0.3-beta5",
+  "generatedBy": "tools/extract-widget-options.py",
+  "languages": [
+   "bg",
+   "bs",
+   "ca",
+   "cs",
+   "da",
+   "de",
+   "el",
+   "en",
+   "es",
+   "eu",
+   "fa",
+   "fi",
+   "fr",
+   "hi",
+   "hr",
+   "hu",
+   "it",
+   "ja",
+   "ko",
+   "lt",
+   "nl",
+   "no",
+   "pl",
+   "pt",
+   "ro",
+   "ru",
+   "sk",
+   "sl",
+   "sr",
+   "tr",
+   "uk",
+   "vi",
+   "zh",
+   "zh-TW"
+  ],
+  "widgetCount": 84,
+  "optionCount": 774,
+  "distinctKeyCount": 171,
+  "pooledOptionCount": 225,
+  "stringCount": 248,
+  "corpusPairs": 393,
+  "corpusMatched": 375,
+  "corpusMissing": 18,
+  "unresolvedCount": 8
+ },
+ "options": {
+  "_bg": {
+   "key": "_bg",
+   "impl": "kt9",
+   "label": "widgetSettingsBackgroundTransparency2",
+   "labelFrom": "args",
+   "definedIn": "Widget",
+   "control": "slider"
+  },
+  "_border": {
+   "key": "_border",
+   "impl": "gs9",
+   "label": "widgetSettingsDrawBorder",
+   "labelFrom": "args",
+   "definedIn": "Widget",
+   "control": "checkbox"
+  },
+  "_theme@Widget": {
+   "key": "_theme",
+   "impl": "qt9",
+   "label": "wsThemeDisplayTheme",
+   "labelFrom": "args",
+   "definedIn": "Widget",
+   "control": "text"
+  },
+  "_title@ValueWidget": {
+   "key": "_title",
+   "impl": "gs9",
+   "label": "widgetSettingsShowTitle",
+   "labelFrom": "args",
+   "definedIn": "ValueWidget",
+   "control": "checkbox"
+  },
+  "titletext@ValueWidget": {
+   "key": "titletext",
+   "impl": "ws9",
+   "label": "widgetSettingsCustomTitle",
+   "labelFrom": "ctor",
+   "help": "widgetSettingsEditTitleHelp",
+   "definedIn": "ValueWidget",
+   "control": "text"
+  },
+  "_unit@ValueWidget": {
+   "key": "_unit",
+   "impl": "gs9",
+   "label": "widgetSettingsShowUnit",
+   "labelFrom": "args",
+   "definedIn": "ValueWidget",
+   "control": "checkbox"
+  },
+  "_hide_labels@ValueWidget": {
+   "key": "_hide_labels",
+   "impl": "gs9",
+   "label": "widgetSettingsHideLabels",
+   "labelFrom": "args",
+   "definedIn": "ValueWidget",
+   "control": "checkbox"
+  },
+  "speed_avg@WAirSpeed": {
+   "key": "speed_avg",
+   "impl": "st9",
+   "label": "widgetSettingsAvgInterval",
+   "labelFrom": "args",
+   "definedIn": "WAirSpeed",
+   "control": "slider"
+  },
+  "speed_type@WAirSpeed": {
+   "key": "speed_type",
+   "impl": "ys9",
+   "label": "widgetSettingsAirspeedType",
+   "labelFrom": "args",
+   "values": [
+    {
+     "value": "TAS",
+     "label": "widgetSettingsTAS"
+    },
+    {
+     "value": "IAS",
+     "label": "widgetSettingsIAS"
+    }
+   ],
+   "default": "TAS",
+   "definedIn": "WAirSpeed",
+   "control": "enum"
+  },
+  "_units@WAirTemperature": {
+   "key": "_units",
+   "impl": "ys9",
+   "label": "prefUnits",
+   "labelFrom": "args",
+   "values": [
+    {
+     "value": "CELSIUS"
+    },
+    {
+     "value": "FAHRENHEIT"
+    }
+   ],
+   "default": "CELSIUS",
+   "definedIn": "WAirTemperature",
+   "control": "enum"
+  },
+  "_title@TextWidget": {
+   "key": "_title",
+   "impl": "gs9",
+   "label": "widgetSettingsShowTitle",
+   "labelFrom": "args",
+   "definedIn": "TextWidget",
+   "control": "checkbox"
+  },
+  "titletext@TextWidget": {
+   "key": "titletext",
+   "impl": "ws9",
+   "label": "widgetSettingsCustomTitle",
+   "labelFrom": "ctor",
+   "help": "widgetSettingsEditTitleHelp",
+   "definedIn": "TextWidget",
+   "control": "text"
+  },
+  "_shownearinside": {
+   "key": "_shownearinside",
+   "impl": "gs9",
+   "label": "widgetSettingsShowNearInside",
+   "labelFrom": "args",
+   "definedIn": "WAirspaceProximity",
+   "control": "checkbox"
+  },
+  "maxDistance": {
+   "key": "maxDistance",
+   "impl": "a",
+   "label": "wAirspaceProximityMaxDistance",
+   "labelFrom": "class",
+   "definedIn": "WAirspaceProximity",
+   "control": "slider"
+  },
+  "postponedFloorLimit@WAirspaceProximity": {
+   "key": "postponedFloorLimit",
+   "impl": "at9",
+   "label": "wAirspaceProximityPostponeFloorLimit",
+   "labelFrom": "switch",
+   "definedIn": "WAirspaceProximity",
+   "control": "slider"
+  },
+  "postponedDisplayDistance@WAirspaceProximity": {
+   "key": "postponedDisplayDistance",
+   "impl": "at9",
+   "label": "wAirspaceProximityPostponeDistance",
+   "labelFrom": "switch",
+   "definedIn": "WAirspaceProximity",
+   "control": "slider"
+  },
+  "_showrecomputedheightline": {
+   "key": "_showrecomputedheightline",
+   "impl": "gs9",
+   "label": "wAirspaceProximityShowRecomputedHeighline",
+   "labelFrom": "args",
+   "definedIn": "WAirspaceProximity",
+   "control": "checkbox"
+  },
+  "_showoriginalheightline": {
+   "key": "_showoriginalheightline",
+   "impl": "gs9",
+   "label": "wAirspaceProximityShowOriginalHeighline",
+   "labelFrom": "args",
+   "definedIn": "WAirspaceProximity",
+   "control": "checkbox"
+  },
+  "_splitdirection": {
+   "key": "_splitdirection",
+   "impl": "ys9",
+   "label": "wAirspaceProximitySplitDirection",
+   "labelFrom": "args",
+   "values": [
+    {
+     "value": "AUTO"
+    },
+    {
+     "value": "HORIZONTAL"
+    },
+    {
+     "value": "VERTICAL"
+    }
+   ],
+   "default": "AUTO",
+   "definedIn": "WAirspaceProximity",
+   "control": "enum"
+  },
+  "_rotation": {
+   "key": "_rotation",
+   "impl": "ys9",
+   "label": "widgetSettingsGlassAirspaceArrow",
+   "labelFrom": "args",
+   "values": [
+    {
+     "value": "BEARING",
+     "label": "widgetSettingsRotationBearingAtTop"
+    },
+    {
+     "value": "HEADING",
+     "label": "widgetSettingsCompassHeadingAtTop"
+    },
+    {
+     "value": "NORTH",
+     "label": "widgetSettingsCompassNorthAtTop"
+    }
+   ],
+   "default": "BEARING",
+   "definedIn": "WAirspaceProximity",
+   "control": "enum"
+  },
+  "_units@WAltitude": {
+   "key": "_units",
+   "impl": "qs9",
+   "label": "prefUnits",
+   "labelFrom": "branch",
+   "values": [
+    {
+     "value": "SYS_UNIT"
+    },
+    {
+     "value": "METER"
+    },
+    {
+     "value": "FOOT"
+    },
+    {
+     "value": "YARD"
+    }
+   ],
+   "default": "SYS_UNIT",
+   "definedIn": "WAltitude",
+   "control": "enum"
+  },
+  "type@WAltitudeDataGraph": {
+   "key": "type",
+   "impl": "ys9",
+   "label": "wAltitudeDataGraphType",
+   "labelFrom": "args",
+   "values": [
+    {
+     "value": "GRAPH_THERMAL"
+    },
+    {
+     "value": "GRAPH_WIND"
+    },
+    {
+     "value": "GRAPH_SPEED"
+    }
+   ],
+   "default": "GRAPH_THERMAL",
+   "definedIn": "WAltitudeDataGraph",
+   "control": "enum"
+  },
+  "line_thickness@WAltitudeDataGraph": {
+   "key": "line_thickness",
+   "impl": "bt9",
+   "label": "widgetSettingsCompMapLineThickness",
+   "labelFrom": "ctor",
+   "definedIn": "WAltitudeDataGraph",
+   "control": "slider"
+  },
+  "color_thermal": {
+   "key": "color_thermal",
+   "impl": "ls9",
+   "label": "wAltitudeDataGraphThermalColor",
+   "labelFrom": "args",
+   "definedIn": "WAltitudeDataGraph",
+   "control": "color"
+  },
+  "color_wind": {
+   "key": "color_wind",
+   "impl": "ls9",
+   "label": "wAltitudeDataGraphWindColor",
+   "labelFrom": "args",
+   "definedIn": "WAltitudeDataGraph",
+   "control": "color"
+  },
+  "color_speed": {
+   "key": "color_speed",
+   "impl": "ls9",
+   "label": "wAltitudeDataGraphGroundSpeedColor",
+   "labelFrom": "args",
+   "definedIn": "WAltitudeDataGraph",
+   "control": "color"
+  },
+  "_units@WBaroAltitude": {
+   "key": "_units",
+   "impl": "qs9",
+   "label": "prefUnits",
+   "labelFrom": "branch",
+   "values": [
+    {
+     "value": "SYS_UNIT"
+    },
+    {
+     "value": "METER"
+    },
+    {
+     "value": "FOOT"
+    },
+    {
+     "value": "YARD"
+    }
+   ],
+   "default": "SYS_UNIT",
+   "definedIn": "WBaroAltitude",
+   "control": "enum"
+  },
+  "_altType": {
+   "key": "_altType",
+   "impl": "ys9",
+   "label": "widgetSettingsAltType",
+   "labelFrom": "args",
+   "values": [
+    {
+     "value": "QNH",
+     "label": "widgetSettingsAltQnh"
+    },
+    {
+     "value": "STD",
+     "label": "widgetSettingsAltQne"
+    }
+   ],
+   "default": "QNH",
+   "definedIn": "WBaroAltitude",
+   "control": "enum"
+  },
+  "degrees@WBearing": {
+   "key": "degrees",
+   "impl": "gs9",
+   "label": "wBearingShowDegrees",
+   "labelFrom": "args",
+   "definedIn": "WBearing",
+   "control": "checkbox"
+  },
+  "type@WButtonBrightness": {
+   "key": "type",
+   "impl": "ys9",
+   "label": "widgetSettingsButtonType",
+   "labelFrom": "args",
+   "values": [
+    {
+     "value": "ACTION_PLUS",
+     "label": "wsButtonBrightnessIncrease"
+    },
+    {
+     "value": "ACTION_MINUS",
+     "label": "wsButtonBrightnessDecrease"
+    }
+   ],
+   "default": "ACTION_PLUS",
+   "definedIn": "WButtonBrightness",
+   "control": "enum"
+  },
+  "longClick@WButtonBrightness": {
+   "key": "longClick",
+   "impl": "gs9",
+   "label": "widgetSettingsButtonLongClick",
+   "labelFrom": "args",
+   "definedIn": "WButtonBrightness",
+   "control": "checkbox"
+  },
+  "longClick@WButtonCamera": {
+   "key": "longClick",
+   "impl": "gs9",
+   "label": "widgetSettingsButtonLongClick",
+   "labelFrom": "args",
+   "definedIn": "WButtonCamera",
+   "control": "checkbox"
+  },
+  "longClick@WButtonIntentLauncher": {
+   "key": "longClick",
+   "impl": "gs9",
+   "label": "widgetSettingsButtonLongClick",
+   "labelFrom": "args",
+   "definedIn": "WButtonIntentLauncher",
+   "control": "checkbox"
+  },
+  "title": {
+   "key": "title",
+   "impl": "ss9",
+   "label": "wsTitle",
+   "labelFrom": "args",
+   "definedIn": "WButtonIntentLauncher",
+   "control": "unknown"
+  },
+  "name": {
+   "key": "name",
+   "impl": "ss9",
+   "label": "wsName",
+   "labelFrom": "args",
+   "definedIn": "WButtonIntentLauncher",
+   "control": "unknown"
+  },
+  "action": {
+   "key": "action",
+   "impl": "ss9",
+   "label": "wsAction",
+   "labelFrom": "args",
+   "definedIn": "WButtonIntentLauncher",
+   "control": "unknown"
+  },
+  "type@WButtonNavig": {
+   "key": "type",
+   "impl": "ys9",
+   "label": "widgetSettingsButtonType",
+   "labelFrom": "args",
+   "values": [
+    {
+     "value": "ACTION_NEXT_WAYPOINT"
+    },
+    {
+     "value": "ACTION_PREV_WAYPOINT"
+    }
+   ],
+   "default": "ACTION_NEXT_WAYPOINT",
+   "definedIn": "WButtonNavig",
+   "control": "enum"
+  },
+  "longClick@WButtonNavig": {
+   "key": "longClick",
+   "impl": "gs9",
+   "label": "widgetSettingsButtonLongClick",
+   "labelFrom": "args",
+   "definedIn": "WButtonNavig",
+   "control": "checkbox"
+  },
+  "contact": {
+   "key": "contact",
+   "impl": "os9",
+   "label": "widgetSettingsButtonPhoneNumber",
+   "labelFrom": "ctor",
+   "definedIn": "WButtonPhone",
+   "control": "unknown"
+  },
+  "showContactName": {
+   "key": "showContactName",
+   "impl": "gs9",
+   "label": "widgetSettingsButtonPhoneShowContactName",
+   "labelFrom": "args",
+   "definedIn": "WButtonPhone",
+   "control": "checkbox"
+  },
+  "callType": {
+   "key": "callType",
+   "impl": "ys9",
+   "label": "widgetSettingsButtonPhoneCallType",
+   "labelFrom": "args",
+   "values": [
+    {
+     "value": "C_DIAL",
+     "label": "widgetSettingsButtonPhoneCTypeDial"
+    },
+    {
+     "value": "C_CALL",
+     "label": "widgetSettingsButtonPhoneCTypeCall"
+    },
+    {
+     "value": "C_CALL_LOUD",
+     "label": "widgetSettingsButtonPhoneCTypeCallLoud"
+    }
+   ],
+   "default": "C_DIAL",
+   "definedIn": "WButtonPhone",
+   "control": "enum"
+  },
+  "backgroundCall": {
+   "key": "backgroundCall",
+   "impl": "gs9",
+   "label": "widgetSettingsButtonPhoneCallBackground",
+   "labelFrom": "args",
+   "definedIn": "WButtonPhone",
+   "control": "checkbox"
+  },
+  "showTitle": {
+   "key": "showTitle",
+   "impl": "gs9",
+   "label": "widgetSettingsShowTitle",
+   "labelFrom": "args",
+   "definedIn": "WButtonVario",
+   "control": "checkbox"
+  },
+  "longClick@WButtonVario": {
+   "key": "longClick",
+   "impl": "gs9",
+   "label": "widgetSettingsButtonLongClick",
+   "labelFrom": "args",
+   "definedIn": "WButtonVario",
+   "control": "checkbox"
+  },
+  "type@WButtonVolume": {
+   "key": "type",
+   "impl": "ys9",
+   "label": "widgetSettingsButtonType",
+   "labelFrom": "args",
+   "values": [
+    {
+     "value": "ACTION_PLUS",
+     "label": "wsButtonVolumeIncrease"
+    },
+    {
+     "value": "ACTION_MINUS",
+     "label": "wsButtonVolumeDecrease"
+    }
+   ],
+   "default": "ACTION_PLUS",
+   "definedIn": "WButtonVolume",
+   "control": "enum"
+  },
+  "longClick@WButtonVolume": {
+   "key": "longClick",
+   "impl": "gs9",
+   "label": "widgetSettingsButtonLongClick",
+   "labelFrom": "args",
+   "definedIn": "WButtonVolume",
+   "control": "checkbox"
+  },
+  "longClick@WButtonVolumeReminder": {
+   "key": "longClick",
+   "impl": "gs9",
+   "label": "widgetSettingsButtonLongClick",
+   "labelFrom": "args",
+   "definedIn": "WButtonVolumeReminder",
+   "control": "checkbox"
+  },
+  "type@WButtonZoom": {
+   "key": "type",
+   "impl": "ys9",
+   "label": "widgetSettingsButtonType",
+   "labelFrom": "args",
+   "values": [
+    {
+     "value": "ACTION_ZOOM_IN"
+    },
+    {
+     "value": "ACTION_ZOOM_OUT"
+    }
+   ],
+   "default": "ACTION_ZOOM_IN",
+   "definedIn": "WButtonZoom",
+   "control": "enum"
+  },
+  "headless@WCompGlideToESS": {
+   "key": "headless",
+   "impl": "zs9",
+   "label": "widgetSettingsGlideHeadless",
+   "labelFrom": "ctor",
+   "definedIn": "WCompGlideToESS",
+   "control": "checkbox"
+  },
+  "headless@WCompGlideToGoal": {
+   "key": "headless",
+   "impl": "zs9",
+   "label": "widgetSettingsGlideHeadless",
+   "labelFrom": "ctor",
+   "definedIn": "WCompGlideToGoal",
+   "control": "checkbox"
+  },
+  "_theme@MapWidget": {
+   "key": "_theme",
+   "impl": "qt9",
+   "label": "wsMapOverlayTheme",
+   "labelFrom": "args",
+   "definedIn": "MapWidget",
+   "control": "text"
+  },
+  "live_ShowFinalGlide": {
+   "key": "live_ShowFinalGlide",
+   "impl": "gs9",
+   "label": "widgetSettingsShowFinalGlide",
+   "labelFrom": "args",
+   "help": "widgetSettingsShowFinalGlideHelp",
+   "definedIn": "MapWidget",
+   "control": "checkbox"
+  },
+  "live_ShowFinalGlideAvg": {
+   "key": "live_ShowFinalGlideAvg",
+   "impl": "st9",
+   "label": "widgetSettingsGlideAvgInterval",
+   "labelFrom": "args",
+   "definedIn": "MapWidget",
+   "control": "slider"
+  },
+  "mapWidget_drawScale": {
+   "key": "mapWidget_drawScale",
+   "impl": "gs9",
+   "label": "widgetSettingsMapDrawScale",
+   "labelFrom": "args",
+   "definedIn": "MapWidget",
+   "control": "checkbox"
+  },
+  "rotation@MapWidget": {
+   "key": "rotation",
+   "impl": "mt9",
+   "label": "widgetSettingsRotation",
+   "labelFrom": "ctor",
+   "otherLabels": [
+    "widgetSettingsRotationShowCompass"
+   ],
+   "fields": [
+    "value",
+    "showCompass"
+   ],
+   "definedIn": "MapWidget",
+   "control": "composite"
+  },
+  "mapWidget_showAirspaces@MapWidget": {
+   "key": "mapWidget_showAirspaces",
+   "impl": "gs9",
+   "label": "widgetSettingsShowAirspacesAndObstacles",
+   "labelFrom": "args",
+   "definedIn": "MapWidget",
+   "control": "checkbox"
+  },
+  "mapWidget_emergencyObstacles": {
+   "key": "mapWidget_emergencyObstacles",
+   "impl": "gs9",
+   "label": "widgetSettingsShowEmergencyObstacles",
+   "labelFrom": "args",
+   "definedIn": "MapWidget",
+   "control": "checkbox"
+  },
+  "mapWidget_emergencyZoom": {
+   "key": "mapWidget_emergencyZoom",
+   "impl": "it9",
+   "label": "widgetSettingsEmergencyObstaclesAutoZoom",
+   "labelFrom": "args",
+   "otherLabels": [
+    "widgetSettingsMapResetScaleAfterExitPanMode",
+    "widgetSettingsMapScale"
+   ],
+   "fields": [
+    "value",
+    "auto",
+    "resetZoomPanExit"
+   ],
+   "definedIn": "MapWidget",
+   "control": "composite"
+  },
+  "mapWidget_panningAirspaceListCycleSpeed": {
+   "key": "mapWidget_panningAirspaceListCycleSpeed",
+   "impl": "zb5",
+   "label": "widgetSettingsPanningTimeout",
+   "labelFrom": "switch",
+   "definedIn": "MapWidget",
+   "control": "slider"
+  },
+  "mapWidget_panningAirspaceList": {
+   "key": "mapWidget_panningAirspaceList",
+   "impl": "ys9",
+   "label": "widgetSettingsShowAirspacesWhilePanning",
+   "labelFrom": "args",
+   "help": "widgetSettingsShowAirspacesWhilePanningHelp",
+   "values": [
+    {
+     "value": "TOP_LIST_ONLY",
+     "label": "widgetSettingsShowAirspacesWhilePanningTopList"
+    },
+    {
+     "value": "HIGHLIGHTED_ONE_ONLY",
+     "label": "widgetSettingsShowAirspacesWhilePanningOnlyCurrentOne"
+    },
+    {
+     "value": "BOTH",
+     "label": "widgetSettingsShowAirspacesWhilePanningBoth"
+    }
+   ],
+   "default": "TOP_LIST_ONLY",
+   "definedIn": "MapWidget",
+   "control": "enum"
+  },
+  "mapWidget_pilotPosCenter": {
+   "key": "mapWidget_pilotPosCenter",
+   "impl": "gs9",
+   "label": "widgetSettingsMapPilotPosCenter",
+   "labelFrom": "args",
+   "definedIn": "MapWidget",
+   "control": "checkbox"
+  },
+  "line_thickness@MapWidget": {
+   "key": "line_thickness",
+   "impl": "bt9",
+   "label": "widgetSettingsCompMapLineThickness",
+   "labelFrom": "ctor",
+   "definedIn": "MapWidget",
+   "control": "slider"
+  },
+  "mapWidget_drawBearing@MapWidget": {
+   "key": "mapWidget_drawBearing",
+   "impl": "gs9",
+   "label": "widgetSettingsShowBearingLine",
+   "labelFrom": "args",
+   "definedIn": "MapWidget",
+   "control": "checkbox"
+  },
+  "tracklog_color": {
+   "key": "tracklog_color",
+   "impl": "ls9",
+   "label": "widgetSettingsTracklogColor",
+   "labelFrom": "args",
+   "definedIn": "MapWidget",
+   "control": "color"
+  },
+  "postponedFloorLimit@MapWidget": {
+   "key": "postponedFloorLimit",
+   "impl": "at9",
+   "label": "wAirspaceProximityPostponeFloorLimit",
+   "labelFrom": "switch",
+   "definedIn": "MapWidget",
+   "control": "slider"
+  },
+  "postponedDisplayDistance@MapWidget": {
+   "key": "postponedDisplayDistance",
+   "impl": "at9",
+   "label": "wAirspaceProximityPostponeDistance",
+   "labelFrom": "switch",
+   "definedIn": "MapWidget",
+   "control": "slider"
+  },
+  "fontSize@MapWidget": {
+   "key": "fontSize",
+   "impl": "ys9",
+   "label": "widgetSettingsMapFont",
+   "labelFrom": "args",
+   "values": [
+    {
+     "value": "SMALL",
+     "label": "widgetSettingsMapFontSmall"
+    },
+    {
+     "value": "MEDIUM",
+     "label": "widgetSettingsMapFontMedium"
+    },
+    {
+     "value": "LARGE",
+     "label": "widgetSettingsMapFontLarge"
+    }
+   ],
+   "default": "SMALL",
+   "definedIn": "MapWidget",
+   "control": "enum"
+  },
+  "mapWidget_showRelativePositionWhilePanning": {
+   "key": "mapWidget_showRelativePositionWhilePanning",
+   "impl": "gs9",
+   "label": "widgetSettingsShowRelativePositionWhilePanning",
+   "labelFrom": "args",
+   "help": "widgetSettingsShowRelativePositionWhilePanningHelp",
+   "definedIn": "MapWidget",
+   "control": "checkbox"
+  },
+  "mapWidget_scale": {
+   "key": "mapWidget_scale",
+   "impl": "it9",
+   "label": "widgetSettingsMapScaleTracklog",
+   "labelFrom": "args",
+   "otherLabels": [
+    "widgetSettingsMapResetScaleAfterExitPanMode",
+    "widgetSettingsMapScale"
+   ],
+   "fields": [
+    "value",
+    "auto",
+    "resetZoomPanExit"
+   ],
+   "definedIn": "MapWidget",
+   "control": "composite"
+  },
+  "mapWidget_mapAppearance": {
+   "key": "mapWidget_mapAppearance",
+   "impl": "sy9",
+   "label": "widgetSettingsShowOpenStreetNotice",
+   "labelFrom": "args",
+   "fields": [
+    "theme",
+    "terrain"
+   ],
+   "definedIn": "bb5",
+   "control": "composite"
+  },
+  "mapWidget_showRainRadar": {
+   "key": "mapWidget_showRainRadar",
+   "impl": "gs9",
+   "label": "widgetSettingsShowRainRadar",
+   "labelFrom": "args",
+   "definedIn": "bb5",
+   "control": "checkbox"
+  },
+  "mapWidget_KK7opacity": {
+   "key": "mapWidget_KK7opacity",
+   "impl": "kt9",
+   "label": "widgetSettingsKK7opacity",
+   "labelFrom": "args",
+   "definedIn": "bb5",
+   "control": "slider"
+  },
+  "mapWidget_showKK7": {
+   "key": "mapWidget_showKK7",
+   "impl": "gs9",
+   "label": "widgetSettingsShowKK7",
+   "labelFrom": "args",
+   "help": "widgetSettingsShowKK7Help",
+   "definedIn": "bb5",
+   "control": "checkbox"
+  },
+  "mapWidget_KK7timedOpacity": {
+   "key": "mapWidget_KK7timedOpacity",
+   "impl": "kt9",
+   "label": "widgetSettingsKK7timedOpacity",
+   "labelFrom": "args",
+   "definedIn": "bb5",
+   "control": "slider"
+  },
+  "mapWidget_KK7timed": {
+   "key": "mapWidget_KK7timed",
+   "impl": "gs9",
+   "label": "widgetSettingsKK7Timed",
+   "labelFrom": "args",
+   "help": "widgetSettingsKK7TimedHelp",
+   "definedIn": "bb5",
+   "control": "checkbox"
+  },
+  "mapWidget_skySightSatelliteOpacity": {
+   "key": "mapWidget_skySightSatelliteOpacity",
+   "impl": "kt9",
+   "label": "widgetSettingsSkySightSatelliteOpacity",
+   "labelFrom": "args",
+   "definedIn": "bb5",
+   "control": "slider"
+  },
+  "mapWidget_showSkySightSatellite": {
+   "key": "mapWidget_showSkySightSatellite",
+   "impl": "gs9",
+   "label": "widgetSettingsShowSkySightSatellite",
+   "labelFrom": "args",
+   "definedIn": "bb5",
+   "control": "checkbox"
+  },
+  "mapWidget_skySightRainOpacity": {
+   "key": "mapWidget_skySightRainOpacity",
+   "impl": "kt9",
+   "label": "widgetSettingsSkySightRainOpacity",
+   "labelFrom": "args",
+   "definedIn": "bb5",
+   "control": "slider"
+  },
+  "mapWidget_showSkySightRain": {
+   "key": "mapWidget_showSkySightRain",
+   "impl": "gs9",
+   "label": "widgetSettingsShowSkySightRain",
+   "labelFrom": "args",
+   "definedIn": "bb5",
+   "control": "checkbox"
+  },
+  "mapWidget_skySightForecastOpacity": {
+   "key": "mapWidget_skySightForecastOpacity",
+   "impl": "kt9",
+   "label": "widgetSettingsSkySightForecastOpacity",
+   "labelFrom": "args",
+   "definedIn": "bb5",
+   "control": "slider"
+  },
+  "mapWidget_skySightForecastLayer": {
+   "key": "mapWidget_skySightForecastLayer",
+   "impl": "qt9",
+   "label": "widgetSettingsSkySightForecastLayer",
+   "labelFrom": "args",
+   "definedIn": "bb5",
+   "control": "text"
+  },
+  "mapWidget_skySightForecastTime": {
+   "key": "mapWidget_skySightForecastTime",
+   "impl": "qt9",
+   "label": "widgetSettingsSkySightForecastTime",
+   "labelFrom": "args",
+   "definedIn": "bb5",
+   "control": "text"
+  },
+  "mapWidget_skySightForecastTimeDisplay": {
+   "key": "mapWidget_skySightForecastTimeDisplay",
+   "impl": "ys9",
+   "label": "widgetSettingsSkySightForecastTimeDisplay",
+   "labelFrom": "args",
+   "values": [
+    {
+     "value": "NONE",
+     "label": "widgetSettingsSkySightForecastTimeDisplayNone"
+    },
+    {
+     "value": "TOP_LEFT",
+     "label": "widgetSettingsSkySightForecastTimeDisplayTopLeft"
+    },
+    {
+     "value": "TOP_RIGHT",
+     "label": "widgetSettingsSkySightForecastTimeDisplayTopRight"
+    },
+    {
+     "value": "BOTTOM_RIGHT",
+     "label": "widgetSettingsSkySightForecastTimeDisplayBottomRight"
+    },
+    {
+     "value": "BOTTOM_LEFT",
+     "label": "widgetSettingsSkySightForecastTimeDisplayBottomLeft"
+    }
+   ],
+   "default": "NONE",
+   "definedIn": "bb5",
+   "control": "enum"
+  },
+  "mapWidget_showSkySightForecast": {
+   "key": "mapWidget_showSkySightForecast",
+   "impl": "gs9",
+   "label": "widgetSettingsShowSkySightForecast",
+   "labelFrom": "args",
+   "definedIn": "bb5",
+   "control": "checkbox"
+  },
+  "mapWidget_skySightWindBarbColor": {
+   "key": "mapWidget_skySightWindBarbColor",
+   "impl": "ls9",
+   "label": "widgetSettingsSkySightWindBarbColor",
+   "labelFrom": "args",
+   "definedIn": "bb5",
+   "control": "color"
+  },
+  "mapWidget_skySightWindBarbSize": {
+   "key": "mapWidget_skySightWindBarbSize",
+   "impl": "ys9",
+   "label": "widgetSettingsSkySightWindBarbSize",
+   "labelFrom": "args",
+   "values": [
+    {
+     "value": "SMALL",
+     "label": "widgetSettingsSkySightForecastWindBarbSizeSmall"
+    },
+    {
+     "value": "NORMAL",
+     "label": "widgetSettingsSkySightForecastWindBarbSizeNormal"
+    },
+    {
+     "value": "LARGE",
+     "label": "widgetSettingsSkySightForecastWindBarbSizeLarge"
+    },
+    {
+     "value": "XLARGE",
+     "label": "widgetSettingsSkySightForecastWindBarbSizeXLarge"
+    }
+   ],
+   "default": "NORMAL",
+   "definedIn": "bb5",
+   "control": "enum"
+  },
+  "mapWidget_skySightWindBarbTime": {
+   "key": "mapWidget_skySightWindBarbTime",
+   "impl": "qt9",
+   "label": "widgetSettingsSkySightWindBarbTime",
+   "labelFrom": "args",
+   "definedIn": "bb5",
+   "control": "text"
+  },
+  "mapWidget_skySightWindBarbTimeDisplay": {
+   "key": "mapWidget_skySightWindBarbTimeDisplay",
+   "impl": "ys9",
+   "label": "widgetSettingsSkySightWindBarbTimeDisplay",
+   "labelFrom": "args",
+   "values": [
+    {
+     "label": "widgetSettingsSkySightForecastTimeDisplayNone"
+    },
+    {
+     "label": "widgetSettingsSkySightForecastTimeDisplayTopRight"
+    },
+    {
+     "label": "widgetSettingsSkySightForecastTimeDisplayBottomRight"
+    },
+    {
+     "label": "widgetSettingsSkySightForecastTimeDisplayBottomLeft"
+    }
+   ],
+   "default": "NONE",
+   "definedIn": "bb5",
+   "control": "enum"
+  },
+  "mapWidget_showSkySightWindBarbs": {
+   "key": "mapWidget_showSkySightWindBarbs",
+   "impl": "gs9",
+   "label": "widgetSettingsShowSkySightWindBarbs",
+   "labelFrom": "args",
+   "definedIn": "bb5",
+   "control": "checkbox"
+  },
+  "mapWidget_osmLanguage": {
+   "key": "mapWidget_osmLanguage",
+   "impl": "qt9",
+   "label": "widgetSettingsOsmLanguage",
+   "labelFrom": "args",
+   "definedIn": "bb5",
+   "control": "text"
+  },
+  "live_ShowTracklogs": {
+   "key": "live_ShowTracklogs",
+   "impl": "gs9",
+   "label": "widgetSettingsShowSelectedTracklogs",
+   "labelFrom": "args",
+   "help": "widgetSettingsShowSelectedTracklogsHelp",
+   "definedIn": "ma5",
+   "control": "checkbox"
+  },
+  "nav_showWind": {
+   "key": "nav_showWind",
+   "impl": "gs9",
+   "label": "widgetSettingsNavigationShowWind",
+   "labelFrom": "args",
+   "definedIn": "pa5",
+   "control": "checkbox"
+  },
+  "nav_showSun": {
+   "key": "nav_showSun",
+   "impl": "gs9",
+   "label": "widgetSettingsNavigationShowSun",
+   "labelFrom": "args",
+   "definedIn": "pa5",
+   "control": "checkbox"
+  },
+  "nav_target": {
+   "key": "nav_target",
+   "impl": "jt9",
+   "label": "widgetSettingsNavigationShowNavigation",
+   "labelFrom": "args",
+   "values": [
+    {
+     "value": "POINT",
+     "label": "widgetSettingsNavigationTargetPoint"
+    },
+    {
+     "value": "OPTIMIZED",
+     "label": "widgetSettingsNavigationTargetOptimized"
+    },
+    {
+     "value": "CYLINDER",
+     "label": "widgetSettingsNavigationTargetCylinder"
+    },
+    {
+     "value": "NONE",
+     "label": "widgetSettingsNavigationTargetNone"
+    }
+   ],
+   "default": "NONE",
+   "definedIn": "pa5",
+   "control": "enum"
+  },
+  "nav_label": {
+   "key": "nav_label",
+   "impl": "ys9",
+   "label": "widgetSettingsNavigationLabel",
+   "labelFrom": "args",
+   "values": [
+    {
+     "value": "NONE",
+     "label": "widgetSettingsNavigationLabelNone"
+    },
+    {
+     "value": "DISTANCE",
+     "label": "widgetSettingsNavigationLabelDistance"
+    },
+    {
+     "value": "DISTANCE_BRACKETS",
+     "label": "widgetSettingsNavigationLabelBrackets"
+    }
+   ],
+   "default": "DISTANCE_BRACKETS",
+   "definedIn": "pa5",
+   "control": "enum"
+  },
+  "thermals": {
+   "key": "thermals",
+   "impl": "as9",
+   "label": "widgetSettingsDetectedThermalsNone",
+   "labelFrom": "switch",
+   "definedIn": "pa5",
+   "control": "slider"
+  },
+  "thermals_labels": {
+   "key": "thermals_labels",
+   "impl": "gs9",
+   "label": "widgetSettingsShowThermalLabels",
+   "labelFrom": "args",
+   "definedIn": "pa5",
+   "control": "checkbox"
+  },
+  "nav_line": {
+   "key": "nav_line",
+   "impl": "gs9",
+   "label": "widgetSettingsNavigationLine",
+   "labelFrom": "args",
+   "definedIn": "pa5",
+   "control": "checkbox"
+  },
+  "wpt_showWaypoints": {
+   "key": "wpt_showWaypoints",
+   "impl": "gs9",
+   "label": "widgetSettingsShowWaypoints",
+   "labelFrom": "args",
+   "definedIn": "tb5",
+   "control": "checkbox"
+  },
+  "wpt_showCities": {
+   "key": "wpt_showCities",
+   "impl": "gs9",
+   "label": "widgetSettingsShowCities",
+   "labelFrom": "args",
+   "definedIn": "tb5",
+   "control": "checkbox"
+  },
+  "wpt_showTakeoffs": {
+   "key": "wpt_showTakeoffs",
+   "impl": "gs9",
+   "label": "widgetSettingsShowTakeoffs",
+   "labelFrom": "args",
+   "definedIn": "tb5",
+   "control": "checkbox"
+  },
+  "live_ShowNearby": {
+   "key": "live_ShowNearby",
+   "impl": "gs9",
+   "label": "widgetSettingsShowNearbyPg",
+   "labelFrom": "args",
+   "help": "widgetSettingsShowNearbyPgHelp",
+   "definedIn": "xc",
+   "control": "checkbox"
+  },
+  "navigation_target@WNextTurnpointSomething": {
+   "key": "navigation_target",
+   "impl": "jt9",
+   "label": "widgetSettingsNextTurnpointNavigationTarget",
+   "labelFrom": "args",
+   "values": [
+    {
+     "value": "POINT",
+     "label": "widgetSettingsNavigationTargetPoint"
+    },
+    {
+     "value": "OPTIMIZED",
+     "label": "widgetSettingsNavigationTargetOptimized"
+    },
+    {
+     "value": "CYLINDER",
+     "label": "widgetSettingsNavigationTargetCylinder"
+    },
+    {
+     "value": "NONE",
+     "label": "widgetSettingsNavigationTargetNone"
+    }
+   ],
+   "default": "OPTIMIZED",
+   "definedIn": "WNextTurnpointSomething",
+   "control": "enum"
+  },
+  "use_brackets": {
+   "key": "use_brackets",
+   "impl": "gs9",
+   "label": "widgetSettingsNextTurnpointUseBrackets",
+   "labelFrom": "args",
+   "definedIn": "WNextTurnpointSomething",
+   "control": "checkbox"
+  },
+  "speed_type@WNextTurnpointSpeedSomething": {
+   "key": "speed_type",
+   "impl": "ys9",
+   "label": "widgetSettingsNextTurnpointSpeedType",
+   "labelFrom": "args",
+   "help": "widgetSettingsNextTurnpointSpeedTypeHelp",
+   "values": [
+    {
+     "value": "GROUND",
+     "label": "widgetSettingsNextTurnpointSpeedTypeGround"
+    },
+    {
+     "value": "AIRSPEED",
+     "label": "widgetSettingsNextTurnpointSpeedTypeAirWithWind"
+    },
+    {
+     "value": "GLIDE",
+     "label": "widgetSettingsNextTurnpointSpeedTypeGlideWithWind"
+    },
+    {
+     "value": "XC",
+     "label": "widgetSettingsNextTurnpointSpeedTypeXC"
+    }
+   ],
+   "default": "GROUND",
+   "definedIn": "WNextTurnpointSpeedSomething",
+   "control": "enum"
+  },
+  "speed_avg@WNextTurnpointSpeedSomething": {
+   "key": "speed_avg",
+   "impl": "st9",
+   "label": "widgetSettingsAvgInterval",
+   "labelFrom": "args",
+   "definedIn": "WNextTurnpointSpeedSomething",
+   "control": "slider"
+  },
+  "time_format@WCompTimeAtStart": {
+   "key": "time_format",
+   "impl": "qs9",
+   "label": "widgetSettingsTimeIntervalFormat",
+   "labelFrom": "branch",
+   "values": [
+    {
+     "value": "COMPACT",
+     "label": "widgetSettingsTimeIntervalFormatCompact"
+    },
+    {
+     "value": "HMS",
+     "label": "widgetSettingsTimeIntervalFormatHMS"
+    },
+    {
+     "value": "HM",
+     "label": "widgetSettingsTimeIntervalFormatHM"
+    },
+    {
+     "value": "WITH_UNITS",
+     "label": "widgetSettingsTimeIntervalFormatWithUnits"
+    }
+   ],
+   "default": "COMPACT",
+   "definedIn": "WCompTimeAtStart",
+   "control": "enum"
+  },
+  "_title@WeightedTextWidget": {
+   "key": "_title",
+   "impl": "gs9",
+   "label": "widgetSettingsShowTitle",
+   "labelFrom": "args",
+   "definedIn": "WeightedTextWidget",
+   "control": "checkbox"
+  },
+  "titletext@WeightedTextWidget": {
+   "key": "titletext",
+   "impl": "ws9",
+   "label": "widgetSettingsCustomTitle",
+   "labelFrom": "ctor",
+   "help": "widgetSettingsEditTitleHelp",
+   "definedIn": "WeightedTextWidget",
+   "control": "text"
+  },
+  "_hide_labels@WeightedTextWidget": {
+   "key": "_hide_labels",
+   "impl": "gs9",
+   "label": "widgetSettingsHideLabels",
+   "labelFrom": "args",
+   "definedIn": "WeightedTextWidget",
+   "control": "checkbox"
+  },
+  "navigation_target@WCompass": {
+   "key": "navigation_target",
+   "impl": "jt9",
+   "label": "widgetSettingsCompassShowNavigationTarget",
+   "labelFrom": "args",
+   "values": [
+    {
+     "value": "POINT",
+     "label": "widgetSettingsNavigationTargetPoint"
+    },
+    {
+     "value": "OPTIMIZED",
+     "label": "widgetSettingsNavigationTargetOptimized"
+    },
+    {
+     "value": "CYLINDER",
+     "label": "widgetSettingsNavigationTargetCylinder"
+    },
+    {
+     "value": "NONE",
+     "label": "widgetSettingsNavigationTargetNone"
+    }
+   ],
+   "default": "OPTIMIZED",
+   "definedIn": "WCompass",
+   "control": "enum"
+  },
+  "showHeading": {
+   "key": "showHeading",
+   "impl": "gs9",
+   "label": "widgetSettingsCompassShowHeadingArrow",
+   "labelFrom": "args",
+   "definedIn": "WCompass",
+   "control": "checkbox"
+  },
+  "showBearing": {
+   "key": "showBearing",
+   "impl": "gs9",
+   "label": "widgetSettingsCompassShowBearingArrow",
+   "labelFrom": "args",
+   "definedIn": "WCompass",
+   "control": "checkbox"
+  },
+  "showBackground": {
+   "key": "showBackground",
+   "impl": "gs9",
+   "label": "widgetSettingsCompassShowBackground",
+   "labelFrom": "args",
+   "definedIn": "WCompass",
+   "control": "checkbox"
+  },
+  "windStyle": {
+   "key": "windStyle",
+   "impl": "ys9",
+   "label": "widgetSettingsCompassWindStyle",
+   "labelFrom": "args",
+   "help": "widgetSettingsCompassWindStyleHelp",
+   "values": [
+    {
+     "value": "NONE",
+     "label": "widgetSettingsCompassWindStyleNone"
+    },
+    {
+     "value": "ARROW",
+     "label": "widgetSettingsCompassWindStyleArrow"
+    },
+    {
+     "value": "ARC",
+     "label": "widgetSettingsCompassWindStyleArc"
+    },
+    {
+     "value": "WINDSOCK",
+     "label": "widgetSettingsCompassWindStyleSock"
+    }
+   ],
+   "default": "NONE",
+   "definedIn": "WCompass",
+   "control": "enum"
+  },
+  "rotation@WCompass": {
+   "key": "rotation",
+   "impl": "ys9",
+   "label": "widgetSettingsCompassRotation",
+   "labelFrom": "args",
+   "values": [
+    {
+     "value": "NORTH",
+     "label": "widgetSettingsCompassNorthAtTop"
+    },
+    {
+     "value": "HEADING",
+     "label": "widgetSettingsCompassHeadingAtTop"
+    },
+    {
+     "value": "BEARING",
+     "label": "widgetSettingsRotationBearingAtTop"
+    },
+    {
+     "value": "TRAVEL_DIRECTION",
+     "label": "widgetSettingsRotationTravelDirAtTop"
+    }
+   ],
+   "default": "HEADING",
+   "definedIn": "WCompass",
+   "control": "enum"
+  },
+  "target": {
+   "key": "target",
+   "impl": "ys9",
+   "label": "widgetSettingsCompassDigitTarget",
+   "labelFrom": "args",
+   "values": [
+    {
+     "value": "N_BEARING"
+    },
+    {
+     "value": "N_HEADING"
+    },
+    {
+     "value": "N_NAVIGATION_POINT"
+    },
+    {
+     "value": "N_NAVIGATION"
+    },
+    {
+     "value": "N_NAVIGATION_CYLINDER"
+    },
+    {
+     "value": "N_WIND"
+    }
+   ],
+   "default": "N_NAVIGATION",
+   "definedIn": "WCompassDigital",
+   "control": "enum"
+  },
+  "relative@WCompassDigital": {
+   "key": "relative",
+   "impl": "gs9",
+   "label": "widgetSettingsCompassDigitRelative",
+   "labelFrom": "args",
+   "definedIn": "WCompassDigital",
+   "control": "checkbox"
+  },
+  "includeWindAlgorithm@WDebugFont": {
+   "key": "includeWindAlgorithm",
+   "impl": "ys9",
+   "label": "widgetSettingsThermalWindIncludeAlgorithm",
+   "labelFrom": "args",
+   "values": [
+    {
+     "value": "ALGO_CLASSIC",
+     "label": "widgetSettingsThermalWindIncludeAlgorithmClassic"
+    },
+    {
+     "value": "ALGO_PARTICLE_DRIFT",
+     "label": "widgetSettingsThermalWindIncludeAlgorithmParticleDrift"
+    },
+    {
+     "value": "ALGO_NONE",
+     "label": "widgetSettingsThermalWindIncludeAlgorithmNone"
+    }
+   ],
+   "default": "ALGO_CLASSIC",
+   "definedIn": "WDebugFont",
+   "control": "enum"
+  },
+  "event": {
+   "key": "event",
+   "impl": "qt9",
+   "label": "wTestingEmitEventPick",
+   "labelFrom": "args",
+   "definedIn": "WEmitTestEvent",
+   "control": "text"
+  },
+  "index": {
+   "key": "index",
+   "impl": "qt9",
+   "label": "wOpenDataValuePosition",
+   "labelFrom": "args",
+   "definedIn": "WExternalData",
+   "control": "text"
+  },
+  "suffix": {
+   "key": "suffix",
+   "impl": "ss9",
+   "label": "widgetSettingsEditSuffix",
+   "labelFrom": "args",
+   "help": "wOpenDataSuffixTestHelp",
+   "definedIn": "WExternalData",
+   "control": "unknown"
+  },
+  "_hide_labels@WExternalData": {
+   "key": "_hide_labels",
+   "impl": "gs9",
+   "label": "widgetSettingsHideLabels",
+   "labelFrom": "args",
+   "definedIn": "WExternalData",
+   "control": "checkbox"
+  },
+  "_decimals": {
+   "key": "_decimals",
+   "impl": "qt9",
+   "label": "wFLDecimals",
+   "labelFrom": "args",
+   "definedIn": "WF",
+   "control": "text"
+  },
+  "text": {
+   "key": "text",
+   "impl": "ss9",
+   "label": "widgetSettingsEditText",
+   "labelFrom": "args",
+   "definedIn": "WFreeText",
+   "control": "unknown"
+  },
+  "color_text@WFreeText": {
+   "key": "color_text",
+   "impl": "ls9",
+   "label": "widgetSettingsTextColor",
+   "labelFrom": "args",
+   "definedIn": "WFreeText",
+   "control": "color"
+  },
+  "color_bg@WFreeText": {
+   "key": "color_bg",
+   "impl": "ls9",
+   "label": "widgetSettingsBackgroundColor",
+   "labelFrom": "args",
+   "definedIn": "WFreeText",
+   "control": "color"
+  },
+  "text_padding": {
+   "key": "text_padding",
+   "impl": "ur9",
+   "label": "widgetSettingsFontSize",
+   "labelFrom": "switch",
+   "definedIn": "WFreeText",
+   "control": "unknown"
+  },
+  "text_bold": {
+   "key": "text_bold",
+   "impl": "gs9",
+   "label": "widgetSettingsFontBold",
+   "labelFrom": "args",
+   "definedIn": "WFreeText",
+   "control": "checkbox"
+  },
+  "text_italic": {
+   "key": "text_italic",
+   "impl": "gs9",
+   "label": "widgetSettingsFontItalic",
+   "labelFrom": "args",
+   "definedIn": "WFreeText",
+   "control": "checkbox"
+  },
+  "avg@WGlide": {
+   "key": "avg",
+   "impl": "st9",
+   "label": "widgetSettingsVarioAvgInterval",
+   "labelFrom": "args",
+   "definedIn": "WGlide",
+   "control": "slider"
+  },
+  "showVario": {
+   "key": "showVario",
+   "impl": "gs9",
+   "label": "widgetSettingsGlideShowVario",
+   "labelFrom": "args",
+   "definedIn": "WGlide",
+   "control": "checkbox"
+  },
+  "headless@WGlide": {
+   "key": "headless",
+   "impl": "zs9",
+   "label": "widgetSettingsGlideHeadless",
+   "labelFrom": "ctor",
+   "definedIn": "WGlide",
+   "control": "checkbox"
+  },
+  "line_count": {
+   "key": "line_count",
+   "impl": "at9",
+   "label": "widgetSettingsLiveMessageCount",
+   "labelFrom": "switch",
+   "definedIn": "WLiveMessage",
+   "control": "slider"
+  },
+  "_format": {
+   "key": "_format",
+   "impl": "ys9",
+   "label": "wsFormat",
+   "labelFrom": "args",
+   "values": [
+    {
+     "value": "DEG"
+    },
+    {
+     "value": "DEG_MIN"
+    },
+    {
+     "value": "DEG_MIN_SEC"
+    },
+    {
+     "value": "UTM"
+    }
+   ],
+   "default": "DEG",
+   "definedIn": "WLocation",
+   "control": "enum"
+  },
+  "lines_count": {
+   "key": "lines_count",
+   "impl": "wr9",
+   "label": "widgetSettingsNumberOfLines",
+   "labelFrom": "switch",
+   "definedIn": "WLogPeek",
+   "control": "unknown"
+  },
+  "reverse": {
+   "key": "reverse",
+   "impl": "gs9",
+   "label": "widgetSettingsReversedOrder",
+   "labelFrom": "args",
+   "definedIn": "WLogPeek",
+   "control": "checkbox"
+  },
+  "filter": {
+   "key": "filter",
+   "impl": "ss9",
+   "label": "widgetSettingsFilterLines",
+   "labelFrom": "args",
+   "help": "widgetSettingsFilterLinesHelp",
+   "definedIn": "WLogPeek",
+   "control": "unknown"
+  },
+  "color_text@WLogPeek": {
+   "key": "color_text",
+   "impl": "ls9",
+   "label": "widgetSettingsTextColor",
+   "labelFrom": "args",
+   "definedIn": "WLogPeek",
+   "control": "color"
+  },
+  "color_bg@WLogPeek": {
+   "key": "color_bg",
+   "impl": "ls9",
+   "label": "widgetSettingsBackgroundColor",
+   "labelFrom": "args",
+   "definedIn": "WLogPeek",
+   "control": "color"
+  },
+  "netto_avg": {
+   "key": "netto_avg",
+   "impl": "st9",
+   "label": "widgetSettingsAvgInterval",
+   "labelFrom": "args",
+   "definedIn": "WNettoVario",
+   "control": "slider"
+  },
+  "altitude": {
+   "key": "altitude",
+   "impl": "ys9",
+   "label": "widgetSettingsNextTurnpointHeightShownValue",
+   "labelFrom": "args",
+   "help": "widgetSettingsNextTurnpointHeightShownValueHelp",
+   "values": [
+    {
+     "value": "AGL",
+     "label": "widgetSettingsNextTurnpointHeightShownValueAGL"
+    },
+    {
+     "value": "AMSL",
+     "label": "widgetSettingsNextTurnpointHeightShownValueAMSL"
+    },
+    {
+     "value": "DROP",
+     "label": "widgetSettingsNextTurnpointHeightShownValueDrop"
+    }
+   ],
+   "default": "AGL",
+   "definedIn": "WNextTurnpointAlt",
+   "control": "enum"
+  },
+  "glide": {
+   "key": "glide",
+   "impl": "ys9",
+   "label": "widgetSettingsNextTurnpointGlide",
+   "labelFrom": "args",
+   "help": "widgetSettingsNextTurnpointGlideHelp",
+   "values": [
+    {
+     "value": "ACTUAL",
+     "label": "widgetSettingsNextTurnpointGlideActual"
+    },
+    {
+     "value": "COMPUTED",
+     "label": "widgetSettingsNextTurnpointGlideComputed"
+    }
+   ],
+   "default": "COMPUTED",
+   "definedIn": "WNextTurnpointAlt",
+   "control": "enum"
+  },
+  "speed_avg@WNextTurnpointAlt": {
+   "key": "speed_avg",
+   "impl": "st9",
+   "label": "widgetSettingsAvgInterval",
+   "labelFrom": "args",
+   "definedIn": "WNextTurnpointAlt",
+   "control": "slider"
+  },
+  "alt_above": {
+   "key": "alt_above",
+   "impl": "as9",
+   "label": "widgetSettingsNextTurnpointAltitudeAbove",
+   "labelFrom": "switch",
+   "definedIn": "WNextTurnpointGlideTo",
+   "control": "slider"
+  },
+  "headless@WNextTurnpointGlideTo": {
+   "key": "headless",
+   "impl": "zs9",
+   "label": "widgetSettingsGlideHeadless",
+   "labelFrom": "ctor",
+   "definedIn": "WNextTurnpointGlideTo",
+   "control": "checkbox"
+  },
+  "time_format@WNextTurnpointTimeOfArrival": {
+   "key": "time_format",
+   "impl": "qs9",
+   "label": "widgetSettingsTimeIntervalFormat",
+   "labelFrom": "branch",
+   "values": [
+    {
+     "value": "COMPACT",
+     "label": "widgetSettingsTimeIntervalFormatCompact"
+    },
+    {
+     "value": "HMS",
+     "label": "widgetSettingsTimeIntervalFormatHMS"
+    },
+    {
+     "value": "HM",
+     "label": "widgetSettingsTimeIntervalFormatHM"
+    },
+    {
+     "value": "WITH_UNITS",
+     "label": "widgetSettingsTimeIntervalFormatWithUnits"
+    }
+   ],
+   "default": "COMPACT",
+   "definedIn": "WNextTurnpointTimeOfArrival",
+   "control": "enum"
+  },
+  "_title@MultiValueWidget": {
+   "key": "_title",
+   "impl": "gs9",
+   "label": "widgetSettingsShowTitle",
+   "labelFrom": "args",
+   "definedIn": "MultiValueWidget",
+   "control": "checkbox"
+  },
+  "titletext@MultiValueWidget": {
+   "key": "titletext",
+   "impl": "ws9",
+   "label": "widgetSettingsCustomTitle",
+   "labelFrom": "ctor",
+   "help": "widgetSettingsEditTitleHelp",
+   "definedIn": "MultiValueWidget",
+   "control": "text"
+  },
+  "_unit@MultiValueWidget": {
+   "key": "_unit",
+   "impl": "gs9",
+   "label": "widgetSettingsShowUnit",
+   "labelFrom": "args",
+   "definedIn": "MultiValueWidget",
+   "control": "checkbox"
+  },
+  "_icons": {
+   "key": "_icons",
+   "impl": "gs9",
+   "label": "widgetSettingsShowIcons",
+   "labelFrom": "args",
+   "definedIn": "MultiValueWidget",
+   "control": "checkbox"
+  },
+  "_hide_labels@MultiValueWidget": {
+   "key": "_hide_labels",
+   "impl": "gs9",
+   "label": "widgetSettingsHideLabels",
+   "labelFrom": "args",
+   "definedIn": "MultiValueWidget",
+   "control": "checkbox"
+  },
+  "max": {
+   "key": "max",
+   "impl": "gs9",
+   "label": "wOptiUnfinishedFAIPotentialMax",
+   "labelFrom": "args",
+   "definedIn": "WOptiUnfinishedFAIPotential",
+   "control": "checkbox"
+  },
+  "real": {
+   "key": "real",
+   "impl": "gs9",
+   "label": "wOptiUnfinishedFAIPotentialReal",
+   "labelFrom": "args",
+   "definedIn": "WOptiUnfinishedFAIPotential",
+   "control": "checkbox"
+  },
+  "min": {
+   "key": "min",
+   "impl": "gs9",
+   "label": "wOptiUnfinishedFAIPotentialMin",
+   "labelFrom": "args",
+   "definedIn": "WOptiUnfinishedFAIPotential",
+   "control": "checkbox"
+  },
+  "distance": {
+   "key": "distance",
+   "impl": "at9",
+   "label": "widgetSettingsSideViewDistance",
+   "labelFrom": "switch",
+   "definedIn": "WSideView",
+   "control": "slider"
+  },
+  "finalGlideAvg": {
+   "key": "finalGlideAvg",
+   "impl": "st9",
+   "label": "widgetSettingsGlideAvgInterval",
+   "labelFrom": "args",
+   "definedIn": "WSideView",
+   "control": "slider"
+  },
+  "type@WSideView": {
+   "key": "type",
+   "impl": "ys9",
+   "label": "widgetSettingsSideViewTypeDefault",
+   "labelFrom": "args",
+   "values": [
+    {
+     "value": "SIDE_BEARING",
+     "label": "widgetSettingsSideViewTypeBearing"
+    },
+    {
+     "value": "SIDE_NAVIG",
+     "label": "widgetSettingsSideViewTypeNavig"
+    }
+   ],
+   "default": "SIDE_BEARING",
+   "definedIn": "WSideView",
+   "control": "enum"
+  },
+  "_units@WSpeed": {
+   "key": "_units",
+   "impl": "ys9",
+   "label": "prefUnits",
+   "labelFrom": "args",
+   "values": [
+    {
+     "value": "SYS_UNIT"
+    },
+    {
+     "value": "KM_H"
+    },
+    {
+     "value": "M_S"
+    },
+    {
+     "value": "MP_H"
+    },
+    {
+     "value": "KT"
+    }
+   ],
+   "default": "SYS_UNIT",
+   "definedIn": "WSpeed",
+   "control": "enum"
+  },
+  "backwardDetection": {
+   "key": "backwardDetection",
+   "impl": "gs9",
+   "label": "widgetSettingsBackwardsSpeed",
+   "labelFrom": "args",
+   "definedIn": "WSpeed",
+   "control": "checkbox"
+  },
+  "showGps": {
+   "key": "showGps",
+   "impl": "gs9",
+   "label": "widgetSettingsShowGps",
+   "labelFrom": "args",
+   "definedIn": "WStatusLine",
+   "control": "checkbox"
+  },
+  "soundMode": {
+   "key": "soundMode",
+   "impl": "ys9",
+   "label": "widgetSettingsSoundWarningMode",
+   "labelFrom": "args",
+   "values": [
+    {
+     "value": "DISABLED",
+     "label": "widgetSettingsSoundWarningModeDisabled"
+    },
+    {
+     "value": "WARN_MUTED",
+     "label": "widgetSettingsSoundWarningModeWarnMuted"
+    },
+    {
+     "value": "SHOW_VOLUME",
+     "label": "widgetSettingsSoundWarningModeShowVolume"
+    }
+   ],
+   "default": "WARN_MUTED",
+   "definedIn": "WStatusLine",
+   "control": "enum"
+  },
+  "showSensors": {
+   "key": "showSensors",
+   "impl": "gs9",
+   "label": "widgetSettingsShowSensors",
+   "labelFrom": "args",
+   "definedIn": "WStatusLine",
+   "control": "checkbox"
+  },
+  "showLive": {
+   "key": "showLive",
+   "impl": "gs9",
+   "label": "widgetSettingsShowLive",
+   "labelFrom": "args",
+   "definedIn": "WStatusLine",
+   "control": "checkbox"
+  },
+  "showLiveLabel": {
+   "key": "showLiveLabel",
+   "impl": "gs9",
+   "label": "widgetSettingsShowLiveLabel",
+   "labelFrom": "args",
+   "definedIn": "WStatusLine",
+   "control": "checkbox"
+  },
+  "showBatteryIcon": {
+   "key": "showBatteryIcon",
+   "impl": "gs9",
+   "label": "widgetSettingsShowBatteryIcon",
+   "labelFrom": "args",
+   "definedIn": "WStatusLine",
+   "control": "checkbox"
+  },
+  "showBatteryPercent": {
+   "key": "showBatteryPercent",
+   "impl": "gs9",
+   "label": "widgetSettingsShowBatteryLabel",
+   "labelFrom": "args",
+   "definedIn": "WStatusLine",
+   "control": "checkbox"
+  },
+  "showTime": {
+   "key": "showTime",
+   "impl": "gs9",
+   "label": "widgetSettingsShowTime",
+   "labelFrom": "args",
+   "definedIn": "WStatusLine",
+   "control": "checkbox"
+  },
+  "relative@WSunset": {
+   "key": "relative",
+   "impl": "ys9",
+   "label": "wsSunsetTimeDisplay",
+   "labelFrom": "args",
+   "values": [
+    {
+     "value": "ABSOLUTE_TIME",
+     "label": "wsSunsetAbsolute"
+    },
+    {
+     "value": "RELATIVE_TIME",
+     "label": "wsSunsetRelative"
+    }
+   ],
+   "default": "ABSOLUTE_TIME",
+   "definedIn": "WSunset",
+   "control": "enum"
+  },
+  "showBefore": {
+   "key": "showBefore",
+   "impl": "st9",
+   "label": "wsSunsetShowBefore",
+   "labelFrom": "args",
+   "definedIn": "WSunset",
+   "control": "slider"
+  },
+  "degrees@WTakeoffCourse": {
+   "key": "degrees",
+   "impl": "gs9",
+   "label": "wBearingShowDegrees",
+   "labelFrom": "args",
+   "definedIn": "WTakeoffCourse",
+   "control": "checkbox"
+  },
+  "mapScale": {
+   "key": "mapScale",
+   "impl": "it9",
+   "label": "widgetSettingsMapScale",
+   "labelFrom": "composite",
+   "otherLabels": [
+    "widgetSettingsMapResetScaleAfterExitPanMode"
+   ],
+   "fields": [
+    "value",
+    "auto",
+    "resetZoomPanExit"
+   ],
+   "definedIn": "WThermalAssistant",
+   "control": "composite"
+  },
+  "drawCircle": {
+   "key": "drawCircle",
+   "impl": "gs9",
+   "label": "widgetSettingsTAShowCircle",
+   "labelFrom": "args",
+   "definedIn": "WThermalAssistant",
+   "control": "checkbox"
+  },
+  "drawScale": {
+   "key": "drawScale",
+   "impl": "gs9",
+   "label": "widgetSettingsMapDrawScale",
+   "labelFrom": "args",
+   "definedIn": "WThermalAssistant",
+   "control": "checkbox"
+  },
+  "mapWidget_showAirspaces@WThermalAssistant": {
+   "key": "mapWidget_showAirspaces",
+   "impl": "gs9",
+   "label": "widgetSettingsShowAirspacesAndObstacles",
+   "labelFrom": "args",
+   "definedIn": "WThermalAssistant",
+   "control": "checkbox"
+  },
+  "drawCompetition": {
+   "key": "drawCompetition",
+   "impl": "gs9",
+   "label": "widgetSettingsTAShowCompetition",
+   "labelFrom": "args",
+   "definedIn": "WThermalAssistant",
+   "control": "checkbox"
+  },
+  "rotation@WThermalAssistant": {
+   "key": "rotation",
+   "impl": "mt9",
+   "label": "widgetSettingsRotation",
+   "labelFrom": "ctor",
+   "otherLabels": [
+    "widgetSettingsRotationShowCompass"
+   ],
+   "fields": [
+    "value",
+    "showCompass"
+   ],
+   "definedIn": "WThermalAssistant",
+   "control": "composite"
+  },
+  "interval@WThermalAssistant": {
+   "key": "interval",
+   "impl": "tt9",
+   "label": "wThermalAssistantTrackInterval",
+   "labelFrom": "ctor",
+   "definedIn": "WThermalAssistant",
+   "control": "slider"
+  },
+  "includeWindAlgorithm@WThermalAssistant": {
+   "key": "includeWindAlgorithm",
+   "impl": "ys9",
+   "label": "widgetSettingsThermalWindIncludeAlgorithm",
+   "labelFrom": "args",
+   "values": [
+    {
+     "value": "ALGO_CLASSIC",
+     "label": "widgetSettingsThermalWindIncludeAlgorithmClassic"
+    },
+    {
+     "value": "ALGO_PARTICLE_DRIFT",
+     "label": "widgetSettingsThermalWindIncludeAlgorithmParticleDrift"
+    },
+    {
+     "value": "ALGO_NONE",
+     "label": "widgetSettingsThermalWindIncludeAlgorithmNone"
+    }
+   ],
+   "default": "ALGO_CLASSIC",
+   "definedIn": "WThermalAssistant",
+   "control": "enum"
+  },
+  "line_thickness@WThermalAssistant": {
+   "key": "line_thickness",
+   "impl": "bt9",
+   "label": "widgetSettingsCompMapLineThickness",
+   "labelFrom": "ctor",
+   "definedIn": "WThermalAssistant",
+   "control": "slider"
+  },
+  "mapWidget_drawBearing@WThermalAssistant": {
+   "key": "mapWidget_drawBearing",
+   "impl": "gs9",
+   "label": "widgetSettingsShowBearingLine",
+   "labelFrom": "args",
+   "definedIn": "WThermalAssistant",
+   "control": "checkbox"
+  },
+  "postponedFloorLimit@WThermalAssistant": {
+   "key": "postponedFloorLimit",
+   "impl": "at9",
+   "label": "wAirspaceProximityPostponeFloorLimit",
+   "labelFrom": "switch",
+   "definedIn": "WThermalAssistant",
+   "control": "slider"
+  },
+  "postponedDisplayDistance@WThermalAssistant": {
+   "key": "postponedDisplayDistance",
+   "impl": "at9",
+   "label": "wAirspaceProximityPostponeDistance",
+   "labelFrom": "switch",
+   "definedIn": "WThermalAssistant",
+   "control": "slider"
+  },
+  "fontSize@WThermalAssistant": {
+   "key": "fontSize",
+   "impl": "ys9",
+   "label": "widgetSettingsMapFont",
+   "labelFrom": "args",
+   "values": [
+    {
+     "value": "SMALL",
+     "label": "widgetSettingsMapFontSmall"
+    },
+    {
+     "value": "MEDIUM",
+     "label": "widgetSettingsMapFontMedium"
+    },
+    {
+     "value": "LARGE",
+     "label": "widgetSettingsMapFontLarge"
+    }
+   ],
+   "default": "SMALL",
+   "definedIn": "WThermalAssistant",
+   "control": "enum"
+  },
+  "showSec": {
+   "key": "showSec",
+   "impl": "gs9",
+   "label": "widgetSettingsTimeShowSeconds",
+   "labelFrom": "args",
+   "definedIn": "WTime",
+   "control": "checkbox"
+  },
+  "rotation@WVTM": {
+   "key": "rotation",
+   "impl": "mt9",
+   "label": "widgetSettingsRotation",
+   "labelFrom": "ctor",
+   "otherLabels": [
+    "widgetSettingsRotationShowCompass"
+   ],
+   "fields": [
+    "value",
+    "showCompass"
+   ],
+   "definedIn": "WVTM",
+   "control": "composite"
+  },
+  "theme": {
+   "key": "theme",
+   "impl": "ys9",
+   "label": "vtm_theme",
+   "labelFrom": "args",
+   "values": [
+    {
+     "value": "DARK"
+    },
+    {
+     "value": "DEFAULT"
+    },
+    {
+     "value": "BIKER"
+    },
+    {
+     "value": "INDIGO"
+    },
+    {
+     "value": "MAPZEN"
+    },
+    {
+     "value": "MOTORIDER"
+    },
+    {
+     "value": "NEWTRON"
+    },
+    {
+     "value": "OPENMAPTILES"
+    },
+    {
+     "value": "OSMARENDER"
+    },
+    {
+     "value": "TRONRENDER"
+    }
+   ],
+   "default": "DEFAULT",
+   "definedIn": "WVTM",
+   "control": "enum"
+  },
+  "avg@WVarioColumn": {
+   "key": "avg",
+   "impl": "st9",
+   "label": "widgetSettingsAvgInterval",
+   "labelFrom": "args",
+   "definedIn": "WVarioColumn",
+   "control": "slider"
+  },
+  "interval@WVerticalGraph": {
+   "key": "interval",
+   "impl": "st9",
+   "label": "widgetSettingsShownInterval",
+   "labelFrom": "args",
+   "definedIn": "WVerticalGraph",
+   "control": "slider"
+  },
+  "vertical_step": {
+   "key": "vertical_step",
+   "impl": "at9",
+   "label": "widgetSettingsVerticalStep",
+   "labelFrom": "switch",
+   "definedIn": "WVerticalGraph",
+   "control": "slider"
+  },
+  "dot_color": {
+   "key": "dot_color",
+   "impl": "ls9",
+   "label": "widgetSettingsDotColor",
+   "labelFrom": "args",
+   "definedIn": "WVerticalGraph",
+   "control": "color"
+  },
+  "avg@WVerticalSpeed": {
+   "key": "avg",
+   "impl": "st9",
+   "label": "widgetSettingsAvgInterval",
+   "labelFrom": "args",
+   "definedIn": "WVerticalSpeed",
+   "control": "slider"
+  },
+  "url": {
+   "key": "url",
+   "impl": "xs9",
+   "label": "widgetSettingsWebViewUrl",
+   "labelFrom": "ctor",
+   "help": "widgetSettingsWebViewUrlHelp2",
+   "definedIn": "WWebView",
+   "control": "unknown"
+  },
+  "refreshInterval": {
+   "key": "refreshInterval",
+   "impl": "st9",
+   "label": "widgetSettingsWebViewRefresh",
+   "labelFrom": "args",
+   "definedIn": "WWebView",
+   "control": "slider"
+  },
+  "allowXCTrackJS": {
+   "key": "allowXCTrackJS",
+   "impl": "gs9",
+   "label": "widgetSettingsWebViewAllowXCTrackJS",
+   "labelFrom": "args",
+   "definedIn": "WWebView",
+   "control": "checkbox"
+  },
+  "allowClickPassing": {
+   "key": "allowClickPassing",
+   "impl": "gs9",
+   "label": "widgetSettingsWebViewAllowClickPassing",
+   "labelFrom": "args",
+   "definedIn": "WWebView",
+   "control": "checkbox"
+  },
+  "allowInteraction": {
+   "key": "allowInteraction",
+   "impl": "gs9",
+   "label": "widgetSettingsWebViewDisableInteraction",
+   "labelFrom": "args",
+   "definedIn": "WWebView",
+   "control": "checkbox"
+  },
+  "saveButtonPos": {
+   "key": "saveButtonPos",
+   "impl": "ys9",
+   "label": "widgetSettingsWebViewSaveButtonPosition",
+   "labelFrom": "args",
+   "values": [
+    {
+     "value": "BOT_LEFT",
+     "label": "widgetSettingsWebViewSaveButtonPositionBotLeft"
+    },
+    {
+     "value": "BOT_CENTER",
+     "label": "widgetSettingsWebViewSaveButtonPositionBotCenter"
+    },
+    {
+     "value": "BOT_RIGHT",
+     "label": "widgetSettingsWebViewSaveButtonPositionBotRight"
+    }
+   ],
+   "default": "BOT_RIGHT",
+   "definedIn": "WWebView",
+   "control": "enum"
+  },
+  "nemo": {
+   "key": "nemo",
+   "impl": "su9",
+   "label": "widgetSettingsWebViewClearCookies",
+   "labelFrom": "ctor",
+   "definedIn": "WWebView",
+   "control": "unknown"
+  },
+  "degrees@WWindDirection": {
+   "key": "degrees",
+   "impl": "gs9",
+   "label": "wBearingShowDegrees",
+   "labelFrom": "args",
+   "definedIn": "WWindDirection",
+   "control": "checkbox"
+  },
+  "xcMinDistance": {
+   "key": "xcMinDistance",
+   "impl": "as9",
+   "label": "wXCAssistantMinDistance",
+   "labelFrom": "switch",
+   "definedIn": "WXCAssistant",
+   "control": "slider"
+  },
+  "faiAreas": {
+   "key": "faiAreas",
+   "impl": "gs9",
+   "label": "wXCAssistantShowFAIAreas",
+   "labelFrom": "args",
+   "definedIn": "WXCAssistant",
+   "control": "checkbox"
+  },
+  "faiAreasMinMax": {
+   "key": "faiAreasMinMax",
+   "impl": "gs9",
+   "label": "wXCAssistantShowFAIAreasDistance",
+   "labelFrom": "args",
+   "definedIn": "WXCAssistant",
+   "control": "checkbox"
+  },
+  "legDistance": {
+   "key": "legDistance",
+   "impl": "gs9",
+   "label": "wXCAssistantShowLegDistance",
+   "labelFrom": "args",
+   "definedIn": "WXCAssistant",
+   "control": "checkbox"
+  },
+  "legPercentage": {
+   "key": "legPercentage",
+   "impl": "gs9",
+   "label": "wXCAssistantShowLegPercentage",
+   "labelFrom": "args",
+   "definedIn": "WXCAssistant",
+   "control": "checkbox"
+  },
+  "closingCircle": {
+   "key": "closingCircle",
+   "impl": "gs9",
+   "label": "wXCAssistantShowTriangleClosingCircle",
+   "labelFrom": "args",
+   "definedIn": "WXCAssistant",
+   "control": "checkbox"
+  },
+  "routes": {
+   "key": "routes",
+   "impl": "gs9",
+   "label": "wXCAssistantShowRoutes",
+   "labelFrom": "args",
+   "definedIn": "WXCAssistant",
+   "control": "checkbox"
+  },
+  "routeVPColor": {
+   "key": "routeVPColor",
+   "impl": "ms9",
+   "label": "wXCAssistantRouteFFColor",
+   "labelFrom": "args",
+   "definedIn": "WXCAssistant",
+   "control": "color"
+  },
+  "routePTColor": {
+   "key": "routePTColor",
+   "impl": "ms9",
+   "label": "wXCAssistantRouteFlatTriangleColor",
+   "labelFrom": "args",
+   "definedIn": "WXCAssistant",
+   "control": "color"
+  },
+  "routeFAIColor": {
+   "key": "routeFAIColor",
+   "impl": "ms9",
+   "label": "wXCAssistantRouteFAIColor",
+   "labelFrom": "args",
+   "definedIn": "WXCAssistant",
+   "control": "color"
+  },
+  "routeThickness": {
+   "key": "routeThickness",
+   "impl": "bt9",
+   "label": "wXCAssistantRouteThickness",
+   "labelFrom": "args",
+   "definedIn": "WXCAssistant",
+   "control": "slider"
+  },
+  "faiSectorOutsideFillColor": {
+   "key": "faiSectorOutsideFillColor",
+   "impl": "ms9",
+   "label": "widgetSettingsFillColor",
+   "labelFrom": "args",
+   "definedIn": "WXCAssistant",
+   "control": "color"
+  },
+  "faiSectorOutsideStrokeColor": {
+   "key": "faiSectorOutsideStrokeColor",
+   "impl": "ms9",
+   "label": "widgetSettingsBorderColor",
+   "labelFrom": "args",
+   "definedIn": "WXCAssistant",
+   "control": "color"
+  },
+  "faiSectorOutsideStrokeThickness": {
+   "key": "faiSectorOutsideStrokeThickness",
+   "impl": "bt9",
+   "label": "widgetSettingsBorderThickness",
+   "labelFrom": "args",
+   "definedIn": "WXCAssistant",
+   "control": "slider"
+  },
+  "faiSectorInsideFillColor": {
+   "key": "faiSectorInsideFillColor",
+   "impl": "ms9",
+   "label": "widgetSettingsFillColor",
+   "labelFrom": "args",
+   "definedIn": "WXCAssistant",
+   "control": "color"
+  },
+  "faiSectorInsideStrokeColor": {
+   "key": "faiSectorInsideStrokeColor",
+   "impl": "ms9",
+   "label": "widgetSettingsBorderColor",
+   "labelFrom": "args",
+   "definedIn": "WXCAssistant",
+   "control": "color"
+  },
+  "faiSectorInsideStrokeThickness": {
+   "key": "faiSectorInsideStrokeThickness",
+   "impl": "bt9",
+   "label": "widgetSettingsBorderThickness",
+   "labelFrom": "args",
+   "definedIn": "WXCAssistant",
+   "control": "slider"
+  },
+  "closingCircleColor": {
+   "key": "closingCircleColor",
+   "impl": "ms9",
+   "label": "widgetSettingsColor",
+   "labelFrom": "args",
+   "definedIn": "WXCAssistant",
+   "control": "color"
+  },
+  "closingCircleThickness": {
+   "key": "closingCircleThickness",
+   "impl": "bt9",
+   "label": "widgetSettingsBorderThickness",
+   "labelFrom": "args",
+   "definedIn": "WXCAssistant",
+   "control": "slider"
+  },
+  "legDistanceColor": {
+   "key": "legDistanceColor",
+   "impl": "ms9",
+   "label": "widgetSettingsFontColor",
+   "labelFrom": "args",
+   "definedIn": "WXCAssistant",
+   "control": "color"
+  },
+  "legDistanceFontSize": {
+   "key": "legDistanceFontSize",
+   "impl": "qt9",
+   "label": "widgetSettingsMapFont",
+   "labelFrom": "args",
+   "definedIn": "WXCAssistant",
+   "control": "text"
+  },
+  "legPercentageColor": {
+   "key": "legPercentageColor",
+   "impl": "ms9",
+   "label": "widgetSettingsFontColor",
+   "labelFrom": "args",
+   "definedIn": "WXCAssistant",
+   "control": "color"
+  },
+  "legPercentageFontSize": {
+   "key": "legPercentageFontSize",
+   "impl": "qt9",
+   "label": "widgetSettingsMapFont",
+   "labelFrom": "args",
+   "definedIn": "WXCAssistant",
+   "control": "text"
+  },
+  "faiAreasDistanceColor": {
+   "key": "faiAreasDistanceColor",
+   "impl": "ms9",
+   "label": "widgetSettingsFontColor",
+   "labelFrom": "args",
+   "definedIn": "WXCAssistant",
+   "control": "color"
+  },
+  "faiAreasDistanceFontSize": {
+   "key": "faiAreasDistanceFontSize",
+   "impl": "qt9",
+   "label": "widgetSettingsMapFont",
+   "labelFrom": "args",
+   "definedIn": "WXCAssistant",
+   "control": "text"
+  }
+ },
+ "widgets": {
+  "WAMSL": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget"
+  ],
+  "WAirHumidity": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget"
+  ],
+  "WAirSpeed": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget",
+   "speed_avg@WAirSpeed",
+   "speed_type@WAirSpeed"
+  ],
+  "WAirTemperature": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget",
+   "_units@WAirTemperature"
+  ],
+  "WAirTime": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@TextWidget",
+   "titletext@TextWidget"
+  ],
+  "WAirspaceProximity": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_shownearinside",
+   "maxDistance",
+   "postponedFloorLimit@WAirspaceProximity",
+   "postponedDisplayDistance@WAirspaceProximity",
+   "_showrecomputedheightline",
+   "_showoriginalheightline",
+   "_splitdirection",
+   "_rotation"
+  ],
+  "WAltitude": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget",
+   "_units@WAltitude"
+  ],
+  "WAltitudeAboveGround": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget"
+  ],
+  "WAltitudeDataGraph": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "type@WAltitudeDataGraph",
+   "line_thickness@WAltitudeDataGraph",
+   "color_thermal",
+   "color_wind",
+   "color_speed"
+  ],
+  "WAltitudeMaximum": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget"
+  ],
+  "WBaroAltitude": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget",
+   "_units@WBaroAltitude",
+   "_altType"
+  ],
+  "WBearing": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@TextWidget",
+   "titletext@TextWidget",
+   "degrees@WBearing"
+  ],
+  "WBrightnessInfo": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@TextWidget",
+   "titletext@TextWidget"
+  ],
+  "WButtonBrightness": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "type@WButtonBrightness",
+   "longClick@WButtonBrightness"
+  ],
+  "WButtonCamera": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "longClick@WButtonCamera"
+  ],
+  "WButtonIntentLauncher": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "longClick@WButtonIntentLauncher",
+   "title",
+   "name",
+   "action"
+  ],
+  "WButtonNavig": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "type@WButtonNavig",
+   "longClick@WButtonNavig"
+  ],
+  "WButtonPhone": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "contact",
+   "showContactName",
+   "callType",
+   "backgroundCall"
+  ],
+  "WButtonVario": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "showTitle",
+   "longClick@WButtonVario"
+  ],
+  "WButtonVolume": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "type@WButtonVolume",
+   "longClick@WButtonVolume"
+  ],
+  "WButtonVolumeReminder": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "longClick@WButtonVolumeReminder"
+  ],
+  "WButtonZoom": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "type@WButtonZoom"
+  ],
+  "WCompAltitudeOverESS": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget"
+  ],
+  "WCompAltitudeOverGoal": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget"
+  ],
+  "WCompDistanceToESS": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget"
+  ],
+  "WCompDistanceToGoal": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget"
+  ],
+  "WCompGlideToESS": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget",
+   "headless@WCompGlideToESS"
+  ],
+  "WCompGlideToGoal": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget",
+   "headless@WCompGlideToGoal"
+  ],
+  "WCompMap": [
+   "_bg",
+   "_border",
+   "_theme@MapWidget",
+   "live_ShowFinalGlide",
+   "live_ShowFinalGlideAvg",
+   "mapWidget_drawScale",
+   "rotation@MapWidget",
+   "mapWidget_showAirspaces@MapWidget",
+   "mapWidget_emergencyObstacles",
+   "mapWidget_emergencyZoom",
+   "mapWidget_panningAirspaceListCycleSpeed",
+   "mapWidget_panningAirspaceList",
+   "mapWidget_pilotPosCenter",
+   "line_thickness@MapWidget",
+   "mapWidget_drawBearing@MapWidget",
+   "tracklog_color",
+   "postponedFloorLimit@MapWidget",
+   "postponedDisplayDistance@MapWidget",
+   "fontSize@MapWidget",
+   "mapWidget_showRelativePositionWhilePanning",
+   "mapWidget_scale",
+   "mapWidget_mapAppearance",
+   "mapWidget_showRainRadar",
+   "mapWidget_KK7opacity",
+   "mapWidget_showKK7",
+   "mapWidget_KK7timedOpacity",
+   "mapWidget_KK7timed",
+   "mapWidget_skySightSatelliteOpacity",
+   "mapWidget_showSkySightSatellite",
+   "mapWidget_skySightRainOpacity",
+   "mapWidget_showSkySightRain",
+   "mapWidget_skySightForecastOpacity",
+   "mapWidget_skySightForecastLayer",
+   "mapWidget_skySightForecastTime",
+   "mapWidget_skySightForecastTimeDisplay",
+   "mapWidget_showSkySightForecast",
+   "mapWidget_skySightWindBarbColor",
+   "mapWidget_skySightWindBarbSize",
+   "mapWidget_skySightWindBarbTime",
+   "mapWidget_skySightWindBarbTimeDisplay",
+   "mapWidget_showSkySightWindBarbs",
+   "mapWidget_osmLanguage",
+   "live_ShowTracklogs",
+   "nav_showWind",
+   "nav_showSun",
+   "nav_target",
+   "nav_label",
+   "thermals",
+   "thermals_labels",
+   "nav_line",
+   "wpt_showWaypoints",
+   "wpt_showCities",
+   "wpt_showTakeoffs",
+   "live_ShowNearby"
+  ],
+  "WCompPercentage": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget"
+  ],
+  "WCompSpeedToStart": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget",
+   "navigation_target@WNextTurnpointSomething",
+   "use_brackets"
+  ],
+  "WCompTaskSummary": [
+   "_bg",
+   "_border",
+   "_theme@Widget"
+  ],
+  "WCompTimeAtStart": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget",
+   "navigation_target@WNextTurnpointSomething",
+   "use_brackets",
+   "speed_type@WNextTurnpointSpeedSomething",
+   "speed_avg@WNextTurnpointSpeedSomething",
+   "time_format@WCompTimeAtStart"
+  ],
+  "WCompTimeToStart": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@WeightedTextWidget",
+   "titletext@WeightedTextWidget",
+   "_hide_labels@WeightedTextWidget"
+  ],
+  "WCompass": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "navigation_target@WCompass",
+   "showHeading",
+   "showBearing",
+   "showBackground",
+   "windStyle",
+   "rotation@WCompass"
+  ],
+  "WCompassDigital": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget",
+   "target",
+   "relative@WCompassDigital"
+  ],
+  "WDebug": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@TextWidget",
+   "titletext@TextWidget"
+  ],
+  "WDebugActivelook": [
+   "_bg",
+   "_border",
+   "_theme@Widget"
+  ],
+  "WDebugDetectedActivity": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@TextWidget",
+   "titletext@TextWidget"
+  ],
+  "WDebugFPS": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@TextWidget",
+   "titletext@TextWidget"
+  ],
+  "WDebugFont": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "includeWindAlgorithm@WDebugFont"
+  ],
+  "WDebugHwAccTestMap": [
+   "_bg",
+   "_border",
+   "_theme@MapWidget",
+   "live_ShowFinalGlide",
+   "live_ShowFinalGlideAvg",
+   "mapWidget_drawScale",
+   "rotation@MapWidget",
+   "mapWidget_showAirspaces@MapWidget",
+   "mapWidget_emergencyObstacles",
+   "mapWidget_emergencyZoom",
+   "mapWidget_panningAirspaceListCycleSpeed",
+   "mapWidget_panningAirspaceList",
+   "mapWidget_pilotPosCenter",
+   "line_thickness@MapWidget",
+   "mapWidget_drawBearing@MapWidget",
+   "tracklog_color",
+   "postponedFloorLimit@MapWidget",
+   "postponedDisplayDistance@MapWidget",
+   "fontSize@MapWidget",
+   "mapWidget_showRelativePositionWhilePanning",
+   "mapWidget_scale",
+   "mapWidget_mapAppearance",
+   "mapWidget_showRainRadar",
+   "mapWidget_KK7opacity",
+   "mapWidget_showKK7",
+   "mapWidget_KK7timedOpacity",
+   "mapWidget_KK7timed",
+   "mapWidget_skySightSatelliteOpacity",
+   "mapWidget_showSkySightSatellite",
+   "mapWidget_skySightRainOpacity",
+   "mapWidget_showSkySightRain",
+   "mapWidget_skySightForecastOpacity",
+   "mapWidget_skySightForecastLayer",
+   "mapWidget_skySightForecastTime",
+   "mapWidget_skySightForecastTimeDisplay",
+   "mapWidget_showSkySightForecast",
+   "mapWidget_skySightWindBarbColor",
+   "mapWidget_skySightWindBarbSize",
+   "mapWidget_skySightWindBarbTime",
+   "mapWidget_skySightWindBarbTimeDisplay",
+   "mapWidget_showSkySightWindBarbs",
+   "mapWidget_osmLanguage",
+   "live_ShowTracklogs",
+   "nav_showWind",
+   "nav_showSun",
+   "nav_target",
+   "nav_label",
+   "thermals",
+   "thermals_labels",
+   "nav_line",
+   "wpt_showWaypoints",
+   "wpt_showCities",
+   "wpt_showTakeoffs",
+   "live_ShowNearby"
+  ],
+  "WDebugSystemInfo": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@TextWidget",
+   "titletext@TextWidget"
+  ],
+  "WEmitTestEvent": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "event"
+  ],
+  "WExternalData": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@TextWidget",
+   "titletext@TextWidget",
+   "index",
+   "suffix",
+   "_hide_labels@WExternalData"
+  ],
+  "WFL": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget",
+   "_decimals"
+  ],
+  "WFreeText": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "text",
+   "color_text@WFreeText",
+   "color_bg@WFreeText",
+   "text_padding",
+   "text_bold",
+   "text_italic"
+  ],
+  "WGlide": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget",
+   "avg@WGlide",
+   "showVario",
+   "headless@WGlide"
+  ],
+  "WLastEvent": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@TextWidget",
+   "titletext@TextWidget"
+  ],
+  "WLastKey": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@TextWidget",
+   "titletext@TextWidget"
+  ],
+  "WLiveMessage": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "line_count"
+  ],
+  "WLocation": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@TextWidget",
+   "titletext@TextWidget",
+   "_format"
+  ],
+  "WLogPeek": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "lines_count",
+   "reverse",
+   "filter",
+   "color_text@WLogPeek",
+   "color_bg@WLogPeek"
+  ],
+  "WNettoVario": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget",
+   "netto_avg"
+  ],
+  "WNextTurnpoint": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@WeightedTextWidget",
+   "titletext@WeightedTextWidget",
+   "_hide_labels@WeightedTextWidget"
+  ],
+  "WNextTurnpointAlt": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget",
+   "navigation_target@WNextTurnpointSomething",
+   "use_brackets",
+   "altitude",
+   "glide",
+   "speed_avg@WNextTurnpointAlt"
+  ],
+  "WNextTurnpointDistance": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget",
+   "navigation_target@WNextTurnpointSomething",
+   "use_brackets"
+  ],
+  "WNextTurnpointGlideTo": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget",
+   "navigation_target@WNextTurnpointSomething",
+   "use_brackets",
+   "alt_above",
+   "headless@WNextTurnpointGlideTo"
+  ],
+  "WNextTurnpointTimeOfArrival": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget",
+   "navigation_target@WNextTurnpointSomething",
+   "use_brackets",
+   "speed_type@WNextTurnpointSpeedSomething",
+   "speed_avg@WNextTurnpointSpeedSomething",
+   "time_format@WNextTurnpointTimeOfArrival"
+  ],
+  "WOptiResult": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget"
+  ],
+  "WOptiUnfinishedFAIPotential": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@MultiValueWidget",
+   "titletext@MultiValueWidget",
+   "_unit@MultiValueWidget",
+   "_icons",
+   "_hide_labels@MultiValueWidget",
+   "max",
+   "real",
+   "min"
+  ],
+  "WOptiUnfinishedTriangle": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget"
+  ],
+  "WProFallback": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@TextWidget",
+   "titletext@TextWidget"
+  ],
+  "WQNH": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget"
+  ],
+  "WSideView": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "distance",
+   "finalGlideAvg",
+   "type@WSideView"
+  ],
+  "WSpeed": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget",
+   "_units@WSpeed",
+   "backwardDetection"
+  ],
+  "WStatusLine": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "showGps",
+   "soundMode",
+   "showSensors",
+   "showLive",
+   "showLiveLabel",
+   "showBatteryIcon",
+   "showBatteryPercent",
+   "showTime"
+  ],
+  "WSunset": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget",
+   "relative@WSunset",
+   "showBefore"
+  ],
+  "WSunsetCivil": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget",
+   "relative@WSunset",
+   "showBefore"
+  ],
+  "WTakeoffCourse": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget",
+   "degrees@WTakeoffCourse"
+  ],
+  "WTakeoffDistance": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget"
+  ],
+  "WTakeoffHeightAbove": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget"
+  ],
+  "WThermalAltGain": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget"
+  ],
+  "WThermalAssistant": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "mapScale",
+   "drawCircle",
+   "drawScale",
+   "mapWidget_showAirspaces@WThermalAssistant",
+   "drawCompetition",
+   "rotation@WThermalAssistant",
+   "interval@WThermalAssistant",
+   "includeWindAlgorithm@WThermalAssistant",
+   "line_thickness@WThermalAssistant",
+   "mapWidget_drawBearing@WThermalAssistant",
+   "postponedFloorLimit@WThermalAssistant",
+   "postponedDisplayDistance@WThermalAssistant",
+   "fontSize@WThermalAssistant",
+   "live_ShowTracklogs",
+   "nav_showWind",
+   "nav_showSun",
+   "nav_target",
+   "nav_label",
+   "thermals",
+   "thermals_labels",
+   "nav_line"
+  ],
+  "WTime": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@TextWidget",
+   "titletext@TextWidget",
+   "showSec"
+  ],
+  "WVTM": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "rotation@WVTM",
+   "theme"
+  ],
+  "WVarioColumn": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "avg@WVarioColumn"
+  ],
+  "WVerticalGraph": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "interval@WVerticalGraph",
+   "vertical_step",
+   "dot_color"
+  ],
+  "WVerticalSpeed": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget",
+   "avg@WVerticalSpeed"
+  ],
+  "WWebView": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "url",
+   "refreshInterval",
+   "allowXCTrackJS",
+   "allowClickPassing",
+   "allowInteraction",
+   "saveButtonPos",
+   "nemo"
+  ],
+  "WWindDirection": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@TextWidget",
+   "titletext@TextWidget",
+   "degrees@WWindDirection"
+  ],
+  "WWindSpeed": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget"
+  ],
+  "WXCAssistant": [
+   "_bg",
+   "_border",
+   "_theme@MapWidget",
+   "live_ShowFinalGlide",
+   "live_ShowFinalGlideAvg",
+   "mapWidget_drawScale",
+   "rotation@MapWidget",
+   "mapWidget_showAirspaces@MapWidget",
+   "mapWidget_emergencyObstacles",
+   "mapWidget_emergencyZoom",
+   "mapWidget_panningAirspaceListCycleSpeed",
+   "mapWidget_panningAirspaceList",
+   "mapWidget_pilotPosCenter",
+   "line_thickness@MapWidget",
+   "mapWidget_drawBearing@MapWidget",
+   "tracklog_color",
+   "postponedFloorLimit@MapWidget",
+   "postponedDisplayDistance@MapWidget",
+   "fontSize@MapWidget",
+   "mapWidget_showRelativePositionWhilePanning",
+   "mapWidget_scale",
+   "mapWidget_mapAppearance",
+   "mapWidget_showRainRadar",
+   "mapWidget_KK7opacity",
+   "mapWidget_showKK7",
+   "mapWidget_KK7timedOpacity",
+   "mapWidget_KK7timed",
+   "mapWidget_skySightSatelliteOpacity",
+   "mapWidget_showSkySightSatellite",
+   "mapWidget_skySightRainOpacity",
+   "mapWidget_showSkySightRain",
+   "mapWidget_skySightForecastOpacity",
+   "mapWidget_skySightForecastLayer",
+   "mapWidget_skySightForecastTime",
+   "mapWidget_skySightForecastTimeDisplay",
+   "mapWidget_showSkySightForecast",
+   "mapWidget_skySightWindBarbColor",
+   "mapWidget_skySightWindBarbSize",
+   "mapWidget_skySightWindBarbTime",
+   "mapWidget_skySightWindBarbTimeDisplay",
+   "mapWidget_showSkySightWindBarbs",
+   "mapWidget_osmLanguage",
+   "live_ShowTracklogs",
+   "nav_showWind",
+   "nav_showSun",
+   "nav_target",
+   "nav_label",
+   "thermals",
+   "thermals_labels",
+   "nav_line",
+   "wpt_showWaypoints",
+   "wpt_showCities",
+   "wpt_showTakeoffs",
+   "live_ShowNearby",
+   "xcMinDistance",
+   "faiAreas",
+   "faiAreasMinMax",
+   "legDistance",
+   "legPercentage",
+   "closingCircle",
+   "routes",
+   "routeVPColor",
+   "routePTColor",
+   "routeFAIColor",
+   "routeThickness",
+   "faiSectorOutsideFillColor",
+   "faiSectorOutsideStrokeColor",
+   "faiSectorOutsideStrokeThickness",
+   "faiSectorInsideFillColor",
+   "faiSectorInsideStrokeColor",
+   "faiSectorInsideStrokeThickness",
+   "closingCircleColor",
+   "closingCircleThickness",
+   "legDistanceColor",
+   "legDistanceFontSize",
+   "legPercentageColor",
+   "legPercentageFontSize",
+   "faiAreasDistanceColor",
+   "faiAreasDistanceFontSize"
+  ],
+  "WXCSpeed": [
+   "_bg",
+   "_border",
+   "_theme@Widget",
+   "_title@ValueWidget",
+   "titletext@ValueWidget",
+   "_unit@ValueWidget",
+   "_hide_labels@ValueWidget"
+  ]
+ },
+ "unresolved": [
+  {
+   "key": "mapWidget_heading_arrow_sizecoef",
+   "definedIn": "MapWidget",
+   "impl": "zb5",
+   "reason": "aucune ressource de libellé identifiable (ni argument, ni constructeur, ni switch de zb5)"
+  },
+  {
+   "key": "text_size",
+   "definedIn": "WAltitudeDataGraph",
+   "impl": "rs9",
+   "reason": "aucune ressource de libellé identifiable (ni argument, ni constructeur, ni switch de rs9)"
+  },
+  {
+   "key": "show_time",
+   "definedIn": "WLiveMessage",
+   "impl": "pt9",
+   "reason": "aucune ressource de libellé identifiable (ni argument, ni constructeur, ni switch de pt9)"
+  },
+  {
+   "key": "mapWidget_heading_arrow_sizecoef",
+   "definedIn": "WThermalAssistant",
+   "impl": "zb5",
+   "reason": "aucune ressource de libellé identifiable (ni argument, ni constructeur, ni switch de zb5)"
+  },
+  {
+   "key": "dot_size",
+   "definedIn": "WVerticalGraph",
+   "impl": "rs9",
+   "reason": "aucune ressource de libellé identifiable (ni argument, ni constructeur, ni switch de rs9)"
+  },
+  {
+   "key": "allowGsp",
+   "definedIn": "WWebView",
+   "impl": "sy9",
+   "reason": "aucune ressource de libellé identifiable (ni argument, ni constructeur, ni switch de sy9)"
+  },
+  {
+   "key": "initialScale",
+   "definedIn": "WWebView",
+   "impl": "sy9",
+   "reason": "aucune ressource de libellé identifiable (ni argument, ni constructeur, ni switch de sy9)"
+  },
+  {
+   "key": "scrollSettings",
+   "definedIn": "WWebView",
+   "impl": "sy9",
+   "reason": "aucune ressource de libellé identifiable (ni argument, ni constructeur, ni switch de sy9)"
+  }
+ ],
+ "unmatchedCorpusKeys": {
+  "WCompMap": [
+   "mapWidget_heading_arrow_sizecoef",
+   "mapWidget_panningTimeout",
+   "mapWidget_pilotEdgeDistance",
+   "mapWidget_showOpenStreet",
+   "mapWidget_showTerrain",
+   "nav_use_brackets"
+  ],
+  "WCompass": [
+   "newWindArrow",
+   "showWind"
+  ],
+  "WLiveMessage": [
+   "show_time"
+  ],
+  "WThermalAssistant": [
+   "mapWidget_heading_arrow_sizecoef",
+   "nav_use_brackets"
+  ],
+  "WVerticalGraph": [
+   "dot_size"
+  ],
+  "WXCAssistant": [
+   "mapWidget_heading_arrow_sizecoef",
+   "mapWidget_panningTimeout",
+   "mapWidget_pilotEdgeDistance",
+   "mapWidget_showOpenStreet",
+   "mapWidget_showTerrain",
+   "nav_use_brackets"
+  ]
+ }
+}
