@@ -6,15 +6,22 @@ import { deviceFor, type Device } from '../catalog/devices'
 import { readableName } from '../catalog/widgetNames'
 import { getMember, readString } from '../core/access'
 import { exportContainer, openContainer, type Container } from '../core/container'
+import type { JsonNode } from '../core/jsonDocument'
 import { gridFor } from '../model/grid'
 import { createHistory, type EditHistory } from '../model/history'
 import { readLayout, type Layout, type Page } from '../model/layout'
+import { insertWidget } from '../model/mutations'
 import { readRenderSettings, resolveLanguage, type RenderSettings } from '../model/preferences'
-import type { Widget } from '../model/widget'
+import { readWidget, type Widget } from '../model/widget'
 import { renderPage } from '../render/canvas'
 import { buildDeviceSelector } from './deviceSelector'
-import { createEditor, type Editor, type Viewport, type WidgetEdit } from './editor'
+import {
+  createEditor, type Editor, type Viewport, type WidgetEdit, type WidgetStructureEdit
+} from './editor'
 import { exportFileName } from './export'
+import {
+  applyPageOperation, operationAnnouncement, renderPageManager, type PageOperation
+} from './pageManager'
 import type { PropertyField } from './properties'
 import {
   aspectRatioOf, buildDetail, buildOverview,
@@ -72,6 +79,23 @@ let selection: number | undefined
 let editor: Editor | undefined
 let panelHost: HTMLElement | undefined
 let selectionLabel: HTMLElement | undefined
+
+/**
+ * La palette d'ajout est un tiroir de la colonne de droite, ouvert par la barre d'édition.
+ * Son état — ouverte, et le filtre saisi — vit ici et non dans le module : la vue est
+ * reconstruite à chaque annulation et à chaque changement de page, et un pilote qui vient
+ * de taper « bouss » pour poser trois boussoles ne doit pas le retaper trois fois.
+ */
+let paletteOpen = false
+let paletteQuery = ''
+let paletteHost: HTMLElement | undefined
+let paletteToggle: HTMLButtonElement | undefined
+
+/**
+ * La dernière annonce du carrousel. Le module la pose dans sa propre zone, que la
+ * reconstruction qui suit l'opération emporte : on la garde ici pour la lui rendre.
+ */
+let pagesMessage: { orientation: Orientation; text: string } | undefined
 
 /**
  * Seule clé régionale du catalogue de libellés (`widgetLabels.json`) : toutes les
@@ -397,6 +421,14 @@ function repaint(): void {
     renderPage(page, aspectRatioOf(session.device, orientation), session.settings, session.language),
     drawing
   )
+  // Le nombre de widgets est un fait de la vue, et une action de structure vient peut-être
+  // de le changer : il se remet à jour ici, faute de quoi la page dirait « 14 widgets »
+  // alors qu'on vient d'en poser un quinzième.
+  const count = content.querySelector('.chip--count')
+  if (count) {
+    const total = page.widgets.length
+    count.textContent = `${total} widget${total > 1 ? 's' : ''}`
+  }
 }
 
 /**
@@ -426,6 +458,35 @@ function onWidgetEdit(edit: WidgetEdit): void {
     session.history.record(edit.description)
   }
   scheduleRepaint()
+  syncEditControls()
+}
+
+/**
+ * Une action de structure terminée sur le calque : suppression, duplication, changement
+ * de rang. Trois différences avec un simple geste, et elles commandent tout ce qui suit.
+ *
+ * 1. **Le pas est enregistré aussitôt, jamais regroupé.** Supprimer puis dupliquer sont
+ *    deux actions distinctes, même à une seconde d'intervalle.
+ * 2. **La page est redessinée.** Le calque ne dessine pas les widgets — il ne pose que
+ *    les marques par-dessus le rendu de `render/canvas.ts` : un widget supprimé resterait
+ *    à l'écran sans ce redessin, et une copie n'y apparaîtrait pas.
+ * 3. **La sélection suit ce que l'action en dit** (`edit.selection`). Le calque l'a déjà
+ *    posée et nous l'a annoncée par `onSelectionChange` juste avant cet appel ; on la
+ *    relit ici pour que le rang mémorisé par cette vue soit celui du calque, quoi qu'il
+ *    arrive à l'ordre des appels.
+ *
+ * L'annulation, elle, ne repasse jamais par `revertStructureEdit` : l'historique
+ * photographie le document entier, ce qui reste juste après un réordonnancement là où un
+ * journal d'opérations inverses désignant les widgets par leur rang deviendrait faux.
+ */
+function onStructureEdit(edit: WidgetStructureEdit): void {
+  if (!session) return
+  session.container.modified = true
+  flushRecord()
+  session.history.record(edit.description)
+  selection = edit.selection
+  scheduleRepaint()
+  refreshPanel()
   syncEditControls()
 }
 
@@ -460,6 +521,9 @@ function stepHistory(direction: 'undo' | 'redo'): void {
   flushRecord()
   const history = session.history
   if (!(direction === 'undo' ? history.canUndo() : history.canRedo())) return
+  // L'annonce du carrousel décrit l'opération précédente : elle vient d'être défaite, et
+  // la redire ferait croire qu'elle tient toujours.
+  pagesMessage = undefined
   session.container.document = direction === 'undo' ? history.undo() : history.redo()
   // Revenu à son état d'origine, le document ressort octet pour octet : c'est `modified`
   // qui commande à `exportContainer`, et `isDirty()` sait reconnaître ce retour.
@@ -490,6 +554,128 @@ function loadProperties(): Promise<PropertiesModule> {
     return module
   })
   return propertiesLoading
+}
+
+/**
+ * La palette se charge à la demande pour la même raison que le panneau, et c'est le même
+ * poids qu'elle traîne : elle dresse la liste des 84 types depuis `widgetOptions.ts`. Les
+ * deux imports différés partagent ce catalogue, que l'assembleur range dans un morceau
+ * commun — ouvrir la palette après le panneau ne le retélécharge pas.
+ */
+type PaletteModule = typeof import('./widgetPalette')
+
+let paletteModule: PaletteModule | undefined
+let paletteLoading: Promise<PaletteModule> | undefined
+
+function loadPalette(): Promise<PaletteModule> {
+  paletteLoading ??= import('./widgetPalette').then((module) => {
+    paletteModule = module
+    return module
+  })
+  return paletteLoading
+}
+
+/**
+ * Les widgets qui serviront de modèles, **dans l'ordre de préférence de la palette** :
+ * ceux de la page affichée d'abord, les autres ensuite. La palette retient le premier
+ * exemplaire rencontré de chaque type — dupliquer une boussole, c'est donc dupliquer
+ * celle qu'on a sous les yeux plutôt qu'une homonyme réglée autrement à l'autre bout du
+ * fichier.
+ */
+function paletteSources(current: Session, page: Page | undefined): JsonNode[] {
+  const nodes: JsonNode[] = []
+  if (page) for (const widget of page.widgets) nodes.push(widget.node)
+  for (const orientation of ['landscape', 'portrait'] as const) {
+    for (const other of current.layout[orientation]) {
+      if (other === page) continue
+      for (const widget of other.widgets) nodes.push(widget.node)
+    }
+  }
+  return nodes
+}
+
+/** Vrai si la page peut recevoir un widget : encore faut-il qu'elle ait un tableau. */
+function acceptsWidgets(page: Page): boolean {
+  return getMember(page.node, 'widgets')?.kind === 'array'
+}
+
+/**
+ * Un type choisi dans la palette. Le nœud arrive prêt ; l'appelant — c'est-à-dire ici —
+ * décide de la page et du rang : **au premier plan**, comme l'appareil, et sélectionné
+ * dans la foulée, pour que le réglage suive l'ajout sans un clic de plus.
+ *
+ * Le document est muté puis photographié par l'historique : on ne passe jamais par
+ * `applyStructureEdit`, dont l'inverse deviendrait faux dès le premier réordonnancement.
+ */
+function addWidgetFromPalette(node: JsonNode, description: string): void {
+  const page = currentPage()
+  if (!session || !editor || page === undefined || !acceptsWidgets(page)) return
+  flushRecord()
+
+  const index = insertWidget(page.node, node)
+  // `page.widgets` est la photographie prise par `readLayout`, parallèle au tableau du
+  // document : les deux bougent ensemble, sans quoi le calque viserait un autre widget
+  // que le document.
+  page.widgets.splice(index, 0, readWidget(node))
+
+  session.container.modified = true
+  session.history.record(description)
+  // Une modification de structure impose le redessin : le calque ne dessine pas les
+  // widgets, c'est `render/canvas.ts` qui s'en charge sous lui.
+  repaint()
+  editor.select(index)
+  editor.refresh()
+  syncEditControls()
+}
+
+/** Reconstruit le tiroir de la palette depuis l'état courant — jamais depuis un nœud retenu. */
+function refreshPalette(): void {
+  const host = paletteHost
+  if (!host || !session || view.kind !== 'detail') return
+
+  if (paletteToggle) {
+    paletteToggle.textContent = paletteOpen ? 'Fermer la palette' : 'Ajouter un gadget'
+    paletteToggle.setAttribute('aria-expanded', String(paletteOpen))
+  }
+
+  host.textContent = ''
+  if (!paletteOpen) return
+
+  const page = currentPage()
+  if (page === undefined) return
+  if (!acceptsWidgets(page)) {
+    host.append(el(
+      'p', 'panel__hint',
+      'Cette page ne décrit aucun tableau de widgets : rien ne peut y être ajouté sans ' +
+      'inventer une clé que le fichier n’a pas.'
+    ))
+    return
+  }
+
+  const module = paletteModule
+  if (module === undefined) {
+    host.append(el('p', 'panel__hint', 'Chargement de la palette…'))
+    // Le tiroir a changé : la vue a été reconstruite entre-temps et s'est rafraîchie de
+    // son côté. Ce résultat-ci est périmé.
+    void loadPalette().then(() => { if (paletteHost === host) refreshPalette() })
+    return
+  }
+
+  const palette = module.renderWidgetPalette({
+    existing: paletteSources(session, page),
+    device: session.device,
+    orientation: view.orientation,
+    language: session.language,
+    onChoose: (node, description) => addWidgetFromPalette(node, description)
+  })
+
+  const search = palette.element.querySelector('.palette__search')
+  if (search instanceof HTMLInputElement) {
+    search.value = paletteQuery
+    if (paletteQuery !== '') palette.filter(paletteQuery)
+    search.addEventListener('input', () => { paletteQuery = search.value })
+  }
+  host.append(palette.element)
 }
 
 /** Reconstruit le panneau depuis le rang sélectionné — jamais depuis un nœud retenu. */
@@ -537,25 +723,50 @@ function buildEditing(current: Session, page: Page, orientation: Orientation): D
 
   const editBar = el('div', 'editbar')
   selectionLabel = el('span', 'editbar__selection')
+
+  // Les deux commandes qui ne portent pas sur le widget sélectionné : ce qu'on ajoute à
+  // la page, et les pages elles-mêmes. Elles sont à part du reste de la barre, qui décrit.
+  const barActions = el('div', 'editbar__actions')
+  paletteToggle = el('button', 'btn', 'Ajouter un gadget')
+  paletteToggle.type = 'button'
+  paletteToggle.setAttribute('aria-expanded', String(paletteOpen))
+  // `refreshPalette` charge le module au besoin et se rappelle lui-même quand il arrive.
+  paletteToggle.addEventListener('click', () => {
+    paletteOpen = !paletteOpen
+    refreshPalette()
+  })
+  const pagesButton = el('button', 'btn', 'Gérer les pages')
+  pagesButton.type = 'button'
+  pagesButton.addEventListener('click', () => openPagesDialog())
+  barActions.append(paletteToggle, pagesButton)
+
   editBar.append(
     el('span', 'editbar__badge', 'Édition'),
     selectionLabel,
     // La grille de l'appareil, dite explicitement : c'est elle qui explique pourquoi un
     // widget ne se pose pas exactement là où on l'a lâché.
     el('span', 'editbar__grid', `Grille ${grid.cols} × ${grid.rows}`),
+    barActions,
     el(
       'span', 'editbar__hint',
       'Glisser : déplacer · équerres et segments : redimensionner · flèches : une cellule · ' +
-      'Maj + flèches : redimensionner · Échap : désélectionner'
+      'Maj + flèches : redimensionner · Ctrl + flèches : changer de rang · Ctrl + D : ' +
+      'dupliquer · Suppr : supprimer · Échap : désélectionner'
     )
   )
 
   const host = el('aside', 'panel')
-  host.setAttribute('aria-label', 'Réglages du widget sélectionné')
+  host.setAttribute('aria-label', 'Ajout d’un gadget et réglages du widget sélectionné')
   // Fin de glissé d'un curseur, sortie d'un champ : le pas en attente est clos ici
   // plutôt qu'au bout du délai.
   host.addEventListener('change', () => flushRecord())
-  panelHost = host
+
+  // Deux tiroirs dans la même colonne : la palette au-dessus quand elle est ouverte, les
+  // réglages en dessous. Le widget qu'on vient de poser est sélectionné : ses réglages
+  // sont déjà là, sous la liste, sans avoir à fermer quoi que ce soit.
+  paletteHost = el('div', 'panel__palette')
+  panelHost = el('div', 'panel__props')
+  host.append(paletteHost, panelHost)
 
   editor = createEditor({
     page,
@@ -564,6 +775,7 @@ function buildEditing(current: Session, page: Page, orientation: Orientation): D
     language: current.language,
     viewport: editorViewport,
     onEdit: onWidgetEdit,
+    onStructureEdit,
     onSelectionChange: (index) => {
       selection = index
       refreshPanel()
@@ -580,8 +792,185 @@ function buildEditing(current: Session, page: Page, orientation: Orientation): D
   if (selection !== undefined && selection >= page.widgets.length) selection = undefined
   if (selection !== undefined) editor.select(selection)
   refreshPanel()
+  refreshPalette()
 
   return { layer: editor.element, panel: host, bar: editBar }
+}
+
+/* ------------------------------------------------------------- gestion des pages */
+
+/**
+ * Ce que devient le rang de la page affichée après une opération sur les pages, ou
+ * `undefined` si cette page n'existe plus.
+ *
+ * Une page n'a pas de nom : son rang EST son identité, et toutes ces opérations le
+ * changent. La vue mémorise ce rang, jamais la page elle-même — après une annulation, le
+ * document est de toute façon un arbre neuf où plus rien de l'ancien ne pointe. Il faut
+ * donc reporter le décalage nous-mêmes, sans quoi le pilote qui insère une page en tête
+ * se retrouverait à regarder sa voisine sous le même numéro.
+ */
+function remapPageIndex(operation: PageOperation, index: number): number | undefined {
+  switch (operation.kind) {
+    case 'insert':
+      return index >= operation.index ? index + 1 : index
+    case 'duplicate':
+      // La copie se pose juste après l'original : seuls les rangs au-delà glissent.
+      return index > operation.index ? index + 1 : index
+    case 'remove':
+      if (index === operation.index) return undefined
+      return index > operation.index ? index - 1 : index
+    case 'reorder': {
+      const { from, to } = operation
+      if (index === from) return to
+      if (from < index && index <= to) return index - 1
+      if (to <= index && index < from) return index + 1
+      return index
+    }
+    case 'setClass':
+      return index
+  }
+}
+
+/**
+ * Une opération demandée par le carrousel. Le module ne décide de rien : il construit
+ * l'opération et sa description, c'est ici qu'on l'applique au document vivant, qu'on en
+ * enregistre le pas et qu'on reconstruit — carrousel compris.
+ */
+function runPageOperation(
+  orientation: Orientation, operation: PageOperation, description: string
+): void {
+  if (!session) return
+  flushRecord()
+
+  // L'annonce se calcule sur l'état d'AVANT, et se garde : la reconstruction du
+  // carrousel emporte la zone d'annonce que le module vient de remplir.
+  const text = operationAnnouncement(session.layout[orientation], operation, orientation)
+
+  try {
+    applyPageOperation(session.container.document, orientation, operation)
+  } catch (error) {
+    pagesMessage = { orientation, text: `Opération impossible : ${String(error)}` }
+    syncPagesDialog()
+    return
+  }
+  pagesMessage = { orientation, text }
+
+  session.container.modified = true
+  session.history.record(description)
+
+  if (view.kind === 'detail' && view.orientation === orientation) {
+    const next = remapPageIndex(operation, view.index)
+    if (next === undefined) {
+      // La page qu'on regardait n'existe plus. Retour à la vue d'ensemble plutôt que
+      // vers sa voisine : rien ne dit que le pilote voulait celle-là.
+      view = { kind: 'overview' }
+      selection = undefined
+    } else if (next !== view.index) {
+      // Même page, autre rang : la sélection, qui est un rang de widget DANS cette page,
+      // reste valable telle quelle.
+      view = { kind: 'detail', orientation, index: next }
+    }
+  }
+
+  // `render()` reconstruit la vue ET le carrousel, depuis la mise en page relue.
+  render()
+}
+
+let pagesDialog: HTMLDialogElement | undefined
+
+/**
+ * Le carrousel des deux orientations, dans une boîte modale : c'est la même commande
+ * depuis la vue d'ensemble et depuis une page, et elle ne fait perdre ni le zoom, ni le
+ * gabarit, ni la sélection en cours.
+ */
+function fillPagesDialog(dialog: HTMLDialogElement): void {
+  if (!session) return
+  const current = session
+  dialog.textContent = ''
+
+  const box = el('div', 'modal__box')
+  const head = el('div', 'modal__head')
+  head.append(el('h2', 'modal__title', 'Gérer les pages'))
+  const close = el('button', 'btn', 'Fermer')
+  close.type = 'button'
+  close.addEventListener('click', () => closePagesDialog())
+  head.append(close)
+  box.append(head)
+
+  box.append(el(
+    'p', 'modal__lead',
+    'Insérer, dupliquer, supprimer, réordonner. Chaque opération est enregistrée : ' +
+    '« Annuler » la défait comme le reste. La classe d’une page, elle, n’est pas ' +
+    'proposée à la modification — XCTrack la fixe à la création, et l’effet d’un ' +
+    'changement après coup n’a pas été vérifié sur l’appareil.'
+  ))
+
+  const ctx: ViewContext = {
+    device: current.device,
+    settings: current.settings,
+    language: current.language
+  }
+
+  for (const orientation of ['landscape', 'portrait'] as const) {
+    const manager = renderPageManager({
+      pages: current.layout[orientation],
+      orientation,
+      ctx,
+      // Voir le texte ci-dessus : on s'en tient à ce que l'appareil sait faire.
+      allowClassChange: false,
+      onOperation: (operation, description) => {
+        runPageOperation(orientation, operation, description)
+      },
+      onOpen: (index) => {
+        closePagesDialog()
+        view = { kind: 'detail', orientation, index }
+        // Un rang de widget ne veut rien dire d'une page à l'autre.
+        selection = undefined
+        render()
+        window.scrollTo({ top: 0 })
+      }
+    })
+    box.append(manager.root)
+    // Ce que l'opération précédente a produit, redit dans le carrousel reconstruit.
+    if (pagesMessage?.orientation === orientation) manager.announce(pagesMessage.text)
+  }
+
+  dialog.append(box)
+}
+
+function syncPagesDialog(): void {
+  if (!pagesDialog) return
+  if (!session || session.container.parseError !== undefined) {
+    closePagesDialog()
+    return
+  }
+  fillPagesDialog(pagesDialog)
+}
+
+function closePagesDialog(): void {
+  const dialog = pagesDialog
+  pagesDialog = undefined
+  pagesMessage = undefined
+  if (!dialog) return
+  dialog.close()
+  dialog.remove()
+}
+
+function openPagesDialog(): void {
+  if (!session || pagesDialog !== undefined) return
+  flushRecord()
+  const dialog = el('dialog', 'modal modal--pages')
+  dialog.setAttribute('aria-label', 'Gérer les pages')
+  // Échap ferme la boîte native : rien n'est annulé, le document reste tel qu'il est.
+  dialog.addEventListener('cancel', () => {
+    pagesDialog = undefined
+    pagesMessage = undefined
+    dialog.remove()
+  })
+  pagesDialog = dialog
+  fillPagesDialog(dialog)
+  document.body.append(dialog)
+  dialog.showModal()
 }
 
 function render(): void {
@@ -590,6 +979,8 @@ function render(): void {
   editor?.destroy()
   editor = undefined
   panelHost = undefined
+  paletteHost = undefined
+  paletteToggle = undefined
   selectionLabel = undefined
 
   // La mise en page se relit à chaque dessin depuis le document courant. Après une
@@ -598,6 +989,11 @@ function render(): void {
   if (session !== undefined && session.container.parseError === undefined) {
     session.layout = readLayout(session.container.document)
   }
+
+  // Le carrousel se reconstruit avec la vue, et depuis la mise en page qui vient d'être
+  // relue : après une annulation, il montre les pages de l'arbre neuf, pas celles de
+  // l'arbre disparu.
+  syncPagesDialog()
 
   content.textContent = ''
   exportButton.hidden = session === undefined
@@ -669,10 +1065,18 @@ function render(): void {
   const title = el('h1', 'sr-only', 'Pages de la configuration')
   content.append(title, metaStrip(session))
   if (editMode) {
-    content.append(el(
-      'p', 'editnote',
-      'Mode édition : ouvrez une page pour en déplacer les widgets et régler leurs options.'
+    const note = el('div', 'editnote')
+    note.append(el(
+      'p', 'editnote__text',
+      'Mode édition : ouvrez une page pour y ajouter des gadgets, déplacer ses widgets et ' +
+      'régler leurs options. Les pages elles-mêmes — en insérer, en dupliquer, en ' +
+      'supprimer, changer leur ordre — se gèrent ici.'
     ))
+    const pagesButton = el('button', 'btn btn--primary', 'Gérer les pages')
+    pagesButton.type = 'button'
+    pagesButton.addEventListener('click', () => openPagesDialog())
+    note.append(pagesButton)
+    content.append(note)
   }
 
   // Les données personnelles n'ont pas leur place ici : elles ne concernent le pilote
@@ -720,6 +1124,10 @@ async function load(file: File): Promise<void> {
   // l'historique de l'ancien n'a plus aucun sens ici.
   editMode = false
   selection = undefined
+  // Le carrousel et la palette parlaient du fichier précédent.
+  closePagesDialog()
+  paletteOpen = false
+  paletteQuery = ''
   try {
     const container = await openContainer(new Uint8Array(await file.arrayBuffer()), file.name)
     const settings = readRenderSettings(container.document)
@@ -763,14 +1171,28 @@ fileInput.addEventListener('change', () => {
   fileInput.value = ''
 })
 
+/**
+ * Le voile « déposez le fichier » ne concerne que les fichiers. Le carrousel des pages se
+ * réordonne au glisser-déposer : sans ce filtre, tirer une vignette recouvrirait toute
+ * l'application d'une invitation à ouvrir un fichier, et masquerait la cible visée.
+ */
+function carriesFiles(event: DragEvent): boolean {
+  return event.dataTransfer?.types.includes('Files') === true
+}
+
 let dragDepth = 0
 window.addEventListener('dragenter', (event) => {
+  if (!carriesFiles(event)) return
   event.preventDefault()
   dragDepth += 1
   document.body.classList.add('is-dragging')
 })
-window.addEventListener('dragover', (event) => { event.preventDefault() })
+window.addEventListener('dragover', (event) => {
+  if (!carriesFiles(event)) return
+  event.preventDefault()
+})
 window.addEventListener('dragleave', (event) => {
+  if (!carriesFiles(event)) return
   event.preventDefault()
   dragDepth = Math.max(0, dragDepth - 1)
   if (dragDepth === 0) document.body.classList.remove('is-dragging')
@@ -878,7 +1300,12 @@ exportButton.addEventListener('click', () => {
 
 editToggle.addEventListener('click', () => {
   editMode = !editMode
-  if (editMode) void loadProperties()
+  // Les deux modules lourds de l'édition sont amorcés dès l'entrée : ils partagent le
+  // catalogue d'options, et le premier clic ne doit pas attendre son téléchargement.
+  if (editMode) {
+    void loadProperties()
+    void loadPalette()
+  }
   if (!editMode) {
     flushRecord()
     selection = undefined
@@ -917,6 +1344,9 @@ window.addEventListener('keydown', (event) => {
 window.addEventListener('keydown', (event) => {
   const current = view
   if (current.kind !== 'detail') return
+  // Le carrousel est ouvert par-dessus : Échap le ferme, les flèches appartiennent à ses
+  // commandes. Rien de tout cela ne doit changer la page qui se trouve derrière.
+  if (pagesDialog !== undefined) return
   // Les flèches appartiennent au curseur de zoom quand il a le focus.
   if (event.target instanceof HTMLInputElement) return
   // En édition, flèches et Échap appartiennent au calque et au panneau : déplacer un

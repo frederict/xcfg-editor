@@ -318,7 +318,10 @@ export function buildDetail(options: DetailOptions): HTMLElement {
   const facts = el('p', 'detail__facts')
   facts.append(
     el('span', 'chip', kind.shortName),
-    el('span', 'chip', plural(page.widgets.length, 'widget', 'widgets')),
+    // `chip--count` : le seul de ces faits qui change sans que la vue soit reconstruite —
+    // ajouter ou supprimer un widget en édition ne redessine que la page. `main.ts` le
+    // retrouve par cette classe et le remet à jour, plutôt que d'afficher un compte périmé.
+    el('span', 'chip chip--count', plural(page.widgets.length, 'widget', 'widgets')),
     el('span', 'chip', `${formatMm(screenSize.widthMm)} × ${formatMm(screenSize.heightMm)} mm`),
     el('span', 'chip chip--quiet', ctx.device.label)
   )

@@ -1578,3 +1578,131 @@ body.is-dragging .veil {
   font-size: 12px;
   color: var(--app-ink-soft);
 }
+
+/* ------------------------------------------- assemblage : palette et carrousel */
+
+/*
+ * Les deux modules d'édition branchés dans la vue : la palette d'ajout, tiroir de la
+ * colonne de droite, et le carrousel des pages, ouvert par-dessus la vue courante.
+ *
+ * Rien de neuf n'est introduit ici : ce sont les meubles déjà posés (`.panel`, `.modal`)
+ * qui reçoivent l'un et l'autre. Le cadre reste achromatique — voir l'en-tête.
+ */
+
+/* Les commandes qui n'agissent pas sur la sélection : ajouter, gérer les pages. Poussées
+   à droite de la barre, elles ne se confondent pas avec ce qui décrit l'état courant. */
+.editbar__actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+/* Le rappel de clavier repasse sous les commandes : mis à leur droite, il les repousserait
+   hors de vue sur un écran étroit. */
+.editbar__hint { order: 1; flex: 1 1 100%; }
+
+/* La note de la vue d'ensemble porte désormais l'accès aux pages. */
+.editnote {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.editnote__text { margin: 0; max-width: 72ch; }
+
+/* --- la palette, tiroir au-dessus des réglages --- */
+
+.panel__palette:not(:empty) { margin-bottom: 1rem; }
+
+/*
+ * La liste des 84 types a sa propre glissière plutôt que d'allonger la colonne : les
+ * réglages du widget qu'on vient de poser sont juste en dessous, et ils doivent rester
+ * atteignables sans traverser toute la liste.
+ */
+.panel__palette .palette__list {
+  max-height: 21rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* La liste est une colonne flexible : bornée en hauteur, elle écraserait ses lignes les
+   unes sur les autres au lieu de défiler. Chaque ligne garde donc sa hauteur. */
+.panel__palette .palette__list > * { flex: 0 0 auto; }
+
+/* --- le carrousel des pages, par-dessus la vue --- */
+
+.modal--pages {
+  /* Un rail de vignettes paysage : la boîte prend la largeur de l'écran, moins ses marges. */
+  max-width: min(84rem, 94vw);
+  width: min(84rem, 94vw);
+}
+
+/*
+ * La boîte défile, pas le rail. Le rail porte `overflow-x: auto`, ce qui rend aussi son
+ * débordement vertical scrollable et rognerait la liste des classes que le « + » déploie
+ * par-dessus les vignettes. On lui rend sa visibilité et on déplace la glissière ici.
+ */
+.modal--pages .modal__box {
+  max-height: 88vh;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+/*
+ * Le rail se replie sur plusieurs lignes au lieu de défiler : gérer les pages, c'est
+ * d'abord voir tous les rangs ensemble, et un carrousel qui cache la moitié des pages
+ * hors du cadre demanderait de faire défiler pour compter. L'ordre de lecture reste
+ * l'ordre des rangs, donc celui du vol.
+ */
+.modal--pages .pages__rail {
+  overflow: visible;
+  flex-wrap: wrap;
+  row-gap: 1.2rem;
+}
+
+.modal--pages .pages:first-of-type { margin-top: 0.5rem; }
+
+.modal__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.modal__lead {
+  margin: 0;
+  max-width: 78ch;
+  color: var(--app-ink-soft);
+  font-size: 13px;
+}
+
+/*
+ * Dans la colonne de droite, une entrée de palette tient sur deux lignes : le libellé
+ * au-dessus, le nom court en dessous, le compteur d'exemplaires à droite. Le module les
+ * pose en ligne avec repli (`flex-wrap`), ce qui convient à une boîte large ; ici la
+ * colonne fait 22 rem, la ligne se replie — et un `<button>` ne recalcule pas sa hauteur
+ * pour un contenu replié, si bien que les entrées se chevauchaient. Une grille à deux
+ * lignes explicites donne au bouton une hauteur que le navigateur sait mesurer.
+ */
+.panel__palette .palette__entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 0.5rem;
+  row-gap: 0.1rem;
+  align-items: baseline;
+  min-height: 0;
+  padding-block: 0.45rem;
+}
+
+.panel__palette .palette__name { grid-column: 1; grid-row: 1; }
+.panel__palette .palette__short { grid-column: 1; grid-row: 2; }
+
+.panel__palette .palette__badge {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+}
