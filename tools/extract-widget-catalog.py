@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 """Extrait le catalogue de la palette d'ajout de widgets XCTrack depuis un APK décompressé.
 
-Régénère `src/catalog/widgetCatalog.json` : pour chaque widget proposé à l'ajout, sa
-**famille**, sa **position dans cette famille**, son indicateur **Pro** et sa
-**description**, traduite dans toutes les langues livrées par l'APK. Plus les libellés
-des familles elles-mêmes. Aucune dépendance tierce.
+Régénère `src/catalog/widgetCatalog/<langue>.json` : pour chaque widget proposé à
+l'ajout, sa **famille**, sa **position dans cette famille**, son indicateur **Pro** et
+sa **description**. Plus les libellés des familles elles-mêmes. Aucune dépendance
+tierce.
+
+**Un fichier par langue**, et non un catalogue unique portant les 33 : l'éditeur n'en
+affiche jamais qu'une à la fois. Voir « La partition par langue » plus bas. La liste
+des langues disponibles sort à part, dans `src/catalog/widgetCatalogLanguages.json`.
 
 Usage :
     python3 tools/extract-widget-catalog.py [chemin_du_dossier_apk_decompile]
@@ -73,6 +77,32 @@ faite avec le relevé d'écran de `docs/reference/edition-native-exploration.md`
 Elle ne donne pas la **taille par défaut** d'un widget neuf (§ 3.4 : relevée sur
 l'appareil, pas trouvée dans le registre), ni la raison pour laquelle un widget est
 Pro. Une description absente est déclarée absente ; elle n'est jamais fabriquée.
+
+## La partition par langue
+
+Le catalogue complet pèse 204 Ko minifiés, dont 95 % de traductions qu'un pilote donné
+ne lira jamais. Chaque fichier de langue est donc **autonome** : il porte la part
+invariante (familles, widgets, ordre, Pro) et les seuls textes de sa langue.
+
+Le repli anglais est **fusionné à la génération**, clé par clé, là où la langue ne
+traduit pas. C'est structurellement nécessaire : des 33 langues, **l'anglais est la
+seule complète** sur les 172 ressources du catalogue, `hr` n'en traduit que 16. Les
+deux stratégies possibles ont été chiffrées avant de trancher (minifié, JSON) :
+
+- **anglais fusionné** — un seul fichier à charger : `fr` 24 276 o (5 775 o gzip),
+  `hr` 23 394 o (5 444 o gzip) ;
+- **deux chargements**, la langue puis l'anglais entier : `fr` 46 651 o
+  (10 780 o gzip), `hr` 37 420 o (8 027 o gzip).
+
+La fusion transfère donc environ **deux fois moins d'octets** pour une langue bien
+traduite, et une requête au lieu de deux. Elle coûte en contrepartie de la place sur le
+serveur : 800 Ko pour les 33 fichiers, contre 713 Ko sans fusion — de la place qui
+n'est jamais transférée. La fusion l'emporte.
+
+Le texte anglais emprunté est indiscernable d'une traduction dans le fichier produit,
+à dessein : l'ancien `catalogText()` rendait déjà `texts[langue] ?? texts.en`, la
+partition rend exactement le même texte. Seuls `nativeStringCount` et
+`fallbackStringCount` gardent trace de l'emprunt, pour l'audit.
 """
 from __future__ import annotations
 
@@ -120,6 +150,10 @@ def class_short(descriptor: str) -> str:
 # widget gratuit, bit désarmé -> widget Pro. Constante nommée ici pour qu'un lecteur
 # n'ait pas à redécouvrir d'où sort le 4.
 FREE_FLAG_BIT = 4
+
+# Langue de repli du catalogue : celle des ressources par défaut de l'APK, et la seule
+# qui traduise les 172 ressources. Voir la partition par langue, plus bas.
+FALLBACK_LANGUAGE = "en"
 
 
 def proto_shorty(dex: Dex, method_idx: int) -> str:
@@ -406,7 +440,9 @@ def main() -> None:
     visible = [f for f in families if not f["hidden"]]
     visible_widgets = [n for f in visible for n in f["widgets"]]
 
-    catalog = {
+    # La part du catalogue qui ne dépend d'aucune langue : elle est recopiée telle
+    # quelle dans chacun des fichiers de langue (voir la partition ci-dessous).
+    common = {
         "meta": {
             "source": apk_dir.name,
             "generatedBy": "tools/extract-widget-catalog.py",
@@ -421,21 +457,79 @@ def main() -> None:
             "descriptionSameAsTitleCount": len(same_as_title),
             "undescribed": undescribed,
         },
-        "strings": strings,
         "families": [
             {"id": f["id"], "hidden": f["hidden"], "widgets": f["widgets"]} for f in families
         ],
         "widgets": dict(sorted(widgets.items())),
     }
 
-    out_path = PROJECT_ROOT / "src" / "catalog" / "widgetCatalog.json"
-    out_path.write_text(
-        json.dumps(catalog, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    # -- partition par langue -----------------------------------------------
+    # Un fichier autonome par langue, au lieu d'un catalogue unique portant les 33.
+    # L'éditeur n'en affiche jamais qu'une : lui en transférer 33 coûtait 204 Ko
+    # minifiés là où le français en demande 24.
+    #
+    # Chaque fichier porte **sa** langue ET l'anglais **là où sa langue manque**.
+    # Ce n'est pas décoratif : sur les 172 ressources du catalogue, l'anglais est la
+    # seule langue complète — `hr` n'en traduit que 16. Le repli doit donc être
+    # disponible à chaque chargement. Le fusionner à la génération coûte, pour une
+    # langue presque complète comme le français, 12 textes anglais soit ~1 Ko ; le
+    # charger à part coûterait un second fichier de ~23 Ko. Le repli est donc résolu
+    # ici, une fois pour toutes, plutôt qu'à l'exécution.
+    #
+    # Le texte anglais emprunté est indiscernable d'une traduction, à dessein :
+    # `catalogText()` rendait déjà `texts[langue] ?? texts.en`, la partition rend
+    # exactement le même texte. Seuls les compteurs `nativeStringCount` /
+    # `fallbackStringCount` gardent trace de l'emprunt, pour l'audit.
+    out_dir = PROJECT_ROOT / "src" / "catalog" / "widgetCatalog"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for stale in out_dir.glob("*.json"):
+        stale.unlink()  # une langue retirée de l'APK ne doit pas survivre au fichier
+    # Le catalogue monolithique d'avant la partition. Supprimé s'il traîne encore :
+    # 247 Ko qui ne sont plus lus par personne, et qui masqueraient la partition à un
+    # lecteur pressé.
+    legacy = PROJECT_ROOT / "src" / "catalog" / "widgetCatalog.json"
+    if legacy.exists():
+        legacy.unlink()
+
+    written: list[tuple[str, int, int, int]] = []
+    for language in languages:
+        texts: dict[str, str] = {}
+        borrowed = 0
+        for key, by_language in strings.items():
+            own = by_language.get(language)
+            if own is not None:
+                texts[key] = own
+            elif (fallback := by_language.get(FALLBACK_LANGUAGE)) is not None:
+                texts[key] = fallback
+                borrowed += 1
+        payload = {
+            "language": language,
+            "fallbackLanguage": FALLBACK_LANGUAGE,
+            "nativeStringCount": len(texts) - borrowed,
+            "fallbackStringCount": borrowed,
+            **common,
+            "strings": texts,
+        }
+        path = out_dir / f"{language}.json"
+        path.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+        )
+        written.append((language, len(texts) - borrowed, borrowed, path.stat().st_size))
+
+    # La liste des langues disponibles doit être connue **avant** de choisir quel
+    # fichier charger : elle ne peut pas vivre dans les fichiers de langue eux-mêmes.
+    # Elle est donc émise à part, et reste écrite par ce script comme tout le reste.
+    index_path = PROJECT_ROOT / "src" / "catalog" / "widgetCatalogLanguages.json"
+    index_path.write_text(
+        json.dumps(languages, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
 
     # -- rapport ------------------------------------------------------------
     print()
-    print(f"Catalogue écrit : {out_path} ({out_path.stat().st_size:,} octets)")
+    total_bytes = sum(size for _l, _n, _b, size in written)
+    print(f"Catalogue écrit : {out_dir}/ — {len(written)} fichiers de langue, "
+          f"{total_bytes:,} octets au total")
+    print(f"Liste des langues : {index_path} ({index_path.stat().st_size:,} octets)")
     print(f"Familles : {len(families)} dont {len(visible)} visibles")
     for family in families:
         label = strings.get(family["id"], {})
@@ -443,7 +537,7 @@ def main() -> None:
         print(f"  {family['id']:<16} {len(family['widgets']):>2} widgets{marker} "
               f"— en={label.get('en')!r} fr={label.get('fr')!r}")
     print(f"Widgets au registre : {len(widgets)} dont {len(visible_widgets)} visibles")
-    print(f"Widgets Pro : {catalog['meta']['proCount']}")
+    print(f"Widgets Pro : {common['meta']['proCount']}")
     print(f"Avec description : {len(described)} / {len(widgets)} "
           f"(dont {len(same_as_title)} identiques au titre)")
     if undescribed:
@@ -464,6 +558,12 @@ def main() -> None:
     print(f"  complètes ({len(complete)}/{len(languages)}) : {complete}")
     if partial:
         print(f"  partielles : " + ", ".join(f"{l} {n}/{total}" for l, n in sorted(partial.items())))
+
+    # Taille de chaque fichier de langue, et part empruntée à l'anglais. C'est le
+    # chiffre qui compte pour le transfert : un pilote n'en charge jamais qu'un.
+    print("\nFichiers de langue (octets indentés / textes propres / empruntés à l'anglais) :")
+    for language, native, borrowed, size in written:
+        print(f"  {language:<6} {size:>8,}  {native:>4} propres  {borrowed:>4} empruntés")
 
     # Confrontation avec la liste des classes de widgets réellement présentes.
     classes = discover_widget_classes(dex_paths)

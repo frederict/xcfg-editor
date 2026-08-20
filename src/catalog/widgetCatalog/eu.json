@@ -1,0 +1,965 @@
+{
+  "language": "eu",
+  "fallbackLanguage": "en",
+  "nativeStringCount": 160,
+  "fallbackStringCount": 12,
+  "meta": {
+    "source": "XCTrack-1.0.3-beta5",
+    "generatedBy": "tools/extract-widget-catalog.py",
+    "registry": "Lfo7;.<clinit>",
+    "languages": [
+      "bg",
+      "bs",
+      "ca",
+      "cs",
+      "da",
+      "de",
+      "el",
+      "en",
+      "es",
+      "eu",
+      "fa",
+      "fi",
+      "fr",
+      "hi",
+      "hr",
+      "hu",
+      "it",
+      "ja",
+      "ko",
+      "lt",
+      "nl",
+      "no",
+      "pl",
+      "pt",
+      "ro",
+      "ru",
+      "sk",
+      "sl",
+      "tr",
+      "uk",
+      "vi",
+      "zh",
+      "zh-TW"
+    ],
+    "familyCount": 11,
+    "visibleFamilyCount": 10,
+    "widgetCount": 83,
+    "visibleWidgetCount": 75,
+    "proCount": 14,
+    "describedCount": 83,
+    "descriptionSameAsTitleCount": 5,
+    "undescribed": []
+  },
+  "families": [
+    {
+      "id": "wgSystem",
+      "hidden": false,
+      "widgets": [
+        "WStatusLine",
+        "WBrightnessInfo",
+        "WLastEvent"
+      ]
+    },
+    {
+      "id": "wgFlying",
+      "hidden": false,
+      "widgets": [
+        "WTime",
+        "WSpeed",
+        "WAirSpeed",
+        "WBearing",
+        "WAltitude",
+        "WBaroAltitude",
+        "WAMSL",
+        "WFL",
+        "WAltitudeAboveGround",
+        "WTakeoffHeightAbove",
+        "WVerticalSpeed",
+        "WVarioColumn",
+        "WGlide",
+        "WLocation",
+        "WAirTime",
+        "WSunset",
+        "WSunsetCivil",
+        "WVerticalGraph",
+        "WAltitudeMaximum",
+        "WNettoVario"
+      ]
+    },
+    {
+      "id": "wgAir",
+      "hidden": false,
+      "widgets": [
+        "WWindSpeed",
+        "WWindDirection",
+        "WThermalAssistant",
+        "WThermalAltGain",
+        "WAltitudeDataGraph",
+        "WQNH",
+        "WAirTemperature",
+        "WAirHumidity"
+      ]
+    },
+    {
+      "id": "wgXContest",
+      "hidden": false,
+      "widgets": [
+        "WXCAssistant",
+        "WOptiResult",
+        "WOptiUnfinishedTriangle",
+        "WOptiUnfinishedFAIPotential",
+        "WXCSpeed"
+      ]
+    },
+    {
+      "id": "wgNavigation",
+      "hidden": false,
+      "widgets": [
+        "WCompass",
+        "WCompassDigital",
+        "WSideView",
+        "WNextTurnpoint",
+        "WNextTurnpointDistance",
+        "WNextTurnpointTimeOfArrival",
+        "WNextTurnpointAlt",
+        "WNextTurnpointGlideTo",
+        "WAirspaceProximity",
+        "WTakeoffDistance",
+        "WTakeoffCourse"
+      ]
+    },
+    {
+      "id": "wgCompetition",
+      "hidden": false,
+      "widgets": [
+        "WCompMap",
+        "WCompDistanceToGoal",
+        "WCompDistanceToESS",
+        "WCompAltitudeOverGoal",
+        "WCompAltitudeOverESS",
+        "WCompGlideToGoal",
+        "WCompGlideToESS",
+        "WCompTimeToStart",
+        "WCompTimeAtStart",
+        "WCompSpeedToStart",
+        "WCompPercentage",
+        "WCompTaskSummary"
+      ]
+    },
+    {
+      "id": "wgLivetracking",
+      "hidden": false,
+      "widgets": [
+        "WLiveMessage"
+      ]
+    },
+    {
+      "id": "wgButtons",
+      "hidden": false,
+      "widgets": [
+        "WButtonNavig",
+        "WButtonPhone",
+        "WButtonCamera",
+        "WButtonZoom",
+        "WButtonVario",
+        "WButtonBrightness",
+        "WButtonVolume",
+        "WButtonVolumeReminder",
+        "WButtonIntentLauncher"
+      ]
+    },
+    {
+      "id": "wgOthers",
+      "hidden": false,
+      "widgets": [
+        "WFreeText",
+        "WWebView",
+        "WExternalData"
+      ]
+    },
+    {
+      "id": "wgTesting",
+      "hidden": false,
+      "widgets": [
+        "WLastKey",
+        "WLogPeek",
+        "WEmitTestEvent"
+      ]
+    },
+    {
+      "id": "debug_wgDebug",
+      "hidden": true,
+      "widgets": [
+        "WDebugDetectedActivity",
+        "WDebugActivelook",
+        "WDebug",
+        "WDebugFPS",
+        "WDebugSystemInfo",
+        "WDebugFont",
+        "WDebugHwAccTestMap",
+        "WVTM"
+      ]
+    }
+  ],
+  "widgets": {
+    "WAMSL": {
+      "family": "wgFlying",
+      "order": 6,
+      "pro": false,
+      "title": "wAMSLTitle",
+      "description": "wAMSLDescription"
+    },
+    "WAirHumidity": {
+      "family": "wgAir",
+      "order": 7,
+      "pro": false,
+      "title": "wAirHumidityTitle",
+      "description": "wAirHumidityDesc"
+    },
+    "WAirSpeed": {
+      "family": "wgFlying",
+      "order": 2,
+      "pro": false,
+      "title": "wAirSpeedTitle",
+      "description": "wAirSpeedDescription3"
+    },
+    "WAirTemperature": {
+      "family": "wgAir",
+      "order": 6,
+      "pro": false,
+      "title": "wAirTemperatureTitle",
+      "description": "wAirTemperatureDesc"
+    },
+    "WAirTime": {
+      "family": "wgFlying",
+      "order": 14,
+      "pro": false,
+      "title": "wAirTimeTitle",
+      "description": "wAirTimeDescription"
+    },
+    "WAirspaceProximity": {
+      "family": "wgNavigation",
+      "order": 8,
+      "pro": false,
+      "title": "wAirspaceProximityTitle",
+      "description": "wAirspaceProximityDescription"
+    },
+    "WAltitude": {
+      "family": "wgFlying",
+      "order": 4,
+      "pro": false,
+      "title": "wAltitudeTitle",
+      "description": "wAltitudeDescription2"
+    },
+    "WAltitudeAboveGround": {
+      "family": "wgFlying",
+      "order": 8,
+      "pro": false,
+      "title": "wAltitudeAboveGroundTitle",
+      "description": "wAltitudeAboveGroundDescription"
+    },
+    "WAltitudeDataGraph": {
+      "family": "wgAir",
+      "order": 4,
+      "pro": true,
+      "title": "wAltitudeDataGraphName",
+      "description": "wAltitudeDataGraphDescription"
+    },
+    "WAltitudeMaximum": {
+      "family": "wgFlying",
+      "order": 18,
+      "pro": true,
+      "title": "wAltitudeMaxInFlight",
+      "description": "wAltitudeMaxInFlightDescr"
+    },
+    "WBaroAltitude": {
+      "family": "wgFlying",
+      "order": 5,
+      "pro": false,
+      "title": "wBaroAltitudeTitle",
+      "description": "wBaroAltitudeDescription2"
+    },
+    "WBearing": {
+      "family": "wgFlying",
+      "order": 3,
+      "pro": false,
+      "title": "wBearingTitle",
+      "description": "wBearingDescription"
+    },
+    "WBrightnessInfo": {
+      "family": "wgSystem",
+      "order": 1,
+      "pro": true,
+      "title": "wBrightnessInfoTitle",
+      "description": "wBrightnessInfoDesc"
+    },
+    "WButtonBrightness": {
+      "family": "wgButtons",
+      "order": 5,
+      "pro": true,
+      "title": "wButtonBrightness",
+      "description": "wButtonBrightnessDesc"
+    },
+    "WButtonCamera": {
+      "family": "wgButtons",
+      "order": 2,
+      "pro": false,
+      "title": "wButtonActionCamera2",
+      "description": "wButtonActionCameraDescription"
+    },
+    "WButtonIntentLauncher": {
+      "family": "wgButtons",
+      "order": 8,
+      "pro": true,
+      "title": "wButtonIntentLauncherTitle",
+      "description": "wButtonIntentLauncherDesc"
+    },
+    "WButtonNavig": {
+      "family": "wgButtons",
+      "order": 0,
+      "pro": false,
+      "title": "wButtonNavig",
+      "description": "wButtonNavigDescription"
+    },
+    "WButtonPhone": {
+      "family": "wgButtons",
+      "order": 1,
+      "pro": false,
+      "title": "wButtonPhone",
+      "description": "wButtonPhoneDescription"
+    },
+    "WButtonVario": {
+      "family": "wgButtons",
+      "order": 4,
+      "pro": false,
+      "title": "widgetSettingsButtonSensVario2",
+      "description": "widgetSettingsButtonSensVarioDescription"
+    },
+    "WButtonVolume": {
+      "family": "wgButtons",
+      "order": 6,
+      "pro": true,
+      "title": "wButtonVolume",
+      "description": "wButtonVolumeDesc"
+    },
+    "WButtonVolumeReminder": {
+      "family": "wgButtons",
+      "order": 7,
+      "pro": false,
+      "title": "wButtonVolumeReminder",
+      "description": "wButtonVolumeReminderDesc"
+    },
+    "WButtonZoom": {
+      "family": "wgButtons",
+      "order": 3,
+      "pro": false,
+      "title": "wButtonZoom",
+      "description": "wButtonZoomDescription"
+    },
+    "WCompAltitudeOverESS": {
+      "family": "wgCompetition",
+      "order": 4,
+      "pro": true,
+      "title": "wCompAltitudeOverESSTitle",
+      "description": "wCompAltitudeOverESSDescription"
+    },
+    "WCompAltitudeOverGoal": {
+      "family": "wgCompetition",
+      "order": 3,
+      "pro": false,
+      "title": "wCompAltitudeOverGoalTitle",
+      "description": "wCompAltitudeOverGoalDescription"
+    },
+    "WCompDistanceToESS": {
+      "family": "wgCompetition",
+      "order": 2,
+      "pro": true,
+      "title": "wCompDistanceToESSTitle",
+      "description": "wCompDistanceToESSDescription"
+    },
+    "WCompDistanceToGoal": {
+      "family": "wgCompetition",
+      "order": 1,
+      "pro": false,
+      "title": "wCompDistanceToGoalTitle",
+      "description": "wCompDistanceToGoalDescription"
+    },
+    "WCompGlideToESS": {
+      "family": "wgCompetition",
+      "order": 6,
+      "pro": true,
+      "title": "wCompGlideToEssTitle",
+      "description": "wCompGlideToEssDescription"
+    },
+    "WCompGlideToGoal": {
+      "family": "wgCompetition",
+      "order": 5,
+      "pro": false,
+      "title": "wCompGlideToGoalTitle",
+      "description": "wCompGlideToGoalDescription"
+    },
+    "WCompMap": {
+      "family": "wgCompetition",
+      "order": 0,
+      "pro": false,
+      "title": "wCompMapTitle",
+      "description": "wCompMapDescription"
+    },
+    "WCompPercentage": {
+      "family": "wgCompetition",
+      "order": 10,
+      "pro": true,
+      "title": "wCompSSPercentage",
+      "description": "wCompSSPercentageDescription"
+    },
+    "WCompSpeedToStart": {
+      "family": "wgCompetition",
+      "order": 9,
+      "pro": false,
+      "title": "wCompSpeedToStartTitle",
+      "description": "wCompSpeedToStartDescription"
+    },
+    "WCompTaskSummary": {
+      "family": "wgCompetition",
+      "order": 11,
+      "pro": false,
+      "title": "wCompTaskSummaryTitle",
+      "description": "wCompTaskSummaryDescription"
+    },
+    "WCompTimeAtStart": {
+      "family": "wgCompetition",
+      "order": 8,
+      "pro": false,
+      "title": "wCompTimeAtStartTitle",
+      "description": "wCompTimeAtStartDescription"
+    },
+    "WCompTimeToStart": {
+      "family": "wgCompetition",
+      "order": 7,
+      "pro": false,
+      "title": "wCompTimeToStartTitle",
+      "description": "wCompTimeToStartDescription"
+    },
+    "WCompass": {
+      "family": "wgNavigation",
+      "order": 0,
+      "pro": false,
+      "title": "wCompassTitleWind",
+      "description": "wCompassDescription"
+    },
+    "WCompassDigital": {
+      "family": "wgNavigation",
+      "order": 1,
+      "pro": false,
+      "title": "wCompassDigitTitle",
+      "description": "wCompassDigitDescription"
+    },
+    "WDebug": {
+      "family": "debug_wgDebug",
+      "order": 2,
+      "pro": false,
+      "title": "debug_wDebugTitle",
+      "description": "debug_wDebugDescription"
+    },
+    "WDebugActivelook": {
+      "family": "debug_wgDebug",
+      "order": 1,
+      "pro": false,
+      "title": "debug_wActiveLookTitle",
+      "description": "debug_wActiveLookDescr"
+    },
+    "WDebugDetectedActivity": {
+      "family": "debug_wgDebug",
+      "order": 0,
+      "pro": false,
+      "title": "debug_wDebugDetectedActivity",
+      "description": "debug_wDebugDetectedActivity"
+    },
+    "WDebugFPS": {
+      "family": "debug_wgDebug",
+      "order": 3,
+      "pro": false,
+      "title": "debug_wDebugFps",
+      "description": "debug_wDebugFps"
+    },
+    "WDebugFont": {
+      "family": "debug_wgDebug",
+      "order": 5,
+      "pro": false,
+      "title": "debug_wDebugFont",
+      "description": "debug_wDebugFont"
+    },
+    "WDebugHwAccTestMap": {
+      "family": "debug_wgDebug",
+      "order": 6,
+      "pro": false,
+      "title": "debug_wDebugHwAccTestMap",
+      "description": "debug_wDebugHwAccTestMapDescription"
+    },
+    "WDebugSystemInfo": {
+      "family": "debug_wgDebug",
+      "order": 4,
+      "pro": false,
+      "title": "debug_wDebugSystemInfo",
+      "description": "debug_wDebugSystemInfo"
+    },
+    "WEmitTestEvent": {
+      "family": "wgTesting",
+      "order": 2,
+      "pro": false,
+      "title": "wTestingEmitEventTitle",
+      "description": "wTestingEmitEventDescription"
+    },
+    "WExternalData": {
+      "family": "wgOthers",
+      "order": 2,
+      "pro": false,
+      "title": "wOpenDataTitle",
+      "description": "wOpenDataDescription"
+    },
+    "WFL": {
+      "family": "wgFlying",
+      "order": 7,
+      "pro": false,
+      "title": "wFLTitle",
+      "description": "wFLDescription"
+    },
+    "WFreeText": {
+      "family": "wgOthers",
+      "order": 0,
+      "pro": false,
+      "title": "wFreeTextTitle",
+      "description": "wFreeTextDescription"
+    },
+    "WGlide": {
+      "family": "wgFlying",
+      "order": 12,
+      "pro": false,
+      "title": "wGlideTitle",
+      "description": "wGlideDescription"
+    },
+    "WLastEvent": {
+      "family": "wgSystem",
+      "order": 2,
+      "pro": false,
+      "title": "wLastEventTitle",
+      "description": "wLastEventDescription"
+    },
+    "WLastKey": {
+      "family": "wgTesting",
+      "order": 0,
+      "pro": false,
+      "title": "wTestingLastKeyTitle",
+      "description": "wTestingLastKeyDescription"
+    },
+    "WLiveMessage": {
+      "family": "wgLivetracking",
+      "order": 0,
+      "pro": false,
+      "title": "wLiveMessageTitle",
+      "description": "wLiveMessageSummary"
+    },
+    "WLocation": {
+      "family": "wgFlying",
+      "order": 13,
+      "pro": false,
+      "title": "wLocationTitle",
+      "description": "wLocationDescription2"
+    },
+    "WLogPeek": {
+      "family": "wgTesting",
+      "order": 1,
+      "pro": false,
+      "title": "wTestingLogPeekTitle",
+      "description": "wTestingLogPeekDescription"
+    },
+    "WNettoVario": {
+      "family": "wgFlying",
+      "order": 19,
+      "pro": false,
+      "title": "wNettoVarioTitle",
+      "description": "wNettoVarioDescription"
+    },
+    "WNextTurnpoint": {
+      "family": "wgNavigation",
+      "order": 3,
+      "pro": false,
+      "title": "wNextTurnpointTitle",
+      "description": "wNextTurnpointDescription"
+    },
+    "WNextTurnpointAlt": {
+      "family": "wgNavigation",
+      "order": 6,
+      "pro": false,
+      "title": "wNextTurnpointAltOfArrivalTitle",
+      "description": "wNextTurnpointAltOfArrivalDescription"
+    },
+    "WNextTurnpointDistance": {
+      "family": "wgNavigation",
+      "order": 4,
+      "pro": false,
+      "title": "wNextTurnpointDistanceTitle",
+      "description": "wNextTurnpointDistanceDescription"
+    },
+    "WNextTurnpointGlideTo": {
+      "family": "wgNavigation",
+      "order": 7,
+      "pro": false,
+      "title": "wNextTurnpointGlideToTitle",
+      "description": "wNextTurnpointGlideToDescription"
+    },
+    "WNextTurnpointTimeOfArrival": {
+      "family": "wgNavigation",
+      "order": 5,
+      "pro": false,
+      "title": "wNextTurnpointTimeOfArrivalTitle",
+      "description": "wNextTurnpointTimeOfArrivalDescription"
+    },
+    "WOptiResult": {
+      "family": "wgXContest",
+      "order": 1,
+      "pro": false,
+      "title": "wOptiResultTitle",
+      "description": "wOptiResultDescription"
+    },
+    "WOptiUnfinishedFAIPotential": {
+      "family": "wgXContest",
+      "order": 3,
+      "pro": true,
+      "title": "wOptiUnfinishedFAIPotentialTitle",
+      "description": "wOptiUnfinishedFAIPotentialDescription2",
+      "descriptionArgs": [
+        "https://xctrack.org/fpw.html"
+      ]
+    },
+    "WOptiUnfinishedTriangle": {
+      "family": "wgXContest",
+      "order": 2,
+      "pro": false,
+      "title": "wOptiUnfinishedTriangleTitle",
+      "description": "wOptiUnfinishedTriangleDescription"
+    },
+    "WQNH": {
+      "family": "wgAir",
+      "order": 5,
+      "pro": false,
+      "title": "wQNHTitle",
+      "description": "wQNHDescription"
+    },
+    "WSideView": {
+      "family": "wgNavigation",
+      "order": 2,
+      "pro": false,
+      "title": "wSideViewTitle",
+      "description": "wSideViewTitleDescription"
+    },
+    "WSpeed": {
+      "family": "wgFlying",
+      "order": 1,
+      "pro": false,
+      "title": "wSpeedTitle",
+      "description": "wSpeedDescription"
+    },
+    "WStatusLine": {
+      "family": "wgSystem",
+      "order": 0,
+      "pro": false,
+      "title": "wStatusLineTitle",
+      "description": "wStatusLineDescription"
+    },
+    "WSunset": {
+      "family": "wgFlying",
+      "order": 15,
+      "pro": true,
+      "title": "wSunsetTitle",
+      "description": "wSunsetDescription"
+    },
+    "WSunsetCivil": {
+      "family": "wgFlying",
+      "order": 16,
+      "pro": true,
+      "title": "wSunsetCivilTitle",
+      "description": "wSunsetCivilDescription"
+    },
+    "WTakeoffCourse": {
+      "family": "wgNavigation",
+      "order": 10,
+      "pro": false,
+      "title": "wTakeoffCourseTitle",
+      "description": "wTakeoffCourseDescription"
+    },
+    "WTakeoffDistance": {
+      "family": "wgNavigation",
+      "order": 9,
+      "pro": false,
+      "title": "wTakeoffDistanceTitle",
+      "description": "wTakeoffDistanceTitleDescription"
+    },
+    "WTakeoffHeightAbove": {
+      "family": "wgFlying",
+      "order": 9,
+      "pro": false,
+      "title": "wTakeoffHeightAboveTitle",
+      "description": "wTakeoffHeightAboveDescription"
+    },
+    "WThermalAltGain": {
+      "family": "wgAir",
+      "order": 3,
+      "pro": false,
+      "title": "wThermalAltGainTitle",
+      "description": "wThermalAltGainDescription"
+    },
+    "WThermalAssistant": {
+      "family": "wgAir",
+      "order": 2,
+      "pro": false,
+      "title": "wThermalAssistantTitle",
+      "description": "wThermalAssistantDescription"
+    },
+    "WTime": {
+      "family": "wgFlying",
+      "order": 0,
+      "pro": false,
+      "title": "wTimeTitle",
+      "description": "wTimeDescription"
+    },
+    "WVTM": {
+      "family": "debug_wgDebug",
+      "order": 7,
+      "pro": false,
+      "title": "debug_wVTM",
+      "description": "debug_wVTM"
+    },
+    "WVarioColumn": {
+      "family": "wgFlying",
+      "order": 11,
+      "pro": false,
+      "title": "wVarioColumnTitle",
+      "description": "wVarioColumnDescription"
+    },
+    "WVerticalGraph": {
+      "family": "wgFlying",
+      "order": 17,
+      "pro": false,
+      "title": "wVerticalGraphTitle",
+      "description": "wVerticalGraphDescription"
+    },
+    "WVerticalSpeed": {
+      "family": "wgFlying",
+      "order": 10,
+      "pro": false,
+      "title": "wVerticalSpeedTitle",
+      "description": "wVerticalSpeedDescription"
+    },
+    "WWebView": {
+      "family": "wgOthers",
+      "order": 1,
+      "pro": true,
+      "title": "wWebViewTextTitle",
+      "description": "wWebViewTextDescription"
+    },
+    "WWindDirection": {
+      "family": "wgAir",
+      "order": 1,
+      "pro": false,
+      "title": "wWindDirectionTitle",
+      "description": "wWindDirectionDescription"
+    },
+    "WWindSpeed": {
+      "family": "wgAir",
+      "order": 0,
+      "pro": false,
+      "title": "wWindSpeedTitle",
+      "description": "wWindSpeedDescription"
+    },
+    "WXCAssistant": {
+      "family": "wgXContest",
+      "order": 0,
+      "pro": false,
+      "title": "wXCAssistantTitle2",
+      "description": "wXCAssistantDescription2"
+    },
+    "WXCSpeed": {
+      "family": "wgXContest",
+      "order": 4,
+      "pro": false,
+      "title": "wXCSpeedTitle",
+      "description": "wXCSpeedDescription"
+    }
+  },
+  "strings": {
+    "wgSystem": "Sistema",
+    "wgFlying": "Hegan",
+    "wgAir": "Airea",
+    "wgXContest": "XContest",
+    "wgNavigation": "Nabigazioa",
+    "wgCompetition": "Konpetizioa",
+    "wgLivetracking": "Livetracking",
+    "wgButtons": "Ekiintza botoiak",
+    "wgOthers": "Besteak",
+    "wgTesting": "Probatzen",
+    "debug_wgDebug": "Debug",
+    "wStatusLineTitle": "Linearen egoera",
+    "wStatusLineDescription": "GPS eta bateria egoera",
+    "wBrightnessInfoTitle": "Pantailaren distira",
+    "wBrightnessInfoDesc": "Pantailaren uneko distira erakusten du. Distira XCTrack-ek jarria bada \"!\" atzizkia gehituko zaio.",
+    "wLastEventTitle": "Azken ekintza",
+    "wLastEventDescription": "Azken gertaeraren erakutsitako testua",
+    "wTimeTitle": "Denbora",
+    "wTimeDescription": "Uneko tokiko ordua",
+    "wSpeedTitle": "Abiadura",
+    "wSpeedDescription": "Uneko abiadura",
+    "wAirSpeedTitle": "Airearen abiadura",
+    "wAirSpeedDescription3": "Uneko aire-abiadura (kanpokoa edo uneko lur-abiaduraren eta haizearen arabera kalkulatua). Aukeratu benetako edo adierazitako aire-abiaduraren artean. IAS kanpokoa bakarrik.",
+    "wBearingTitle": "Nabigazio noranzkoa (bearing)",
+    "wBearingDescription": "Uneko nabigazio noranzkoa",
+    "wAltitudeTitle": "GPS Alt",
+    "wAltitudeDescription2": "Itsas-mailarekiko altuera erreala, GPSaren arabera",
+    "wBaroAltitudeTitle": "Baro Alt",
+    "wBaroAltitudeDescription2": "QNHaren araberako prsio altuera (AMSL9 edota presio estandarra",
+    "wAMSLTitle": "AMSL",
+    "wAMSLDescription": "Batez besteko batez besteko maila: uneko QNHren araberako altuera barometrikoa",
+    "wFLTitle": "Hegaldi maila",
+    "wFLDescription": "Hegaldi maila erakusten du, presio sentsorerik balego",
+    "wAltitudeAboveGroundTitle": "AGL",
+    "wAltitudeAboveGroundDescription": "Uneko GPS altuera lurretik",
+    "wTakeoffHeightAboveTitle": "Aireratzarekiko altuera",
+    "wTakeoffHeightAboveDescription": "Aireratze gunearekiko altuera erakusten du",
+    "wVerticalSpeedTitle": "Abiadura bertikala",
+    "wVerticalSpeedDescription": "Barioaren testu bertsioa",
+    "wVarioColumnTitle": "Bario-barra",
+    "wVarioColumnDescription": "Uneko igotze/hondoratzea koloretako zutabeekin",
+    "wGlideTitle": "Planeoa",
+    "wGlideDescription": "Uneko planeoa",
+    "wLocationTitle": "Kokapena",
+    "wLocationDescription2": "Uneko kokapenaren WGS-84/UTM koordenatuak",
+    "wAirTimeTitle": "Aire-denbora",
+    "wAirTimeDescription": "Hegaldi denbora aireratzetik",
+    "wSunsetTitle": "Ilunabarra",
+    "wSunsetDescription": "Ilunabarreraji denbora",
+    "wSunsetCivilTitle": "Ilunabar zibila",
+    "wSunsetCivilDescription": "Illunabar zibilaren denbora",
+    "wVerticalGraphTitle": "Grafiko bertikala",
+    "wVerticalGraphDescription": "Zehaztutako aldian altuera erakusten du",
+    "wAltitudeMaxInFlight": "Max altuera",
+    "wAltitudeMaxInFlightDescr": "Hegaldiaren gehienezko GPS altuera",
+    "wNettoVarioTitle": "Bario netoa",
+    "wNettoVarioDescription": "Kanpo sensoreko bario netoa",
+    "wWindSpeedTitle": "Haizearen abiadura",
+    "wWindSpeedDescription": "Haizearen abiadura kalkulatua",
+    "wWindDirectionTitle": "Haizearen noranzkoa",
+    "wWindDirectionDescription": "Haizearen noranzko kalkulatua",
+    "wThermalAssistantTitle": "Termika laguntzailea",
+    "wThermalAssistantDescription": "Termika laguntzailea",
+    "wThermalAltGainTitle": "Termikan irabazia",
+    "wThermalAltGainDescription": "Uneko termikan irabazitako altuera",
+    "wAltitudeDataGraphName": "Altuera estatistikak",
+    "wAltitudeDataGraphDescription": "Marraztu termikaren indarra, haizearen abiadura eta norabidearekin, lurzoruarekiko abiadura eta norabidearekin, altuera ezberdinetan",
+    "wQNHTitle": "QNH",
+    "wQNHDescription": "Itsas-mailako presioa",
+    "wAirTemperatureTitle": "Airearen tenperatura",
+    "wAirTemperatureDesc": "Inguruko airearen tenperatura.",
+    "wAirHumidityTitle": "Airearen hezetasuna",
+    "wAirHumidityDesc": "Inguruko airearen hezetasuna",
+    "wXCAssistantTitle2": "XC mapa",
+    "wXCAssistantDescription2": "FAI laguntzaile eta nabigazioarekin mapa",
+    "wOptiResultTitle": "Hegan egindako XC distantzia",
+    "wOptiResultDescription": "Uneko tracklog-ean topatutako XC distantzia eta disziplina",
+    "wOptiUnfinishedTriangleTitle": "AMAITUGABEKO triangelua",
+    "wOptiUnfinishedTriangleDescription": "Triangelu lauaren/FAI triangeluaren distantzia aireratze eremura itzultzen bazara",
+    "wOptiUnfinishedFAIPotentialTitle": "FAI potentziala",
+    "wOptiUnfinishedFAIPotentialDescription2": "FAI triangeluaren gutxieneko eta gehieneko luzera, amaitu gabeko triangeluaren alde luzeenetik oraindik lor daitekeenera - XC Assistant-ek mapako FAI eremuetan marrazten dituen zenbaki berberak dira. Benetako potentziala orain arteko hegaldiarekin justifikatutako FAI triangelurik handiena da; hegaldiak irauten duen bitartean ez da inoiz txikitzen. Irakurri gehiago hemen: %s",
+    "wXCSpeedTitle": "XC batazbesteko abiadura",
+    "wXCSpeedDescription": "Abian den 3 biraketa-puntutan XC abiadura",
+    "wCompassTitleWind": "Iparrorratza eta haizea",
+    "wCompassDescription": "Uneko norabidearen, haizearen eta nabigazioaren bistaratze grafikoa",
+    "wCompassDigitTitle": "Iparrorratz digitala",
+    "wCompassDigitDescription": "Nabigazioaren noranzkoa, haizea edota nabigazioa erakutsi",
+    "wSideViewTitle": "Albo ikuspegia",
+    "wSideViewTitleDescription": "Lurzoruarekiko eta aire espazioekiko planeoa erakutsi",
+    "wNextTurnpointTitle": "Hurrengo biratze-puntua",
+    "wNextTurnpointDescription": "Hurrengo biratze-puntuaren izena",
+    "wNextTurnpointDistanceTitle": "Hurrengora distantzia",
+    "wNextTurnpointDistanceDescription": "Hurrengo biratze-punturarteko distantzia",
+    "wNextTurnpointTimeOfArrivalTitle": "Next TP TOA",
+    "wNextTurnpointTimeOfArrivalDescription": "Hurrengo biratze puntura iritsiera denbora (Next TP TOA)",
+    "wNextTurnpointAltOfArrivalTitle": "Hurrengo biratze-puntuan altuera",
+    "wNextTurnpointAltOfArrivalDescription": "Hurrengo biratze-puntuan iritsiko zaren altuera",
+    "wNextTurnpointGlideToTitle": "Biratze-puntura planeo ratioa",
+    "wNextTurnpointGlideToDescription": "Hurrengo biratze-puntura iristeko altuera-erreserba konfiguragarriarekin iristeko behar den planeo ratioa",
+    "wAirspaceProximityTitle": "Aire espazioaren gertutasuna",
+    "wAirspaceProximityDescription": "Aire-espazioaren deskribapena eta honekiko distantzia erakutsi",
+    "wTakeoffDistanceTitle": "Aireratzetik distantzia",
+    "wTakeoffDistanceTitleDescription": "Detektatutako aireratze-gunetik distantzia erakusten du",
+    "wTakeoffCourseTitle": "Aireratzera bidea",
+    "wTakeoffCourseDescription": "Aireratze gunera bidea erakusten du",
+    "wCompMapTitle": "Egitekoaren mapa",
+    "wCompMapDescription": "Koonpetizio mapa ikuspegia: egitekoa, ibilbide optimoa eta tracklog-a erakusten ditu",
+    "wCompDistanceToGoalTitle": "Goal-era distantzia",
+    "wCompDistanceToGoalDescription": "Goal-erako distantzia optimizatua falta diren bide-puntuetatik pasatuta",
+    "wCompDistanceToESSTitle": "ESS-era distantzia",
+    "wCompDistanceToESSDescription": "ESS-erako distantzia optimizatua falta diren bide-puntuetatik pasatuta",
+    "wCompAltitudeOverGoalTitle": "Goal gaineko altuera",
+    "wCompAltitudeOverGoalDescription": "Iritsierako altuera goal linea/zilindroan",
+    "wCompAltitudeOverESSTitle": "ESS gaineko altuera",
+    "wCompAltitudeOverESSDescription": "Iritsierako altuera ESS gainean",
+    "wCompGlideToGoalTitle": "Goal-erako planeoa",
+    "wCompGlideToGoalDescription": "Beharrezko planeo ratioa goal-era iristeko",
+    "wCompGlideToEssTitle": "ESS-ra planeoa",
+    "wCompGlideToEssDescription": "Beharrezko planeo ratioa ESS-era iristeko",
+    "wCompTimeToStartTitle": "Start-erako denbora",
+    "wCompTimeToStartDescription": "Hurrengo hasiera-aterako denbora",
+    "wCompTimeAtStartTitle": "Start-ean denbora",
+    "wCompTimeAtStartDescription": "SSS gurutzatu duzun denbora",
+    "wCompSpeedToStartTitle": "Start-erako abiadura",
+    "wCompSpeedToStartDescription": "Beharrezko abiadura hasiera zilindroa behar den orduan gurutzatzeko",
+    "wCompSSPercentage": "Abiadura sekzioaren %",
+    "wCompSSPercentageDescription": "Abiadura sekzioaren portzentaia erakutsi (leading puntuak lortzen laguntzeko)",
+    "wCompTaskSummaryTitle": "Egitekoaren (task) laburpena",
+    "wCompTaskSummaryDescription": "Egitekoaren (task) informazio gogorarazpena",
+    "wLiveMessageTitle": "Sarrerako mezuak",
+    "wLiveMessageSummary": "Livetracking kanaletik datozen testu mezuak",
+    "wButtonNavig": "Nabigazio botoiak",
+    "wButtonNavigDescription": "Hurrengo/aurreko bide-puntuetara aldatu botoian klik eginez",
+    "wButtonPhone": "Telefonoaren botoia",
+    "wButtonPhoneDescription": "Botoia sakatuz telefono deia egin",
+    "wButtonActionCamera2": "Kamera app botoia",
+    "wButtonActionCameraDescription": "Kamera aplikazioa abiarazi",
+    "wButtonZoom": "Maparen zoom-aren botoia",
+    "wButtonZoomDescription": "Maparen zoom in/out botoia sakatuz",
+    "widgetSettingsButtonSensVario2": "Bario botoia",
+    "widgetSettingsButtonSensVarioDescription": "Barioa piztu/itzali eta igoera leuna",
+    "wButtonBrightness": "Pantaila distira",
+    "wButtonBrightnessDesc": "Atzeko argiaren distira gehitu/gutxitu",
+    "wButtonVolume": "Multimedia bolumena",
+    "wButtonVolumeDesc": "Multimedia-bolumena igo edo jaitsi.",
+    "wButtonVolumeReminder": "Bolumen gogorarazlea",
+    "wButtonVolumeReminderDesc": "Multimedia-bolumena konfiguratutako helburu-mailaren azpitik dagoenean soilik erakusten da. Sakatu bolumena helburu-mailara igotzeko.",
+    "wButtonIntentLauncherTitle": "Abiarazlea",
+    "wButtonIntentLauncherDesc": "Asmoa sistemara igorri - beste aplikazio batzuek prozesatu dezakete.",
+    "wFreeTextTitle": "Testu librea",
+    "wFreeTextDescription": "Nahi duzuna idatzi ezazu",
+    "wWebViewTextTitle": "Web orria",
+    "wWebViewTextDescription": "Web orria widget modura erakutsi",
+    "wOpenDataTitle": "Kanpoko datuak erakutsi",
+    "wOpenDataDescription": "Erakutsi $XCTOD esaldien balioak. Kanpoko sentsore pertsonalizatuetarako erabilgarria (motor-sentsoreak, etab.) ).",
+    "wTestingLastKeyTitle": "Sakatutako azken tekla",
+    "wTestingLastKeyDescription": "Erakutsi azken segundoan sakatutako tekla.",
+    "wTestingLogPeekTitle": "Erregistro bukaera",
+    "wTestingLogPeekDescription": "Erakutsi erregistro-fitxategiko azken N lerroak.",
+    "wTestingEmitEventTitle": "Igorri probako gertaera bat",
+    "wTestingEmitEventDescription": "Hautatutako gertaera eragin klik egitean.",
+    "debug_wDebugDetectedActivity": "DetectedActivity",
+    "debug_wActiveLookTitle": "ActiveLook widget",
+    "debug_wActiveLookDescr": "Simulation of ActiveLook glasses",
+    "debug_wDebugTitle": "Debug",
+    "debug_wDebugDescription": "For debugging purposes only",
+    "debug_wDebugFps": "FPS",
+    "debug_wDebugSystemInfo": "System Info",
+    "debug_wDebugFont": "DebugFont",
+    "debug_wDebugHwAccTestMap": "Debug HW acceleration test map",
+    "debug_wDebugHwAccTestMapDescription": "Empty map widget that prints the results of Canvas.isHardwareAccelerated() and View.isHardwareAccelerated().\n\nExpected results:\n• Enabled → both read true (HW canvas in a HW window).\n• Disabled on map widgets → View.isHardwareAccelerated() stays true (window is accelerated) but Canvas.isHardwareAccelerated() becomes false, because the map widget renders its overlays through a software canvas. That divergence proves software map rendering is active.\n• Disabled completely → both false.",
+    "debug_wVTM": "VTM"
+  }
+}
