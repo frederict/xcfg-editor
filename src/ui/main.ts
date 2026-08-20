@@ -8,6 +8,7 @@ import { exportContainer, openContainer, type Container } from '../core/containe
 import { readLayout, type Layout } from '../model/layout'
 import { readRenderSettings, resolveLanguage, type RenderSettings } from '../model/preferences'
 import { buildDeviceSelector } from './deviceSelector'
+import { exportFileName } from './export'
 import { buildDetail, buildOverview, type Orientation, type ViewContext } from './views'
 import { computeWarnings, warningsAt, type Warning } from './warnings'
 
@@ -376,26 +377,76 @@ window.addEventListener('drop', (event) => {
 /* -------------------------------------------------------------------------- export */
 
 /**
- * Réémission des octets, seule action offerte quand le fichier est illisible. Le nom
- * horodaté et distinct de l'original viendra avec la tâche 22 (`src/ui/export.ts`) :
- * ici, le fichier n'est jamais modifié, `exportContainer` rend sa source telle quelle.
+ * Réémission des octets — la seule action offerte, et la seule offerte aussi quand le
+ * fichier est illisible. Le fichier n'est jamais modifié : `exportContainer` rend sa
+ * source telle quelle. Le nom, lui, est horodaté et distinct de l'original — deux
+ * fichiers homonymes sur une carte SD la veille d'une manche sont une erreur d'import
+ * qui se découvre en vol.
  */
+async function download(current: Session): Promise<void> {
+  const bytes = await exportContainer(current.container)
+  // Copie dans un ArrayBuffer simple : `Blob` n'accepte pas une vue dont le tampon
+  // pourrait être partagé, et le conteneur ne garantit rien de son origine.
+  const buffer = new ArrayBuffer(bytes.byteLength)
+  new Uint8Array(buffer).set(bytes)
+  const url = URL.createObjectURL(new Blob([buffer], { type: 'application/octet-stream' }))
+  const link = el('a')
+  link.href = url
+  link.download = exportFileName(current.container.fileName, new Date())
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
+/**
+ * Ce que le pilote s'apprête à donner, dit AVANT le téléchargement et non après : une
+ * fois le fichier sur la carte SD ou dans une conversation, l'avertissement arrive trop
+ * tard. On avertit, on ne dépouille pas en silence — le document sort intact.
+ */
+function askBeforeExport(current: Session): void {
+  const warnings = warningsAt(current.warnings, 'export')
+  if (warnings.length === 0) {
+    void download(current)
+    return
+  }
+
+  const dialog = el('dialog', 'modal')
+  const box = el('div', 'modal__box')
+  box.append(el('h2', 'modal__title', 'Avant de partager ce fichier'))
+  for (const warning of warnings) box.append(warningCard(warning))
+
+  box.append(el(
+    'p', 'modal__name',
+    `Nom du fichier produit : ${exportFileName(current.container.fileName, new Date())}`
+  ))
+
+  const actions = el('div', 'modal__actions')
+  const cancel = el('button', 'btn', 'Annuler')
+  cancel.type = 'button'
+  const confirm = el('button', 'btn btn--primary', 'Enregistrer quand même')
+  confirm.type = 'button'
+  actions.append(cancel, confirm)
+  box.append(actions)
+  dialog.append(box)
+
+  const close = (): void => {
+    dialog.close()
+    dialog.remove()
+  }
+  cancel.addEventListener('click', close)
+  confirm.addEventListener('click', () => {
+    close()
+    void download(current)
+  })
+  // Échap ferme la boîte native : rien n'est téléchargé, comme « Annuler ».
+  dialog.addEventListener('cancel', () => dialog.remove())
+
+  document.body.append(dialog)
+  dialog.showModal()
+  confirm.focus()
+}
+
 exportButton.addEventListener('click', () => {
-  const current = session
-  if (!current) return
-  void (async () => {
-    const bytes = await exportContainer(current.container)
-    // Copie dans un ArrayBuffer simple : `Blob` n'accepte pas une vue dont le tampon
-    // pourrait être partagé, et le conteneur ne garantit rien de son origine.
-    const buffer = new ArrayBuffer(bytes.byteLength)
-    new Uint8Array(buffer).set(bytes)
-    const url = URL.createObjectURL(new Blob([buffer], { type: 'application/octet-stream' }))
-    const link = el('a')
-    link.href = url
-    link.download = current.container.fileName
-    link.click()
-    URL.revokeObjectURL(url)
-  })()
+  if (session) askBeforeExport(session)
 })
 
 /* ------------------------------------------------------------------------- clavier */

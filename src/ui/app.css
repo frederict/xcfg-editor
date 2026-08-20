@@ -393,6 +393,33 @@ body {
 
 .warning__more[open] .warning__summary { margin-bottom: 0.2rem; }
 
+/* ------------------------------------------------------- confirmation avant export */
+
+.modal {
+  padding: 0;
+  border: 1px solid var(--app-line-strong);
+  border-radius: 8px;
+  background: var(--app-bg);
+  color: var(--app-ink);
+  max-width: min(46rem, 92vw);
+  box-shadow: var(--app-plate-shadow);
+}
+
+.modal::backdrop { background: rgb(0 0 0 / 0.45); }
+
+.modal__box { padding: 1.3rem 1.4rem; display: grid; gap: 0.9rem; }
+.modal__title { margin: 0; font-size: 16px; font-weight: 600; }
+
+.modal__name {
+  margin: 0;
+  font-family: var(--font-data);
+  font-size: 11.5px;
+  color: var(--app-ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.modal__actions { display: flex; justify-content: flex-end; gap: 0.6rem; }
+
 /* ---------------------------------------------------------------------- vue d'ensemble */
 
 .section + .section { margin-top: 3.5rem; }
