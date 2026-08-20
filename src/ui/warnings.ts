@@ -8,7 +8,7 @@ import type { Widget } from '../model/widget'
 import { isTransparent } from '../render/registry'
 
 /**
- * Ce que l'interface doit dire au pilote, et rien de plus. Sept familles, calculées ici
+ * Ce que l'interface doit dire au pilote, et rien de plus. Huit familles, calculées ici
  * plutôt que dans `main.ts` : c'est la seule logique non triviale de la couche
  * d'interface, elle a donc ses propres tests.
  *
@@ -35,6 +35,7 @@ export const REFERENCE_VERSION_CODE = 100030
 
 export type WarningKind =
   | 'export-type'
+  | 'theme-not-drawn'
   | 'assumed-values'
   | 'assumed-language'
   | 'personal-data'
@@ -417,6 +418,82 @@ function geometryWarning(input: WarningInput): Warning | undefined {
 
 /* ------------------------------------------------------------------------- assemblage */
 
+/* -------------------------------------------- 8. le thème déclaré n'est pas dessiné */
+
+/**
+ * Les cinq thèmes de XCTrack, relevés dans les tables de chaînes des dex de l'APK
+ * 1.0.3-beta5 (`docs/reference/corpus-air3.md` §6). Le catalogue de `Display.Theme`
+ * était un point ouvert de la spec ; il ne l'est plus.
+ */
+const KNOWN_THEMES = ['WhiteTheme', 'WhiteHCTheme', 'WhiteEInkTheme', 'BlackTheme', 'BlackHCTheme']
+
+/** Le seul thème que le rendu sache dessiner, faute d'avoir observé les autres. */
+const DRAWN_THEME = 'WhiteHCTheme'
+
+/**
+ * La visionneuse dessine toujours `WhiteHCTheme`, quel que soit le thème déclaré : aucun
+ * rendu ne consulte `RenderSettings.theme`, et aucun ne consulte le `_theme` propre à un
+ * widget — que le corpus élargi montre pourtant employé (46 widgets, `WhiteEInkTheme`
+ * pour l'essentiel) et que le manuel décrit comme une fonctionnalité.
+ *
+ * Pour une visionneuse dont la promesse tient en « telles qu'elles apparaîtront sur
+ * l'instrument », c'est un écart qu'il faut dire. Le taire serait pire que l'avoir : un
+ * pilote qui vole en thème sombre ou sur un instrument e-ink croirait voir son écran.
+ *
+ * **On se contente de le dire.** Deviner l'apparence des quatre autres thèmes
+ * contredirait le deuxième principe du projet — 28 libellés sur 37 étaient faux quand ils
+ * venaient d'une traduction plausible. Il faut d'abord les observer sur l'appareil ; le
+ * protocole est au point 11 de `docs/plans/2026-08-20-feuille-de-route.md`.
+ */
+function themeWarning(input: WarningInput): Warning | undefined {
+  const declared = input.settings.theme
+  const items: string[] = []
+
+  // Le thème du document, quand il diffère de celui qu'on sait dessiner.
+  //
+  // Pas de garde-fou sur `fromDefaults` : il serait mort. Un fichier sans `preferences`
+  // reçoit `DEFAULTS.theme`, qui vaut précisément `WhiteHCTheme` (`model/preferences.ts`),
+  // donc un export « pages » ne peut pas différer. Le lien est ténu — il tient à ce que
+  // deux constantes de deux modules coïncident — et c'est `warnings.test.ts` qui le tient,
+  // pas ce commentaire : si `DEFAULTS.theme` changeait, tout export « pages » se mettrait
+  // à porter cet avertissement en plus de « valeurs supposées », et le test tomberait.
+  const documentDiffers = declared !== DRAWN_THEME
+
+  // Les thèmes posés widget par widget, qui l'emportent sur celui du document.
+  const perWidget = new Map<string, number>()
+  for (const orientation of ['landscape', 'portrait'] as const) {
+    for (const page of input.layout[orientation]) {
+      for (const widget of page.widgets) {
+        const theme = widget.theme.trim()
+        if (theme.length === 0 || theme === DRAWN_THEME) continue
+        perWidget.set(theme, (perWidget.get(theme) ?? 0) + 1)
+      }
+    }
+  }
+
+  if (!documentDiffers && perWidget.size === 0) return undefined
+
+  if (documentDiffers) {
+    const known = KNOWN_THEMES.includes(declared) ? '' : ' (thème inconnu de cet outil)'
+    items.push(`Thème du fichier : ${declared}${known}`)
+  }
+  for (const [theme, count] of perWidget) {
+    items.push(`${count} widget${count > 1 ? 's' : ''} en ${theme}`)
+  }
+
+  return {
+    kind: 'theme-not-drawn',
+    moment: 'import',
+    title: 'Thème dessiné différent du thème déclaré',
+    detail:
+      `Ces pages sont dessinées ici avec le thème ${DRAWN_THEME}, le seul qui ait été ` +
+      'observé sur l’instrument. Le fichier en demande un autre : les couleurs et les ' +
+      'contrastes que vous voyez ne sont donc pas ceux de votre appareil. La géométrie, ' +
+      'elle, est juste — et le fichier n’est pas modifié pour autant.',
+    items
+  }
+}
+
 export function computeWarnings(input: WarningInput): Warning[] {
   const info = getMember(input.document, 'info')
   const preferences = getMember(input.document, 'preferences')
@@ -429,7 +506,8 @@ export function computeWarnings(input: WarningInput): Warning[] {
     externalResourceWarning(preferences),
     versionWarning(info),
     structureWarning(input),
-    geometryWarning(input)
+    geometryWarning(input),
+    themeWarning(input)
   ]
   for (const warning of optional) {
     if (warning) warnings.push(warning)

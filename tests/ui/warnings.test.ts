@@ -294,6 +294,102 @@ describe('avertissements — corpus réel (comparaison au sol)', () => {
   })
 })
 
+describe('avertissements — thème dessiné différent du thème déclaré', () => {
+  /** Un widget portant un `_theme` propre — le corpus élargi en compte 46. */
+  function themedWidget(theme: string): string {
+    return `{
+      "CLASS": "org.xcontest.XCTrack.widget.w.WAltitude",
+      "X1": 0, "Y1": 0, "X2": 1000, "Y2": 1000,
+      "_border": true, "_bg": 100, "_theme": "${theme}"
+    }`
+  }
+
+  /** Le même document, avec un bloc `preferences` qui déclare un thème. */
+  function documentWithTheme(theme: string, widgets: string[] = [widget(0, 0, 1000, 1000)]): JsonNode {
+    return parseJson(`{
+      "info": { "device": "AIR3 AIR3-7.2 8.1.0", "exportType": "backup", "versionCode": ${REFERENCE_VERSION_CODE} },
+      "preferences": { "Display.Theme": "${theme}", "Display.Language": "fr" },
+      "layout": {
+        "landscape": [
+          {
+            "CLASS": "org.xcontest.XCTrack.page.WPEmpty",
+            "navigations": "all",
+            "widgets": [${widgets.join(',')}]
+          }
+        ],
+        "portrait": []
+      }
+    }`)
+  }
+
+  it('se tait quand le fichier demande le thème que l’on sait dessiner', () => {
+    expect(kinds(warningsOf(documentWithTheme('WhiteHCTheme')))).not.toContain('theme-not-drawn')
+  })
+
+  it('signale un thème sombre déclaré par le fichier', () => {
+    const warning = pick(warningsOf(documentWithTheme('BlackTheme')), 'theme-not-drawn')
+    expect(warning).toBeDefined()
+    expect(warning!.moment).toBe('import')
+    expect(textOf(warning)).toContain('BlackTheme')
+    expect(textOf(warning)).toContain('WhiteHCTheme')
+  })
+
+  it('signale un thème inconnu du catalogue des cinq thèmes de l’APK', () => {
+    const warning = pick(warningsOf(documentWithTheme('ThemeVenuDuFutur')), 'theme-not-drawn')
+    expect(textOf(warning)).toContain('inconnu')
+  })
+
+  it('ne crie pas « inconnu » sur un thème catalogué', () => {
+    const warning = pick(warningsOf(documentWithTheme('WhiteEInkTheme')), 'theme-not-drawn')
+    expect(textOf(warning)).not.toContain('inconnu')
+  })
+
+  it('compte les widgets qui posent leur propre thème, et les nomme', () => {
+    const document = documentWithTheme('WhiteHCTheme', [
+      themedWidget('WhiteEInkTheme'),
+      themedWidget('WhiteEInkTheme'),
+      themedWidget('BlackHCTheme'),
+      widget(0, 0, 1000, 1000)
+    ])
+    const warning = pick(warningsOf(document), 'theme-not-drawn')
+    expect(warning).toBeDefined()
+    // Le thème du document est celui qu'on dessine : seuls les widgets doivent parler.
+    expect(textOf(warning)).not.toContain('Thème du fichier')
+    expect(warning!.items).toContain('2 widgets en WhiteEInkTheme')
+    expect(warning!.items).toContain('1 widget en BlackHCTheme')
+  })
+
+  it('ignore un `_theme` vide, qui veut dire « celui du document »', () => {
+    const document = documentWithTheme('WhiteHCTheme', [themedWidget(''), themedWidget('   ')])
+    expect(kinds(warningsOf(document))).not.toContain('theme-not-drawn')
+  })
+
+  it('ne double pas l’avertissement des valeurs supposées sur un export « pages »', () => {
+    // Un fichier sans `preferences` n'a pas de thème à lui : `assumedValueWarnings` le dit
+    // déjà. Redire ici « le thème diffère » ferait deux avertissements pour un seul fait.
+    const warnings = warningsOf(documentWith([widget(0, 0, 1000, 1000)]))
+    expect(kinds(warnings)).toContain('assumed-values')
+    expect(kinds(warnings)).not.toContain('theme-not-drawn')
+  })
+
+  it('et cela tient à ce que le thème par défaut soit celui qu’on sait dessiner', () => {
+    // Le test précédent ne passe que parce que deux constantes de deux modules
+    // coïncident : `DEFAULTS.theme` dans `model/preferences.ts` et le thème que le rendu
+    // sait dessiner. Le lien est invisible et se romprait en silence — on l'épingle ici.
+    // Si `DEFAULTS.theme` changeait, tout export « pages » porterait soudain cet
+    // avertissement en plus de « valeurs supposées ».
+    const settings = readRenderSettings(parseJson('{"info":{},"layout":{"landscape":[],"portrait":[]}}'))
+    expect(settings.fromDefaults).toBe(true)
+    expect(settings.theme).toBe('WhiteHCTheme')
+  })
+
+  it('le corpus réel, en WhiteHCTheme, ne déclenche rien', () => {
+    for (const name of CORPUS) {
+      expect(kinds(warningsOfFile(name))).not.toContain('theme-not-drawn')
+    }
+  })
+})
+
 describe('avertissements — ce qui n’est délibérément pas signalé', () => {
   /**
    * Assertion négative explicite, et non un oubli : le corpus compte 34 chevauchements,
