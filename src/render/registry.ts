@@ -48,6 +48,16 @@ export function isRegistered(shortName: string): boolean {
  * visible (voir `widgets/buttonNavig.ts`) et reçoit donc normalement le fond/cadre
  * génériques comme n'importe quel autre type dessiné.
  *
+ * **`WLiveMessage` rejoint ce mécanisme (comparaison au sol, corpus des 5 fichiers)** :
+ * ce n'est PAS une zone tactile — c'est un afficheur qui A du contenu, seulement pas en
+ * permanence. Mais sur l'appareil, il ne peint rien tant qu'aucun message n'est arrivé,
+ * malgré une zone souvent large et `_bg: 100` dans le fichier — même symptôme que
+ * `WButtonBrightness`, et même correctif : fond/cadre neutralisés par ce registre.
+ * Voir `widgets/liveMessage.ts` pour la marque discrète au survol qui remplace
+ * l'ancien contenu simulé en permanence, et `src/ui/warnings.ts` pour l'exclusion de
+ * ces types du calcul de recouvrement (un widget transparent au repos ne masque
+ * personne).
+ *
  * Distinct de `register` : un type peut être transparent sans dessin particulier
  * (repli générique) et inversement.
  */

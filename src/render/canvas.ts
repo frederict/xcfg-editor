@@ -88,11 +88,12 @@ export function renderPage(page: Page, aspectRatio: number, settings: RenderSett
 
   for (const widget of page.widgets) {
     const style = widgetStyle(widget)
-    // Un widget purement tactile invisible (WButtonBrightness — voir
-    // registry.ts/registerTransparent ; WButtonNavig n'en fait plus partie depuis la
-    // correction en vol, rendu-en-vol.md § 4) ne reçoit jamais le fond ni le cadre que
-    // _bg/_border demanderaient dans le fichier : sur l'appareil, il ne dessine rien
-    // du tout, quelles que soient ces valeurs (rendu-observe.md).
+    // Un widget sans rendu au repos (WButtonBrightness, zone tactile ; WLiveMessage,
+    // afficheur conditionnel — voir registry.ts/registerTransparent ; WButtonNavig
+    // n'en fait plus partie depuis la correction en vol, rendu-en-vol.md § 4) ne
+    // reçoit jamais le fond ni le cadre que _bg/_border demanderaient dans le
+    // fichier : sur l'appareil, il ne dessine rien du tout tant que son contenu n'est
+    // pas là, quelles que soient ces valeurs (rendu-observe.md).
     const transparent = isTransparent(widget.shortName)
 
     const element = document.createElement('div')

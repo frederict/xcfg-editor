@@ -10,8 +10,6 @@ const settings: RenderSettings = {
   windSpeedUnit: 'm/s', distanceUnit: 'NM', relativeDistanceUnit: 'km', airspaceAltitudeUnit: 'm'
 }
 
-const language = 'fr'
-
 function widget(params: Record<string, string> = {}): Widget {
   return {
     node: {
@@ -27,32 +25,44 @@ function widget(params: Record<string, string> = {}): Widget {
   }
 }
 
-// Non observé par une capture — voir le commentaire de tête de liveMessage.ts. Ces
-// tests verrouillent le comportement voulu, pas un relevé visuel.
-describe('WLiveMessage (non confirmé par une capture)', () => {
-  it('affiche `line_count` lignes de message d’exemple', () => {
-    const el = drawLiveMessage(widget({ line_count: '2' }), settings, language)
-    expect(el.querySelectorAll('.xc-livemsg__line').length).toBe(2)
+// Recouvrement en vol (comparaison au sol, vol-thermalassistant-boutonsnavig.png) :
+// WLiveMessage ne doit plus jamais dessiner de fond, cadre ou contenu permanent — voir
+// le commentaire de tête de liveMessage.ts. Ces tests verrouillent le rendu-au-repos
+// (rien) et l'étiquette de survol (marque discrète, avec line_count).
+describe('WLiveMessage — afficheur transparent au repos', () => {
+  it('ne dessine ni fond, ni cadre, ni texte visible en rendu normal', () => {
+    const el = drawLiveMessage(widget({ line_count: '2' }), settings, 'fr')
+    expect(el.className).toBe('xc-livemsg')
+    expect(el.querySelectorAll('.xc-livemsg__label')).toHaveLength(1)
+    expect(el.style.background).toBe('')
+    expect(el.style.border).toBe('')
   })
 
-  it('affiche une seule ligne quand `line_count` est absent', () => {
-    const el = drawLiveMessage(widget({}), settings, language)
-    expect(el.querySelectorAll('.xc-livemsg__line').length).toBe(1)
-  })
-
-  it('borne le nombre de lignes à la liste d’exemples disponible', () => {
-    const el = drawLiveMessage(widget({ line_count: '99' }), settings, language)
-    expect(el.querySelectorAll('.xc-livemsg__line').length).toBeGreaterThan(0)
-    expect(el.querySelectorAll('.xc-livemsg__line').length).toBeLessThanOrEqual(4)
-  })
-
-  it('n’affiche aucune heure quand `show_time` est absent', () => {
-    const el = drawLiveMessage(widget({}), settings, language)
+  it('ne simule plus aucun message d’exemple (contrairement à l’ancien rendu permanent)', () => {
+    const el = drawLiveMessage(widget({ line_count: '2' }), settings, 'fr')
+    expect(el.querySelectorAll('.xc-livemsg__line')).toHaveLength(0)
     expect(el.querySelector('.xc-livemsg__time')).toBeNull()
   })
 
-  it('affiche une heure d’exemple quand `show_time` est un nombre positif — seule forme connue du corpus (300)', () => {
-    const el = drawLiveMessage(widget({ show_time: '300' }), settings, language)
-    expect(el.querySelector('.xc-livemsg__time')?.textContent).toBe('14:32')
+  describe('étiquette de survol', () => {
+    it('annonce le nombre de lignes réservées (line_count)', () => {
+      const el = drawLiveMessage(widget({ line_count: '2' }), settings, 'fr')
+      expect(el.querySelector('.xc-livemsg__label')?.textContent).toBe('Panneau de messages — 2 lignes réservées')
+    })
+
+    it('accorde le singulier à une seule ligne', () => {
+      const el = drawLiveMessage(widget({ line_count: '1' }), settings, 'fr')
+      expect(el.querySelector('.xc-livemsg__label')?.textContent).toBe('Panneau de messages — 1 ligne réservée')
+    })
+
+    it('bascule en anglais avec la langue reçue en paramètre', () => {
+      const el = drawLiveMessage(widget({ line_count: '2' }), settings, 'en')
+      expect(el.querySelector('.xc-livemsg__label')?.textContent).toBe('Message panel — 2 lines reserved')
+    })
+
+    it('retombe sur le seul préfixe quand `line_count` est absent', () => {
+      const el = drawLiveMessage(widget({}), settings, 'fr')
+      expect(el.querySelector('.xc-livemsg__label')?.textContent).toBe('Panneau de messages')
+    })
   })
 })

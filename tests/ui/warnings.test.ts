@@ -4,6 +4,11 @@ import { parseJson } from '../../src/core/parseJson'
 import type { JsonNode } from '../../src/core/jsonDocument'
 import { readLayout } from '../../src/model/layout'
 import { readRenderSettings } from '../../src/model/preferences'
+// Effet de bord : enregistre WButtonBrightness/WLiveMessage comme transparents
+// (registerTransparent, registry.ts) — nécessaire pour que le calcul de recouvrement
+// ci-dessous les exclue, exactement comme dans l'application réelle (ui/main.ts importe
+// ce module avant d'appeler computeWarnings).
+import '../../src/render/widgets'
 import {
   REFERENCE_VERSION_CODE,
   computeWarnings,
@@ -256,6 +261,37 @@ describe('avertissements — défauts géométriques', () => {
     const translucent = widget(0, 0, 10000, 10000, 40)
     expect(kinds(warningsOf(documentWith([under, translucent])))).not.toContain('geometry')
   })
+
+  it('ne signale pas un recouvrement par un widget transparent au repos, même opaque dans le fichier', () => {
+    // WButtonBrightness a _bg: 100 dans le corpus (fond opaque déclaré) mais ne peint
+    // rien sur l'appareil (registerTransparent, registry.ts) : il ne peut masquer
+    // personne, même quand sa boîte couvre entièrement l'autre widget.
+    const masked = widget(1000, 1000, 2000, 2000)
+    const touchZone = `{
+      "CLASS": "org.xcontest.XCTrack.widget.w.WButtonBrightness",
+      "X1": 0, "Y1": 0, "X2": 10000, "Y2": 10000,
+      "_border": false, "_bg": 100, "_theme": ""
+    }`
+    expect(kinds(warningsOf(documentWith([masked, touchZone])))).not.toContain('geometry')
+  })
+})
+
+describe('avertissements — corpus réel (comparaison au sol)', () => {
+  /**
+   * Recouvrement en vol : `WLiveMessage` occupait, dans les 5 fichiers du corpus,
+   * une large bande déclarée opaque et dessinée après deux `WButtonNavig` — signalé à
+   * tort comme un défaut de géométrie (4 items par fichier, avant correctif). Or
+   * `vol-thermalassistant-boutonsnavig.png` montre ces deux boutons parfaitement
+   * visibles sur l'appareil : `WLiveMessage` ne peint rien au repos
+   * (`registerTransparent`, `registry.ts`) et ne doit donc plus jamais apparaître comme
+   * « recouvrant ». Ce sont des configurations réellement utilisées en vol : elles ne
+   * doivent déclencher AUCUN défaut géométrique.
+   */
+  it('ne produit plus aucun défaut géométrique, sur aucun fichier du corpus', () => {
+    for (const name of CORPUS) {
+      expect(kinds(warningsOfFile(name)), name).not.toContain('geometry')
+    }
+  })
 })
 
 describe('avertissements — ce qui n’est délibérément pas signalé', () => {
@@ -269,14 +305,11 @@ describe('avertissements — ce qui n’est délibérément pas signalé', () =>
     for (const name of CORPUS) {
       const items = warningsOfFile(name).flatMap((warning) => warning.items)
       expect(items.filter((item) => /chevauch/i.test(item)), name).toEqual([])
-
-      // Les seuls défauts géométriques que le corpus produit sont des recouvrements
-      // COMPLETS par un opaque dessiné après — le panneau « Réception de messages »
-      // couvre le bandeau bas de la page 5 en paysage. Aucun chevauchement partiel n'y
-      // remonte : c'est ce que cette assertion vérifie fichier par fichier.
-      const geometry = pick(warningsOfFile(name), 'geometry')?.items ?? []
-      expect(geometry.every((item) => /entièrement recouvert/.test(item)), name).toBe(true)
     }
+
+    // Le corpus ne produit plus aucun défaut géométrique du tout, y compris les
+    // recouvrements complets — voir la description « corpus réel (comparaison au
+    // sol) » ci-dessous (WLiveMessage, exclu depuis qu'il est transparent au repos).
   })
 
   it('ne signale pas deux widgets qui se recouvrent partiellement', () => {

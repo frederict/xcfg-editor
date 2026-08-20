@@ -647,37 +647,45 @@
 
 .xc-airprox--row > .xc-airprox__divider { height: 100%; width: 2px; }
 
-/* Réception de messages — WLiveMessage (liveMessage.ts). Non confirmé par une capture :
-   panneau sobre, voir le commentaire de tête du module. */
+/* Réception de messages — WLiveMessage (liveMessage.ts). Recouvrement en vol : widget
+   transparent au repos (registerTransparent, widgets/index.ts) — sur l'appareil,
+   XCTrack n'y dessine rien tant qu'aucun message n'est arrivé (comparaison au sol,
+   vol-thermalassistant-boutonsnavig.png). Contrairement aux zones tactiles (.xc-touch),
+   rien ne se touche ici : pas de cursor: pointer, seulement le même contour en
+   pointillés et la même étiquette au survol, pour annoncer l'espace réservé et son
+   nombre de lignes (line_count) sans jamais masquer ce qui se trouve dessous. */
 .xc-livemsg {
+  position: relative;
   width: 100%;
   height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 0.3em;
-  padding: 0.4em 0.6em;
-  overflow: hidden;
 }
 
-.xc-livemsg__lines {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2em;
-}
-
-.xc-livemsg__line {
-  font-size: 0.85em;
+.xc-livemsg__label {
+  display: none;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 90%;
+  padding: 0.25em 0.6em;
+  font-size: 0.75em;
+  font-weight: 600;
+  color: var(--xc-ink);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--xc-line);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  pointer-events: none;
 }
 
-.xc-livemsg__time {
-  align-self: flex-end;
-  font-size: 0.75em;
-  opacity: 0.7;
-  font-variant-numeric: tabular-nums;
+.xc-livemsg:hover {
+  outline: 1px dashed var(--xc-line);
+  outline-offset: -1px;
+}
+
+.xc-livemsg:hover .xc-livemsg__label {
+  display: block;
 }
 
 /* Résumé de la manche — WCompTaskSummary (compTaskSummary.ts). Non confirmé par une

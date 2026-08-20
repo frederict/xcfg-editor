@@ -83,4 +83,10 @@ register('WButtonNavig', drawButtonNavig)
 // `coverage.test.ts` passe désormais entièrement au vert sans avoir été modifié.
 register('WAirspaceProximity', drawAirspaceProximity)
 register('WLiveMessage', drawLiveMessage)
+// Comparaison au sol (vol-thermalassistant-boutonsnavig.png, landscape[4] du corpus) :
+// WLiveMessage recouvre entièrement deux WButtonNavig dans le fichier (_bg: 100, dessiné
+// après), mais les deux boutons sont bien visibles sur l'appareil — comme
+// WButtonBrightness, il ne peint rien au repos. Voir registry.ts (commentaire de
+// registerTransparent) et liveMessage.ts pour le détail.
+registerTransparent('WLiveMessage')
 register('WCompTaskSummary', drawCompTaskSummary)

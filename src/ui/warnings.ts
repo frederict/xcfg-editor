@@ -5,6 +5,7 @@ import { findDuplicateKeys } from '../core/parseJson'
 import type { Layout, Page } from '../model/layout'
 import type { RenderSettings } from '../model/preferences'
 import type { Widget } from '../model/widget'
+import { isTransparent } from '../render/registry'
 
 /**
  * Ce que l'interface doit dire au pilote, et rien de plus. Sept familles, calculées ici
@@ -367,9 +368,15 @@ function pageGeometryItems(page: Page, where: string, language: string): string[
 
     // Plus haut dans la pile = plus loin dans le tableau : c'est l'ordre de dessin, et
     // c'est lui seul qui distingue « masqué » de « masquant ». Un widget opaque placé
-    // AVANT ne masque rien du tout.
+    // AVANT ne masque rien du tout. Un type transparent au repos (registerTransparent,
+    // registry.ts — WButtonBrightness, WLiveMessage) est exclu même quand `_bg` vaut
+    // 100 dans le fichier : sur l'appareil, il ne peint rien tant que son contenu n'est
+    // pas là, donc il ne masque personne — comparaison au sol,
+    // vol-thermalassistant-boutonsnavig.png, qui montre les WButtonNavig recouverts
+    // dans le fichier bel et bien visibles.
     const hider = page.widgets.findIndex(
-      (other, index) => index > position && other.background >= 100 && covers(other, widget)
+      (other, index) =>
+        index > position && other.background >= 100 && !isTransparent(other.shortName) && covers(other, widget)
     )
     if (hider !== -1) {
       const cover = page.widgets[hider]!
