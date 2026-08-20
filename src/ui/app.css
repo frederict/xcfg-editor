@@ -718,6 +718,117 @@ body.is-dragging .veil {
   font-weight: 500;
 }
 
+/* ------------------------------------------------------------------ calque d'édition */
+
+/*
+ * Exception assumée à la règle achromatique du haut de cette feuille : le rose et le bleu
+ * ci-dessous ne sont pas une décoration, ce sont **les marques de l'instrument**. XCTrack
+ * dessine exactement celles-là autour du widget sélectionné — quatre équerres roses aux
+ * coins, quatre segments bleus aux milieux de côté, une ellipse pointillée au centre
+ * (relevé § 2.3 de `docs/reference/edition-native-exploration.md`). Le pilote qui a déjà
+ * édité une page au doigt doit retrouver ici ce qu'il connaît de son appareil ; en
+ * changer la couleur lui coûterait plus que la cohérence du cadre ne lui rapporte.
+ *
+ * Elles se posent par-dessus le rendu (`.plate`), qui n'en sait rien : aucune règle de ce
+ * bloc ne touche à `.xc-*`.
+ */
+.editor {
+  --edit-mark: #ff2f8e;    /* le rose des équerres, relevé sur l'appareil */
+  --edit-frame: #2f7fe0;   /* le bleu du cadre, des segments et de l'aperçu */
+
+  position: absolute;
+  inset: 0;
+  cursor: default;
+  touch-action: none;      /* le geste appartient à l'éditeur, pas au défilement */
+}
+
+.editor:focus-visible { outline: 2px solid var(--app-focus); outline-offset: 2px; }
+
+.editor--busy { cursor: grabbing; }
+
+/* Rien de ce calque n'intercepte le pointeur : c'est `.editor` qui fait le calcul de
+   ce qui se trouve sous le curseur, en coordonnées de page — pas le DOM. */
+.editor__marks,
+.editor__preview,
+.editor__ghost,
+.editor__badge { position: absolute; pointer-events: none; }
+
+/* Le cadre bleu fin du contour, posé en `box-shadow` pour ne pas décaler la boîte. */
+.editor__marks { box-shadow: 0 0 0 1px var(--edit-frame); }
+
+/* Les équerres : deux bords adjacents, épais, débordant vers l'extérieur du coin. */
+.editor__corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 3px solid var(--edit-mark);
+}
+
+.editor__corner--nw { left: -2px; top: -2px; border-right: 0; border-bottom: 0; }
+.editor__corner--ne { right: -2px; top: -2px; border-left: 0; border-bottom: 0; }
+.editor__corner--sw { left: -2px; bottom: -2px; border-right: 0; border-top: 0; }
+.editor__corner--se { right: -2px; bottom: -2px; border-left: 0; border-top: 0; }
+
+/* Les segments de milieu de côté : redimensionnement à une seule dimension. */
+.editor__side { position: absolute; background: var(--edit-frame); }
+
+.editor__side--n,
+.editor__side--s { left: 50%; width: 18%; height: 3px; transform: translateX(-50%); }
+.editor__side--n { top: -1px; }
+.editor__side--s { bottom: -1px; }
+
+.editor__side--w,
+.editor__side--e { top: 50%; height: 18%; width: 3px; transform: translateY(-50%); }
+.editor__side--w { left: -1px; }
+.editor__side--e { right: -1px; }
+
+/* L'ellipse de préhension : la moitié du widget, comme sur l'appareil. Elle reste la
+   prise du widget sélectionné même lorsqu'un autre le recouvre. */
+.editor__grip {
+  position: absolute;
+  left: 25%;
+  top: 25%;
+  width: 50%;
+  height: 50%;
+  border: 2px dashed var(--edit-frame);
+  border-radius: 50%;
+}
+
+/* Pendant le geste : le rectangle plein montre la position AIMANTÉE, le rectangle
+   pointillé suit le doigt. L'écart entre les deux est le retour visuel de l'aimantation
+   — c'est ce que fait l'appareil, et c'est ce qui apprend la grille au pilote. */
+.editor__preview {
+  border: 2px solid var(--edit-frame);
+  background: color-mix(in srgb, var(--edit-frame) 10%, transparent);
+}
+
+.editor__ghost { border: 1px dashed var(--edit-mark); }
+
+/* La cote en millimètres, affichée au redimensionnement : « ce texte sera-t-il lisible
+   avec des gants ? » ne se répond pas en coordonnées. L'appareil, lui, n'affiche rien. */
+.editor__badge {
+  transform: translateY(4px);
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--edit-frame);
+  color: #ffffff;
+  font-family: var(--font-data);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Annonce de la sélection et du geste pour les lecteurs d'écran, invisible à l'œil. */
+.editor__live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
