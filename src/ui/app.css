@@ -1145,8 +1145,16 @@ body.is-dragging .veil {
  * Le bandeau de réglages : collant au bas de la fenêtre. À fort zoom la page dépasse la
  * hauteur de l'écran, et les réglages doivent rester atteignables sans faire défiler
  * jusqu'en bas. Dernier enfant d'un conteneur bien plus haut que la fenêtre, il s'y colle
- * pendant tout le défilement, puis se pose à sa place à la fin — sans jamais recouvrir
- * quoi que ce soit, puisqu'il garde sa place dans le flux.
+ * pendant tout le défilement, puis se pose à sa place à la fin.
+ *
+ * Collé, il EST remonté depuis sa place et recouvre donc le bas de la page — c'est le prix
+ * du bandeau. Ce qui rachète ce prix : `sticky` n'est pas `fixed`, le bandeau garde sa
+ * hauteur pleine dans le flux, sous la page. Cette hauteur EST la place réservée : elle
+ * suffit exactement à faire remonter la page au-dessus de lui, et il existe donc toujours
+ * une position de défilement — celle où le bandeau se décolle — qui la dégage entièrement,
+ * pourvu que la fenêtre soit assez haute pour les loger tous les deux (voir `.dock__body`).
+ * Doubler cette place par une cale sous le bandeau a été mesuré : une cale de 258 px
+ * rallonge le document d'autant sans déplacer d'un pixel la position qui dégage la page.
  */
 .dock {
   position: sticky;
@@ -1186,13 +1194,24 @@ body.is-dragging .veil {
 .dock__toggle { margin-left: auto; flex: none; }
 
 /*
- * Hauteur bornée, défilement interne au-delà : le bandeau ne doit jamais manger la moitié
- * de l'écran, même pour les 63 réglages d'une carte. La glissière est ici, sur une simple
- * boîte — jamais sur le conteneur multi-colonnes, qui à hauteur fixée fabriquerait des
- * colonnes supplémentaires et déborderait en largeur au lieu de défiler en hauteur.
+ * Hauteur bornée, défilement interne au-delà. La borne ne se juge pas à la part de fenêtre
+ * qu'elle prend, mais à ce qu'elle LAISSE : sous le bandeau collé en bas, il faut encore de
+ * quoi loger la page entière, sans quoi aucune position de défilement ne la dégage et l'on
+ * règle un widget qu'on ne voit pas.
+ *
+ * Le pilote travaille toujours au-delà de 100 % : c'est le zoom 200 % qui commande. Mesuré
+ * sur `WXCAssistant` (63 réglages) en fenêtre 1500 × 1000, page de 661 px, barre de tête de
+ * 56 px : la page entière reste atteignable jusqu'à un bandeau de 274 px (corps de 14rem, 6 px
+ * de marge) et cesse de l'être à 282 px (14.5rem). 13rem — bandeau de 258 px, 22 px de marge —
+ * garde un rem de réserve sous ce seuil. Le terme en `vh` ne mord qu'en fenêtre très basse
+ * (sous 743 px de haut), où il resserre encore.
+ *
+ * La glissière est ici, sur une simple boîte — jamais sur le conteneur multi-colonnes, qui à
+ * hauteur fixée fabriquerait des colonnes supplémentaires et déborderait en largeur au lieu
+ * de défiler en hauteur.
  */
 .dock__body {
-  max-height: min(38vh, 23rem);
+  max-height: min(28vh, 13rem);
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 0.6rem 0.9rem 0.8rem;
