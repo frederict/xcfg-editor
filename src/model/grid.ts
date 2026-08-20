@@ -33,10 +33,17 @@ export const NORMALIZED_MAX = 10000
  *   Y1=2759=8/29, et les 24+21 valeurs distinctes du corpus utilisateur, toutes multiples de
  *   1/48 et 1/29 — voir la relevé refait dans `tests/model/grid.test.ts`).
  * - `air3-7.2` / `portrait` : **inférence plus faible**. Le corpus portrait ne compte que 10
- *   valeurs X et 11 valeurs Y distinctes, et ces pages ont été écrites par une version antérieure
- *   de XCTrack (le document de référence note qu'un import migre le schéma des pages portrait,
- *   pas des pages paysage). 19 × 31 reste la meilleure lecture disponible de ce corpus, mais ce
- *   n'est pas une mesure directe au même titre que le paysage.
+ *   valeurs X et 11 valeurs Y distinctes. Le document de référence (§6, « Une migration de
+ *   schéma se produit à l'import ») constate que les trois pages portrait du corpus ont été
+ *   **réécrites par XCTrack 1.0.3-beta à la lecture**, depuis un schéma antérieur — alors que les
+ *   cinq pages paysage sont revenues strictement identiques, octet pour octet. Ces pages
+ *   portrait viennent donc d'une version plus ancienne de XCTrack, dont la grille d'aimantation
+ *   pouvait très bien différer : c'est la raison la plus probable pour laquelle 19 × 31 ne
+ *   s'accorde pas avec le 48 × 29 mesuré en paysage sur le même appareil (une cellule physique
+ *   constante donnerait ≈4,6 × 5,0 mm en portrait contre ≈3,2 × 3,0 mm en paysage — un facteur
+ *   1,5, pas un écart d'arrondi). 19 × 31 reste la meilleure lecture disponible de ce corpus,
+ *   mais ce n'est pas une mesure directe au même titre que le paysage, ni forcément la grille du
+ *   XCTrack actuel.
  *
  * Aucune règle générale dérivée de `Device.widthPx`/`heightPx`/`diagonalInches` ne redonne ces
  * deux couples exactement (voir `approximateGrid` ci-dessous, et le rapport de tâche) : ils sont

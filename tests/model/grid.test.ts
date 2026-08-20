@@ -22,10 +22,11 @@ const AIR3_7_2 = DEVICES.find((d) => d.id === 'air3-7.2')!
  * les rectangles distincts (X1, Y1, X2, Y2) de tous les widgets de toutes les pages, toutes
  * les cinq fichiers confondus.
  *
- * 74 rectangles distincts en paysage, 28 en portrait — soit 102 au total. C'est moins que les
- * « 207 widgets distincts » mentionnés dans la consigne (peut-être un décompte incluant la
- * classe du widget, ou un corpus plus large que celui présent ici) : ce test s'appuie sur ce
- * qui a été effectivement mesuré dans ce dépôt, pas sur ce chiffre.
+ * 74 rectangles distincts en paysage, 28 en portrait — soit 102 au total, contre 207 widgets
+ * (sur les 2 mises en page du corpus). Pas une contradiction : deux métriques différentes.
+ * Plusieurs widgets partagent exactement les mêmes coordonnées (74 + 28 = 102 positions pour
+ * 207 widgets), ce qu'une grille d'aimantation favorise mécaniquement — elle réduit l'espace des
+ * positions possibles, donc plusieurs widgets distincts retombent sur le même rectangle.
  *
  * Les 24 valeurs X et 21 valeurs Y distinctes en paysage, et les 10 valeurs X et 11 valeurs Y
  * distinctes en portrait, correspondent exactement à celles citées par
