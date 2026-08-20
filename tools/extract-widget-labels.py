@@ -250,9 +250,14 @@ def discover_widget_classes(dex_paths: list[Path]) -> dict:
 
 # Exceptions à la règle mécanique "w<Stem>Title" / "wp<Stem>Title", établies
 # en croisant les candidats du pool de clés avec le contenu réel des libellés
-# (et, pour WNextTurnpointAlt et WPXCAssistant, confirmées par une recherche
-# du littéral d'identifiant de ressource correspondant dans le bytecode de
-# leur propre classe .dex). Voir le rapport de livraison pour le détail
+# et confirmées par une recherche du littéral d'identifiant de ressource
+# correspondant dans le bytecode .dex. Pour la plupart, le littéral vit dans
+# les méthodes de la classe du widget elle-même ; pour WCompass et
+# WXCAssistant, il fallait chercher dans la classe interne `$Companion`
+# (`WCompass$Companion.<init>` référence exactement deux littéraux de type
+# "string" — `wCompassDescription` et `wCompassTitleWind` — confirmant que le
+# titre est `wCompassTitleWind`, pas `wCompassDigitTitle` qui appartient à la
+# classe sœur WCompassDigital). Voir le rapport de livraison pour le détail
 # classe par classe.
 KEY_OVERRIDES = {
     "WButtonBrightness": "wButtonBrightness",
@@ -262,6 +267,7 @@ KEY_OVERRIDES = {
     "WButtonVolumeReminder": "wButtonVolumeReminder",
     "WButtonZoom": "wButtonZoom",
     "WCompGlideToESS": "wCompGlideToEssTitle",
+    "WCompass": "wCompassTitleWind",
     "WCompassDigital": "wCompassDigitTitle",
     "WDebug": "debug_wDebugTitle",
     "WDebugActivelook": "debug_wActiveLookTitle",
@@ -280,14 +286,11 @@ KEY_OVERRIDES = {
 }
 
 # Classes pour lesquelles aucune clé fiable n'a été trouvée : ni la règle
-# mécanique, ni une correspondance non ambiguë dans le pool de clés, ni (pour
-# WCompass) un littéral d'identifiant de ressource dans le bytecode de leur
-# propre classe .dex. Documentées explicitement plutôt que devinées.
+# mécanique, ni une correspondance non ambiguë dans le pool de clés, ni un
+# littéral d'identifiant de ressource dans le bytecode de leur propre classe
+# .dex (ou de sa classe interne `$Companion`). Documentées explicitement
+# plutôt que devinées.
 KNOWN_UNRESOLVED = {
-    "WCompass": "ambigu avec la classe sœur WCompassDigital, qui possède le "
-                "seul candidat plausible (wCompassDigitTitle) — confirmé par "
-                "bytecode comme appartenant à WCompassDigital, pas WCompass ; "
-                "aucun littéral de ressource trouvé dans le bytecode propre à WCompass",
     "WAltitudeMaximum": "aucune clé candidate dans le pool de clés",
     "WButtonCamera": "aucune clé candidate dans le pool de clés",
     "WButtonVario": "seules des clés d'état existent (wButtonVarioMuted, "
