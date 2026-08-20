@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest'
+import { readFileSync, readdirSync } from 'node:fs'
 import { drawNumeric } from '../../../src/render/widgets/numeric'
 import type { RenderSettings } from '../../../src/model/preferences'
 import type { Widget } from '../../../src/model/widget'
+import { parseJson } from '../../../src/core/parseJson'
+import { readLayout } from '../../../src/model/layout'
+import { drawWidget } from '../../../src/render/registry'
+// Effet de bord : enregistre les dessins connus auprès de l'annuaire (registry.ts) —
+// nécessaire au bloc « défaut 4 » plus bas, qui interroge `drawWidget` sur le corpus.
+import '../../../src/render/widgets'
+
+const EXAMPLES = '/Users/fred/DEV/XCTrack/Exemples/'
 
 const settings: RenderSettings = {
   fromDefaults: false, theme: 'WhiteHCTheme', titleColor: '#f44336',
@@ -221,6 +230,103 @@ describe('widgets numériques', () => {
     it('n’ajoute pas xc-num--no-title quand un titre est affiché', () => {
       const el = drawNumeric(widget('WAltitude', { _title: 'true' }), settings, language)
       expect(el.classList.contains('xc-num--no-title')).toBe(false)
+    })
+  })
+
+  // Défaut 1 (rapport de tâche) — le dimensionnement par hauteur seule (--xc-h,
+  // style.css) ignorait la largeur du widget : constaté en rendant landscape[3] de
+  // 2026-08-20_backup-00.xcfg à 640px, où « 1234 » s'affichait coupé en « 234 », le
+  // « m » de « 320 » disparaissait et « 045 » risquait de déborder de sa boîte.
+  describe('taille de la valeur bornée par la largeur du widget (défaut 1)', () => {
+    it('une valeur longue dans un widget étroit reçoit une taille inférieure à une valeur courte dans le même widget', () => {
+      // Même boîte étroite pour les deux (833/10000 de large, 1000/10000 de haut) : seule
+      // la longueur de l'exemple diffère (« 1234 » contre « 38 », voir SPECS).
+      const bounds = { x1: 0, x2: 600 }
+      const long = drawNumeric(widget('WAltitude', {}, bounds), settings, language)
+      const short = drawNumeric(widget('WSpeed', {}, bounds), settings, language)
+      const longSize = parseFloat((long.querySelector('.xc-num__value') as HTMLElement).style.fontSize)
+      const shortSize = parseFloat((short.querySelector('.xc-num__value') as HTMLElement).style.fontSize)
+      expect(longSize).toBeLessThan(shortSize)
+    })
+
+    it('un widget large garde la taille de base (4em, avec titre), quelle que soit la valeur', () => {
+      // Bornes larges par défaut (x1: 0, x2: 10000, voir `widget()`) : aucune réduction
+      // de largeur ne doit s'appliquer, même à la valeur la plus longue du corpus.
+      const el = drawNumeric(widget('WAltitude', { _title: 'true' }), settings, language)
+      const value = el.querySelector('.xc-num__value') as HTMLElement
+      expect(value.style.fontSize).toBe('4em')
+    })
+
+    it('sans titre, la taille de base est 5em plutôt que 4em', () => {
+      const el = drawNumeric(widget('WAltitude', { _title: 'false' }), settings, language)
+      const value = el.querySelector('.xc-num__value') as HTMLElement
+      expect(value.style.fontSize).toBe('5em')
+    })
+
+    it('l’unité suit la même réduction que la valeur, dans le rapport 0.4 (1.6/4 == 2/5, style.css)', () => {
+      const bounds = { x1: 0, x2: 600 }
+      const el = drawNumeric(widget('WAltitude', { _unit: 'true' }, bounds), settings, language)
+      const value = el.querySelector('.xc-num__value') as HTMLElement
+      const unit = el.querySelector('.xc-num__unit') as HTMLElement
+      const valueEm = parseFloat(value.style.fontSize)
+      const unitEm = parseFloat(unit.style.fontSize)
+      expect(unitEm).toBeCloseTo(valueEm * 0.4, 5)
+    })
+  })
+
+  // Défaut 3 (rapport de tâche) — XCTrack affiche « +3,5 » et « -0,1 » en français
+  // (virgule), pas « +3.5 » (point) : constaté sur vol-numeriques-boussole-
+  // variocolumn.png et vol-carte-kk7-sideview.png. Nos exemples (SPECS) sont écrits
+  // avec un point ; seule la présentation doit suivre la langue.
+  describe('séparateur décimal selon la langue (défaut 3)', () => {
+    it('affiche une virgule en français', () => {
+      const el = drawNumeric(widget('WGlide', {}), settings, 'fr')
+      expect(el.querySelector('.xc-num__value')?.textContent).toBe('8,3')
+    })
+
+    it('garde le point en anglais', () => {
+      const el = drawNumeric(widget('WGlide', {}), settings, 'en')
+      expect(el.querySelector('.xc-num__value')?.textContent).toBe('8.3')
+    })
+
+    it('reconnaît un code de langue système complet (ex. fr-FR), pas seulement le code court', () => {
+      // resolveLanguage (src/model/preferences.ts) peut relayer navigator.language tel
+      // quel (« fr-FR ») quand le fichier ne précise rien — pas seulement le code court
+      // du catalogue de libellés (« fr »).
+      const el = drawNumeric(widget('WVerticalSpeed', {}), settings, 'fr-FR')
+      expect(el.querySelector('.xc-num__value')?.textContent).toBe('+2,1')
+    })
+
+    it('ne touche pas une valeur sans décimale', () => {
+      const el = drawNumeric(widget('WSpeed', {}), settings, 'fr')
+      expect(el.querySelector('.xc-num__value')?.textContent).toBe('38')
+    })
+  })
+
+  // Défaut 4 (rapport de tâche) — sur l'instrument, un widget sans donnée n'affiche que
+  // son titre, l'espace de la valeur restant vide ; notre visionneuse choisit d'afficher
+  // « -- » à la place (choix assumé, pas un défaut à corriger). Mais ce « -- » ne doit
+  // venir QUE du rendu générique de repli (drawGeneric) : un type numérique qui
+  // l'afficherait signalerait une entrée manquante dans SPECS (numeric.ts).
+  describe('« -- » réservé au rendu générique de repli (défaut 4)', () => {
+    it('aucun widget numérique du corpus n’affiche « -- » comme valeur d’exemple', () => {
+      const files = readdirSync(EXAMPLES).filter((f) => f.endsWith('.xcfg'))
+      const offenders: string[] = []
+      for (const file of files) {
+        const document = parseJson(readFileSync(EXAMPLES + file, 'utf8'))
+        const layout = readLayout(document)
+        for (const page of [...layout.portrait, ...layout.landscape]) {
+          for (const widgetOnPage of page.widgets) {
+            const el = drawWidget(widgetOnPage, settings, language)
+            if (!el.classList.contains('xc-num')) continue // pas un widget numérique
+            const value = el.querySelector('.xc-num__value')?.textContent
+            if (value === '--' && !offenders.includes(widgetOnPage.shortName)) {
+              offenders.push(widgetOnPage.shortName)
+            }
+          }
+        }
+      }
+      expect(offenders).toEqual([])
     })
   })
 })

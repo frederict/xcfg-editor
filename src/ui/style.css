@@ -2,11 +2,19 @@
   --xc-surface: #ffffff;
   --xc-ink: #101010;
   --xc-line: #808080;
-  /* Fonds pâles de la zone de valeur, registre observé sur l'AIR³ (rendu-observe.md) :
-     vert clair pour une mesure positive (vario, gain), rose clair pour une négative.
-     Restent très clairs — c'est du texte noir dessus, sur un thème à fort contraste. */
-  --xc-value-positive-bg: #e3f6e6;
-  --xc-value-negative-bg: #fbe4ea;
+  /* Défaut 2 (rapport de tâche) — corrige le premier relevé (fond pâle derrière une
+     valeur noire, `rendu-observe.md`) : en vol, XCTrack colore la VALEUR elle-même,
+     cernée de noir. `--xc-value-positive` mesuré au pixel (mode le plus fréquent d'une
+     zone de compte de couleurs) sur `vol-numeriques-boussole-variocolumn.png` ET
+     `vol-landscape3-en-vol.png` — les deux captures donnent exactement #a0ffa0 pour le
+     remplissage et #000000 pour le cerne, malgré des vols différents.
+     `--xc-value-negative` n'a PAS été observé en vol (aucune mesure négative dans les
+     deux relevés) : on ne fait que conserver la symétrie du relevé au sol — un rose
+     dérivé par symétrie de teinte avec le vert confirmé, à la même clarté, jamais
+     mesuré directement. À corriger dès qu'une capture en vol montre un vario négatif. */
+  --xc-value-positive: #a0ffa0;
+  --xc-value-negative: #ffa0c8;
+  --xc-value-stroke: #000000;
   /* Barre d'état (WStatusLine) : fond et rouge d'alerte mesurés au pixel sur
      ecran-landscape3-17widgets.png (voir statusLine.ts). Un rouge distinct de
      --xc-ink/du rouge des titres : deux rouges coexistent sur l'appareil. */
@@ -146,8 +154,34 @@
   gap: 0.15em;
 }
 
-.xc-num__row--positive { background: var(--xc-value-positive-bg); }
-.xc-num__row--negative { background: var(--xc-value-negative-bg); }
+/* Défaut 2 (rapport de tâche) — la couleur porte sur la VALEUR (`.xc-num__value`), pas
+   sur le fond de la ligne : un fond pâle derrière un chiffre noir (premier relevé,
+   `rendu-observe.md`) n'est pas ce que fait l'instrument, et ne produit pas le même
+   effet de lisibilité en plein soleil qu'un chiffre coloré cerné de noir. L'unité
+   (`.xc-num__unit`) n'est pas concernée : sur les deux captures, seule la valeur se
+   colore, l'unité reste noire ordinaire.
+
+   `paint-order: stroke fill` dessine le cerne AVANT le remplissage — sinon le trait
+   recouvrirait la couleur au lieu de la cerner. `-webkit-text-stroke` est le moyen
+   direct (Chrome/Safari, donc l'AIR³ et son rendu Android) ; le `text-shadow` empilé sur
+   les 4 axes est le repli pour les moteurs qui ne le supportent pas. Ce n'est pas une
+   ombre décorative : sans cerne, un chiffre vert clair sur fond blanc n'a presque plus
+   de contraste — c'est le cerne qui rend l'instrument lisible en plein vol, pas un
+   effet de style. Pas de dégradé, pas de coin arrondi : uniquement ce que fait
+   l'appareil. */
+.xc-num__row--positive .xc-num__value,
+.xc-num__row--negative .xc-num__value {
+  paint-order: stroke fill;
+  -webkit-text-stroke: 0.035em var(--xc-value-stroke);
+  text-shadow:
+    0.025em 0 var(--xc-value-stroke),
+    -0.025em 0 var(--xc-value-stroke),
+    0 0.025em var(--xc-value-stroke),
+    0 -0.025em var(--xc-value-stroke);
+}
+
+.xc-num__row--positive .xc-num__value { color: var(--xc-value-positive); }
+.xc-num__row--negative .xc-num__value { color: var(--xc-value-negative); }
 
 /* La valeur occupe presque toute la hauteur disponible du widget — comparé à
    docs/reference/captures-air3/ecran-landscape3-17widgets.png (« 99 » sur
