@@ -28,7 +28,9 @@ interface NumericSpec {
  * Relevé sur le corpus (`Exemples/2026-08-20_backup-00.xcfg` et `Exemples/pages.xcfg`) :
  * les 23 types partagent la structure titre/valeur/unité. `WFL`, `WGlide` et les
  * finesses n'ont pas d'unité de préférence — une unité fixe leur suffit. `WNextTurnpoint`
- * affiche un nom de balise, pas une valeur numérique à unité.
+ * affiche un nom de balise, pas une valeur numérique à unité. Le champ `unit` des
+ * grandeurs `altitude`/`speed`/`verticalSpeed`/`windSpeed`/`distance` n'est qu'indicatif :
+ * `resolveUnit` retient la préférence correspondante et ignore ce champ pour elles.
  */
 const SPECS: Record<string, NumericSpec> = {
   WAltitude: { quantity: 'altitude', unit: 'm', example: '1234' },
