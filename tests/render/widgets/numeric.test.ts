@@ -5,7 +5,7 @@ import type { Widget } from '../../../src/model/widget'
 
 const settings: RenderSettings = {
   fromDefaults: false, theme: 'WhiteHCTheme', titleColor: '#f44336',
-  titleSizePercent: 140, titleFont: 'normal',
+  titleSizePercent: 140, titleFont: 'normal', language: 'fr',
   altitudeUnit: 'm', speedUnit: 'km/h', verticalSpeedUnit: 'm/s',
   // windSpeedUnit et distanceUnit diffèrent volontairement de speedUnit et de leur
   // valeur par défaut : un test qui coïnciderait avec le repli ne prouverait rien.
@@ -35,9 +35,16 @@ function widget(shortName: string, params: Record<string, string>): Widget {
 describe('widgets numériques', () => {
   it('affiche titre, valeur et unité', () => {
     const el = drawNumeric(widget('WAltitude', { _title: 'true', titletext: '""', _unit: 'true' }), settings)
-    expect(el.querySelector('.xc-num__title')?.textContent).toBe('Altitude')
+    // Libellé officiel XCTrack (settings.language === 'fr'), pas la traduction maison.
+    expect(el.querySelector('.xc-num__title')?.textContent).toBe('Altitude GPS')
     expect(el.querySelector('.xc-num__unit')?.textContent).toBe('m')
     expect(el.querySelector('.xc-num__value')?.textContent).toBeTruthy()
+  })
+
+  it('utilise la langue des préférences pour le libellé', () => {
+    const englishSettings: RenderSettings = { ...settings, language: 'en' }
+    const el = drawNumeric(widget('WAltitude', { _title: 'true', titletext: '""' }), englishSettings)
+    expect(el.querySelector('.xc-num__title')?.textContent).toBe('GPS Alt')
   })
 
   it('masque l’unité quand _unit vaut false', () => {

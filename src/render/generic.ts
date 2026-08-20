@@ -15,7 +15,7 @@ export function drawGeneric(widget: Widget, settings: RenderSettings): HTMLEleme
   title.className = 'xc-generic__title'
   title.style.color = settings.titleColor
   title.style.fontSize = `${settings.titleSizePercent}%`
-  title.textContent = readableName(widget.shortName)
+  title.textContent = readableName(widget.shortName, settings.language)
 
   const value = document.createElement('span')
   value.className = 'xc-generic__value'

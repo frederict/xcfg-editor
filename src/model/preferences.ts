@@ -8,6 +8,13 @@ export interface RenderSettings {
   titleColor: string
   titleSizePercent: number
   titleFont: string
+  /**
+   * Langue d'affichage, lue depuis `Display.Language`. XCTrack y écrit soit un code de
+   * langue (`"fr"`), soit la chaîne vide quand le pilote n'a rien choisi explicitement
+   * (langue système) — les deux cas retombent ici sur `"en"`, la langue source du
+   * catalogue de libellés officiels.
+   */
+  language: string
   altitudeUnit: string
   speedUnit: string
   verticalSpeedUnit: string
@@ -28,6 +35,7 @@ const DEFAULTS: Omit<RenderSettings, 'fromDefaults'> = {
   titleColor: '#f44336',
   titleSizePercent: 100,
   titleFont: 'normal',
+  language: 'en',
   altitudeUnit: 'm',
   speedUnit: 'km/h',
   verticalSpeedUnit: 'm/s',
@@ -84,6 +92,7 @@ export function readRenderSettings(document: JsonNode): RenderSettings {
     titleColor: color === undefined ? DEFAULTS.titleColor : androidColorToHex(color),
     titleSizePercent: readNumeric(preferences, 'Display.WidgetTitleSize') ?? DEFAULTS.titleSizePercent,
     titleFont: readString(preferences, 'Display.WidgetTitleFont') ?? DEFAULTS.titleFont,
+    language: languageOf(preferences),
     altitudeUnit: readString(preferences, 'Unit.Altitude') ?? DEFAULTS.altitudeUnit,
     speedUnit: readString(preferences, 'Unit.Speed') ?? DEFAULTS.speedUnit,
     verticalSpeedUnit: readString(preferences, 'Unit.VerticalSpeed') ?? DEFAULTS.verticalSpeedUnit,
@@ -97,4 +106,14 @@ export function readRenderSettings(document: JsonNode): RenderSettings {
 function distanceUnitOf(preferences: JsonNode, key: string): string | undefined {
   const raw = readString(preferences, key)
   return raw === undefined ? undefined : longDistanceUnit(raw)
+}
+
+/**
+ * `Display.Language` peut être absente ou valoir la chaîne vide (langue système, non
+ * choisie explicitement) : les deux retombent sur l'anglais, plutôt que sur une chaîne
+ * vide qui ne correspondrait à aucune locale du catalogue de libellés.
+ */
+function languageOf(preferences: JsonNode): string {
+  const raw = readString(preferences, 'Display.Language')
+  return raw !== undefined && raw.length > 0 ? raw : DEFAULTS.language
 }

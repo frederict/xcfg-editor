@@ -5,7 +5,7 @@ import type { Widget } from '../../src/model/widget'
 
 const settings: RenderSettings = {
   fromDefaults: true, theme: 'WhiteHCTheme', titleColor: '#f44336',
-  titleSizePercent: 100, titleFont: 'normal',
+  titleSizePercent: 100, titleFont: 'normal', language: 'en',
   altitudeUnit: 'm', speedUnit: 'km/h', verticalSpeedUnit: 'm/s',
   windSpeedUnit: 'km/h', distanceUnit: 'km', relativeDistanceUnit: 'km', airspaceAltitudeUnit: 'm'
 }
@@ -24,7 +24,9 @@ describe('annuaire', () => {
   })
 
   it('affiche le nom lisible quand il existe', () => {
-    expect(drawWidget(widget('WAltitude'), settings).textContent).toContain('Altitude')
+    // settings.language vaut 'en' ici : libellé officiel anglais, pas la traduction
+    // maison française.
+    expect(drawWidget(widget('WAltitude'), settings).textContent).toContain('GPS Alt')
   })
 
   it('utilise le dessin enregistré quand il existe', () => {

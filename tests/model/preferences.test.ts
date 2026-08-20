@@ -43,6 +43,22 @@ describe('paramètres de rendu', () => {
     expect(settings.relativeDistanceUnit).toBe('km')
     expect(settings.airspaceAltitudeUnit).toBe('m')
   })
+
+  it('lit la langue d’affichage depuis Display.Language', () => {
+    const withLanguage = readRenderSettings(parseJson(readFileSync(DIR + 'complète.xcfg', 'utf8')))
+    expect(withLanguage.language).toBe('fr')
+  })
+
+  it('retombe sur l’anglais quand Display.Language est vide ou absente', () => {
+    // Sur ce backup, Display.Language vaut la chaîne vide "" (langue système, non
+    // explicitée) — pas d'absence de clé, mais une valeur vide : les deux cas doivent
+    // aboutir au même repli.
+    const emptyLanguage = readRenderSettings(parseJson(readFileSync(DIR + '2026-08-20_backup-00.xcfg', 'utf8')))
+    expect(emptyLanguage.language).toBe('en')
+
+    const noPreferencesAtAll = readRenderSettings(parseJson(readFileSync(DIR + '2026-08-20_pages-00.xcfg', 'utf8')))
+    expect(noPreferencesAtAll.language).toBe('en')
+  })
 })
 
 describe('longDistanceUnit', () => {

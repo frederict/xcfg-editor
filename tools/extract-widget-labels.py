@@ -285,6 +285,16 @@ KEY_OVERRIDES = {
     "WAltitudeDataGraph": "wAltitudeDataGraphName",
 }
 
+# ANOMALIE CONNUE, VOLONTAIREMENT NON CORRIGÉE — ne pas "réparer" ceci un jour de bonne
+# foi. Dans les ressources XCTrack elles-mêmes, les libellés français de ces deux clés
+# semblent inversés par rapport à leur sémantique anglaise :
+#   wCompTimeToStartTitle (= "Time to start")  -> fr "Heure du départ"
+#   wCompTimeAtStartTitle (= "Time at start")  -> fr "Temps au départ"
+# Vérifié deux fois directement dans le pool de chaînes (locale 'fr' ET locale par
+# défaut/'en'), ce n'est pas un artefact de ce script. L'objectif de ce catalogue est de
+# reproduire XCTrack tel qu'il est, pas de corriger sa traduction : la valeur est prise
+# telle quelle, sans permutation.
+
 # Classes pour lesquelles aucune clé fiable n'a été trouvée : ni la règle
 # mécanique, ni une correspondance non ambiguë dans le pool de clés, ni un
 # littéral d'identifiant de ressource dans le bytecode de leur propre classe

@@ -98,7 +98,7 @@ export function drawNumeric(widget: Widget, settings: RenderSettings): HTMLEleme
     title.style.color = settings.titleColor
     title.style.fontSize = `${settings.titleSizePercent}%`
     const custom = readString(widget.node, 'titletext')
-    title.textContent = custom && custom.length > 0 ? custom : readableName(widget.shortName)
+    title.textContent = custom && custom.length > 0 ? custom : readableName(widget.shortName, settings.language)
     element.append(title)
   }
 
