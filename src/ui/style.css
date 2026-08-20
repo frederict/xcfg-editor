@@ -1,0 +1,50 @@
+:root {
+  --xc-surface: #ffffff;
+  --xc-ink: #101010;
+  --xc-line: #808080;
+}
+
+.xc-page {
+  position: relative;   /* référence de tous les widgets positionnés en absolu */
+  width: 100%;
+  background: var(--xc-surface);
+  color: var(--xc-ink);
+  overflow: hidden;
+  font-family: system-ui, sans-serif;
+}
+
+.xc-widget {
+  position: absolute;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: flex;
+}
+
+.xc-widget__bg {
+  position: absolute;
+  inset: 0;
+  background: var(--xc-surface);
+  opacity: var(--xc-bg-opacity, 1);
+}
+
+.xc-widget__content {
+  position: relative;   /* passe au-dessus du calque de fond, sans z-index */
+  flex: 1;
+  display: flex;
+  min-width: 0;
+}
+
+.xc-widget--border {
+  border: 1px solid var(--xc-line);
+}
+
+.xc-generic {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.xc-generic__title { font-size: 0.8em; opacity: 0.8; }
+.xc-generic__value { font-weight: 600; }
