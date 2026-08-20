@@ -5,6 +5,15 @@ export function decode(raw: string): string {
   return JSON.parse(raw) as string
 }
 
+/**
+ * Inverse de `decode` : rend le texte source d'une chaîne, guillemets et échappements
+ * compris, prêt à être posé par `setString`. Existe pour que chaque appelant ne
+ * réinvente pas l'échappement — et ne se trompe pas.
+ */
+export function encode(value: string): string {
+  return JSON.stringify(value)
+}
+
 export function getMember(node: JsonNode, key: string): JsonNode | undefined {
   if (node.kind !== 'object') return undefined
   // Sur clé dupliquée, la dernière l'emporte — c'est ce que fait XCTrack en lecture.
@@ -47,13 +56,15 @@ export function readBoolean(node: JsonNode, key: string): boolean | undefined {
  */
 function setRaw(node: JsonNode, key: string, value: JsonNode): void {
   if (node.kind !== 'object') throw new Error('objet attendu')
+  // On écrit sur la DERNIÈRE occurrence, celle que `getMember` retient. Écrire sur la
+  // première laisserait la lecture inchangée : un widget dont une coordonnée est
+  // dupliquée ne bougerait pas, sans erreur ni signal.
+  let cible: [string, JsonNode] | undefined
   for (const entry of node.entries) {
-    if (decode(entry[0]) === key) {
-      entry[1] = value
-      return
-    }
+    if (decode(entry[0]) === key) cible = entry
   }
-  throw new Error(`clé absente : ${key}`)
+  if (cible === undefined) throw new Error(`clé absente : ${key}`)
+  cible[1] = value
 }
 
 /** Pose un nombre, un booléen ou `null`, sous sa forme source exacte. */

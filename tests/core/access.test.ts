@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { parseJson } from '../../src/core/parseJson'
 import { serializeJson } from '../../src/core/serializeJson'
-import { getMember, getIndex, readString, readNumber, setLiteral, setString } from '../../src/core/access'
+import { getMember, getIndex, readString, readNumber, setLiteral, setString, decode, encode } from '../../src/core/access'
 
 const FILE = '/Users/fred/DEV/XCTrack/Exemples/2026-08-20_pages-00.xcfg'
 
@@ -49,5 +49,23 @@ describe('accesseurs', () => {
     const doc = parseJson(source)
     setString(doc, 'CLASS', '"WFutur2"')
     expect(serializeJson(doc)).toBe(source.replace('"WFutur"', '"WFutur2"'))
+  })
+})
+
+describe('clés dupliquées', () => {
+  // getMember retient la dernière occurrence. setLiteral doit écrire sur la même,
+  // sinon la lecture resterait inchangée après écriture — un widget ne bougerait pas.
+  it('écrit sur la même occurrence que celle qui est lue', () => {
+    const doc = parseJson('{\n  "X1": 100,\n  "X1": 200\n}')
+    expect(readNumber(doc, 'X1')).toBe(200)
+    setLiteral(doc, 'X1', '300')
+    expect(readNumber(doc, 'X1')).toBe(300)
+    expect(serializeJson(doc)).toBe('{\n  "X1": 100,\n  "X1": 300\n}')
+  })
+
+  it('encode est l’inverse de decode', () => {
+    for (const brut of ['"simple"', '"avec \\"guillemets\\""', '"Frédéric"', '"a\\nb"']) {
+      expect(encode(decode(brut))).toBe(brut)
+    }
   })
 })
