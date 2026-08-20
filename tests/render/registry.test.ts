@@ -6,7 +6,8 @@ import type { Widget } from '../../src/model/widget'
 const settings: RenderSettings = {
   fromDefaults: true, theme: 'WhiteHCTheme', titleColor: '#f44336',
   titleSizePercent: 100, titleFont: 'normal',
-  altitudeUnit: 'm', speedUnit: 'km/h', verticalSpeedUnit: 'm/s'
+  altitudeUnit: 'm', speedUnit: 'km/h', verticalSpeedUnit: 'm/s',
+  windSpeedUnit: 'km/h', distanceUnit: 'km', relativeDistanceUnit: 'km', airspaceAltitudeUnit: 'm'
 }
 
 const widget = (shortName: string): Widget => ({

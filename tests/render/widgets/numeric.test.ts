@@ -6,7 +6,10 @@ import type { Widget } from '../../../src/model/widget'
 const settings: RenderSettings = {
   fromDefaults: false, theme: 'WhiteHCTheme', titleColor: '#f44336',
   titleSizePercent: 140, titleFont: 'normal',
-  altitudeUnit: 'm', speedUnit: 'km/h', verticalSpeedUnit: 'm/s'
+  altitudeUnit: 'm', speedUnit: 'km/h', verticalSpeedUnit: 'm/s',
+  // windSpeedUnit et distanceUnit diffèrent volontairement de speedUnit et de leur
+  // valeur par défaut : un test qui coïnciderait avec le repli ne prouverait rien.
+  windSpeedUnit: 'm/s', distanceUnit: 'NM', relativeDistanceUnit: 'km', airspaceAltitudeUnit: 'm'
 }
 
 /**
@@ -68,5 +71,21 @@ describe('widgets numériques', () => {
     const vario = drawNumeric(widget('WVerticalSpeed', { _unit: 'true' }), settings)
     expect(speed.querySelector('.xc-num__unit')?.textContent).toBe('km/h')
     expect(vario.querySelector('.xc-num__unit')?.textContent).toBe('m/s')
+  })
+
+  it('WWindSpeed utilise l’unité de vent dédiée, pas celle de la vitesse sol', () => {
+    // Unit.WindSpeed est une préférence distincte de Unit.Speed dans XCTrack : un pilote
+    // peut régler sa vitesse sol en km/h et son vent en m/s. Les confondre affiche une
+    // unité fausse à côté d'une valeur correcte.
+    const el = drawNumeric(widget('WWindSpeed', { _unit: 'true' }), settings)
+    expect(el.querySelector('.xc-num__unit')?.textContent).toBe(settings.windSpeedUnit)
+    expect(el.querySelector('.xc-num__unit')?.textContent).not.toBe(settings.speedUnit)
+  })
+
+  it('les grandeurs de distance utilisent distanceUnit, pas une unité codée en dur', () => {
+    const goal = drawNumeric(widget('WCompDistanceToGoal', { _unit: 'true' }), settings)
+    const turnpoint = drawNumeric(widget('WNextTurnpointDistance', { _unit: 'true' }), settings)
+    expect(goal.querySelector('.xc-num__unit')?.textContent).toBe('NM')
+    expect(turnpoint.querySelector('.xc-num__unit')?.textContent).toBe('NM')
   })
 })

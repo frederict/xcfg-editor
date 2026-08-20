@@ -11,6 +11,11 @@ export interface RenderSettings {
   altitudeUnit: string
   speedUnit: string
   verticalSpeedUnit: string
+  windSpeedUnit: string
+  /** Unité pour les grandes distances — voir `longDistanceUnit`. */
+  distanceUnit: string
+  relativeDistanceUnit: string
+  airspaceAltitudeUnit: string
 }
 
 /**
@@ -25,7 +30,23 @@ const DEFAULTS: Omit<RenderSettings, 'fromDefaults'> = {
   titleFont: 'normal',
   altitudeUnit: 'm',
   speedUnit: 'km/h',
-  verticalSpeedUnit: 'm/s'
+  verticalSpeedUnit: 'm/s',
+  windSpeedUnit: 'km/h',
+  distanceUnit: 'km',
+  relativeDistanceUnit: 'km',
+  airspaceAltitudeUnit: 'm'
+}
+
+/**
+ * `Unit.Distance` et `Unit.CompetitionDistance` ne valent jamais une unité seule : c'est
+ * une paire séparée par une virgule, « unité pour les petites distances, unité pour les
+ * grandes » (`"m,km"` sur le seul backup du corpus). XCTrack choisit laquelle afficher
+ * selon la magnitude de la valeur ; nos widgets numériques n'affichent que des exemples
+ * en dizaines de kilomètres, donc on ne retient que le second terme.
+ */
+export function longDistanceUnit(raw: string): string {
+  const parts = raw.split(',')
+  return parts[1] ?? parts[0] ?? raw
 }
 
 /**
@@ -65,6 +86,15 @@ export function readRenderSettings(document: JsonNode): RenderSettings {
     titleFont: readString(preferences, 'Display.WidgetTitleFont') ?? DEFAULTS.titleFont,
     altitudeUnit: readString(preferences, 'Unit.Altitude') ?? DEFAULTS.altitudeUnit,
     speedUnit: readString(preferences, 'Unit.Speed') ?? DEFAULTS.speedUnit,
-    verticalSpeedUnit: readString(preferences, 'Unit.VerticalSpeed') ?? DEFAULTS.verticalSpeedUnit
+    verticalSpeedUnit: readString(preferences, 'Unit.VerticalSpeed') ?? DEFAULTS.verticalSpeedUnit,
+    windSpeedUnit: readString(preferences, 'Unit.WindSpeed') ?? DEFAULTS.windSpeedUnit,
+    distanceUnit: distanceUnitOf(preferences, 'Unit.Distance') ?? DEFAULTS.distanceUnit,
+    relativeDistanceUnit: readString(preferences, 'Unit.RelativeDistance') ?? DEFAULTS.relativeDistanceUnit,
+    airspaceAltitudeUnit: readString(preferences, 'Unit.AirspaceAltitude') ?? DEFAULTS.airspaceAltitudeUnit
   }
+}
+
+function distanceUnitOf(preferences: JsonNode, key: string): string | undefined {
+  const raw = readString(preferences, key)
+  return raw === undefined ? undefined : longDistanceUnit(raw)
 }

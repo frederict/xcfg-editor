@@ -5,10 +5,16 @@ import { readableName } from '../../catalog/widgetNames'
 
 /**
  * Grandeur mesurée par un widget numérique. Détermine quelle préférence d'unité du
- * fichier s'applique (`altitude`, `speed`, `verticalSpeed`) ; les autres grandeurs
- * n'ont pas de préférence dédiée et gardent l'unité fixe du type.
+ * fichier s'applique (`altitude`, `speed`, `verticalSpeed`, `windSpeed`, `distance`) ;
+ * les autres grandeurs n'ont pas de préférence dédiée et gardent l'unité fixe du type.
+ *
+ * `windSpeed` est distincte de `speed` : XCTrack a une préférence `Unit.WindSpeed`
+ * séparée de `Unit.Speed`, et rien ne garantit qu'un pilote règle les deux pareil.
+ * `distance` n'a en pratique qu'une seule préférence identifiable dans le corpus
+ * (`Unit.Distance` ; `Unit.CompetitionDistance` vaut la même valeur sur le seul fichier
+ * disponible, la distinction n'est donc pas tranchable ici — voir `distanceUnit`).
  */
-type Quantity = 'altitude' | 'speed' | 'verticalSpeed' | 'duration' | 'time' | 'distance' | 'glide' | 'none'
+type Quantity = 'altitude' | 'speed' | 'verticalSpeed' | 'windSpeed' | 'duration' | 'time' | 'distance' | 'glide' | 'none'
 
 interface NumericSpec {
   quantity: Quantity
@@ -33,7 +39,7 @@ const SPECS: Record<string, NumericSpec> = {
   WGlide: { quantity: 'glide', unit: ':1', example: '8.3' },
   WAirTime: { quantity: 'duration', unit: '', example: '2:47' },
   WTime: { quantity: 'time', unit: '', example: '14:32' },
-  WWindSpeed: { quantity: 'speed', unit: 'km/h', example: '18' },
+  WWindSpeed: { quantity: 'windSpeed', unit: 'km/h', example: '18' },
   WThermalAltGain: { quantity: 'altitude', unit: 'm', example: '320' },
   WNextTurnpoint: { quantity: 'none', unit: '', example: 'P3' },
   WNextTurnpointAlt: { quantity: 'altitude', unit: 'm', example: '1800' },
@@ -67,6 +73,8 @@ function resolveUnit(widget: Widget, settings: RenderSettings, spec: NumericSpec
     case 'altitude': return settings.altitudeUnit
     case 'speed': return settings.speedUnit
     case 'verticalSpeed': return settings.verticalSpeedUnit
+    case 'windSpeed': return settings.windSpeedUnit
+    case 'distance': return settings.distanceUnit
     default: return spec.unit
   }
 }
