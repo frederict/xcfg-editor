@@ -829,6 +829,166 @@ body.is-dragging .veil {
   white-space: nowrap;
 }
 
+/* ------------------------------------------------------- panneau de propriétés */
+
+/*
+ * Une liste verticale de lignes, comme le panneau natif — pas une grille d'étiquettes
+ * et de champs. Le pilote qui règle son instrument lit une ligne, agit, passe à la
+ * suivante ; une colonne de libellés alignés à droite d'une colonne de contrôles se
+ * parcourt moins bien à la souris et pas du tout au doigt.
+ *
+ * Les lignes n'ont pas d'accent de couleur : le cadre reste achromatique, la couleur
+ * appartient au rendu de l'instrument. La seule teinte est celle qu'une option de type
+ * couleur affiche dans sa pastille — c'est une donnée, pas une décoration.
+ */
+
+.props {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.9rem 1rem 1.1rem;
+  border: 1px solid var(--app-line);
+  border-radius: 6px;
+  background: var(--app-panel);
+}
+
+.props__head { display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap; }
+.props__title { margin: 0; font-size: 15px; font-weight: 600; }
+
+.props__count {
+  margin: 0;
+  font-family: var(--font-data);
+  font-size: 11px;
+  color: var(--app-ink-soft);
+}
+
+.props__class {
+  flex-basis: 100%;
+  margin: 0;
+  font-family: var(--font-data);
+  font-size: 11px;
+  color: var(--app-ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.props__filter {
+  font: inherit;
+  font-size: 13px;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--app-line-strong);
+  border-radius: 4px;
+  background: var(--app-bg);
+  color: var(--app-ink);
+}
+
+.props__list { display: flex; flex-direction: column; }
+.props__rule { width: 100%; margin: 0.35rem 0; border: 0; border-top: 1px solid var(--app-line-strong); }
+
+.props__row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  /* Assez haut pour être visé au doigt : l'outil sert aussi sur une tablette. */
+  min-height: 2.2rem;
+  padding: 0.3rem 0.2rem;
+  border-bottom: 1px solid var(--app-line);
+}
+
+.props__row:last-child { border-bottom: 0; }
+
+/* Sous-option d'une clé composite : le décalage dit la subordination (§ 4.4 du relevé). */
+.props__row[data-depth="1"] { padding-left: 1.4rem; }
+
+.props__label { flex: 1 1 13rem; font-size: 14px; cursor: pointer; }
+.props__row[data-control="checkbox"] .props__label { flex: 1 1 auto; }
+
+.props__checkbox {
+  flex: none;
+  width: 1.05rem;
+  height: 1.05rem;
+  margin: 0;
+  accent-color: var(--app-ink);
+  cursor: pointer;
+}
+
+.props__select,
+.props__number,
+.props__text,
+.props__hex {
+  font: inherit;
+  font-size: 13px;
+  padding: 0.3rem 0.45rem;
+  border: 1px solid var(--app-line-strong);
+  border-radius: 4px;
+  background: var(--app-bg);
+  color: var(--app-ink);
+}
+
+.props__select { flex: 0 1 14rem; }
+.props__text { flex: 0 1 14rem; }
+.props__number { flex: none; width: 7rem; font-variant-numeric: tabular-nums; }
+.props__slider { flex: 0 1 11rem; accent-color: var(--app-ink); }
+
+.props__color { display: flex; align-items: center; gap: 0.5rem; }
+.props__hex { width: 9.5rem; font-family: var(--font-data); text-transform: uppercase; }
+
+/* Le « gros disque plein » du panneau natif ; son opacité rend la composante alpha. */
+.props__swatch {
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 50%;
+  border: 1px solid var(--app-line-strong);
+}
+
+.props__raw {
+  flex: 1 1 100%;
+  font-family: var(--font-data);
+  font-size: 12px;
+  color: var(--app-ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.props__badge {
+  flex: none;
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--app-flag-line);
+  border-radius: 999px;
+  background: var(--app-flag-bg);
+  color: var(--app-flag-ink);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.props__help {
+  flex: none;
+  width: 1.4rem;
+  height: 1.4rem;
+  padding: 0;
+  border: 1px solid var(--app-line-strong);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--app-ink-soft);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.props__help:hover { color: var(--app-ink); border-color: var(--app-ink-soft); }
+
+.props__help-text {
+  flex-basis: 100%;
+  margin: 0.3rem 0 0.1rem;
+  padding: 0.55rem 0.7rem;
+  border-left: 2px solid var(--app-line-strong);
+  background: var(--app-bg);
+  font-size: 13px;
+  /* L'aide de XCTrack contient des retours à la ligne signifiants — douze pour windStyle. */
+  white-space: pre-wrap;
+  color: var(--app-ink-soft);
+}
+
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }

@@ -1,0 +1,715 @@
+import { decode, encode, getMember, setLiteral, setString } from '../core/access'
+import type { JsonNode } from '../core/jsonDocument'
+import { serializeJson } from '../core/serializeJson'
+import { readableName } from '../catalog/widgetNames'
+import { optionHelp, optionLabel, optionValues, optionsFor, resourceText } from '../catalog/widgetOptions'
+import type { WidgetOption } from '../catalog/widgetOptions'
+
+/**
+ * Le panneau de propriétés d'un widget : la description du formulaire, puis son rendu.
+ *
+ * ## Le formulaire se construit depuis le FICHIER, jamais depuis le catalogue
+ *
+ * Deux raisons, l'une de fidélité, l'autre de conservation.
+ *
+ * **Fidélité.** L'ordre des clés dans le fichier est plus proche du panneau natif que
+ * l'ordre du catalogue. Vérifiable sur la boussole : le relevé
+ * (`docs/reference/edition-native.md`) donne `_border, _bg, _theme, rotation,
+ * navigation_target, windStyle, showHeading, showBearing, showBackground` — exactement
+ * l'ordre des clés du fichier, alors que le catalogue les déclare dans l'ordre du
+ * bytecode (`_bg` avant `_border`, `rotation` en dernier). XCTrack sérialise donc ses
+ * widgets dans l'ordre où il les affiche : c'est la meilleure source d'ordre dont on
+ * dispose, et elle est gratuite.
+ *
+ * **Conservation.** Une clé que le catalogue ignore reste éditable, sous son nom brut,
+ * avec un contrôle déduit de son type JSON. Le corpus en compte 18 (`showWind`,
+ * `nav_use_brackets`, `mapWidget_showTerrain`…) : des vestiges que l'application
+ * n'expose plus mais qu'elle relit toujours. Partir du catalogue les ferait disparaître
+ * du panneau ; partir du fichier les montre toutes. Rien n'est masqué, rien n'est
+ * supprimé à l'écriture.
+ *
+ * Le catalogue apporte le reste — libellé traduit, texte d'aide, valeurs permises —
+ * mais **c'est le type JSON qui tranche** en cas de désaccord : le format gagne des
+ * clés et en change à chaque version, et le fichier ouvert est la seule chose dont on
+ * soit sûr.
+ *
+ * ## Ce que ce module ne fait pas
+ *
+ * Il ne simule aucune dépendance entre options. Le relevé
+ * (`docs/reference/edition-native-exploration.md` § 4.4) en décrit cinq — `rotation`
+ * grise `showHeading`, `nav_target = NONE` grise `nav_label`… — mais aucune n'est
+ * décrite par les métadonnées de l'APK, et la liste n'est certainement pas complète.
+ * Tout reste modifiable : un réglage sans effet est ignoré par XCTrack, une option
+ * grisée à tort ne l'est pas.
+ *
+ * Il n'écrit jamais le document : chaque modification passe par `setLiteral` ou
+ * `setString`, qui remplacent **une** valeur dans le nœud d'origine. Une clé qu'on ne
+ * touche pas ne change pas d'un octet, y compris son texte source (`3.0` reste `3.0`).
+ */
+
+/* ------------------------------------------------------------------ description */
+
+/**
+ * Le contrôle à présenter. `number` n'existe pas dans le catalogue : c'est ce que
+ * devient un curseur dont on ignore les bornes — voir `sliderRange`.
+ */
+export type FieldControl = 'checkbox' | 'enum' | 'slider' | 'number' | 'color' | 'text' | 'unknown'
+
+export interface FieldChoice {
+  /** Ce qui s'écrit dans le fichier (`"ARC"`). */
+  value: string
+  label: string
+}
+
+export interface FieldRange { min: number; max: number }
+
+/** Un contrôle du panneau. */
+export interface PropertyField {
+  /** La clé du fichier (`windStyle`, `_bg`, `rotation`). */
+  key: string
+  /** Le sous-champ, pour une clé composite (`rotation` → `value`, `showCompass`). */
+  field?: string
+  /** Identifiant du contrôle : `windStyle`, ou `rotation.showCompass`. */
+  path: string
+  /** Libellé affiché, valeur déjà substituée s'il en porte une. */
+  label: string
+  control: FieldControl
+  /** Texte source de la valeur, tel qu'il figure dans le fichier — guillemets compris. */
+  raw: string
+  /** La valeur lisible : chaîne décodée, ou texte du littéral. */
+  text: string
+  /** Nature du nœud. C'est elle qui décide entre `setString` et `setLiteral`. */
+  valueKind: JsonNode['kind']
+  choices: FieldChoice[]
+  help?: string
+  /**
+   * Le gabarit du libellé quand il porte la valeur (« Transparence… : %d%% »), pour
+   * que le rendu réécrive l'intitulé quand le curseur bouge.
+   */
+  labelPattern?: string
+  /** Bornes d'un curseur, quand elles sont connues. Sinon : champ numérique libre. */
+  range?: FieldRange
+  /**
+   * Ce que le catalogue sait de plus, quand le libellé affiché est un nom brut : le
+   * libellé traduit de la clé composite dont ce champ est un sous-champ. Le rendu le
+   * pose en infobulle sur la ligne.
+   */
+  hint?: string
+  /** Faux si la clé est absente du catalogue : le libellé est alors le nom brut. */
+  known: boolean
+  /** D'où vient l'appariement libellé/clé — `args` est sûr, le reste est déduit. */
+  labelFrom?: string
+  /** 1 pour un sous-champ subordonné d'une clé composite : il s'affiche en retrait. */
+  depth: number
+  /** L'objet JSON qui porte la clé : le widget, ou l'objet d'une clé composite. */
+  owner: JsonNode
+}
+
+export interface PropertyForm {
+  className: string
+  shortName: string
+  /** « Gadget : Boussole », comme l'intitulé de l'activité native. */
+  title: string
+  language: string
+  fields: PropertyField[]
+  /**
+   * Longueur du bloc de tête — les clés universelles `_border`, `_bg`, `_theme`. Le
+   * panneau natif le termine par un séparateur horizontal (§ 4.1 du relevé). C'est le
+   * seul séparateur qu'on sache placer : les autres dépendent de regroupements que
+   * l'APK ne décrit nulle part, et qu'on n'invente pas.
+   */
+  headCount: number
+  /** Les clés du fichier que le catalogue ne connaît pas, dans l'ordre du fichier. */
+  unknownKeys: string[]
+}
+
+/** Les cinq clés de structure. Elles ne sont pas des réglages : le panneau natif ne les montre pas. */
+const STRUCTURE_KEYS = new Set(['CLASS', 'X1', 'Y1', 'X2', 'Y2'])
+
+/** Les trois clés universelles réglables, dans l'ordre où le panneau natif les montre. */
+const UNIVERSAL_KEYS = new Set(['_border', '_bg', '_theme'])
+
+/** Sous-champ principal d'une clé composite : il porte le libellé de l'option. */
+const MAIN_FIELD = 'value'
+
+/* ---------------------------------------------------------------- déduction du type */
+
+function isBooleanLiteral(raw: string): boolean {
+  return raw === 'true' || raw === 'false'
+}
+
+function isNumberLiteral(raw: string): boolean {
+  return raw !== '' && Number.isFinite(Number(raw))
+}
+
+/**
+ * Le contrôle qu'impose le type JSON, seul. C'est le repli pour une clé inconnue, et
+ * l'arbitre quand le catalogue annonce autre chose que ce que le fichier contient.
+ */
+function controlFromValue(node: JsonNode): FieldControl {
+  if (node.kind === 'string') return 'text'
+  if (node.kind === 'literal') {
+    if (isBooleanLiteral(node.raw)) return 'checkbox'
+    if (isNumberLiteral(node.raw)) return 'number'
+  }
+  return 'unknown'
+}
+
+/**
+ * Le contrôle retenu. Le catalogue propose, le type du fichier dispose : un `enum` dont
+ * la valeur est un booléen est une case, un `slider` dont la valeur est une chaîne est
+ * un champ texte. Un désaccord signale une clé que XCTrack a fait évoluer — la suivre
+ * vaut mieux que d'afficher un contrôle qui ne sait pas lire sa propre valeur.
+ */
+function resolveControl(
+  option: WidgetOption | undefined, node: JsonNode, hasChoices: boolean
+): FieldControl {
+  const byValue = controlFromValue(node)
+  if (option === undefined) return byValue
+  switch (option.control) {
+    case 'enum': return byValue === 'text' && hasChoices ? 'enum' : byValue
+    case 'slider': return byValue === 'number' ? 'slider' : byValue
+    case 'color': return byValue === 'number' ? 'color' : byValue
+    default: return byValue
+  }
+}
+
+/**
+ * Bornes d'un curseur. Le catalogue n'en donne aucune ; la seule qui se lise dans les
+ * données est le pourcentage — un libellé en `%d%%` (« Transparence d'arrière-plan :
+ * %d%% », « Opacité de la superposition thermique : %d%% ») borne sa valeur à 0–100.
+ *
+ * Pour tous les autres curseurs — `thermals`, `postponedFloorLimit`, `line_thickness` —
+ * inventer une échelle reviendrait à écrêter une valeur légitime au premier glissement.
+ * Ils deviennent des champs numériques libres, et le restent tant que personne n'aura
+ * relevé leurs bornes sur l'appareil.
+ */
+function sliderRange(pattern: string | undefined, value: number): FieldRange | undefined {
+  if (pattern === undefined || !/%[dsf]\s*%%/.test(pattern)) return undefined
+  if (value < 0 || value > 100) return undefined
+  return { min: 0, max: 100 }
+}
+
+/** Substitue la valeur dans un gabarit de libellé : `%d`, `%s`, `%f`, et `%%` littéral. */
+export function applyLabelPattern(pattern: string, value: string): string {
+  return pattern.replace(/%[dsf]/, value).replace(/%%/g, '%')
+}
+
+/** Le libellé d'un champ pour une valeur donnée — l'intitulé d'un curseur suit sa valeur. */
+export function fieldLabel(field: PropertyField, text: string): string {
+  return field.labelPattern === undefined ? field.label : applyLabelPattern(field.labelPattern, text)
+}
+
+/* ------------------------------------------------------------------- les couleurs */
+
+/**
+ * Une couleur XCTrack est un **entier signé 32 bits ARGB** : `tracklog_color` vaut
+ * `-27091` dans le fichier et s'affiche `FFFF962D` dans le sélecteur natif (§ 4.6 du
+ * relevé). La conversion est vérifiée par les tests dans les deux sens.
+ */
+export function colorToHex(raw: string): string | undefined {
+  const value = Number(raw)
+  if (!Number.isInteger(value) || value < -0x80000000 || value > 0xffffffff) return undefined
+  return `#${(value >>> 0).toString(16).padStart(8, '0').toUpperCase()}`
+}
+
+/** Inverse de `colorToHex`. Accepte `#AARRGGBB` et `#RRGGBB` (alpha implicite `FF`). */
+export function colorToLiteral(hex: string): string | undefined {
+  const digits = hex.replace(/^#/, '').toUpperCase()
+  if (!/^[0-9A-F]{6}$|^[0-9A-F]{8}$/.test(digits)) return undefined
+  const full = digits.length === 6 ? `FF${digits}` : digits
+  return String(parseInt(full, 16) | 0)
+}
+
+/** La partie visible d'une couleur ARGB, sous une forme que CSS accepte. */
+export function colorSwatch(hex: string): string {
+  return `#${hex.replace(/^#/, '').slice(-6)}`
+}
+
+/* ------------------------------------------------------------ construction du formulaire */
+
+/** Ce dont la construction a besoin : `Widget` de `src/model/widget.ts` en est un. */
+export interface FormSource {
+  node: JsonNode
+  shortName: string
+  className?: string
+}
+
+/**
+ * Les clés du widget, dans l'ordre du fichier, dédoublonnées.
+ *
+ * Sur clé dupliquée, XCTrack retient la dernière — comme `getMember`, comme `setLiteral`.
+ * On garde donc la **dernière** occurrence, pas la première : le contrôle montre alors la
+ * valeur qui fait foi, et l'écrit au bon endroit. Un fichier sain n'a pas de doublon ;
+ * `findDuplicateKeys` le signale par ailleurs.
+ */
+function orderedKeys(node: JsonNode): string[] {
+  if (node.kind !== 'object') return []
+  const keys: string[] = []
+  node.entries.forEach(([rawKey], index) => {
+    const key = decode(rawKey)
+    const later = node.entries.some(([other], j) => j > index && decode(other) === key)
+    if (!later) keys.push(key)
+  })
+  return keys
+}
+
+interface FieldSeed {
+  key: string
+  field?: string
+  label: string
+  labelPattern?: string
+  option?: WidgetOption
+  node: JsonNode
+  owner: JsonNode
+  choices: FieldChoice[]
+  help?: string
+  hint?: string
+  depth: number
+}
+
+function buildField(seed: FieldSeed): PropertyField {
+  const { node, option } = seed
+  const text = node.kind === 'string' ? decode(node.raw) : node.kind === 'literal' ? node.raw : ''
+  const control = resolveControl(option, node, seed.choices.length > 0)
+  const pattern = seed.labelPattern !== undefined && /%[dsf]/.test(seed.labelPattern)
+    ? seed.labelPattern
+    : undefined
+
+  const field: PropertyField = {
+    key: seed.key,
+    path: seed.field === undefined ? seed.key : `${seed.key}.${seed.field}`,
+    label: pattern === undefined ? seed.label : applyLabelPattern(pattern, text),
+    control,
+    raw: node.kind === 'object' || node.kind === 'array' ? serializeJson(node) : node.raw,
+    text,
+    valueKind: node.kind,
+    choices: seed.choices,
+    known: option !== undefined,
+    depth: seed.depth,
+    owner: seed.owner
+  }
+  if (seed.field !== undefined) field.field = seed.field
+  if (seed.help !== undefined) field.help = seed.help
+  if (seed.hint !== undefined) field.hint = seed.hint
+  if (pattern !== undefined) field.labelPattern = pattern
+  if (option !== undefined) field.labelFrom = option.labelFrom
+  if (control === 'slider') {
+    const range = sliderRange(pattern, Number(text))
+    if (range !== undefined) field.range = range
+  }
+  return field
+}
+
+/**
+ * Une clé composite donne **plusieurs contrôles** : `rotation` vaut
+ * `{"value": …, "showCompass": …}` et se présente en une liste et une case (§ 4.3 du
+ * relevé). L'éclatement suit l'objet du fichier, pas la liste `fields` du catalogue :
+ * un sous-champ apparu depuis l'extraction doit rester éditable, un sous-champ absent
+ * ne doit pas produire de contrôle vide.
+ *
+ * **Seul le sous-champ `value` reçoit le libellé de l'option** ; les autres portent leur
+ * chemin (`mapWidget_scale · auto`) et s'affichent en retrait sous lui — l'indentation
+ * est le mécanisme observé pour une sous-option (§ 4.4). Le catalogue joint pourtant à
+ * chaque composite les libellés de ses sous-contrôles (`otherLabels`), mais il annonce
+ * lui-même ne pas savoir lequel va à quel sous-champ, et les leur distribuer serait sans
+ * profit : sur les six `otherLabels` du catalogue, cinq n'ont aucune traduction dans le
+ * pool de chaînes, et le sixième — « Echelle Carte » — désigne justement un `value`,
+ * pas un subordonné. Il n'y a donc rien à gagner, et un appariement faux à risquer.
+ *
+ * Le libellé traduit de l'option reste attaché au champ par `hint`, que le rendu pose en
+ * infobulle : rien de ce que le catalogue sait n'est perdu.
+ */
+function expandComposite(
+  node: JsonNode, key: string, option: WidgetOption | undefined,
+  parentLabel: string, help: string | undefined, language: string
+): PropertyField[] {
+  const subKeys = orderedKeys(node)
+  const hasMain = subKeys.includes(MAIN_FIELD)
+
+  const fields: PropertyField[] = []
+  for (const subKey of subKeys) {
+    const value = getMember(node, subKey)
+    if (value === undefined) continue
+    const main = hasMain && subKey === MAIN_FIELD
+    fields.push(buildField({
+      key,
+      field: subKey,
+      label: main ? parentLabel : `${key} · ${subKey}`,
+      // Le gabarit de libellé (« Echelle Carte: %d m ») appartient au sous-champ principal.
+      ...(main && option !== undefined ? { labelPattern: resourceText(option.label, language) } : {}),
+      ...(option === undefined ? {} : { option }),
+      ...(main || option === undefined ? {} : { hint: parentLabel }),
+      node: value,
+      owner: node,
+      choices: main && option !== undefined ? optionValues(option, language) : [],
+      ...(main && help !== undefined ? { help } : {}),
+      depth: hasMain && !main ? 1 : 0
+    }))
+  }
+  return fields
+}
+
+/**
+ * La description du formulaire d'un widget : la liste ordonnée de ses contrôles.
+ *
+ * `language` est un code du catalogue (`fr`, `en`, `de`… 34 en tout) ; un libellé
+ * manquant retombe sur l'anglais, puis sur le nom brut de la clé.
+ */
+export function buildPropertyForm(source: FormSource, language = 'fr'): PropertyForm {
+  const { node, shortName } = source
+  const catalog = new Map<string, WidgetOption>()
+  for (const option of optionsFor(shortName)) {
+    if (!catalog.has(option.key)) catalog.set(option.key, option)
+  }
+
+  const fields: PropertyField[] = []
+  const unknownKeys: string[] = []
+  let headCount = 0
+  let inHead = true
+
+  for (const key of orderedKeys(node)) {
+    if (STRUCTURE_KEYS.has(key)) continue
+    const value = getMember(node, key)
+    if (value === undefined) continue
+
+    const option = catalog.get(key)
+    if (option === undefined) unknownKeys.push(key)
+    const label = option === undefined ? key : optionLabel(option, language)
+    const help = option === undefined ? undefined : optionHelp(option, language)
+
+    const before = fields.length
+    if (value.kind === 'object') {
+      fields.push(...expandComposite(value, key, option, label, help, language))
+    } else {
+      const pattern = option === undefined ? undefined : resourceText(option.label, language)
+      fields.push(buildField({
+        key,
+        label,
+        // `buildField` ne retient le gabarit que s'il porte vraiment une valeur.
+        ...(pattern === undefined ? {} : { labelPattern: pattern }),
+        ...(option === undefined ? {} : { option }),
+        node: value,
+        owner: node,
+        choices: option === undefined ? [] : optionValues(option, language),
+        ...(help === undefined ? {} : { help }),
+        depth: 0
+      }))
+    }
+
+    if (inHead && UNIVERSAL_KEYS.has(key)) headCount = fields.length
+    else if (fields.length > before) inHead = false
+  }
+
+  const className = source.className ?? ''
+  return {
+    className,
+    shortName,
+    title: `Gadget : ${readableName(shortName, language)}`,
+    language,
+    fields,
+    headCount,
+    unknownKeys
+  }
+}
+
+/* --------------------------------------------------------------------- modification */
+
+/**
+ * Écrit la valeur d'un champ, et rien d'autre.
+ *
+ * `text` est la valeur telle qu'on la lit : le contenu d'une chaîne sans ses
+ * guillemets, le texte source exact d'un littéral. **C'est bien un texte et pas un
+ * nombre** : `setLiteral` refuse les nombres pour que JavaScript ne réécrive pas `3.0`
+ * en `3` au passage, et cette fonction ne rouvre pas la porte — un nombre saisi par le
+ * pilote arrive ici sous la forme qu'il aura dans le fichier.
+ *
+ * Rend `false` sans rien écrire si la valeur est déjà celle-là : régler une option sur
+ * sa valeur courante ne doit pas altérer son texte source.
+ *
+ * Un champ dont la valeur est un objet ou un tableau n'est pas modifiable ici : le
+ * panneau l'affiche en lecture seule plutôt que de risquer de le reconstruire.
+ */
+export function setFieldValue(field: PropertyField, text: string): boolean {
+  if (field.valueKind !== 'string' && field.valueKind !== 'literal') return false
+  const key = field.field ?? field.key
+  const current = getMember(field.owner, key)
+
+  if (field.valueKind === 'string') {
+    if (current?.kind === 'string' && decode(current.raw) === text) return false
+    setString(field.owner, key, encode(text))
+    field.raw = encode(text)
+  } else {
+    if (current?.kind === 'literal' && current.raw === text) return false
+    setLiteral(field.owner, key, text)
+    field.raw = text
+  }
+  field.text = text
+  field.label = fieldLabel(field, text)
+  return true
+}
+
+/* -------------------------------------------------------------------------- rendu */
+
+/**
+ * Au-delà de ce nombre de contrôles, le panneau se dote d'un champ de filtrage.
+ *
+ * `WCompMap` en a 49 une fois ses clés composites éclatées, `WXCAssistant` davantage
+ * encore. Le panneau natif les range en sections repliables, mais **aucune métadonnée
+ * ne dit quelle option va dans quelle section** : les reconstituer serait les inventer.
+ * Le filtre résout le même problème — atteindre un réglage sans dérouler cinquante
+ * lignes — sans rien affirmer sur la structure. Il porte sur le libellé et sur la clé,
+ * ce qui permet aussi bien « épaisseur » que « mapWidget_ ».
+ */
+export const FILTER_THRESHOLD = 12
+
+export interface PropertiesPanelOptions {
+  form: PropertyForm
+  /** Appelé après chaque écriture effective, avec le champ modifié. */
+  onChange?: (field: PropertyField, form: PropertyForm) => void
+}
+
+export interface PropertiesPanel {
+  element: HTMLElement
+  form: PropertyForm
+  /** Filtre les contrôles affichés. Chaîne vide : tout est visible. */
+  filter: (query: string) => void
+}
+
+function el<K extends keyof HTMLElementTagNameMap>(
+  tag: K, className?: string, text?: string
+): HTMLElementTagNameMap[K] {
+  const node = document.createElement(tag)
+  if (className !== undefined) node.className = className
+  if (text !== undefined) node.textContent = text
+  return node
+}
+
+let panelCount = 0
+
+/** Minuscules sans accents : « épaisseur » doit trouver « Epaisseur des lignes ». */
+function normalize(value: string): string {
+  return value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+}
+
+export function renderProperties(options: PropertiesPanelOptions): PropertiesPanel {
+  const { form } = options
+  const prefix = `props-${++panelCount}`
+
+  const root = el('section', 'props')
+  root.dataset.widget = form.shortName
+
+  const head = el('header', 'props__head')
+  head.append(
+    el('h2', 'props__title', form.title),
+    el('p', 'props__count', `${form.fields.length} réglage${form.fields.length > 1 ? 's' : ''}`)
+  )
+  if (form.className !== '') head.append(el('p', 'props__class', form.className))
+  root.append(head)
+
+  const list = el('div', 'props__list')
+  const rows: Array<{ element: HTMLElement; haystack: string }> = []
+  const rules: HTMLElement[] = []
+
+  form.fields.forEach((field, index) => {
+    const row = buildRow(field, `${prefix}-${index}`, () => options.onChange?.(field, form))
+    rows.push({ element: row, haystack: normalize(`${field.label} ${field.path}`) })
+    list.append(row)
+    // Le bloc universel de tête, fermé par un trait — le seul séparatif attesté.
+    if (index + 1 === form.headCount && index + 1 < form.fields.length) {
+      const rule = el('hr', 'props__rule')
+      rules.push(rule)
+      list.append(rule)
+    }
+  })
+
+  function filter(query: string): void {
+    const needle = normalize(query.trim())
+    for (const row of rows) row.element.hidden = needle !== '' && !row.haystack.includes(needle)
+    for (const rule of rules) rule.hidden = needle !== ''
+  }
+
+  if (form.fields.length > FILTER_THRESHOLD) {
+    const search = el('input', 'props__filter')
+    search.type = 'search'
+    search.placeholder = 'Filtrer les réglages'
+    search.setAttribute('aria-label', 'Filtrer les réglages')
+    search.addEventListener('input', () => { filter(search.value) })
+    root.append(search)
+  }
+
+  root.append(list)
+  return { element: root, form, filter }
+}
+
+/** Une ligne du panneau : intitulé, contrôle, et le `?` de l'aide quand il y en a une. */
+function buildRow(field: PropertyField, id: string, changed: () => void): HTMLElement {
+  const row = el('div', 'props__row')
+  row.dataset.key = field.path
+  row.dataset.control = field.control
+  if (field.depth > 0) row.dataset.depth = String(field.depth)
+  if (!field.known) row.dataset.unknown = 'true'
+  // La clé du fichier au survol : c'est elle qu'on cherche quand on compare deux
+  // sauvegardes ou qu'on lit un rapport de bogue.
+  row.title = field.hint === undefined ? field.path : `${field.path} — ${field.hint}`
+
+  const label = el('label', 'props__label', field.label)
+  label.htmlFor = id
+
+  if (field.control === 'checkbox') {
+    // La case porte son libellé : c'est la forme du panneau natif, et elle donne une
+    // cible tactile de la largeur de la ligne.
+    const box = el('input', 'props__checkbox')
+    box.type = 'checkbox'
+    box.id = id
+    box.checked = field.text === 'true'
+    box.addEventListener('change', () => {
+      if (setFieldValue(field, box.checked ? 'true' : 'false')) changed()
+    })
+    row.append(box, label)
+  } else {
+    row.append(label, buildControl(field, id, label, changed))
+  }
+
+  if (!field.known) {
+    const badge = el('span', 'props__badge', 'clé hors catalogue')
+    badge.title = `« ${field.path} » n'est pas décrite par le catalogue : contrôle déduit de son type.`
+    row.append(badge)
+  }
+
+  if (field.help !== undefined) row.append(...helpParts(field.help, id))
+  return row
+}
+
+/** Le `?` cerclé du panneau natif et l'infobulle qu'il déplie. */
+function helpParts(help: string, id: string): HTMLElement[] {
+  const text = el('p', 'props__help-text', help)
+  text.id = `${id}-help`
+  text.hidden = true
+
+  const button = el('button', 'props__help')
+  button.type = 'button'
+  button.textContent = '?'
+  button.setAttribute('aria-label', 'Aide sur ce réglage')
+  button.setAttribute('aria-expanded', 'false')
+  button.setAttribute('aria-controls', text.id)
+  button.addEventListener('click', () => {
+    text.hidden = !text.hidden
+    button.setAttribute('aria-expanded', text.hidden ? 'false' : 'true')
+  })
+  return [button, text]
+}
+
+function buildControl(
+  field: PropertyField, id: string, label: HTMLElement, changed: () => void
+): HTMLElement {
+  if (field.control === 'enum') return buildSelect(field, id, changed)
+  if (field.control === 'color') return buildColor(field, id, changed)
+  if (field.control === 'slider' || field.control === 'number') {
+    return buildNumber(field, id, label, changed)
+  }
+  if (field.control === 'text') return buildText(field, id, changed)
+
+  // Objet imbriqué, tableau, `null`, littéral illisible : montré, jamais réécrit. La
+  // règle d'or vaut aussi pour ce qu'on ne comprend pas — on ne le fait pas disparaître.
+  const readonly = el('output', 'props__raw', field.raw)
+  readonly.id = id
+  readonly.title = 'Valeur non modifiable ici ; elle est conservée telle quelle.'
+  return readonly
+}
+
+function buildSelect(field: PropertyField, id: string, changed: () => void): HTMLElement {
+  const select = el('select', 'props__select')
+  select.id = id
+  for (const choice of field.choices) {
+    const option = el('option', undefined, choice.label)
+    option.value = choice.value
+    select.append(option)
+  }
+  // Une valeur que le catalogue ne connaît pas — vestige, ou version plus récente que
+  // l'extraction — s'ajoute à la liste plutôt que de se faire remplacer en silence.
+  if (!field.choices.some((choice) => choice.value === field.text)) {
+    const extra = el('option', undefined, `${field.text} (hors catalogue)`)
+    extra.value = field.text
+    select.prepend(extra)
+  }
+  select.value = field.text
+  select.addEventListener('change', () => {
+    if (setFieldValue(field, select.value)) changed()
+  })
+  return select
+}
+
+function buildNumber(
+  field: PropertyField, id: string, label: HTMLElement, changed: () => void
+): HTMLElement {
+  const input = el('input', field.range === undefined ? 'props__number' : 'props__slider')
+  input.type = field.range === undefined ? 'number' : 'range'
+  input.id = id
+  if (field.range !== undefined) {
+    input.min = String(field.range.min)
+    input.max = String(field.range.max)
+    input.step = '1'
+  }
+  input.value = field.text
+  input.addEventListener('input', () => {
+    // Le texte vient du contrôle, pas d'un `Number` : c'est lui qui ira dans le fichier.
+    const text = input.value.trim()
+    if (text === '' || !Number.isFinite(Number(text))) return
+    if (setFieldValue(field, text)) {
+      label.textContent = field.label
+      changed()
+    }
+  })
+  return input
+}
+
+function buildText(field: PropertyField, id: string, changed: () => void): HTMLElement {
+  const input = el('input', 'props__text')
+  input.type = 'text'
+  input.id = id
+  input.value = field.text
+  input.addEventListener('change', () => {
+    if (setFieldValue(field, input.value)) changed()
+  })
+  return input
+}
+
+/**
+ * Le sélecteur de couleur : le champ `#AARRGGBB` du panneau natif, et sa pastille.
+ * Pas de `<input type="color">` — il ignore la composante alpha, que XCTrack utilise.
+ */
+function buildColor(field: PropertyField, id: string, changed: () => void): HTMLElement {
+  const wrap = el('span', 'props__color')
+  const input = el('input', 'props__hex')
+  input.type = 'text'
+  input.id = id
+  input.spellcheck = false
+  input.setAttribute('inputmode', 'latin')
+
+  const swatch = el('span', 'props__swatch')
+  swatch.setAttribute('aria-hidden', 'true')
+
+  function show(hex: string | undefined): void {
+    input.value = hex ?? field.text
+    if (hex === undefined) return
+    swatch.style.backgroundColor = colorSwatch(hex)
+    swatch.style.opacity = String(parseInt(hex.slice(1, 3), 16) / 255)
+  }
+  show(colorToHex(field.text))
+
+  input.addEventListener('change', () => {
+    const literal = colorToLiteral(input.value)
+    if (literal === undefined) {
+      show(colorToHex(field.text)) // Saisie invalide : on remet ce que le fichier contient.
+      return
+    }
+    if (setFieldValue(field, literal)) {
+      show(colorToHex(literal))
+      changed()
+    }
+  })
+
+  wrap.append(input, swatch)
+  return wrap
+}
