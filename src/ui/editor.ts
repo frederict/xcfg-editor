@@ -1,8 +1,13 @@
 import type { Device } from '../catalog/devices'
 import { readableName } from '../catalog/widgetNames'
+import type { JsonNode } from '../core/jsonDocument'
 import type { Page } from '../model/layout'
 import { gridFor, snapValue, NORMALIZED_MAX, type Grid, type Orientation, type Rect } from '../model/grid'
-import { readWidgetBounds, setWidgetBounds, type Bounds } from '../model/mutations'
+import {
+  duplicateWidget, insertWidget, readWidgetBounds, removeWidget, reorderWidget, setWidgetBounds,
+  type Bounds
+} from '../model/mutations'
+import { readWidget } from '../model/widget'
 import { formatMm, widgetSizeMm } from './views'
 
 /**
@@ -406,6 +411,294 @@ export function sizeLabel(rect: Rect, device: Device, orientation: Orientation):
   return `${formatMm(size.widthMm)} × ${formatMm(size.heightMm)} mm`
 }
 
+/* ============================================== actions sur le widget sélectionné */
+
+/**
+ * Les quatre mouvements d'empilement. Le tableau `widgets` **est** l'ordre de dessin : le
+ * premier élément est au fond, le dernier au-dessus. « Avancer » va donc vers la fin du
+ * tableau, « reculer » vers son début.
+ *
+ * Le relevé (§ 2) note que les deux boutons natifs « avant-plan » / « arrière-plan » se
+ * sont annulés lors du test : leur effet exact sur l'ordre du tableau n'a **pas** été
+ * observé directement. Ce qui est repris ici n'est donc pas leur comportement mesuré mais
+ * l'ordre de dessin, lui établi par le corpus — une carte posée en premier est recouverte
+ * par tout ce qui suit — et par `widgetAtPoint`, qui parcourt déjà le tableau à l'envers.
+ */
+export type StackAction = 'raise' | 'lower' | 'front' | 'back'
+
+/** Les six actions qui portent sur la sélection, telles qu'elles se nomment. */
+export type SelectionAction = 'delete' | 'duplicate' | StackAction
+
+/**
+ * Le rang d'arrivée d'un mouvement d'empilement, **calculé avant toute mutation**.
+ *
+ * C'est la raison pour laquelle `reorderWidget` est préféré ici aux quatre raccourcis de
+ * `mutations.ts` (`raiseWidget`, `bringWidgetToFront`…) : ceux-ci ne rendent leur résultat
+ * qu'une fois le tableau modifié, alors qu'il faut savoir **avant** si l'opération
+ * changerait quelque chose. Un widget déjà au premier plan qu'on remet au premier plan ne
+ * doit ni produire un pas d'historique, ni réécrire un octet, ni laisser croire qu'il
+ * s'est passé quelque chose.
+ */
+export function stackTarget(action: StackAction, index: number, count: number): number {
+  if (!Number.isInteger(index) || index < 0 || index >= count) {
+    throw new Error(`stackTarget : rang ${index} hors de [0, ${count - 1}]`)
+  }
+  const last = count - 1
+  switch (action) {
+    case 'raise': return Math.min(index + 1, last)
+    case 'lower': return Math.max(index - 1, 0)
+    case 'front': return last
+    default: return 0
+  }
+}
+
+/**
+ * Le rang courant, dit en clair. L'appareil n'en donne **aucun** retour : un widget envoyé
+ * sous une carte disparaît de l'écran sans que rien n'indique où il est passé (capture
+ * `edition-widget-envoye-en-arriere-plan.png`). Une pile qu'on ne voit pas se lit au
+ * moins en toutes lettres.
+ */
+export function stackLabel(index: number, count: number): string {
+  if (count <= 1) return 'Seul widget de la page'
+  if (index === count - 1) return `Rang ${index + 1} sur ${count}, premier plan`
+  if (index === 0) return `Rang 1 sur ${count}, arrière-plan`
+  return `Rang ${index + 1} sur ${count}`
+}
+
+/**
+ * Ce que devient la sélection quand un widget disparaît.
+ *
+ * Deux cas, et un seul piège. Le widget supprimé **était** le sélectionné : plus rien
+ * n'est sélectionné, comme sur l'appareil (capture
+ * `edition-apres-suppression-aucune-selection.png`) et comme dans tout éditeur — désigner
+ * d'office le voisin ferait porter la prochaine frappe à un widget que personne n'a
+ * choisi. Un **autre** widget est supprimé : tous les rangs au-dessus glissent d'un cran,
+ * et la sélection doit glisser avec son widget plutôt que rester sur un nombre.
+ *
+ * Le résultat est valide par construction — jamais hors des bornes d'après suppression.
+ */
+export function selectionAfterRemoval(
+  countBefore: number, removed: number, selected: number | undefined
+): number | undefined {
+  if (selected === undefined || selected === removed) return undefined
+  const shifted = selected > removed ? selected - 1 : selected
+  return shifted >= 0 && shifted < countBefore - 1 ? shifted : undefined
+}
+
+/**
+ * L'emplacement d'une copie : le widget d'origine décalé d'**une cellule** vers le bas et
+ * la droite. Sans ce décalage, la copie recouvrirait exactement l'original et rien à
+ * l'écran ne distinguerait « j'ai dupliqué » de « il ne s'est rien passé ».
+ *
+ * Deux replis, dans cet ordre : un widget déjà collé au coin bas-droit se décale vers le
+ * haut-gauche ; un widget qui couvre toute la page ne peut se décaler nulle part et sa
+ * copie se superpose — c'est alors le rang, annoncé par la barre d'outils, qui les
+ * distingue. Le pas est arrondi à l'entier : les coordonnées du format le sont toutes, et
+ * une cellule de la grille 48 × 29 ne tombe pas juste (10000 / 48 = 208,33…).
+ *
+ * La **taille** n'est jamais touchée : une copie est le widget, ailleurs.
+ */
+export function duplicateRect(rect: Rect, grid: Grid): Rect {
+  const step = {
+    x: Math.round(NORMALIZED_MAX / grid.cols),
+    y: Math.round(NORMALIZED_MAX / grid.rows)
+  }
+  const forward = clampedTranslation(rect, step)
+  const translation = forward.x === 0 && forward.y === 0
+    ? clampedTranslation(rect, { x: -step.x, y: -step.y })
+    : forward
+  return {
+    x1: rect.x1 + translation.x, y1: rect.y1 + translation.y,
+    x2: rect.x2 + translation.x, y2: rect.y2 + translation.y
+  }
+}
+
+/** Le libellé d'une action, tel qu'il s'écrit dans un menu « Annuler … ». */
+export function structureDescription(
+  action: SelectionAction, shortName: string, language: string
+): string {
+  const name = readableName(shortName, language)
+  switch (action) {
+    case 'delete': return `Supprimer ${name}`
+    case 'duplicate': return `Dupliquer ${name}`
+    case 'raise': return `Avancer ${name}`
+    case 'lower': return `Reculer ${name}`
+    case 'front': return `Mettre ${name} au premier plan`
+    default: return `Envoyer ${name} à l’arrière-plan`
+  }
+}
+
+/* ------------------------------------------------- modifications de structure */
+
+/**
+ * Une modification qui change la **composition** de la page, là où `WidgetEdit` ne change
+ * que quatre nombres. Trois formes, et chacune porte de quoi se défaire exactement :
+ *
+ * - `insert` connaît le nœud inséré et son rang : l'annuler, c'est le retirer ;
+ * - `remove` **détient le nœud retiré**, entier. C'est le point qui décide de la fidélité
+ *   de l'annulation : un widget porte une centaine de clés propres à son type, dont la
+ *   plupart ne sont documentées nulle part, et le nœud conservé ici est celui-là même qui
+ *   était dans le document — pas une lecture, pas une reconstruction, pas un sous-ensemble
+ *   des clés connues. Le réinsérer à son rang rend le document à l'octet près ;
+ * - `reorder` retient les deux rangs, et l'inverse d'un déplacement de `from` vers `to`
+ *   est le déplacement de `to` vers `from`.
+ *
+ * Chaque forme dit aussi **où va la sélection** : `selection` après l'action,
+ * `selectionBefore` après son annulation. L'interface désigne un widget par son rang et
+ * jamais par référence (l'historique rend un arbre neuf à chaque annulation) ; une action
+ * qui décale les rangs sans dire ce que devient la sélection la laisserait pointer un
+ * voisin, ou le vide.
+ */
+export interface WidgetInsertion {
+  kind: 'insert'
+  description: string
+  /** Rang auquel le widget a été inséré. */
+  index: number
+  /** Le nœud inséré, avec toutes ses clés. */
+  node: JsonNode
+  selection: number | undefined
+  selectionBefore: number | undefined
+}
+
+export interface WidgetRemoval {
+  kind: 'remove'
+  description: string
+  /** Rang d'où le widget a été retiré — et où il revient à l'annulation. */
+  index: number
+  /** Le nœud retiré, détaché du document mais intact. */
+  node: JsonNode
+  selection: number | undefined
+  selectionBefore: number | undefined
+}
+
+export interface WidgetReorder {
+  kind: 'reorder'
+  description: string
+  from: number
+  to: number
+  selection: number | undefined
+  selectionBefore: number | undefined
+}
+
+export type WidgetStructureEdit = WidgetInsertion | WidgetRemoval | WidgetReorder
+
+/**
+ * `Page.widgets` est une **photographie** prise à la lecture par `readLayout`, parallèle
+ * au tableau `widgets` du document. Une action de structure doit donc bouger les deux, et
+ * exactement de la même façon : le calque, le panneau de réglages et l'historique
+ * désignent tous un widget par son rang, et un rang qui ne veut pas dire la même chose des
+ * deux côtés serait une corruption silencieuse de l'interface.
+ *
+ * Le tableau est modifié **en place** (`splice`), jamais remplacé : un appelant qui en
+ * détient la référence continue de voir la page à jour.
+ */
+function insertIntoPage(page: Page, node: JsonNode, index: number): void {
+  insertWidget(page.node, node, index)
+  page.widgets.splice(index, 0, readWidget(node))
+}
+
+function removeFromPage(page: Page, index: number): JsonNode {
+  const node = removeWidget(page.node, index)
+  page.widgets.splice(index, 1)
+  return node
+}
+
+function reorderInPage(page: Page, from: number, to: number): void {
+  reorderWidget(page.node, from, to)
+  const [widget] = page.widgets.splice(from, 1)
+  if (widget !== undefined) page.widgets.splice(to, 0, widget)
+}
+
+/** Refaire : réapplique la modification de structure. */
+export function applyStructureEdit(page: Page, edit: WidgetStructureEdit): void {
+  if (edit.kind === 'insert') insertIntoPage(page, edit.node, edit.index)
+  else if (edit.kind === 'remove') removeFromPage(page, edit.index)
+  else reorderInPage(page, edit.from, edit.to)
+}
+
+/** Annuler : rétablit la page telle qu'elle était, nœud retiré compris. */
+export function revertStructureEdit(page: Page, edit: WidgetStructureEdit): void {
+  if (edit.kind === 'insert') removeFromPage(page, edit.index)
+  else if (edit.kind === 'remove') insertIntoPage(page, edit.node, edit.index)
+  else reorderInPage(page, edit.to, edit.from)
+}
+
+/**
+ * Supprime un widget. `selected` est la sélection **courante**, qui n'est pas forcément le
+ * widget supprimé — c'est elle qui détermine `selection` (voir `selectionAfterRemoval`) ;
+ * par défaut, on supprime ce qui est sélectionné, le seul cas que la barre d'outils
+ * produise.
+ *
+ * Contrairement à l'appareil, qui supprime sans confirmation **et sans retour possible**,
+ * rien n'est perdu : le nœud voyage dans la modification rendue.
+ */
+export function removeWidgetAt(
+  page: Page, index: number, language: string, selected: number | undefined = index
+): WidgetRemoval {
+  const widget = widgetAt(page, index)
+  const description = structureDescription('delete', widget.shortName, language)
+  const countBefore = page.widgets.length
+  const node = removeFromPage(page, index)
+  return {
+    kind: 'remove',
+    description,
+    index,
+    node,
+    selection: selectionAfterRemoval(countBefore, index, selected),
+    selectionBefore: selected
+  }
+}
+
+/**
+ * Duplique un widget. La copie se pose **juste devant l'original** (rang `index + 1`) et
+ * décalée d'une cellule : devant, parce qu'une copie posée derrière disparaîtrait sous son
+ * modèle sur les pages où les widgets se recouvrent ; décalée, pour qu'on la voie.
+ *
+ * `duplicateWidget` recopie le nœud entrée par entrée, texte source compris : la copie est
+ * **indépendante** — la modifier ne touche pas l'original — et complète, y compris sur les
+ * clés qu'aucune version connue ne documente. C'est le seul mécanisme de création dont on
+ * dispose : les valeurs par défaut d'un type de widget ne sont pas connues.
+ */
+export function duplicateWidgetAt(
+  page: Page, index: number, grid: Grid, language: string
+): WidgetInsertion {
+  const widget = widgetAt(page, index)
+  const copy = duplicateWidget(widget.node, duplicateRect(currentBounds(page, index), grid))
+  const at = index + 1
+  insertIntoPage(page, copy, at)
+  return {
+    kind: 'insert',
+    description: structureDescription('duplicate', widget.shortName, language),
+    index: at,
+    node: copy,
+    selection: at,
+    selectionBefore: index
+  }
+}
+
+/**
+ * Change le rang d'empilement d'un widget, ou rend `undefined` quand il n'y a rien à
+ * changer — premier plan sur le widget déjà au premier plan, recul sur celui du fond.
+ * Dans ce cas **le document n'est pas touché** et il n'y a rien à enregistrer : un
+ * historique qui accumulerait des pas sans effet ferait de « Annuler » une loterie.
+ */
+export function restackWidget(
+  page: Page, index: number, action: StackAction, language: string
+): WidgetReorder | undefined {
+  const widget = widgetAt(page, index)
+  const to = stackTarget(action, index, page.widgets.length)
+  if (to === index) return undefined
+  reorderInPage(page, index, to)
+  return {
+    kind: 'reorder',
+    description: structureDescription(action, widget.shortName, language),
+    from: index,
+    to,
+    selection: to,
+    selectionBefore: index
+  }
+}
+
 /* ================================================================== calque d'édition */
 
 export interface EditorOptions {
@@ -420,6 +713,13 @@ export interface EditorOptions {
   viewport: () => Viewport
   /** Appelé une fois par geste **effectif**. Le point d'accroche de l'historique. */
   onEdit?: (edit: WidgetEdit) => void
+  /**
+   * Appelé une fois par action de structure **effective** : suppression, duplication,
+   * changement de rang. Séparé de `onEdit` parce que ce n'est pas la même chose à
+   * défaire — et parce qu'il implique un **redessin de la page**, le calque ne dessinant
+   * pas les widgets. Un mouvement d'empilement sans effet n'appelle rien.
+   */
+  onStructureEdit?: (edit: WidgetStructureEdit) => void
   onSelectionChange?: (index: number | undefined) => void
 }
 
@@ -430,6 +730,15 @@ export interface Editor {
   select: (index: number | undefined) => void
   /** Redessine les marques depuis le document — après une annulation, par exemple. */
   refresh: () => void
+  /**
+   * Les trois actions sur la sélection, telles que la barre d'outils les déclenche.
+   * Exposées pour qu'un menu, un raccourci global ou un test puissent les appeler sans
+   * passer par le DOM. Chacune rend la modification produite, ou `undefined` quand il n'y
+   * avait rien à faire : rien de sélectionné, geste en cours, ou rang déjà atteint.
+   */
+  remove: () => WidgetStructureEdit | undefined
+  duplicate: () => WidgetStructureEdit | undefined
+  restack: (action: StackAction) => WidgetStructureEdit | undefined
   destroy: () => void
 }
 
@@ -473,7 +782,11 @@ export function createEditor(options: EditorOptions): Editor {
   const root = el('div', 'editor')
   root.tabIndex = 0
   root.setAttribute('role', 'application')
-  root.setAttribute('aria-label', 'Édition de la page : flèches pour déplacer, Maj + flèches pour redimensionner')
+  root.setAttribute(
+    'aria-label',
+    'Édition de la page : flèches pour déplacer, Maj + flèches pour redimensionner, ' +
+    'Ctrl + flèches haut/bas pour changer de rang, Ctrl + D pour dupliquer, Suppr pour supprimer'
+  )
 
   /* Les marques du widget sélectionné, relevées sur l'appareil (§ 2.3). */
   const marks = el('div', 'editor__marks')
@@ -490,13 +803,76 @@ export function createEditor(options: EditorOptions): Editor {
   const badge = el('div', 'editor__badge')
   badge.hidden = true
 
+  /*
+   * La barre d'outils de la sélection. L'appareil en montre une (§ 2, capture
+   * `edition-barre-outils-et-widget-selectionne.png`) ; celle-ci s'en écarte sur trois
+   * points, et les trois répondent à un manque relevé :
+   *
+   * - elle **dit le rang** du widget dans la pile. L'appareil n'en donne aucun retour :
+   *   envoyer un widget sous une carte le fait disparaître sans rien afficher, et plus
+   *   rien n'indique ensuite où il se trouve ni combien de crans le séparent de la
+   *   surface (capture `edition-widget-envoye-en-arriere-plan.png`) ;
+   * - les boutons d'empilement **sans effet sont désactivés** plutôt que muets — c'est la
+   *   même information, lue avant d'appuyer plutôt qu'après ;
+   * - « Supprimer » et « Dupliquer » sont écrits en toutes lettres, les quatre mouvements
+   *   d'empilement portent une flèche. Un symbole pour « envoyer à l'arrière-plan » se
+   *   devine ; un symbole pour « supprimer » se confond avec « fermer », et l'action est
+   *   la seule des six qui fasse disparaître quelque chose.
+   *
+   * Elle est le seul élément du calque qui **intercepte le pointeur**, d'où le garde-fou
+   * en tête de `onPointerDown` et de `onHover` : un clic sur un bouton ne doit jamais
+   * démarrer un geste sur le widget qui se trouve dessous.
+   */
+  const toolbar = el('div', 'editor__toolbar')
+  toolbar.hidden = true
+  toolbar.setAttribute('role', 'toolbar')
+  toolbar.setAttribute('aria-label', 'Actions sur le widget sélectionné')
+
+  const toolButton = (
+    modifier: string, text: string, label: string, keys: string
+  ): HTMLButtonElement => {
+    const button = el('button', `editor__tool editor__tool--${modifier}`, text)
+    button.type = 'button'
+    button.title = `${label} (${keys})`
+    button.setAttribute('aria-label', label)
+    return button
+  }
+
+  const STACK_TOOLS: ReadonlyArray<readonly [StackAction, string, string, string]> = [
+    ['back', '⤓', 'Envoyer à l’arrière-plan', 'Ctrl + Maj + Flèche bas'],
+    ['lower', '↓', 'Reculer d’un rang', 'Ctrl + Flèche bas'],
+    ['raise', '↑', 'Avancer d’un rang', 'Ctrl + Flèche haut'],
+    ['front', '⤒', 'Mettre au premier plan', 'Ctrl + Maj + Flèche haut']
+  ]
+
+  const stackButtons = new Map<StackAction, HTMLButtonElement>()
+  for (const [action, glyph, label, keys] of STACK_TOOLS) {
+    const button = toolButton(action, glyph, label, keys)
+    button.addEventListener('click', () => { runRestack(action); root.focus() })
+    stackButtons.set(action, button)
+    toolbar.append(button)
+  }
+
+  const rank = el('span', 'editor__rank')
+  const duplicateTool = toolButton('duplicate', 'Dupliquer', 'Dupliquer le widget', 'Ctrl + D')
+  duplicateTool.addEventListener('click', () => { runDuplicate(); root.focus() })
+  const deleteTool = toolButton('delete', 'Supprimer', 'Supprimer le widget', 'Suppr')
+  deleteTool.addEventListener('click', () => { runRemove(); root.focus() })
+  toolbar.append(rank, duplicateTool, deleteTool)
+
   const live = el('p', 'editor__live')
   live.setAttribute('aria-live', 'polite')
 
-  root.append(preview, ghost, marks, badge, live)
+  root.append(preview, ghost, marks, badge, toolbar, live)
 
   let selected: number | undefined
   let gesture: ActiveGesture | undefined
+  /**
+   * Le calque démonté ne doit plus rien écrire. Les écoutes du calque partent avec lui,
+   * mais celles des boutons vivent sur les boutons : une référence gardée par un appelant
+   * — ou par un test — ne doit pas ressusciter une page que `render()` a déjà remplacée.
+   */
+  let alive = true
 
   const boxes = (): Rect[] => currentBoxes(options.page)
 
@@ -505,13 +881,38 @@ export function createEditor(options: EditorOptions): Editor {
   // Les marques s'effacent pendant le geste, comme sur l'appareil : ce qui compte alors
   // est le couple aperçu aimanté / rectangle du doigt, et quatre équerres immobiles au
   // point de départ ne feraient que brouiller la lecture de l'écart entre les deux.
+  /**
+   * Hauteur, en unités de page, sous laquelle la barre ne tient plus au-dessus du widget.
+   * Un widget qui commence à moins d'un dixième de la hauteur du haut la reçoit à
+   * l'intérieur, sur son bord supérieur, plutôt que hors de la plaque.
+   */
+  const TOOLBAR_FLIP = 1000
+
+  const drawToolbar = (): void => {
+    if (selected === undefined || gesture !== undefined || options.page.widgets.length === 0) {
+      toolbar.hidden = true
+      return
+    }
+    const count = options.page.widgets.length
+    const rect = currentBounds(options.page, selected)
+    toolbar.hidden = false
+    toolbar.style.left = `${rect.x1 / 100}%`
+    toolbar.style.top = `${rect.y1 / 100}%`
+    toolbar.classList.toggle('editor__toolbar--below', rect.y1 < TOOLBAR_FLIP)
+    rank.textContent = stackLabel(selected, count)
+    for (const [action, button] of stackButtons) {
+      button.disabled = stackTarget(action, selected, count) === selected
+    }
+  }
+
   const drawMarks = (): void => {
     if (selected === undefined || gesture !== undefined) {
       marks.hidden = true
-      return
+    } else {
+      marks.hidden = false
+      place(marks, currentBounds(options.page, selected))
     }
-    marks.hidden = false
-    place(marks, currentBounds(options.page, selected))
+    drawToolbar()
   }
 
   const drawGesture = (): void => {
@@ -557,6 +958,58 @@ export function createEditor(options: EditorOptions): Editor {
     )
   }
 
+  /* ------------------------------------------------- actions sur la sélection */
+
+  /**
+   * La sortie commune des trois actions : la sélection est replacée **là où l'action dit
+   * qu'elle va**, les marques et la barre sont redessinées, puis l'appelant est prévenu —
+   * dans cet ordre, pour qu'un abonné qui relit la page la trouve déjà cohérente.
+   *
+   * `setSelection` n'est pas employée ici : elle se tait quand le rang ne change pas de
+   * valeur, ce qui est exactement le cas d'un widget qui reste au même rang alors que la
+   * page a changé sous lui (une suppression au-dessous, par exemple).
+   */
+  const finishStructure = (
+    edit: WidgetStructureEdit, announcement: string
+  ): WidgetStructureEdit => {
+    selected = edit.selection
+    drawMarks()
+    options.onSelectionChange?.(edit.selection)
+    options.onStructureEdit?.(edit)
+    announce(announcement)
+    return edit
+  }
+
+  const plural = (count: number): string =>
+    count === 0 ? 'Page vide' : `${count} widget${count > 1 ? 's' : ''} sur la page`
+
+  const runRemove = (): WidgetStructureEdit | undefined => {
+    if (!alive || selected === undefined || gesture !== undefined) return undefined
+    const edit = removeWidgetAt(options.page, selected, options.language, selected)
+    return finishStructure(edit, `${edit.description}. ${plural(options.page.widgets.length)}.`)
+  }
+
+  const runDuplicate = (): WidgetStructureEdit | undefined => {
+    if (!alive || selected === undefined || gesture !== undefined) return undefined
+    const edit = duplicateWidgetAt(options.page, selected, grid, options.language)
+    return finishStructure(
+      edit, `${edit.description}. ${stackLabel(edit.index, options.page.widgets.length)}.`
+    )
+  }
+
+  const runRestack = (action: StackAction): WidgetStructureEdit | undefined => {
+    if (!alive || selected === undefined || gesture !== undefined) return undefined
+    const count = options.page.widgets.length
+    const edit = restackWidget(options.page, selected, action, options.language)
+    // Rang déjà atteint : rien n'a été écrit et rien n'est enregistré, mais le silence
+    // total laisserait croire à un bouton cassé — on redit où en est le widget.
+    if (edit === undefined) {
+      announce(`${stackLabel(selected, count)}, rien à changer.`)
+      return undefined
+    }
+    return finishStructure(edit, `${edit.description}. ${stackLabel(edit.to, count)}.`)
+  }
+
   /* ------------------------------------------------------------------ pointeur */
 
   const onPointerMove = (event: MouseEvent): void => {
@@ -596,8 +1049,12 @@ export function createEditor(options: EditorOptions): Editor {
   const onPointerUp = (): void => endGesture(true)
   const onPointerCancel = (): void => endGesture(false)
 
+  /** La barre d'outils est le seul enfant du calque qui reçoive le pointeur pour lui. */
+  const onToolbar = (target: EventTarget | null): boolean =>
+    target instanceof Node && toolbar.contains(target)
+
   const onPointerDown = (event: MouseEvent): void => {
-    if (event.button !== 0) return
+    if (event.button !== 0 || onToolbar(event.target)) return
     const viewport = options.viewport()
     const point = pixelToPage(event.clientX, event.clientY, viewport)
     const current = boxes()
@@ -646,7 +1103,7 @@ export function createEditor(options: EditorOptions): Editor {
   }
 
   const onHover = (event: MouseEvent): void => {
-    if (gesture !== undefined) return
+    if (gesture !== undefined || onToolbar(event.target)) return
     const viewport = options.viewport()
     const point = pixelToPage(event.clientX, event.clientY, viewport)
     const current = boxes()
@@ -674,12 +1131,51 @@ export function createEditor(options: EditorOptions): Editor {
    * déplacement visible et qui laisse le widget sur la grille. Maj redimensionne par le
    * coin bas-droit, le geste le plus courant à la souris.
    */
+  /**
+   * Les six actions au clavier, dans le prolongement de ce qui existait : les flèches
+   * agissent déjà sur la **géométrie** (seules : déplacer, avec Maj : redimensionner), la
+   * touche de commande les fait agir sur le **rang** (seule : d'un cran, avec Maj :
+   * jusqu'au bout). Suppr et Ctrl + D sont les conventions de tous les éditeurs ; Retour
+   * arrière fait aussi bien, c'est la touche de suppression des claviers Mac.
+   *
+   * `Ctrl` et `Cmd` sont acceptées indifféremment : le même geste sur les deux systèmes.
+   */
+  const STACK_KEYS: Record<string, readonly [StackAction, StackAction]> = {
+    // touche → [sans Maj, avec Maj]
+    ArrowUp: ['raise', 'front'],
+    ArrowDown: ['lower', 'back']
+  }
+
   const onKeyDown = (event: KeyboardEvent): void => {
     if (event.key === 'Escape') {
       if (gesture !== undefined) endGesture(false)
       else setSelection(undefined)
       return
     }
+
+    const command = event.ctrlKey || event.metaKey
+    if (selected !== undefined && gesture === undefined) {
+      if (event.key === 'Delete' || event.key === 'Backspace') {
+        event.preventDefault()
+        runRemove()
+        return
+      }
+      if (command && (event.key === 'd' || event.key === 'D')) {
+        event.preventDefault()
+        runDuplicate()
+        return
+      }
+      const stack = command ? STACK_KEYS[event.key] : undefined
+      if (stack !== undefined) {
+        event.preventDefault()
+        runRestack(stack[event.shiftKey ? 1 : 0])
+        return
+      }
+    }
+    // Ctrl + flèche ne déplace plus : la combinaison appartient désormais à l'empilement,
+    // et les autres raccourcis de commande (annuler, rétablir) appartiennent à la page.
+    if (command) return
+
     const step = ARROWS[event.key]
     if (step === undefined || selected === undefined || gesture !== undefined) return
     event.preventDefault()
@@ -704,7 +1200,11 @@ export function createEditor(options: EditorOptions): Editor {
     selection: () => selected,
     select: (index) => setSelection(index),
     refresh: () => { drawMarks(); drawGesture() },
+    remove: runRemove,
+    duplicate: runDuplicate,
+    restack: runRestack,
     destroy: () => {
+      alive = false
       endGesture(false)
       root.removeEventListener('pointerdown', onPointerDown as EventListener)
       root.removeEventListener('pointermove', onHover as EventListener)

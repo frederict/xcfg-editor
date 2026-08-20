@@ -1,16 +1,23 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
+import { readNumber, setLiteral } from '../../src/core/access'
+import type { JsonNode } from '../../src/core/jsonDocument'
 import { DEVICES } from '../../src/catalog/devices'
+import { readableName } from '../../src/catalog/widgetNames'
 import { parseJson } from '../../src/core/parseJson'
 import { serializeJson } from '../../src/core/serializeJson'
 import { gridFor } from '../../src/model/grid'
 import { readLayout, type Page } from '../../src/model/layout'
-import { readWidgetBounds, type Bounds } from '../../src/model/mutations'
+import { pageWidgets, readWidgetBounds, setWidgetBounds, type Bounds } from '../../src/model/mutations'
 import {
+  applyStructureEdit,
   applyWidgetEdit,
   commitGesture,
   createEditor,
+  currentBounds,
   currentBoxes,
+  duplicateRect,
+  duplicateWidgetAt,
   fingerRect,
   gestureDescription,
   gestureRect,
@@ -22,13 +29,23 @@ import {
   movedRect,
   pixelToPage,
   pixelToPageDelta,
+  removeWidgetAt,
   resizedRect,
+  restackWidget,
+  revertStructureEdit,
   revertWidgetEdit,
   sameRect,
+  selectionAfterRemoval,
   sizeLabel,
+  stackLabel,
+  stackTarget,
+  structureDescription,
   widgetAtPoint,
+  type Editor,
   type Handle,
-  type Viewport
+  type Viewport,
+  type WidgetEdit,
+  type WidgetStructureEdit
 } from '../../src/ui/editor'
 
 const FILE = '/Users/fred/DEV/XCTrack/Exemples/2026-08-20_backup-00.xcfg'
@@ -550,6 +567,556 @@ describe('calque d’édition', () => {
     instance.destroy()
     drag(instance.element, [30, 250], [230, 250])
     expect(edits).toHaveLength(0)
+    expect(serializeJson(json)).toBe(before)
+  })
+})
+
+/* ==================================================== actions sur la sélection */
+
+function entryCount(node: JsonNode): number {
+  return node.kind === 'object' ? node.entries.length : 0
+}
+
+/**
+ * `Page.widgets` est une photographie parallèle au tableau `widgets` du document. Toute
+ * action de structure doit bouger les deux ensemble ; un décalage entre les deux ferait
+ * désigner par l'interface un widget qui n'est pas celui qu'elle croit.
+ */
+function expectInSync(page: Page): void {
+  const items = pageWidgets(page.node).items
+  expect(page.widgets).toHaveLength(items.length)
+  page.widgets.forEach((widget, index) => { expect(widget.node).toBe(items[index]) })
+}
+
+describe('rang d’empilement', () => {
+  it('avance vers la fin du tableau, recule vers son début', () => {
+    expect(stackTarget('raise', 3, 8)).toBe(4)
+    expect(stackTarget('lower', 3, 8)).toBe(2)
+    expect(stackTarget('front', 3, 8)).toBe(7)
+    expect(stackTarget('back', 3, 8)).toBe(0)
+  })
+
+  it('rend le rang lui-même quand la course est déjà au bout', () => {
+    expect(stackTarget('raise', 7, 8)).toBe(7)
+    expect(stackTarget('front', 7, 8)).toBe(7)
+    expect(stackTarget('lower', 0, 8)).toBe(0)
+    expect(stackTarget('back', 0, 8)).toBe(0)
+  })
+
+  it('refuse un rang hors bornes plutôt que de le corriger en silence', () => {
+    expect(() => stackTarget('raise', 8, 8)).toThrow()
+    expect(() => stackTarget('raise', -1, 8)).toThrow()
+  })
+
+  it('dit le rang en clair, les deux extrémités nommées', () => {
+    expect(stackLabel(0, 8)).toBe('Rang 1 sur 8, arrière-plan')
+    expect(stackLabel(7, 8)).toBe('Rang 8 sur 8, premier plan')
+    expect(stackLabel(3, 8)).toBe('Rang 4 sur 8')
+    expect(stackLabel(0, 1)).toBe('Seul widget de la page')
+  })
+
+  it('libelle chaque action pour le menu « Annuler … »', () => {
+    const name = readableName('WAltitude', 'fr')
+    expect(structureDescription('delete', 'WAltitude', 'fr')).toBe(`Supprimer ${name}`)
+    expect(structureDescription('duplicate', 'WAltitude', 'fr')).toBe(`Dupliquer ${name}`)
+    expect(structureDescription('raise', 'WAltitude', 'fr')).toBe(`Avancer ${name}`)
+    expect(structureDescription('lower', 'WAltitude', 'fr')).toBe(`Reculer ${name}`)
+    expect(structureDescription('front', 'WAltitude', 'fr')).toBe(`Mettre ${name} au premier plan`)
+    expect(structureDescription('back', 'WAltitude', 'fr')).toBe(`Envoyer ${name} à l’arrière-plan`)
+  })
+})
+
+describe('sélection après suppression', () => {
+  it('ne laisse rien de sélectionné quand c’est le widget sélectionné qui part', () => {
+    expect(selectionAfterRemoval(8, 3, 3)).toBeUndefined()
+  })
+
+  it('suit son widget quand un rang inférieur disparaît', () => {
+    expect(selectionAfterRemoval(8, 3, 5)).toBe(4)
+  })
+
+  it('ne bouge pas quand c’est un rang supérieur qui disparaît', () => {
+    expect(selectionAfterRemoval(8, 5, 3)).toBe(3)
+  })
+
+  it('rend toujours un rang valide après coup, jamais hors bornes', () => {
+    for (let removed = 0; removed < 8; removed += 1) {
+      for (let selected = 0; selected < 8; selected += 1) {
+        const after = selectionAfterRemoval(8, removed, selected)
+        if (after === undefined) continue
+        expect(after).toBeGreaterThanOrEqual(0)
+        expect(after).toBeLessThan(7)   // 8 − 1 widgets après suppression
+      }
+    }
+  })
+})
+
+describe('emplacement d’une copie', () => {
+  it('décale d’une cellule vers le bas-droite, sans toucher à la taille', () => {
+    const box = rect(625, 0, 3125, 2414)
+    const copy = duplicateRect(box, grid)
+    expect(copy.x1).toBe(625 + Math.round(10000 / 48))
+    expect(copy.y1).toBe(Math.round(10000 / 29))
+    expect(copy.x2 - copy.x1).toBe(box.x2 - box.x1)
+    expect(copy.y2 - copy.y1).toBe(box.y2 - box.y1)
+  })
+
+  it('se replie vers le haut-gauche quand le coin bas-droit est déjà atteint', () => {
+    // WXCAssistant de la page 3 du fichier : collé aux bords droit et bas.
+    const box = rect(1250, 0, 10000, 10000)
+    const copy = duplicateRect(box, grid)
+    expect(copy.x1).toBe(1250 - Math.round(10000 / 48))
+    expect(copy.x2).toBe(10000 - Math.round(10000 / 48))
+    expect(copy.y1).toBe(0)
+  })
+
+  it('laisse la copie sur place quand le widget couvre toute la page', () => {
+    expect(duplicateRect(rect(0, 0, 10000, 10000), grid)).toEqual(rect(0, 0, 10000, 10000))
+  })
+
+  it('ne produit que des entiers — le format n’accepte rien d’autre', () => {
+    const copy = duplicateRect(rect(625, 345, 3125, 2414), grid)
+    for (const value of [copy.x1, copy.y1, copy.x2, copy.y2]) {
+      expect(Number.isInteger(value)).toBe(true)
+    }
+  })
+})
+
+describe('suppression d’un widget', () => {
+  it('rend le document à l’octet près après annulation, paramètres inconnus compris', () => {
+    const { page, document } = loadPage(2)
+    const before = serializeJson(document)
+
+    // WXCAssistant : 62 clés, dont `faiSectorOutsideStrokeThickness`, `mapWidget_KK7timed`
+    // et une vingtaine d'autres que l'outil ne lit jamais. C'est le pire cas du corpus.
+    expect(page.widgets[0]!.shortName).toBe('WXCAssistant')
+    expect(entryCount(page.widgets[0]!.node)).toBe(62)
+
+    const edit = removeWidgetAt(page, 0, 'fr')
+    expect(page.widgets).toHaveLength(7)
+    expect(serializeJson(document)).not.toBe(before)
+
+    revertStructureEdit(page, edit)
+    expect(serializeJson(document)).toBe(before)
+    expect(page.widgets).toHaveLength(8)
+    expect(entryCount(page.widgets[0]!.node)).toBe(62)
+    expectInSync(page)
+  })
+
+  it('se refait à l’identique', () => {
+    const { page, document } = loadPage(2)
+    const before = serializeJson(document)
+    const edit = removeWidgetAt(page, 0, 'fr')
+    const after = serializeJson(document)
+
+    revertStructureEdit(page, edit)
+    expect(serializeJson(document)).toBe(before)
+    applyStructureEdit(page, edit)
+    expect(serializeJson(document)).toBe(after)
+  })
+
+  it('remet le widget à son rang d’origine, pas à la fin de la pile', () => {
+    const { page } = loadPage(0)
+    const order = page.widgets.map((widget) => widget.shortName)
+    const edit = removeWidgetAt(page, 5, 'fr')
+    expect(page.widgets.map((widget) => widget.shortName)).not.toEqual(order)
+    revertStructureEdit(page, edit)
+    expect(page.widgets.map((widget) => widget.shortName)).toEqual(order)
+  })
+
+  it('dit où va la sélection : nulle part si c’était elle, un cran plus bas sinon', () => {
+    const { page } = loadPage(2)
+    expect(removeWidgetAt(page, 3, 'fr').selection).toBeUndefined()
+
+    const { page: other } = loadPage(2)
+    const edit = removeWidgetAt(other, 2, 'fr', 5)
+    expect(edit.selection).toBe(4)
+    expect(edit.selectionBefore).toBe(5)
+  })
+
+  it('garde la photographie de la page et le document en phase', () => {
+    const { page } = loadPage(0)
+    removeWidgetAt(page, 5, 'fr')
+    expectInSync(page)
+  })
+})
+
+describe('duplication d’un widget', () => {
+  it('pose la copie juste devant l’original, décalée', () => {
+    const { page } = loadPage(0)
+    const before = currentBounds(page, 3)
+    const edit = duplicateWidgetAt(page, 3, grid, 'fr')
+
+    expect(edit.index).toBe(4)
+    expect(edit.selection).toBe(4)
+    expect(page.widgets).toHaveLength(15)
+    expect(page.widgets[4]!.shortName).toBe(page.widgets[3]!.shortName)
+
+    const copy = currentBounds(page, 4)
+    expect(copy.x1).toBeGreaterThan(before.x1)
+    expect(copy.x2 - copy.x1).toBe(before.x2 - before.x1)
+    expect(copy.y2 - copy.y1).toBe(before.y2 - before.y1)
+    expectInSync(page)
+  })
+
+  it('copie toutes les clés, y compris celles que l’outil ne lit jamais', () => {
+    const { page } = loadPage(2)
+    const edit = duplicateWidgetAt(page, 0, grid, 'fr')
+    expect(entryCount(edit.node)).toBe(entryCount(page.widgets[0]!.node))
+    expect(entryCount(edit.node)).toBe(62)
+  })
+
+  it('produit un widget indépendant : modifier la copie ne touche pas l’original', () => {
+    const { page } = loadPage(2)
+    const original = page.widgets[0]!.node
+    const edit = duplicateWidgetAt(page, 0, grid, 'fr')
+    expect(edit.node).not.toBe(original)
+
+    // Une clé qu'aucune partie de l'outil ne connaît : si la copie partageait un nœud
+    // avec son modèle, c'est exactement ici que ça se verrait.
+    const key = 'faiSectorOutsideStrokeThickness'
+    const kept = readNumber(original, key)
+    expect(kept).toBeDefined()
+    setLiteral(edit.node, key, '42')
+    expect(readNumber(edit.node, key)).toBe(42)
+    expect(readNumber(original, key)).toBe(kept)
+
+    const bounds = readWidgetBounds(original)
+    setWidgetBounds(edit.node, { x1: 100, y1: 100, x2: 900, y2: 900 })
+    expect(readWidgetBounds(original)).toEqual(bounds)
+  })
+
+  it('s’annule en retirant exactement la copie', () => {
+    const { page, document } = loadPage(2)
+    const before = serializeJson(document)
+    const edit = duplicateWidgetAt(page, 0, grid, 'fr')
+    expect(serializeJson(document)).not.toBe(before)
+    revertStructureEdit(page, edit)
+    expect(serializeJson(document)).toBe(before)
+    expectInSync(page)
+  })
+})
+
+describe('empilement d’un widget', () => {
+  it('avancer puis reculer redonne l’ordre initial, à l’octet près', () => {
+    const { page, document } = loadPage(2)
+    const before = serializeJson(document)
+
+    const up = restackWidget(page, 3, 'raise', 'fr')!
+    expect(up.to).toBe(4)
+    expect(up.selection).toBe(4)
+    expect(serializeJson(document)).not.toBe(before)
+
+    const down = restackWidget(page, 4, 'lower', 'fr')!
+    expect(down.to).toBe(3)
+    expect(serializeJson(document)).toBe(before)
+    expectInSync(page)
+  })
+
+  it('ne produit aucune modification enregistrable quand le rang est déjà atteint', () => {
+    const { page, document } = loadPage(2)
+    const before = serializeJson(document)
+
+    expect(restackWidget(page, 7, 'front', 'fr')).toBeUndefined()
+    expect(restackWidget(page, 7, 'raise', 'fr')).toBeUndefined()
+    expect(restackWidget(page, 0, 'back', 'fr')).toBeUndefined()
+    expect(restackWidget(page, 0, 'lower', 'fr')).toBeUndefined()
+
+    // Pas un octet réécrit : un historique qui enregistrerait ces quatre appels ferait
+    // de « Annuler » quatre pressions sans effet visible.
+    expect(serializeJson(document)).toBe(before)
+  })
+
+  it('s’annule exactement, premier plan et arrière-plan compris', () => {
+    for (const action of ['front', 'back'] as const) {
+      const { page, document } = loadPage(2)
+      const before = serializeJson(document)
+      const edit = restackWidget(page, 1, action, 'fr')!
+      expect(edit.to).toBe(action === 'front' ? 7 : 0)
+      expect(serializeJson(document)).not.toBe(before)
+      revertStructureEdit(page, edit)
+      expect(serializeJson(document)).toBe(before)
+      expectInSync(page)
+    }
+  })
+
+  it('change bien le rang de dessin, donc ce que le clic attrape', () => {
+    const { page } = loadPage(3)
+    // Page 4 du fichier : WThermalAssistant (rang 2) recouvre WButtonBrightness (rang 0).
+    const point = { x: 5000, y: 2000 }
+    expect(page.widgets[widgetAtPoint(currentBoxes(page), point)!]!.shortName)
+      .toBe('WThermalAssistant')
+
+    restackWidget(page, 2, 'back', 'fr')
+    expect(page.widgets[0]!.shortName).toBe('WThermalAssistant')
+    expect(page.widgets[widgetAtPoint(currentBoxes(page), point)!]!.shortName)
+      .not.toBe('WThermalAssistant')
+  })
+})
+
+/* --------------------------------------------- barre d'outils de la sélection */
+
+describe('barre d’outils de la sélection', () => {
+  const viewport: Viewport = { left: 0, top: 0, width: 1000, height: 500 }
+
+  /** Page 3 du fichier (index 2) : huit widgets, dont WXCAssistant et ses 62 clés. */
+  function editor(pageIndex = 2) {
+    const { page, document: json } = loadPage(pageIndex)
+    const edits: WidgetEdit[] = []
+    const structure: WidgetStructureEdit[] = []
+    const selections: Array<number | undefined> = []
+    const instance = createEditor({
+      page,
+      device: air3,
+      orientation: 'landscape',
+      language: 'fr',
+      viewport: () => viewport,
+      onEdit: (edit) => { edits.push(edit) },
+      onStructureEdit: (edit) => { structure.push(edit) },
+      onSelectionChange: (index) => { selections.push(index) }
+    })
+    return { page, json, edits, structure, selections, instance }
+  }
+
+  const bar = (instance: Editor): HTMLElement =>
+    instance.element.querySelector('.editor__toolbar') as HTMLElement
+  const tool = (instance: Editor, name: string): HTMLButtonElement =>
+    instance.element.querySelector(`.editor__tool--${name}`) as HTMLButtonElement
+  const rankText = (instance: Editor): string =>
+    (instance.element.querySelector('.editor__rank') as HTMLElement).textContent ?? ''
+
+  it('n’apparaît qu’avec une sélection', () => {
+    const { instance } = editor()
+    expect(bar(instance).hidden).toBe(true)
+    instance.select(3)
+    expect(bar(instance).hidden).toBe(false)
+    instance.select(undefined)
+    expect(bar(instance).hidden).toBe(true)
+  })
+
+  it('affiche le rang courant — la seule chose que l’appareil ne dit nulle part', () => {
+    const { instance } = editor()
+    instance.select(0)
+    expect(rankText(instance)).toBe('Rang 1 sur 8, arrière-plan')
+    instance.select(7)
+    expect(rankText(instance)).toBe('Rang 8 sur 8, premier plan')
+    instance.select(3)
+    expect(rankText(instance)).toBe('Rang 4 sur 8')
+  })
+
+  it('désactive les mouvements sans effet plutôt que de les laisser muets', () => {
+    const { instance } = editor()
+    instance.select(7)
+    expect(tool(instance, 'raise').disabled).toBe(true)
+    expect(tool(instance, 'front').disabled).toBe(true)
+    expect(tool(instance, 'lower').disabled).toBe(false)
+    expect(tool(instance, 'back').disabled).toBe(false)
+
+    instance.select(0)
+    expect(tool(instance, 'lower').disabled).toBe(true)
+    expect(tool(instance, 'back').disabled).toBe(true)
+    expect(tool(instance, 'raise').disabled).toBe(false)
+  })
+
+  it('se nomme en français, au clavier comme à la souris', () => {
+    const { instance } = editor()
+    instance.select(3)
+    expect(bar(instance).getAttribute('aria-label')).toBe('Actions sur le widget sélectionné')
+    expect(tool(instance, 'delete').textContent).toBe('Supprimer')
+    expect(tool(instance, 'duplicate').textContent).toBe('Dupliquer')
+    expect(tool(instance, 'back').getAttribute('aria-label')).toBe('Envoyer à l’arrière-plan')
+    expect(tool(instance, 'front').title).toContain('Ctrl + Maj + Flèche haut')
+  })
+
+  it('supprime au bouton, et ne laisse rien de sélectionné', () => {
+    const { page, instance, structure, selections } = editor()
+    instance.select(3)
+    const doomed = page.widgets[3]!.shortName
+
+    tool(instance, 'delete').click()
+
+    expect(page.widgets).toHaveLength(7)
+    expect(page.widgets.map((widget) => widget.shortName)).not.toContain(doomed)
+    expect(structure).toHaveLength(1)
+    expect(structure[0]!.kind).toBe('remove')
+    expect(structure[0]!.description).toMatch(/^Supprimer /)
+    expect(instance.selection()).toBeUndefined()
+    expect(selections.at(-1)).toBeUndefined()
+    expect(bar(instance).hidden).toBe(true)
+    expectInSync(page)
+  })
+
+  it('la suppression au bouton s’annule à l’octet près', () => {
+    const { page, json, instance, structure } = editor()
+    const before = serializeJson(json)
+    instance.select(0)   // WXCAssistant, 62 clés
+
+    tool(instance, 'delete').click()
+    expect(serializeJson(json)).not.toBe(before)
+
+    revertStructureEdit(page, structure[0]!)
+    expect(serializeJson(json)).toBe(before)
+  })
+
+  it('duplique au bouton et sélectionne aussitôt la copie', () => {
+    const { page, instance, structure } = editor()
+    instance.select(3)
+    const name = page.widgets[3]!.shortName
+    const before = currentBounds(page, 3)
+
+    tool(instance, 'duplicate').click()
+
+    expect(page.widgets).toHaveLength(9)
+    expect(instance.selection()).toBe(4)
+    expect(page.widgets[4]!.shortName).toBe(name)
+    expect(currentBounds(page, 4)).not.toEqual(before)
+    expect(structure[0]!.kind).toBe('insert')
+    expect(rankText(instance)).toBe('Rang 5 sur 9')
+    expectInSync(page)
+  })
+
+  it('met le rang à jour après un mouvement d’empilement', () => {
+    const { instance, structure } = editor()
+    instance.select(2)
+    expect(rankText(instance)).toBe('Rang 3 sur 8')
+
+    tool(instance, 'front').click()
+
+    expect(instance.selection()).toBe(7)
+    expect(rankText(instance)).toBe('Rang 8 sur 8, premier plan')
+    expect(structure).toHaveLength(1)
+    expect(structure[0]!.kind).toBe('reorder')
+  })
+
+  it('n’enregistre rien quand la course est déjà au bout', () => {
+    const { json, instance, structure } = editor()
+    instance.select(7)
+    const before = serializeJson(json)
+
+    expect(instance.restack('front')).toBeUndefined()
+    expect(instance.restack('raise')).toBeUndefined()
+
+    expect(structure).toHaveLength(0)
+    expect(instance.selection()).toBe(7)
+    expect(serializeJson(json)).toBe(before)
+  })
+
+  it('un clic sur un bouton ne démarre pas de geste sur le widget du dessous', () => {
+    const { json, instance, edits } = editor()
+    instance.select(3)
+    const before = serializeJson(json)
+
+    const button = tool(instance, 'duplicate')
+    button.dispatchEvent(new MouseEvent('pointerdown', {
+      clientX: 400, clientY: 200, bubbles: true, cancelable: true
+    }))
+    window.dispatchEvent(new MouseEvent('pointermove', { clientX: 600, clientY: 300, bubbles: true }))
+    window.dispatchEvent(new MouseEvent('pointerup', { clientX: 600, clientY: 300, bubbles: true }))
+
+    expect(edits).toHaveLength(0)
+    expect((instance.element.querySelector('.editor__preview') as HTMLElement).hidden).toBe(true)
+    expect(serializeJson(json)).toBe(before)
+  })
+
+  it('supprime à Suppr et duplique à Ctrl + D', () => {
+    const { page, instance, structure } = editor()
+    instance.select(2)
+
+    instance.element.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', ctrlKey: true, bubbles: true }))
+    expect(page.widgets).toHaveLength(9)
+    expect(instance.selection()).toBe(3)
+
+    instance.element.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete', bubbles: true }))
+    expect(page.widgets).toHaveLength(8)
+    expect(instance.selection()).toBeUndefined()
+    expect(structure.map((edit) => edit.kind)).toEqual(['insert', 'remove'])
+  })
+
+  it('accepte Cmd aussi bien que Ctrl, et Retour arrière aussi bien que Suppr', () => {
+    const { page, instance } = editor()
+    instance.select(2)
+    instance.element.dispatchEvent(new KeyboardEvent('keydown', { key: 'D', metaKey: true, bubbles: true }))
+    expect(page.widgets).toHaveLength(9)
+    instance.element.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace', bubbles: true }))
+    expect(page.widgets).toHaveLength(8)
+  })
+
+  it('change de rang à Ctrl + flèche, jusqu’au bout avec Maj', () => {
+    const { page, instance } = editor()
+    const name = page.widgets[2]!.shortName
+    instance.select(2)
+
+    instance.element.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', ctrlKey: true, bubbles: true }))
+    expect(instance.selection()).toBe(3)
+    expect(page.widgets[3]!.shortName).toBe(name)
+
+    instance.element.dispatchEvent(new KeyboardEvent('keydown', {
+      key: 'ArrowUp', ctrlKey: true, shiftKey: true, bubbles: true
+    }))
+    expect(instance.selection()).toBe(7)
+
+    instance.element.dispatchEvent(new KeyboardEvent('keydown', {
+      key: 'ArrowDown', ctrlKey: true, shiftKey: true, bubbles: true
+    }))
+    expect(instance.selection()).toBe(0)
+    expect(page.widgets[0]!.shortName).toBe(name)
+  })
+
+  it('ne déplace plus le widget à Ctrl + flèche : la combinaison est à l’empilement', () => {
+    const { page, instance, edits } = editor()
+    instance.select(2)
+    const before = currentBounds(page, 2)
+
+    instance.element.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', ctrlKey: true, bubbles: true }))
+
+    expect(edits).toHaveLength(0)
+    expect(currentBounds(page, 3)).toEqual(before)
+  })
+
+  it('ne laisse jamais la sélection hors bornes, jusqu’à vider la page', () => {
+    const { page, instance } = editor()
+
+    for (let remaining = page.widgets.length; remaining > 0; remaining -= 1) {
+      instance.select(remaining - 1)
+      expect(instance.selection()).toBe(remaining - 1)
+      instance.remove()
+      const after = instance.selection()
+      expect(after === undefined || (after >= 0 && after < page.widgets.length)).toBe(true)
+    }
+
+    expect(page.widgets).toHaveLength(0)
+    expect(instance.selection()).toBeUndefined()
+    expect(bar(instance).hidden).toBe(true)
+    // Une page vide ne casse rien : ni action, ni redessin.
+    expect(instance.remove()).toBeUndefined()
+    expect(instance.duplicate()).toBeUndefined()
+    expect(instance.restack('front')).toBeUndefined()
+    expect(() => instance.refresh()).not.toThrow()
+  })
+
+  it('ne fait rien sans sélection', () => {
+    const { json, instance, structure } = editor()
+    const before = serializeJson(json)
+    expect(instance.remove()).toBeUndefined()
+    expect(instance.duplicate()).toBeUndefined()
+    expect(instance.restack('back')).toBeUndefined()
+    expect(structure).toHaveLength(0)
+    expect(serializeJson(json)).toBe(before)
+  })
+
+  it('ne fait plus rien une fois le calque démonté', () => {
+    // Les écoutes du calque partent avec lui ; celles des boutons vivent sur les boutons.
+    // Une référence gardée après `destroy()` ne doit pas écrire dans une page que le
+    // dessin suivant a déjà remplacée.
+    const { json, instance, structure } = editor()
+    instance.select(3)
+    const before = serializeJson(json)
+    const button = tool(instance, 'delete')
+
+    instance.destroy()
+    button.click()
+
+    expect(structure).toHaveLength(0)
     expect(serializeJson(json)).toBe(before)
   })
 })
