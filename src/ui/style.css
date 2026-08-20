@@ -23,6 +23,26 @@
   --xc-map-climb-medium: #e8d34a;
   --xc-map-thermal-circle: #2b4bdb;
   --xc-map-label: #f44336;
+  /* Boussole (WCompass, compass.ts) : gris mesurés sur widget-WCompass-en-vol.png
+     (couronne/graduations/N `#404040`, deux facettes d'aiguille `#808080`/`#606060`) et
+     sur le coin de ecran-landscape3-17widgets.png en petit format (aiguille rouge
+     `#e04040`/`#c02020`) — voir le commentaire de tête de compass.ts. */
+  --xc-compass-ring: #404040;
+  --xc-compass-needle-a: #808080;
+  --xc-compass-needle-b: #606060;
+  --xc-compass-needle-small-a: #e04040;
+  --xc-compass-needle-small-b: #c02020;
+  /* Échelle verticale (WVarioColumn/WVerticalGraph, verticalScale.ts) : orange
+     `dot_color` mesuré (`-26624` → `#ff9800`), flèche et libellé neutres. */
+  --xc-vscale-arrow: #101010;
+  --xc-vscale-label: #606060;
+  --xc-vscale-dot: #ff9800;
+  /* Vue de profil (WSideView, sideView.ts) : couleurs mesurées sur widget-WCompass.png
+     (bandeau réel « PAGE 4 — WSideView », voir sideView.ts). */
+  --xc-sideview-terrain: #e2cfaa;
+  --xc-sideview-airspace: #f9f0d7;
+  --xc-sideview-airspace-restricted: #f6d7d7;
+  --xc-sideview-label: #7f7f7f;
 }
 
 .xc-page {
@@ -320,3 +340,86 @@
 }
 
 .xc-map__wind-arrow { width: 1.4em; height: 1.4em; }
+
+/* Boussole — WCompass (compass.ts). Instrument à fort contraste, aplats francs, aucun
+   dégradé ni ombre — voir le commentaire de tête de compass.ts pour les mesures. */
+.xc-compass {
+  width: 100%;
+  height: 100%;
+  display: flex;
+}
+
+.xc-compass__scene { width: 100%; height: 100%; display: block; }
+
+.xc-compass__ring { stroke: var(--xc-compass-ring); stroke-width: 8; }
+
+.xc-compass__tick { stroke: var(--xc-compass-ring); stroke-width: 2.5; }
+.xc-compass__tick--cardinal { stroke-width: 4; }
+
+.xc-compass__n {
+  fill: var(--xc-compass-ring);
+  font-size: 26px;
+  font-weight: 700;
+  dominant-baseline: hanging;
+}
+
+.xc-compass__needle-facet--a { fill: var(--xc-compass-needle-a); }
+.xc-compass__needle-facet--b { fill: var(--xc-compass-needle-b); }
+.xc-compass__needle--small .xc-compass__needle-facet--a { fill: var(--xc-compass-needle-small-a); }
+.xc-compass__needle--small .xc-compass__needle-facet--b { fill: var(--xc-compass-needle-small-b); }
+
+/* Échelle verticale — WVarioColumn / WVerticalGraph (verticalScale.ts). */
+.xc-vscale {
+  width: 100%;
+  height: 100%;
+  display: flex;
+}
+
+.xc-vscale__scene { width: 100%; height: 100%; display: block; }
+
+.xc-vscale__arrow line { stroke: var(--xc-vscale-arrow); stroke-width: 3; }
+.xc-vscale__arrowhead { fill: var(--xc-vscale-arrow); }
+
+.xc-vscale__label { fill: var(--xc-vscale-label); font-size: 30px; }
+
+.xc-vscale__trace circle { fill-opacity: 1; }
+
+/* Vue de profil — WSideView (sideView.ts). */
+.xc-sideview {
+  width: 100%;
+  height: 100%;
+  display: flex;
+}
+
+.xc-sideview__scene { width: 100%; height: 100%; display: block; }
+
+.xc-sideview__terrain { fill: var(--xc-sideview-terrain); }
+
+.xc-sideview__airspace rect { fill: var(--xc-sideview-airspace); }
+.xc-sideview__airspace--restricted rect { fill: var(--xc-sideview-airspace-restricted); }
+.xc-sideview__airspace-label { fill: var(--xc-sideview-label); font-size: 9px; }
+
+.xc-sideview__scale-tick { stroke: var(--xc-sideview-label); stroke-width: 1.5; }
+.xc-sideview__scale-label { fill: var(--xc-sideview-label); font-size: 10px; }
+
+/* Direction du vent — WWindDirection (windDirection.ts). Non observé isolément : rendu
+   sobre et distinct de la boussole détaillée de WCompass, délibérément minimal. */
+.xc-wind-dir {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 0.2em;
+}
+
+.xc-wind-dir__title { font-size: 0.8em; opacity: 0.8; }
+
+.xc-wind-dir__arrow {
+  width: 2em;
+  height: 2em;
+  stroke: var(--xc-ink);
+  fill: var(--xc-ink);
+}
+
+.xc-wind-dir__degrees { font-size: 0.9em; font-weight: 600; }

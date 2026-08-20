@@ -25,6 +25,16 @@ export function drawWidget(widget: Widget, settings: RenderSettings, language: s
 }
 
 /**
+ * Vrai si `shortName` a un dessin dédié — distinct du repli générique de `drawWidget`.
+ * Sert le contrôle de couverture (`tests/render/widgets/coverage.test.ts`) : interroger
+ * l'annuaire à l'exécution plutôt que grep-er le texte de `widgets/index.ts`, qui ne
+ * prouve rien sur ce qui est réellement enregistré une fois les imports exécutés.
+ */
+export function isRegistered(shortName: string): boolean {
+  return drawers.has(shortName)
+}
+
+/**
  * Types dont le dessin ne doit jamais recevoir le fond ni le cadre génériques que
  * `_bg`/`_border` demanderaient dans le fichier (`src/render/canvas.ts`) — le cas des
  * widgets purement tactiles (`WButtonBrightness`, `WButtonNavig`, voir
