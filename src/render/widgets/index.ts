@@ -8,6 +8,9 @@ import { drawVarioColumn } from './varioColumn'
 import { drawVerticalGraph } from './verticalGraph'
 import { drawSideView } from './sideView'
 import { drawWindDirection } from './windDirection'
+import { drawAirspaceProximity } from './airspaceProximity'
+import { drawLiveMessage } from './liveMessage'
+import { drawCompTaskSummary } from './compTaskSummary'
 
 /**
  * Les 23 types « titre + valeur + unité » du corpus (voir `numeric.ts`). Une boucle
@@ -70,7 +73,11 @@ for (const shortName of ['WButtonBrightness', 'WButtonNavig']) {
   registerTransparent(shortName)
 }
 
-// Tâche 18 (restante, hors périmètre de la 17 ci-dessus) : WAirspaceProximity,
-// WLiveMessage, WCompTaskSummary n'ont pas encore de dessin — voir le rapport de la
-// tâche 17 pour le détail. `coverage.test.ts` le signale sciemment : c'est le but de ce
-// test, pas un défaut des cinq types enregistrés au-dessus.
+// Tâche 18, les trois derniers types du corpus. WAirspaceProximity est bien documenté
+// (capture réelle, voir airspaceProximity.ts) ; WLiveMessage et WCompTaskSummary ne le
+// sont pas — voir leurs commentaires de tête respectifs pour le détail des réserves.
+// Avec ces trois dessins, les 37 types du corpus ont un dessin enregistré :
+// `coverage.test.ts` passe désormais entièrement au vert sans avoir été modifié.
+register('WAirspaceProximity', drawAirspaceProximity)
+register('WLiveMessage', drawLiveMessage)
+register('WCompTaskSummary', drawCompTaskSummary)

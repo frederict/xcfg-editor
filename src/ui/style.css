@@ -43,6 +43,13 @@
   --xc-sideview-airspace: #f9f0d7;
   --xc-sideview-airspace-restricted: #f6d7d7;
   --xc-sideview-label: #7f7f7f;
+  /* Proximité d'espace aérien (WAirspaceProximity, airspaceProximity.ts) : fond bleu
+     très clair et filet rouge séparateur, observés sur ecran-non-identifie-4.png. Rouge
+     défini séparément de --xc-status-alert : même valeur mesurée, mais deux captures
+     distinctes — statusLine.ts documente déjà que deux rouges coexistent sur
+     l'appareil, on ne suppose donc pas qu'il s'agit du même. */
+  --xc-airprox-bg: #dce6f8;
+  --xc-airprox-divider: #ff0000;
 }
 
 .xc-page {
@@ -423,3 +430,111 @@
 }
 
 .xc-wind-dir__degrees { font-size: 0.9em; font-weight: 600; }
+
+/* Proximité d'espace aérien — WAirspaceProximity (airspaceProximity.ts). Blocs empilés
+   en colonne par défaut, en ligne si `_splitdirection` vaut `HORIZONTAL` — voir le
+   commentaire de tête du module pour la corrélation observée avec la forme du widget. */
+.xc-airprox {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--xc-airprox-bg);
+  color: var(--xc-ink);
+  font-size: 0.8em;
+  line-height: 1.3;
+  overflow: hidden;
+}
+
+.xc-airprox--row { flex-direction: row; }
+
+.xc-airprox__zone {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  padding: 0.35em 0.5em;
+  gap: 0.1em;
+}
+
+.xc-airprox__name { font-weight: 700; }
+.xc-airprox__range { opacity: 0.85; }
+
+.xc-airprox__dist {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  font-weight: 700;
+}
+
+.xc-airprox__icon { width: 1em; height: 1em; stroke: var(--xc-ink); fill: var(--xc-ink); flex: none; }
+
+/* Filet rouge entre deux zones — horizontal en colonne (défaut), vertical en ligne. */
+.xc-airprox__divider {
+  border: none;
+  margin: 0;
+  flex: none;
+  background: var(--xc-airprox-divider);
+  height: 2px;
+  width: 100%;
+}
+
+.xc-airprox--row > .xc-airprox__divider { height: 100%; width: 2px; }
+
+/* Réception de messages — WLiveMessage (liveMessage.ts). Non confirmé par une capture :
+   panneau sobre, voir le commentaire de tête du module. */
+.xc-livemsg {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.3em;
+  padding: 0.4em 0.6em;
+  overflow: hidden;
+}
+
+.xc-livemsg__lines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2em;
+}
+
+.xc-livemsg__line {
+  font-size: 0.85em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.xc-livemsg__time {
+  align-self: flex-end;
+  font-size: 0.75em;
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Résumé de la manche — WCompTaskSummary (compTaskSummary.ts). Non confirmé par une
+   capture, et sans aucune clé propre dans le corpus : rendu fixe, voir le commentaire
+   de tête du module. */
+.xc-tasksum {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.2em;
+  padding: 0.3em 0.5em;
+  font-size: 0.8em;
+  overflow: hidden;
+}
+
+.xc-tasksum__leg {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5em;
+  white-space: nowrap;
+}
+
+.xc-tasksum__distance { font-variant-numeric: tabular-nums; opacity: 0.85; }
