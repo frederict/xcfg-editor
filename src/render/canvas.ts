@@ -27,8 +27,12 @@ export function widgetStyle(box: Box): WidgetStyle {
  * Émet les widgets dans l'ordre du tableau : c'est l'ordre de dessin de XCTrack. Le
  * premier est au fond, le dernier au-dessus. L'empilement naturel du DOM suffit — aucun
  * z-index n'est nécessaire.
+ *
+ * `language` est déjà résolue en code concret par l'appelant (`resolveLanguage` dans
+ * `src/model/preferences.ts`, avec `navigator.language` côté `src/ui/` quand le fichier
+ * ne précise rien) : ce module ne fait que la relayer jusqu'aux dessins de widgets.
  */
-export function renderPage(page: Page, aspectRatio: number, settings: RenderSettings): HTMLElement {
+export function renderPage(page: Page, aspectRatio: number, settings: RenderSettings, language: string): HTMLElement {
   const canvas = document.createElement('div')
   canvas.className = 'xc-page'
   canvas.style.aspectRatio = String(aspectRatio)
@@ -52,7 +56,7 @@ export function renderPage(page: Page, aspectRatio: number, settings: RenderSett
 
     const content = document.createElement('div')
     content.className = 'xc-widget__content'
-    content.append(drawWidget(widget, settings))
+    content.append(drawWidget(widget, settings, language))
 
     element.append(background, content)
     canvas.append(element)

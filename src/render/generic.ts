@@ -7,7 +7,7 @@ import { readableName } from '../catalog/widgetNames'
  * XCTrack n'apparaissent dans aucun fichier connu, et le format gagne des types à
  * chaque version — ce repli est le chemin normal, pas un cas d'erreur.
  */
-export function drawGeneric(widget: Widget, settings: RenderSettings): HTMLElement {
+export function drawGeneric(widget: Widget, settings: RenderSettings, language: string): HTMLElement {
   const element = document.createElement('div')
   element.className = 'xc-generic'
 
@@ -15,7 +15,7 @@ export function drawGeneric(widget: Widget, settings: RenderSettings): HTMLEleme
   title.className = 'xc-generic__title'
   title.style.color = settings.titleColor
   title.style.fontSize = `${settings.titleSizePercent}%`
-  title.textContent = readableName(widget.shortName, settings.language)
+  title.textContent = readableName(widget.shortName, language)
 
   const value = document.createElement('span')
   value.className = 'xc-generic__value'

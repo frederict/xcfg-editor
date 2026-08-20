@@ -5,10 +5,13 @@ import type { Widget } from '../../src/model/widget'
 
 const settings: RenderSettings = {
   fromDefaults: true, theme: 'WhiteHCTheme', titleColor: '#f44336',
-  titleSizePercent: 100, titleFont: 'normal', language: 'en',
+  titleSizePercent: 100, titleFont: 'normal', language: { kind: 'system' },
   altitudeUnit: 'm', speedUnit: 'km/h', verticalSpeedUnit: 'm/s',
   windSpeedUnit: 'km/h', distanceUnit: 'km', relativeDistanceUnit: 'km', airspaceAltitudeUnit: 'm'
 }
+
+// Langue déjà résolue en chaîne, distincte de `settings` — voir numeric.test.ts.
+const language = 'en'
 
 const widget = (shortName: string): Widget => ({
   node: { kind: 'object', entries: [] },
@@ -19,14 +22,14 @@ const widget = (shortName: string): Widget => ({
 
 describe('annuaire', () => {
   it('utilise le rendu générique pour un type inconnu', () => {
-    const element = drawWidget(widget('WInventeEn2027'), settings)
+    const element = drawWidget(widget('WInventeEn2027'), settings, language)
     expect(element.textContent).toContain('WInventeEn2027')
   })
 
   it('affiche le nom lisible quand il existe', () => {
-    // settings.language vaut 'en' ici : libellé officiel anglais, pas la traduction
-    // maison française.
-    expect(drawWidget(widget('WAltitude'), settings).textContent).toContain('GPS Alt')
+    // language vaut 'en' ici : libellé officiel anglais, pas la traduction maison
+    // française.
+    expect(drawWidget(widget('WAltitude'), settings, language).textContent).toContain('GPS Alt')
   })
 
   it('utilise le dessin enregistré quand il existe', () => {
@@ -35,6 +38,6 @@ describe('annuaire', () => {
       el.textContent = 'dessin sur mesure'
       return el
     })
-    expect(drawWidget(widget('WEssai'), settings).textContent).toBe('dessin sur mesure')
+    expect(drawWidget(widget('WEssai'), settings, language).textContent).toBe('dessin sur mesure')
   })
 })

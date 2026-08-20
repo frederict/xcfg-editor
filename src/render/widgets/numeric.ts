@@ -86,7 +86,7 @@ function resolveUnit(widget: Widget, settings: RenderSettings, spec: NumericSpec
  * booléen d'affichage (toujours `true` quand présent dans le corpus) et non une unité —
  * le confondre afficherait le mot « true » à côté de la valeur.
  */
-export function drawNumeric(widget: Widget, settings: RenderSettings): HTMLElement {
+export function drawNumeric(widget: Widget, settings: RenderSettings, language: string): HTMLElement {
   const spec = SPECS[widget.shortName] ?? FALLBACK_SPEC
 
   const element = document.createElement('div')
@@ -98,7 +98,7 @@ export function drawNumeric(widget: Widget, settings: RenderSettings): HTMLEleme
     title.style.color = settings.titleColor
     title.style.fontSize = `${settings.titleSizePercent}%`
     const custom = readString(widget.node, 'titletext')
-    title.textContent = custom && custom.length > 0 ? custom : readableName(widget.shortName, settings.language)
+    title.textContent = custom && custom.length > 0 ? custom : readableName(widget.shortName, language)
     element.append(title)
   }
 

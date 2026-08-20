@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { parseJson } from '../../src/core/parseJson'
-import { readRenderSettings, longDistanceUnit } from '../../src/model/preferences'
+import { readRenderSettings, longDistanceUnit, resolveLanguage } from '../../src/model/preferences'
 
 const DIR = '/Users/fred/DEV/XCTrack/Exemples/'
 
@@ -44,20 +44,34 @@ describe('paramètres de rendu', () => {
     expect(settings.airspaceAltitudeUnit).toBe('m')
   })
 
-  it('lit la langue d’affichage depuis Display.Language', () => {
+  it('lit une langue explicite depuis Display.Language', () => {
     const withLanguage = readRenderSettings(parseJson(readFileSync(DIR + 'complète.xcfg', 'utf8')))
-    expect(withLanguage.language).toBe('fr')
+    expect(withLanguage.language).toEqual({ kind: 'explicit', code: 'fr' })
   })
 
-  it('retombe sur l’anglais quand Display.Language est vide ou absente', () => {
-    // Sur ce backup, Display.Language vaut la chaîne vide "" (langue système, non
-    // explicitée) — pas d'absence de clé, mais une valeur vide : les deux cas doivent
-    // aboutir au même repli.
+  it('signale une langue système — jamais l’anglais — quand Display.Language est vide ou absente', () => {
+    // Mesuré sur l'appareil de l'utilisateur : Display.Language: "" (2 fichiers du
+    // corpus sur 5) ne veut PAS dire anglais — persist.sys.locale y vaut fr-FR et
+    // XCTrack y affiche du français. Le vide et l'absence de section `preferences`
+    // signifient tous deux « langue système, inconnue de ce fichier » : ce n'est
+    // décidable qu'à l'affichage (src/ui/), jamais ici.
     const emptyLanguage = readRenderSettings(parseJson(readFileSync(DIR + '2026-08-20_backup-00.xcfg', 'utf8')))
-    expect(emptyLanguage.language).toBe('en')
+    expect(emptyLanguage.language).toEqual({ kind: 'system' })
 
     const noPreferencesAtAll = readRenderSettings(parseJson(readFileSync(DIR + '2026-08-20_pages-00.xcfg', 'utf8')))
-    expect(noPreferencesAtAll.language).toBe('en')
+    expect(noPreferencesAtAll.language).toEqual({ kind: 'system' })
+  })
+})
+
+describe('resolveLanguage', () => {
+  it('privilégie la langue explicite du fichier sur celle du système', () => {
+    expect(resolveLanguage({ kind: 'explicit', code: 'fr' }, 'de-DE')).toBe('fr')
+  })
+
+  it('retombe sur la langue système fournie par l’appelant quand le fichier ne dit rien', () => {
+    // La fonction ne lit jamais navigator elle-même : la langue système lui est
+    // fournie en paramètre par l'appelant (src/ui/, avec navigator.language).
+    expect(resolveLanguage({ kind: 'system' }, 'de-DE')).toBe('de-DE')
   })
 })
 

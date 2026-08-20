@@ -26,7 +26,7 @@ describe('empilement', () => {
   const page = readLayout(doc).landscape[4]!
 
   it('émet les widgets dans l’ordre du tableau', () => {
-    const element = renderPage(page, 16 / 9, settings)
+    const element = renderPage(page, 16 / 9, settings, 'fr')
     const children = [...element.querySelectorAll('.xc-widget')]
     expect(children).toHaveLength(21)
     // Le grand widget cartographique est au fond : il est émis en premier.
@@ -36,7 +36,7 @@ describe('empilement', () => {
   })
 
   it('reporte l’opacité de _bg sur chaque widget', () => {
-    const element = renderPage(page, 16 / 9, settings)
+    const element = renderPage(page, 16 / 9, settings, 'fr')
     const third = element.querySelectorAll('.xc-widget')[2] as HTMLElement
     expect(third.style.getPropertyValue('--xc-bg-opacity')).toBe('0.2')
   })

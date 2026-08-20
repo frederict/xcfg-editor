@@ -1,6 +1,19 @@
 import type { JsonNode } from '../core/jsonDocument'
 import { getMember, readNumber, readString } from '../core/access'
 
+/**
+ * Ce que le fichier dit de la langue d'affichage. Volontairement PAS une simple
+ * `string` avec repli sur `'en'` : `Display.Language` vide, comme l'absence totale de
+ * section `preferences`, signifie « langue système » et non « anglais » — mesuré sur
+ * l'appareil de l'utilisateur (`persist.sys.locale = fr-FR`, XCTrack y affiche du
+ * français) alors que 2 fichiers du corpus sur 5 portent `Display.Language: ""`. Ce
+ * module ne connaît que le fichier, jamais le système d'exploitation qui l'ouvre : la
+ * résolution en langue concrète (via `navigator.language`) est un repli d'affichage,
+ * propre à `src/ui/` — voir `resolveLanguage` ci-dessous, qui reçoit cette langue
+ * système en paramètre plutôt que de la lire elle-même.
+ */
+export type LanguagePreference = { kind: 'explicit'; code: string } | { kind: 'system' }
+
 export interface RenderSettings {
   /** Vrai si le fichier ne contenait aucune préférence — la moitié du corpus. */
   fromDefaults: boolean
@@ -8,13 +21,8 @@ export interface RenderSettings {
   titleColor: string
   titleSizePercent: number
   titleFont: string
-  /**
-   * Langue d'affichage, lue depuis `Display.Language`. XCTrack y écrit soit un code de
-   * langue (`"fr"`), soit la chaîne vide quand le pilote n'a rien choisi explicitement
-   * (langue système) — les deux cas retombent ici sur `"en"`, la langue source du
-   * catalogue de libellés officiels.
-   */
-  language: string
+  /** Langue d'affichage telle que déclarée par le fichier — voir `LanguagePreference`. */
+  language: LanguagePreference
   altitudeUnit: string
   speedUnit: string
   verticalSpeedUnit: string
@@ -35,7 +43,7 @@ const DEFAULTS: Omit<RenderSettings, 'fromDefaults'> = {
   titleColor: '#f44336',
   titleSizePercent: 100,
   titleFont: 'normal',
-  language: 'en',
+  language: { kind: 'system' },
   altitudeUnit: 'm',
   speedUnit: 'km/h',
   verticalSpeedUnit: 'm/s',
@@ -109,11 +117,23 @@ function distanceUnitOf(preferences: JsonNode, key: string): string | undefined 
 }
 
 /**
- * `Display.Language` peut être absente ou valoir la chaîne vide (langue système, non
- * choisie explicitement) : les deux retombent sur l'anglais, plutôt que sur une chaîne
- * vide qui ne correspondrait à aucune locale du catalogue de libellés.
+ * `Display.Language` peut être absente ou valoir la chaîne vide : dans les deux cas,
+ * le pilote n'a rien choisi explicitement dans XCTrack, et l'application y suit la
+ * langue du système Android — jamais l'anglais par défaut. On ne normalise donc pas
+ * le vide en une langue : on le nomme `{ kind: 'system' }`, une information vraie sur
+ * le fichier plutôt qu'une supposition.
  */
-function languageOf(preferences: JsonNode): string {
+function languageOf(preferences: JsonNode): LanguagePreference {
   const raw = readString(preferences, 'Display.Language')
-  return raw !== undefined && raw.length > 0 ? raw : DEFAULTS.language
+  return raw !== undefined && raw.length > 0 ? { kind: 'explicit', code: raw } : { kind: 'system' }
+}
+
+/**
+ * Résout une préférence de langue en code concret pour l'affichage. `systemLanguage`
+ * est fourni par l'appelant — typiquement `navigator.language`, côté `src/ui/` — plutôt
+ * que lu ici : ce module décrit des fichiers XCTrack, il ne connaît pas le DOM et ne
+ * doit jamais appeler `navigator` lui-même.
+ */
+export function resolveLanguage(preference: LanguagePreference, systemLanguage: string): string {
+  return preference.kind === 'explicit' ? preference.code : systemLanguage
 }
