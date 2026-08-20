@@ -201,4 +201,26 @@ describe('widgets numériques', () => {
       expect(title.style.fontSize).toBe(`${settings.titleSizePercent}%`)
     })
   })
+
+  // Défaut 2 (rapport de tâche) — la valeur doit occuper presque toute la hauteur
+  // disponible du widget ; un titre et une unité partagent la place avec elle. La
+  // classe `xc-num--no-title` (style.css : `.xc-num--no-title .xc-num__value`) est le
+  // seul signal, côté DOM, de ce partage — sans titre à loger au-dessus, la valeur
+  // reçoit toute la hauteur.
+  describe('la valeur domine la hauteur du widget (défaut 2)', () => {
+    it('ajoute xc-num--no-title quand _title est absent', () => {
+      const el = drawNumeric(widget('WAltitude', {}), settings, language)
+      expect(el.classList.contains('xc-num--no-title')).toBe(true)
+    })
+
+    it('ajoute xc-num--no-title quand _title vaut false', () => {
+      const el = drawNumeric(widget('WAltitude', { _title: 'false' }), settings, language)
+      expect(el.classList.contains('xc-num--no-title')).toBe(true)
+    })
+
+    it('n’ajoute pas xc-num--no-title quand un titre est affiché', () => {
+      const el = drawNumeric(widget('WAltitude', { _title: 'true' }), settings, language)
+      expect(el.classList.contains('xc-num--no-title')).toBe(false)
+    })
+  })
 })

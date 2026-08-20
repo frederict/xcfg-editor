@@ -187,6 +187,10 @@ export function drawNumeric(widget: Widget, settings: RenderSettings, language: 
     title.style.fontSize = `${titleSizePercent(settings, widget)}%`
     title.textContent = titleText(widget, language)
     element.append(title)
+  } else {
+    // Sans titre à loger au-dessus, la valeur reçoit toute la hauteur du widget —
+    // voir `.xc-num--no-title` dans style.css.
+    element.classList.add('xc-num--no-title')
   }
 
   // La valeur et l'unité partagent une même zone : c'est elle, et non tout le widget,
