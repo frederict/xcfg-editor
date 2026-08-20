@@ -1093,6 +1093,130 @@ body.is-dragging .veil {
   font-size: 13px;
 }
 
+/* -------------------------------------------------- palette d'ajout d'un gadget */
+
+/*
+ * La palette reprend la boîte du panneau de propriétés — même fond, même bordure, même
+ * champ de filtrage : c'est le même meuble, une colonne de droite qui liste et qui filtre.
+ *
+ * Une seule chose y est portée par le style plutôt que par le texte : la **différence entre
+ * dupliquer et créer**. Elle ne passe pas par une couleur — le cadre est achromatique, la
+ * couleur appartient à l'instrument — mais par le poids du trait : un liseré plein à gauche
+ * des types duplicables, un liseré pointillé pour ceux qu'il faudra créer. Le pointillé dit
+ * l'incertitude sans crier au danger, et il reste lisible en monochrome comme pour un œil
+ * qui ne distingue pas les teintes.
+ */
+
+.palette {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.9rem 1rem 1.1rem;
+  border: 1px solid var(--app-line);
+  border-radius: 6px;
+  background: var(--app-panel);
+}
+
+.palette__head { display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap; }
+.palette__title { margin: 0; font-size: 15px; font-weight: 600; }
+
+.palette__count {
+  margin: 0;
+  font-family: var(--font-data);
+  font-size: 11px;
+  color: var(--app-ink-soft);
+}
+
+.palette__search {
+  font: inherit;
+  font-size: 13px;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--app-line-strong);
+  border-radius: 4px;
+  background: var(--app-bg);
+  color: var(--app-ink);
+}
+
+.palette__empty {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border: 1px dashed var(--app-line-strong);
+  border-radius: 6px;
+  color: var(--app-ink-soft);
+  font-size: 13px;
+}
+
+.palette__list { display: flex; flex-direction: column; }
+
+/* L'en-tête de groupe de la liste native : un bandeau gris, en gras, plus petit que le nom. */
+.palette__group {
+  margin: 0.7rem 0 0;
+  padding: 0.25rem 0.5rem;
+  background: var(--app-bg);
+  border-radius: 3px;
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--app-ink-soft);
+}
+
+.palette__group:first-child { margin-top: 0; }
+
+.palette__note {
+  margin: 0.35rem 0.5rem 0.4rem;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--app-ink-soft);
+}
+
+.palette__entry {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  width: 100%;
+  /* Assez haut pour être visé au doigt : l'outil sert aussi sur une tablette. */
+  min-height: 2.4rem;
+  padding: 0.35rem 0.5rem;
+  border: 0;
+  border-bottom: 1px solid var(--app-line);
+  border-left: 3px solid var(--app-line-strong);
+  border-radius: 0;
+  background: transparent;
+  color: var(--app-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Type absent de la configuration : le liseré se pointille — il faudra créer, pas copier. */
+.palette__entry[data-origin="create"] { border-left-style: dashed; }
+
+.palette__entry:hover { background: var(--app-bg); }
+.palette__entry:last-child { border-bottom: 0; }
+
+.palette__name { flex: 1 1 12rem; font-size: 14px; }
+
+/* Le nom court, toujours affiché : c'est lui qui sépare les deux « Luminosité de l'écran ». */
+.palette__short {
+  flex: none;
+  font-family: var(--font-data);
+  font-size: 11px;
+  color: var(--app-ink-soft);
+}
+
+.palette__badge {
+  flex: none;
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--app-line-strong);
+  border-radius: 999px;
+  font-family: var(--font-data);
+  font-size: 11px;
+  color: var(--app-ink-soft);
+  white-space: nowrap;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
