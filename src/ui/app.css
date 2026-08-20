@@ -154,6 +154,80 @@ body {
   flex: 1;
 }
 
+/* ------------------------------------------------------------- gabarit d'écran */
+
+/* Bandeau d'outils d'affichage, sous la barre de tête et hors du contenu redessiné. */
+.tools {
+  background: var(--app-panel);
+  border-bottom: 1px solid var(--app-line);
+}
+
+.picker {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0.6rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.picker__label {
+  font-family: var(--font-data);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--app-ink-soft);
+}
+
+.picker__select,
+.picker__number,
+.picker__text {
+  font: inherit;
+  font-size: 13px;
+  padding: 0.3rem 0.45rem;
+  border: 1px solid var(--app-line-strong);
+  border-radius: 4px;
+  background: var(--app-bg);
+  color: var(--app-ink);
+}
+
+.picker__number { width: 7rem; font-variant-numeric: tabular-nums; }
+.picker__text { min-width: 12rem; }
+
+.picker__fields { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+.picker__field { display: flex; align-items: center; gap: 0.35rem; }
+
+.picker__field-label {
+  font-size: 12px;
+  color: var(--app-ink-soft);
+}
+
+.picker__note {
+  margin: 0;
+  flex: 1 1 20rem;
+  font-size: 12px;
+  color: var(--app-ink-soft);
+}
+
+.picker__form {
+  flex-basis: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding: 0.6rem 0 0.2rem;
+  border-top: 1px solid var(--app-line);
+}
+
+.picker__error {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 12px;
+  color: var(--app-flag-ink);
+}
+
 /* -------------------------------------------------------------------- page d'accueil */
 
 .landing { max-width: 46rem; padding-top: 2.5rem; }

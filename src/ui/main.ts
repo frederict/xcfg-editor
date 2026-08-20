@@ -7,15 +7,17 @@ import { getMember, readString } from '../core/access'
 import { exportContainer, openContainer, type Container } from '../core/container'
 import { readLayout, type Layout } from '../model/layout'
 import { readRenderSettings, resolveLanguage, type RenderSettings } from '../model/preferences'
+import { buildDeviceSelector } from './deviceSelector'
 import { buildDetail, buildOverview, type Orientation, type ViewContext } from './views'
 
 interface Session {
   container: Container
   layout: Layout
   settings: RenderSettings
+  /** Gabarit d'affichage courant : choisi par le pilote, jamais écrit dans le fichier. */
   device: Device
-  /** Vrai si `info.device` désigne bien ce gabarit — voir `deviceIsDeclared`. */
-  deviceDeclared: boolean
+  /** Nom de l'appareil que le fichier déclare, s'il en désigne un — `deviceIsDeclared`. */
+  declaredDevice: string | undefined
   language: string
   /** Vrai si la langue vient du navigateur, faute d'indication dans le fichier. */
   languageFromBrowser: boolean
@@ -47,7 +49,7 @@ function catalogLanguage(tag: string): string {
  * `deviceFor` retombe silencieusement sur l'AIR³ 7.2 quand `info.device` manque ou ne
  * désigne aucun gabarit connu. L'interface doit le dire plutôt que de laisser croire
  * que le fichier a déclaré cet appareil : les millimètres affichés dépendent entièrement
- * de ce choix. Le sélecteur de gabarit viendra à la tâche 20.
+ * de ce choix — et le sélecteur permet d'en changer sans rien réécrire.
  */
 function deviceIsDeclared(raw: string | undefined, device: Device): boolean {
   const match = /AIR3-(\d+\.\d+)/i.exec(raw ?? '')
@@ -93,10 +95,19 @@ actions.append(fileName, openLabel, fileInput, exportButton)
 bar.append(brand, actions)
 
 const content = el('main', 'content')
+
+/**
+ * Barre d'outils d'affichage, hors de `content` : `render()` vide `content` à chaque
+ * dessin, et le sélecteur de gabarit doit survivre — il porte un état (appareil
+ * personnalisé en cours de saisie, champs « Responsive ») que le vider effacerait.
+ */
+const tools = el('div', 'tools')
+tools.hidden = true
+
 const veil = el('div', 'veil')
 veil.append(el('span', 'veil__text', 'Déposez le fichier pour l’ouvrir'))
 
-app.append(bar, content, veil)
+app.append(bar, tools, content, veil)
 
 /* --------------------------------------------------------------------------- vues */
 
@@ -151,9 +162,9 @@ function metaStrip(current: Session): HTMLElement {
   }
   // Le nom du fichier est déjà dans la barre de tête : ne pas le répéter ici.
   add('Format', current.container.kind === 'xczfg' ? 'archive .xczfg' : 'fichier .xcfg')
-  add('Gabarit', current.deviceDeclared
-    ? current.device.label
-    : `${current.device.label} (par défaut, le fichier ne dit rien de l’appareil)`)
+  // Ce que le fichier dit de l'appareil, distinct du gabarit d'affichage choisi
+  // au-dessus : l'un est une donnée, l'autre un réglage de la visionneuse.
+  add('Appareil du fichier', current.declaredDevice ?? 'non déclaré')
   add(
     'Libellés',
     current.languageFromBrowser
@@ -169,6 +180,7 @@ function metaStrip(current: Session): HTMLElement {
 function render(): void {
   content.textContent = ''
   exportButton.hidden = session === undefined
+  tools.hidden = session === undefined || session.container.parseError !== undefined
   fileName.textContent = session?.container.fileName ?? ''
 
   if (failure !== undefined) {
@@ -234,6 +246,26 @@ function render(): void {
   )
 }
 
+/* ---------------------------------------------------------------- gabarit d'écran */
+
+/**
+ * Le sélecteur est refait à chaque fichier ouvert : sa sélection initiale découle de
+ * `info.device`, qui change avec le fichier. Changer de gabarit ne touche jamais au
+ * document — seul `session.device` bouge, et la vue est redessinée.
+ */
+function installDeviceSelector(initialDevice: Device): void {
+  tools.textContent = ''
+  const selector = buildDeviceSelector({
+    initialDevice,
+    onChange: (device) => {
+      if (!session) return
+      session.device = device
+      render()
+    }
+  })
+  tools.append(selector.element)
+}
+
 /* ------------------------------------------------------------------------- import */
 
 async function load(file: File): Promise<void> {
@@ -253,10 +285,11 @@ async function load(file: File): Promise<void> {
       layout: readLayout(container.document),
       settings,
       device,
-      deviceDeclared: deviceIsDeclared(declaredDevice, device),
+      declaredDevice: deviceIsDeclared(declaredDevice, device) ? device.label : undefined,
       language: resolveLanguage(settings.language, systemLanguage),
       languageFromBrowser: settings.language.kind === 'system'
     }
+    installDeviceSelector(device)
   } catch (error) {
     failure = String(error)
   }
