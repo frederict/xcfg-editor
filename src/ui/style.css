@@ -2,6 +2,11 @@
   --xc-surface: #ffffff;
   --xc-ink: #101010;
   --xc-line: #808080;
+  /* Fonds pâles de la zone de valeur, registre observé sur l'AIR³ (rendu-observe.md) :
+     vert clair pour une mesure positive (vario, gain), rose clair pour une négative.
+     Restent très clairs — c'est du texte noir dessus, sur un thème à fort contraste. */
+  --xc-value-positive-bg: #e3f6e6;
+  --xc-value-negative-bg: #fbe4ea;
 }
 
 .xc-page {
@@ -58,6 +63,29 @@
   line-height: 1.1;
 }
 
-.xc-num__title { font-size: 0.8em; opacity: 0.8; }
+.xc-num__title { font-size: 0.8em; opacity: 0.8; max-width: 100%; }
+
+/* Valeur et unité, alignées en bas comme sur l'appareil — c'est cette zone, et non le
+   widget entier, que la coloration de signe recouvre (rendu-observe.md). */
+.xc-num__row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.15em;
+}
+
+.xc-num__row--positive { background: var(--xc-value-positive-bg); }
+.xc-num__row--negative { background: var(--xc-value-negative-bg); }
+
 .xc-num__value { font-size: 1.6em; font-weight: 600; }
 .xc-num__unit { font-size: 0.7em; opacity: 0.8; }
+
+/* Unité composée (km/h, m/s) empilée en fraction : numérateur, filet, dénominateur. */
+.xc-num__unit--fraction {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.15;
+}
+
+.xc-num__unit-num { border-bottom: 1px solid currentColor; padding: 0 0.15em; }
+.xc-num__unit-den { padding: 0 0.15em; }

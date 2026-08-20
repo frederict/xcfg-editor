@@ -1,6 +1,6 @@
 import type { Widget } from '../../model/widget'
 import type { RenderSettings } from '../../model/preferences'
-import { readBoolean, readString } from '../../core/access'
+import { readBoolean, readNumber, readString } from '../../core/access'
 import { readableName } from '../../catalog/widgetNames'
 
 /**
@@ -82,6 +82,94 @@ function resolveUnit(widget: Widget, settings: RenderSettings, spec: NumericSpec
 }
 
 /**
+ * Largeur normalisée (sur 10000, voir `src/render/canvas.ts`) en-deçà de laquelle le
+ * titre doit rétrécir pour tenir dans le widget — observé sur « Altitude GPS » et
+ * « Vitesse du vent », tronqués ou renvoyés à la ligne par `Display.WidgetTitleSize`
+ * seul (rendu-observe.md). Valeurs relevées sur le corpus : les widgets numériques
+ * étroits d'une page à 6 colonnes (« landscape[3] ») font 1458-1459 sur 10000.
+ */
+const NARROW_WIDTH_THRESHOLD = 2000
+const MIN_TITLE_SCALE = 0.5
+
+/**
+ * Grandeurs pour lesquelles XCTrack colore le fond de la zone de valeur selon le signe
+ * de la mesure — observé sur `WVerticalSpeed` (vario) et `WThermalAltGain` (gain dans
+ * le thermique) uniquement. Une altitude ou une heure ordinaires ne se colorent pas
+ * (rendu-observe.md).
+ */
+const SIGN_COLORED_TYPES = new Set(['WVerticalSpeed', 'WThermalAltGain'])
+
+/**
+ * Compose une unité simple (`m`, `FL`) sur une ligne ; une unité composée (contenant
+ * `/`) en fraction empilée — numérateur, filet, dénominateur — comme XCTrack le fait
+ * pour `km/h` et `m/s` (rendu-observe.md).
+ */
+function buildUnit(unitText: string): HTMLElement {
+  const unit = document.createElement('span')
+  unit.className = 'xc-num__unit'
+
+  const slash = unitText.indexOf('/')
+  if (slash === -1) {
+    unit.textContent = unitText
+    return unit
+  }
+
+  unit.classList.add('xc-num__unit--fraction')
+  const numerator = document.createElement('span')
+  numerator.className = 'xc-num__unit-num'
+  numerator.textContent = unitText.slice(0, slash)
+  const denominator = document.createElement('span')
+  denominator.className = 'xc-num__unit-den'
+  denominator.textContent = unitText.slice(slash + 1)
+  unit.append(numerator, denominator)
+  return unit
+}
+
+/**
+ * Le titre porte la période de moyennage (clé `avg`, en millisecondes) quand elle est
+ * présente et non nulle : « Finesse / 2s », « Vitesse verticale / 2s » (rendu-observe.md).
+ * Un titre personnalisé (`titletext` renseigné) n'en hérite pas. Aucun widget du corpus
+ * ne combine `avg` et un `titletext` non vide — l'hypothèse n'est donc pas vérifiable
+ * sur les données disponibles — mais c'est la seule lecture cohérente avec la consigne
+ * qui la formule explicitement.
+ */
+function titleText(widget: Widget, language: string): string {
+  const custom = readString(widget.node, 'titletext')
+  if (custom !== undefined && custom.length > 0) return custom
+
+  const base = readableName(widget.shortName, language)
+  const avg = readNumber(widget.node, 'avg')
+  if (avg === undefined || avg === 0) return base
+  return `${base} / ${avg / 1000}s`
+}
+
+/**
+ * `Display.WidgetTitleSize` seul fait déborder un libellé long sur un widget étroit
+ * (« Altitude GPS » sur deux lignes, « Vitesse du vent » tronquée — rendu-observe.md).
+ * En-deçà du seuil, la taille décroît linéairement avec la largeur normalisée du
+ * widget, avec un plancher pour rester lisible.
+ */
+function titleSizePercent(settings: RenderSettings, widget: Widget): number {
+  const width = widget.x2 - widget.x1
+  if (width >= NARROW_WIDTH_THRESHOLD) return settings.titleSizePercent
+  const scale = Math.max(MIN_TITLE_SCALE, width / NARROW_WIDTH_THRESHOLD)
+  return settings.titleSizePercent * scale
+}
+
+/**
+ * Classe de couleur de fond pour la zone de valeur, selon le signe de l'exemple
+ * statique — nos valeurs ne simulent rien, donc c'est le seul signe disponible.
+ * Restreinte à `SIGN_COLORED_TYPES` : une distance ou une heure ne se colorent jamais,
+ * même si leur exemple s'écrivait avec un signe.
+ */
+function rowSignClass(shortName: string, example: string): string | undefined {
+  if (!SIGN_COLORED_TYPES.has(shortName)) return undefined
+  const value = Number(example)
+  if (!Number.isFinite(value) || value === 0) return undefined
+  return value > 0 ? 'xc-num__row--positive' : 'xc-num__row--negative'
+}
+
+/**
  * Dessin partagé par les 23 types « titre + valeur + unité » du corpus. `_unit` est un
  * booléen d'affichage (toujours `true` quand présent dans le corpus) et non une unité —
  * le confondre afficherait le mot « true » à côté de la valeur.
@@ -96,23 +184,27 @@ export function drawNumeric(widget: Widget, settings: RenderSettings, language: 
     const title = document.createElement('span')
     title.className = 'xc-num__title'
     title.style.color = settings.titleColor
-    title.style.fontSize = `${settings.titleSizePercent}%`
-    const custom = readString(widget.node, 'titletext')
-    title.textContent = custom && custom.length > 0 ? custom : readableName(widget.shortName, language)
+    title.style.fontSize = `${titleSizePercent(settings, widget)}%`
+    title.textContent = titleText(widget, language)
     element.append(title)
   }
+
+  // La valeur et l'unité partagent une même zone : c'est elle, et non tout le widget,
+  // que XCTrack colore selon le signe (rendu-observe.md).
+  const row = document.createElement('div')
+  row.className = 'xc-num__row'
+  const colorClass = rowSignClass(widget.shortName, spec.example)
+  if (colorClass !== undefined) row.classList.add(colorClass)
 
   const value = document.createElement('span')
   value.className = 'xc-num__value'
   value.textContent = spec.example
-  element.append(value)
+  row.append(value)
 
   if (readBoolean(widget.node, '_unit') === true) {
-    const unit = document.createElement('span')
-    unit.className = 'xc-num__unit'
-    unit.textContent = resolveUnit(widget, settings, spec)
-    element.append(unit)
+    row.append(buildUnit(resolveUnit(widget, settings, spec)))
   }
 
+  element.append(row)
   return element
 }
