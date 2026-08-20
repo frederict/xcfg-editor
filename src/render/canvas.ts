@@ -1,6 +1,6 @@
 import type { Page } from '../model/layout'
 import type { RenderSettings } from '../model/preferences'
-import { drawWidget } from './registry'
+import { drawWidget, isTransparent } from './registry'
 
 export interface Box { x1: number; y1: number; x2: number; y2: number; background: number }
 
@@ -39,6 +39,11 @@ export function renderPage(page: Page, aspectRatio: number, settings: RenderSett
 
   for (const widget of page.widgets) {
     const style = widgetStyle(widget)
+    // Un widget purement tactile (WButtonBrightness, WButtonNavig — voir
+    // registry.ts/registerTransparent) ne reçoit jamais le fond ni le cadre que
+    // _bg/_border demanderaient dans le fichier : sur l'appareil, il ne dessine rien
+    // du tout, quelles que soient ces valeurs (rendu-observe.md).
+    const transparent = isTransparent(widget.shortName)
 
     const element = document.createElement('div')
     element.className = 'xc-widget'
@@ -46,8 +51,8 @@ export function renderPage(page: Page, aspectRatio: number, settings: RenderSett
     element.style.top = style.top
     element.style.width = style.width
     element.style.height = style.height
-    element.style.setProperty('--xc-bg-opacity', String(style.backgroundOpacity))
-    if (widget.border) element.classList.add('xc-widget--border')
+    element.style.setProperty('--xc-bg-opacity', String(transparent ? 0 : style.backgroundOpacity))
+    if (widget.border && !transparent) element.classList.add('xc-widget--border')
 
     // Le fond est un calque séparé : appliquer l'opacité au widget entier effacerait
     // aussi son texte, alors que _bg ne concerne que le fond.

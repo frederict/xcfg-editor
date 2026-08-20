@@ -152,3 +152,42 @@
 
 .xc-status__percent,
 .xc-status__time { font-variant-numeric: tabular-nums; }
+
+/* Zones tactiles — WButtonBrightness / WButtonNavig (touchZone.ts). Rien de visible en
+   rendu normal : le fond opaque venant de _bg est déjà neutralisé en amont, côté
+   canvas.ts (voir registry.ts/registerTransparent) — ici, on s'assure seulement de ne
+   RIEN ajouter par nous-mêmes (pas de background, pas de border) qui masquerait la carte
+   dessous. Un contour en pointillés et l'étiquette n'apparaissent qu'au survol. */
+.xc-touch {
+  position: relative;
+  cursor: pointer;
+}
+
+.xc-touch__label {
+  display: none;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 90%;
+  padding: 0.25em 0.6em;
+  font-size: 0.75em;
+  font-weight: 600;
+  color: var(--xc-ink);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--xc-line);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+/* Contour en pointillés, pas un cadre plein : discret, et seulement au survol. */
+.xc-touch:hover {
+  outline: 1px dashed var(--xc-line);
+  outline-offset: -1px;
+}
+
+.xc-touch:hover .xc-touch__label {
+  display: block;
+}

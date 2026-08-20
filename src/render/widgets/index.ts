@@ -1,6 +1,7 @@
-import { register } from '../registry'
+import { register, registerTransparent } from '../registry'
 import { drawNumeric } from './numeric'
 import { drawStatusLine } from './statusLine'
+import { drawTouchZone } from './touchZone'
 
 /**
  * Les 23 types « titre + valeur + unité » du corpus (voir `numeric.ts`). Une boucle
@@ -38,3 +39,10 @@ for (const shortName of NUMERIC_TYPES) {
 }
 
 register('WStatusLine', drawStatusLine)
+
+// Zones tactiles sans rendu visible (rendu-observe.md, « Widgets sans rendu visible ») :
+// dessin dédié ET transparence forcée, quelles que soient _bg/_border dans le fichier.
+for (const shortName of ['WButtonBrightness', 'WButtonNavig']) {
+  register(shortName, drawTouchZone)
+  registerTransparent(shortName)
+}

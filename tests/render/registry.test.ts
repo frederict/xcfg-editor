@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { drawWidget, register } from '../../src/render/registry'
+import { drawWidget, isTransparent, register, registerTransparent } from '../../src/render/registry'
 import type { RenderSettings } from '../../src/model/preferences'
 import type { Widget } from '../../src/model/widget'
 
@@ -39,5 +39,18 @@ describe('annuaire', () => {
       return el
     })
     expect(drawWidget(widget('WEssai'), settings, language).textContent).toBe('dessin sur mesure')
+  })
+})
+
+describe('transparence', () => {
+  it('un type non enregistré n’est pas transparent', () => {
+    expect(isTransparent('WQuelqueChoseDeNouveau')).toBe(false)
+  })
+
+  it('un type enregistré via registerTransparent devient transparent', () => {
+    registerTransparent('WEssaiTactile')
+    expect(isTransparent('WEssaiTactile')).toBe(true)
+    // Les autres types ne sont pas affectés.
+    expect(isTransparent('WAltitude')).toBe(false)
   })
 })
