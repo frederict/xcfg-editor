@@ -217,6 +217,24 @@ export function buildOverview(
 
 /* -------------------------------------------------------------------- vue détaillée */
 
+/**
+ * Ce que le mode édition ajoute à la vue détaillée. Les trois éléments sont **construits
+ * ailleurs** (`main.ts`, qui seul connaît l'historique et la sélection) : cette couche ne
+ * fait que leur donner leur place. Absent, la vue est exactement celle du jalon 1.
+ */
+export interface DetailEditing {
+  /**
+   * Le calque d'édition (`ui/editor.ts`). Il se pose DANS `.plate`, et il **remplace**
+   * les `.hotspot` de la consultation — deux couches de zones cliquables superposées se
+   * voleraient le pointeur.
+   */
+  layer: HTMLElement
+  /** Le panneau de propriétés du widget sélectionné, à droite de la page. */
+  panel: HTMLElement
+  /** La barre contextuelle d'édition : grille, sélection courante, rappels de clavier. */
+  bar: HTMLElement
+}
+
 export interface DetailOptions {
   page: Page
   /** Rang de la page dans son orientation, à partir de 0. */
@@ -228,6 +246,8 @@ export interface DetailOptions {
   onBack: () => void
   onGo: (index: number) => void
   onZoom: (zoom: number) => void
+  /** Défini uniquement en mode édition. */
+  editing?: DetailEditing
 }
 
 const ZOOM_MIN = 0.4
@@ -259,7 +279,7 @@ function scaleRuler(widthMm: number): HTMLElement {
  * de l'utilisateur, d'où le facteur de zoom — et la règle graduée pour le régler.
  */
 export function buildDetail(options: DetailOptions): HTMLElement {
-  const { page, index, pageCount, orientation, ctx, zoom } = options
+  const { page, index, pageCount, orientation, ctx, zoom, editing } = options
   const kind = pageKind(page.className)
   const screenSize = physicalSize(ctx.device, orientation)
 
@@ -292,6 +312,7 @@ export function buildDetail(options: DetailOptions): HTMLElement {
 
   bar.append(back, identity, steps)
   root.append(bar)
+  if (editing) root.append(editing.bar)
 
   /* --- ce que la page implique --- */
   const facts = el('p', 'detail__facts')
@@ -333,28 +354,32 @@ export function buildDetail(options: DetailOptions): HTMLElement {
 
   // Même ordre que le dessin : le dernier widget est au-dessus, et sa zone de survol
   // aussi — l'empilement naturel du DOM suffit, comme dans `renderPage`.
-  page.widgets.forEach((widget, position) => {
-    const size = widgetSizeMm(widget, ctx.device, orientation)
-    const hotspot = el('button', 'hotspot')
-    hotspot.type = 'button'
-    hotspot.style.left = `${widget.x1 / 100}%`
-    hotspot.style.top = `${widget.y1 / 100}%`
-    hotspot.style.width = `${(widget.x2 - widget.x1) / 100}%`
-    hotspot.style.height = `${(widget.y2 - widget.y1) / 100}%`
-    hotspot.setAttribute(
-      'aria-label',
-      `${readableName(widget.shortName, ctx.language)}, ` +
-      `${formatMm(size.widthMm)} sur ${formatMm(size.heightMm)} millimètres`
-    )
-    hotspot.addEventListener('pointerenter', () => describe(widget))
-    hotspot.addEventListener('focus', () => describe(widget))
-    hotspot.addEventListener('blur', () => describe(undefined))
-    hotspot.dataset.position = String(position)
-    hotspots.append(hotspot)
-  })
-  hotspots.addEventListener('pointerleave', () => describe(undefined))
+  // En édition, le calque remplace les zones de survol : c'est lui qui décide, en
+  // coordonnées de page et non par empilement du DOM, de ce qui se trouve sous le curseur.
+  if (!editing) {
+    page.widgets.forEach((widget, position) => {
+      const size = widgetSizeMm(widget, ctx.device, orientation)
+      const hotspot = el('button', 'hotspot')
+      hotspot.type = 'button'
+      hotspot.style.left = `${widget.x1 / 100}%`
+      hotspot.style.top = `${widget.y1 / 100}%`
+      hotspot.style.width = `${(widget.x2 - widget.x1) / 100}%`
+      hotspot.style.height = `${(widget.y2 - widget.y1) / 100}%`
+      hotspot.setAttribute(
+        'aria-label',
+        `${readableName(widget.shortName, ctx.language)}, ` +
+        `${formatMm(size.widthMm)} sur ${formatMm(size.heightMm)} millimètres`
+      )
+      hotspot.addEventListener('pointerenter', () => describe(widget))
+      hotspot.addEventListener('focus', () => describe(widget))
+      hotspot.addEventListener('blur', () => describe(undefined))
+      hotspot.dataset.position = String(position)
+      hotspots.append(hotspot)
+    })
+    hotspots.addEventListener('pointerleave', () => describe(undefined))
+  }
 
-  plate.append(hotspots)
+  plate.append(editing ? editing.layer : hotspots)
   stage.append(scaleRuler(screenSize.widthMm), plate)
 
   /* --- zoom --- */
@@ -390,6 +415,16 @@ export function buildDetail(options: DetailOptions): HTMLElement {
     'sur l’écran coïncide avec les graduations.'
   )
 
-  root.append(zoomBox, stage, readout, advice)
+  root.append(zoomBox)
+  if (editing) {
+    // La page et son panneau côte à côte : régler une option et voir la page changer
+    // sans quitter des yeux ni l'une ni l'autre.
+    const workspace = el('div', 'workspace')
+    workspace.append(stage, editing.panel)
+    root.append(workspace)
+  } else {
+    root.append(stage, readout)
+  }
+  root.append(advice)
   return root
 }

@@ -989,6 +989,110 @@ body.is-dragging .veil {
   color: var(--app-ink-soft);
 }
 
+/* --------------------------------------------------------------- mode édition */
+
+/*
+ * Le mode édition ne déplace rien de ce que la consultation avait posé : la page reste au
+ * même endroit, à la même échelle, sous le même zoom. Il ajoute une barre au-dessus et une
+ * colonne à droite — le pilote règle une option et voit la page changer sans quitter des
+ * yeux ni l'une ni l'autre.
+ */
+
+.editbar {
+  display: flex;
+  align-items: baseline;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+  margin-top: 0.9rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--app-line);
+  border-radius: 6px;
+  background: var(--app-panel);
+  font-size: 13px;
+}
+
+.editbar__badge {
+  flex: none;
+  padding: 0.05rem 0.45rem;
+  border-radius: 3px;
+  background: var(--app-ink);
+  color: var(--app-bg);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.editbar__selection { font-weight: 600; }
+
+.editbar__grid {
+  font-family: var(--font-data);
+  font-size: 12px;
+  color: var(--app-ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.editbar__hint {
+  flex: 1 1 20rem;
+  color: var(--app-ink-soft);
+  font-size: 12px;
+}
+
+.editnote {
+  margin: 1rem 0 1.6rem;
+  padding: 0.5rem 0.7rem;
+  border-left: 3px solid var(--app-line-strong);
+  color: var(--app-ink-soft);
+  font-size: 13px;
+}
+
+/* La page à gauche, ses réglages à droite. `minmax(0, 1fr)` et non `1fr` : sans quoi la
+   plaque, dont la largeur est fixée en millimètres, imposerait la sienne à la colonne et
+   pousserait le panneau hors de l'écran. */
+.workspace {
+  display: grid;
+  /* `auto` et non `1fr` : la plaque a une largeur fixée en millimètres, et le panneau doit
+     venir se coller contre elle. Une colonne élastique le repousserait au bord de l'écran,
+     à un mouvement d'yeux de la page qu'il règle. `minmax(0, …)` garde la faculté de
+     rétrécir : sur un écran étroit, c'est `.stage` qui défile. */
+  grid-template-columns: minmax(0, auto) minmax(17rem, 22rem);
+  justify-content: start;
+  gap: 1.4rem;
+  align-items: start;
+}
+
+/* La dernière graduation de la règle déborde de la plaque : sans cette marge, la colonne
+   s'arrêtant net au bord de la page, son intitulé serait tranché. */
+.workspace .stage { padding-right: 2.6rem; }
+
+@media (max-width: 1100px) {
+  .workspace { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Le panneau suit le défilement : sur une page de dix-sept widgets, la plaque est haute et
+   la liste des réglages ne doit pas disparaître en haut de l'écran. */
+.panel {
+  position: sticky;
+  /* Sous la barre de tête, elle-même collante. */
+  top: 4.2rem;
+  max-height: calc(100vh - 5.4rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@media (max-width: 1100px) {
+  .panel { position: static; max-height: none; }
+}
+
+.panel__hint {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border: 1px dashed var(--app-line-strong);
+  border-radius: 6px;
+  color: var(--app-ink-soft);
+  font-size: 13px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
