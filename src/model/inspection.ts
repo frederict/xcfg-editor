@@ -483,8 +483,29 @@ function eachPage(layout: Layout): PageContext[] {
 }
 
 /**
- * Règle 1 — **mesurée**, 6 constats sur les 105 widgets de la configuration réelle de
- * Fred, 0 ailleurs dans le corpus.
+ * Règle 1 — 6 constats sur les 105 widgets de la configuration réelle de Fred. Sur le
+ * corpus historique, 15 fichiers sur 16 en rendent exactement 4, toujours le même motif ;
+ * seul `2022-02-08.xcfg` (227 widgets, 11 pages) en rend 49, dont 32 `WButtonNavig`
+ * délibérément posés sous des cartes. Le taux global — 109 sur 1631 widgets — est donc
+ * porté par un seul fichier atypique, pas par un bruit de fond.
+ *
+ * **Ce qui est mesuré, et ce qui ne l'est pas.** Le recouvrement, lui, est un fait
+ * géométrique : aucun point de la surface n'échappe aux widgets placés après. Que cela
+ * rende le widget **insélectionnable en mode édition** est solide, dans notre éditeur
+ * comme sur l'appareil : `edition-native-exploration.md` § 2.3 relève que XCTrack résout
+ * un appui par « le widget le plus en avant l'emporte », règle que `widgetAtPoint`
+ * reproduit.
+ *
+ * **Ce qu'on ne sait pas, et qu'il ne faut donc pas dire** : comment XCTrack route un
+ * appui **en vol**. Une version antérieure de ce message affirmait « sur l'instrument,
+ * aucun point de sa surface ne répond au doigt » — c'est une affirmation sur le
+ * comportement en vol, et elle n'a jamais été observée. L'enjeu n'est pas théorique :
+ * `WButtonNavig` et `WButtonBrightness`, les deux types les plus souvent concernés,
+ * n'existent que pour être touchés en vol. Ou bien ils fonctionnent, et l'ancien message
+ * inquiétait pour rien ; ou bien ils ne fonctionnent pas, et c'est un vrai défaut de la
+ * configuration. **Le constat porte donc sur l'édition, et pose la question du vol** —
+ * d'où `certainty: 'hypothesis'` et un `toVerify`, le deuxième principe du projet
+ * interdisant d'affirmer un comportement de l'appareil qu'on n'a pas vu.
  */
 function unreachableWidgetFindings(input: InspectionInput): Finding[] {
   const findings: Finding[] = []
@@ -495,13 +516,18 @@ function unreachableWidgetFindings(input: InspectionInput): Finding[] {
       findings.push({
         ruleId: 'unreachable-widget',
         severity: 'likely-error',
-        certainty: 'measured',
+        certainty: 'hypothesis',
         location: { orientation, pageRank, widgetRank: rank },
         message:
-          `« ${name} » est entièrement recouvert par des widgets placés après lui : sur ` +
-          'l’instrument, aucun point de sa surface ne répond au doigt. Il peut rester ' +
-          'parfaitement visible — un widget qui ne peint rien vole les appuis tout autant ' +
-          'qu’un widget opaque. Pour le régler, passez par la liste des widgets de la page.'
+          `« ${name} » est entièrement recouvert par des widgets placés après lui. Aucun ` +
+          'clic ne peut donc l’atteindre, ni ici ni dans l’écran d’édition de XCTrack, qui ' +
+          'donne lui aussi la main au widget le plus en avant. Il peut rester parfaitement ' +
+          'visible — un widget qui ne peint rien vole les appuis tout autant qu’un widget ' +
+          'opaque. Pour le régler, passez par la liste des widgets de la page.',
+        toVerify:
+          'Ce qu’il advient de ce widget **en vol** n’a pas été observé : XCTrack route ' +
+          'peut-être l’appui autrement qu’en édition. La question compte surtout pour les ' +
+          'boutons d’action, qui n’existent que pour être touchés en vol.'
       })
     }
   }

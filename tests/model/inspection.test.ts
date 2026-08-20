@@ -234,7 +234,12 @@ describe('règle 1 — widget inatteignable au clic', () => {
     ]), 'unreachable-widget')
     expect(locations(findings)).toEqual(['Paysage, page 1, widget 1'])
     expect(findings[0]!.severity).toBe('likely-error')
-    expect(findings[0]!.certainty).toBe('measured')
+    // Le recouvrement est un fait géométrique, et l'insélectionnabilité en édition est
+    // solide des deux côtés (`edition-native-exploration.md` § 2.3). Mais le routage d'un
+    // appui EN VOL n'a jamais été observé, et ce sont surtout des boutons d'action qui
+    // tombent sous cette règle : le constat pose donc la question au lieu de trancher.
+    expect(findings[0]!.certainty).toBe('hypothesis')
+    expect(findings[0]!.toVerify).toMatch(/en vol/)
   })
 
   it('ne signale rien si les deux couvrants laissent un interstice d’une unité', () => {
