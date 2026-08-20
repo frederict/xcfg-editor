@@ -81,15 +81,27 @@ let panelHost: HTMLElement | undefined
 let selectionLabel: HTMLElement | undefined
 
 /**
- * La palette d'ajout est un tiroir de la colonne de droite, ouvert par la barre d'édition.
- * Son état — ouverte, et le filtre saisi — vit ici et non dans le module : la vue est
- * reconstruite à chaque annulation et à chaque changement de page, et un pilote qui vient
- * de taper « bouss » pour poser trois boussoles ne doit pas le retaper trois fois.
+ * La palette d'ajout s'ouvre en boîte modale, comme la gestion des pages : on l'ouvre, on
+ * choisit, elle se ferme. Poser un gadget est un geste ponctuel — le laisser en permanence
+ * à l'écran prendrait de la largeur à la page, qui est le seul objet à taille réelle.
+ *
+ * Le filtre saisi vit ici et non dans le module : la boîte est reconstruite à chaque
+ * annulation et à chaque changement de page, et un pilote qui vient de taper « bouss »
+ * pour poser trois boussoles ne doit pas le retaper trois fois.
  */
-let paletteOpen = false
 let paletteQuery = ''
-let paletteHost: HTMLElement | undefined
-let paletteToggle: HTMLButtonElement | undefined
+
+/**
+ * Le bandeau de réglages, replié ou déployé. L'état survit à la sélection suivante et à la
+ * reconstruction de la vue : un pilote qui déplace dix widgets à la suite l'a replié une
+ * fois, pas dix. Il vit donc ici, hors de tout ce que `render()` renouvelle.
+ */
+let dockCollapsed = false
+let dockElement: HTMLElement | undefined
+let dockTitle: HTMLElement | undefined
+let dockClass: HTMLElement | undefined
+let dockCount: HTMLElement | undefined
+let dockToggle: HTMLButtonElement | undefined
 
 /**
  * La dernière annonce du carrousel. Le module la pose dans sa propre zone, que la
@@ -321,9 +333,9 @@ function isTyping(target: EventTarget | null): boolean {
   return target instanceof HTMLInputElement && TYPING_TYPES.includes(target.type)
 }
 
-/** Vrai si la frappe est destinée au calque ou au panneau : la vue n'y touche pas. */
+/** Vrai si la frappe est destinée au calque ou au bandeau : la vue n'y touche pas. */
 function insideEditor(target: EventTarget | null): boolean {
-  return target instanceof Element && target.closest('.editor, .panel') !== null
+  return target instanceof Element && target.closest('.editor, .dock') !== null
 }
 
 /**
@@ -628,36 +640,54 @@ function addWidgetFromPalette(node: JsonNode, description: string): void {
   syncEditControls()
 }
 
-/** Reconstruit le tiroir de la palette depuis l'état courant — jamais depuis un nœud retenu. */
-function refreshPalette(): void {
-  const host = paletteHost
-  if (!host || !session || view.kind !== 'detail') return
+/* ------------------------------------------------------- palette d'ajout, en modale */
 
-  if (paletteToggle) {
-    paletteToggle.textContent = paletteOpen ? 'Fermer la palette' : 'Ajouter un gadget'
-    paletteToggle.setAttribute('aria-expanded', String(paletteOpen))
-  }
+let paletteDialog: HTMLDialogElement | undefined
 
-  host.textContent = ''
-  if (!paletteOpen) return
+/**
+ * La palette, dans une boîte modale ouverte par la barre d'édition. Rien ne partage la
+ * largeur avec la page : à fort zoom, une liste de 84 types tenue en permanence sur le
+ * côté mordrait sur le seul objet dessiné à sa taille réelle.
+ *
+ * La boîte est **remplie depuis l'état courant** à chaque ouverture et à chaque
+ * reconstruction de la vue : les modèles à dupliquer viennent de la mise en page vivante,
+ * qu'une annulation renouvelle entièrement.
+ */
+function fillPaletteDialog(dialog: HTMLDialogElement): void {
+  if (!session || view.kind !== 'detail') return
+  dialog.textContent = ''
+
+  const box = el('div', 'modal__box')
+  const head = el('div', 'modal__head')
+  head.append(el('h2', 'modal__title', 'Ajouter un gadget'))
+  const close = el('button', 'btn', 'Fermer')
+  close.type = 'button'
+  close.addEventListener('click', () => closePaletteDialog())
+  head.append(close)
+  box.append(head)
 
   const page = currentPage()
-  if (page === undefined) return
+  if (page === undefined) {
+    dialog.append(box)
+    return
+  }
+
   if (!acceptsWidgets(page)) {
-    host.append(el(
-      'p', 'panel__hint',
+    box.append(el(
+      'p', 'hint-note',
       'Cette page ne décrit aucun tableau de widgets : rien ne peut y être ajouté sans ' +
       'inventer une clé que le fichier n’a pas.'
     ))
+    dialog.append(box)
     return
   }
 
   const module = paletteModule
   if (module === undefined) {
-    host.append(el('p', 'panel__hint', 'Chargement de la palette…'))
-    // Le tiroir a changé : la vue a été reconstruite entre-temps et s'est rafraîchie de
-    // son côté. Ce résultat-ci est périmé.
-    void loadPalette().then(() => { if (paletteHost === host) refreshPalette() })
+    box.append(el('p', 'hint-note', 'Chargement de la palette…'))
+    dialog.append(box)
+    // La boîte a pu être fermée ou refaite entre-temps : ce résultat-ci serait périmé.
+    void loadPalette().then(() => { if (paletteDialog === dialog) fillPaletteDialog(dialog) })
     return
   }
 
@@ -666,7 +696,12 @@ function refreshPalette(): void {
     device: session.device,
     orientation: view.orientation,
     language: session.language,
-    onChoose: (node, description) => addWidgetFromPalette(node, description)
+    // On ouvre, on choisit, elle se ferme : le widget posé est sélectionné, et ses
+    // réglages apparaissent dans le bandeau du bas sans un clic de plus.
+    onChoose: (node, description) => {
+      closePaletteDialog()
+      addWidgetFromPalette(node, description)
+    }
   })
 
   const search = palette.element.querySelector('.palette__search')
@@ -675,26 +710,87 @@ function refreshPalette(): void {
     if (paletteQuery !== '') palette.filter(paletteQuery)
     search.addEventListener('input', () => { paletteQuery = search.value })
   }
-  host.append(palette.element)
+  box.append(palette.element)
+  dialog.append(box)
+
+  // La boîte était déjà ouverte : ce remplissage-ci vient du module arrivé après coup, ou
+  // d'une vue reconstruite sous elle. Le focus est parti avec le contenu remplacé, on le
+  // rend au champ de recherche — là où le pilote tapait. À la première ouverture, la boîte
+  // n'est pas encore affichée : c'est `openPaletteDialog` qui s'en charge.
+  if (dialog.open && search instanceof HTMLInputElement) search.focus()
 }
 
-/** Reconstruit le panneau depuis le rang sélectionné — jamais depuis un nœud retenu. */
+function syncPaletteDialog(): void {
+  if (!paletteDialog) return
+  if (!session || session.container.parseError !== undefined || view.kind !== 'detail') {
+    closePaletteDialog()
+    return
+  }
+  fillPaletteDialog(paletteDialog)
+}
+
+function closePaletteDialog(): void {
+  const dialog = paletteDialog
+  paletteDialog = undefined
+  if (!dialog) return
+  dialog.close()
+  dialog.remove()
+}
+
+function openPaletteDialog(): void {
+  if (!session || paletteDialog !== undefined) return
+  flushRecord()
+  const dialog = el('dialog', 'modal modal--palette')
+  dialog.setAttribute('aria-label', 'Ajouter un gadget')
+  // Échap ferme la boîte native : rien n'est ajouté, le document reste tel qu'il est.
+  dialog.addEventListener('cancel', () => {
+    paletteDialog = undefined
+    dialog.remove()
+  })
+  paletteDialog = dialog
+  fillPaletteDialog(dialog)
+  document.body.append(dialog)
+  dialog.showModal()
+  const search = dialog.querySelector('.palette__search')
+  if (search instanceof HTMLInputElement) search.focus()
+}
+
+/**
+ * Le bandeau, replié ou déployé. Replié, il ne laisse que sa barre de tête : le nom du
+ * widget sélectionné et le bouton pour la rouvrir — de quoi savoir sur quoi on agit sans
+ * rien prendre à la page.
+ */
+function syncDock(): void {
+  if (!dockElement || !dockToggle || !panelHost) return
+  dockElement.classList.toggle('dock--collapsed', dockCollapsed)
+  dockToggle.textContent = dockCollapsed ? 'Déplier les réglages' : 'Replier'
+  dockToggle.setAttribute('aria-expanded', String(!dockCollapsed))
+  panelHost.hidden = dockCollapsed
+}
+
+/** Reconstruit le bandeau depuis le rang sélectionné — jamais depuis un nœud retenu. */
 function refreshPanel(): void {
   if (!panelHost || !session) return
   const page = currentPage()
   const widget = selection === undefined ? undefined : page?.widgets[selection]
+  const name = widget === undefined ? undefined : readableName(widget.shortName, session.language)
 
   if (selectionLabel) {
     selectionLabel.textContent = widget === undefined
       ? 'Aucun widget sélectionné'
-      : `${readableName(widget.shortName, session.language)} — rang ${(selection ?? 0) + 1} ` +
-        `sur ${page?.widgets.length ?? 0}`
+      : `${name} — rang ${(selection ?? 0) + 1} sur ${page?.widgets.length ?? 0}`
   }
+
+  // La barre de tête du bandeau redit ces trois faits : elle reste visible une fois le
+  // bandeau replié, où le panneau lui-même a disparu.
+  if (dockTitle) dockTitle.textContent = name ?? 'Aucun widget sélectionné'
+  if (dockClass) dockClass.textContent = widget?.shortName ?? ''
+  if (dockCount) dockCount.textContent = ''
 
   panelHost.textContent = ''
   if (widget === undefined) {
     panelHost.append(el(
-      'p', 'panel__hint',
+      'p', 'hint-note',
       'Cliquez un widget sur la page : ses réglages apparaissent ici, dans l’ordre où ' +
       'l’instrument les présente.'
     ))
@@ -704,7 +800,7 @@ function refreshPanel(): void {
   const module = propertiesModule
   if (module === undefined) {
     const host = panelHost
-    host.append(el('p', 'panel__hint', 'Chargement des réglages…'))
+    host.append(el('p', 'hint-note', 'Chargement des réglages…'))
     // `panelHost` a changé : la vue a été reconstruite entre-temps, et elle a rappelé
     // `refreshPanel` de son côté. Ce résultat-ci est périmé.
     void loadProperties().then(() => { if (panelHost === host) refreshPanel() })
@@ -712,10 +808,47 @@ function refreshPanel(): void {
   }
 
   const form = module.buildPropertyForm(widget, session.language)
+  if (dockCount) {
+    const total = form.fields.length
+    dockCount.textContent = `${total} réglage${total > 1 ? 's' : ''}`
+  }
   panelHost.append(module.renderProperties({
     form,
     onChange: (field) => onPropertyChange(field, widget)
   }).element)
+}
+
+/**
+ * Le bandeau de réglages, sous la page et collant en bas de fenêtre. La barre de tête dit
+ * ce qui est réglé ; le corps porte le panneau de `properties.ts` tel quel — c'est le CSS
+ * de l'enveloppe qui étale sa liste verticale en colonnes, le module n'en sait rien.
+ */
+function buildDock(): HTMLElement {
+  const dock = el('section', 'dock')
+  dock.setAttribute('aria-label', 'Réglages du widget sélectionné')
+  // Fin de glissé d'un curseur, sortie d'un champ : le pas en attente est clos ici
+  // plutôt qu'au bout du délai.
+  dock.addEventListener('change', () => flushRecord())
+
+  const head = el('div', 'dock__head')
+  dockTitle = el('h2', 'dock__title', 'Aucun widget sélectionné')
+  dockClass = el('span', 'dock__class')
+  dockCount = el('span', 'dock__count')
+  dockToggle = el('button', 'btn dock__toggle', 'Replier')
+  dockToggle.type = 'button'
+  dockToggle.addEventListener('click', () => {
+    dockCollapsed = !dockCollapsed
+    syncDock()
+  })
+  head.append(dockTitle, dockClass, dockCount, dockToggle)
+
+  panelHost = el('div', 'dock__body')
+  panelHost.id = 'dock-body'
+  dockToggle.setAttribute('aria-controls', panelHost.id)
+
+  dock.append(head, panelHost)
+  dockElement = dock
+  return dock
 }
 
 function buildEditing(current: Session, page: Page, orientation: Orientation): DetailEditing {
@@ -727,18 +860,14 @@ function buildEditing(current: Session, page: Page, orientation: Orientation): D
   // Les deux commandes qui ne portent pas sur le widget sélectionné : ce qu'on ajoute à
   // la page, et les pages elles-mêmes. Elles sont à part du reste de la barre, qui décrit.
   const barActions = el('div', 'editbar__actions')
-  paletteToggle = el('button', 'btn', 'Ajouter un gadget')
-  paletteToggle.type = 'button'
-  paletteToggle.setAttribute('aria-expanded', String(paletteOpen))
-  // `refreshPalette` charge le module au besoin et se rappelle lui-même quand il arrive.
-  paletteToggle.addEventListener('click', () => {
-    paletteOpen = !paletteOpen
-    refreshPalette()
-  })
+  const paletteButton = el('button', 'btn', 'Ajouter un gadget')
+  paletteButton.type = 'button'
+  // La boîte charge le module au besoin et se remplit elle-même quand il arrive.
+  paletteButton.addEventListener('click', () => openPaletteDialog())
   const pagesButton = el('button', 'btn', 'Gérer les pages')
   pagesButton.type = 'button'
   pagesButton.addEventListener('click', () => openPagesDialog())
-  barActions.append(paletteToggle, pagesButton)
+  barActions.append(paletteButton, pagesButton)
 
   editBar.append(
     el('span', 'editbar__badge', 'Édition'),
@@ -755,18 +884,7 @@ function buildEditing(current: Session, page: Page, orientation: Orientation): D
     )
   )
 
-  const host = el('aside', 'panel')
-  host.setAttribute('aria-label', 'Ajout d’un gadget et réglages du widget sélectionné')
-  // Fin de glissé d'un curseur, sortie d'un champ : le pas en attente est clos ici
-  // plutôt qu'au bout du délai.
-  host.addEventListener('change', () => flushRecord())
-
-  // Deux tiroirs dans la même colonne : la palette au-dessus quand elle est ouverte, les
-  // réglages en dessous. Le widget qu'on vient de poser est sélectionné : ses réglages
-  // sont déjà là, sous la liste, sans avoir à fermer quoi que ce soit.
-  paletteHost = el('div', 'panel__palette')
-  panelHost = el('div', 'panel__props')
-  host.append(paletteHost, panelHost)
+  const dock = buildDock()
 
   editor = createEditor({
     page,
@@ -792,9 +910,9 @@ function buildEditing(current: Session, page: Page, orientation: Orientation): D
   if (selection !== undefined && selection >= page.widgets.length) selection = undefined
   if (selection !== undefined) editor.select(selection)
   refreshPanel()
-  refreshPalette()
+  syncDock()
 
-  return { layer: editor.element, panel: host, bar: editBar }
+  return { layer: editor.element, dock, bar: editBar }
 }
 
 /* ------------------------------------------------------------- gestion des pages */
@@ -979,9 +1097,12 @@ function render(): void {
   editor?.destroy()
   editor = undefined
   panelHost = undefined
-  paletteHost = undefined
-  paletteToggle = undefined
   selectionLabel = undefined
+  dockElement = undefined
+  dockTitle = undefined
+  dockClass = undefined
+  dockCount = undefined
+  dockToggle = undefined
 
   // La mise en page se relit à chaque dessin depuis le document courant. Après une
   // annulation, ce document est un arbre neuf : rien de ce qui a été lu avant lui ne
@@ -994,8 +1115,13 @@ function render(): void {
   // relue : après une annulation, il montre les pages de l'arbre neuf, pas celles de
   // l'arbre disparu.
   syncPagesDialog()
+  syncPaletteDialog()
 
   content.textContent = ''
+  // La page est le seul objet dessiné à sa taille réelle : en édition, le cadre s'élargit
+  // pour elle. Remis à faux ici, il n'est rétabli que par la branche qui construit
+  // effectivement une page en édition.
+  content.classList.remove('content--wide')
   exportButton.hidden = session === undefined
   tools.hidden = session === undefined || session.container.parseError !== undefined
   fileName.textContent = session?.container.fileName ?? ''
@@ -1039,6 +1165,7 @@ function render(): void {
       // Le calque et le panneau ne sont construits qu'en édition : en consultation, la
       // vue détaillée reste celle du jalon 1, zones de survol comprises.
       const editing = editMode ? buildEditing(session, page, orientation) : undefined
+      if (editing) content.classList.add('content--wide')
       content.append(buildDetail({
         page,
         index: view.index,
@@ -1126,7 +1253,7 @@ async function load(file: File): Promise<void> {
   selection = undefined
   // Le carrousel et la palette parlaient du fichier précédent.
   closePagesDialog()
-  paletteOpen = false
+  closePaletteDialog()
   paletteQuery = ''
   try {
     const container = await openContainer(new Uint8Array(await file.arrayBuffer()), file.name)
@@ -1344,9 +1471,9 @@ window.addEventListener('keydown', (event) => {
 window.addEventListener('keydown', (event) => {
   const current = view
   if (current.kind !== 'detail') return
-  // Le carrousel est ouvert par-dessus : Échap le ferme, les flèches appartiennent à ses
-  // commandes. Rien de tout cela ne doit changer la page qui se trouve derrière.
-  if (pagesDialog !== undefined) return
+  // Une boîte modale est ouverte par-dessus : Échap la ferme, les flèches appartiennent à
+  // ses commandes. Rien de tout cela ne doit changer la page qui se trouve derrière.
+  if (pagesDialog !== undefined || paletteDialog !== undefined) return
   // Les flèches appartiennent au curseur de zoom quand il a le focus.
   if (event.target instanceof HTMLInputElement) return
   // En édition, flèches et Échap appartiennent au calque et au panneau : déplacer un

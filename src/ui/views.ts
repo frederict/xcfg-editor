@@ -229,8 +229,12 @@ export interface DetailEditing {
    * voleraient le pointeur.
    */
   layer: HTMLElement
-  /** Le panneau de propriétés du widget sélectionné, à droite de la page. */
-  panel: HTMLElement
+  /**
+   * Le bandeau de réglages du widget sélectionné, **sous** la page et collant en bas de
+   * fenêtre. Rien ne partage la largeur avec la page : à fort zoom, une colonne latérale
+   * mordrait sur le seul objet qui compte — la page dessinée à sa taille réelle.
+   */
+  dock: HTMLElement
   /** La barre contextuelle d'édition : grille, sélection courante, rappels de clavier. */
   bar: HTMLElement
 }
@@ -284,6 +288,9 @@ export function buildDetail(options: DetailOptions): HTMLElement {
   const screenSize = physicalSize(ctx.device, orientation)
 
   const root = el('div', 'detail')
+  // Le mode édition élargit le cadre : c'est la seule différence de gabarit entre les deux
+  // modes, et elle profite à la page, jamais à autre chose.
+  if (editing) root.classList.add('detail--editing')
 
   /* --- barre de navigation --- */
   const bar = el('div', 'detail__bar')
@@ -419,15 +426,17 @@ export function buildDetail(options: DetailOptions): HTMLElement {
   )
 
   root.append(zoomBox)
-  if (editing) {
-    // La page et son panneau côte à côte : régler une option et voir la page changer
-    // sans quitter des yeux ni l'une ni l'autre.
-    const workspace = el('div', 'workspace')
-    workspace.append(stage, editing.panel)
-    root.append(workspace)
-  } else {
-    root.append(stage, readout)
-  }
+  // La page occupe toute la largeur, en édition comme en consultation : elle déborde en
+  // défilement horizontal dans `.stage` dès que le zoom la fait dépasser la fenêtre, et la
+  // règle graduée, posée dans le même conteneur, défile avec elle.
+  root.append(stage)
+  // Le survol décrit ce qui est sous le curseur ; en édition, c'est la barre d'édition et
+  // le bandeau qui disent la sélection, et deux relevés concurrents se contrediraient.
+  if (!editing) root.append(readout)
   root.append(advice)
+  // Le bandeau vient en dernier : dernier enfant d'un conteneur plus haut que la fenêtre,
+  // `position: sticky; bottom: 0` le maintient au bas de l'écran tant que la page défile,
+  // puis le laisse se poser à sa place à la fin du défilement.
+  if (editing) root.append(editing.dock)
   return root
 }

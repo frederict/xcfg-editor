@@ -1070,8 +1070,8 @@ body.is-dragging .veil {
 
 /*
  * Le mode édition ne déplace rien de ce que la consultation avait posé : la page reste au
- * même endroit, à la même échelle, sous le même zoom. Il ajoute une barre au-dessus et une
- * colonne à droite — le pilote règle une option et voit la page changer sans quitter des
+ * même endroit, à la même échelle, sous le même zoom. Il ajoute une barre au-dessus et un
+ * bandeau en dessous — le pilote règle une option et voit la page changer sans quitter des
  * yeux ni l'une ni l'autre.
  */
 
@@ -1123,45 +1123,120 @@ body.is-dragging .veil {
   font-size: 13px;
 }
 
-/* La page à gauche, ses réglages à droite. `minmax(0, 1fr)` et non `1fr` : sans quoi la
-   plaque, dont la largeur est fixée en millimètres, imposerait la sienne à la colonne et
-   pousserait le panneau hors de l'écran. */
-.workspace {
-  display: grid;
-  /* `auto` et non `1fr` : la plaque a une largeur fixée en millimètres, et le panneau doit
-     venir se coller contre elle. Une colonne élastique le repousserait au bord de l'écran,
-     à un mouvement d'yeux de la page qu'il règle. `minmax(0, …)` garde la faculté de
-     rétrécir : sur un écran étroit, c'est `.stage` qui défile. */
-  grid-template-columns: minmax(0, auto) minmax(17rem, 22rem);
-  justify-content: start;
-  gap: 1.4rem;
-  align-items: start;
-}
+/*
+ * RIEN NE PARTAGE LA LARGEUR AVEC LA PAGE.
+ *
+ * L'éditeur dessine la page à sa taille physique réelle — c'est la fonction de la règle
+ * graduée et du curseur de zoom. La page de l'AIR³ 7.2 fait déjà 1280 × 720 px à 100 %, et
+ * le pilote calibre presque toujours au-delà : une colonne latérale ne prendrait pas de la
+ * place en trop, elle mordrait sur le seul objet qui compte. Ce qui n'est pas la page passe
+ * donc au-dessus (la barre d'édition) ou en dessous (le bandeau de réglages).
+ *
+ * Le cadre s'élargit en édition, au seul profit de la page : au-delà, `.stage` défile
+ * horizontalement, la règle graduée étant dans le même conteneur qu'elle et défilant avec.
+ */
+.content--wide { max-width: 1680px; }
 
-/* La dernière graduation de la règle déborde de la plaque : sans cette marge, la colonne
-   s'arrêtant net au bord de la page, son intitulé serait tranché. */
-.workspace .stage { padding-right: 2.6rem; }
+/* La dernière graduation de la règle déborde de la plaque : sans cette marge, le conteneur
+   s'arrêtant net au bord de la page, son intitulé serait tranché en fin de défilement. */
+.detail--editing .stage { padding-right: 2.6rem; }
 
-@media (max-width: 1100px) {
-  .workspace { grid-template-columns: minmax(0, 1fr); }
-}
-
-/* Le panneau suit le défilement : sur une page de dix-sept widgets, la plaque est haute et
-   la liste des réglages ne doit pas disparaître en haut de l'écran. */
-.panel {
+/*
+ * Le bandeau de réglages : collant au bas de la fenêtre. À fort zoom la page dépasse la
+ * hauteur de l'écran, et les réglages doivent rester atteignables sans faire défiler
+ * jusqu'en bas. Dernier enfant d'un conteneur bien plus haut que la fenêtre, il s'y colle
+ * pendant tout le défilement, puis se pose à sa place à la fin — sans jamais recouvrir
+ * quoi que ce soit, puisqu'il garde sa place dans le flux.
+ */
+.dock {
   position: sticky;
-  /* Sous la barre de tête, elle-même collante. */
-  top: 4.2rem;
-  max-height: calc(100vh - 5.4rem);
+  bottom: 0;
+  /* Au-dessus de la plaque et de ses marques d'édition, sous la barre de tête (20). */
+  z-index: 15;
+  margin-top: 1.2rem;
+  border: 1px solid var(--app-line-strong);
+  border-radius: 6px 6px 0 0;
+  background: var(--app-panel);
+  box-shadow: 0 -8px 20px rgb(0 0 0 / 0.14);
+}
+
+.dock__head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  padding: 0.45rem 0.9rem;
+  border-bottom: 1px solid var(--app-line);
+}
+
+/* Replié, le bandeau n'est plus qu'une barre fine : le nom de ce qu'on règle, et de quoi
+   la rouvrir. Le trait de séparation n'a alors plus rien à séparer. */
+.dock--collapsed .dock__head { border-bottom: 0; }
+
+.dock__title { margin: 0; font-size: 14px; font-weight: 600; }
+
+.dock__class,
+.dock__count {
+  font-family: var(--font-data);
+  font-size: 11px;
+  color: var(--app-ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.dock__toggle { margin-left: auto; flex: none; }
+
+/*
+ * Hauteur bornée, défilement interne au-delà : le bandeau ne doit jamais manger la moitié
+ * de l'écran, même pour les 63 réglages d'une carte. La glissière est ici, sur une simple
+ * boîte — jamais sur le conteneur multi-colonnes, qui à hauteur fixée fabriquerait des
+ * colonnes supplémentaires et déborderait en largeur au lieu de défiler en hauteur.
+ */
+.dock__body {
+  max-height: min(38vh, 23rem);
   overflow-y: auto;
   overscroll-behavior: contain;
+  padding: 0.6rem 0.9rem 0.8rem;
 }
 
-@media (max-width: 1100px) {
-  .panel { position: static; max-height: none; }
+/* Le panneau de `properties.ts` entre ici tel quel : son propre cadre ferait une boîte
+   dans une boîte. */
+.dock .props {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  gap: 0.5rem;
 }
 
-.panel__hint {
+/* Le module pose un en-tête — nom du widget, nombre de réglages, classe. La barre de tête
+   du bandeau dit déjà les trois, et elle survit au repli : le redire ici ferait doublon. */
+.dock .props__head { display: none; }
+
+.dock .props__filter { align-self: start; width: min(22rem, 100%); }
+
+/*
+ * Les réglages s'étalent en colonnes sur toute la largeur. `properties.ts` produit une
+ * liste verticale et continue de le faire : la mise en colonnes est celle de l'enveloppe,
+ * et le module n'en sait rien. La largeur de colonne commande leur nombre, qui s'adapte
+ * donc à la fenêtre sans qu'aucune valeur ne soit à tenir à jour.
+ */
+.dock .props__list {
+  display: block;
+  column-width: 22rem;
+  column-gap: 2rem;
+}
+
+/* Une ligne coupée en deux entre le bas d'une colonne et le haut de la suivante serait
+   illisible : son intitulé d'un côté, son contrôle de l'autre. */
+.dock .props__row { break-inside: avoid; }
+
+/* Le trait qui ferme le bloc universel de tête traverse toutes les colonnes : c'est une
+   frontière dans l'ordre des réglages, pas une décoration de colonne. */
+.dock .props__rule { column-span: all; }
+
+/* Une phrase encadrée à la place d'un contenu absent : rien de sélectionné, module encore
+   en vol. Partagée par le bandeau et la boîte de la palette. */
+.hint-note {
   margin: 0;
   padding: 0.9rem 1rem;
   border: 1px dashed var(--app-line-strong);
@@ -1582,11 +1657,11 @@ body.is-dragging .veil {
 /* ------------------------------------------- assemblage : palette et carrousel */
 
 /*
- * Les deux modules d'édition branchés dans la vue : la palette d'ajout, tiroir de la
- * colonne de droite, et le carrousel des pages, ouvert par-dessus la vue courante.
+ * Les deux modules d'édition branchés dans la vue : la palette d'ajout et le carrousel des
+ * pages, ouverts l'un comme l'autre par-dessus la vue courante.
  *
- * Rien de neuf n'est introduit ici : ce sont les meubles déjà posés (`.panel`, `.modal`)
- * qui reçoivent l'un et l'autre. Le cadre reste achromatique — voir l'en-tête.
+ * Rien de neuf n'est introduit ici : c'est le meuble déjà posé (`.modal`) qui reçoit l'un
+ * et l'autre. Le cadre reste achromatique — voir l'en-tête.
  */
 
 /* Les commandes qui n'agissent pas sur la sélection : ajouter, gérer les pages. Poussées
@@ -1614,24 +1689,47 @@ body.is-dragging .veil {
 
 .editnote__text { margin: 0; max-width: 72ch; }
 
-/* --- la palette, tiroir au-dessus des réglages --- */
-
-.panel__palette:not(:empty) { margin-bottom: 1rem; }
+/* --- la palette, en boîte modale --- */
 
 /*
- * La liste des 84 types a sa propre glissière plutôt que d'allonger la colonne : les
- * réglages du widget qu'on vient de poser sont juste en dessous, et ils doivent rester
- * atteignables sans traverser toute la liste.
+ * Poser un gadget est un geste ponctuel : on ouvre, on choisit, la boîte se ferme. Elle
+ * prend la largeur d'une boîte de dialogue plutôt qu'une colonne permanente à côté de la
+ * page — voir « rien ne partage la largeur avec la page », plus haut.
  */
-.panel__palette .palette__list {
-  max-height: 21rem;
-  overflow-y: auto;
+.modal--palette {
+  max-width: min(52rem, 94vw);
+  width: min(52rem, 94vw);
+}
+
+/* La boîte défile, et sa hauteur est bornée : 84 types ne tiennent pas dans une fenêtre. */
+.modal--palette .modal__box {
+  max-height: 86vh;
+  overflow: auto;
   overscroll-behavior: contain;
 }
 
-/* La liste est une colonne flexible : bornée en hauteur, elle écraserait ses lignes les
-   unes sur les autres au lieu de défiler. Chaque ligne garde donc sa hauteur. */
-.panel__palette .palette__list > * { flex: 0 0 auto; }
+/* Le module porte son propre titre ; dans la boîte, c'est celui de la boîte qui le dit,
+   au-dessus du bouton de fermeture. Le compte des types, lui, reste. */
+.modal--palette .palette__title { display: none; }
+
+/* Sans cadre à l'intérieur d'un cadre : la boîte EST la palette. */
+.modal--palette .palette {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+/* La boîte est large : les types s'étalent en colonnes plutôt que de tirer une liste de
+   84 lignes sur toute la hauteur. */
+.modal--palette .palette__list {
+  display: block;
+  column-width: 15rem;
+  column-gap: 1.6rem;
+}
+
+.modal--palette .palette__entry { break-inside: avoid; }
+.modal--palette .palette__group,
+.modal--palette .palette__note { break-inside: avoid; }
 
 /* --- le carrousel des pages, par-dessus la vue --- */
 
@@ -1681,14 +1779,14 @@ body.is-dragging .veil {
 }
 
 /*
- * Dans la colonne de droite, une entrée de palette tient sur deux lignes : le libellé
+ * Dans une colonne de 15 rem, une entrée de palette tient sur deux lignes : le libellé
  * au-dessus, le nom court en dessous, le compteur d'exemplaires à droite. Le module les
- * pose en ligne avec repli (`flex-wrap`), ce qui convient à une boîte large ; ici la
- * colonne fait 22 rem, la ligne se replie — et un `<button>` ne recalcule pas sa hauteur
- * pour un contenu replié, si bien que les entrées se chevauchaient. Une grille à deux
- * lignes explicites donne au bouton une hauteur que le navigateur sait mesurer.
+ * pose en ligne avec repli (`flex-wrap`), ce qui conviendrait à une ligne pleine largeur ;
+ * repliée, la ligne débordait — un `<button>` ne recalcule pas sa hauteur pour un contenu
+ * replié, si bien que les entrées se chevauchaient. Une grille à deux lignes explicites
+ * donne au bouton une hauteur que le navigateur sait mesurer.
  */
-.panel__palette .palette__entry {
+.modal--palette .palette__entry {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   column-gap: 0.5rem;
@@ -1698,10 +1796,10 @@ body.is-dragging .veil {
   padding-block: 0.45rem;
 }
 
-.panel__palette .palette__name { grid-column: 1; grid-row: 1; }
-.panel__palette .palette__short { grid-column: 1; grid-row: 2; }
+.modal--palette .palette__name { grid-column: 1; grid-row: 1; }
+.modal--palette .palette__short { grid-column: 1; grid-row: 2; }
 
-.panel__palette .palette__badge {
+.modal--palette .palette__badge {
   grid-column: 2;
   grid-row: 1 / span 2;
   align-self: center;
