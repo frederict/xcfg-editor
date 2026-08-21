@@ -83,10 +83,12 @@ describe('métriques de texte relevées sur l’appareil', () => {
       }
     })
 
-    it('« Vitesse verticale / 2s » tient dans les 320 px de son widget de la page 1', () => {
+    it('« Vitesse verticale / 2s » tient dans les 326 px de son widget de la page 1', () => {
       // Le défaut signalé : ce libellé s'y affichait tronqué en « Vitesse vertic… ».
-      const largeurWidget = widgetWidthPx(box(625, 4828, 3125, 7586))
-      expect(largeurWidget).toBeCloseTo(320, 0)
+      // 326 et non 320 : les bords sont aimantés sur la grille de rendu 51 × 29 avant
+      // d'être dessinés, et c'est bien 326 px que mesure la cellule sur l'appareil.
+      const largeurWidget = widgetWidthPx(box(625, 4828, 3125, 7586), PAYSAGE)
+      expect(largeurWidget).toBeCloseTo(326.27, 1)
       expect(titleWidthEm('Vitesse verticale / 2s') * titleFontPx(PAYSAGE, 140)).toBeLessThan(largeurWidget)
     })
 

@@ -4,7 +4,8 @@ import { parseJson } from '../../src/core/parseJson'
 import { readLayout, type Page } from '../../src/model/layout'
 import { readRenderSettings } from '../../src/model/preferences'
 import {
-  backgroundOpacity, renderPage, titleFontPx, widgetHeightPx, widgetWidthPx, widgetStyle
+  backgroundOpacity, renderGrid, renderPage, snapBox, snapToRenderGrid, titleFontPx,
+  widgetHeightPx, widgetWidthPx, widgetStyle
 } from '../../src/render/canvas'
 import { registerBlankAtRest } from '../../src/render/registry'
 // Effet de bord : enregistre les dessins réels (numériques, barre d'état, boutons,
@@ -15,11 +16,13 @@ import { BACKUP_2026 } from '../fixtures/paths'
 
 describe('positionnement', () => {
   it('convertit les coordonnées 0-10000 en pourcentages', () => {
-    const style = widgetStyle({ x1: 0, y1: 3226, x2: 10000, y2: 10000, background: 100 })
+    // Bords choisis SUR la grille de rendu (0 et 10000 en X ; 3103,4 = 9/29 en Y) :
+    // l'aimantation ne les déplace pas, la conversion se lit donc seule.
+    const style = widgetStyle({ x1: 0, y1: (9 / 29) * 10000, x2: 10000, y2: 10000, background: 100 }, 16 / 9)
     expect(style.left).toBe('0%')
-    expect(style.top).toBe('32.26%')
+    expect(Number.parseFloat(style.top)).toBeCloseTo(31.0345, 3)
     expect(style.width).toBe('100%')
-    expect(style.height).toBe('67.74%')
+    expect(Number.parseFloat(style.height)).toBeCloseTo(68.9655, 3)
   })
 
   /**
@@ -37,7 +40,7 @@ describe('positionnement', () => {
    */
   it('traduit _bg, qui est une TRANSPARENCE, en opacité de fond', () => {
     const opacity = (background: number): number =>
-      widgetStyle({ x1: 0, y1: 0, x2: 1, y2: 1, background }).backgroundOpacity
+      widgetStyle({ x1: 0, y1: 0, x2: 1, y2: 1, background }, 16 / 9).backgroundOpacity
     expect(opacity(100)).toBe(0)
     expect(opacity(40)).toBeCloseTo(0.6, 10)
     expect(opacity(0)).toBe(1)
@@ -102,7 +105,7 @@ describe('repère de référence (défaut 1 — lisibilité à toute taille)', (
     const widgets = [...element.querySelectorAll('.xc-widget')] as HTMLElement[]
     // WVarioColumn (landscape[3]) : X1:0, X2:833 — le widget le plus étroit de la page.
     const largeurs = widgets.map(w => Number(w.style.getPropertyValue('--xc-w')))
-    expect(Math.min(...largeurs)).toBeCloseTo(widgetWidthPx({ x1: 0, y1: 0, x2: 833, y2: 10000, background: 100 }), 6)
+    expect(Math.min(...largeurs)).toBeCloseTo(widgetWidthPx({ x1: 0, y1: 0, x2: 833, y2: 10000, background: 100 }, 16 / 9), 6)
     expect(Math.max(...largeurs)).toBeGreaterThan(Math.min(...largeurs))
   })
 
@@ -121,13 +124,19 @@ describe('repère de référence (défaut 1 — lisibilité à toute taille)', (
 })
 
 describe('widgetWidthPx', () => {
-  it('vaut une fraction de REFERENCE_WIDTH proportionnelle à la largeur normalisée', () => {
-    expect(widgetWidthPx({ x1: 625, y1: 0, x2: 3125, y2: 2414, background: 100 })).toBeCloseTo(320, 5)
+  /**
+   * 625 et 3125 tombent sur 3/51 et 16/51 après aimantation : le widget mesure donc
+   * 13 cellules, soit 326,27 px du repère de référence — et non les 320 px que donnait
+   * la largeur brute. C'est l'écart de la grille de rendu (canvas.ts), mesuré sur
+   * l'appareil à 326 px.
+   */
+  it('vaut une fraction de REFERENCE_WIDTH proportionnelle à la largeur AIMANTÉE', () => {
+    expect(widgetWidthPx({ x1: 625, y1: 0, x2: 3125, y2: 2414, background: 100 }, 16 / 9)).toBeCloseTo(326.27, 2)
   })
 
   it('ne dépend pas des proportions de la page : la largeur du repère est fixe', () => {
     const box = { x1: 0, y1: 0, x2: 5000, y2: 1000, background: 100 }
-    expect(widgetWidthPx(box)).toBeCloseTo(640, 5)
+    expect(widgetWidthPx(box, 16 / 9)).toBeCloseTo((26 / 51) * 1280, 5)
   })
 })
 
@@ -135,9 +144,10 @@ describe('widgetHeightPx (défaut 2 — la valeur numérique suit la hauteur de 
   it('vaut une fraction de REFERENCE_WIDTH/aspectRatio proportionnelle à la hauteur normalisée', () => {
     // Page 16/9 (donc 1280×720 dans le repère de référence) : un widget qui occupe
     // 20 % de la hauteur (2000/10000, la largeur du widget n'intervient pas) vaut
-    // 20 % de 720.
+    // 20 % de 720 — une fois le bord aimanté sur la grille de rendu, 2000 devient
+    // 6/29, soit 148,97 px et non 144.
     const height = widgetHeightPx({ x1: 0, y1: 0, x2: 2000, y2: 2000, background: 100 }, 16 / 9)
-    expect(height).toBeCloseTo(144, 5)
+    expect(height).toBeCloseTo((6 / 29) * 720, 5)
   })
 
   it('un widget deux fois plus haut reçoit une hauteur de référence deux fois plus grande', () => {
@@ -162,8 +172,10 @@ describe('empilement', () => {
     const element = renderPage(page, 16 / 9, settings, 'fr')
     const children = [...element.querySelectorAll('.xc-widget')]
     expect(children).toHaveLength(21)
-    // Le grand widget cartographique est au fond : il est émis en premier.
-    expect((children[0] as HTMLElement).style.width).toBe('75%')
+    // Le grand widget cartographique est au fond : il est émis en premier. Sa largeur
+    // n'est plus 75 % mais 38/51 : les bords passent par la grille de rendu (51 × 29)
+    // avant d'être posés, comme sur l'appareil.
+    expect(Number.parseFloat((children[0] as HTMLElement).style.width)).toBeCloseTo((38 / 51) * 100, 6)
     // Le dernier émis est au-dessus de tous les autres — direct enfant de `.xc-page`,
     // pas de `element` lui-même : `renderPage` enveloppe désormais la page dans un
     // `<svg viewBox>` + `<foreignObject>` (voir « repère de référence » ci-dessous),
@@ -294,5 +306,68 @@ describe('boutons réels du corpus (intégration)', () => {
     for (const w of navigWidgets) {
       expect(w.classList.contains('xc-widget--border')).toBe(true)
     }
+  })
+})
+
+/**
+ * La grille de rendu de XCTrack — 51 divisions sur le grand côté de la dalle, 29 sur le
+ * petit — appliquée à CHAQUE bord avant le tracé. À ne pas confondre avec la grille
+ * d'aimantation de l'édition (48 × 29, `src/model/grid.ts`), qui reste inchangée.
+ *
+ * Les neuf couples norme → pixel sont ceux relevés sur l'appareil
+ * (`docs/reference/2026-08-21-validation-bout-en-bout.md` § 4.1), par `uiautomator` et
+ * par détection des filets sur les captures.
+ */
+describe('grille de rendu (51 × 29)', () => {
+  const enPixels = (norme: number, divisions: number, cote: number): number =>
+    Math.round((snapToRenderGrid(norme, divisions) / 10000) * cote)
+
+  it('reproduit les neuf abscisses mesurées sur la dalle 1280 px', () => {
+    const mesures: [number, number][] = [
+      [833, 100], [2292, 301], [6250, 803], [8125, 1029], [8542, 1104],
+      [1000, 125], [2500, 326], [5000, 653], [7500, 954]
+    ]
+    for (const [norme, attendu] of mesures) {
+      expect(enPixels(norme, 51, 1280)).toBe(attendu)
+    }
+  })
+
+  it('ne déplace rien en Y : 1/29 EST la grille de rendu', () => {
+    for (const norme of [0, 1034, 4138, 6897, 10000]) {
+      expect(enPixels(norme, 29, 720)).toBe(Math.round((norme / 10000) * 720))
+    }
+  })
+
+  it('donne le grand côté à X en paysage, à Y en portrait', () => {
+    expect(renderGrid(16 / 9)).toEqual({ x: 51, y: 29 })
+    expect(renderGrid(9 / 16)).toEqual({ x: 29, y: 51 })
+  })
+
+  it('aimante les quatre bords, chacun sur la grille de son axe', () => {
+    const snapped = snapBox({ x1: 2500, y1: 2500, x2: 7500, y2: 7500 }, 16 / 9)
+    // La preuve minimale du relevé : sur une dalle 1280 × 720, ce widget se dessine en
+    // [326, 174]-[954, 546] et non en [320, 180]-[960, 540].
+    expect(Math.round((snapped.x1 / 10000) * 1280)).toBe(326)
+    expect(Math.round((snapped.y1 / 10000) * 720)).toBe(174)
+    expect(Math.round((snapped.x2 / 10000) * 1280)).toBe(954)
+    expect(Math.round((snapped.y2 / 10000) * 720)).toBe(546)
+  })
+
+  it('laisse une valeur non finie passer sans la corrompre', () => {
+    expect(snapToRenderGrid(Number.NaN, 51)).toBeNaN()
+    expect(snapToRenderGrid(2500, 0)).toBe(2500)
+  })
+
+  it('le rendu d’une page pose les bords aimantés, pas les bords bruts', () => {
+    const page: Page = {
+      node: { kind: 'object', entries: [] },
+      className: '',
+      widgets: [readLayout(parseJson(readFileSync(BACKUP_2026, 'utf8'))).landscape[0]!.widgets[0]!],
+      navigations: { kind: 'none' }
+    }
+    const element = renderPage(page, 16 / 9, readRenderSettings(parseJson(readFileSync(BACKUP_2026, 'utf8'))), 'fr')
+    const widget = element.querySelector('.xc-widget') as HTMLElement
+    const gauche = Number.parseFloat(widget.style.left)
+    expect(gauche * 51 / 100).toBeCloseTo(Math.round(gauche * 51 / 100), 6)
   })
 })

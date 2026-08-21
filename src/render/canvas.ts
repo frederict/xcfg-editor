@@ -22,6 +22,100 @@ const SCALE = 10000
 const SVG_NS = 'http://www.w3.org/2000/svg'
 
 /**
+ * ## La grille de rendu — 51 × 29, et ce n'est PAS la grille d'aimantation
+ *
+ * XCTrack ne dessine pas un widget à sa coordonnée normalisée : il **aimante chaque bord
+ * sur une grille avant de tracer**. Il faut donc distinguer deux grilles, que ce projet
+ * confondait :
+ *
+ * - la **grille d'édition**, **48 × 29** (`src/model/grid.ts`), sur laquelle XCTrack
+ *   aimante quand le pilote fait glisser un widget au doigt. Le relevé est juste — les
+ *   98 pages paysage du corpus n'ont aucune valeur X hors des multiples de 1/48 — et
+ *   l'aimantation de notre éditeur reste dessus : elle écrit les valeurs que XCTrack
+ *   écrirait ;
+ * - la **grille de rendu**, **51 × 29**, appliquée **au moment de dessiner**, quelle que
+ *   soit la valeur du fichier. C'est elle, et elle seule, qui est reprise ici.
+ *
+ * ## La loi, et sa mesure
+ *
+ * ```
+ * px = arrondi( arrondi(norme × N / 10000) × côté / N )
+ * ```
+ *
+ * `N = 51` sur le grand côté de la dalle (1280 px), `29` sur le petit (720 px). Vérifiée
+ * sans exception sur 9 valeurs X et 16 valeurs Y distinctes, par relevé `uiautomator`
+ * **et** par détection des filets sur les captures
+ * (`docs/reference/2026-08-21-validation-bout-en-bout.md` § 4.1) :
+ *
+ * | norme | sans grille (ce que nous dessinions) | appareil | écart |
+ * |---|---|---|---|
+ * | 833 | 106,6 | **100** | −6,6 |
+ * | 2292 | 293,4 | **301** | +7,6 |
+ * | 2500 | 320,0 | **326** | +6,3 |
+ * | 5000 | 640,0 | **653** | +13,0 |
+ * | 7500 | 960,0 | **954** | −6,3 |
+ * | 8125 | 1040,0 | **1029** | −11,0 |
+ *
+ * Sur la configuration réelle du propriétaire, l'écart maximal atteint **12,5 px, soit
+ * 3,0 mm** sur la dalle — visible à l'œil et faussant tout jugement de composition.
+ * Recompté sur la planche des 75 widgets : les filets de la page 1 tombent à 324/326 et
+ * 651/653 sur l'appareil, là où le rendu non aimanté les posait à 319/320 et 639/640.
+ *
+ * **Pourquoi l'écart ne se voyait qu'en X** : les coordonnées du corpus sont des
+ * multiples de 1/48 en X et de 1/29 en Y. En Y, 1/29 EST la grille de rendu et
+ * l'aimantation ne déplace rien (écart mesuré : 0,03 px). En X, 1/48 ne tombe jamais sur
+ * 1/51.
+ *
+ * ## Ce qui est mesuré, et ce qui est déduit
+ *
+ * **Mesuré** : une dalle 1280 × 720 en paysage donne 51 divisions en X et 29 en Y.
+ *
+ * **Déduit, non vérifié** : en portrait, c'est la même dalle tournée d'un quart de tour —
+ * le grand côté (1280 px) passe en Y et le petit (720 px) en X, d'où 29 × 51. Aucune
+ * capture portrait n'existe pour le confirmer, et l'hypothèse concurrente (une cellule
+ * constante en dp, qui donnerait 51 ou 52 selon l'arrondi) n'est pas départageable avec
+ * ce qui est disponible. C'est la raison pour laquelle la grille se lit sur le RAPPORT
+ * de la page et non sur sa taille de rendu : un même fichier doit se dessiner pareil en
+ * vignette et en plein écran, et la grille est une propriété de la DALLE, pas de la
+ * taille à laquelle nous en montrons l'image.
+ */
+const RENDER_GRID_LONG_SIDE = 51
+const RENDER_GRID_SHORT_SIDE = 29
+
+/** Nombre de divisions de la grille de rendu, sur chacun des deux axes de la page. */
+export interface RenderGrid { x: number; y: number }
+
+export function renderGrid(aspectRatio: number): RenderGrid {
+  return aspectRatio >= 1
+    ? { x: RENDER_GRID_LONG_SIDE, y: RENDER_GRID_SHORT_SIDE }
+    : { x: RENDER_GRID_SHORT_SIDE, y: RENDER_GRID_LONG_SIDE }
+}
+
+/**
+ * Aimante une coordonnée normalisée (0 à 10000) sur la grille de rendu, et la rend dans
+ * le même repère normalisé — c'est l'arrondi INTÉRIEUR de la loi ci-dessus. L'arrondi
+ * extérieur, celui qui tombe sur un pixel entier, appartient au dispositif d'affichage :
+ * l'appareil arrondit à SES pixels, le navigateur aux siens, et les intercaler ici
+ * ferait dépendre le dessin de la taille à laquelle on le regarde.
+ */
+export function snapToRenderGrid(value: number, divisions: number): number {
+  if (!Number.isFinite(value) || divisions <= 0) return value
+  return (Math.round((value * divisions) / SCALE) * SCALE) / divisions
+}
+
+/** Les quatre bords d'un widget, aimantés sur la grille de rendu de la page. */
+export function snapBox<T extends { x1: number; y1: number; x2: number; y2: number }>(box: T, aspectRatio: number): T {
+  const grid = renderGrid(aspectRatio)
+  return {
+    ...box,
+    x1: snapToRenderGrid(box.x1, grid.x),
+    x2: snapToRenderGrid(box.x2, grid.x),
+    y1: snapToRenderGrid(box.y1, grid.y),
+    y2: snapToRenderGrid(box.y2, grid.y)
+  }
+}
+
+/**
  * Largeur du repère de référence dans lequel toute la page se dessine (`renderPage`,
  * plus bas) — voir le commentaire de tête de `renderPage` pour pourquoi ce repère
  * existe. `1280` n'est pas arbitraire : c'est la largeur, en pixels, de la seule
@@ -52,14 +146,22 @@ export function backgroundOpacity(transparency: number): number {
   return Math.min(1, Math.max(0, 1 - transparency / 100))
 }
 
-/** Les coordonnées sont normalisées : un centième de leur valeur donne un pourcentage. */
-export function widgetStyle(box: Box): WidgetStyle {
+/**
+ * Les coordonnées sont normalisées : un centième de leur valeur donne un pourcentage.
+ *
+ * Les quatre bords passent d'abord par la **grille de rendu** (`snapBox`) — c'est ce que
+ * fait XCTrack avant de tracer, et l'ignorer décalait le dessin de 12,5 px sur la
+ * configuration du propriétaire. D'où le paramètre `aspectRatio` : la grille n'est pas la
+ * même selon que la page est en paysage ou en portrait.
+ */
+export function widgetStyle(box: Box, aspectRatio: number): WidgetStyle {
+  const snapped = snapBox(box, aspectRatio)
   const pct = (v: number): string => `${v / (SCALE / 100)}%`
   return {
-    left: pct(box.x1),
-    top: pct(box.y1),
-    width: pct(box.x2 - box.x1),
-    height: pct(box.y2 - box.y1),
+    left: pct(snapped.x1),
+    top: pct(snapped.y1),
+    width: pct(snapped.x2 - snapped.x1),
+    height: pct(snapped.y2 - snapped.y1),
     backgroundOpacity: backgroundOpacity(box.background)
   }
 }
@@ -84,13 +186,23 @@ export function widgetStyle(box: Box): WidgetStyle {
  */
 export function widgetHeightPx(box: Box, aspectRatio: number): number {
   if (aspectRatio <= 0) return 0
-  const height = box.y2 - box.y1
+  const snapped = snapBox(box, aspectRatio)
+  const height = snapped.y2 - snapped.y1
   return (height / SCALE) * (REFERENCE_WIDTH / aspectRatio)
 }
 
-/** Largeur du widget dans le même repère que `widgetHeightPx` — voir son commentaire. */
-export function widgetWidthPx(box: Box): number {
-  return ((box.x2 - box.x1) / SCALE) * REFERENCE_WIDTH
+/**
+ * Largeur du widget dans le même repère que `widgetHeightPx` — voir son commentaire.
+ *
+ * Aimantée sur la grille de rendu comme la hauteur : ces deux nombres servent à borner
+ * le texte par la place réellement disponible (`--xc-value-fit`, `--xc-title-em`,
+ * style.css), et la place réellement disponible est celle du widget DESSINÉ, pas celle
+ * de ses coordonnées brutes. Une cellule de 2500 unités fait 320 px en brut et 326 en
+ * dessiné : juger le texte sur 320 le réduirait sans nécessité.
+ */
+export function widgetWidthPx(box: Box, aspectRatio: number): number {
+  const snapped = snapBox(box, aspectRatio)
+  return ((snapped.x2 - snapped.x1) / SCALE) * REFERENCE_WIDTH
 }
 
 /** Petit côté de la page dans le repère de référence — voir `TITLE_SIZE_RATIO`. */
@@ -150,7 +262,7 @@ export function renderPage(page: Page, aspectRatio: number, settings: RenderSett
   canvas.style.setProperty('--xc-page-min', String(pageShortSidePx(aspectRatio)))
 
   for (const widget of page.widgets) {
-    const style = widgetStyle(widget)
+    const style = widgetStyle(widget, aspectRatio)
     // Aucun type n'est traité à part ici : le fond suit `_bg`, le cadre suit `_border`,
     // pour tous. Le cas particulier qui neutralisait les deux sur `WLiveMessage` et
     // `WButtonBrightness` était un pansement sur l'inversion de `_bg` — voir le
@@ -167,7 +279,7 @@ export function renderPage(page: Page, aspectRatio: number, settings: RenderSett
     element.style.setProperty('--xc-h', String(widgetHeightPx(widget, aspectRatio)))
     // La largeur sert le garde-fou du titre (`.xc-num__title`, style.css) : réduire le
     // titre uniquement s'il ne tenait pas, au lieu de le tronquer.
-    element.style.setProperty('--xc-w', String(widgetWidthPx(widget)))
+    element.style.setProperty('--xc-w', String(widgetWidthPx(widget, aspectRatio)))
     if (widget.border) element.classList.add('xc-widget--border')
 
     // Le fond est un calque séparé : appliquer l'opacité au widget entier effacerait

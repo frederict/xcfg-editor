@@ -508,7 +508,7 @@ export function renderThumbnail(
   const scene = renderPage(page, aspectRatio, settings, language)
 
   const at = (x1: number, y1: number, x2: number, y2: number): { w: number; h: number } => ({
-    w: widgetWidthPx({ x1, y1, x2, y2, background: 0 }),
+    w: widgetWidthPx({ x1, y1, x2, y2, background: 0 }, aspectRatio),
     h: widgetHeightPx({ x1, y1, x2, y2, background: 0 }, aspectRatio)
   })
   const offset = at(0, 0, bounds.x1, bounds.y1)

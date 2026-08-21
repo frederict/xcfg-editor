@@ -550,12 +550,14 @@ describe('la vignette', () => {
     const scene = renderThumbnail(entry, bounds, 16 / 9, SETTINGS, 'fr')
 
     // Repère de rendu : 1280 de large, 720 de haut (canvas.ts). Le rectangle relevé sur
-    // l'appareil, 4375..5625 × 3793..5862, y tombe sur ces quatre nombres.
+    // l'appareil, 4375..5625 × 3793..5862, passe d'abord par la grille de rendu 51 × 29
+    // — c'est ce que XCTrack fait avant de tracer — et tombe sur 22/51..29/51 en X,
+    // 11/29..17/29 en Y. Le recadrage doit suivre le dessin, pas les bornes brutes.
     const box = (scene.getAttribute('viewBox') ?? '').split(' ').map(Number)
-    expect(box[0]).toBeCloseTo((4375 / 10000) * 1280, 6)
-    expect(box[1]).toBeCloseTo((3793 / 10000) * 720, 6)
-    expect(box[2]).toBeCloseTo((1250 / 10000) * 1280, 6)
-    expect(box[3]).toBeCloseTo((2069 / 10000) * 720, 6)
+    expect(box[0]).toBeCloseTo((22 / 51) * 1280, 6)
+    expect(box[1]).toBeCloseTo((11 / 29) * 720, 6)
+    expect(box[2]).toBeCloseTo((7 / 51) * 1280, 6)
+    expect(box[3]).toBeCloseTo((6 / 29) * 720, 6)
     // Décorative pour l'assistance vocale : l'intitulé de la ligne dit tout en clair.
     expect(scene.getAttribute('aria-hidden')).toBe('true')
   })
