@@ -469,8 +469,8 @@ function preferencesReminder(personal: PersonalInventory): HTMLElement | undefin
     `Ce fichier porte par ailleurs ${plural(personal.counts.preferences,
       'donnée personnelle dans ses préférences', 'données personnelles dans ses préférences')} ` +
     '— nom, matériel, capteurs appairés, tâche en cours. Elles ne sont pas remplacées : ' +
-    'elles sont écartées en bloc, avec toute la section « preferences », par la dérivation ' +
-    'en export « pages » ci-dessus.'
+    'la version partageable ci-dessus n’emporte que les pages, et laisse en bloc toute la ' +
+    'section « preferences ».'
   )
 }
 
@@ -645,7 +645,8 @@ export function renderSharingDialog(options: SharingDialogOptions): SharingDialo
   box.append(el(
     'p', 'modal__lead',
     'Le fichier produit porte un nom horodaté qui ne reprend rien du nom d’origine — '
-    + 'celui-ci contient souvent un prénom. Reste à choisir ce qu’il contient, lui.'
+    + 'celui-ci contient souvent un prénom. Le nom est donc réglé ; reste à choisir ce '
+    + 'que le fichier contient.'
   ))
   if (options.notice) box.append(options.notice)
 
