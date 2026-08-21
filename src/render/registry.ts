@@ -35,38 +35,38 @@ export function isRegistered(shortName: string): boolean {
 }
 
 /**
- * Types dont le dessin ne doit jamais recevoir le fond ni le cadre génériques que
- * `_bg`/`_border` demanderaient dans le fichier (`src/render/canvas.ts`) — le cas du
- * widget purement tactile `WButtonBrightness` (voir `widgets/touchZone.ts`) : il
- * occupe de vastes zones qui, sur l'appareil, ne dessinent rien du tout, quelles que
- * soient ses valeurs `_bg`/`_border` dans le fichier (rendu-observe.md, « Widgets sans
- * rendu visible »).
+ * Types dont l'appareil ne peint **aucun contenu** au repos.
  *
- * **Correction en vol (rendu-en-vol.md § 4)** : `WButtonNavig` en est sorti.
- * Contrairement à ce que montrait le premier relevé au sol, seul `WButtonBrightness`
- * est réellement invisible sur l'appareil — `WButtonNavig` dessine un pictogramme
- * visible (voir `widgets/buttonNavig.ts`) et reçoit donc normalement le fond/cadre
- * génériques comme n'importe quel autre type dessiné.
+ * Un seul type y figure : `WLiveMessage`. Sur
+ * `docs/reference/captures-air3/vol-thermalassistant-boutonsnavig.png`, sa bande occupe
+ * tout le bas de l'écran, au premier plan, par-dessus une carte — et rien ne s'y voit :
+ * ni cadre, ni texte, ni gabarit de panneau. XCTrack n'y dessine rien tant qu'aucun
+ * message n'est arrivé. `widgets/liveMessage.ts` en tire son dessin (une marque
+ * discrète au survol, rien de plus).
  *
- * **`WLiveMessage` rejoint ce mécanisme (comparaison au sol, corpus des 5 fichiers)** :
- * ce n'est PAS une zone tactile — c'est un afficheur qui A du contenu, seulement pas en
- * permanence. Mais sur l'appareil, il ne peint rien tant qu'aucun message n'est arrivé,
- * malgré une zone souvent large et `_bg: 100` dans le fichier — même symptôme que
- * `WButtonBrightness`, et même correctif : fond/cadre neutralisés par ce registre.
- * Voir `widgets/liveMessage.ts` pour la marque discrète au survol qui remplace
- * l'ancien contenu simulé en permanence, et `src/ui/warnings.ts` pour l'exclusion de
- * ces types du calcul de recouvrement (un widget transparent au repos ne masque
- * personne).
+ * **Ce que ce registre ne fait PAS, et ne doit plus jamais faire.** Il a porté, jusqu'au
+ * 2026-08-21, un cas particulier qui neutralisait le fond et le cadre de ces types et
+ * les excluait du calcul de recouvrement de `src/ui/warnings.ts`. C'était un pansement
+ * sur l'inversion de `_bg` : le `WLiveMessage` du corpus ne masque pas les
+ * `WButtonNavig` qu'il recouvre parce qu'il porte `_bg: 100` — **aucun fond** — et non
+ * parce que son type serait à part. `_bg` étant désormais lu à l'endroit
+ * (`backgroundOpacity`, `canvas.ts`), le fond suit `_bg` et le cadre suit `_border`,
+ * pour ce type comme pour tous les autres. Voir `rendu-observe.md`.
  *
- * Distinct de `register` : un type peut être transparent sans dessin particulier
+ * Ne reste donc qu'un **fait de rendu**, et un seul usage : la marque « sans dessin » de
+ * la liste des widgets (`src/ui/widgetList.ts`), qui dit au pilote pourquoi un rectangle
+ * de sa page reste vide. À ne pas confondre avec « recouvert » (géométrie, `warnings.ts`)
+ * ni avec « inatteignable au clic » (géométrie encore, `widgetList.ts`).
+ *
+ * Distinct de `register` : un type peut ne rien peindre au repos sans dessin particulier
  * (repli générique) et inversement.
  */
-const transparentTypes = new Set<string>()
+const blankAtRestTypes = new Set<string>()
 
-export function registerTransparent(shortName: string): void {
-  transparentTypes.add(shortName)
+export function registerBlankAtRest(shortName: string): void {
+  blankAtRestTypes.add(shortName)
 }
 
-export function isTransparent(shortName: string): boolean {
-  return transparentTypes.has(shortName)
+export function isBlankAtRest(shortName: string): boolean {
+  return blankAtRestTypes.has(shortName)
 }

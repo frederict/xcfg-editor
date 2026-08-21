@@ -4,11 +4,6 @@ import { parseJson } from '../../src/core/parseJson'
 import type { JsonNode } from '../../src/core/jsonDocument'
 import { readLayout } from '../../src/model/layout'
 import { readRenderSettings } from '../../src/model/preferences'
-// Effet de bord : enregistre WButtonBrightness/WLiveMessage comme transparents
-// (registerTransparent, registry.ts) — nécessaire pour que le calcul de recouvrement
-// ci-dessous les exclue, exactement comme dans l'application réelle (ui/main.ts importe
-// ce module avant d'appeler computeWarnings).
-import '../../src/render/widgets'
 import {
   REFERENCE_VERSION_CODE,
   computeWarnings,
@@ -278,16 +273,35 @@ describe('avertissements — défauts géométriques', () => {
     expect(kinds(warningsOf(documentWith([masked, sansFond])))).not.toContain('geometry')
   })
 
-  it('ne signale pas un recouvrement par un widget transparent au repos', () => {
-    // WLiveMessage porte `_bg: 100` dans les 10 occurrences du corpus : le cas est déjà
-    // couvert par le critère `_bg`. Ce test tient le second verrou, celui du type.
-    const masked = widget(1000, 1000, 2000, 2000)
-    const liveMessage = `{
+  /** Le `WLiveMessage` du corpus, exactement : pleine largeur, dessiné en dernier. */
+  function liveMessage(background: number): string {
+    return `{
       "CLASS": "org.xcontest.XCTrack.widget.w.WLiveMessage",
       "X1": 0, "Y1": 0, "X2": 10000, "Y2": 10000,
-      "_border": false, "_bg": 100, "_theme": "", "line_count": 2, "show_time": 300
+      "_border": false, "_bg": ${background}, "_theme": "", "line_count": 2, "show_time": 300
     }`
-    expect(kinds(warningsOf(documentWith([masked, liveMessage])))).not.toContain('geometry')
+  }
+
+  it('ne signale pas le WLiveMessage du corpus, qui porte _bg 100', () => {
+    const masked = widget(1000, 1000, 2000, 2000)
+    expect(kinds(warningsOf(documentWith([masked, liveMessage(100)])))).not.toContain('geometry')
+  })
+
+  /**
+   * **Plus aucun type n'est exempté.** `registerTransparent('WLiveMessage')` excluait ce
+   * type du calcul quel que soit son `_bg` ; c'était un pansement sur l'inversion. La
+   * règle ne connaît plus que `_bg`, et un `WLiveMessage` à `_bg: 0` masque donc ce qu'il
+   * recouvre, comme n'importe quel autre widget.
+   *
+   * Réserve assumée : aucun fichier du corpus ne porte un `WLiveMessage` à `_bg: 0`, et
+   * personne n'a observé ce cas sur l'appareil. La règle suit ce que le fichier déclare
+   * — le seul choix qu'on puisse défendre sans mesure.
+   */
+  it('signale en revanche un WLiveMessage à _bg 0 : le type n’est plus un passe-droit', () => {
+    const masked = widget(1000, 1000, 2000, 2000)
+    const text = textOf(pick(warningsOf(documentWith([masked, liveMessage(0)])), 'geometry'))
+    expect(text).toMatch(/entièrement recouvert/)
+    expect(text).toContain('Réception de messages')
   })
 })
 

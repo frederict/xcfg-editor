@@ -5,7 +5,6 @@ import { findDuplicateKeys } from '../core/parseJson'
 import type { Layout, Page } from '../model/layout'
 import type { RenderSettings } from '../model/preferences'
 import type { Widget } from '../model/widget'
-import { isTransparent } from '../render/registry'
 
 /**
  * Ce que l'interface doit dire au pilote, et rien de plus. Huit familles, calculées ici
@@ -378,11 +377,11 @@ function pageGeometryItems(page: Page, where: string, language: string): string[
     // vol-thermalassistant-boutonsnavig.png laisse la carte apparaître — et ne masque
     // donc personne au sens de cette règle.
     //
-    // Un type transparent au repos (registerTransparent, registry.ts) reste exclu : il
-    // ne peint rien tant que son contenu n'est pas arrivé.
+    // Aucun type n'est traité à part : `_bg` suffit. L'exclusion qui visait
+    // `WLiveMessage` (registerTransparent) était un pansement sur l'inversion — les
+    // 10 occurrences du corpus portent `_bg: 100` et le critère les écarte tout seul.
     const hider = page.widgets.findIndex(
-      (other, index) =>
-        index > position && other.background <= 0 && !isTransparent(other.shortName) && covers(other, widget)
+      (other, index) => index > position && other.background <= 0 && covers(other, widget)
     )
     if (hider !== -1) {
       const cover = page.widgets[hider]!

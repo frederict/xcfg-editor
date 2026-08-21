@@ -1,17 +1,15 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { parseJson } from '../../src/core/parseJson'
-import { readLayout } from '../../src/model/layout'
+import { readLayout, type Page } from '../../src/model/layout'
 import { readRenderSettings } from '../../src/model/preferences'
 import {
   backgroundOpacity, renderPage, titleFontPx, widgetHeightPx, widgetWidthPx, widgetStyle
 } from '../../src/render/canvas'
-import { registerTransparent } from '../../src/render/registry'
-// Effet de bord : enregistre les dessins réels (numériques, barre d'état, zone
-// tactile) et marque WButtonBrightness comme transparent — nécessaire pour les tests
-// d'intégration ci-dessous, qui vérifient le comportement sur les widgets réels du
-// corpus, pas seulement sur un type de test synthétique. WButtonNavig n'est plus
-// transparent depuis la correction en vol (rendu-en-vol.md § 4, registry.ts).
+import { registerBlankAtRest } from '../../src/render/registry'
+// Effet de bord : enregistre les dessins réels (numériques, barre d'état, boutons,
+// cartes…) — nécessaire pour les tests d'intégration ci-dessous, qui vérifient le
+// comportement sur les widgets réels du corpus, pas seulement sur un type synthétique.
 import '../../src/render/widgets'
 import { BACKUP_2026 } from '../fixtures/paths'
 
@@ -207,23 +205,51 @@ describe('empilement', () => {
   })
 })
 
-describe('widgets transparents (mécanisme)', () => {
+describe('aucun type n’échappe à son _bg', () => {
   const settings = readRenderSettings(parseJson(readFileSync(BACKUP_2026, 'utf8')))
 
-  it('force l’opacité de fond à 0 pour un type enregistré transparent, quelle que soit _bg', () => {
-    registerTransparent('WEssaiTactileCanvas')
-    const page = {
-      node: { kind: 'object' as const, entries: [] }, className: 'page', navigations: { kind: 'none' as const },
+  function pageWith(shortName: string, background: number, border: boolean): Page {
+    return {
+      node: { kind: 'object' as const, entries: [] }, className: 'page',
+      navigations: { kind: 'none' as const },
       widgets: [{
-        node: { kind: 'object' as const, entries: [] }, className: 'x.WEssaiTactileCanvas',
-        shortName: 'WEssaiTactileCanvas', x1: 0, y1: 0, x2: 10000, y2: 10000,
-        border: true, background: 100, theme: ''
+        node: { kind: 'object' as const, entries: [] }, className: `x.${shortName}`,
+        shortName, x1: 0, y1: 0, x2: 10000, y2: 10000, border, background, theme: ''
       }]
     }
-    const element = renderPage(page, 1, settings, 'fr')
+  }
+
+  /**
+   * Le pansement retiré : `registerTransparent` forçait l'opacité de fond à 0 et
+   * supprimait le cadre, quelles que soient les valeurs du fichier. Il ne visait que
+   * `WLiveMessage`, dont les 10 occurrences du corpus portent `_bg: 100` — donc aucun
+   * fond de toute façon. Il traitait un symptôme de l'inversion de `_bg`.
+   */
+  it('un type qui ne peint aucun contenu au repos reçoit quand même son fond et son cadre', () => {
+    registerBlankAtRest('WEssaiSansDessinCanvas')
+    const element = renderPage(pageWith('WEssaiSansDessinCanvas', 0, true), 1, settings, 'fr')
+    const el = element.querySelector('.xc-widget') as HTMLElement
+    expect(el.style.getPropertyValue('--xc-bg-opacity')).toBe('1')
+    expect(el.classList.contains('xc-widget--border')).toBe(true)
+  })
+
+  it('et son _bg 100 lui donne un fond nul, comme à tout le monde', () => {
+    registerBlankAtRest('WEssaiSansDessinCanvas')
+    const element = renderPage(pageWith('WEssaiSansDessinCanvas', 100, false), 1, settings, 'fr')
     const el = element.querySelector('.xc-widget') as HTMLElement
     expect(el.style.getPropertyValue('--xc-bg-opacity')).toBe('0')
     expect(el.classList.contains('xc-widget--border')).toBe(false)
+  })
+
+  /** Le `WLiveMessage` réel du corpus : `_bg: 100`, `_border: false` — rien ne change. */
+  it('le WLiveMessage du corpus ne peint toujours aucun fond, mais par son _bg', () => {
+    const doc = parseJson(readFileSync(BACKUP_2026, 'utf8'))
+    const page = readLayout(doc).landscape[4]!
+    const element = renderPage(page, 16 / 9, readRenderSettings(doc), 'fr')
+    const widgets = [...element.querySelectorAll('.xc-widget')] as HTMLElement[]
+    const live = widgets.find(w => w.querySelector('.xc-livemsg') !== null)!
+    expect(live.style.getPropertyValue('--xc-bg-opacity')).toBe('0')
+    expect(live.classList.contains('xc-widget--border')).toBe(false)
   })
 })
 

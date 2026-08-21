@@ -1,6 +1,6 @@
 import type { Page } from '../model/layout'
 import type { RenderSettings } from '../model/preferences'
-import { drawWidget, isTransparent } from './registry'
+import { drawWidget } from './registry'
 import { TITLE_SIZE_RATIO } from './textMetrics'
 
 export interface Box {
@@ -151,25 +151,24 @@ export function renderPage(page: Page, aspectRatio: number, settings: RenderSett
 
   for (const widget of page.widgets) {
     const style = widgetStyle(widget)
-    // Un widget sans rendu au repos (WLiveMessage, afficheur conditionnel — voir
-    // registry.ts/registerTransparent) ne reçoit jamais le fond ni le cadre que
-    // _bg/_border demanderaient dans le fichier.
-    const transparent = isTransparent(widget.shortName)
-
+    // Aucun type n'est traité à part ici : le fond suit `_bg`, le cadre suit `_border`,
+    // pour tous. Le cas particulier qui neutralisait les deux sur `WLiveMessage` et
+    // `WButtonBrightness` était un pansement sur l'inversion de `_bg` — voir le
+    // commentaire de `registerBlankAtRest` dans registry.ts.
     const element = document.createElement('div')
     element.className = 'xc-widget'
     element.style.left = style.left
     element.style.top = style.top
     element.style.width = style.width
     element.style.height = style.height
-    element.style.setProperty('--xc-bg-opacity', String(transparent ? 0 : style.backgroundOpacity))
+    element.style.setProperty('--xc-bg-opacity', String(style.backgroundOpacity))
     // Voir `widgetHeightPx` : donne au CSS la hauteur de CE widget, dans le même
     // repère que le `viewBox` du wrapper — hérité jusqu'à `.xc-num` (numeric.ts).
     element.style.setProperty('--xc-h', String(widgetHeightPx(widget, aspectRatio)))
     // La largeur sert le garde-fou du titre (`.xc-num__title`, style.css) : réduire le
     // titre uniquement s'il ne tenait pas, au lieu de le tronquer.
     element.style.setProperty('--xc-w', String(widgetWidthPx(widget)))
-    if (widget.border && !transparent) element.classList.add('xc-widget--border')
+    if (widget.border) element.classList.add('xc-widget--border')
 
     // Le fond est un calque séparé : appliquer l'opacité au widget entier effacerait
     // aussi son texte, alors que _bg ne concerne que le fond — sur l'appareil, le

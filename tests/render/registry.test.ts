@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { drawWidget, isTransparent, register, registerTransparent } from '../../src/render/registry'
+import { drawWidget, isBlankAtRest, register, registerBlankAtRest } from '../../src/render/registry'
 import type { RenderSettings } from '../../src/model/preferences'
 import type { Widget } from '../../src/model/widget'
 
@@ -42,15 +42,15 @@ describe('annuaire', () => {
   })
 })
 
-describe('transparence', () => {
-  it('un type non enregistré n’est pas transparent', () => {
-    expect(isTransparent('WQuelqueChoseDeNouveau')).toBe(false)
+describe('types qui ne peignent aucun contenu au repos', () => {
+  it('un type non enregistré peint quelque chose', () => {
+    expect(isBlankAtRest('WQuelqueChoseDeNouveau')).toBe(false)
   })
 
-  it('un type enregistré via registerTransparent devient transparent', () => {
-    registerTransparent('WEssaiTactile')
-    expect(isTransparent('WEssaiTactile')).toBe(true)
+  it('un type enregistré via registerBlankAtRest est reconnu comme tel', () => {
+    registerBlankAtRest('WEssaiSansDessin')
+    expect(isBlankAtRest('WEssaiSansDessin')).toBe(true)
     // Les autres types ne sont pas affectés.
-    expect(isTransparent('WAltitude')).toBe(false)
+    expect(isBlankAtRest('WAltitude')).toBe(false)
   })
 })

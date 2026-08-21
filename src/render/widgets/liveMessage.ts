@@ -11,23 +11,28 @@ import { readNumber } from '../../core/access'
  * `X 0..10000 / Y 7586..10000` et se dessine APRÈS deux `WButtonNavig` — dans notre
  * premier rendu, cela recouvrait entièrement les deux boutons. Or
  * `docs/reference/captures-air3/vol-thermalassistant-boutonsnavig.png` montre ces deux
- * boutons parfaitement visibles sur l'appareil, en bas à droite. Conclusion : comme
- * `WButtonBrightness` (`touchZone.ts`), XCTrack ne peint RIEN pour `WLiveMessage` tant
- * qu'aucun message n'est arrivé — un fond opaque déclaré dans le fichier ne veut pas
- * dire un fond opaque dessiné. Ce recouvrement existe dans les 5 fichiers du corpus.
+ * boutons parfaitement visibles sur l'appareil, en bas à droite.
  *
- * **Traitement — adapté, pas identique à `WButtonBrightness`.** `WLiveMessage` rejoint
- * `registerTransparent` (`widgets/index.ts`, `registry.ts`) pour neutraliser fond et
- * cadre exactement comme les zones tactiles. Mais ce n'EST PAS une zone tactile : rien
- * à toucher ici, contrairement à `WButtonBrightness`/`WButtonNavig` — c'est un
- * afficheur qui a du contenu, seulement pas en permanence. La version précédente de ce
- * module simulait un panneau de messages toujours visible ; elle masquait donc
- * exactement ce que la capture dément. Le dessin ci-dessous ne simule plus aucun
- * message : il pose uniquement une marque discrète au survol (même mécanisme visuel
- * que `.xc-touch`, contour en pointillés + étiquette, mais sans `cursor: pointer` —
- * rien ne se touche ici), qui annonce l'espace réservé et son nombre de lignes prévu
- * (`line_count`), pour que le pilote comprenne pourquoi cet espace existe sans que
- * rien ne masque la carte ou les boutons dessous.
+ * On en avait conclu que XCTrack ne peint RIEN pour `WLiveMessage` tant qu'aucun message
+ * n'est arrivé, « un fond opaque déclaré dans le fichier ne voulant pas dire un fond
+ * opaque dessiné ». **La cause était ailleurs** : le fichier ne déclarait pas un fond
+ * opaque. `_bg` est une transparence, et `_bg: 100` veut dire *aucun fond*
+ * (`backgroundOpacity`, `canvas.ts` ; `rendu-observe.md`). Le fond et le cadre de ce
+ * widget suivent donc `_bg`/`_border` comme pour tout autre type, sans cas particulier.
+ *
+ * **Ce que la capture prouve tout de même**, et qui survit : ce widget ne dessine aucun
+ * *contenu* au repos. Sa bande est au premier plan, par-dessus la carte ; s'il y peignait
+ * un cadre, un texte ou un gabarit de panneau, cela se verrait. Rien. D'où
+ * `registerBlankAtRest` (`widgets/index.ts`, `registry.ts`), qui ne sert plus qu'à la
+ * marque « sans dessin » de la liste des widgets — et non plus à trafiquer le fond.
+ *
+ * La version précédente de ce module simulait un panneau de messages toujours visible ;
+ * elle masquait donc exactement ce que la capture dément. Le dessin ci-dessous ne simule
+ * plus aucun message : il pose uniquement une marque discrète au survol (contour en
+ * pointillés + étiquette, sans `cursor: pointer` — rien ne se touche ici), qui annonce
+ * l'espace réservé et son nombre de lignes prévu (`line_count`), pour que le pilote
+ * comprenne pourquoi cet espace existe sans que rien ne masque la carte ou les boutons
+ * dessous.
  *
  * Clés propres relevées sur les 10 occurrences du corpus (5 fichiers × 2 emplacements,
  * `landscape[3]` et `landscape[4]`, valeurs identiques partout) :

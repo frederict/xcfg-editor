@@ -234,8 +234,7 @@ const boxOf = (widget: Widget): Rectangle =>
  * ne vole rien du tout — inverser ce sens rend la règle exactement fausse, et c'est
  * l'un des sabotages que les tests détectent.
  *
- * Ni `_bg` ni `registerTransparent` n'entrent ici : la question est le doigt, pas
- * l'œil. Voir l'en-tête du module.
+ * `_bg` n'entre pas ici : la question est le doigt, pas l'œil. Voir l'en-tête du module.
  *
  * Un widget de surface nulle est ignoré : il n'a aucun point à recouvrir, et
  * `warnings.ts` le signale déjà comme géométrie dégénérée.

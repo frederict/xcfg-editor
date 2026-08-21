@@ -10,7 +10,7 @@ import {
   drawButtonVolumeReminder,
   drawButtonZoom
 } from '../../../src/render/widgets/buttons'
-import { isRegistered, isTransparent } from '../../../src/render/registry'
+import { isBlankAtRest, isRegistered } from '../../../src/render/registry'
 import '../../../src/render/widgets/index'
 import type { RenderSettings } from '../../../src/model/preferences'
 import type { Widget } from '../../../src/model/widget'
@@ -53,18 +53,20 @@ describe('les neuf widgets « bouton »', () => {
     for (const shortName of BOUTONS) expect(isRegistered(shortName)).toBe(true)
   })
 
-  it('aucun n’est plus traité en zone transparente', () => {
+  it('aucun n’est traité comme « sans dessin »', () => {
     // La règle établie : si WButtonBrightness disparaissait sur landscape[3] du corpus,
-    // c'est qu'un WThermalAssistant de bornes identiques est dessiné APRÈS lui — un
-    // recouvrement, pas une propriété du type. Voir buttons.ts et rendu-observe.md.
-    for (const shortName of BOUTONS) expect(isTransparent(shortName)).toBe(false)
+    // c'est qu'un WThermalAssistant de bornes identiques est dessiné APRÈS lui, avec
+    // `_bg: 0` — un recouvrement, pas une propriété du type. Voir buttons.ts et
+    // rendu-observe.md.
+    for (const shortName of BOUTONS) expect(isBlankAtRest(shortName)).toBe(false)
   })
 
-  it('WLiveMessage, lui, reste transparent — ce n’est pas la même situation', () => {
-    // Il recouvre deux WButtonNavig dans les 5 fichiers du corpus et ne les masque pas
-    // sur l'appareil (vol-thermalassistant-boutonsnavig.png). Le retirer ferait
-    // réapparaître de faux avertissements de recouvrement (src/ui/warnings.ts).
-    expect(isTransparent('WLiveMessage')).toBe(true)
+  it('WLiveMessage, lui, ne peint aucun contenu au repos — ce n’est pas la même situation', () => {
+    // Sa bande est au premier plan par-dessus la carte sur
+    // vol-thermalassistant-boutonsnavig.png et rien ne s'y voit. C'est un fait de rendu,
+    // qui ne sert plus qu'à la marque « sans dessin » de la liste des widgets : son fond
+    // et son cadre suivent `_bg`/`_border` comme pour tout autre type.
+    expect(isBlankAtRest('WLiveMessage')).toBe(true)
   })
 
   describe('chaque bouton porte son pictogramme', () => {

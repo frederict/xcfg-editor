@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
-// Effet de bord : enregistre les types dont l'appareil ne peint rien
-// (`registerTransparent`, `render/registry.ts`). Sans cet import, `isTransparent` rend
+// Effet de bord : enregistre les types dont l'appareil ne peint aucun contenu au repos
+// (`registerBlankAtRest`, `render/registry.ts`). Sans cet import, `isBlankAtRest` rend
 // faux partout et la marque « sans dessin » ne serait jamais posée.
 import '../../src/render/widgets'
 import { DEVICES, deviceFor } from '../../src/catalog/devices'

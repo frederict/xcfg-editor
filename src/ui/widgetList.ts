@@ -3,7 +3,7 @@ import { readableName } from '../catalog/widgetNames'
 import type { Orientation } from '../model/grid'
 import type { Page } from '../model/layout'
 import type { Widget } from '../model/widget'
-import { isTransparent } from '../render/registry'
+import { isBlankAtRest } from '../render/registry'
 import { aspectRatioOf, formatMm, widgetSizeMm, type WidgetBox } from './views'
 
 /**
@@ -25,7 +25,7 @@ import { aspectRatioOf, formatMm, widgetSizeMm, type WidgetBox } from './views'
  *
  * **Deux marques, deux faits distincts, à ne pas confondre.**
  * - *Inatteignable au clic* : fait **géométrique**, calculé ici, propre à l'éditeur.
- * - *Ne dessine rien* : fait **de rendu** (`isTransparent`, `render/registry.ts`), propre
+ * - *Ne dessine rien* : fait **de rendu** (`isBlankAtRest`, `render/registry.ts`), propre
  *   à l'appareil. Un `WLiveMessage` ne dessine rien au repos et reste pourtant au premier
  *   plan — c'est lui qui vole les clics des quatre autres, pas l'inverse.
  *
@@ -117,7 +117,7 @@ export interface WidgetListEntry {
   heightMm: number
   /** Aucun clic sur la page ne peut l'atteindre — voir `unreachableWidgets`. */
   unreachable: boolean
-  /** L'appareil n'en peint rien au repos — voir `isTransparent`. */
+  /** L'appareil n'en peint aucun contenu au repos — voir `isBlankAtRest`. */
   blank: boolean
 }
 
@@ -134,7 +134,7 @@ export function widgetListEntries(
       widthMm: size.widthMm,
       heightMm: size.heightMm,
       unreachable: unreachable[index] === true,
-      blank: isTransparent(widget.shortName)
+      blank: isBlankAtRest(widget.shortName)
     }
   })
 }

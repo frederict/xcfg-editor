@@ -859,13 +859,12 @@
 
 .xc-airprox--row > .xc-airprox__divider { height: 100%; width: 2px; }
 
-/* Réception de messages — WLiveMessage (liveMessage.ts). Recouvrement en vol : widget
-   transparent au repos (registerTransparent, widgets/index.ts) — sur l'appareil,
-   XCTrack n'y dessine rien tant qu'aucun message n'est arrivé (comparaison au sol,
-   vol-thermalassistant-boutonsnavig.png). Contrairement aux zones tactiles (.xc-touch),
-   rien ne se touche ici : pas de cursor: pointer, seulement le même contour en
-   pointillés et la même étiquette au survol, pour annoncer l'espace réservé et son
-   nombre de lignes (line_count) sans jamais masquer ce qui se trouve dessous. */
+/* Réception de messages — WLiveMessage (liveMessage.ts). L'appareil n'y dessine aucun
+   contenu tant qu'aucun message n'est arrivé (registerBlankAtRest, widgets/index.ts —
+   comparaison au sol, vol-thermalassistant-boutonsnavig.png). Le fond, lui, suit `_bg`
+   comme partout (calque .xc-widget__bg). Rien ne se touche ici : pas de cursor: pointer,
+   seulement un contour en pointillés et une étiquette au survol, pour annoncer l'espace
+   réservé et son nombre de lignes (line_count) sans jamais masquer ce qui est dessous. */
 .xc-livemsg {
   position: relative;
   width: 100%;

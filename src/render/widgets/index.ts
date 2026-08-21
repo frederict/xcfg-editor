@@ -1,4 +1,4 @@
-import { register, registerTransparent } from '../registry'
+import { register, registerBlankAtRest } from '../registry'
 import { drawNumeric } from './numeric'
 import { drawStatusLine } from './statusLine'
 import {
@@ -78,12 +78,13 @@ register('WWindDirection', drawWindDirection)
 
 // Les neuf boutons (buttons.ts) — écart 1.6 de la planche : l'appareil dessine pour
 // chacun un grand pictogramme noir, y compris pour WButtonBrightness, que nous rendions
-// en case vide. `registerTransparent('WButtonBrightness')` a donc disparu : il venait
-// d'une page où deux zones de luminosité étaient RECOUVERTES par un WThermalAssistant
-// dessiné après elles (landscape[3] de 2026-08-20_backup-00.xcfg, bornes identiques à
-// l'union des deux). Ce recouvrement-là se reproduit tout seul, canvas.ts empilant les
-// widgets dans l'ordre du fichier — voir le commentaire de tête de buttons.ts pour la
-// règle complète, et rendu-observe.md pour ce qui était affirmé et pourquoi c'était faux.
+// en case vide. Le cas particulier qui neutralisait WButtonBrightness a disparu : il
+// venait d'une page où deux zones de luminosité étaient RECOUVERTES par un
+// WThermalAssistant dessiné après elles (landscape[3] de 2026-08-20_backup-00.xcfg,
+// bornes identiques à l'union des deux, et `_bg: 0` donc un fond opaque). Ce
+// recouvrement-là se reproduit tout seul, canvas.ts empilant les widgets dans l'ordre du
+// fichier — voir le commentaire de tête de buttons.ts pour la règle complète, et
+// rendu-observe.md pour ce qui était affirmé et pourquoi c'était faux.
 register('WButtonNavig', drawButtonNavig)
 register('WButtonPhone', drawButtonPhone)
 register('WButtonCamera', drawButtonCamera)
@@ -102,9 +103,11 @@ register('WButtonIntentLauncher', drawButtonIntentLauncher)
 register('WAirspaceProximity', drawAirspaceProximity)
 register('WLiveMessage', drawLiveMessage)
 // Comparaison au sol (vol-thermalassistant-boutonsnavig.png, landscape[4] du corpus) :
-// WLiveMessage recouvre entièrement deux WButtonNavig dans le fichier (_bg: 100, dessiné
-// après), mais les deux boutons sont bien visibles sur l'appareil — comme
-// WButtonBrightness, il ne peint rien au repos. Voir registry.ts (commentaire de
-// registerTransparent) et liveMessage.ts pour le détail.
-registerTransparent('WLiveMessage')
+// la bande du WLiveMessage est au premier plan, par-dessus la carte, et rien ne s'y voit.
+// C'est un fait de RENDU — l'appareil n'y peint aucun contenu tant qu'aucun message n'est
+// arrivé — et il ne sert qu'à la marque « sans dessin » de la liste des widgets. Le fond
+// et le cadre, eux, suivent `_bg`/`_border` comme pour tout autre type : s'il ne masque
+// pas les WButtonNavig qu'il recouvre, c'est parce qu'il porte `_bg: 100`, pas parce que
+// son type serait à part. Voir registry.ts (commentaire de registerBlankAtRest).
+registerBlankAtRest('WLiveMessage')
 register('WCompTaskSummary', drawCompTaskSummary)
