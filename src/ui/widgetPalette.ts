@@ -761,7 +761,13 @@ function buildRow(
   thumb.append(renderThumbnail(entry, bounds, aspectRatio, options.settings, language))
   // « rien à voir » écrit noir sur blanc plutôt qu'un cadre vide sans explication : le titre
   // au survol dit pourquoi, le texte dit qu'il n'y a pas d'erreur.
+  // Deux cases quasi vides, deux causes opposées, et un pilote ne peut pas les deviner :
+  // « rien au repos » est un fait de l'appareil — rassurant —, « aperçu non dessiné » est
+  // notre limite. Les confondre est exactement ce que ce projet existe pour éviter.
   if (kind === 'blank') thumb.append(el('span', 'palette__thumb-note', 'rien au repos'))
+  if (kind === 'generic') {
+    thumb.append(el('span', 'palette__thumb-note', 'aperçu non dessiné'))
+  }
   row.append(thumb)
 
   const text = el('span', 'palette__text')

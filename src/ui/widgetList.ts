@@ -316,7 +316,10 @@ export function renderWidgetList(options: WidgetListOptions): WidgetList {
       flags.append(flag)
     }
     if (entry.blank) {
-      const flag = el('span', 'wlist__flag wlist__flag--blank', 'sans dessin')
+      // « sans dessin » se lisait comme une limite de cet éditeur, alors que c'est un
+      // fait de l'appareil : le gadget est bien là, il ne peint rien tant qu'il n'a rien
+      // à montrer. La palette dit déjà cela avec ces mots-là ; deux écrans, un mot.
+      const flag = el('span', 'wlist__flag wlist__flag--blank', 'rien au repos')
       flag.title =
         'Sur l’appareil, ce type ne peint rien au repos. Il occupe pourtant sa place et ' +
         'intercepte les clics comme n’importe quel autre gadget.'

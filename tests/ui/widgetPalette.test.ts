@@ -596,6 +596,27 @@ describe('la vignette', () => {
       .toContain('ne peint rien au repos')
   })
 
+  it('sépare le fait de l’appareil de notre propre limite', () => {
+    // Deux vignettes quasi vides, deux causes opposées : « rien au repos » est ce que
+    // l'appareil fait — rassurant —, « aperçu non dessiné » est ce que cet éditeur ne
+    // sait pas faire. Un seul mot pour les deux, et le pilote ne peut plus savoir si son
+    // gadget sera vide sur l'instrument ou si c'est seulement notre aperçu qui manque.
+    const view = palette(EMPTY)
+    const noteOf = (widget: string): string | null | undefined => view.element
+      .querySelector<HTMLElement>(`.palette__entry[data-widget="${widget}"] .palette__thumb-note`)
+      ?.textContent
+    const generic = [...view.element.querySelectorAll<HTMLElement>('.palette__entry')]
+      .find((row) => row.dataset.preview === 'generic')
+    expect(generic).toBeDefined()
+    expect(generic!.querySelector('.palette__thumb-note')?.textContent)
+      .toBe('aperçu non dessiné')
+    expect(noteOf('WLiveMessage')).toBe('rien au repos')
+    // Une vignette réellement dessinée n'en porte aucune : il n'y a rien à excuser.
+    const drawn = [...view.element.querySelectorAll<HTMLElement>('.palette__entry')]
+      .find((row) => row.dataset.preview === 'drawn')
+    expect(drawn!.querySelector('.palette__thumb-note')).toBeNull()
+  })
+
   it('dessine les cartes et l’assistant de thermique, plutôt que de les laisser vides', () => {
     for (const shortName of ['WCompMap', 'WXCAssistant', 'WThermalAssistant']) {
       expect(previewKind(shortName), shortName).toBe('drawn')
