@@ -67,6 +67,89 @@ import { widgetBoolean } from '../defaults'
 
 const SVG_NS = 'http://www.w3.org/2000/svg'
 
+/**
+ * ## Le cadrage des pictogrammes — ce que l'appareil fait des DEUX dimensions
+ *
+ * `.xc-button__glyph` (style.css) cale le pictogramme sur la **seule hauteur** du widget.
+ * Les trois types qui posent deux pictogrammes côte à côte occupent donc une rangée de
+ * largeur fixe en fraction de la hauteur, quelle que soit la largeur de la case, et
+ * `overflow: hidden` tranche ce qui dépasse. Mesuré à géométrie identique, cases
+ * 123 × 146 px du fichier du propriétaire (`captures-air3/vol-thermalassistant-boutonsnavig.png`) :
+ *
+ * | | encre du drapeau + Ø | rapport à la case | marges G / D |
+ * |---|---|---|---|
+ * | appareil | 82 × 45 px | 0,667 L × 0,308 H | 31 / 11 — entièrement dedans |
+ * | avant | 119 × 68 (borné par la case) | 0,967 L × 0,466 H | 2 / 2 — **coupé** |
+ *
+ * Sans la coupe, la rangée mesurait 178 px dans une case de 123 : **45 % de débordement**.
+ *
+ * **La règle de l'appareil se déduit de deux mesures du même dessin** : en case large
+ * (320 × 174) l'encre fait 166 × 91, en case étroite (123 × 146) elle fait 82 × 45 — même
+ * rapport (1,82), et dans les deux cas elle s'inscrit dans une boîte de
+ * **0,667 L × 0,52 H**. C'est un ajustement aux deux dimensions, pas à la seule hauteur.
+ *
+ * `MAX_GLYPH_WIDTH` est ce 0,667. Il n'a été mesuré **que sur `WButtonNavig`**, seul type
+ * dont on ait une capture en case étroite ; il est appliqué aux neuf, parce qu'aucun
+ * mécanisme ne rendrait ce plafond propre à un type. Les six pictogrammes simples ne
+ * l'atteignent d'ailleurs jamais aux géométries observées — vérifié par balayage.
+ */
+const MAX_GLYPH_WIDTH = 0.667
+
+/**
+ * Rapport largeur/hauteur d'une page paysage, pour convertir la « forme » d'un widget
+ * (ses coordonnées normalisées) en rapport de pixels réels. Même approximation, et même
+ * réserve, que `numeric.ts` : le dessin ne reçoit pas l'`aspectRatio` de la page, et le
+ * lui faire traverser toute la chaîne pour ce seul besoin serait disproportionné. À
+ * revoir le jour où un bouton devra se cadrer sur une page portrait ; aucune capture ne
+ * couvre ce cas.
+ */
+const LANDSCAPE_ASPECT = 16 / 9
+
+/**
+ * Largeur de l'encre de la rangée de pictogrammes, en fractions de la hauteur du widget,
+ * **avant** cadrage — mesurée sur notre propre rendu de la page 5 de la planche
+ * (1280 × 720), colonne par colonne, pictogrammes seuls : les libellés (« Monter le son »,
+ * « test », nom de contact) sont exclus, ils sont déjà bornés par `max-width` et ne
+ * doivent pas commander la réduction du dessin.
+ *
+ * `navig` porte la valeur du dessin REFAIT ci-dessous (0,350 + 0,218 d'écart + 0,378),
+ * pas celle de l'ancien (1,092).
+ */
+const GLYPH_ROW_WIDTH: Record<string, number> = {
+  navig: 0.946,
+  phone: 0.672,
+  camera: 0.678,
+  zoom: 0.391,
+  vario: 1.289,
+  brightness: 0.564,
+  volume: 1.315,
+  volumereminder: 0.201,
+  intent: 0.224
+}
+
+/**
+ * Plancher du cadrage — une soupape, comme celle de `numeric.ts` : une case extrêmement
+ * plate ne doit pas réduire le pictogramme jusqu'à l'invisible. À 0,3, la rangée du
+ * drapeau reste haute de 0,16 fois la case, encore lisible ; en deçà, mieux vaut un
+ * dessin trop grand qu'un dessin qu'on ne reconnaît plus.
+ */
+const MIN_GLYPH_FIT = 0.3
+
+/** Encre du drapeau : 62 × 91 px sur l'appareil, soit 0,523 fois la hauteur du widget. */
+const FLAG_HEIGHT = 0.523
+const FLAG_WIDTH = 0.356
+
+/** Encre du `Ø` : 66 × 65 px, soit 0,379 × 0,374 — la boîte déborde de 1,7 % de l'encre. */
+const SLASH_WIDTH = 0.385
+const SLASH_HEIGHT = 0.385
+
+/**
+ * Écart entre les deux encres, relevé à 0,218 fois la hauteur du widget. La rangée
+ * (`.xc-button__row`) n'en pose que 0,06 : le complément est écrit en ligne, et tient
+ * compte du peu de blanc que les deux boîtes laissent autour de leur encre.
+ */
+const NAVIG_ROW_GAP = 0.209
+
 function svgEl<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, string> = {}): SVGElementTagNameMap[K] {
   const el = document.createElementNS(SVG_NS, tag)
   for (const [key, value] of Object.entries(attrs)) el.setAttribute(key, value)
@@ -93,23 +176,83 @@ function glyph(name: string, build: (svg: SVGSVGElement) => void, outline: boole
   return svg
 }
 
-/** Drapeau de balise, au trait — mât, fanion, base. */
-function flagGlyph(): SVGSVGElement {
-  return glyph('flag', (svg) => {
-    svg.append(svgEl('line', { x1: '7', y1: '3', x2: '7', y2: '21' }))
-    svg.append(svgEl('polygon', { points: '7,3 19,7.5 7,12' }))
-    svg.append(svgEl('line', { x1: '3', y1: '21', x2: '11', y2: '21' }))
-  }, true)
+/**
+ * Un pictogramme dont la BOÎTE épouse l'encre, et dont la taille est donnée en cadratins
+ * plutôt que par `--xc-button-glyph`.
+ *
+ * `.xc-button__glyph` (style.css) pose une boîte CARRÉE, dimensionnée sur la seule
+ * hauteur du widget. C'est le bon compromis pour sept pictogrammes sur neuf ; ce ne l'est
+ * pas pour le drapeau de `WButtonNavig`, dont l'appareil fait un dessin nettement plus
+ * haut que large (62 × 91 px mesurés) et dont l'encre doit être calée au pixel près pour
+ * que la rangée entière tienne dans la case. Les deux dimensions sont donc écrites en
+ * ligne, ce qui l'emporte sur la règle de classe.
+ *
+ * `widthEm` et `heightEm` sont en **fractions de la hauteur du widget** : `.xc-button`
+ * pose `font-size: calc(var(--xc-h) * 1px)`, un cadratin vaut donc exactement cette
+ * hauteur. Le facteur de cadrage (`glyphFit`) passe par cette même police, si bien qu'il
+ * s'applique à ces tailles-ci comme aux autres sans être répété.
+ */
+function sizedGlyph(
+  name: string, viewBox: string, widthEm: number, heightEm: number,
+  strokeWidth: number, build: (svg: SVGSVGElement) => void
+): SVGSVGElement {
+  const svg = svgEl('svg', {
+    class: `xc-button__glyph xc-button__glyph--${name}`,
+    viewBox,
+    fill: 'none',
+    stroke: 'currentColor',
+    'stroke-width': String(strokeWidth),
+    'stroke-linejoin': 'round',
+    'stroke-linecap': 'round'
+  })
+  svg.style.width = `${widthEm}em`
+  svg.style.height = `${heightEm}em`
+  build(svg)
+  return svg
 }
 
-/** Le `Ø` de `WButtonNavig` : un cercle barré, dessiné et non composé en texte — la
- * capture montre un trait d'épaisseur constante avec le drapeau, pas un glyphe de
- * police. */
+/**
+ * Drapeau de balise — **redessiné sur la mesure de l'appareil**, écart 3.3 de la revue
+ * des visuels (« rapport 2,29 contre 1,82, traits environ deux fois trop épais »).
+ *
+ * Profil relevé colonne par colonne sur `2026-08-21_planche-sol-5-boutons-autres-test.png`,
+ * case 320 × 174, encre du drapeau **62 × 91 px** — d'où le `viewBox` : ses unités SONT
+ * les pixels de la capture, chaque coordonnée ci-dessous est donc une transcription et
+ * non un choix de dessin.
+ *
+ * | | appareil | ancien dessin |
+ * |---|---|---|
+ * | encre du drapeau | 0,356 L × 0,523 H, rapport 0,68 | 0,425 × 0,477, rapport 0,89 |
+ * | épaisseur du mât | 3 px, soit 0,017 fois la hauteur du widget | 0,044 — **2,5 fois trop** |
+ * | base | arc fin, remontant au milieu, large de 0,52 boîte | barre pleine arrondie |
+ * | fanion | pointe à 0,98 de la boîte, entre y 0,02 et 0,29 | triangle deux fois plus gros |
+ */
+function flagGlyph(): SVGSVGElement {
+  return sizedGlyph('flag', '0 0 62 91', FLAG_WIDTH, FLAG_HEIGHT, 3, (svg) => {
+    // Mât : x 16,5 (relevé 0,242..0,290 de la boîte), du haut jusqu'à la base.
+    svg.append(svgEl('line', { x1: '16.5', y1: '1.5', x2: '16.5', y2: '88' }))
+    // Fanion : pointe à droite, à hauteur y 15 — le sommet du relevé.
+    svg.append(svgEl('polygon', { points: '16.5,3 59.5,15 16.5,26' }))
+    // Base : un arc, et non une barre. Sur la capture, ses deux extrémités descendent
+    // plus bas que son milieu.
+    svg.append(svgEl('path', { d: 'M 1.5 89.5 Q 16.5 84 31.5 89.5' }))
+  })
+}
+
+/**
+ * Le `Ø` de `WButtonNavig` : un cercle barré, dessiné et non composé en texte.
+ *
+ * Relevé sur la même capture : encre **66 × 65 px**, anneau de 9 px — soit 0,136 fois la
+ * boîte, presque le double du rapport de l'ancien dessin (0,075). Le trait oblique
+ * **dépasse** l'anneau des deux côtés, ce que l'ancien dessin ne faisait pas. Le cercle
+ * est donc à la fois plus petit que l'ancien (0,379 L contre 0,431) et plus épais : les
+ * deux se compensent, et c'est le drapeau, pas lui, qui portait les traits trop gras.
+ */
 function slashedCircleGlyph(): SVGSVGElement {
-  return glyph('slashed', (svg) => {
-    svg.append(svgEl('circle', { cx: '12', cy: '12', r: '8' }))
-    svg.append(svgEl('line', { x1: '5.5', y1: '18.5', x2: '18.5', y2: '5.5' }))
-  }, true)
+  return sizedGlyph('slashed', '0 0 24 24', SLASH_WIDTH, SLASH_HEIGHT, 3.2, (svg) => {
+    svg.append(svgEl('circle', { cx: '12', cy: '12', r: '10.2' }))
+    svg.append(svgEl('line', { x1: '2.6', y1: '21.4', x2: '21.4', y2: '2.6' }))
+  })
 }
 
 /** Combiné téléphone, silhouette pleine. */
@@ -220,11 +363,38 @@ function hoverLabel(widget: Widget, language: string): string | undefined {
   return `${action}${suffix}`
 }
 
+/**
+ * Facteur de cadrage : 1 quand la rangée tient dans `MAX_GLYPH_WIDTH` fois la largeur de
+ * la case — le cas courant —, sinon la réduction qu'il faut pour l'y faire tenir.
+ *
+ * Il s'applique par la **taille de police du bouton**, dont tout le contenu dérive
+ * (`--xc-button-glyph`, `.xc-button__sign`, `.xc-button__mark`, les tailles en cadratins
+ * posées en ligne) : une seule écriture réduit la rangée entière sans avoir à recopier
+ * ici les neuf valeurs de `--xc-button-glyph` que porte style.css. Le titre de
+ * `WButtonVario`, lui, est en pixels de `--xc-title` et ne bouge pas — c'est bien ce que
+ * fait l'appareil, dont les titres gardent la même taille partout.
+ */
+function glyphFit(widget: Widget, modifier: string): number {
+  const height = widget.y2 - widget.y1
+  const rowWidth = GLYPH_ROW_WIDTH[modifier]
+  if (height <= 0 || rowWidth === undefined || rowWidth <= 0) return 1
+  const widthOverHeight = ((widget.x2 - widget.x1) / height) * LANDSCAPE_ASPECT
+  const fit = (MAX_GLYPH_WIDTH * widthOverHeight) / rowWidth
+  return Math.max(MIN_GLYPH_FIT, Math.min(1, fit))
+}
+
 /** Coquille commune : une colonne centrée, dont le CSS règle la taille des glyphes en
- * fraction de la hauteur du widget. */
-function shell(modifier: string): HTMLElement {
+ * fraction de la hauteur du widget, et dont `glyphFit` borne la largeur. */
+function shell(widget: Widget, modifier: string): HTMLElement {
   const element = document.createElement('div')
   element.className = `xc-button xc-button--${modifier}`
+  const fit = glyphFit(widget, modifier)
+  element.style.setProperty('--xc-button-fit', fit.toFixed(4))
+  // La taille de police n'est réécrite que lorsqu'il y a quelque chose à réduire : dans
+  // le cas courant, la règle de style.css reste seule en jeu. Elle est recopiée ici
+  // parce que style.css ne connaît pas encore `--xc-button-fit` ; le jour où il le
+  // multipliera lui-même, cette ligne disparaîtra et la variable suffira.
+  if (fit < 1) element.style.fontSize = `calc(var(--xc-h, 100) * var(--xc-button-fit) * 1px)`
   return element
 }
 
@@ -243,15 +413,17 @@ function caption(text: string): HTMLElement {
 }
 
 export function drawButtonNavig(widget: Widget, _settings: RenderSettings, language: string): HTMLElement {
-  const element = shell('navig')
+  const element = shell(widget, 'navig')
   const label = hoverLabel(widget, language)
   if (label !== undefined) element.title = label
-  element.append(row(flagGlyph(), slashedCircleGlyph()))
+  const line = row(flagGlyph(), slashedCircleGlyph())
+  line.style.gap = `${NAVIG_ROW_GAP}em`
+  element.append(line)
   return element
 }
 
 export function drawButtonPhone(widget: Widget, _settings: RenderSettings, _language: string): HTMLElement {
-  const element = shell('phone')
+  const element = shell(widget, 'phone')
   // `showContactName` vaut true par défaut mais `contact.fullName` est vide tant que le
   // pilote n'a choisi personne : la capture ne montre donc que le combiné. On ne compose
   // pas de nom d'exemple — ce serait inventer une donnée personnelle.
@@ -263,14 +435,14 @@ export function drawButtonPhone(widget: Widget, _settings: RenderSettings, _lang
   return element
 }
 
-export function drawButtonCamera(_widget: Widget, _settings: RenderSettings, _language: string): HTMLElement {
-  const element = shell('camera')
+export function drawButtonCamera(widget: Widget, _settings: RenderSettings, _language: string): HTMLElement {
+  const element = shell(widget, 'camera')
   element.append(row(cameraGlyph()))
   return element
 }
 
 export function drawButtonZoom(widget: Widget, _settings: RenderSettings, language: string): HTMLElement {
-  const element = shell('zoom')
+  const element = shell(widget, 'zoom')
   const label = hoverLabel(widget, language)
   if (label !== undefined) element.title = label
   element.append(row(signSpan(actionSign(widget))))
@@ -280,7 +452,7 @@ export function drawButtonZoom(widget: Widget, _settings: RenderSettings, langua
 /** Le seul bouton titré, et c'est `showTitle` qui le commande — pas `_title`. Le titre
  * porte la couleur de titre du fichier, comme les widgets numériques. */
 export function drawButtonVario(widget: Widget, settings: RenderSettings, language: string): HTMLElement {
-  const element = shell('vario')
+  const element = shell(widget, 'vario')
   if (widgetBoolean(widget, 'showTitle') ?? true) {
     const title = document.createElement('span')
     title.className = 'xc-button__title'
@@ -293,7 +465,7 @@ export function drawButtonVario(widget: Widget, settings: RenderSettings, langua
 }
 
 export function drawButtonBrightness(widget: Widget, _settings: RenderSettings, language: string): HTMLElement {
-  const element = shell('brightness')
+  const element = shell(widget, 'brightness')
   const label = hoverLabel(widget, language)
   if (label !== undefined) element.title = label
   element.append(row(sunGlyph(actionSign(widget))))
@@ -301,7 +473,7 @@ export function drawButtonBrightness(widget: Widget, _settings: RenderSettings, 
 }
 
 export function drawButtonVolume(widget: Widget, _settings: RenderSettings, language: string): HTMLElement {
-  const element = shell('volume')
+  const element = shell(widget, 'volume')
   const label = hoverLabel(widget, language)
   if (label !== undefined) element.title = label
   element.append(row(speakerGlyph(), signSpan(actionSign(widget))))
@@ -312,8 +484,8 @@ export function drawButtonVolume(widget: Widget, _settings: RenderSettings, lang
  * sur l'appareil, qui écrit « Monter le son » en français. */
 const VOLUME_REMINDER: Record<string, string> = { fr: 'Monter le son', en: 'Turn the volume up' }
 
-export function drawButtonVolumeReminder(_widget: Widget, _settings: RenderSettings, language: string): HTMLElement {
-  const element = shell('volumereminder')
+export function drawButtonVolumeReminder(widget: Widget, _settings: RenderSettings, language: string): HTMLElement {
+  const element = shell(widget, 'volumereminder')
   element.append(row(speakerGlyph()))
   element.append(caption(VOLUME_REMINDER[language] ?? VOLUME_REMINDER.en!))
   return element
@@ -326,7 +498,7 @@ export function drawButtonVolumeReminder(_widget: Widget, _settings: RenderSetti
  * renseigne autrement affiche ses propres textes.
  */
 export function drawButtonIntentLauncher(widget: Widget, _settings: RenderSettings, _language: string): HTMLElement {
-  const element = shell('intent')
+  const element = shell(widget, 'intent')
   const mark = readString(widget.node, 'title') ?? '🚀'
   const name = readString(widget.node, 'name') ?? 'test'
   if (mark.length > 0) {

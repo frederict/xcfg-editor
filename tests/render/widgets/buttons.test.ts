@@ -22,7 +22,12 @@ const settings: RenderSettings = {
   windSpeedUnit: 'm/s', distanceUnit: 'NM', relativeDistanceUnit: 'km', airspaceAltitudeUnit: 'm'
 }
 
-function widget(shortName: string, params: Record<string, string> = {}): Widget {
+/**
+ * Bornes par défaut : une case de la grille 4 × 3 en paysage — 2500 × 2414 en
+ * coordonnées normalisées, soit 320 × 174 px sur une page 1280 × 720. C'est la géométrie
+ * de la planche, celle sur laquelle les pictogrammes ont été calibrés.
+ */
+function widget(shortName: string, params: Record<string, string> = {}, bounds: { x2: number; y2: number } = { x2: 2500, y2: 2414 }): Widget {
   return {
     node: {
       kind: 'object',
@@ -32,7 +37,7 @@ function widget(shortName: string, params: Record<string, string> = {}): Widget 
       ])
     },
     className: `org.xcontest.XCTrack.widget.w.${shortName}`,
-    shortName, x1: 0, y1: 0, x2: 2500, y2: 2414,
+    shortName, x1: 0, y1: 0, x2: bounds.x2, y2: bounds.y2,
     border: true, background: 100, theme: ''
   }
 }
@@ -196,6 +201,93 @@ describe('les neuf widgets « bouton »', () => {
 
     it('aucune étiquette pour un code inconnu — jamais de texte inventé', () => {
       expect(drawButtonZoom(widget('WButtonZoom', { type: '"ACTION_INCONNUE"' }), settings, 'fr').title).toBe('')
+    })
+  })
+
+  /**
+   * Écart 1.2 de la revue des visuels — le cas signalé par le propriétaire, capture à
+   * l'appui. `.xc-button__glyph` (style.css) cale le pictogramme sur la SEULE hauteur du
+   * widget ; les trois boutons à deux pictogrammes côte à côte occupaient donc une
+   * rangée de largeur fixe, et `overflow: hidden` tranchait.
+   *
+   * La règle de l'appareil, déduite de deux mesures du même dessin : l'encre s'inscrit
+   * dans 0,667 L × 0,52 H en gardant son rapport. Voir `MAX_GLYPH_WIDTH` dans buttons.ts.
+   */
+  describe('cadrage : le pictogramme tient dans la LARGEUR de la case, pas seulement dans sa hauteur', () => {
+    // 961 × 2028 en normalisé = 123 × 146 px sur une page 1280 × 720 : la case du
+    // fichier du propriétaire, celle de la capture `vol-thermalassistant-boutonsnavig`.
+    const CASE_ETROITE = { x2: 961, y2: 2028 }
+
+    const fit = (el: HTMLElement): number => Number(el.style.getPropertyValue('--xc-button-fit'))
+
+    // Deuxième rangée de la planche : les cases y sont plus plates (320 × 149 px, soit
+    // 2069 en normalisé) que celles de la grille 4 × 3.
+    const CASE_PLATE = { x2: 2500, y2: 2069 }
+
+    it('ne touche à rien aux géométries de la planche — les neuf gardent la taille de style.css', () => {
+      expect(fit(drawButtonNavig(widget('WButtonNavig'), settings, 'fr'))).toBe(1)
+      expect(fit(drawButtonPhone(widget('WButtonPhone'), settings, 'fr'))).toBe(1)
+      expect(fit(drawButtonCamera(widget('WButtonCamera'), settings, 'fr'))).toBe(1)
+      expect(fit(drawButtonZoom(widget('WButtonZoom'), settings, 'fr'))).toBe(1)
+      expect(fit(drawButtonIntentLauncher(widget('WButtonIntentLauncher'), settings, 'fr'))).toBe(1)
+      expect(fit(drawButtonVario(widget('WButtonVario', {}, CASE_PLATE), settings, 'fr'))).toBe(1)
+      expect(fit(drawButtonVolume(widget('WButtonVolume', {}, CASE_PLATE), settings, 'fr'))).toBe(1)
+      expect(fit(drawButtonBrightness(widget('WButtonBrightness', {}, CASE_PLATE), settings, 'fr'))).toBe(1)
+      expect(fit(drawButtonVolumeReminder(widget('WButtonVolumeReminder', {}, CASE_PLATE), settings, 'fr'))).toBe(1)
+    })
+
+    it('réduit WButtonNavig dans la case étroite jusqu’à l’encre mesurée sur l’appareil', () => {
+      // Rangée de 0,946 fois la hauteur du widget ; case de 123 × 146 px, soit
+      // L/H = 0,842. L'appareil y dessine 82 × 45 px.
+      const facteur = fit(drawButtonNavig(widget('WButtonNavig', {}, CASE_ETROITE), settings, 'fr'))
+      expect(0.946 * facteur * 146).toBeCloseTo(82, 0)
+      expect(0.523 * facteur * 146).toBeCloseTo(45, 0)
+    })
+
+    it('réduit aussi les deux autres boutons à deux pictogrammes', () => {
+      expect(fit(drawButtonVario(widget('WButtonVario', {}, CASE_ETROITE), settings, 'fr'))).toBeLessThan(1)
+      expect(fit(drawButtonVolume(widget('WButtonVolume', {}, CASE_ETROITE), settings, 'fr'))).toBeLessThan(1)
+    })
+
+    it('ne réduit jamais en deçà du plancher, même sur une case dégénérée', () => {
+      const el = drawButtonNavig(widget('WButtonNavig', {}, { x2: 60, y2: 5000 }), settings, 'fr')
+      expect(fit(el)).toBe(0.3)
+    })
+  })
+
+  /**
+   * Écart 3.3 — le même dessin, en case large : rapport 2,29 contre 1,82 sur l'appareil,
+   * et des traits environ deux fois trop épais. La géométrie ci-dessous est une
+   * transcription du profil relevé sur la capture, pas un choix de dessin.
+   */
+  describe('proportions du drapeau + Ø, relevées sur l’appareil', () => {
+    const glyphes = (el: HTMLElement): SVGSVGElement[] =>
+      [...el.querySelectorAll('svg')] as SVGSVGElement[]
+
+    it('le drapeau est nettement plus haut que large, et le Ø carré', () => {
+      const [flag, slashed] = glyphes(drawButtonNavig(widget('WButtonNavig'), settings, 'fr'))
+      expect(flag?.getAttribute('viewBox')).toBe('0 0 62 91')
+      expect(slashed?.getAttribute('viewBox')).toBe('0 0 24 24')
+    })
+
+    it('les deux tailles sont écrites en ligne, en cadratins, et donnent le rapport 1,82', () => {
+      const [flag, slashed] = glyphes(drawButtonNavig(widget('WButtonNavig'), settings, 'fr'))
+      const em = (value: string): number => Number(value.replace('em', ''))
+      const hauteur = em(flag!.style.height)
+      const largeur = em(flag!.style.width) + 0.209 + em(slashed!.style.width)
+      expect(hauteur).toBeCloseTo(0.523, 3)
+      expect(largeur / hauteur).toBeCloseTo(1.82, 1)
+    })
+
+    it('la base du mât est un arc, plus une barre pleine', () => {
+      const [flag] = glyphes(drawButtonNavig(widget('WButtonNavig'), settings, 'fr'))
+      const d = flag!.querySelector('path')?.getAttribute('d') ?? ''
+      expect(d).toContain('Q')
+    })
+
+    it('l’écart entre les deux pictogrammes est celui de la capture', () => {
+      const el = drawButtonNavig(widget('WButtonNavig'), settings, 'fr')
+      expect(el.querySelector('.xc-button__row')?.getAttribute('style')).toContain('0.209em')
     })
   })
 })
