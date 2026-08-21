@@ -296,6 +296,23 @@ describe('la boîte : ce que le pilote voit et ce qu’il décide', () => {
     handle.close()
   })
 
+  it('le focus initial se pose sur le premier choix, jamais sur « Enregistrer »', () => {
+    // Cette boîte décide du sort de données personnelles, et l'option cochée par défaut
+    // est celle qui les emporte toutes (« l’export ordinaire est la position par
+    // défaut », juste au-dessus). Un clavier qui presse Entrée par réflexe à
+    // l'ouverture ne doit pas déclencher l'enregistrement avant d'avoir vu le choix.
+    const handle = open(
+      { document: readSource(BACKUP_2026), fileName: shortName(BACKUP_2026), kind: 'xcfg' },
+      () => {}
+    )
+    const [plain] = radios(handle)
+    expect(document.activeElement).toBe(plain)
+    const confirm = [...handle.element.querySelectorAll<HTMLButtonElement>('.btn')]
+      .find((button) => button.textContent === 'Enregistrer')
+    expect(document.activeElement).not.toBe(confirm)
+    handle.close()
+  })
+
   it('choisir la version partageable montre l’inventaire et change le nom annoncé', () => {
     const handle = open(
       { document: readSource(FORMES_PRESERVEES), fileName: 'formes-preservees.xcfg', kind: 'xcfg' },

@@ -766,7 +766,11 @@ export function renderSharingDialog(options: SharingDialogOptions): SharingDialo
     open: () => {
       if (!dialog.isConnected) document.body.append(dialog)
       dialog.showModal()
-      confirm.focus()
+      // Jamais le bouton « Enregistrer » : cette boîte choisit ce qu'il advient de données
+      // personnelles, et l'option cochée par défaut est celle qui les emporte toutes. Un
+      // clavier qui presse Entrée par réflexe juste après l'ouverture ne doit pas exporter
+      // avant d'avoir vu le choix. Le premier bouton radio est déjà celui coché.
+      plainInput.focus()
     },
     close: () => {
       if (dialog.open) dialog.close()
