@@ -142,16 +142,6 @@ function buildScene(widget: Widget, kind: MapKind): SVGSVGElement {
     }))
   }
 
-  // Symbole du pilote : petit triangle blanc cerné de noir, pointant dans la direction
-  // du vol (rendu-observe.md). Direction fixe et illustrative, comme le reste de la
-  // trace — aucune donnée de cap n'est modélisée ici.
-  const pilot = svgEl('g', {
-    class: 'xc-map__pilot',
-    transform: `translate(${CENTER_X - 2} ${CENTER_Y + 2}) rotate(-25)`
-  })
-  pilot.append(svgEl('polygon', { points: '0,-9 6,7 0,3 -6,7' }))
-  svg.append(pilot)
-
   const rotation = readRotation(widget.node)
   if (rotation.showCompass) {
     // Boussole de coin : petit disque en bas à droite avec une aiguille
@@ -165,10 +155,53 @@ function buildScene(widget: Widget, kind: MapKind): SVGSVGElement {
   return svg
 }
 
-/** Segment d'échelle avec sa longueur, en bas à gauche (rendu-observe.md). Longueur
- * fixe d'exemple — comme la valeur des widgets numériques, elle ne dérive d'aucun
- * zoom réel : `mapWidget_scale`/`mapScale` ne portent qu'un niveau de zoom de tuiles,
- * pas une distance, et aucune formule de conversion n'est sourcée dans ce projet. */
+/**
+ * Symbole du pilote — écart 2.5 de la revue des 75 visuels : nous dessinions « une grosse
+ * flèche pleine avec une queue grise épaisse », l'appareil dessine un **contour fin**.
+ *
+ * Mesuré sur `captures-air3/2026-08-21_planche-sol-6-assistant-thermique-et-carte-xc.png` :
+ *
+ * | | appareil | ce que nous dessinions |
+ * |---|---|---|
+ * | encombrement | **24 × 49 px** | 44 × 59 px |
+ * | encre | 525 px, dont 130 de noir franc | 675 px |
+ * | forme | dard **creux**, filet noir de 2 px | polygone plein |
+ * | centre | disque **orange `#ff962d`**, 16 px | absent |
+ *
+ * **Il est de taille FIXE**, et c'est ce qui compte le plus ici : identique au pixel près
+ * sur l'assistant thermique (échelle 150 m) et sur la carte XC (2 500 m) de la même
+ * capture. Il ne peut donc pas vivre dans la scène SVG, qui est mise à l'échelle du
+ * gadget (`preserveAspectRatio="slice"`) — d'où ce calque HTML posé au centre, dans le
+ * repère de rendu où les 24 × 49 px ont été mesurés.
+ *
+ * L'inclinaison est illustrative, comme la trace : aucune donnée de cap n'est modélisée.
+ */
+const PILOT_W = 24
+const PILOT_H = 49
+const PILOT_TILT_DEG = -18
+
+function buildPilot(): HTMLElement {
+  const holder = document.createElement('div')
+  holder.className = 'xc-map__pilot'
+  const svg = svgEl('svg', { viewBox: `0 0 ${PILOT_W} ${PILOT_H}` })
+  const dart = svgEl('polygon', { points: '12,1 23,47 12,37 1,47' })
+  dart.setAttribute('transform', `rotate(${PILOT_TILT_DEG} 12 30)`)
+  svg.append(dart)
+  const dot = svgEl('circle', { class: 'xc-map__pilot-dot', cx: '12', cy: '31', r: '5' })
+  dot.setAttribute('transform', `rotate(${PILOT_TILT_DEG} 12 30)`)
+  svg.append(dot)
+  holder.append(svg)
+  return holder
+}
+
+/** Segment d'échelle avec sa longueur, en bas à gauche (rendu-observe.md).
+ *
+ * **Longueur fixe d'exemple, et ce n'est pas faute d'avoir cherché.** Sur la planche des
+ * 75 gadgets, `WThermalAssistant` et `WCompMap` affichent tous deux « 150m » et
+ * `WXCAssistant` « 2500m » — alors que les deux derniers portent la MÊME clé,
+ * `mapWidget_scale: { value: 26, auto: true }`. C'est `auto` qui tranche : l'appareil
+ * choisit l'échelle sur le vol en cours, et rien dans le fichier ne permet de la déduire.
+ * On garde donc la valeur observée sur deux des trois cartes. */
 const SCALE_LABEL = '150m'
 
 function buildScale(): HTMLElement {
@@ -179,7 +212,9 @@ function buildScale(): HTMLElement {
   const label = document.createElement('span')
   label.className = 'xc-map__scale-label'
   label.textContent = SCALE_LABEL
-  scale.append(bar, label)
+  // Le libellé au-DESSUS du filet : c'est l'ordre de la capture (texte y 677 à 699, filet
+  // y 700 à 710). L'inverse le posait à cheval sur la barre.
+  scale.append(label, bar)
   return scale
 }
 
@@ -248,6 +283,9 @@ function drawMap(widget: Widget, _settings: RenderSettings, _language: string, k
   element.className = 'xc-map'
 
   element.append(buildScene(widget, kind))
+  // Le pilote est un calque HTML et non un élément de la scène : il garde une taille fixe
+  // quand tout le reste suit celle du gadget — voir `buildPilot`.
+  element.append(buildPilot())
 
   if (drawScaleEnabled(widget, kind)) element.append(buildScale())
 

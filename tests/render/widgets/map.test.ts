@@ -196,3 +196,45 @@ describe('widgets cartographiques', () => {
     })
   })
 })
+
+/**
+ * Écart 2.5 de la revue des 75 visuels — « fond gris, aucune échelle, marqueur pilote deux
+ * fois trop gros ». Tout est relevé sur
+ * `docs/reference/captures-air3/2026-08-21_planche-sol-6-assistant-thermique-et-carte-xc.png`,
+ * cellule de 653 × 646 px.
+ */
+describe('symbole du pilote (écart 2.5)', () => {
+  it('est un dard creux avec un disque orange, pas un polygone plein', () => {
+    const el = drawThermalAssistant(widget('WThermalAssistant', {}), settings, language)
+    const pilote = el.querySelector('.xc-map__pilot')
+    expect(pilote).not.toBeNull()
+    expect(pilote?.querySelector('polygon')).not.toBeNull()
+    expect(pilote?.querySelector('.xc-map__pilot-dot')).not.toBeNull()
+  })
+
+  /**
+   * Il mesure 24 × 49 px sur l'assistant thermique comme sur la carte XC de la même
+   * capture, dont les échelles diffèrent pourtant d'un facteur 16 : il est de taille
+   * FIXE, et ne peut donc pas vivre dans la scène SVG, qui suit la taille du gadget.
+   */
+  it('vit hors de la scène, qui est mise à l’échelle du gadget', () => {
+    const el = drawThermalAssistant(widget('WThermalAssistant', {}), settings, language)
+    expect(el.querySelector('.xc-map__scene .xc-map__pilot')).toBeNull()
+    expect(el.querySelector(':scope > .xc-map__pilot')).not.toBeNull()
+  })
+
+  it('les trois cartes le portent', () => {
+    for (const dessin of [drawCompMap, drawXCAssistant, drawThermalAssistant]) {
+      expect(dessin(widget('WCompMap', {}), settings, language).querySelector('.xc-map__pilot')).not.toBeNull()
+    }
+  })
+})
+
+describe('barre d’échelle (écart 2.5)', () => {
+  it('pose le libellé AU-DESSUS du filet, comme sur la capture', () => {
+    const el = drawThermalAssistant(widget('WThermalAssistant', {}), settings, language)
+    const echelle = el.querySelector('.xc-map__scale')!
+    expect(echelle.firstElementChild?.className).toBe('xc-map__scale-label')
+    expect(echelle.lastElementChild?.className).toBe('xc-map__scale-bar')
+  })
+})
