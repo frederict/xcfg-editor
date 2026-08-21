@@ -164,6 +164,47 @@ instrument.** Même un export `pages` peut porter du texte que vous avez écrit 
 personnalisé d'un widget, le contenu d'un `WFreeText`, et jusqu'au nom et au numéro de
 téléphone rangés dans un bouton d'appel. Le format d'export ne garantit rien à lui seul.
 
+### Régénérer la base des versions de XCTrack
+
+`src/catalog/widgetVersions/` répond à une question : *pour un couple (widget, clé
+d'option), dans quelles versions de XCTrack existe-t-il ?* C'est ce qui permettra de
+distinguer un réglage devenu caduc d'un réglage parfaitement valide — donc de nettoyer
+une configuration sans rien casser.
+
+Elle est reproductible, une version à la fois, à partir d'un APK **que l'on possède**.
+Deux outils, sans réseau ni dépendance :
+
+```bash
+# 1. Dépaqueter l'APK : trois sortes de fichiers suffisent
+unzip -o mon-xctrack.apk AndroidManifest.xml resources.arsc 'classes*.dex' -d /tmp/xct
+
+# 2. Relever sa structure — le versionCode est lu dans le manifeste, il fait autorité
+python3 tools/extract-version-schema.py /tmp/xct -o relevés/ma-version.json
+
+# 3. Assembler les relevés en base, et les confronter à des fichiers .xcfg réels
+python3 tools/build-version-database.py --surveys relevés/ --corpus mes-exports/
+```
+
+Le second affiche, pour chaque version dont on possède des fichiers `.xcfg`, combien de
+couples *(widget, clé)* la confrontation retrouve. **Ce contrôle vaut preuve** : un
+fichier a été écrit par la version qu'il déclare, toute clé qu'il porte existe donc dans
+cette version-là. Quand la base dit le contraire, c'est la base qui a tort — et elle le
+consigne au lieu de le corriger en douce.
+
+Ce n'est pas une précaution théorique, et l'inverse ne l'est pas non plus : **XCTrack
+conserve les clés qu'il ne connaît plus**. Dans une même sauvegarde de 1.0.3, sur cinq
+widgets cartographiques, deux portent `mapWidget_showTerrain` et trois portent
+`mapWidget_panningTimeout` — jamais les deux. Les seconds ont été refaits depuis le
+remplacement, les premiers traînent un reliquat vieux de deux ans.
+
+Une base qui prendrait toute clé observée pour une clé existante protégerait donc
+exactement les reliquats qu'un nettoyage doit ôter ; une base qui prendrait toute clé
+non extraite pour une clé retirée supprimerait des réglages valides. D'où des tables
+distinctes — ce qui a été *lu*, ce qu'un fichier réel *porte*, et **pourquoi** les deux
+diffèrent. Voir l'en-tête de `src/catalog/widgetVersions.ts`.
+
+Ce dépôt ne fournit pas d'outil pour rassembler les APK : chacun apporte les siens.
+
 ## Licence
 
 MIT — voir [LICENSE](LICENSE).
