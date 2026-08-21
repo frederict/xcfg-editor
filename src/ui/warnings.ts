@@ -369,15 +369,20 @@ function pageGeometryItems(page: Page, where: string, language: string): string[
 
     // Plus haut dans la pile = plus loin dans le tableau : c'est l'ordre de dessin, et
     // c'est lui seul qui distingue « masqué » de « masquant ». Un widget opaque placé
-    // AVANT ne masque rien du tout. Un type transparent au repos (registerTransparent,
-    // registry.ts — WButtonBrightness, WLiveMessage) est exclu même quand `_bg` vaut
-    // 100 dans le fichier : sur l'appareil, il ne peint rien tant que son contenu n'est
-    // pas là, donc il ne masque personne — comparaison au sol,
-    // vol-thermalassistant-boutonsnavig.png, qui montre les WButtonNavig recouverts
-    // dans le fichier bel et bien visibles.
+    // AVANT ne masque rien du tout.
+    //
+    // « Opaque » se lit `_bg: 0`, PAS `_bg: 100`. `_bg` est une **transparence** (voir
+    // `backgroundOpacity`, render/canvas.ts) : seule la valeur 0 peint un fond plein,
+    // et c'est la seule qui garantisse que rien du dessous ne transparaît. Une valeur
+    // intermédiaire laisse voir au travers — `_bg: 40` sur
+    // vol-thermalassistant-boutonsnavig.png laisse la carte apparaître — et ne masque
+    // donc personne au sens de cette règle.
+    //
+    // Un type transparent au repos (registerTransparent, registry.ts) reste exclu : il
+    // ne peint rien tant que son contenu n'est pas arrivé.
     const hider = page.widgets.findIndex(
       (other, index) =>
-        index > position && other.background >= 100 && !isTransparent(other.shortName) && covers(other, widget)
+        index > position && other.background <= 0 && !isTransparent(other.shortName) && covers(other, widget)
     )
     if (hider !== -1) {
       const cover = page.widgets[hider]!

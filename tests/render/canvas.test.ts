@@ -3,7 +3,9 @@ import { describe, expect, it } from 'vitest'
 import { parseJson } from '../../src/core/parseJson'
 import { readLayout } from '../../src/model/layout'
 import { readRenderSettings } from '../../src/model/preferences'
-import { renderPage, titleFontPx, widgetHeightPx, widgetWidthPx, widgetStyle } from '../../src/render/canvas'
+import {
+  backgroundOpacity, renderPage, titleFontPx, widgetHeightPx, widgetWidthPx, widgetStyle
+} from '../../src/render/canvas'
 import { registerTransparent } from '../../src/render/registry'
 // Effet de bord : enregistre les dessins réels (numériques, barre d'état, zone
 // tactile) et marque WButtonBrightness comme transparent — nécessaire pour les tests
@@ -22,9 +24,31 @@ describe('positionnement', () => {
     expect(style.height).toBe('67.74%')
   })
 
-  it('traduit _bg en opacité de fond', () => {
-    expect(widgetStyle({ x1: 0, y1: 0, x2: 1, y2: 1, background: 40 }).backgroundOpacity).toBe(0.4)
-    expect(widgetStyle({ x1: 0, y1: 0, x2: 1, y2: 1, background: 0 }).backgroundOpacity).toBe(0)
+  /**
+   * **`_bg` est une transparence, pas une opacité.** Ce test affirmait l'inverse
+   * (`background: 40` → `0.4`) : il ne décrivait que notre propre calcul, jamais
+   * l'appareil. Les trois valeurs ci-dessous sont, elles, lues sur
+   * `docs/reference/captures-air3/vol-thermalassistant-boutonsnavig.png`, une page
+   * posée sur une carte — le seul cas où l'erreur se voyait :
+   *
+   * | `_bg` | ce que montre la capture |
+   * |---|---|
+   * | `100` | aucun fond peint — le « 0:00 » de `WAirTime` flotte à même la carte |
+   * | `40`  | case blanchâtre, la carte transparaît (`WWindSpeed`, `WWindDirection`) |
+   * | `0`   | case blanche **opaque** (les deux `WButtonNavig` du bas) |
+   */
+  it('traduit _bg, qui est une TRANSPARENCE, en opacité de fond', () => {
+    const opacity = (background: number): number =>
+      widgetStyle({ x1: 0, y1: 0, x2: 1, y2: 1, background }).backgroundOpacity
+    expect(opacity(100)).toBe(0)
+    expect(opacity(40)).toBeCloseTo(0.6, 10)
+    expect(opacity(0)).toBe(1)
+  })
+
+  it('range une transparence hors bornes dans 0–1 plutôt que de la laisser filer au CSS', () => {
+    expect(backgroundOpacity(-50)).toBe(1)
+    expect(backgroundOpacity(300)).toBe(0)
+    expect(backgroundOpacity(Number.NaN)).toBe(1)
   })
 })
 
@@ -150,10 +174,36 @@ describe('empilement', () => {
     expect(children[children.length - 1]).toBe(xcPage.lastElementChild)
   })
 
-  it('reporte l’opacité de _bg sur chaque widget', () => {
+  it('reporte l’opacité déduite de _bg sur chaque widget', () => {
     const element = renderPage(page, 16 / 9, settings, 'fr')
-    const third = element.querySelectorAll('.xc-widget')[2] as HTMLElement
-    expect(third.style.getPropertyValue('--xc-bg-opacity')).toBe('0.2')
+    const widgets = [...element.querySelectorAll('.xc-widget')] as HTMLElement[]
+    const opacity = (rank: number): string =>
+      widgets[rank - 1]!.style.getPropertyValue('--xc-bg-opacity')
+    // Les rangs de landscape[4], et les trois valeurs de la capture (voir
+    // « traduit _bg… » plus haut) : rang 3 `WTime` _bg 20, rang 4 `WSpeed` _bg 40,
+    // rang 6 `WAirTime` _bg 100, rang 9 `WButtonNavig` _bg 0.
+    expect(opacity(3)).toBe('0.8')
+    expect(opacity(4)).toBe('0.6')
+    expect(opacity(6)).toBe('0')
+    expect(opacity(9)).toBe('1')
+  })
+
+  /**
+   * Le cas qui prouve tout : un widget posé sur une carte. Sur `landscape[4]`, le
+   * `WCompMap` du rang 1 occupe les trois quarts droits de la page et vingt widgets se
+   * posent dessus. Avant la correction, les 12 widgets à `_bg: 100` de cette page
+   * peignaient un fond blanc PLEIN et effaçaient la carte ; l'appareil, lui, ne peint
+   * aucun fond pour eux (capture `vol-thermalassistant-boutonsnavig.png`).
+   */
+  it('n’efface pas la carte : les widgets à _bg 100 posés dessus ne peignent aucun fond', () => {
+    const element = renderPage(page, 16 / 9, settings, 'fr')
+    const widgets = [...element.querySelectorAll('.xc-widget')] as HTMLElement[]
+    const sansFond = widgets.filter(w => w.style.getPropertyValue('--xc-bg-opacity') === '0')
+    expect(sansFond).toHaveLength(12)
+    // Et les deux boutons de navigation restent, eux, des cases blanches opaques.
+    const opaques = widgets.filter(w => w.style.getPropertyValue('--xc-bg-opacity') === '1')
+    expect(opaques).toHaveLength(2)
+    for (const opaque of opaques) expect(opaque.querySelector('.xc-button--navig')).not.toBeNull()
   })
 })
 

@@ -3,10 +3,18 @@ import type { RenderSettings } from '../model/preferences'
 import { drawWidget, isTransparent } from './registry'
 import { TITLE_SIZE_RATIO } from './textMetrics'
 
-export interface Box { x1: number; y1: number; x2: number; y2: number; background: number }
+export interface Box {
+  x1: number; y1: number; x2: number; y2: number
+  /** La clé `_bg` du fichier : une **transparence** de 0 à 100 — voir `backgroundOpacity`. */
+  background: number
+}
 
 export interface WidgetStyle {
   left: string; top: string; width: string; height: string
+  /**
+   * L'opacité CSS du calque de fond, de 0 (aucun fond peint) à 1 (fond plein).
+   * C'est l'**inverse** de `Box.background` — voir `backgroundOpacity`.
+   */
   backgroundOpacity: number
 }
 
@@ -24,6 +32,26 @@ const SVG_NS = 'http://www.w3.org/2000/svg'
  */
 const REFERENCE_WIDTH = 1280
 
+/**
+ * Opacité du calque de fond, déduite de `_bg`.
+ *
+ * **`_bg` est une TRANSPARENCE, pas une opacité** — le réglage s'appelle « Transparence
+ * d'arrière-plan : n % » dans XCTrack (`docs/reference/edition-native.md`, table des huit
+ * clés universelles), et `captures-air3/vol-thermalassistant-boutonsnavig.png` le montre
+ * sur une page posée sur une carte : `_bg: 100` ne peint **aucun** fond (le « 0:00 » de
+ * `WAirTime` y flotte à même la carte), `_bg: 40` laisse la carte transparaître, `_bg: 0`
+ * donne des **cases blanches opaques** (les deux `WButtonNavig` du bas). L'opacité est
+ * donc `1 - _bg / 100`, et non `_bg / 100` comme ce module l'a longtemps calculé.
+ *
+ * Les valeurs hors 0–100 sont ramenées dans l'intervalle : aucun fichier du corpus n'en
+ * porte, mais un fichier étranger n'a pas à produire une opacité que le CSS écrêterait
+ * en silence.
+ */
+export function backgroundOpacity(transparency: number): number {
+  if (!Number.isFinite(transparency)) return 1
+  return Math.min(1, Math.max(0, 1 - transparency / 100))
+}
+
 /** Les coordonnées sont normalisées : un centième de leur valeur donne un pourcentage. */
 export function widgetStyle(box: Box): WidgetStyle {
   const pct = (v: number): string => `${v / (SCALE / 100)}%`
@@ -32,7 +60,7 @@ export function widgetStyle(box: Box): WidgetStyle {
     top: pct(box.y1),
     width: pct(box.x2 - box.x1),
     height: pct(box.y2 - box.y1),
-    backgroundOpacity: box.background / 100
+    backgroundOpacity: backgroundOpacity(box.background)
   }
 }
 
@@ -123,12 +151,9 @@ export function renderPage(page: Page, aspectRatio: number, settings: RenderSett
 
   for (const widget of page.widgets) {
     const style = widgetStyle(widget)
-    // Un widget sans rendu au repos (WButtonBrightness, zone tactile ; WLiveMessage,
-    // afficheur conditionnel — voir registry.ts/registerTransparent ; WButtonNavig
-    // n'en fait plus partie depuis la correction en vol, rendu-en-vol.md § 4) ne
-    // reçoit jamais le fond ni le cadre que _bg/_border demanderaient dans le
-    // fichier : sur l'appareil, il ne dessine rien du tout tant que son contenu n'est
-    // pas là, quelles que soient ces valeurs (rendu-observe.md).
+    // Un widget sans rendu au repos (WLiveMessage, afficheur conditionnel — voir
+    // registry.ts/registerTransparent) ne reçoit jamais le fond ni le cadre que
+    // _bg/_border demanderaient dans le fichier.
     const transparent = isTransparent(widget.shortName)
 
     const element = document.createElement('div')
@@ -147,7 +172,8 @@ export function renderPage(page: Page, aspectRatio: number, settings: RenderSett
     if (widget.border && !transparent) element.classList.add('xc-widget--border')
 
     // Le fond est un calque séparé : appliquer l'opacité au widget entier effacerait
-    // aussi son texte, alors que _bg ne concerne que le fond.
+    // aussi son texte, alors que _bg ne concerne que le fond — sur l'appareil, le
+    // « 0:00 » d'un WAirTime à _bg: 100 reste parfaitement noir sur la carte.
     const background = document.createElement('div')
     background.className = 'xc-widget__bg'
 

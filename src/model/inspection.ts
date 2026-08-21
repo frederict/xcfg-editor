@@ -36,12 +36,12 @@ import type { Widget } from './widget'
  *
  * Un seul recoupement, assumé : la règle 1 (« inatteignable au clic ») et
  * l'avertissement `geometry` de `warnings.ts` regardent tous deux le recouvrement, mais
- * pas la même chose. `warnings.ts` demande « ce widget sera-t-il **visible** ? » et
- * exclut donc les types transparents au repos (`registerTransparent`) ; la règle 1
- * demande « ce widget sera-t-il **atteignable au doigt** ? », et un widget transparent
- * vole les clics tout autant qu'un opaque — c'est même exactement ce qui se passe chez
- * Fred, où deux `WLiveMessage` invisibles volent les clics de quatre widgets dont deux
- * `WButtonNavig` que l'instrument dessine visiblement.
+ * pas la même chose. `warnings.ts` demande « ce widget sera-t-il **visible** ? » et ne
+ * retient donc comme masquants que les fonds opaques (`_bg: 0`) ; la règle 1 demande
+ * « ce widget sera-t-il **atteignable au doigt** ? », et un widget sans aucun fond vole
+ * les clics tout autant qu'un opaque — c'est même exactement ce qui se passe chez Fred,
+ * où deux `WLiveMessage` invisibles (`_bg: 100`) volent les clics de quatre widgets dont
+ * deux `WButtonNavig` que l'instrument dessine visiblement.
  */
 
 /* ============================================================== la forme d'un constat */

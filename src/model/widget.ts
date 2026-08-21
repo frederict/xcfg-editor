@@ -12,7 +12,11 @@ export interface Widget {
   shortName: string
   x1: number; y1: number; x2: number; y2: number
   border: boolean
-  /** Opacité du fond, de 0 à 100. */
+  /**
+   * La clé `_bg` : une **transparence**, de 0 (fond opaque) à 100 (aucun fond peint).
+   * XCTrack l'intitule « Transparence d'arrière-plan : n % » — voir
+   * `backgroundOpacity` dans `src/render/canvas.ts` pour la mesure et sa preuve.
+   */
   background: number
   theme: string
 }

@@ -241,9 +241,16 @@ describe('avertissements — défauts géométriques', () => {
     expect(text).toContain('12000')
   })
 
-  it('signale un widget entièrement recouvert par un opaque placé après lui', () => {
+  /**
+   * **« Opaque » se lit `_bg: 0`, pas `_bg: 100`.** Ces quatre cas affirmaient
+   * l'inverse : ils passaient parce que le critère de `warnings.ts` était aligné sur
+   * la même erreur, pas parce qu'ils décrivaient l'appareil. La mesure est
+   * `docs/reference/captures-air3/vol-thermalassistant-boutonsnavig.png` — `_bg: 0`
+   * donne des cases blanches opaques, `_bg: 100` ne peint aucun fond.
+   */
+  it('signale un widget entièrement recouvert par un opaque (_bg 0) placé après lui', () => {
     const masked = widget(1000, 1000, 2000, 2000)
-    const opaque = widget(0, 0, 10000, 10000, 100)
+    const opaque = widget(0, 0, 10000, 10000, 0)
     const text = textOf(pick(warningsOf(documentWith([masked, opaque])), 'geometry'))
     expect(text).toMatch(/entièrement recouvert/)
   })
@@ -251,7 +258,7 @@ describe('avertissements — défauts géométriques', () => {
   it('ne signale rien quand le même opaque est placé avant', () => {
     // L'ordre du tableau EST l'ordre de dessin : un opaque placé avant ne masque rien.
     const masked = widget(1000, 1000, 2000, 2000)
-    const opaque = widget(0, 0, 10000, 10000, 100)
+    const opaque = widget(0, 0, 10000, 10000, 0)
     expect(kinds(warningsOf(documentWith([opaque, masked])))).not.toContain('geometry')
   })
 
@@ -261,16 +268,19 @@ describe('avertissements — défauts géométriques', () => {
     expect(kinds(warningsOf(documentWith([under, translucent])))).not.toContain('geometry')
   })
 
-  it('ne signale pas un recouvrement par un widget transparent au repos, même opaque dans le fichier', () => {
-    // WLiveMessage a _bg: 100 dans les 10 occurrences du corpus (fond opaque déclaré au
-    // sens où canvas.ts le lit aujourd'hui) mais ne masque rien sur l'appareil : les
-    // deux WButtonNavig qu'il recouvre dans le fichier sont parfaitement visibles sur
-    // vol-thermalassistant-boutonsnavig.png. Il reste donc dans `registerTransparent`.
-    //
-    // WButtonBrightness, lui, en est SORTI (écart 1.6, buttons.ts) : la planche des 75
-    // widgets montre qu'il dessine un pictogramme. S'il disparaissait sur landscape[3]
-    // du corpus, c'est qu'un WThermalAssistant de bornes identiques est dessiné après
-    // lui — un recouvrement, pas une transparence.
+  it('ne signale pas un recouvrement par un widget à _bg 100, qui ne peint aucun fond', () => {
+    // Le cas exact du WLiveMessage du corpus : pleine largeur, dessiné en dernier,
+    // par-dessus deux WButtonNavig — et pourtant les deux boutons sont parfaitement
+    // visibles sur vol-thermalassistant-boutonsnavig.png. La raison est son `_bg: 100`,
+    // pas une propriété de son type.
+    const masked = widget(1000, 1000, 2000, 2000)
+    const sansFond = widget(0, 0, 10000, 10000, 100)
+    expect(kinds(warningsOf(documentWith([masked, sansFond])))).not.toContain('geometry')
+  })
+
+  it('ne signale pas un recouvrement par un widget transparent au repos', () => {
+    // WLiveMessage porte `_bg: 100` dans les 10 occurrences du corpus : le cas est déjà
+    // couvert par le critère `_bg`. Ce test tient le second verrou, celui du type.
     const masked = widget(1000, 1000, 2000, 2000)
     const liveMessage = `{
       "CLASS": "org.xcontest.XCTrack.widget.w.WLiveMessage",
@@ -282,18 +292,52 @@ describe('avertissements — défauts géométriques', () => {
 })
 
 describe('avertissements — corpus réel (comparaison au sol)', () => {
+  const geometryItems = (name: string): string[] => pick(warningsOfFile(name), 'geometry')?.items ?? []
+
   /**
-   * Recouvrement en vol : `WLiveMessage` occupait, dans les 5 fichiers du corpus,
-   * une large bande déclarée opaque et dessinée après deux `WButtonNavig` — signalé à
-   * tort comme un défaut de géométrie (4 items par fichier, avant correctif). Or
-   * `vol-thermalassistant-boutonsnavig.png` montre ces deux boutons parfaitement
-   * visibles sur l'appareil : `WLiveMessage` ne peint rien au repos
-   * (`registerTransparent`, `registry.ts`) et ne doit donc plus jamais apparaître comme
-   * « recouvrant ». Ce sont des configurations réellement utilisées en vol : elles ne
-   * doivent déclencher AUCUN défaut géométrique.
+   * **Le faux avertissement qui ne doit jamais revenir.** `WLiveMessage` occupe, dans
+   * les 5 fichiers du corpus, une large bande dessinée après deux `WButtonNavig` (plus,
+   * sur `landscape[4]`, un `WCompDistanceToGoal` et un `WCompAltitudeOverGoal`). Lu
+   * comme un fond opaque, cela donnait 4 items de « recouvrement » par fichier. Or
+   * `captures-air3/vol-thermalassistant-boutonsnavig.png` montre les deux boutons
+   * parfaitement visibles sur l'appareil : ce `WLiveMessage` porte `_bg: 100`, il ne
+   * peint donc **aucun** fond et ne masque personne.
    */
-  it('ne produit plus aucun défaut géométrique, sur aucun fichier du corpus', () => {
+  it('ne signale jamais le WLiveMessage du corpus comme recouvrant', () => {
     for (const name of CORPUS) {
+      for (const item of geometryItems(name)) {
+        expect(item, `${name} : ${item}`).not.toMatch(/Réception de messages/)
+      }
+    }
+  })
+
+  /**
+   * **Ce qui reste, et qui est vrai.** Sur `landscape[3]` des trois fichiers 2026, deux
+   * `WButtonBrightness` (`X 2292..8542`, `Y 1034..4483` et `4483..7586`) sont suivis
+   * d'un `WThermalAssistant` de bornes `X 2292..8542, Y 1034..7586` — exactement leur
+   * union — qui porte `_bg: 0`, un fond **opaque**. `ecran-landscape3-17widgets.png`,
+   * qui est cette page sur l'appareil, ne montre effectivement aucun des deux boutons :
+   * l'assistant de thermique est un aplat blanc bordé de noir, et rien ne transparaît.
+   * Le pilote a rangé ses zones tactiles sous la carte ; l'avertissement dit la
+   * conséquence visuelle, qui est exacte.
+   *
+   * Cet avertissement n'apparaissait pas avant la correction de `_bg` : le critère
+   * cherchait `_bg >= 100`, c'est-à-dire précisément les widgets qui ne peignent rien.
+   */
+  it('signale les deux WButtonBrightness que la carte de landscape[3] recouvre', () => {
+    for (const name of ['2026-08-20_backup-00.xcfg', '2026-08-20_pages-00.xcfg', 'backup.xcfg']) {
+      const items = geometryItems(name)
+      expect(items, name).toHaveLength(2)
+      expect(items[0], name).toBe(
+        "Paysage, page 4, widget 1 (Luminosité de l'écran) : entièrement recouvert par " +
+        'le widget 3 (Assistant thermique), opaque et dessiné après lui'
+      )
+      expect(items[1], name).toContain("widget 2 (Luminosité de l'écran)")
+    }
+  })
+
+  it('ne produit aucun défaut géométrique sur les deux fichiers 2025', () => {
+    for (const name of ['2025-07-07_backup-00.xcfg', '2025-07-07_pages-00.xcfg']) {
       expect(kinds(warningsOfFile(name)), name).not.toContain('geometry')
     }
   })

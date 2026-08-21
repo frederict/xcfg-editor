@@ -56,14 +56,12 @@ import { readBoolean, readString } from '../../core/access'
  * recouvre ces boutons dans le fichier ne les masque donc pas parce qu'il est
  * transparent (`_bg: 100`), pas parce qu'il « ne peint rien ».
  *
- * **Conséquence non traitée ici** : `canvas.ts` calcule `background / 100` comme une
- * opacité, c'est-à-dire l'inverse. La corriger demanderait de reprendre en même temps
- * `src/ui/warnings.ts` (dont l'avertissement de recouvrement teste `background >= 100`
- * pour « opaque ») et `src/ui/widgetList.ts` — hors du périmètre de cette tâche. Le
- * `registerTransparent` de `WLiveMessage` est donc conservé tel quel : il produit le bon
- * résultat sur les 10 occurrences du corpus, qui portent toutes `_bg: 100`. Seul
- * `WButtonBrightness` en sort, parce qu'il dessine — et son recouvrement par la carte
- * se reproduit tout seul, `canvas.ts` empilant déjà les widgets dans l'ordre du fichier.
+ * **Conséquence, traitée depuis** : `canvas.ts` calculait `background / 100` comme une
+ * opacité, c'est-à-dire l'inverse ; il calcule désormais `1 - background / 100`
+ * (`backgroundOpacity`), et `src/ui/warnings.ts` lit « opaque » comme `_bg: 0` et non
+ * plus `_bg >= 100`. `WButtonBrightness` reçoit donc le fond et le cadre de son fichier
+ * comme tout widget dessiné, et son recouvrement par la carte se reproduit tout seul,
+ * `canvas.ts` empilant déjà les widgets dans l'ordre du fichier.
  */
 
 const SVG_NS = 'http://www.w3.org/2000/svg'
