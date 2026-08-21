@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { drawVarioColumn } from '../../../src/render/widgets/varioColumn'
+import { BARS_PER_HALF, STEP_MS, barCount, drawVarioColumn, varioTone } from '../../../src/render/widgets/varioColumn'
 import type { RenderSettings } from '../../../src/model/preferences'
 import type { Widget } from '../../../src/model/widget'
 
@@ -10,76 +10,119 @@ const settings: RenderSettings = {
   windSpeedUnit: 'm/s', distanceUnit: 'NM', relativeDistanceUnit: 'km', airspaceAltitudeUnit: 'm'
 }
 
-const language = 'fr'
-
-function widget(params: Record<string, string>): Widget {
+function widget(params: Record<string, string> = {}): Widget {
   return {
     node: {
       kind: 'object',
-      entries: Object.entries(params).map(([k, v]) => [
-        `"${k}"`,
-        v.startsWith('"') ? { kind: 'string' as const, raw: v } : { kind: 'literal' as const, raw: v }
-      ])
+      entries: Object.entries(params).map(([k, v]) => [`"${k}"`, { kind: 'literal' as const, raw: v }])
     },
     className: 'org.xcontest.XCTrack.widget.w.WVarioColumn',
     shortName: 'WVarioColumn', x1: 0, y1: 0, x2: 833, y2: 10000,
-    border: false, background: 100, theme: ''
+    border: true, background: 100, theme: ''
   }
 }
 
-// Correction en vol (rendu-en-vol.md § 2) : WVarioColumn est un bargraphe — une colonne
-// de barres horizontales empilées — pas la flèche à double pointe qu'on lui avait
-// donnée. Cette flèche appartient à WVerticalGraph (verticalGraph.test.ts la garde).
-describe('WVarioColumn', () => {
-  it('dessine une colonne de barres empilées, pas une flèche', () => {
-    const el = drawVarioColumn(widget({}), settings, language)
-    expect(el.className).toBe('xc-variocol')
-    expect(el.querySelector('.xc-vscale__arrow')).toBeNull()
-    expect(el.querySelectorAll('.xc-variocol__bar').length).toBeGreaterThan(1)
+/** Le `viewBox` du dessin (varioColumn.ts) : 100 × 400, mi-hauteur à 200. */
+const VIEW_H = 400
+const MIDDLE = VIEW_H / 2
+
+function bars(el: HTMLElement): { y: number; height: number; accent: boolean }[] {
+  return Array.from(el.querySelectorAll('.xc-variocol__bar')).map((bar) => ({
+    y: Number(bar.getAttribute('y')),
+    height: Number(bar.getAttribute('height')),
+    accent: bar.classList.contains('xc-variocol__bar--accent')
+  }))
+}
+
+/**
+ * Écart 1.7 de `docs/reference/planche-widgets-air3.md` § 5 : le rendu précédent
+ * remplissait toute la colonne d'une échelle de barres roses fixe. L'appareil dessine une
+ * jauge partant de la mi-hauteur exacte, vide au repos.
+ */
+describe('WVarioColumn — une jauge, pas une échelle', () => {
+  describe('échelle : 0,2 m/s la barre, 20 barres par demi-colonne', () => {
+    it('les deux mesures appariées de l’appareil donnent la même graduation', () => {
+      // vol-numeriques-boussole-variocolumn.png : « +3,5 m/s » affiché, 17 barres.
+      // vol-page3.png : « -1,0 m/s » affiché, 5 barres. 3,5/17 ≈ 1,0/5 = 0,2.
+      expect(STEP_MS).toBe(0.2)
+      expect(barCount(3.5)).toBe(18)
+      expect(barCount(3.4)).toBe(17)
+      expect(barCount(-1)).toBe(5)
+    })
+
+    it('l’échelle sature à ±4 m/s — le pas mesuré vaut 2,5 % de la hauteur, aux deux tailles', () => {
+      expect(BARS_PER_HALF).toBe(20)
+      expect(barCount(4)).toBe(20)
+      expect(barCount(9)).toBe(20)
+    })
   })
 
-  it('les barres occupent toute la hauteur du widget (empilées sans recouvrement)', () => {
-    const el = drawVarioColumn(widget({}), settings, language)
-    const bars = [...el.querySelectorAll('.xc-variocol__bar')] as SVGRectElement[]
-    const svg = el.querySelector('.xc-variocol__scene') as SVGSVGElement
-    const viewBoxHeight = Number(svg.getAttribute('viewBox')?.split(' ')[3])
+  describe('convention de signe : haut = montée (tranchée)', () => {
+    it('les barres d’une montée sont toutes AU-DESSUS de la mi-hauteur', () => {
+      const el = drawVarioColumn(widget(), settings, 'fr')
+      const dessinees = bars(el)
+      expect(dessinees.length).toBeGreaterThan(0)
+      for (const bar of dessinees) expect(bar.y + bar.height).toBeLessThanOrEqual(MIDDLE + 0.01)
+    })
 
-    // Empilées bord à bord, dans l'ordre : la première commence à 0, chacune reprend
-    // exactement où la précédente s'arrête, la dernière finit à la hauteur totale.
-    let expectedY = 0
-    for (const bar of bars) {
-      expect(Number(bar.getAttribute('y'))).toBeCloseTo(expectedY, 5)
-      expectedY += Number(bar.getAttribute('height'))
-    }
-    expect(expectedY).toBeCloseTo(viewBoxHeight, 5)
+    it('la pile part de la mi-hauteur EXACTE, sans intervalle', () => {
+      const dessinees = bars(drawVarioColumn(widget(), settings, 'fr'))
+      const plusBasse = dessinees.reduce((a, b) => (a.y > b.y ? a : b))
+      expect(plusBasse.y + plusBasse.height).toBeCloseTo(MIDDLE, 5)
+    })
+
+    it('les barres se touchent, sans trou ni recouvrement', () => {
+      const dessinees = bars(drawVarioColumn(widget(), settings, 'fr')).sort((a, b) => a.y - b.y)
+      for (let i = 1; i < dessinees.length; i++) {
+        expect(dessinees[i]!.y).toBeCloseTo(dessinees[i - 1]!.y + dessinees[i - 1]!.height, 5)
+      }
+    })
   })
 
-  it('une barre sur cinq porte la classe d’accentuation, à intervalle régulier', () => {
-    // Motif mesuré sur vol-landscape3-en-vol.png et vol-numeriques-boussole-
-    // variocolumn.png (barres 3, 8, 13 sur les 17 visibles — intervalle constant de 5) ;
-    // non tranché quant à sa signification exacte, voir le commentaire de tête du module.
-    const el = drawVarioColumn(widget({}), settings, language)
-    const bars = [...el.querySelectorAll('.xc-variocol__bar')]
-    const accentIndices = bars
-      .map((bar, i) => (bar.classList.contains('xc-variocol__bar--accent') ? i : -1))
-      .filter(i => i !== -1)
+  describe('quatre familles de teintes, par amplitude — la descente n’en a qu’une', () => {
+    it('toute descente est bleue', () => {
+      expect(varioTone(-0.2)).toBe('sink')
+      expect(varioTone(-3.9)).toBe('sink')
+    })
 
-    expect(accentIndices.length).toBeGreaterThan(1)
-    for (let i = 1; i < accentIndices.length; i++) {
-      expect(accentIndices[i]! - accentIndices[i - 1]!).toBe(5)
-    }
+    it('montée : vert en dessous de 2 m/s, jaune de 2 à 3, rose au-delà', () => {
+      // Seuils = milieux des recouvrements observés sur les 40 captures du rejeu : vert
+      // vu de 2 à 10 barres, jaune de 10 à 15, rose de 15 à 20.
+      expect(varioTone(0.4)).toBe('climb-weak')
+      expect(varioTone(1.9)).toBe('climb-weak')
+      expect(varioTone(2.0)).toBe('climb-medium')
+      expect(varioTone(2.9)).toBe('climb-medium')
+      expect(varioTone(3.0)).toBe('climb-strong')
+      expect(varioTone(4.0)).toBe('climb-strong')
+    })
+
+    it('la famille est portée par un groupe, pas par chaque barre', () => {
+      const el = drawVarioColumn(widget(), settings, 'fr')
+      const gauge = el.querySelector('.xc-variocol__gauge')
+      expect(gauge).not.toBeNull()
+      // La valeur d'exemple (+2,1 m/s, alignée sur WVerticalSpeed) tombe en jaune.
+      expect(gauge?.classList.contains('xc-variocol__gauge--climb-medium')).toBe(true)
+    })
   })
 
-  it('ne dépend d’aucune clé du fichier — aucune clé d’échelle connue pour ce type', () => {
-    // avg (2000 sur le corpus) n'a aucun effet visuel confirmé pour ce type : le rendu
-    // ne varie pas avec les clés du widget, contrairement à WVerticalGraph.
-    const withoutKeys = drawVarioColumn(widget({}), settings, language)
-    const withAvg = drawVarioColumn(widget({ avg: '2000' }), settings, language)
-    expect(withAvg.innerHTML).toBe(withoutKeys.innerHTML)
+  it('une barre sur cinq est accentuée — une graduation majeure tous les 1,0 m/s', () => {
+    const dessinees = bars(drawVarioColumn(widget(), settings, 'fr')).sort((a, b) => b.y - a.y)
+    // `dessinees[0]` est la plus proche du milieu : c'est la barre n° 1.
+    dessinees.forEach((bar, index) => {
+      expect(bar.accent).toBe((index + 1) % 5 === 0)
+    })
   })
 
-  it('ne dessine jamais la trace pointillée — c’est le propre de WVerticalGraph', () => {
-    const el = drawVarioColumn(widget({}), settings, language)
-    expect(el.querySelector('.xc-vscale__trace')).toBeNull()
+  it('rien du tout quand le vario est nul — la colonne reste blanche, comme au sol', () => {
+    // Vérifié sur 2026-08-21_planche-sol-8-* : dans la boîte du widget, seuls les deux
+    // pixels du cadre. Ni barre, ni filet de mi-hauteur.
+    expect(barCount(0)).toBe(0)
+    expect(barCount(0.05)).toBe(0)
+  })
+
+  it('la clé `avg` n’a aucun effet visuel connu — elle vaut 2000 partout et le type n’a pas de titre', () => {
+    const avec = drawVarioColumn(widget({ avg: '2000' }), settings, 'fr')
+    const sans = drawVarioColumn(widget(), settings, 'fr')
+    expect(avec.innerHTML).toBe(sans.innerHTML)
   })
 })

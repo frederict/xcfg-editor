@@ -58,11 +58,25 @@
   --xc-vscale-arrow: #101010;
   --xc-vscale-label: #606060;
   --xc-vscale-dot: #ff9800;
-  /* Bargraphe — WVarioColumn (varioColumn.ts), correction en vol : teintes mesurées au
-     pixel sur vol-landscape3-en-vol.png et vol-numeriques-boussole-variocolumn.png. */
-  --xc-variocol-pale: #ffdfdf;
-  --xc-variocol-accent: #ffa0a0;
-  --xc-variocol-border: #5f0000;
+  /* Jauge de vario — WVarioColumn (varioColumn.ts), écart 1.7. Quatre familles d'aplats
+     relevées au pixel : une seule pour la descente, trois pour la montée selon
+     l'amplitude. Sources : vol-page3.png et 2026-08-21_planche-vol-8-* (bleu),
+     2026-08-21_planche-vol-8 en rejeu (vert et jaune), vol-numeriques-boussole-
+     variocolumn.png et vol-landscape3-en-vol.png (rose). Les teintes #ffe26a/#ffc46c
+     que la planche attribuait à ce widget appartiennent en réalité au tracé de
+     WVerticalGraph — voir le commentaire de tête de varioColumn.ts. */
+  --xc-variocol-sink-pale: #dfefff;
+  --xc-variocol-sink-accent: #a0b0ff;
+  --xc-variocol-sink-rule: #001060;
+  --xc-variocol-weak-pale: #dfffdf;
+  --xc-variocol-weak-accent: #a0ffa0;
+  --xc-variocol-weak-rule: #005f00;
+  --xc-variocol-medium-pale: #ffffdf;
+  --xc-variocol-medium-accent: #ffd0a0;
+  --xc-variocol-medium-rule: #5f3000;
+  --xc-variocol-strong-pale: #ffdfdf;
+  --xc-variocol-strong-accent: #ffa0a0;
+  --xc-variocol-strong-rule: #5f0000;
   /* Vue de profil (WSideView, sideView.ts) : couleurs mesurées sur widget-WCompass.png
      (bandeau réel « PAGE 4 — WSideView », voir sideView.ts). */
   --xc-sideview-terrain: #e2cfaa;
@@ -682,8 +696,9 @@
 
 .xc-vscale__trace circle { fill-opacity: 1; }
 
-/* Bargraphe — WVarioColumn (varioColumn.ts). Colonne de barres empilées, pas une
-   flèche : voir le commentaire de tête du module pour la correction en vol. */
+/* Jauge de vario — WVarioColumn (varioColumn.ts). Une pile de barres partant de la
+   mi-hauteur exacte, vers le haut en montée et vers le bas en descente ; rien du tout au
+   repos. Ce n'est pas une échelle décorative : voir le commentaire de tête du module. */
 .xc-variocol {
   width: 100%;
   height: 100%;
@@ -692,13 +707,41 @@
 
 .xc-variocol__scene { width: 100%; height: 100%; display: block; }
 
+/* Le filet mesure 2 px entre deux barres de 16 px sur l'appareil, soit 1/8 du pas. Le
+   `viewBox` de 400 pour 40 barres donne un pas de 10 : le filet vaut donc 1,25. Deux
+   barres voisines partagent une arête, et chacune y pose la moitié de son trait — la
+   bande visible entre elles fait bien `stroke-width`, pas le double. */
 .xc-variocol__bar {
   fill: var(--xc-variocol-pale);
-  stroke: var(--xc-variocol-border);
-  stroke-width: 4;
+  stroke: var(--xc-variocol-rule);
+  stroke-width: 1.25;
 }
 
 .xc-variocol__bar--accent { fill: var(--xc-variocol-accent); }
+
+.xc-variocol__gauge--sink {
+  --xc-variocol-pale: var(--xc-variocol-sink-pale);
+  --xc-variocol-accent: var(--xc-variocol-sink-accent);
+  --xc-variocol-rule: var(--xc-variocol-sink-rule);
+}
+
+.xc-variocol__gauge--climb-weak {
+  --xc-variocol-pale: var(--xc-variocol-weak-pale);
+  --xc-variocol-accent: var(--xc-variocol-weak-accent);
+  --xc-variocol-rule: var(--xc-variocol-weak-rule);
+}
+
+.xc-variocol__gauge--climb-medium {
+  --xc-variocol-pale: var(--xc-variocol-medium-pale);
+  --xc-variocol-accent: var(--xc-variocol-medium-accent);
+  --xc-variocol-rule: var(--xc-variocol-medium-rule);
+}
+
+.xc-variocol__gauge--climb-strong {
+  --xc-variocol-pale: var(--xc-variocol-strong-pale);
+  --xc-variocol-accent: var(--xc-variocol-strong-accent);
+  --xc-variocol-rule: var(--xc-variocol-strong-rule);
+}
 
 /* Vue de profil — WSideView (sideView.ts). */
 .xc-sideview {
