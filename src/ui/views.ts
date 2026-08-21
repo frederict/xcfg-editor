@@ -215,6 +215,53 @@ export function buildOverview(
   return root
 }
 
+/* --------------------------------------- amener la sélection sous les yeux du pilote */
+
+/**
+ * La bande de fenêtre laissée libre par les bandeaux collants : sous la barre de tête,
+ * au-dessus du bandeau de réglages. C'est la seule partie de la page qu'un pilote voit
+ * réellement, et donc la seule où une sélection se montre.
+ */
+export interface VisibleBand { top: number; bottom: number }
+
+/**
+ * Ce qu'on s'accorde au-dessus et au-dessous du gadget amené à l'écran : de quoi ne pas
+ * le coller au bord d'un bandeau, sans plus. La marge cède dès que la bande devient
+ * trop courte pour la loger.
+ */
+export const REVEAL_MARGIN_PX = 12
+
+/**
+ * De combien de pixels faire défiler la fenêtre pour qu'un gadget entre dans la bande
+ * visible — positif vers le bas, `0` s'il y est déjà.
+ *
+ * Trois cas, et l'ordre compte :
+ *
+ * 1. **Le gadget est plus haut que la bande** — page très zoomée, bandeau déployé : rien
+ *    ne le fera tenir en entier. On aligne alors son bord **supérieur** sur le haut de la
+ *    bande, parce que c'est là que se lisent son nom et sa valeur.
+ * 2. **Il dépasse par le bas** — le cas courant, celui du gadget caché sous le bandeau de
+ *    réglages : on remonte juste assez.
+ * 3. **Il dépasse par le haut** : on redescend juste assez.
+ *
+ * Le calcul est ici, hors de `main.ts`, parce que c'est la seule partie du geste qui ne
+ * dépende ni du DOM ni de la position de défilement — donc la seule qui se teste.
+ */
+export function revealOffset(
+  target: { top: number; bottom: number }, band: VisibleBand
+): number {
+  const bandHeight = band.bottom - band.top
+  if (!Number.isFinite(bandHeight) || bandHeight <= 0) return 0
+  const targetHeight = Math.max(0, target.bottom - target.top)
+  if (targetHeight >= bandHeight) return Math.round(target.top - band.top)
+  const margin = Math.min(REVEAL_MARGIN_PX, Math.floor((bandHeight - targetHeight) / 2))
+  const top = target.top - margin
+  const bottom = target.bottom + margin
+  if (bottom > band.bottom) return Math.round(bottom - band.bottom)
+  if (top < band.top) return Math.round(top - band.top)
+  return 0
+}
+
 /* -------------------------------------------------------------------- vue détaillée */
 
 /**

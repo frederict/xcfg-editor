@@ -25,8 +25,9 @@ import {
 import type { PropertyField } from './properties'
 import {
   aspectRatioOf, buildDetail, buildOverview, clampDockHeight, dockHeightCeiling,
-  DOCK_HEIGHT_DEFAULT, DOCK_HEIGHT_MIN, readDockHeight, writeDockHeight,
-  type DetailEditing, type DetailInspecting, type Orientation, type ViewContext
+  DOCK_HEIGHT_DEFAULT, DOCK_HEIGHT_MIN, readDockHeight, revealOffset, writeDockHeight,
+  type DetailEditing, type DetailInspecting, type Orientation, type ViewContext,
+  type VisibleBand
 } from './views'
 import { computeWarnings, REFERENCE_VERSION_CODE, warningsAt, type Warning } from './warnings'
 import { renderWidgetList, type WidgetList } from './widgetList'
@@ -1084,6 +1085,71 @@ function syncDock(): void {
 }
 
 /**
+ * Vrai le temps que `buildEditing` repose sur le calque neuf la sélection d'avant la
+ * reconstruction. Ce n'est pas un geste du pilote : ni le dépliage du bandeau ni le
+ * défilement vers la sélection ne doivent s'y déclencher, sans quoi une annulation
+ * rouvrirait un bandeau qu'il venait de replier et lui reprendrait sa position de
+ * lecture.
+ */
+let restoringSelection = false
+
+/** Coordonnées des widgets, normalisées sur 10000 quelle que soit la dalle. */
+const WIDGET_SCALE = 10000
+
+/**
+ * Ce qui reste de fenêtre à la page : sous les bandeaux collants du haut, au-dessus du
+ * bandeau de réglages. Mesuré à chaque appel — la barre de tête passe sur deux lignes
+ * en dessous de 1100 px, et le bandeau vient peut-être de changer de hauteur.
+ */
+function visibleBand(): VisibleBand {
+  const top = Math.max(
+    bar.getBoundingClientRect().bottom,
+    tools.hidden ? 0 : tools.getBoundingClientRect().bottom
+  )
+  const bottom = dockElement === undefined || dockElement.hidden
+    ? window.innerHeight
+    : dockElement.getBoundingClientRect().top
+  return { top, bottom }
+}
+
+/** Un défilement animé, sauf pour qui a demandé qu'on lui épargne les animations. */
+function revealBehavior(): ScrollBehavior {
+  return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true
+    ? 'auto'
+    : 'smooth'
+}
+
+/**
+ * Amène le gadget sélectionné dans la bande visible.
+ *
+ * C'est la boucle d'édition elle-même : *je choisis → je vois*. Sans ce défilement, un
+ * gadget de la moitié basse de la page est sous le bandeau de réglages au moment précis
+ * où l'on ouvre ses réglages — et comme il est aussi hors d'atteinte du clic pour la
+ * même raison, la liste du bandeau est son unique voie d'accès, laquelle ne montrait
+ * rien.
+ *
+ * On défile **la fenêtre**, jamais la plaque : le zoom que le pilote a calé à la règle
+ * graduée n'est pas touché, et la page reste dessinée à sa taille physique. La position
+ * du gadget se calcule depuis ses coordonnées normalisées et le rectangle de la plaque,
+ * plutôt que depuis les marques du calque — la consultation n'en a pas, et le calcul
+ * vaut alors pour les deux modes.
+ */
+function revealSelection(): void {
+  if (view.kind !== 'detail' || selection === undefined) return
+  const widget = currentPage()?.widgets[selection]
+  const plate = content.querySelector('.plate')
+  if (widget === undefined || !(plate instanceof HTMLElement)) return
+  const box = plate.getBoundingClientRect()
+  if (box.height <= 0) return
+  const offset = revealOffset({
+    top: box.top + (widget.y1 / WIDGET_SCALE) * box.height,
+    bottom: box.top + (widget.y2 / WIDGET_SCALE) * box.height
+  }, visibleBand())
+  if (offset === 0) return
+  window.scrollBy({ top: offset, behavior: revealBehavior() })
+}
+
+/**
  * Remet la page d'accord avec la sélection, **en consultation**.
  *
  * En édition, c'est le calque qui pose ses marques et qui sait le faire sans redessiner.
@@ -1214,6 +1280,9 @@ function refreshWidgetList(): void {
       // pas de calque : on met à jour le panneau et les marques nous-mêmes.
       if (editor) editor.select(index)
       else { refreshPanel(); syncSelectionMarks() }
+      // Après le dépliage, jamais avant : le bandeau vient de reprendre sa hauteur, et
+      // c'est elle qui décide de la bande où le gadget doit entrer.
+      revealSelection()
     }
   })
   widgetList = list
@@ -1327,6 +1396,7 @@ function buildInspecting(page: Page): DetailInspecting {
       selection = index
       refreshPanel()
       syncSelectionMarks()
+      revealSelection()
     },
     bindRefresh: (refresh) => { refreshReadout = refresh }
   }
@@ -1386,6 +1456,11 @@ function buildEditing(current: Session, page: Page, orientation: Orientation): D
     onSelectionChange: (index) => {
       selection = index
       refreshPanel()
+      // Un clic sur la page, une flèche, une action de la barre d'outils : c'est un geste
+      // du pilote, et il a droit au gadget sous les yeux. La sélection reposée par
+      // `buildEditing` après une reconstruction, elle, n'en est pas un — voir
+      // `restoringSelection`.
+      if (index !== undefined && !restoringSelection) revealSelection()
     }
   })
 
@@ -1400,7 +1475,11 @@ function buildEditing(current: Session, page: Page, orientation: Orientation): D
   // La liste avant le calque : `editor.select` aboutit à `refreshPanel`, qui met la ligne
   // en évidence — encore faut-il que la liste existe.
   refreshWidgetList()
-  if (selection !== undefined) editor.select(selection)
+  if (selection !== undefined) {
+    restoringSelection = true
+    editor.select(selection)
+    restoringSelection = false
+  }
   refreshPanel()
   syncDock()
 

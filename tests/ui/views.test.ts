@@ -14,6 +14,7 @@ import {
   clampDockHeight,
   dockHeightCeiling,
   readDockHeight,
+  revealOffset,
   widgetSizeMm,
   writeDockHeight,
   type DetailInspecting,
@@ -242,5 +243,45 @@ describe('consulter les réglages d’un widget sans entrer en édition', () => 
     // Le clic non plus : `onSelect` remonte un entier, il ne touche à aucun nœud.
     root.querySelectorAll<HTMLElement>('.hotspot')[0]!.click()
     expect(after).toBe(before)
+  })
+})
+
+describe('amener la sélection sous les yeux du pilote', () => {
+  // La bande mesurée sur la fenêtre de référence de l'audit : 1500 × 950, mode édition,
+  // barre de tête à 56 px, bandeau de réglages déployé dont le haut est à 602 px.
+  const BAND = { top: 56, bottom: 602 }
+
+  it('ne défile pas quand le gadget est déjà dans la bande', () => {
+    expect(revealOffset({ top: 200, bottom: 320 }, BAND)).toBe(0)
+  })
+
+  it('remonte juste ce qu’il faut quand le gadget est sous le bandeau', () => {
+    // Le cas de l'audit : rang 14 de la page 1, entre 607 et 777 px, entièrement caché
+    // par le bandeau de réglages. Il faut descendre de 777 + marge − 602 = 187 px.
+    expect(revealOffset({ top: 607, bottom: 777 }, BAND)).toBe(187)
+  })
+
+  it('redescend quand le gadget est passé sous la barre de tête', () => {
+    // Un offset négatif fait remonter la fenêtre : le haut du gadget revient sous la barre.
+    expect(revealOffset({ top: 10, bottom: 90 }, BAND)).toBe(10 - 12 - 56)
+  })
+
+  it('aligne le bord supérieur quand le gadget est plus haut que la bande', () => {
+    // Page très zoomée, bandeau déployé : rien ne le fera tenir en entier. Son bord
+    // supérieur va au haut de la bande — c'est là que se lisent son nom et sa valeur.
+    expect(revealOffset({ top: 300, bottom: 1400 }, BAND)).toBe(300 - 56)
+  })
+
+  it('n’exige jamais la marge au point de faire dépasser par l’autre bord', () => {
+    // Bande de 100 px, gadget de 96 : la marge de 12 px ne tient pas, elle cède à 2 px.
+    const band = { top: 0, bottom: 100 }
+    expect(revealOffset({ top: 6, bottom: 102 }, band)).toBe(4)
+  })
+
+  it('ne défile pas quand la bande est vide ou absurde', () => {
+    // Fenêtre trop basse pour loger quoi que ce soit entre les deux bandeaux : mieux vaut
+    // ne rien faire que sauter au hasard.
+    expect(revealOffset({ top: 100, bottom: 200 }, { top: 400, bottom: 300 })).toBe(0)
+    expect(revealOffset({ top: 100, bottom: 200 }, { top: 0, bottom: Number.NaN })).toBe(0)
   })
 })

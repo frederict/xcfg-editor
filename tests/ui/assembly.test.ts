@@ -171,3 +171,34 @@ describe('assemblage — les deux lectures du fichier sont dans le bandeau du fi
     expect(main).not.toMatch(/libraryButton\.hidden\s*=/)
   })
 })
+
+/*
+ * Les trois corrections d'ergonomie du 2026-08-21 (§ A.2, A.3, A.4 de l'audit). Chacune
+ * tient en un point d'assemblage que ni happy-dom ni une assertion de sortie n'atteint :
+ * `main.ts` monte un DOM entier et branche des écoutes de fenêtre. Le calcul, lui, est
+ * dans `views.ts` et a ses propres tests d'exécution.
+ */
+describe('assemblage — sélectionner un gadget l’amène sous les yeux du pilote', () => {
+  it('les trois chemins de sélection défilent vers le gadget', () => {
+    // Liste du bandeau, clic sur la page en consultation, calque d'édition : trois
+    // entrées, un seul geste attendu.
+    expect(main.match(/revealSelection\(\)/g)?.length).toBeGreaterThanOrEqual(4)
+  })
+
+  it('le défilement porte sur la fenêtre, jamais sur le zoom', () => {
+    // Le pilote a calé son zoom à la règle graduée : le montrer ne doit pas le déranger.
+    expect(main).toContain('window.scrollBy({ top: offset')
+    expect(main).not.toMatch(/revealSelection[\s\S]{0,600}zoom\s*=/)
+  })
+
+  it('la bande visible se mesure, elle n’est pas supposée', () => {
+    // La barre de tête passe sur deux lignes sous 1100 px et le bandeau vient peut-être
+    // de changer de hauteur : une constante mentirait.
+    expect(main).toContain('function visibleBand(): VisibleBand')
+    expect(main).toContain('bar.getBoundingClientRect().bottom')
+  })
+
+  it('qui a demandé moins d’animation n’en reçoit pas', () => {
+    expect(main).toContain("'(prefers-reduced-motion: reduce)'")
+  })
+})
