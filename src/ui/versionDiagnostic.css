@@ -56,7 +56,7 @@
   outline-offset: 1px;
 }
 
-/* La présélection : d'où vient le palier retenu, et ce qu'on ne sait pas de lui. */
+/* La présélection : d'où vient la version proposée, et ce qu'on ne sait pas d'elle. */
 .vdiag__basis {
   margin: 0.2rem 0 0;
   font-size: 0.85rem;
@@ -64,7 +64,23 @@
   color: var(--app-ink-soft, #59616a);
 }
 
-/* Ce qui a changé depuis le palier proposé précédent — c'est ce qui justifie le choix. */
+/*
+ * Les versions que le diagnostic ne distingue pas de celle choisie. Contrepartie d'un
+ * menu qui propose des versions là où l'outil ne connaît que des inventaires de
+ * réglages : elle dit ce que le choix ne change pas. Filet à gauche pour qu'elle se lise
+ * comme une réserve attachée au menu, et non comme une phrase du diagnostic.
+ */
+.vdiag__same {
+  margin: 0.1rem 0 0;
+  padding-left: 0.55rem;
+  border-left: 2px solid var(--app-line-strong, #b1b8bf);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.vdiag__same[hidden] { display: none; }
+
+/* Ce qui a changé depuis la version publiée précédente — c'est ce qui justifie le choix. */
 .vdiag__delta {
   margin: 0;
   font-size: 0.85rem;
@@ -211,7 +227,7 @@
   overflow-wrap: anywhere;
 }
 
-/* Un constat qui change selon le palier candidat retenu : dit, jamais tu. */
+/* Un constat qui change selon la version candidate retenue : dit, jamais tu. */
 .vdiag__divergence {
   display: block;
   font-size: 0.76rem;
@@ -236,6 +252,10 @@
   .vdiag__select {
     background: var(--app-bg, #101315);
     border-color: var(--app-line-strong, #3b434a);
+  }
+
+  .vdiag__same {
+    border-left-color: var(--app-line-strong, #3b434a);
   }
 
   .vdiag__basis,

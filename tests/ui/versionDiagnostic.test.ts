@@ -18,9 +18,12 @@ import {
   divergenceSentence,
   placeLabel,
   readDocumentVersion,
+  previousPublishedTier,
+  splitVersionName,
   suggestTier,
   tierDelta,
-  tierOptions,
+  versionLabel,
+  versionOptions,
   type Diagnosis,
   type FindingCategory
 } from '../../src/ui/versionDiagnostic'
@@ -48,44 +51,86 @@ const KNOWN_GAPS: Array<[widget: string, key: string, tiers: number[]]> = [
 
 /* --------------------------------------------------------------------- le sélecteur */
 
-describe('le menu de paliers', () => {
-  it('ne propose que les paliers portant une version publiée', () => {
-    const options = tierOptions(db)
-    expect(options.length).toBeGreaterThan(0)
-    for (const option of options) {
-      expect(option.releaseNames.length, `palier ${option.tier}`).toBeGreaterThan(0)
-      expect(option.unpublished).toBe(false)
-    }
-    // Onze des vingt-et-un paliers : les dix autres n'existent que par des constructions
-    // intermédiaires, qu'aucun pilote n'a installées.
-    expect(options).toHaveLength(11)
+describe('le menu de versions', () => {
+  const options = versionOptions(db)
+
+  it('propose une entrée par version relevée, pas une par inventaire de réglages', () => {
+    // 47 relevés, dont deux archives de 0.9.8.4 que rien ne distingue : 46 entrées.
+    // Le menu par inventaire n'en proposait que 11, et la version de l'AIR³ n'y était pas.
+    expect(options).toHaveLength(46)
     expect(db.index.tiers).toHaveLength(21)
   })
 
-  it('nomme chaque palier par la version publiée qui l’ouvre, et dit celles qu’il couvre', () => {
-    const options = tierOptions(db)
-    const last = options[options.length - 1]
-    expect(last?.openingRelease).toBe('1.0.0-RC2')
-    expect(last?.releaseNames).toEqual(['1.0.0-RC2', '1.0.1-beta', '1.0.2-beta'])
-    expect(last?.label).toContain('1.0.0-RC2')
+  it('porte la version que l’AIR³ affiche, sous le nom que l’AIR³ affiche', () => {
+    // Le défaut mesuré : l'appareil dit « 1.0.3-beta », le relevé enregistre
+    // « 1.0.3-beta-5-gc036d8f2c », et le menu ne nommait que « 1.0.0-RC2 ».
+    const mine = options.find((option) => option.label === '1.0.3-beta')
+    expect(mine).toBeDefined()
+    expect(mine?.code).toBe(100030)
+    expect(mine?.tier).toBe(20)
+    expect(options.map((option) => option.label)).toContain('1.0.1-beta')
+    expect(options.map((option) => option.label)).toContain('1.0.2-beta')
   })
 
-  it('ajoute au menu la construction non publiée que le fichier ouvert désigne', () => {
-    // `gson-2022.xcfg` vient d'une construction intermédiaire : les paliers 0 et 1 ne
-    // portent aucune version publiée. Les masquer rendrait l'outil inutile pour lui.
-    const options = tierOptions(db, [0, 1])
-    expect(options).toHaveLength(13)
-    const extra = options.filter((option) => option.unpublished).map((option) => option.tier)
-    expect(extra).toEqual([0, 1])
-    expect(options[0]?.label).toContain('construction')
+  it('va de la plus récente à la plus ancienne', () => {
+    expect(options[0]?.label).toBe('1.0.3-beta')
+    expect(options[options.length - 1]?.label).toContain('0.9.6.2-beta')
   })
 
-  it('cumule l’écart depuis le palier PROPOSÉ précédent, pas depuis le palier n-1', () => {
-    // Le palier 20 déclare `keysAdded` par rapport au palier 19, absent du menu : deux
-    // clés. Depuis 0.9.12.6 (palier 17), le seul que le pilote voit avant lui, l'écart
-    // réel est d'un tout autre ordre — l'afficher tel quel mentirait.
+  it('ôte le suffixe de construction, et ne le remet que s’il départage', () => {
+    expect(splitVersionName('1.0.3-beta-5-gc036d8f2c'))
+      .toEqual({ release: '1.0.3-beta', build: '5-gc036d8f2c' })
+    expect(splitVersionName('1.0.0-RC2')).toEqual({ release: '1.0.0-RC2', build: null })
+
+    // Trois constructions de 0.9.12.3 : sans le suffixe, trois lignes identiques.
+    const builds = options.filter((option) => option.release === '0.9.12.3')
+    expect(builds).toHaveLength(3)
+    for (const option of builds) expect(option.label).toContain('construction')
+    // Une seule construction de 1.0.3-beta : le suffixe n'y départage rien.
+    expect(options.filter((option) => option.release === '1.0.3-beta')).toHaveLength(1)
+  })
+
+  it('distingue les versions publiées des constructions intermédiaires', () => {
+    const published = options.filter((option) => option.published)
+    const builds = options.filter((option) => !option.published)
+    expect(published.length).toBeGreaterThan(0)
+    expect(builds.length).toBeGreaterThan(0)
+    expect(published.map((option) => option.label)).toContain('1.0.0-RC2')
+    expect(builds.map((option) => option.label)).toContain('1.0.0-RC1 (construction 31-g598cd4ebb)')
+  })
+
+  it('donne une valeur distincte à chaque entrée', () => {
+    expect(new Set(options.map((option) => option.value)).size).toBe(options.length)
+  })
+
+  it('ne fait qu’une entrée de deux archives que rien ne distingue', () => {
+    // 0.9.8.4 est relevé sous 90840 et 90841, même nom, même inventaire : en proposer
+    // deux laisserait croire à un choix qui n'en est pas un.
+    const same = options.filter((option) => option.release === '0.9.8.4')
+    expect(same).toHaveLength(1)
+    expect(same[0]?.codes).toEqual([90840, 90841])
+  })
+
+  it('ne nomme jamais une version par un numéro interne', () => {
+    for (let tier = 0; tier < db.schema.tierCount; tier += 1) {
+      expect(versionLabel(db, tier)).not.toContain('palier')
+    }
+    expect(versionLabel(db, 20)).toBe('1.0.0-RC2')
+    expect(versionLabel(db, 19)).toBe('1.0.0-RC1 (construction 31-g598cd4ebb)')
+    // Avec un numéro, c'est la version qui le porte qui est nommée, construction
+    // comprise : ces messages-là servent précisément à départager des voisines.
+    expect(versionLabel(db, 20, 100030)).toBe('1.0.3-beta (construction 5-gc036d8f2c)')
+  })
+})
+
+describe('l’écart affiché', () => {
+  it('se compte depuis la version PUBLIÉE précédente, pas depuis le relevé n-1', () => {
+    // Le relevé 20 déclare `keysAdded` par rapport au 19, une construction intermédiaire
+    // de 1.0.0-RC1 : deux réglages. Depuis 0.9.12.6, la dernière version publiée avant
+    // elle, l'écart réel est d'un tout autre ordre — l'afficher tel quel mentirait.
     const declared = db.tier(20)
     expect(Object.values(declared?.keysAdded ?? {}).flat()).toHaveLength(2)
+    expect(previousPublishedTier(db, 20)).toBe(17)
 
     const delta = tierDelta(db, 17, 20)
     expect(delta.fromTier).toBe(17)
@@ -97,38 +142,52 @@ describe('le menu de paliers', () => {
   it('ne compte pas deux fois les réglages qu’un gadget entièrement neuf apporte', () => {
     const delta = tierDelta(db, 17, 20)
     for (const entry of delta.keysAdded) {
-      // Un gadget cité dans `keysAdded` existait déjà au palier de départ.
+      // Un gadget cité dans `keysAdded` existait déjà au départ de la comparaison.
       expect(db.widgetStatus(entry.widget, 17)).toBe('present')
     }
   })
 
-  it('dit du premier palier proposé qu’il n’y a rien à comparer', () => {
-    const first = tierOptions(db)[0]
-    expect(first?.delta.fromTier).toBeNull()
-    expect(first?.delta.summary).toContain('rien à comparer')
+  it('dit qu’il n’y a rien à comparer quand rien n’est publié avant', () => {
+    expect(previousPublishedTier(db, 0)).toBeNull()
+    const delta = tierDelta(db, previousPublishedTier(db, 0), 0)
+    expect(delta.fromTier).toBeNull()
+    expect(delta.summary).toContain('rien à comparer')
   })
 })
 
 /* ------------------------------------------------------------------ la présélection */
 
 describe('présélection d’après le versionCode du fichier', () => {
-  it('retient le palier unique quand le numéro n’en désigne qu’un', () => {
+  it('retient la version que le fichier déclare, et la nomme comme l’appareil', () => {
     const suggestion = suggestTier(db, documentOf(BACKUP_2026))
     expect(suggestion.version).toEqual({ code: 100030, name: '1.0.3-beta' })
     expect(suggestion.basis).toBe('exact')
     expect(suggestion.candidateTiers).toEqual([20])
     expect(suggestion.selected).toBe(20)
-    expect(suggestion.message).toContain('Un seul palier')
+    expect(suggestion.selectedCode).toBe(100030)
+    // Le nom de l'appareil, pas celui de la première version du même inventaire.
+    expect(suggestion.message).toContain('XCTrack 1.0.3-beta')
+    expect(suggestion.message).not.toContain('1.0.0-RC2')
   })
 
-  it('retient le plus récent quand le numéro en désigne plusieurs, et le dit', () => {
-    // 90615 est déclaré par deux APK aux inventaires différents : le versionCode
-    // n'identifie pas un schéma, et le fichier ne dit pas lequel l'a écrit.
+  it('laisse le NOM déclaré trancher ce que le numéro laisse ambigu', () => {
+    // 90615 est déclaré par deux APK aux inventaires différents : le versionCode ne dit
+    // pas lequel a écrit le fichier — mais le versionName, lui, le dit.
     const suggestion = suggestTier(db, documentOf(GSON_2022))
+    expect(suggestion.version.name).toBe('0.9.6.2-beta-48-gcb6ffef8')
+    expect(suggestion.basis).toBe('exact')
+    expect(suggestion.candidateTiers).toEqual([0])
+    expect(suggestion.selected).toBe(0)
+    expect(suggestion.message).toContain('le nom que le fichier déclare n’en désigne qu’une')
+  })
+
+  it('retient la plus récente, et le dit, quand ni le numéro ni le nom ne tranchent', () => {
+    // Le même fichier privé de son nom : il ne reste que le numéro, qui ne suffit pas.
+    const suggestion = suggestTier(db, parseJson('{"info":{"versionCode":90615}}'))
     expect(suggestion.basis).toBe('ambiguous')
     expect(suggestion.candidateTiers).toEqual([0, 1])
     expect(suggestion.selected).toBe(1)
-    expect(suggestion.message).toContain('n’identifie pas un schéma')
+    expect(suggestion.message).toContain('sans accepter les mêmes réglages')
     expect(suggestion.message).toContain('arbitraire')
   })
 
@@ -153,7 +212,7 @@ describe('présélection d’après le versionCode du fichier', () => {
     expect(suggestion.message).toContain('ne dit pas de quelle version')
   })
 
-  it('ne devine pas un palier pour un numéro inconnu de la base', () => {
+  it('ne devine pas une version pour un numéro inconnu de la base', () => {
     const suggestion = suggestTier(db, parseJson('{"info":{"versionCode":100400}}'))
     expect(suggestion.basis).toBe('unrecognized')
     expect(suggestion.selected).toBeNull()
@@ -410,11 +469,19 @@ describe('diagnostic des fichiers réels', () => {
 
 /* ------------------------------------------------------------------------ le panneau */
 
+/** La valeur d'`<option>` d'une version, telle que le menu la fabrique. */
+function valueOf(release: string): string {
+  const option = versionOptions(db).find((entry) => entry.release === release)
+  expect(option, release).toBeDefined()
+  return option?.value ?? ''
+}
+
 describe('le panneau', () => {
-  it('présélectionne le palier du fichier et affiche son diagnostic', async () => {
+  it('présélectionne la version du fichier et affiche son diagnostic', async () => {
     const panel = await buildVersionPanel({ document: documentOf(BACKUP_2026), database: db })
     expect(panel.tier()).toBe(20)
-    expect(panel.select.value).toBe('20')
+    expect(panel.version()?.label).toBe('1.0.3-beta')
+    expect(panel.select.value).toBe(valueOf('1.0.3-beta'))
     expect(panel.diagnosis()?.counts.legacy).toBe(9)
 
     const text = panel.element.textContent ?? ''
@@ -426,9 +493,46 @@ describe('le panneau', () => {
     expect(text).not.toContain('widget ')
   })
 
+  it('ouvre le menu sur la version du fichier, avant toutes les autres', async () => {
+    const panel = await buildVersionPanel({ document: documentOf(BACKUP_2026), database: db })
+    const groups = [...panel.select.querySelectorAll('optgroup')]
+    expect(groups[0]?.label).toBe('La version qui a écrit ce fichier')
+    expect(groups[0]?.textContent).toBe('1.0.3-beta')
+    expect(groups.map((group) => group.label)).toEqual([
+      'La version qui a écrit ce fichier',
+      'Versions publiées, de la plus récente à la plus ancienne',
+      'Versions de développement, jamais publiées'
+    ])
+    // La version de l'appareil ne figure qu'une fois : elle a quitté son groupe d'origine.
+    const lines = [...panel.select.querySelectorAll('option')].map((node) => node.textContent)
+    expect(lines.filter((line) => line === '1.0.3-beta')).toHaveLength(1)
+  })
+
+  it('nomme les versions que le diagnostic ne distingue pas de celle choisie', async () => {
+    const panel = await buildVersionPanel({ document: documentOf(BACKUP_2026), database: db })
+    const text = panel.element.textContent ?? ''
+    // C'est la contrepartie du menu par version : le pilote reconnaît la sienne, et
+    // apprend du même coup que trois autres donneraient exactement le même constat.
+    expect(text).toContain('1.0.2-beta, 1.0.1-beta et 1.0.0-RC2')
+    expect(text).toContain('exactement les mêmes réglages que 1.0.3-beta')
+    expect(text).toContain('vaut pour 4 versions')
+  })
+
+  it('ne dit jamais « palier », « schéma » ni « clé » au pilote', async () => {
+    for (const path of [BACKUP_2026, BACKUP_2025, GSON_2022]) {
+      const panel = await buildVersionPanel({
+        document: documentOf(path), database: db, onCleanup: () => undefined
+      })
+      const text = panel.element.textContent ?? ''
+      for (const word of ['palier', 'schéma', 'Schéma', 'clé', 'clés']) {
+        expect(text, `${path} — ${word}`).not.toContain(word)
+      }
+    }
+  })
+
   it('recalcule le diagnostic quand le pilote change de version', async () => {
     const panel = await buildVersionPanel({ document: documentOf(BACKUP_2026), database: db })
-    panel.select.value = '5'
+    panel.select.value = valueOf('0.9.8.7') // même inventaire de réglages que 0.9.8.3
     panel.select.dispatchEvent(new Event('change'))
     expect(panel.tier()).toBe(5)
     expect(panel.diagnosis()?.counts.gap).toBe(9)
@@ -436,29 +540,45 @@ describe('le panneau', () => {
     expect(text).toContain('trou de relevé')
     expect(text).toContain('Ne jamais supprimer')
     // Le pilote a délibérément visé autre chose que la version du fichier : on le lui
-    // rappelle, et on ne confronte plus le constat au palier d'origine — chaque
+    // rappelle, et on ne confronte plus le constat à la version d'origine — chaque
     // différence attendue deviendrait sinon un « constat instable », c'est-à-dire du bruit.
     expect(text).toContain('Vous visez une autre version que celle-là')
+    expect(text).toContain('confronte ce fichier à 0.9.8.7')
     expect(panel.diagnosis()?.unstableCount).toBe(0)
     expect(text).not.toContain('Constat instable')
   })
 
-  it('n’affiche aucun diagnostic tant qu’aucun palier n’est retenu', async () => {
+  it('ne rappelle rien quand la version choisie accepte les mêmes réglages', async () => {
+    // 1.0.1-beta n'est pas 1.0.3-beta, mais notre relevé ne les distingue pas : annoncer
+    // un changement de cible démentirait la phrase qui vient de dire le contraire.
+    const panel = await buildVersionPanel({ document: documentOf(BACKUP_2026), database: db })
+    panel.select.value = valueOf('1.0.1-beta')
+    panel.select.dispatchEvent(new Event('change'))
+    expect(panel.tier()).toBe(20)
+    expect(panel.version()?.label).toBe('1.0.1-beta')
+    expect(panel.element.textContent).not.toContain('Vous visez une autre version')
+    expect(panel.diagnosis()?.counts.legacy).toBe(9)
+  })
+
+  it('n’affiche aucun diagnostic tant qu’aucune version n’est choisie', async () => {
     const panel = await buildVersionPanel({
       document: parseJson('{"info":{"versionCode":100400},"layout":{}}'),
       database: db
     })
     expect(panel.tier()).toBeNull()
+    expect(panel.version()).toBeNull()
     expect(panel.diagnosis()).toBeNull()
     expect(panel.element.textContent).toContain('Choisissez une version')
   })
 
-  it('propose la construction que le fichier de 2022 désigne, et la présélectionne', async () => {
+  it('présélectionne la construction que le fichier de 2022 déclare', async () => {
     const panel = await buildVersionPanel({ document: documentOf(GSON_2022), database: db })
-    expect(panel.tier()).toBe(1)
+    // Le nom déclaré désigne la première des deux constructions, pas la plus récente.
+    expect(panel.tier()).toBe(0)
+    expect(panel.version()?.build).toBe('48-gcb6ffef8')
     const groups = [...panel.select.querySelectorAll('optgroup')].map((g) => g.label)
-    expect(groups).toContain('Constructions désignées par ce fichier')
-    expect(panel.element.textContent).toContain('n’identifie pas un schéma')
+    expect(groups[0]).toBe('La version qui a écrit ce fichier')
+    expect(panel.element.textContent).toContain('le nom que le fichier déclare')
   })
 
   it('suit un changement de document', async () => {
@@ -467,13 +587,17 @@ describe('le panneau', () => {
     expect(panel.tier()).toBe(17)
     expect(panel.diagnosis()?.counts.legacy).toBe(4)
     expect(panel.element.textContent).toContain('91231')
+    // Le repli porte sur trois constructions de 0.9.12.3 : elles ouvrent le menu.
+    const groups = [...panel.select.querySelectorAll('optgroup')].map((g) => g.label)
+    expect(groups[0]).toBe('Les versions les plus proches de celle de ce fichier')
+    expect(panel.version()?.release).toBe('0.9.12.3')
   })
 
   it('ne touche jamais au document : il ressort à l’octet près', async () => {
     const source = readFileSync(BACKUP_2026, 'utf8')
     const document = parseJson(source)
     const panel = await buildVersionPanel({ document, database: db })
-    panel.select.value = '2'
+    panel.select.value = valueOf('0.9.7.4-beta')
     panel.select.dispatchEvent(new Event('change'))
     expect(serializeJson(document)).toBe(source)
   })

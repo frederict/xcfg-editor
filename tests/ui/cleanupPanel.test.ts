@@ -301,9 +301,12 @@ describe('dans le panneau de diagnostic', () => {
       document: documentOf(BACKUP_2026), database: db, onCleanup: () => undefined
     })
     expect(panel.cleanupPlan()?.entries).toHaveLength(9)
-    panel.select.value = '5'
+    const older = [...panel.select.querySelectorAll('option')]
+      .find((node) => node.textContent === '0.9.8.7')
+    expect(older).toBeDefined()
+    panel.select.value = older?.value ?? ''
     panel.select.dispatchEvent(new Event('change'))
-    // Au palier 5, les écarts sont des réglages APPARUS depuis : rien à enlever.
+    // Sous 0.9.8.7, les écarts sont des réglages APPARUS depuis : rien à enlever.
     expect(panel.cleanupPlan()?.entries).toEqual([])
     expect(panel.element.textContent).not.toContain('Enlever ce qu’une ancienne version')
   })

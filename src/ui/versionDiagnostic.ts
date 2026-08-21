@@ -24,35 +24,63 @@ import './versionDiagnostic.css'
  * écrit ailleurs : `src/ui/cleanupPanel.ts` pour l'écran, `src/model/cleanup.ts` pour le
  * plan et le retrait.
  *
- * ## Cinq décisions, et leurs raisons
+ * ## Le palier travaille, la version se montre
  *
- * 1. **Le menu propose des paliers, pas des versions.** 47 versions relevées, 21
- *    schémas distincts : deux versions au schéma identique sont indiscernables pour cet
- *    outil, et les distinguer laisserait croire à un choix sans effet.
+ * Les 47 versions relevées ne produisent que 21 inventaires de réglages distincts, et
+ * c'est cet inventaire — le **palier** — qui fait tout le travail de ce module. Mais le
+ * palier est notre concept, pas celui du pilote : il ne cherche pas un inventaire, il
+ * cherche l'appareil qu'il a dans les mains. Un AIR³ affichant « 1.0.3-beta » doit
+ * trouver « 1.0.3-beta ».
  *
- * 2. **Et seulement les paliers qui portent une version publiée** — 11 des 21. Sinon le
- *    pilote choisirait entre quatre constructions intermédiaires de 0.9.11.11, qu'il n'a
- *    jamais installées. Exception assumée : si le fichier ouvert désigne lui-même une
- *    construction non publiée (le cas de `gson-2022.xcfg`, paliers 0 et 1), ce palier-là
- *    est ajouté au menu dans un groupe à part — le masquer rendrait l'outil inutile
- *    précisément pour le fichier qu'on regarde.
+ * Un menu nommé par paliers l'a longtemps rendu invisible à lui-même : son 1.0.3-beta
+ * partage son inventaire avec 1.0.0-RC2, et c'est ce dernier nom que le menu portait.
+ * Le mot « palier » ne paraît donc plus à l'écran — ni ici, ni dans les messages ; il
+ * reste dans les identifiants et dans ces commentaires, où il est à sa place.
  *
- * 3. **L'écart affiché est cumulé depuis le palier proposé précédent**, jamais depuis le
- *    palier immédiatement antérieur. `TierEntry.keysAdded` compare au palier n-1, qui
- *    n'est souvent pas dans le menu : afficher « 2 réglages ajoutés » pour 1.0.0-RC2
- *    alors que 140 séparent 0.9.12.6 de 1.0.0-RC2 serait faux. L'écart est donc recalculé
- *    par différence d'ensembles entre les deux paliers réellement proposés.
+ * ## Sept décisions, et leurs raisons
  *
- * 4. **Un `versionCode` ne désigne pas un palier.** Cinq collisions connues. Quand il en
- *    désigne plusieurs, on présélectionne **le plus récent**, on le dit, on liste les
- *    autres — et chaque constat du diagnostic est recalculé sous *tous* les paliers
- *    candidats : celui qui change d'un palier à l'autre est marqué « constat instable ».
- *    Le choix arbitraire devient alors sans conséquence, parce qu'il est mesuré.
+ * 1. **Le menu propose des versions, une entrée par version relevée.** Le palier se
+ *    déduit du choix, en silence. Ce que ce regroupement fait perdre — savoir que le
+ *    choix entre deux voisines est sans effet — est rendu par une phrase qui nomme
+ *    explicitement les versions que ce diagnostic ne sait pas distinguer de celle
+ *    choisie. Le pilote reconnaît la sienne, et sait ce que son choix ne change pas.
  *
- * 5. **Le diagnostic se raisonne par instance de gadget, jamais par type.** Une même clé
- *    peut être un reliquat sur un gadget et courante sur un autre dans le même fichier —
- *    c'est le cas mesuré dans une sauvegarde 1.0.3, où deux cartes portent
+ * 2. **Les versions publiées d'abord, les constructions intermédiaires à part.**
+ *    `1.0.0-RC1-31-g598cd4ebb` n'est pas un nom qu'un pilote a lu sur son appareil ;
+ *    `1.0.0-RC2` en est un. Les deux restent atteignables — l'AIR³ est livré avec des
+ *    betas, et 1.0.3-beta n'est relevé que sous une construction — mais l'ordre du menu
+ *    dit lesquelles sont ordinaires.
+ *
+ * 3. **Le nom est coupé de son suffixe de construction** (`1.0.3-beta-5-gc036d8f2c` →
+ *    `1.0.3-beta`), et le suffixe n'est remis que là où il distingue deux entrées de même
+ *    nom — trois constructions de 0.9.12.3, deux de 1.0.0-RC1. Le montrer partout
+ *    imposerait à tous le bruit que deux cas justifient.
+ *
+ * 4. **Ce que le fichier déclare ouvre le menu**, dans son propre groupe, et il est
+ *    présélectionné. La question « quelle version visez-vous ? » a une réponse évidente
+ *    quand le fichier la porte : la faire chercher parmi quarante-six entrées serait un
+ *    travail rendu au pilote sans raison.
+ *
+ * 5. **Le nom lève l'ambiguïté que le numéro laisse.** `gson-2022.xcfg` déclare le
+ *    `versionCode` 90615, que deux relevés portent — mais il déclare aussi le
+ *    `versionName` `0.9.6.2-beta-48-gcb6ffef8`, qui n'en désigne qu'un. Retenir le plus
+ *    récent « faute de mieux » revenait à ignorer un renseignement que le fichier donne.
+ *
+ * 6. **Quand ni le numéro ni le nom ne tranchent**, on présélectionne **la plus
+ *    récente**, on le dit, on laisse les autres dans le menu — et chaque constat du
+ *    diagnostic est recalculé sous *toutes* les candidates : celui qui change de l'une à
+ *    l'autre est marqué « constat instable ». Le choix arbitraire devient sans
+ *    conséquence, parce qu'il est mesuré.
+ *
+ * 7. **Le diagnostic se raisonne par instance de gadget, jamais par type.** Un même
+ *    réglage peut être un reliquat sur un gadget et courant sur un autre dans le même
+ *    fichier — c'est le cas mesuré dans une sauvegarde 1.0.3, où deux cartes portent
  *    `mapWidget_showTerrain` et trois `mapWidget_panningTimeout`, jamais les deux.
+ *
+ * L'écart affiché sous le menu est compté **depuis la version publiée précédente**,
+ * jamais depuis l'entrée qui précède dans la liste. `TierEntry.keysAdded` compare au
+ * palier n-1, souvent une construction intermédiaire : afficher « 2 réglages ajoutés »
+ * pour 1.0.0-RC2 alors que 140 la séparent de 0.9.12.6 serait faux.
  *
  * ## Ce que le diagnostic ne couvre pas
  *
@@ -85,22 +113,29 @@ export function readDocumentVersion(document: JsonNode): DocumentVersion {
   }
 }
 
-/** Un palier tel que le menu le présente. */
-export interface TierOption {
+/** Une version telle que le menu la présente — l'unité de choix du pilote. */
+export interface VersionOption {
+  /** Le `versionCode` de la version ; le premier quand plusieurs archives se confondent. */
+  code: number
+  /** Tous les `versionCode` menant à cette même entrée. */
+  codes: number[]
+  /** Le nom que l'appareil affiche, suffixe de construction ôté : « 1.0.3-beta ». */
+  release: string
+  /** Le suffixe de construction, quand le relevé vient d'une construction : « 5-gc036d8f2c ». */
+  build: string | null
+  /** Vrai pour une version publiée, fausse pour une construction intermédiaire. */
+  published: boolean
+  /** Tous les `versionName` complets relevés sous cette entrée. */
+  names: string[]
+  /**
+   * Le palier de schéma dont cette version relève. **Jamais montré au pilote** : c'est
+   * la traduction interne de son choix.
+   */
   tier: number
-  /** La version publiée qui ouvre le palier — ce qui l'identifie pour le pilote. */
-  openingRelease: string
-  /** Toutes les versions publiées que le palier couvre. */
-  releaseNames: string[]
-  /** Vrai quand le palier ne porte aucune version publiée (construction intermédiaire). */
-  unpublished: boolean
-  /** Première et dernière version du palier, publiées ou non. */
-  firstName: string
-  lastName: string
-  /** Libellé de l'option `<option>`. */
+  /** Ce que l'`<option>` porte à l'écran. */
   label: string
-  /** Ce qui a changé depuis le palier proposé précédent. */
-  delta: TierDelta
+  /** Ce que l'`<option>` porte comme valeur : `« code:palier »`, unique dans le menu. */
+  value: string
 }
 
 /**
@@ -125,9 +160,12 @@ export interface TierDelta {
 
 /** Comment la présélection a été obtenue. Le message reste l'autorité. */
 export type SuggestionBasis =
-  /** Un seul palier porte ce `versionCode`. */
+  /**
+   * La version qui a écrit le fichier est désignée sans ambiguïté — soit un seul palier
+   * porte son `versionCode`, soit son `versionName` en désigne un seul parmi plusieurs.
+   */
   | 'exact'
-  /** Plusieurs paliers le portent : le fichier ne dit pas lequel l'a écrit. */
+  /** Plusieurs paliers le portent, et le nom déclaré n'en désigne aucun. */
   | 'ambiguous'
   /** Aucun APK ne porte ce numéro ; la base déclare un repli (`approximatedBy`). */
   | 'approximated'
@@ -143,6 +181,11 @@ export interface VersionSuggestion {
   candidateTiers: number[]
   /** Le palier présélectionné, ou `null` quand rien ne permet d'en désigner un. */
   selected: number | null
+  /**
+   * Le `versionCode` dont les entrées du menu sont celles de ce fichier : celui qu'il
+   * déclare, ou celui du repli. `null` quand la base ne reconnaît rien.
+   */
+  selectedCode: number | null
   /** Le numéro sur lequel la base s'est repliée, quand elle l'a fait. */
   approximatedFrom: number | null
   /** Ce qu'on dit au pilote, sans rien affirmer de plus que ce qu'on sait. */
@@ -205,11 +248,11 @@ export const CATEGORIES: Record<FindingCategory, CategoryDescription> = {
   legacy: {
     category: 'legacy',
     badge: 'reliquat',
-    title: 'Reliquats : le palier visé ne lit plus ces réglages',
+    title: 'Reliquats : la version visée ne lit plus ces réglages',
     evidence:
       'Notre relevé lit ces réglages dans des versions antérieures, plus dans celle-ci — ' +
       'et des fichiers réels écrits par cette version-là les portent quand même. XCTrack ' +
-      'conserve les clés qu’il ne connaît plus : c’est un reliquat, mesuré, pas déduit.',
+      'conserve les réglages qu’il ne connaît plus : c’est un reliquat, mesuré, pas déduit.',
     verdict:
       'Une suppression se défend ici. C’est le seul cas que la base atteste par un ' +
       'fichier réel.',
@@ -220,9 +263,9 @@ export const CATEGORIES: Record<FindingCategory, CategoryDescription> = {
     badge: 'antérieur',
     title: 'Lus par des versions antérieures seulement',
     evidence:
-      'Notre relevé lit ces réglages à des paliers antérieurs, plus au palier visé. Aucun ' +
-      'fichier réel du corpus ne vient l’attester : la preuve est celle du relevé seul, ' +
-      'plus faible que pour un reliquat attesté.',
+      'Notre relevé lit ces réglages dans des versions antérieures, plus dans celle qui ' +
+      'est visée. Aucun fichier réel du corpus ne vient l’attester : la preuve est celle ' +
+      'du relevé seul, plus faible que pour un reliquat attesté.',
     verdict:
       'Une suppression se défend, sur la foi du relevé. Rien ne dit que XCTrack les ait ' +
       'retirés : il dit seulement que nous ne les y lisons plus.',
@@ -231,10 +274,10 @@ export const CATEGORIES: Record<FindingCategory, CategoryDescription> = {
   'future-only': {
     category: 'future-only',
     badge: 'postérieur',
-    title: 'Apparus après le palier visé',
+    title: 'Apparus après la version visée',
     evidence:
-      'Notre relevé ne lit ces réglages qu’à des paliers postérieurs à celui visé. Ce ' +
-      'fichier vient donc d’une version plus récente que la version choisie ici.',
+      'Notre relevé ne lit ces réglages que dans des versions postérieures à celle qui ' +
+      'est visée. Ce fichier vient donc d’une version plus récente que celle choisie ici.',
     verdict:
       'Ne pas supprimer. La version visée les ignore ; une version ultérieure les ' +
       'retrouvera intacts.',
@@ -243,11 +286,11 @@ export const CATEGORIES: Record<FindingCategory, CategoryDescription> = {
   straddled: {
     category: 'straddled',
     badge: 'trou de relevé',
-    title: 'Lus avant et après le palier visé, mais pas à ce palier',
+    title: 'Lus avant et après la version visée, mais pas par elle',
     evidence:
-      'Notre relevé lit ces réglages de part et d’autre du palier visé et les manque ici. ' +
-      'Une option qui disparaîtrait pour reparaître à l’identique serait une singularité ; ' +
-      'un trou de notre extraction est l’explication ordinaire.',
+      'Notre relevé lit ces réglages de part et d’autre de la version visée et les manque ' +
+      'ici. Une option qui disparaîtrait pour reparaître à l’identique serait une ' +
+      'singularité ; un trou de notre extraction est l’explication ordinaire.',
     verdict: 'Ne pas supprimer. L’anomalie est de notre côté, pas dans le fichier.',
     removal: 'never'
   },
@@ -268,9 +311,9 @@ export const CATEGORIES: Record<FindingCategory, CategoryDescription> = {
     badge: 'trou de relevé',
     title: 'Trous de notre relevé : le réglage existait',
     evidence:
-      'Notre relevé n’a pas vu ces réglages à ce palier, mais il les lit à des paliers ' +
-      'postérieurs, et un fichier réel de ce palier-ci les porte. Le réglage existait bien : ' +
-      'c’est notre extraction qui l’a manqué.',
+      'Notre relevé n’a pas vu ces réglages dans cette version, mais il les lit dans des ' +
+      'versions postérieures, et un fichier réel écrit par elle les porte. Le réglage ' +
+      'existait bien : c’est notre extraction qui l’a manqué.',
     verdict:
       'Ne jamais supprimer. Ce sont des réglages valides, et les confondre avec des ' +
       'reliquats effacerait des réglages du pilote.',
@@ -281,7 +324,7 @@ export const CATEGORIES: Record<FindingCategory, CategoryDescription> = {
     badge: 'aveugle',
     title: 'Réglages sur lesquels notre relevé est aveugle',
     evidence:
-      'Attestés par des fichiers réels, retrouvés dans aucun palier, d’aucune version. ' +
+      'Attestés par des fichiers réels, retrouvés dans aucun relevé, d’aucune version. ' +
       'Notre extraction ne les lit nulle part : son silence ne dit rien.',
     verdict: 'Rien à conclure. Ne pas supprimer sur cette base.',
     removal: 'undecided'
@@ -289,10 +332,11 @@ export const CATEGORIES: Record<FindingCategory, CategoryDescription> = {
   'unknown-widget': {
     category: 'unknown-widget',
     badge: 'gadget inconnu',
-    title: 'Gadgets que le palier visé ne connaît pas',
+    title: 'Gadgets que la version visée ne connaît pas',
     evidence:
-      'Le type de gadget lui-même est absent du relevé de ce palier. Nous ne savons donc ' +
-      'rien de ses réglages : un gadget qu’aucun relevé n’a vu n’est pas un gadget retiré.',
+      'Le type de gadget lui-même est absent du relevé de cette version. Nous ne savons ' +
+      'donc rien de ses réglages : un gadget qu’aucun relevé n’a vu n’est pas un gadget ' +
+      'retiré.',
     verdict: 'Rien à conclure sur ses réglages.',
     removal: 'undecided'
   }
@@ -351,8 +395,8 @@ export interface WidgetFinding {
 
 export interface Diagnosis {
   tier: number
-  /** Comment nommer le palier au pilote : « 1.0.0-RC2 » ou « palier 15 ». */
-  tierLabel: string
+  /** Comment nommer la version visée au pilote : « 1.0.0-RC2 », jamais un numéro interne. */
+  versionLabel: string
   /** Gadgets examinés, toutes orientations et pages confondues. */
   widgetCount: number
   /** Réglages examinés, clés de structure exclues. */
@@ -447,7 +491,7 @@ export function tierDelta(
       keysAddedCount: 0,
       keysRemovedCount: 0,
       summary:
-        'Premier palier proposé : il n’y a rien avant lui dans ce menu, donc rien à ' +
+        'Aucune version publiée ne précède celle-ci dans notre relevé : rien à ' +
         `comparer. ${plural(target?.widgetCount ?? 0, 'gadget connu', 'gadgets connus')}.`
     }
   }
@@ -496,9 +540,9 @@ export function tierDelta(
     parts.push(plural(keysRemovedCount, 'réglage retiré', 'réglages retirés'))
   }
 
-  const fromName = releaseLabel(db, fromTier)
+  const fromName = versionLabel(db, fromTier)
   const summary = parts.length === 0
-    ? `Rien ne distingue ce palier de ${fromName} dans notre relevé.`
+    ? `Rien ne distingue cette version de ${fromName} dans notre relevé.`
     : `Depuis ${fromName} : ${parts.join(', ')}.`
 
   return {
@@ -514,57 +558,136 @@ export function tierDelta(
   }
 }
 
-/** Comment nommer un palier : par sa version publiée quand il en a une. */
-export function releaseLabel(db: VersionDatabase, tier: number): string {
-  const entry = db.tier(tier)
-  if (entry === undefined) return `palier ${tier}`
-  const first = entry.releaseNames[0]
-  if (first !== undefined) return first
-  return `palier ${tier} (${entry.firstName})`
+/**
+ * Le suffixe qu'un `git describe` colle au nom d'une version : `-<nombre de commits>-g<empreinte>`.
+ *
+ * C'est lui qui rend `1.0.0-RC1-31-g598cd4ebb` illisible, et c'est lui qui a rendu la
+ * version de l'AIR³ introuvable : l'appareil affiche `1.0.3-beta`, notre relevé
+ * enregistre `1.0.3-beta-5-gc036d8f2c`. L'ôter rend au pilote un nom qu'il reconnaît, et
+ * `splitVersionName` garde le suffixe à part plutôt que de le perdre — deux
+ * constructions du même nom se distinguent par lui, et par rien d'autre.
+ */
+export function splitVersionName(name: string): { release: string; build: string | null } {
+  const match = /^(.+)-(\d+-g[0-9a-f]{6,})$/.exec(name)
+  if (match === null) return { release: name, build: null }
+  return { release: match[1] as string, build: match[2] as string }
 }
 
 /**
- * Les paliers du menu : ceux qui portent au moins une version publiée, plus ceux que le
- * fichier ouvert désigne, fussent-ils des constructions intermédiaires.
+ * Comment nommer une version au pilote. Jamais « palier N » : ce numéro-là ne veut rien
+ * dire pour lui.
+ *
+ * Avec un `versionCode`, c'est la version portant ce numéro qui est nommée — celle que
+ * le fichier désigne. Sans lui, c'est la version publiée du palier, à défaut la première
+ * qu'il couvre : le palier 20 se dit alors « 1.0.0-RC2 », qui est vrai pour ce qu'on en
+ * fait, même si trois autres versions y mènent.
  */
-export function tierOptions(
-  db: VersionDatabase, extraTiers: number[] = [], language = 'fr'
-): TierOption[] {
-  const wanted = new Set<number>()
-  db.index.tiers.forEach((entry, index) => {
-    if (entry.releaseNames.length > 0) wanted.add(index)
-  })
-  for (const tier of extraTiers) {
-    if (db.tier(tier) !== undefined) wanted.add(tier)
+export function versionLabel(
+  db: VersionDatabase, tier: number, code?: number | null
+): string {
+  if (code !== undefined && code !== null) {
+    const entry = db.index.versions.find((v) => v.tier === tier && v.code === code)
+    if (entry !== undefined) return plainLabel(entry.name)
+  }
+  const entry = db.tier(tier)
+  if (entry === undefined) return 'version inconnue'
+  return entry.releaseNames[0] ?? plainLabel(entry.firstName)
+}
+
+/** « 1.0.3-beta-5-gc036d8f2c » → « 1.0.3-beta (construction 5-gc036d8f2c) ». */
+function plainLabel(name: string): string {
+  const { release, build } = splitVersionName(name)
+  return build === null ? release : `${release} (construction ${build})`
+}
+
+/**
+ * Toutes les versions du menu, **de la plus récente à la plus ancienne** — l'ordre du
+ * pilote, qui vise presque toujours l'appareil qu'il a sous la main.
+ *
+ * Deux archives de même nom et de même schéma (0.9.8.4 sous 90840 et 90841) sont une
+ * seule entrée : les distinguer laisserait croire à un choix, alors que ni le nom ni le
+ * diagnostic ne changent. Le suffixe de construction n'est remis dans le libellé que
+ * lorsque deux entrées portent le même nom — sans quoi le pilote de l'AIR³ lirait
+ * « 1.0.3-beta (construction 5-gc036d8f2c) » là où son appareil affiche « 1.0.3-beta ».
+ */
+export function versionOptions(db: VersionDatabase): VersionOption[] {
+  interface Draft {
+    codes: number[]
+    release: string
+    build: string | null
+    published: boolean
+    names: string[]
+    tier: number
+  }
+  const drafts = new Map<string, Draft>()
+  for (const version of db.index.versions) {
+    if (version.tier === null) continue
+    const { release, build } = splitVersionName(version.name)
+    const id = `${String(version.tier)}|${release}|${build ?? ''}`
+    const known = drafts.get(id)
+    if (known === undefined) {
+      drafts.set(id, {
+        codes: [version.code],
+        release,
+        build,
+        published: version.release,
+        names: [...version.names],
+        tier: version.tier
+      })
+      continue
+    }
+    if (!known.codes.includes(version.code)) known.codes.push(version.code)
+    known.published ||= version.release
+    for (const name of version.names) {
+      if (!known.names.includes(name)) known.names.push(name)
+    }
   }
 
-  const ordered = [...wanted].sort((a, b) => a - b)
-  let previous: number | null = null
-  const options: TierOption[] = []
-  for (const tier of ordered) {
-    const entry = db.tier(tier)
-    if (entry === undefined) continue
-    const releases = [...new Set(entry.releaseNames)]
-    const opening = releases[0]
-    const delta = tierDelta(db, previous, tier, language)
-    const covered = releases.length > 1
-      ? ` — ${plural(releases.length, 'version publiée', 'versions publiées')}`
-      : ''
-    options.push({
-      tier,
-      openingRelease: opening ?? '',
-      releaseNames: releases,
-      unpublished: opening === undefined,
-      firstName: entry.firstName,
-      lastName: entry.lastName,
-      label: opening === undefined
-        ? `Palier ${tier} — construction ${entry.firstName}`
-        : `${opening}${covered}`,
-      delta
-    })
-    previous = tier
+  const all = [...drafts.values()]
+  // Le suffixe ne sert que là où il départage : trois constructions de 0.9.12.3, deux de
+  // 1.0.0-RC1, et 0.9.11.10 qui existe publiée puis reprise. Ailleurs, il est du bruit.
+  const shared = new Map<string, number>()
+  for (const draft of all) {
+    shared.set(draft.release, (shared.get(draft.release) ?? 0) + 1)
   }
-  return options
+
+  return all
+    .sort((a, b) =>
+      b.tier - a.tier ||
+      Math.max(...b.codes) - Math.max(...a.codes) ||
+      Number(b.published) - Number(a.published))
+    .map((draft) => {
+      const ambiguous = (shared.get(draft.release) ?? 0) > 1
+      const label = ambiguous && draft.build !== null
+        ? `${draft.release} (construction ${draft.build})`
+        : draft.release
+      return {
+        code: draft.codes[0] as number,
+        codes: draft.codes,
+        release: draft.release,
+        build: draft.build,
+        published: draft.published,
+        names: draft.names,
+        tier: draft.tier,
+        label,
+        value: `${String(draft.codes[0])}:${String(draft.tier)}`
+      }
+    })
+}
+
+/**
+ * Le palier de la version publiée qui précède celle-ci — la seule comparaison qu'un
+ * pilote sache lire. Comparer à l'entrée précédente du menu le confronterait à une
+ * construction intermédiaire qu'il n'a jamais installée ; comparer au palier n-1
+ * afficherait l'écart minuscule qui sépare deux constructions voisines.
+ */
+export function previousPublishedTier(db: VersionDatabase, tier: number): number | null {
+  let best: number | null = null
+  db.index.tiers.forEach((entry, index) => {
+    if (index >= tier || entry.releaseNames.length === 0) return
+    if (best === null || index > best) best = index
+  })
+  return best
 }
 
 /* ------------------------------------------------------------------ présélection */
@@ -587,20 +710,39 @@ function knownCodeRange(db: VersionDatabase): { min: number; max: number } | nul
 }
 
 /**
- * Le palier à présélectionner, et pourquoi.
+ * Les paliers que ce couple *(numéro, nom)* désigne. Le nom d'abord : quand deux relevés
+ * partagent un `versionCode`, c'est lui — et lui seul — qui dit lequel a écrit le fichier.
+ */
+function tiersDeclaredBy(db: VersionDatabase, code: number, name: string | null): number[] {
+  const byCode = db.tiersOf(code)
+  if (name === null || byCode.length < 2) return byCode
+  const byName = new Set<number>()
+  for (const version of db.index.versions) {
+    if (version.tier === null || version.code !== code) continue
+    if (version.name === name || version.names.includes(name)) byName.add(version.tier)
+  }
+  return byName.size === 1 ? [...byName] : byCode
+}
+
+/**
+ * La version à présélectionner, et pourquoi.
  *
- * Trois cas qui ne se confondent pas :
+ * Quatre cas qui ne se confondent pas :
  *
- * - **un seul palier** — on le retient, sans réserve ;
- * - **plusieurs** — le fichier ne dit pas lequel l'a écrit. On retient le plus récent,
- *   on le dit, et le diagnostic marque tout constat qui changerait sous un autre ;
- * - **aucun** — soit la base ne connaît pas ce numéro (on ne choisit rien : deviner
- *   serait inventer), soit elle déclare elle-même un repli (`approximatedBy`), et ce
- *   repli est dit au pilote au lieu d'être masqué.
+ * - **une seule version** — soit son numéro ne mène qu'à un palier, soit le nom qu'elle
+ *   déclare tranche entre plusieurs. On la retient, sans réserve ;
+ * - **plusieurs** — ni le numéro ni le nom ne disent laquelle a écrit le fichier. On
+ *   retient la plus récente, on le dit, et le diagnostic marque tout constat qui
+ *   changerait sous une autre ;
+ * - **un repli déclaré** — aucune archive ne porte ce numéro, mais la base en désigne
+ *   elle-même un voisin (`approximatedBy`) : il est dit au pilote au lieu d'être masqué ;
+ * - **rien** — on ne choisit pas : deviner serait inventer.
  */
 export function suggestTier(db: VersionDatabase, document: JsonNode): VersionSuggestion {
   const version = readDocumentVersion(document)
-  const named = version.name === null ? '' : ` (« ${version.name} »)`
+  const declared = version.name === null
+    ? `la version ${String(version.code)}`
+    : `XCTrack ${splitVersionName(version.name).release} (numéro ${String(version.code)})`
 
   if (version.code === null) {
     return {
@@ -608,26 +750,35 @@ export function suggestTier(db: VersionDatabase, document: JsonNode): VersionSug
       basis: 'undeclared',
       candidateTiers: [],
       selected: null,
+      selectedCode: null,
       approximatedFrom: null,
       message:
         'Ce fichier ne dit pas de quelle version de XCTrack il vient : son bloc `info` ne ' +
-        'porte pas de `versionCode`. Rien ne permet de présélectionner un palier — ' +
-        'choisissez celui de l’appareil sur lequel vous réimporterez ce fichier.'
+        'porte pas de `versionCode`. Rien ne permet d’en proposer une — choisissez celle ' +
+        'de l’appareil sur lequel vous réimporterez ce fichier.'
     }
   }
 
-  const direct = db.tiersOf(version.code)
+  const byCode = db.tiersOf(version.code)
+  const direct = tiersDeclaredBy(db, version.code, version.name)
   if (direct.length === 1) {
     const tier = direct[0] as number
+    // Le nom a tranché là où le numéro ne pouvait pas : le dire, parce que c'est ce qui
+    // rend la présélection sûre plutôt qu'arbitraire.
+    const pinned = byCode.length > 1
+      ? ` ${plural(byCode.length, 'version porte', 'versions portent')} ce numéro ; le nom ` +
+        'que le fichier déclare n’en désigne qu’une.'
+      : ''
     return {
       version,
       basis: 'exact',
       candidateTiers: direct,
       selected: tier,
+      selectedCode: version.code,
       approximatedFrom: null,
       message:
-        `Ce fichier déclare la version ${version.code}${named}. Un seul palier porte ce ` +
-        `numéro dans notre base : ${releaseLabel(db, tier)}. C’est lui qui est retenu.`
+        `Ce fichier a été écrit par ${declared}.${pinned} C’est elle qui est visée ` +
+        'ci-dessous, et vous pouvez en choisir une autre.'
     }
   }
   if (direct.length > 1) {
@@ -637,14 +788,15 @@ export function suggestTier(db: VersionDatabase, document: JsonNode): VersionSug
       basis: 'ambiguous',
       candidateTiers: direct,
       selected,
+      selectedCode: version.code,
       approximatedFrom: null,
       message:
-        `Ce fichier déclare la version ${version.code}${named}. ` +
-        `${plural(direct.length, 'palier porte', 'paliers portent')} ce numéro avec des ` +
-        'inventaires de clés différents : le `versionCode` n’identifie pas un schéma, et ' +
-        'le fichier ne dit pas lequel l’a écrit. Nous retenons le plus récent, ' +
-        `${releaseLabel(db, selected)} — un choix arbitraire, assumé comme tel : chaque ` +
-        'constat qui changerait sous un autre de ces paliers est signalé ci-dessous.'
+        `Ce fichier a été écrit par ${declared}. ` +
+        `${plural(direct.length, 'version porte', 'versions portent')} ce numéro sans ` +
+        'accepter les mêmes réglages, et le fichier ne dit pas laquelle l’a écrit. Nous ' +
+        `visons la plus récente, ${versionLabel(db, selected, version.code)} — un choix ` +
+        'arbitraire, assumé comme tel : chaque constat qui changerait sous une des autres ' +
+        'est signalé ci-dessous.'
     }
   }
 
@@ -654,21 +806,22 @@ export function suggestTier(db: VersionDatabase, document: JsonNode): VersionSug
     if (tiers.length > 0) {
       const selected = Math.max(...tiers)
       const several = tiers.length > 1
-        ? ` Ce numéro-là désigne lui-même ${plural(tiers.length, 'palier', 'paliers')} ; ` +
-          `nous retenons le plus récent, ${releaseLabel(db, selected)}, et signalons ` +
-          'ci-dessous tout constat qui changerait sous un autre.'
-        : ` Le palier retenu est ${releaseLabel(db, selected)}.`
+        ? ` Ce numéro-là couvre lui-même ${plural(tiers.length, 'version', 'versions')} ; ` +
+          `nous visons la plus récente, ${versionLabel(db, selected, fallbackCode)}, et ` +
+          'signalons ci-dessous tout constat qui changerait sous une autre.'
+        : ` Nous visons ${versionLabel(db, selected, fallbackCode)}.`
       return {
         version,
         basis: 'approximated',
         candidateTiers: tiers,
         selected,
+        selectedCode: fallbackCode,
         approximatedFrom: fallbackCode,
         message:
-          `Ce fichier déclare la version ${version.code}${named}, qu’aucune des archives ` +
-          `relevées ne porte. La base se replie sur le numéro le plus proche, ` +
-          `${fallbackCode} — ce n’est pas la même version, c’est la plus proche que nous ` +
-          `ayons pu lire.${several}`
+          `Ce fichier a été écrit par ${declared}, qu’aucune des archives relevées ne ` +
+          `porte. La base se replie sur le numéro le plus proche, ${String(fallbackCode)} — ` +
+          `ce n’est pas la même version, c’est la plus proche que nous ayons pu ` +
+          `lire.${several}`
       }
     }
   }
@@ -676,19 +829,20 @@ export function suggestTier(db: VersionDatabase, document: JsonNode): VersionSug
   const range = knownCodeRange(db)
   const situate = range === null
     ? ''
-    : ` Les numéros relevés vont de ${range.min} à ${range.max} ; celui-ci leur est ` +
-      `${version.code > range.max ? 'postérieur' : version.code < range.min ? 'antérieur' : 'intercalé'}.`
+    : ` Les numéros relevés vont de ${String(range.min)} à ${String(range.max)} ; celui-ci ` +
+      `leur est ${version.code > range.max ? 'postérieur' : version.code < range.min ? 'antérieur' : 'intercalé'}.`
   return {
     version,
     basis: 'unrecognized',
     candidateTiers: [],
     selected: null,
+    selectedCode: null,
     approximatedFrom: null,
     message:
-      `Ce fichier déclare la version ${version.code}${named}, que notre base ne connaît ` +
-      `pas : elle a été extraite de 47 relevés d’APK, et celui-ci n’en fait pas partie.` +
-      `${situate} Nous ne présélectionnons rien — désigner un palier au jugé reviendrait ` +
-      'à inventer. Choisissez celui de votre appareil.'
+      `Ce fichier a été écrit par ${declared}, que notre base ne connaît pas : elle a été ` +
+      'extraite de 47 relevés d’APK, et celui-ci n’en fait pas partie.' +
+      `${situate} Nous n’en proposons aucune — en désigner une au jugé reviendrait à ` +
+      'inventer. Choisissez celle de votre appareil.'
   }
 }
 
@@ -767,7 +921,7 @@ export function diagnose(
 
   return {
     tier,
-    tierLabel: releaseLabel(db, tier),
+    versionLabel: versionLabel(db, tier),
     widgetCount,
     keyCount,
     recognizedCount: statusCounts.present,
@@ -788,7 +942,7 @@ export function divergenceSentence(db: VersionDatabase, finding: KeyFinding): st
   if (finding.stable) return ''
   const parts = finding.divergences.map((divergence) => {
     const word = divergence.category === null ? 'reconnu' : CATEGORIES[divergence.category].badge
-    return `${releaseLabel(db, divergence.tier)} : ${word}`
+    return `${versionLabel(db, divergence.tier)} : ${word}`
   })
   return `Constat instable — sous ${parts.join(' ; ')}.`
 }
@@ -837,18 +991,42 @@ export interface VersionPanel {
   select: HTMLSelectElement
   /** Palier retenu, ou `null` tant que rien n'est choisi. */
   tier: () => number | null
+  /** La version que le pilote a choisie, ou `null`. C'est elle qu'il reconnaît. */
+  version: () => VersionOption | null
   diagnosis: () => Diagnosis | null
   /**
    * Ce que le nettoyage retirerait, ou `null` s'il n'est pas ouvert. Toujours vide tant
-   * qu'aucun palier n'est retenu.
+   * qu'aucune version n'est visée.
    */
   cleanupPlan: () => CleanupPlan | null
   /** Rebranche le panneau sur un autre document — nouvelle présélection comprise. */
   setDocument: (document: JsonNode) => void
 }
 
-/** Valeur d'option réservée : « aucun palier retenu ». */
-const NO_TIER = ''
+/** Valeur d'option réservée : « aucune version choisie ». */
+const NO_VERSION = ''
+
+/** « a, b et c » — la liste française, celle qu'on lit à voix haute. */
+function frenchList(items: string[]): string {
+  if (items.length <= 1) return items[0] ?? ''
+  return `${items.slice(0, -1).join(', ')} et ${items[items.length - 1] as string}`
+}
+
+/**
+ * Comment titrer le groupe de tête, celui qui porte la version du fichier. Il est
+ * toujours au singulier quand une seule entrée y figure : « les versions que ce fichier
+ * peut désigner » pour une seule ligne serait une bizarrerie de plus à déchiffrer.
+ */
+function fileGroupLabel(basis: SuggestionBasis, count: number): string {
+  if (basis === 'approximated') {
+    return count > 1
+      ? 'Les versions les plus proches de celle de ce fichier'
+      : 'La version la plus proche de celle de ce fichier'
+  }
+  return count > 1
+    ? 'Les versions que ce fichier peut désigner'
+    : 'La version qui a écrit ce fichier'
+}
 
 /**
  * Construit le panneau. **Asynchrone à dessein** : la base des versions n'est chargée
@@ -861,90 +1039,140 @@ export async function buildVersionPanel(
 ): Promise<VersionPanel> {
   const db = options.database ?? await loadVersionDatabase()
   const language = options.language ?? 'fr'
+  const menu = versionOptions(db)
 
   let source = options.document
   let layout = readLayout(source)
   let suggestion = suggestTier(db, source)
-  let menu = tierOptions(db, suggestion.candidateTiers, language)
-  let current: number | null = suggestion.selected
+  let chosen: VersionOption | null = null
   let report: Diagnosis | null = null
   let cleanup: CleanupSection | undefined
+
+  /** L'écart depuis la version publiée précédente, calculé une fois par palier. */
+  const deltas = new Map<number, TierDelta>()
+  function deltaAt(tier: number): TierDelta {
+    const known = deltas.get(tier)
+    if (known !== undefined) return known
+    const fresh = tierDelta(db, previousPublishedTier(db, tier), tier, language)
+    deltas.set(tier, fresh)
+    return fresh
+  }
 
   const root = el('section', 'vdiag')
   root.setAttribute('aria-label', 'Version visée et compatibilité')
 
   const choice = el('div', 'vdiag__choice')
   const select = el('select', 'vdiag__select')
-  select.id = 'vdiag-tier'
-  const label = el('label', 'vdiag__label', 'Version de XCTrack visée')
+  select.id = 'vdiag-version'
+  const label = el('label', 'vdiag__label', 'La version de XCTrack que vous visez')
   label.htmlFor = select.id
   const basis = el('p', 'vdiag__basis')
+  const same = el('p', 'vdiag__same')
   const delta = el('p', 'vdiag__delta')
   const deltaDetails = el('details', 'vdiag__details')
   const deltaSummary = el('summary', undefined, 'Le détail de ces changements')
   const deltaBody = el('div', 'vdiag__details-body')
   deltaDetails.append(deltaSummary, deltaBody)
-  choice.append(label, select, basis, delta, deltaDetails)
+  choice.append(label, select, basis, same, delta, deltaDetails)
 
   const reportEl = el('div', 'vdiag__report')
 
+  /**
+   * Les entrées du fichier : celles que son `versionCode` — ou le numéro de repli —
+   * désigne. Elles ouvrent le menu, parce que c'est la réponse que le pilote cherche.
+   */
+  function fileOptions(): VersionOption[] {
+    const code = suggestion.selectedCode
+    if (code === null) return []
+    return menu.filter(
+      (option) => option.codes.includes(code) && suggestion.candidateTiers.includes(option.tier)
+    )
+  }
+
+  function group(title: string, entries: VersionOption[]): void {
+    if (entries.length === 0) return
+    const node = el('optgroup')
+    node.label = title
+    for (const entry of entries) {
+      const line = el('option', undefined, entry.label)
+      line.value = entry.value
+      node.append(line)
+    }
+    select.append(node)
+  }
+
   function fillOptions(): void {
     select.textContent = ''
-    const placeholder = el('option', undefined, '— aucun palier retenu —')
-    placeholder.value = NO_TIER
+    const placeholder = el('option', undefined, '— aucune version choisie —')
+    placeholder.value = NO_VERSION
     select.append(placeholder)
 
-    const published = menu.filter((option) => !option.unpublished)
-    const designated = menu.filter((option) => option.unpublished)
+    const mine = fileOptions()
+    const taken = new Set(mine.map((option) => option.value))
+    const rest = menu.filter((option) => !taken.has(option.value))
 
-    const publishedGroup = el('optgroup')
-    publishedGroup.label = 'Versions publiées'
-    for (const option of published) {
-      const node = el('option', undefined, option.label)
-      node.value = String(option.tier)
-      publishedGroup.append(node)
-    }
-    select.append(publishedGroup)
+    group(fileGroupLabel(suggestion.basis, mine.length), mine)
+    group('Versions publiées, de la plus récente à la plus ancienne',
+      rest.filter((option) => option.published))
+    // Les constructions intermédiaires viennent en dernier, et sous un titre qui dit
+    // pourquoi leur nom est illisible : un pilote ordinaire n'en a jamais installé.
+    group('Versions de développement, jamais publiées',
+      rest.filter((option) => !option.published))
 
-    if (designated.length > 0) {
-      const group = el('optgroup')
-      group.label = 'Constructions désignées par ce fichier'
-      for (const option of designated) {
-        const node = el('option', undefined, option.label)
-        node.value = String(option.tier)
-        group.append(node)
-      }
-      select.append(group)
+    select.value = chosen === null ? NO_VERSION : chosen.value
+  }
+
+  /**
+   * Ce que le choix du pilote ne change pas. C'est la contrepartie honnête d'un menu qui
+   * propose des versions là où l'outil ne connaît que des inventaires de réglages : au
+   * lieu de fondre quatre versions sous le nom de la première, on les nomme toutes.
+   */
+  function renderSame(): void {
+    if (chosen === null) {
+      same.textContent = ''
+      same.hidden = true
+      return
     }
-    select.value = current === null ? NO_TIER : String(current)
+    const others = menu.filter(
+      (option) => option.tier === chosen?.tier && option.value !== chosen.value
+    )
+    if (others.length === 0) {
+      same.textContent =
+        `Aucune autre version relevée n’accepte exactement les mêmes réglages que ` +
+        `${chosen.label} : le constat ci-dessous ne vaut que pour elle.`
+      same.hidden = false
+      return
+    }
+    same.textContent =
+      `${frenchList(others.map((option) => option.label))} ${others.length > 1 ? 'acceptent' : 'accepte'} ` +
+      `exactement les mêmes réglages que ${chosen.label} : notre relevé ne les distingue ` +
+      `pas, et le constat ci-dessous vaut pour ${plural(others.length + 1, 'version', 'versions')}.`
+    same.hidden = false
   }
 
   function renderDelta(): void {
-    const option = menu.find((entry) => entry.tier === current)
-    if (option === undefined) {
+    if (chosen === null) {
       delta.textContent =
-        'Aucun palier retenu : rien n’est comparé, et rien n’est diagnostiqué.'
+        'Aucune version choisie : rien n’est comparé, et rien n’est diagnostiqué.'
       deltaDetails.hidden = true
       return
     }
-    const covered = option.releaseNames.length > 0
-      ? `Versions couvertes : ${option.releaseNames.join(', ')}.`
-      : `Construction ${option.firstName} — aucune version publiée à ce palier.`
-    delta.textContent = `${option.delta.summary} ${covered}`
+    const change = deltaAt(chosen.tier)
+    delta.textContent = change.summary
 
     deltaBody.textContent = ''
     const lists: Array<[string, string[]]> = [
-      ['Gadgets ajoutés', option.delta.widgetsAdded],
-      ['Gadgets retirés', option.delta.widgetsRemoved],
+      ['Gadgets ajoutés', change.widgetsAdded],
+      ['Gadgets retirés', change.widgetsRemoved],
       [
         'Réglages ajoutés sur des gadgets existants',
-        option.delta.keysAdded.map(
+        change.keysAdded.map(
           (entry) => `${readableName(entry.widget, language)} : ${entry.keys.join(', ')}`
         )
       ],
       [
         'Réglages retirés',
-        option.delta.keysRemoved.map(
+        change.keysRemoved.map(
           (entry) => `${readableName(entry.widget, language)} : ${entry.keys.join(', ')}`
         )
       ]
@@ -963,7 +1191,7 @@ export async function buildVersionPanel(
 
   function renderReport(): void {
     reportEl.textContent = ''
-    if (current === null || report === null) {
+    if (chosen === null || report === null) {
       reportEl.append(el('p', 'vdiag__tally',
         'Choisissez une version pour obtenir le diagnostic de ce fichier.'))
       return
@@ -980,15 +1208,16 @@ export async function buildVersionPanel(
     scope.textContent =
       'Seuls les gadgets des pages sont examinés : la base des versions ne décrit qu’eux. ' +
       'Les autres réglages d’une sauvegarde — vario, unités, capteurs, espaces aériens — ' +
-      'ne sont pas diagnostiqués. Les clés de position et le type de gadget ne sont pas ' +
-      'des réglages et ne sont pas comptés.'
+      'ne sont pas diagnostiqués. La position d’un gadget et son type ne sont pas des ' +
+      'réglages et ne sont pas comptés.'
     reportEl.append(scope)
 
     if (report.unstableCount > 0) {
       const unstable = el('p', 'vdiag__unstable')
       unstable.textContent =
-        `${plural(report.unstableCount, 'constat change', 'constats changent')} selon le ` +
-        'palier retenu parmi ceux que ce fichier désigne. Ils sont signalés un à un.'
+        `${plural(report.unstableCount, 'constat change', 'constats changent')} selon la ` +
+        'version retenue parmi celles que ce fichier peut désigner. Ils sont signalés un ' +
+        'à un.'
       reportEl.append(unstable)
     }
 
@@ -1015,7 +1244,7 @@ export async function buildVersionPanel(
 
     if (sections === 0) {
       reportEl.append(el('p', 'vdiag__clean',
-        'Aucun écart : tous les réglages de ce fichier sont lus par le palier visé, et ' +
+        'Aucun écart : tous les réglages de ce fichier sont lus par la version visée, et ' +
         'tous ses gadgets y existent. Rien à signaler — ce qui ne veut pas dire que le ' +
         'fichier soit conforme, seulement que notre relevé n’y trouve rien à redire.'))
     }
@@ -1074,7 +1303,7 @@ export async function buildVersionPanel(
       const item = el('li')
       item.append(el('span', 'vdiag__place', placeLabel(finding.place)))
       item.append(el('span', 'vdiag__keys', finding.status === 'absent'
-        ? 'type connu de notre relevé, mais pas à ce palier'
+        ? 'type connu de notre relevé, mais pas dans cette version'
         : 'type inconnu de tout notre relevé'))
       list.append(item)
     }
@@ -1087,59 +1316,76 @@ export async function buildVersionPanel(
    * après un geste de nettoyage, le retour en arrière doit survivre au recalcul ; après un
    * changement de version ou de fichier, il n'a plus d'objet.
    *
-   * Le palier `-1` sert de « pas de palier retenu » : aucun réglage n'y est reconnu comme
+   * Le palier `-1` sert de « aucune version visée » : aucun réglage n'y est reconnu comme
    * reliquat, donc la section est vide, et elle le reste sans cas particulier à écrire.
    */
   function syncCleanup(forget: boolean): void {
     if (cleanup === undefined) return
-    const at = current ?? -1
+    const at = chosen?.tier ?? -1
     if (forget) cleanup.reset(layout, at)
     else cleanup.refresh(layout, at)
   }
 
   function recompute(forget = true): void {
-    // La stabilité ne s'éprouve que contre les paliers que le FICHIER désigne, et
-    // seulement si le pilote est resté sur l'un d'eux. Dès qu'il vise délibérément une
-    // autre version, comparer au palier d'origine ferait de chaque différence attendue
+    // La stabilité ne s'éprouve que contre les versions que le FICHIER peut désigner, et
+    // seulement si le pilote est resté sur l'une d'elles. Dès qu'il vise délibérément
+    // autre chose, comparer à la version d'origine ferait de chaque différence attendue
     // un « constat instable » : du bruit, et du bruit qui apprend à ignorer le signal.
-    const candidates = current !== null && suggestion.candidateTiers.includes(current)
+    const tier = chosen?.tier ?? null
+    const candidates = tier !== null && suggestion.candidateTiers.includes(tier)
       ? suggestion.candidateTiers
-      : current === null ? [] : [current]
+      : tier === null ? [] : [tier]
 
-    report = current === null
+    report = tier === null
       ? null
-      : diagnose(db, layout, { tier: current, candidateTiers: candidates, language })
+      : diagnose(db, layout, { tier, candidateTiers: candidates, language })
     renderBasis()
+    renderSame()
     renderDelta()
     renderReport()
     syncCleanup(forget)
-    options.onChange?.(current, report)
+    options.onChange?.(tier, report)
   }
 
   /**
    * D'où vient la présélection — et, si le pilote s'en est écarté, le rappel qu'il vise
    * autre chose que la version qui a écrit le fichier.
+   *
+   * S'en écarter, c'est viser un autre **inventaire de réglages** : passer de 1.0.2-beta
+   * à 1.0.3-beta ne change rien au diagnostic, et prétendre le contraire ferait mentir le
+   * paragraphe juste au-dessus, qui vient de dire que ces deux-là sont indiscernables.
    */
   function renderBasis(): void {
-    const chosen = current
-    basis.textContent = chosen !== null && chosen !== suggestion.selected
+    const elsewhere = chosen !== null && chosen.tier !== suggestion.selected
+    basis.textContent = elsewhere && chosen !== null
       ? `${suggestion.message} Vous visez une autre version que celle-là : le diagnostic ` +
-        `ci-dessous confronte ce fichier à ${releaseLabel(db, chosen)}.`
+        `ci-dessous confronte ce fichier à ${chosen.label}.`
       : suggestion.message
   }
 
   select.addEventListener('change', () => {
-    current = select.value === NO_TIER ? null : Number(select.value)
+    chosen = menu.find((option) => option.value === select.value) ?? null
     recompute()
   })
 
   function reload(): void {
     layout = readLayout(source)
     suggestion = suggestTier(db, source)
-    menu = tierOptions(db, suggestion.candidateTiers, language)
-    current = suggestion.selected
+    chosen = pickSuggested()
     fillOptions()
     recompute()
+  }
+
+  /**
+   * L'entrée présélectionnée : celle du fichier de préférence, à défaut n'importe laquelle
+   * du palier retenu — la présélection porte sur un inventaire de réglages, et il arrive
+   * qu'aucune entrée ne porte le numéro déclaré (le repli de 0.9.12.3).
+   */
+  function pickSuggested(): VersionOption | null {
+    const tier = suggestion.selected
+    if (tier === null) return null
+    const mine = fileOptions().find((option) => option.tier === tier)
+    return mine ?? menu.find((option) => option.tier === tier) ?? null
   }
 
   // Bâtie avant le premier `reload()` : c'est lui qui la remplit, comme il remplit le
@@ -1150,7 +1396,7 @@ export async function buildVersionPanel(
     cleanup = buildCleanupSection({
       db,
       layout,
-      tier: current ?? -1,
+      tier: -1,
       language,
       onChange: (event) => {
         // Le document a changé sous le diagnostic : le refaire, sans effacer le retour en
@@ -1168,7 +1414,8 @@ export async function buildVersionPanel(
   return {
     element: root,
     select,
-    tier: () => current,
+    tier: () => chosen?.tier ?? null,
+    version: () => chosen,
     diagnosis: () => report,
     cleanupPlan: () => cleanup?.plan() ?? null,
     setDocument: (next: JsonNode) => {
