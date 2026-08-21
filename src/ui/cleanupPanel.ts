@@ -114,6 +114,18 @@ function plural(count: number, one: string, many: string): string {
 }
 
 /**
+ * « ce réglage » / « ces 9 réglages ».
+ *
+ * Écrit à part parce que `plural` place le nombre **devant** le groupe, ce qui est juste
+ * pour « 9 réglages retenus » et faux pour un démonstratif : le français ne dit pas
+ * « 9 ces réglages ». Le nombre s'y glisse entre le déterminant et le nom, et il
+ * disparaît au singulier — « ce 1 réglage » ne se dit pas davantage.
+ */
+function theseSettings(count: number): string {
+  return count > 1 ? `ces ${french(count)} réglages` : 'ce réglage'
+}
+
+/**
  * « Portrait · page 2 · rang 1 · Carte de compétition ». Même forme que `placeLabel` du
  * diagnostic — écrite ici plutôt qu'importée pour que ce module ne dépende pas de celui
  * qui l'appelle.
@@ -240,7 +252,7 @@ export function buildCleanupSection(options: CleanupSectionOptions): CleanupSect
     root.append(done)
 
     const undo = el('button', 'vclean__undo',
-      `Remettre ${plural(outcome.keyCount, 'ce réglage', 'ces réglages')}`)
+      `Remettre ${theseSettings(outcome.keyCount)}`)
     undo.type = 'button'
     undo.addEventListener('click', () => { revert() })
     root.append(undo)
@@ -251,7 +263,7 @@ export function buildCleanupSection(options: CleanupSectionOptions): CleanupSect
   function renderList(): HTMLElement {
     const details = el('details', 'vclean__details')
     details.append(el('summary', undefined,
-      `Voir ${plural(plan.entries.length, 'ce réglage', 'ces réglages')}, et décocher ce ` +
+      `Voir ${theseSettings(plan.entries.length)}, et décocher ce ` +
       'que vous préférez garder'))
 
     const body = el('div', 'vclean__details-body')
@@ -319,7 +331,7 @@ export function buildCleanupSection(options: CleanupSectionOptions): CleanupSect
         `${plural(total - count, 'réglage restera', 'réglages resteront')} en place.`
     go.textContent = count === 0
       ? 'Aucun réglage retenu'
-      : `Enlever ${plural(count, 'ce réglage', 'ces réglages')}`
+      : `Enlever ${theseSettings(count)}`
     go.disabled = count === 0
   }
 

@@ -1,4 +1,6 @@
 import { readFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { loadVersionDatabase } from '../../src/catalog/widgetVersions'
 import type { JsonNode } from '../../src/core/jsonDocument'
@@ -317,5 +319,20 @@ describe('dans le panneau de diagnostic', () => {
     })
     panel.setDocument(documentOf(BACKUP_2025))
     expect(panel.cleanupPlan()?.entries).toHaveLength(4)
+  })
+})
+
+describe('le français des libellés', () => {
+  it('le démonstratif ne s’accole pas au nombre', () => {
+    // « Voir 9 ces réglages » : le nombre se glisse entre le déterminant et le nom, et il
+    // disparaît au singulier. Le module a une fonction séparée pour ça, parce que la
+    // fonction de pluriel générale place le nombre devant le groupe — juste pour
+    // « 9 réglages retenus », faux pour un démonstratif.
+    const source = readFileSync(join(
+      dirname(fileURLToPath(import.meta.url)), '../../src/ui/cleanupPanel.ts'
+    ), 'utf8')
+    expect(source).not.toMatch(/plural\([^)]*'ce réglage'/)
+    expect(source).toContain("`ces ${french(count)} réglages`")
+    expect(source).toContain(": 'ce réglage'")
   })
 })
