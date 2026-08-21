@@ -1,0 +1,380 @@
+/*
+ * La page de consultation des préférences générales.
+ *
+ * ⚠️ Cette feuille **consomme** les jetons de `app.css` (`--app-bg`, `--app-ink`,
+ * `--app-line`, `--font-ui`, `--font-data`) et n'en redéfinit aucun : le cadre reste
+ * achromatique et suit `prefers-color-scheme` comme le reste de l'interface. Elle
+ * n'écrit rien non plus sur un `--xc-*` : cette page n'affiche aucun rendu d'écran
+ * d'instrument, mais la règle du projet vaut partout.
+ *
+ * Elle est importée par `preferencesPage.ts` et non par `main.ts` : le module de page
+ * étant chargé à la demande, ses styles le suivent dans le même morceau plutôt que de
+ * peser sur le premier écran.
+ *
+ * Les jetons de repli des deux valeurs ci-dessous existent pour un seul cas : la page
+ * montée hors de l'application (harnais de vérification, test de rendu isolé), où
+ * `app.css` peut ne pas être là.
+ */
+
+.prefs {
+  --prefs-line: var(--app-line, #d3d7dc);
+  --prefs-soft: var(--app-ink-soft, #59616a);
+
+  max-width: 66rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 4rem;
+  color: var(--app-ink, #15181c);
+  font-family: var(--font-ui, system-ui, sans-serif);
+}
+
+/* ------------------------------------------------------------------------ tête de page */
+
+.prefs__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--prefs-line);
+}
+
+.prefs__titles { min-width: 0; }
+.prefs__title { margin: 0; font-size: 19px; font-weight: 600; letter-spacing: -0.01em; }
+
+.prefs__subtitle {
+  margin: 0.2rem 0 0;
+  font-size: 13px;
+  color: var(--prefs-soft);
+  overflow-wrap: anywhere;
+}
+
+.prefs__actions { display: flex; align-items: center; gap: 0.6rem; flex: none; }
+
+/* ------------------------------------------------------------------------- commandes */
+
+.prefs__tools {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin: 1.1rem 0 0;
+}
+
+.prefs__filter {
+  flex: 1 1 16rem;
+  max-width: 24rem;
+  font: inherit;
+  font-size: 13px;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--app-line-strong, #b1b8bf);
+  border-radius: 4px;
+  background: var(--app-panel, #f6f7f8);
+  color: inherit;
+}
+
+.prefs__only[aria-pressed='true'],
+.prefs__mask[aria-pressed='true'] {
+  background: var(--app-ink, #15181c);
+  border-color: var(--app-ink, #15181c);
+  color: var(--app-bg, #e7e9ec);
+}
+
+/* ------------------------------------------------------- bandeau de lecture et notes */
+
+.prefs__summary {
+  margin: 1.2rem 0 0;
+  padding: 0.8rem 1rem;
+  background: var(--app-panel, #f6f7f8);
+  border: 1px solid var(--prefs-line);
+  border-left: 3px solid var(--app-line-strong, #b1b8bf);
+  border-radius: 4px;
+}
+
+.prefs__summary-count { margin: 0; font-size: 14px; font-weight: 600; }
+
+.prefs__summary-detail {
+  margin: 0.35rem 0 0;
+  font-size: 13px;
+  color: var(--prefs-soft);
+}
+
+.prefs__summary-note {
+  margin: 0.6rem 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--prefs-soft);
+  max-width: 78ch;
+}
+
+.prefs__lead {
+  margin: 1.6rem 0 0.6rem;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--prefs-soft);
+  max-width: 78ch;
+}
+
+.prefs__families {
+  margin: 0 0 0.7rem;
+  font-family: var(--font-data, monospace);
+  font-size: 11px;
+  color: var(--prefs-soft);
+}
+
+/* ------------------------------------------------------------- données personnelles */
+
+.prefs__privacy {
+  margin: 0.8rem 0 0;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--app-flag-line, #cf9c2c);
+  border-radius: 4px;
+  background: var(--app-flag-bg, #f7eacd);
+  color: var(--app-flag-ink, #7a5410);
+}
+
+.prefs__privacy-head { font-size: 13px; font-weight: 600; cursor: pointer; }
+.prefs__privacy-body { margin-top: 0.6rem; }
+
+.prefs__privacy-list {
+  list-style: none;
+  margin: 0 0 0.6rem;
+  padding: 0;
+  display: grid;
+  gap: 0.15rem;
+}
+
+.prefs__privacy-item {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  flex-wrap: wrap;
+  font-size: 12px;
+}
+
+.prefs__privacy-key {
+  flex: 0 0 15rem;
+  font-family: var(--font-data, monospace);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.prefs__privacy-why { flex: 1 1 18rem; }
+
+.prefs__privacy-note {
+  margin: 0.5rem 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  max-width: 78ch;
+}
+
+/* --------------------------------------------------------------- écrans et catégories */
+
+.prefs__menu { margin-top: 0.4rem; }
+
+.prefs__entry + .prefs__entry { margin-top: 1.6rem; }
+
+.prefs__screen + .prefs__screen { margin-top: 1.4rem; }
+
+.prefs__screen-title,
+.prefs__leftover .prefs__screen-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  margin: 0 0 0.4rem;
+  font-size: 12px;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--prefs-line);
+}
+
+.prefs__screen-name {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 700;
+}
+
+.prefs__screen-count {
+  font-family: var(--font-data, monospace);
+  font-size: 11px;
+  color: var(--prefs-soft);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.prefs__category {
+  margin: 0.9rem 0 0.1rem;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--prefs-soft);
+}
+
+/* Une ligne du menu que la page ne peut pas déplier : elle reste, avec sa raison. */
+.prefs__entry-quiet {
+  display: flex;
+  gap: 0.8rem;
+  align-items: baseline;
+  flex-wrap: wrap;
+  padding: 0.5rem 0.7rem;
+  border-left: 2px solid var(--prefs-line);
+  background: color-mix(in srgb, var(--app-panel, #f6f7f8) 60%, transparent);
+}
+
+.prefs__entry-name {
+  flex: 0 0 12rem;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--prefs-soft);
+}
+
+.prefs__entry-note {
+  flex: 1 1 22rem;
+  display: grid;
+  gap: 0.25rem;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--prefs-soft);
+}
+
+/* Le compte mesuré : il pèse plus que la raison générique, il se lit comme tel. */
+.prefs__entry-tally { color: var(--app-ink, #15181c); }
+
+.prefs__never {
+  margin: 0.5rem 0 0;
+  font-size: 11.5px;
+  color: var(--prefs-soft);
+  font-style: italic;
+}
+
+/* -------------------------------------------------------------------------- les lignes */
+
+.prefs__list { display: flex; flex-direction: column; }
+
+/*
+ * Quatre colonnes fixes plutôt qu'un flux : sur 90 lignes, une valeur qui se cale au
+ * ras de sa marque d'état oblige l'œil à repartir en chasse à chaque ligne. Les colonnes
+ * alignent les valeurs entre elles et les états entre eux, ce qui est exactement la
+ * lecture qu'on vient faire — « qu'est-ce qui n'est pas au défaut ? » se répond alors
+ * d'un balayage vertical.
+ */
+.prefs__row {
+  display: grid;
+  grid-template-columns: minmax(9rem, 1fr) minmax(6rem, 17rem) 12rem 5.5rem;
+  align-items: baseline;
+  gap: 0.2rem 0.7rem;
+  padding: 0.4rem 0.2rem;
+  border-bottom: 1px solid var(--prefs-line);
+}
+
+.prefs__row:last-child { border-bottom: 0; }
+
+.prefs__label { font-size: 14px; min-width: 0; overflow-wrap: anywhere; }
+
+.prefs__row[data-unlabelled='true'] .prefs__label {
+  font-family: var(--font-data, monospace);
+  font-size: 11.5px;
+}
+
+.prefs__value {
+  font-size: 13px;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.prefs__value--none { color: var(--prefs-soft); }
+.prefs__value--structured { font-family: var(--font-data, monospace); font-size: 11px; color: var(--prefs-soft); }
+
+/* Le masquage remplace la valeur à l'écran ; elle reste dans le DOM et dans le fichier. */
+.prefs--masked .prefs__value--secret { color: transparent; position: relative; }
+
+.prefs--masked .prefs__value--secret::after {
+  content: '••••••';
+  position: absolute;
+  inset: 0;
+  text-align: right;
+  color: var(--prefs-soft);
+  letter-spacing: 0.1em;
+}
+
+/* --------------------------------------------------------------- la marque d'état */
+
+.prefs__state {
+  font-family: var(--font-data, monospace);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--prefs-soft);
+  cursor: help;
+}
+
+.prefs__state--custom { color: var(--app-ink, #15181c); font-weight: 700; }
+.prefs__state--conflict { color: var(--app-flag-ink, #7a5410); font-weight: 700; }
+
+/* Les trois états d'absence se lisent d'un coup d'œil : la ligne est en retrait. */
+.prefs__row[data-state='absent'],
+.prefs__row[data-state='unwritten'] { opacity: 0.62; }
+
+.prefs__row[data-state='custom'] { background: color-mix(in srgb, var(--app-panel, #f6f7f8) 70%, transparent); }
+.prefs__row[data-state='custom'] .prefs__label { font-weight: 600; }
+
+.prefs__row[data-state='conflict'] { border-left: 2px solid var(--app-flag-line, #cf9c2c); padding-left: 0.5rem; }
+
+.prefs__personal {
+  justify-self: start;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.05rem 0.35rem;
+  border: 1px solid var(--app-flag-line, #cf9c2c);
+  border-radius: 999px;
+  color: var(--app-flag-ink, #7a5410);
+  cursor: help;
+}
+
+.prefs__help {
+  grid-column: 1 / -1;
+  margin: 0.15rem 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--prefs-soft);
+  max-width: 78ch;
+}
+
+/* --------------------------------------------------------------------- blocs de fin */
+
+.prefs__leftover { margin-top: 2.4rem; }
+
+.prefs__leftover[data-reason='unknown'] {
+  border-left: 3px solid var(--app-flag-line, #cf9c2c);
+  padding-left: 0.9rem;
+}
+
+/* ---------------------------------------------------------- fichier sans préférence */
+
+.prefs__empty {
+  margin: 1.5rem 0 0;
+  padding: 1.1rem 1.2rem;
+  border: 1px dashed var(--app-line-strong, #b1b8bf);
+  border-radius: 6px;
+  background: var(--app-panel, #f6f7f8);
+}
+
+.prefs__empty-title { margin: 0; font-size: 15px; font-weight: 600; }
+
+.prefs__empty-text {
+  margin: 0.6rem 0 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--prefs-soft);
+  max-width: 74ch;
+}
+
+/* ------------------------------------------------------------------- petites largeurs */
+
+@media (max-width: 46rem) {
+  .prefs__row { grid-template-columns: 1fr auto; }
+  .prefs__value { text-align: right; }
+  .prefs__state { grid-column: 1 / -1; text-align: left; }
+  .prefs__personal { grid-column: 1 / -1; }
+  .prefs__entry-name { flex: 1 1 100%; }
+}
