@@ -25,6 +25,7 @@ import { drawOptiPotential } from './optiPotential'
 import { drawCompassDigital } from './compassDigital'
 import { drawEmitTestEvent, drawFreeText } from './freeText'
 import { drawAltitudeDataGraph } from './altitudeDataGraph'
+import { drawLogPeek, drawWebView } from './logPeek'
 
 /**
  * Les types « titre + valeur + unité » : les 23 du corpus, puis les 19 que la revue des
@@ -157,3 +158,9 @@ register('WEmitTestEvent', drawEmitTestEvent)
 // même au repos ; les barres de gain, elles, sont recalculées sur le vol en cours et ne
 // sont donc pas reproduites (altitudeDataGraph.ts).
 register('WAltitudeDataGraph', drawAltitudeDataGraph)
+
+// Écart 2.11 — les deux gadgets que l'appareil remplit entièrement et que nous laissions
+// en « titre + `--` ». Le journal se dessine avec des lignes d'EXEMPLE ; la page web ne
+// se dessine pas du tout, seule l'adresse qui sera chargée s'affiche (logPeek.ts).
+register('WLogPeek', drawLogPeek)
+register('WWebView', drawWebView)
