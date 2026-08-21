@@ -1,0 +1,335 @@
+/*
+ * L'habillage de la bibliothèque de configurations. Importée par `ui/libraryPanel.ts` et
+ * par lui seul : le module se charge à la demande, sa feuille suit.
+ *
+ * Trois règles du cadre sont tenues ici comme ailleurs, et rien de neuf n'est introduit :
+ *
+ * 1. **le meuble est celui d'`app.css`** — `.modal`, `.modal__box`, `.modal__head`
+ *    collante, `.modal__actions`, `.btn`, `.chip`, `.flag`. Ce fichier ne fait que donner
+ *    sa forme à la liste et à la carte d'identité ;
+ * 2. **le cadre est achromatique.** Aucune couleur n'est introduite : l'ambre reste réservé
+ *    à ce qui alerte — ici les données personnelles et les entrées illisibles, qui
+ *    empruntent `--app-flag-*` déjà défini ; le bleu au contour de focus ;
+ * 3. **les deux thèmes sont servis par les mêmes variables.** Aucune valeur en dur : tout
+ *    passe par `--app-*`, donc le mode sombre suit sans une ligne de plus.
+ */
+
+/* ------------------------------------------------------------------------ le panneau */
+
+.library {
+  display: grid;
+  gap: 0.9rem;
+  max-width: 62rem;
+}
+
+.library__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem 1rem;
+}
+
+.library__title { margin: 0; font-size: 16px; font-weight: 600; }
+
+.library__actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.library__lead { margin: 0; font-size: 13px; color: var(--app-ink-soft); max-width: 78ch; }
+
+.library__foot {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.8rem;
+  font-size: 12px;
+  color: var(--app-ink-soft);
+  border-top: 1px solid var(--app-line);
+  padding-top: 0.6rem;
+}
+
+.library__empty {
+  margin: 0;
+  padding: 1.4rem;
+  border: 1px dashed var(--app-line-strong);
+  border-radius: 6px;
+  background: var(--app-panel);
+  color: var(--app-ink-soft);
+  font-size: 13px;
+  max-width: 78ch;
+}
+
+/* ------------------------------------------------ ce qu'on refuse de taire : les bandeaux */
+
+/*
+ * Le bandeau de non-durabilité vient AVANT la liste, et il prend l'ambre : c'est la seule
+ * information du panneau qui rende toutes les autres provisoires. Un pilote qui ne lirait
+ * qu'une ligne doit lire celle-là.
+ */
+.library__banner {
+  display: grid;
+  gap: 0.35rem;
+  justify-items: start;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--app-flag-line);
+  border-left-width: 3px;
+  border-radius: 5px;
+  background: var(--app-flag-bg);
+  color: var(--app-flag-ink);
+}
+
+.library__bannerTitle { font-size: 13px; }
+.library__bannerText { font-size: 12.5px; max-width: 78ch; }
+
+.library__flash {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.8rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--app-line-strong);
+  border-left: 3px solid var(--app-line-strong);
+  border-radius: 5px;
+  background: var(--app-panel);
+  font-size: 13px;
+}
+
+/* Un échec se distingue par le filet, pas par un fond alarmant : le texte dit déjà quoi. */
+.library__flash--trouble { border-left-color: var(--app-flag-line); }
+
+.library__flashText { max-width: 78ch; }
+
+/* ----------------------------------------------------------------------- les entrées */
+
+.library__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.7rem; }
+
+.library__entry {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.9rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--app-line);
+  border-radius: 6px;
+  background: var(--app-panel);
+}
+
+.library__entry--broken { border-left: 3px solid var(--app-flag-line); }
+
+.library__entryMain { display: grid; gap: 0.35rem; min-width: 0; }
+
+.library__entryName { margin: 0; font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
+
+.library__meta {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.library__meta:empty { display: none; }
+
+.library__stamp {
+  margin: 0;
+  font-size: 12px;
+  color: var(--app-ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.library__entryNote {
+  margin: 0.1rem 0 0;
+  font-size: 12.5px;
+  max-width: 78ch;
+  white-space: pre-wrap;
+}
+
+.library__entryActions { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.25rem; }
+
+/*
+ * La place de l'aperçu. Elle est **vide et le dit** : le dessin d'une page appartient au
+ * moteur de rendu, hors de ce module. Le cadre est aux proportions d'une page paysage
+ * d'AIR³ 7.2 (1280 × 720), pour que rien ne bouge le jour où l'image arrivera.
+ */
+.library__preview {
+  width: 7.5rem;
+  aspect-ratio: 16 / 9;
+  display: grid;
+  place-items: center;
+  border: 1px dashed var(--app-line-strong);
+  border-radius: 4px;
+  background: var(--app-bg);
+  color: var(--app-ink-soft);
+  font-size: 10.5px;
+  text-align: center;
+  padding: 0.3rem;
+}
+
+@media (max-width: 34rem) {
+  .library__entry { grid-template-columns: minmax(0, 1fr); }
+  .library__preview { width: 100%; max-width: 12rem; }
+}
+
+/* ------------------------------------------------------------------- sections et textes */
+
+.library__section { display: grid; gap: 0.5rem; }
+
+.library__section--broken { margin-top: 0.6rem; }
+
+.library__heading {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--app-ink-soft);
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--app-line);
+}
+
+/*
+ * Les deux moitiés de la carte d'identité ne se distinguent PAS par une couleur — elles se
+ * distinguent par leur titre et par la note qui le suit, parce que c'est cela qu'il faut
+ * lire. Le filet gauche marque seulement que le bloc est une moitié d'un tout.
+ */
+.library__heading--read,
+.library__heading--assumed {
+  border-bottom-style: solid;
+  border-left: 3px solid var(--app-line-strong);
+  padding-left: 0.5rem;
+}
+
+.library__heading--assumed { border-left-style: dashed; }
+
+.library__note { margin: 0; font-size: 12.5px; color: var(--app-ink-soft); max-width: 78ch; }
+
+.library__caveat {
+  margin: 0.2rem 0 0;
+  padding-left: 0.7rem;
+  border-left: 2px solid var(--app-line-strong);
+  font-size: 12px;
+  color: var(--app-ink-soft);
+  max-width: 78ch;
+}
+
+/* --------------------------------------------------------------- la carte d'identité */
+
+.library__card { display: grid; gap: 1.2rem; }
+
+.library__facts {
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(9rem, auto) minmax(0, 1fr);
+  gap: 0.3rem 0.9rem;
+  align-items: baseline;
+}
+
+@media (max-width: 34rem) {
+  .library__facts { grid-template-columns: minmax(0, 1fr); gap: 0.05rem; }
+  .library__factLabel { margin-top: 0.5rem; }
+}
+
+.library__factLabel { margin: 0; font-size: 12px; font-weight: 600; color: var(--app-ink-soft); }
+
+.library__factValue {
+  margin: 0;
+  display: grid;
+  gap: 0.1rem;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.library__factNote { font-size: 11.5px; color: var(--app-ink-soft); }
+
+.library__digest {
+  font-family: var(--font-data);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+/* ------------------------------------------------------------- les données personnelles */
+
+.library__personal { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.4rem; }
+
+.library__datum {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--app-line);
+  border-radius: 5px;
+  background: var(--app-panel);
+}
+
+/* Ce qui part avec les pages est ce qu'on croyait ne pas envoyer : c'est cela qu'on marque. */
+.library__datum--travels { border-left: 3px solid var(--app-flag-line); }
+
+.library__datumWhere { font-size: 11.5px; font-weight: 600; color: var(--app-ink-soft); }
+.library__datumKey { font-family: var(--font-data); font-size: 11px; color: var(--app-ink-soft); overflow-wrap: anywhere; }
+.library__datumValue { font-family: var(--font-data); font-size: 12px; overflow-wrap: anywhere; }
+
+/* ------------------------------------------------------------------- empreinte et import */
+
+.library__verify, .library__confirm { display: grid; gap: 0.7rem; }
+
+.library__verdict { margin: 0; font-size: 13px; font-weight: 600; }
+.library__verdict--differs { color: var(--app-flag-ink); }
+
+.library__results { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.4rem; }
+
+.library__result {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--app-line);
+  border-radius: 5px;
+  background: var(--app-panel);
+}
+
+.library__result--rejected { border-left: 3px solid var(--app-flag-line); }
+
+.library__resultName { font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+.library__resultOutcome { font-size: 12px; color: var(--app-ink-soft); }
+.library__resultReason { font-size: 11.5px; color: var(--app-flag-ink); }
+
+/* ------------------------------------------------------------------------ les formulaires */
+
+.library__form { display: grid; gap: 0.8rem; }
+
+.library__field { display: grid; gap: 0.2rem; }
+
+.library__fieldLabel { font-size: 12px; font-weight: 600; color: var(--app-ink-soft); }
+
+.library__input {
+  font: inherit;
+  font-size: 14px;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--app-line-strong);
+  border-radius: 4px;
+  background: var(--app-bg);
+  color: var(--app-ink);
+  width: 100%;
+}
+
+.library__input--note { min-height: 4.5rem; resize: vertical; }
+
+.library__hint { font-size: 11.5px; color: var(--app-ink-soft); }
+
+/* ------------------------------------------------------------------------- les modales */
+
+.modal--library { max-width: min(52rem, 94vw); width: min(52rem, 94vw); }
+
+/*
+ * La boîte défile — la carte d'identité d'une sauvegarde complète tient sur plusieurs
+ * écrans, et sa liste de données personnelles peut être longue. Le rembourrage du haut
+ * passe donc à la tête collante, comme pour la palette et le carrousel des pages : sans
+ * cela, la tête se colle au bord du CONTENU et une bande de carte reste visible au-dessus
+ * d'elle. C'est ce qui garde « Fermer » atteignable une fois la carte défilée à fond.
+ */
+.modal--library .modal__box {
+  padding-top: 0;
+  max-height: 88vh;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+/* Le panneau entier en modale : plus large, la liste ayant des actions sur une ligne. */
+.modal--libraryPanel { max-width: min(64rem, 96vw); width: min(64rem, 96vw); }

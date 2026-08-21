@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Essai — bibliothèque de configurations</title>
+    <style>
+      /* L'habillage de la page d'essai seulement : le module, lui, apporte le sien. */
+      .demo { max-width: 68rem; margin: 0 auto; padding: 2rem 1.5rem; }
+      .demo__title { font-size: 18px; margin: 0 0 0.4rem; }
+      .demo__lead { margin: 0 0 1.2rem; font-size: 13px; color: var(--app-ink-soft); max-width: 78ch; }
+      .demo__buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.8rem; }
+      .demo__current {
+        margin: 0 0 1rem;
+        font-family: var(--font-data);
+        font-size: 12px;
+        color: var(--app-ink-soft);
+      }
+      .demo__out {
+        margin-top: 1.4rem;
+        font-family: var(--font-data);
+        font-size: 12px;
+        padding: 0.8rem;
+        border: 1px solid var(--app-line);
+        border-radius: 5px;
+        background: var(--app-panel);
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <!--
+      Page d'essai du seul module `ui/libraryPanel.ts`, qui n'est encore branché nulle
+      part. Elle sert à le voir vivre, à refaire les captures, et surtout à l'éprouver
+      là où les tests ne peuvent pas : sur un IndexedDB réel.
+
+          npm run dev -- --port 5182
+          http://localhost:5182/src/ui/libraryPanel.demo.html
+
+      Le port 5175 appartient au propriétaire : ne pas s'en servir.
+      Elle n'entre pas dans `dist/` : `vite build` ne construit que ce que
+      l'`index.html` référence.
+    -->
+    <main class="demo">
+      <h1 class="demo__title">Bibliothèque de configurations — page d’essai</h1>
+      <p class="demo__lead">
+        Les fichiers proposés sont les fixtures anonymisées de <code>tests/fixtures/</code>,
+        lues en lecture seule : aucune donnée personnelle réelle n’y figure. Le rangement se
+        fait dans l’IndexedDB de ce navigateur — rechargez la page pour vérifier qu’il
+        survit. Le thème suit celui du système.
+      </p>
+      <div class="demo__buttons" id="buttons"></div>
+      <div id="host"></div>
+      <pre class="demo__out" id="out">— prêt —</pre>
+    </main>
+    <script type="module" src="./libraryPanel.demo.ts"></script>
+  </body>
+</html>
