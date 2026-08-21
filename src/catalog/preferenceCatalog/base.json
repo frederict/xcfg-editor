@@ -8,6 +8,7 @@
   "configClass": "a",
   "preferenceRoot": "fp6",
   "scopeEnum": "gp6",
+  "configCriterion": "scope",
   "languages": [
    "bg",
    "bs",
@@ -45,14 +46,15 @@
    "zh",
    "zh-TW"
   ],
-  "preferenceCount": 216,
-  "declaredCount": 209,
-  "exportedCount": 135,
+  "preferenceCount": 217,
+  "declaredCount": 211,
+  "exportedCount": 136,
   "labelledCount": 131,
-  "personalCount": 43,
+  "personalCount": 44,
   "screenCount": 20,
   "stringCount": 217,
   "arrayCount": 13,
+  "directReadCount": 24,
   "valueConflicts": [],
   "defaultConflicts": [
    "Display.WidgetTitleOutlineColor",
@@ -173,6 +175,7 @@
    "Internal.LiveTempDontShare",
    "Internal.LiveTempShortDelay",
    "Internal.PreV5SelectedChannels",
+   "Internal.ProcessedBootstraps",
    "Internal.SntpVsGpsOffset",
    "Internal.TrackingRunning",
    "Internal.VolumeInitial",
@@ -1765,6 +1768,22 @@
    "help": null,
    "impl": "yd0"
   },
+  "Internal.ProcessedBootstraps": {
+   "family": "Internal",
+   "scope": "SECURE",
+   "declared": true,
+   "valueKind": null,
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "defaultSource": "runtime",
+   "personal": {
+    "kind": "credential",
+    "basis": "scope",
+    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+   }
+  },
   "Internal.SntpVsGpsOffset": {
    "family": "Internal",
    "scope": "INTERNAL",
@@ -2529,12 +2548,14 @@
   },
   "SafeSky.Interval": {
    "family": "SafeSky",
-   "scope": null,
-   "declared": false,
-   "valueKind": "string",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": null,
    "control": "list",
    "label": "safeSkyFrequencyTitle",
    "help": null,
+   "impl": "yd0",
+   "defaultSource": "runtime",
    "screen": "preferences_live",
    "order": 9,
    "category": "_safesky",
@@ -3650,6 +3671,128 @@
    "screen": "preferences_sound",
    "order": 7,
    "category": "_ttsSetting"
+  }
+ },
+ "directReads": {
+  "Airspace.State": {
+   "read": "getString",
+   "by": "a.j0",
+   "written": false
+  },
+  "EventMapping": {
+   "read": "getString",
+   "by": "a.j0",
+   "written": false
+  },
+  "Mapsforge.MapFiles": {
+   "read": "getString",
+   "by": "a.j0",
+   "written": false
+  },
+  "Sensors.Barometer.LowPassFilterWeight": {
+   "read": "getFloat",
+   "by": "a.j0",
+   "written": false
+  },
+  "Sensors.Bluetooth.Address": {
+   "read": "getString",
+   "by": "a.j0",
+   "written": false
+  },
+  "Sensors.Bluetooth.Name": {
+   "read": "getString",
+   "by": "a.j0",
+   "written": false
+  },
+  "Sensors.Bluetooth.Type": {
+   "read": "getInt",
+   "by": "a.j0",
+   "written": false
+  },
+  "Sensors.ExtType": {
+   "read": "getString",
+   "by": "a.j0",
+   "written": false
+  },
+  "Sensors.ExtTypes": {
+   "read": "getStringSet",
+   "by": "a.j0",
+   "written": false
+  },
+  "Sensors.ExternalAirspeed": {
+   "read": "getBoolean",
+   "by": "a.j0",
+   "written": false
+  },
+  "Sensors.ExternalBarometer": {
+   "read": "getBoolean",
+   "by": "a.j0",
+   "written": false
+  },
+  "Sensors.ExternalGPS": {
+   "read": "getBoolean",
+   "by": "a.j0",
+   "written": false
+  },
+  "Sensors.ExternalWind": {
+   "read": "getBoolean",
+   "by": "a.j0",
+   "written": false
+  },
+  "Sensors.ExternalWindRotate": {
+   "read": "getBoolean",
+   "by": "a.j0",
+   "written": false
+  },
+  "Sensors.ForceLocationApi": {
+   "read": "getBoolean",
+   "by": "a.j0",
+   "written": false
+  },
+  "Sensors.InternalBarometer": {
+   "read": "getBoolean",
+   "by": "a.j0",
+   "written": false
+  },
+  "Sensors.InternalCompass": {
+   "read": "getBoolean",
+   "by": "a.j0",
+   "written": false
+  },
+  "Sensors.Network.Host": {
+   "read": "getString",
+   "by": "a.j0",
+   "written": false
+  },
+  "Sensors.Network.Port": {
+   "read": "getString",
+   "by": "a.j0",
+   "written": false
+  },
+  "Sensors.USB.Baudrate": {
+   "read": "getString",
+   "by": "a.j0",
+   "written": false
+  },
+  "Tweak.DisableHWAccel": {
+   "read": "getBoolean",
+   "by": "a.j0",
+   "written": false
+  },
+  "XContest.AuthToken": {
+   "read": "getString",
+   "by": "a.j0",
+   "written": false
+  },
+  "XContest.Password": {
+   "read": "getString",
+   "by": "a.j0",
+   "written": false
+  },
+  "XContest.Username": {
+   "read": "getString",
+   "by": "a.j0",
+   "written": false
   }
  },
  "screens": [
@@ -5480,6 +5623,7 @@
   "Internal.CameraBack",
   "Internal.GliderListRefreshed",
   "Internal.PreV5SelectedChannels",
+  "Internal.ProcessedBootstraps",
   "Internal.SntpVsGpsOffset",
   "Internal.TrackingRunning",
   "Internal.VolumeInitial",

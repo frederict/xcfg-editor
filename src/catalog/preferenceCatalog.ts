@@ -8,21 +8,24 @@ import PREFERENCE_LANGUAGE_LIST from './preferenceCatalogLanguages.json'
  * y sont croisées : les écrans de réglages (`res/xml/preferences_*.xml`), qui donnent le
  * libellé, l'aide, la forme du contrôle et les valeurs permises ; et le `<clinit>` de la
  * classe de configuration, qui donne le type de la valeur, son défaut et sa **portée**.
+ * Une troisième, plus maigre, se tient à côté : `directReads`.
  *
  * ## Ce que ce module apporte que les autres catalogues n'ont pas
  *
  * `widgetOptions.ts` décrit ce qu'on règle **dans un widget**. Ici, c'est tout le reste :
- * les unités, les touches, les capteurs, le son, les espaces aériens — 216 clés, dont
+ * les unités, les touches, les capteurs, le son, les espaces aériens — 217 clés, dont
  * 136 qu'un fichier réel porte effectivement.
  *
  * ## La portée décide de ce qu'un fichier emporte
  *
  * XCTrack range ses préférences en trois portées, lues dans le bytecode :
  *
- * - `PUBLIC` — écrite dans un export `backup`. **Les 135 clés `PUBLIC` du bytecode, plus
- *   la seule clé qu'Android persiste sans passer par la classe de configuration
- *   (`SafeSky.Interval`), font exactement les 136 clés du fichier de sauvegarde de
- *   référence.** C'est le contrôle croisé qui valide toute l'extraction.
+ * - `PUBLIC` — écrite dans un export `backup`. **Les 136 clés `PUBLIC` du bytecode sont
+ *   exactement les 136 clés du fichier de sauvegarde de référence.** C'est le contrôle
+ *   croisé qui valide toute l'extraction. Il n'a pas toujours été aussi net : la 136ᵉ,
+ *   `SafeSky.Interval`, passait pour une clé qu'Android persistait seul, faute de lire
+ *   les préférences dont la clé est posée par leur constructeur et non au site de
+ *   construction. Elle est bien déclarée, et bien `PUBLIC`.
  * - `INTERNAL` — locale à l'appareil (`Devel.*`, `_temp.*`, `App.Guess*`). Jamais
  *   exportée, donc jamais rencontrée par cet éditeur.
  * - `SECURE` — préférences chiffrées : jetons, mots de passe, identifiants de compte.
@@ -40,7 +43,7 @@ import PREFERENCE_LANGUAGE_LIST from './preferenceCatalogLanguages.json'
  *
  * ## Ce que le catalogue ne dit pas, et le dit
  *
- * - **85 clés n'ont pas de libellé**, dont 49 des 136 d'un fichier réel. XCTrack les
+ * - **86 clés n'ont pas de libellé**, dont 49 des 136 d'un fichier réel. XCTrack les
  *   règle dans des écrans construits en code (espaces aériens, cartes, actions
  *   automatiques, sons), où la clé n'est plus argument du même appel que son libellé ;
  *   ou bien ce ne sont pas des réglages du tout, mais de l'état sérialisé
@@ -48,6 +51,12 @@ import PREFERENCE_LANGUAGE_LIST from './preferenceCatalogLanguages.json'
  *   jamais un texte inventé, et `unlabelled` en donne la liste.
  * - **Les dépendances entre préférences** (une case qui en grise trois autres) ne sont
  *   écrites nulle part dans les ressources. Le catalogue ne les invente pas.
+ * - **Ce que XCTrack lit sans le déclarer.** Vingt-quatre clés ne passent par aucun objet
+ *   de préférence : la classe de configuration les lit à même les préférences partagées
+ *   d'Android. Elles sont dans `directReads()`, **pas** dans la table des préférences —
+ *   on n'a lu ni leur portée, ni la moindre écriture de la version courante, et
+ *   `isExported()` les dirait exportables sans que rien ne l'ait mesuré. Deux d'entre
+ *   elles (`Airspace.State`, `EventMapping`) figurent encore dans un fichier de 0.9.12.3.
  * - **La dimension « version » n'est pas construite.** `meta.versionCode` dit de quelle
  *   version ce catalogue parle ; rien de plus. Voir `widgetVersions.ts` pour ce que
  *   serait le travail, qui suppose de réextraire les 54 APK.
@@ -152,6 +161,26 @@ export interface PreferenceEntry {
   personal?: PersonalData
 }
 
+/**
+ * Une clé que la classe de configuration lit **directement** dans les préférences
+ * partagées d'Android, sans objet de préférence : ni `<clinit>`, ni écran de réglages.
+ *
+ * Ce n'est pas une préférence du catalogue et ça ne doit pas le devenir : sa portée
+ * n'est écrite nulle part, et `isExported()` rendrait vrai pour une clé dont rien ne
+ * dit qu'elle est exportée. Ce qui est **lu**, et rien de plus : le nom de l'accesseur
+ * Android — qui donne le type de la valeur —, la méthode qui fait la lecture, et si la
+ * version réécrit la clé quelque part. Sur la 1.0.3-beta5, aucune des vingt-quatre
+ * n'est réécrite.
+ */
+export interface DirectRead {
+  /** `getString`, `getStringSet`, `getBoolean`, `getInt`, `getLong` ou `getFloat`. */
+  read: string
+  /** Classe et méthode qui lisent la clé, noms obfusqués — `a.j0`. */
+  by: string
+  /** Vrai si une méthode de l'application réécrit cette clé. */
+  written: boolean
+}
+
 /** Une ligne d'un écran de réglages, dans l'ordre du document. */
 export interface ScreenRow {
   /** Nom de l'élément XML : `SwitchPreferenceCompat`, `PreferenceCategory`… */
@@ -187,7 +216,14 @@ export interface PreferenceCatalogMeta {
   /** Classe de configuration, racine des préférences, énumération de portée — obfusquées. */
   configClass: string
   preferenceRoot: string
+  /** Vide quand la version n'en a pas — avant la 0.9.11, la portée n'existait pas. */
   scopeEnum: string
+  /**
+   * À quoi la classe de configuration a été reconnue. `scope` : par l'énumération de
+   * portée. `screens` : par le recoupement de ses clés avec celles des écrans, le repli
+   * des versions qui n'ont pas encore de portée. Un relevé doit dire d'où il vient.
+   */
+  configCriterion: 'scope' | 'screens' | ''
   languages: string[]
   preferenceCount: number
   declaredCount: number
@@ -197,6 +233,8 @@ export interface PreferenceCatalogMeta {
   screenCount: number
   stringCount: number
   arrayCount: number
+  /** Combien de clés `directReads` porte. Voir `DirectRead`. */
+  directReadCount: number
   /**
    * Les clés où l'écran et le bytecode ne s'accordent pas sur le domaine de valeurs.
    * **Doit rester vide** : une entrée signalerait un appariement raté.
@@ -215,6 +253,7 @@ interface RawBase {
   meta: PreferenceCatalogMeta
   families: Record<string, string[]>
   preferences: Record<string, PreferenceEntry>
+  directReads: Record<string, DirectRead>
   screens: PreferenceScreen[]
   unlabelled: string[]
 }
@@ -258,9 +297,10 @@ export interface PreferenceCatalog {
    *
    * ⚠️ Une **possibilité**, pas une observation, pour les six clés du second cas : une
    * préférence qu'Android persiste seul n'entre dans le fichier qu'une fois écrite au
-   * moins une fois. Sur le fichier de référence, `SafeSky.Interval` y est et les cinq
-   * autres n'y sont pas — elles vivent dans les écrans cachés. `declared` distingue les
-   * deux cas ; une interface qui bâtit une page de réglages a tout intérêt à s'y fier.
+   * moins une fois. Sur le fichier de référence, aucune des six n'y est — elles vivent
+   * dans les écrans cachés « - extra - » et « - development - », ou recopient une autre
+   * clé. `declared` distingue les deux cas ; une interface qui bâtit une page de réglages
+   * a tout intérêt à s'y fier.
    *
    * Faux pour une clé **inconnue** : le catalogue ne peut rien affirmer sur ce qu'il ne
    * connaît pas, et un éditeur qui rencontre une clé inconnue doit la conserver telle
@@ -305,6 +345,12 @@ export interface PreferenceCatalog {
   unlabelled(): readonly string[]
   /** Les clés marquées comme portant une donnée personnelle, dans l'ordre alphabétique. */
   personalKeys(): string[]
+  /**
+   * Les clés que la classe de configuration lit sans les déclarer, dans l'ordre
+   * alphabétique. Voir `DirectRead` : ce sont des **lectures**, pas des préférences —
+   * `preference()` et `knows()` les ignorent, et c'est voulu.
+   */
+  directReads(): Readonly<Record<string, DirectRead>>
 }
 
 /** Les langues dans lesquelles XCTrack livre ses libellés de préférences. */
@@ -351,8 +397,9 @@ function makeCatalog(base: RawBase, texts: RawTexts): PreferenceCatalog {
       const entry = preference(key)
       if (entry === undefined) return false
       // Une clé qu'Android persiste depuis un écran (`scope: null`) est écrite dans les
-      // mêmes préférences partagées que les autres, donc reprise par l'export :
-      // `SafeSky.Interval` est bien dans le fichier de référence.
+      // mêmes préférences partagées que les autres, donc reprise par l'export — une
+      // possibilité, pas une observation : les six du cas ne sont dans aucun fichier de
+      // référence, faute d'avoir jamais été réglées.
       return entry.scope === 'PUBLIC' || entry.scope === null
     },
     families: () =>
@@ -385,7 +432,8 @@ function makeCatalog(base: RawBase, texts: RawTexts): PreferenceCatalog {
     },
     unlabelled: () => base.unlabelled,
     personalKeys: () =>
-      Object.keys(base.preferences).filter((key) => base.preferences[key]?.personal !== undefined)
+      Object.keys(base.preferences).filter((key) => base.preferences[key]?.personal !== undefined),
+    directReads: () => base.directReads
   }
 }
 

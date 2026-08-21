@@ -500,13 +500,22 @@ describe('ce que la page accepte de présenter sous un libellé', () => {
   })
 
   /**
-   * `declared` n'entre pas dans le filtre. Ces trois clés-là ne sont pas déclarées par la
-   * classe de configuration mais portent un libellé, une liste de valeurs, et figurent
-   * dans un fichier réel : les écarter les ferait disparaître d'une page qui part du
-   * fichier.
+   * `declared` n'entre pas dans le filtre : une clé qu'Android persiste seul porte un
+   * libellé, un contrôle et parfois une liste de valeurs. L'écarter la ferait
+   * disparaître d'une page qui part du fichier.
+   *
+   * ⚠️ `SafeSky.Interval` a longtemps servi d'exemple ici : on la croyait persistée par
+   * Android depuis l'écran. L'extraction a depuis appris à lire les préférences dont la
+   * clé est posée par leur constructeur, et celle-là est bien déclarée, bien `PUBLIC`.
+   * Elle reste dans ce test — c'est elle qui est dans le fichier réel — mais comme le
+   * cas *déclaré*, aux côtés de deux clés qui, elles, ne le sont pas.
    */
   it('garde les réglages qu’Android persiste seul', () => {
-    expect(catalog.preference('SafeSky.Interval')?.declared).toBe(false)
+    for (const key of ['_ttsSpeed', '_ttsPitch']) {
+      expect(catalog.preference(key)?.declared, key).toBe(false)
+      expect(isPresentable(catalog, key), key).toBe(true)
+    }
+    expect(catalog.preference('SafeSky.Interval')?.declared).toBe(true)
     expect(isPresentable(catalog, 'SafeSky.Interval')).toBe(true)
     const row = rowFor(BACKUP_2026, 'SafeSky.Interval')
     expect(row.labelled).toBe(true)

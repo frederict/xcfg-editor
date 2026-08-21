@@ -64,15 +64,42 @@ pas deviné », appliquée au type.
 
 Le dernier argument, quand il est présent, est une constante de l'énumération de
 **portée** : `PUBLIC`, `INTERNAL`, `SECURE`. Elle décide de ce qu'un export emporte, et
-c'est le contrôle croisé le plus net de toute l'extraction : les 135 clés `PUBLIC` de la
-classe de configuration, plus la seule clé persistée par le XML sans passer par elle
-(`SafeSky.Interval`), font **exactement** les 136 clés du fichier de sauvegarde réel du
-propriétaire. Ni une de plus, ni une de moins.
+c'est le contrôle croisé le plus net de toute l'extraction : les 136 clés `PUBLIC` de la
+classe de configuration sont **exactement** les 136 clés du fichier de sauvegarde réel
+du propriétaire. Ni une de plus, ni une de moins.
 
 Rien n'est nommé en dur : ni la classe de configuration (obfusquée en `a`), ni la classe
 racine des préférences (`fp6`), ni l'énumération de portée (`gp6`). Les trois se
 découvrent — voir `ConfigReader._scope_enum`, `_read_declarations` et
 `_preference_root`.
+
+⚠️ **Cette énumération a varié, et rien ne dit qu'elle ne variera plus.** La `0.9.6.2`
+de 2022 en porte une quatrième constante (`SENSITIVE`) ; de la `0.9.9.1` à la
+`0.9.10.3`, elle n'existe pas du tout. La reconnaissance se fait donc par inclusion, et
+un repli reconnaît la classe de configuration sans elle. Ces deux points, et le
+garde-fou qui les accompagne, sont la matière de `ExtractionFailed` : **un relevé sans
+aucune préférence déclarée est une panne, pas un résultat.**
+
+Deux formes de déclaration coexistent, et la seconde a longtemps échappé au relevé :
+
+    new yd0("Display.Theme", "WhiteTheme")   // la clé est au site de construction
+    new yd0()                                // la clé est dans le constructeur
+
+La seconde est traitée par `_fixed_key_declarations`, qui lit l'appel relayé à
+l'ancêtre — c'est là que se trouvent la clé, la fabrique du défaut *et* la portée.
+
+### Source 3 — ce que la configuration lit à même Android (`directReads`)
+
+Certaines clés ne passent par aucun objet de préférence : la classe de configuration les
+lit directement dans les préférences partagées (`prefs.getStringSet("Sensors.ExtTypes",
+…)`). Ni `<clinit>`, ni `PreferenceScreen` : les deux sources croisées les manquent
+toutes les deux. `ConfigReader._direct_reads` les relève, avec le nom de l'accesseur
+Android — qui donne le type — et le fait de savoir si la version les réécrit.
+
+Elles sont publiées **à part**, sous `directReads`, et non dans la table des
+préférences : on n'a lu ni leur portée, ni — pour les vingt-quatre de la 1.0.3-beta5,
+sans exception — la moindre écriture. Les ranger avec les autres les dirait exportables
+sans que rien ne l'ait mesuré.
 
 ## Ce que la méthode ne donne pas
 
@@ -447,10 +474,98 @@ def is_type_token(type_name: str, scope_enum: str | None) -> bool:
             and not type_name.startswith(("Ljava/", "Lkotlin/", "Landroid")))
 
 
+# --------------------------------------------------------------------------
+# Reconnaître la classe de configuration — et ne jamais échouer en silence
+# --------------------------------------------------------------------------
+
+class ExtractionFailed(RuntimeError):
+    """Une lecture qui n'a pas abouti, **levée** plutôt que rendue vide.
+
+    C'est le garde-fou central de ce script. Un extracteur qui ne reconnaît plus ce
+    qu'il cherche rend, s'il se tait, un catalogue *plausible* : les écrans de
+    réglages sont toujours lus, donc il reste des préférences, avec des libellés et
+    des écrans — simplement plus de type, plus de défaut, plus de portée, et un tiers
+    des clés manquantes. Rien ne le distingue à l'œil d'une version qui avait
+    réellement moins de réglages.
+
+    C'est arrivé, et on peut le dater : la `0.9.6.2` de 2022 porte une **quatrième**
+    constante de portée (`SENSITIVE`). L'égalité stricte n'y reconnaissait plus
+    l'énumération, la classe de configuration n'était plus trouvée, et le relevé
+    tombait à 105 préférences au lieu de 203 avec `declaredCount = 0` — sans un mot.
+    67 clés d'un `.xcfg` réel de cette version manquaient à son propre relevé.
+
+    D'où la règle : un relevé sans **aucune** préférence déclarée n'est pas un
+    résultat, c'est une panne. On lève, l'appelant décide. `extract-version-schema.py`
+    la rattrape par section et l'inscrit dans `errors` ; `main()` s'arrête sans rien
+    écrire, plutôt que de remplacer un catalogue juste par un catalogue vide.
+    """
+
+
+# Les trois portées que XCTrack a toujours eues — mais pas les seules qu'il ait jamais
+# portées. La reconnaissance se fait donc par **inclusion**, jamais par égalité : la
+# `0.9.6.2` en a quatre (`SENSITIVE`), et rien ne dit qu'une version future n'en
+# ajoutera pas une cinquième. Sur une version qui en a exactement trois, l'inclusion
+# et l'égalité donnent la même réponse : la correction ne déplace rien de ce qui
+# marchait.
+SCOPE_CONSTANTS = frozenset({"PUBLIC", "INTERNAL", "SECURE"})
+
+
+# Combien de clés d'un `<clinit>` doivent se retrouver dans les écrans de réglages pour
+# qu'on tienne la classe pour celle de la configuration, **quand aucune énumération de
+# portée n'existe** — c'est le cas de la `0.9.9.1` à la `0.9.10.3`, où la notion n'était
+# pas encore née et où `SECURE` n'apparaît nulle part dans le bytecode.
+#
+# Cinq suffisent largement à écarter le seul concurrent sérieux : le `<clinit>` d'une
+# table d'icônes construit neuf cents objets sur des noms en forme de clé
+# (`md_battery_full`), et pas un seul ne figure dans un `PreferenceScreen`.
+SCREEN_OVERLAP_MINIMUM = 5
+
+
+# Les préférences partagées d'Android, et les accesseurs qui nomment une clé. `getAll`
+# est écarté : il ne nomme rien.
+SHARED_PREFERENCES = "Landroid/content/SharedPreferences;"
+SHARED_EDITOR = "Landroid/content/SharedPreferences$Editor;"
+SHARED_READERS = frozenset({"getString", "getStringSet", "getBoolean", "getInt",
+                            "getLong", "getFloat"})
+SHARED_WRITERS = frozenset({"putString", "putStringSet", "putBoolean", "putInt",
+                            "putLong", "putFloat"})
+
+
+def scope_enum_of(enums: dict[str, dict]) -> str | None:
+    """L'énumération de portée parmi les énumérations de l'APK, ou `None`.
+
+    Critère : ses constantes **contiennent** `PUBLIC`, `INTERNAL` et `SECURE`. La plus
+    petite gagne, pour qu'une énumération qui les recouvrirait par accident en portant
+    cinquante constantes ne passe jamais devant la vraie.
+
+    Fonction libre plutôt que méthode : elle se teste sur une table écrite à la main,
+    sans APK — voir `--self-test`.
+    """
+    candidates = [(len(table["order"]), name) for name, table in sorted(enums.items())
+                  if SCOPE_CONSTANTS <= set(table["order"])]
+    return min(candidates)[1] if candidates else None
+
+
+def _guard_declarations(reader, apk_dir: Path) -> None:
+    """Refuse un relevé sans aucune préférence déclarée. Voir `ExtractionFailed`.
+
+    Fonction libre, appelée par `ConfigReader.__init__` : elle se déclenche ainsi sur
+    une instance construite à la main, donc s'éprouve sans APK.
+    """
+    if reader.declarations:
+        return
+    scope = short(reader.scope_enum) if reader.scope_enum else "aucune"
+    raise ExtractionFailed(
+        f"{apk_dir.name} : aucune préférence déclarée. La classe de configuration n'a "
+        f"pas été reconnue (énumération de portée : {scope} ; clés d'écrans "
+        f"disponibles : {len(reader.screen_keys)}). Un catalogue sans déclaration n'a "
+        "ni type, ni défaut, ni portée : il ne doit pas être publié.")
+
+
 class ConfigReader:
     """Lit le `<clinit>` de la classe de configuration : clé, type, défaut, portée."""
 
-    def __init__(self, apk_dir: Path):
+    def __init__(self, apk_dir: Path, screen_keys: set[str] | None = None):
         self.dexes = [Dex(path) for path in sorted(apk_dir.glob("classes*.dex"))]
         self.owner: dict[str, tuple[Dex, int]] = {}
         self.parent: dict[str, str | None] = {}
@@ -461,24 +576,35 @@ class ConfigReader:
                 self.parent[name] = parent
                 self.class_methods[name] = list(dex.methods(cdata_off))
         self.enums = OPTIONS.Extractor._enum_tables(self)
+        # {dex: {index de méthode: offset de code}}, rempli à la demande.
+        self._code_offsets: dict[str, dict[int, int]] = {}
+        # Les clés que les écrans de réglages déclarent : une vérité lue **sans** le
+        # bytecode, donc utilisable pour le reconnaître.
+        self.screen_keys: set[str] = set(screen_keys or ())
 
         self.scope_enum = self._scope_enum()
+        self.criterion = ""
         self.config_class, raw = self._read_declarations()
+        self.constructions: list = self._constructions_of(self.config_class)
         self.preference_root = self._preference_root(raw)
+        raw = raw + self._fixed_key_declarations(raw)
         self.declarations = self._resolve(raw)
+        self.direct_reads = self._direct_reads()
+
+        # Le garde-fou. Voir `ExtractionFailed` : zéro déclaration n'est pas un relevé
+        # maigre, c'est une reconnaissance qui a échoué, et elle doit s'entendre.
+        _guard_declarations(self, apk_dir)
 
     # -- découverte --------------------------------------------------------
     def _scope_enum(self) -> str | None:
-        """L'énumération de portée : ses constantes sont `PUBLIC`, `INTERNAL`, `SECURE`.
+        """L'énumération de portée : elle porte `PUBLIC`, `INTERNAL` et `SECURE`.
 
         C'est elle qu'on cherche en premier, parce qu'elle sert ensuite à reconnaître la
-        classe de configuration : ses trois constantes sont une signature qu'aucune autre
-        énumération de l'APK ne porte.
+        classe de configuration : ces trois constantes réunies sont une signature
+        qu'aucune autre énumération de l'APK ne porte. Elle peut manquer — voir
+        `_read_declarations`.
         """
-        for name, table in sorted(self.enums.items()):
-            if set(table["order"]) == {"PUBLIC", "INTERNAL", "SECURE"}:
-                return name
-        return None
+        return scope_enum_of(self.enums)
 
     def _read_declarations(self) -> tuple[str, list]:
         """La classe dont le `<clinit>` déclare les préférences.
@@ -495,7 +621,30 @@ class ConfigReader:
         Sans la seconde, le `<clinit>` d'une table d'icônes gagne le concours : il
         construit neuf cents objets sur des noms qui ressemblent à des clés. Aucune de ses
         constructions ne parle de portée.
+
+        **Sauf que la portée n'a pas toujours existé.** De la `0.9.9.1` à la `0.9.10.3`,
+        `SECURE` n'est nulle part dans le bytecode : la condition 2 y est impossible à
+        remplir et l'ancienne lecture rendait zéro déclaration, sans rien dire. On
+        retombe alors sur un critère qui ne dépend d'aucun nommage et qu'aucune table
+        d'icônes ne peut passer : **les clés du `<clinit>` doivent se retrouver dans les
+        `PreferenceScreen`**, au moins `SCREEN_OVERLAP_MINIMUM` fois.
+
+        L'ordre compte : quand l'énumération existe, c'est le critère d'origine qui est
+        appliqué, tel quel.
         """
+        for criterion in ("scope", "screens"):
+            if criterion == "scope" and self.scope_enum is None:
+                continue
+            if criterion == "screens" and not self.screen_keys:
+                continue
+            found = self._best_clinit(criterion)
+            if found[1]:
+                self.criterion = criterion
+                return found
+        return ("", [])
+
+    def _best_clinit(self, criterion: str) -> tuple[str, list]:
+        """Le `<clinit>` le plus fourni qui passe `criterion`, et ses constructions."""
         best: tuple[str, list] = ("", [])
         for name, methods in sorted(self.class_methods.items()):
             dex, _cdata = self.owner[name]
@@ -516,12 +665,233 @@ class ConfigReader:
                     OPTIONS.simulate(dex, code_off, on_new)
                 except (struct.error, IndexError, KeyError):
                     continue
-                if not any(self.scope_enum in types for _c, _k, types, _a in found):
+                if criterion == "scope":
+                    qualified = any(self.scope_enum in types
+                                    for _c, _k, types, _a in found)
+                else:
+                    overlap = {key for _c, key, _t, _a in found} & self.screen_keys
+                    qualified = len(overlap) >= SCREEN_OVERLAP_MINIMUM
+                if not qualified:
                     break
                 if len(found) > len(best[1]):
                     best = (name, found)
                 break
         return best
+
+    # -- les clés qui ne sont pas au site de construction ------------------
+    def _constructions_of(self, config_class: str) -> list:
+        """Toutes les constructions du `<clinit>` retenu, **clé ou pas**.
+
+        `_best_clinit` ne garde que celles dont un argument est une clé ; il en existe
+        d'autres, et l'une d'elles porte une préférence bien réelle — voir
+        `_fixed_key_declarations`.
+        """
+        if not config_class:
+            return []
+        dex, _cdata = self.owner[config_class]
+        for idx, method_name, code_off in self.class_methods[config_class]:
+            if method_name != "<clinit>" or code_off == 0:
+                continue
+            found: list = []
+
+            def on_new(cls, method_idx, args, dex=dex, found=found):
+                found.append((cls, method_idx, dex.parameter_types(method_idx), args))
+
+            try:
+                OPTIONS.simulate(dex, code_off, on_new)
+            except (struct.error, IndexError, KeyError):
+                return []
+            return found
+        return []
+
+    def _delegated_declarations(self, dex: Dex, method_idx: int) -> list:
+        """Ce qu'un constructeur déclare lui-même, en relayant une clé à son ancêtre.
+
+        Rend les `(types, arguments)` des appels de constructeur faits **dans** ce
+        constructeur et dont un argument `String` est une chaîne en forme de clé — le
+        même critère qu'au site de construction, appliqué un cran plus bas.
+        """
+        code_off = self.code_offsets(dex).get(method_idx, 0)
+        if code_off == 0:
+            return []
+        found: list = []
+
+        def on_new(_cls, inner_idx, args, dex=dex, found=found):
+            types = dex.parameter_types(inner_idx)
+            if any(t == "Ljava/lang/String;" and a and a[0] == "str" and looks_like_key(a[1])
+                   for a, t in zip(args, types)):
+                found.append((types, args))
+
+        try:
+            OPTIONS.simulate(dex, code_off, on_new)
+        except (struct.error, IndexError, KeyError):
+            return []
+        return found
+
+    def code_offsets(self, dex: Dex) -> dict[int, int]:
+        """{index de méthode: offset de code} pour un dex, construit une seule fois."""
+        table = self._code_offsets.get(dex.path.name)
+        if table is None:
+            table = self._code_offsets[dex.path.name] = {}
+            for name, (owner, _cdata) in self.owner.items():
+                if owner is not dex:
+                    continue
+                for idx, _method_name, code_off in self.class_methods[name]:
+                    table[idx] = code_off
+        return table
+
+    def _fixed_key_declarations(self, raw: list) -> list:
+        """Les préférences dont la clé est écrite dans leur **constructeur**.
+
+        `new yd0("Display.Theme", …)` livre sa clé au site de construction ; ce n'est pas
+        toujours le cas. De la `0.9.9.1` à la `0.9.12.6`, le profil sonore personnalisé
+        se construit sans clé —
+
+            new y1(serializer, defaultProfile)
+
+        — et c'est une surcharge du constructeur de `y1` qui pose
+        `"Sound.AcousticVario.CustomProfile"` avant d'appeler la forme complète. La clé
+        est bien dans le `.dex`, et la préférence est bien déclarée par le `<clinit>` :
+        seule la lecture était trop courte, et il manquait au relevé de vingt versions
+        une clé que les fichiers réels de 2024 et 2025 portent.
+
+        Le critère reste fonctionnel et ne nomme rien : parmi les constructions du
+        `<clinit>` **restées sans clé**, on ne retient que celles dont la classe hérite
+        de la racine des préférences — c'est déjà ce qui distingue une préférence d'un
+        `StringBuilder` — et dont le constructeur relaie **exactement une** clé à son
+        ancêtre. Une seule : deux laisseraient le choix, et un choix est une déduction.
+
+        Ce sont les arguments de **l'appel relayé** qui sont retenus, pas ceux du site de
+        construction. C'est tout l'intérêt : `new yd0()` ne dit rien, alors que le
+        `super(clé, fabrique, portée)` qu'il exécute donne la clé, la fabrique du défaut
+        et la portée. Prendre les arguments du site aurait rendu ces préférences
+        `PUBLIC` par défaut — une portée devinée, jamais lue.
+        """
+        if self.preference_root is None:
+            return []
+        known = {key for _cls, key, _types, _args in raw}
+        recovered: list = []
+        for cls, method_idx, types, args in self.constructions:
+            if self.parent.get(cls) != self.preference_root:
+                continue
+            if any(a and a[0] == "str" and looks_like_key(a[1])
+                   for a, t in zip(args, types) if t == "Ljava/lang/String;"):
+                continue
+            dex, _cdata = self.owner[cls]
+            delegated = self._delegated_declarations(dex, method_idx)
+            if len(delegated) != 1:
+                continue
+            inner_types, inner_args = delegated[0]
+            keys = [a[1] for a, t in zip(inner_args, inner_types)
+                    if t == "Ljava/lang/String;" and a and a[0] == "str"
+                    and looks_like_key(a[1])]
+            if len(keys) != 1 or keys[0] in known:
+                continue
+            known.add(keys[0])
+            recovered.append((cls, keys[0], inner_types, inner_args))
+        return recovered
+
+    def _direct_reads(self) -> dict[str, dict]:
+        """Les clés que la classe de configuration lit **directement** dans Android.
+
+        Toutes les préférences ne passent pas par un objet de préférence. La classe de
+        configuration en lit certaines à même les `SharedPreferences` :
+
+            prefs.getStringSet("Sensors.ExtTypes", emptySet())
+
+        La clé n'est alors ni dans le `<clinit>`, ni dans un `PreferenceScreen`, et rien
+        dans les deux sources croisées ne la trahit. Elle est pourtant écrite noir sur
+        blanc dans le bytecode, avec **son type de lecture** — c'est le nom de la
+        méthode Android qui le donne, sans rien deviner.
+
+        Le rattachement à la configuration ne se fait pas sur le nom de la classe
+        appelante, qui est obfusqué et change de version en version : on suit
+        l'instance. Est retenue la lecture dont le receveur vient d'une méthode de la
+        classe de configuration — ou, plus simplement, celle qui a lieu dans la classe
+        de configuration elle-même. Les préférences partagées de Firebase, d'AndroidX ou
+        du SDK publicitaire, qui ont leur propre instance, ne passent pas ce filtre.
+
+        Ce que la méthode **ne dit pas** : la portée de ces clés. Elle dit en revanche si
+        la version les **réécrit**, et c'est mesuré de la même façon, en suivant l'éditeur
+        que rend `edit()`. Sur la 1.0.3-beta5, aucune des vingt-quatre ne l'est : elles
+        sont toutes lues par la méthode qui reconstruit la collection de capteurs, et
+        aucune n'est réécrite ensuite.
+
+        Elles sont donc publiées à part, dans `directReads`, et **pas** dans la table des
+        préférences : les faire entrer là leur donnerait une portée qu'on n'a pas lue et
+        les dirait exportables — `isExported()` rend vrai pour une clé sans portée —, ce
+        qui n'est pas mesuré.
+        """
+        if not self.config_class:
+            return {}
+        reads: dict[str, dict] = {}
+        written: set[str] = set()
+        for name, methods in sorted(self.class_methods.items()):
+            dex, _cdata = self.owner[name]
+            for _idx, method_name, code_off in methods:
+                if code_off == 0:
+                    continue
+                for key, accessor in self._shared_accesses(dex, code_off, name):
+                    if accessor in SHARED_READERS:
+                        reads.setdefault(key, {"read": accessor,
+                                               "by": f"{short(name)}.{method_name}"})
+                    else:
+                        written.add(key)
+        for key, entry in reads.items():
+            entry["written"] = key in written
+        return dict(sorted(reads.items()))
+
+    def _shared_accesses(self, dex: Dex, code_off: int, owner: str):
+        """(clé, nom de l'accesseur) pour chaque accès aux préférences de la config.
+
+        Deux registres suivis, et rien de plus : les chaînes constantes, et les
+        instances **issues de la classe de configuration**. La seconde marque se propage
+        aux appels faits sur une instance déjà marquée, ce qui suffit à suivre
+        `prefs.edit()` sans nommer quoi que ce soit.
+        """
+        strings: dict[int, str] = {}
+        from_config: set[int] = set()
+        pending_config = False
+        try:
+            for _pc, op, off in OPTIONS.walk(dex, code_off):
+                if op in (0x1A, 0x1B):
+                    register = dex.data[off + 1]
+                    index = (struct.unpack_from("<H", dex.data, off + 2)[0] if op == 0x1A
+                             else struct.unpack_from("<I", dex.data, off + 2)[0])
+                    strings[register] = dex.string(index)
+                    from_config.discard(register)
+                elif op == 0x0C:  # move-result-object : reçoit le retour de l'appel
+                    register = dex.data[off + 1]
+                    strings.pop(register, None)
+                    from_config.discard(register)
+                    if pending_config:
+                        from_config.add(register)
+                    pending_config = False
+                    continue
+                elif 0x6E <= op <= 0x78:
+                    method_idx = struct.unpack_from("<H", dex.data, off + 2)[0]
+                    cls, method_name = dex.method_ref(method_idx)
+                    registers = (OPTIONS._regs_35c(dex.data, off) if op <= 0x72
+                                 else OPTIONS._regs_3rc(dex.data, off))
+                    reachable = bool(registers) and (owner == self.config_class
+                                                     or registers[0] in from_config)
+                    accessors = (SHARED_READERS if cls == SHARED_PREFERENCES
+                                 else SHARED_WRITERS if cls == SHARED_EDITOR else ())
+                    if method_name in accessors and len(registers) >= 2 and reachable:
+                        key = strings.get(registers[1])
+                        if key is not None and looks_like_key(key):
+                            yield key, method_name
+                    pending_config = cls == self.config_class or reachable
+                    for register in registers:
+                        strings.pop(register, None)
+                        from_config.discard(register)
+                    continue
+                elif op in (0x0A, 0x0B):  # move-result / move-result-wide
+                    strings.pop(dex.data[off + 1], None)
+                    from_config.discard(dex.data[off + 1])
+                pending_config = False
+        except (struct.error, IndexError, KeyError):
+            return
 
     def _preference_root(self, raw: list) -> str | None:
         """La classe racine des préférences : l'ancêtre commun des classes construites.
@@ -759,8 +1129,11 @@ class Catalog:
         self.by_locale = self.table.string_entries_by_locale()
         self.arrays = ArrayTable(self.table)
         self.strings_by_id = self._string_ids()
-        self.config = ConfigReader(apk_dir)
+        # Les écrans **avant** le bytecode : leurs clés servent à reconnaître la classe
+        # de configuration des versions qui n'ont pas encore d'énumération de portée.
+        # C'est la seule raison de cet ordre — la lecture des écrans ne dépend de rien.
         self.screens, self.rows = self._read_screens()
+        self.config = ConfigReader(apk_dir, screen_keys=set(self.rows))
         # Les clés dont l'écran et le bytecode ne s'accordent pas sur le domaine de
         # valeurs. Vide dans la 1.0.3-beta5 ; une entrée signalerait que l'une des deux
         # lectures s'est trompée de préférence, et il faudrait la trancher sur
@@ -982,7 +1355,70 @@ def used_resources(catalog: Catalog) -> tuple[set[str], set[str]]:
     return texts, arrays
 
 
+def self_test() -> None:
+    """Éprouve les deux garde-fous **sans APK**, sur des tables écrites à la main.
+
+    Ce que ce script doit garantir ne se voit pas sur un APK qui marche : il faut le
+    saboter. On rend donc l'énumération de portée méconnaissable, et on vérifie que la
+    lecture ne rend pas un catalogue vide en silence mais **lève**.
+
+    Lancé par `python3 tools/extract-preferences.py --self-test`, et par la suite de
+    tests du dépôt, qui verrouille ainsi le mode d'échec.
+    """
+    checks: list[tuple[str, bool]] = []
+
+    def check(label: str, condition: bool) -> None:
+        checks.append((label, bool(condition)))
+
+    icons = {"order": ["MD_BATTERY_FULL", "MD_WIFI"], "fields": {}}
+    three = {"order": ["PUBLIC", "INTERNAL", "SECURE"], "fields": {}}
+    four = {"order": ["PUBLIC", "INTERNAL", "SECURE", "SENSITIVE"], "fields": {}}
+    wide = {"order": ["PUBLIC", "INTERNAL", "SECURE"] + [f"X{n}" for n in range(50)],
+            "fields": {}}
+
+    check("trois constantes : reconnue", scope_enum_of({"a": icons, "b": three}) == "b")
+    # Le défaut 1 : la 0.9.6.2 en porte quatre. L'égalité stricte rendait `None`.
+    check("quatre constantes (0.9.6.2) : reconnue",
+          scope_enum_of({"a": icons, "b": four}) == "b")
+    check("cinq constantes ou plus : reconnue",
+          scope_enum_of({"z": wide}) == "z")
+    check("la plus petite gagne", scope_enum_of({"a": wide, "b": four}) == "b")
+    # De la 0.9.9.1 à la 0.9.10.3, l'énumération n'existe pas : il faut le dire, pas
+    # désigner une table d'icônes au hasard.
+    check("aucune énumération de portée : None", scope_enum_of({"a": icons}) is None)
+    check("énumération incomplète : None",
+          scope_enum_of({"a": {"order": ["PUBLIC", "INTERNAL"], "fields": {}}}) is None)
+
+    # Le sabotage : une énumération renommée n'est plus reconnue — et c'est bien le
+    # comportement voulu, tant que la suite refuse de publier ce qu'elle en tire.
+    renamed = {"order": ["OPEN", "LOCAL", "ENCRYPTED"], "fields": {}}
+    check("énumération renommée : méconnaissable", scope_enum_of({"a": renamed}) is None)
+
+    # Et le garde-fou proprement dit : zéro déclaration lève, quoi qu'il arrive.
+    reader = ConfigReader.__new__(ConfigReader)
+    reader.declarations = {}
+    reader.scope_enum = None
+    reader.screen_keys = set()
+    raised = False
+    try:
+        _guard_declarations(reader, Path("XCTrack-saboté"))
+    except ExtractionFailed as error:
+        raised = "aucune préférence déclarée" in str(error)
+    check("zéro déclaration : ExtractionFailed", raised)
+
+    for label, ok in checks:
+        print(f"  {'ok  ' if ok else 'ÉCHEC'} {label}")
+    failed = [label for label, ok in checks if not ok]
+    if failed:
+        print(f"{len(failed)} vérification(s) en échec", file=sys.stderr)
+        raise SystemExit(1)
+    print(f"{len(checks)} vérifications, aucune en échec")
+
+
 def main() -> None:
+    if "--self-test" in sys.argv[1:]:
+        self_test()
+        return
     apk_dir = Path(sys.argv[1]) if len(sys.argv) > 1 else None
     if apk_dir is None:
         candidates = sorted(PROJECT_ROOT.parent.glob("XCTrack-*"))
@@ -995,7 +1431,21 @@ def main() -> None:
         print(f"{apk_dir} ne contient pas resources.arsc", file=sys.stderr)
         raise SystemExit(2)
 
-    catalog = Catalog(apk_dir)
+    # Rien n'est écrit avant que la lecture ait abouti : un échec laisse le catalogue
+    # précédent en place, plutôt que de le remplacer par un catalogue vide.
+    try:
+        catalog = Catalog(apk_dir)
+    except ExtractionFailed as failure:
+        print(f"ÉCHEC DE L'EXTRACTION — {failure}", file=sys.stderr)
+        print("Aucun fichier n'a été écrit.", file=sys.stderr)
+        raise SystemExit(3) from failure
+    if catalog.config.scope_enum is None:
+        # Légitime avant la 0.9.11 — la notion de portée n'existait pas —, suspect
+        # après. Dans les deux cas, toutes les portées valent alors `PUBLIC` par
+        # défaut : ça se dit, plutôt que de se lire entre les lignes du catalogue.
+        print("Attention : aucune énumération de portée dans cet APK. La classe de "
+              "configuration a été reconnue par recoupement avec les écrans, et toutes "
+              "les préférences sont rendues PUBLIC faute de portée lue.", file=sys.stderr)
     version_code, version_name, package = SCHEMA.manifest_version(apk_dir / "AndroidManifest.xml")
 
     texts, arrays = used_resources(catalog)
@@ -1025,6 +1475,11 @@ def main() -> None:
             "configClass": short(catalog.config.config_class),
             "preferenceRoot": short(catalog.config.preference_root or ""),
             "scopeEnum": short(catalog.config.scope_enum or ""),
+            # À quoi la classe de configuration a été reconnue : `scope` par
+            # l'énumération de portée, `screens` par le recoupement avec les écrans
+            # quand cette énumération n'existe pas encore. Publié parce qu'un relevé
+            # doit dire de quel chemin il vient.
+            "configCriterion": catalog.config.criterion,
             "languages": languages,
             "preferenceCount": len(catalog.preferences),
             "declaredCount": len(catalog.config.declarations),
@@ -1034,6 +1489,7 @@ def main() -> None:
             "screenCount": len(catalog.screens),
             "stringCount": len(strings),
             "arrayCount": len(arrays),
+            "directReadCount": len(catalog.config.direct_reads),
             # Deux relevés qui doivent rester vides. Voir `value_conflicts` et
             # `default_conflicts` : ce sont les deux endroits où les deux sources se
             # contredisent, donc les deux endroits où l'extraction se serait trompée.
@@ -1042,6 +1498,12 @@ def main() -> None:
         },
         "families": {name: sorted(keys) for name, keys in sorted(families.items())},
         "preferences": catalog.preferences,
+        # Les clés que la classe de configuration lit à même les préférences partagées,
+        # sans objet de préférence : ni dans le `<clinit>`, ni dans un écran. Voir
+        # `ConfigReader._direct_reads`. Publiées **à côté** des préférences, parce qu'on
+        # n'a lu ni leur portée ni, pour la plupart, la moindre écriture : les ranger
+        # avec les autres reviendrait à les dire exportables sans l'avoir mesuré.
+        "directReads": catalog.config.direct_reads,
         "screens": catalog.screens,
         # Les clés qu'aucun écran de réglages ne montre : l'écart est une donnée, il est
         # publié tel quel plutôt que laissé à recalculer.
@@ -1096,7 +1558,8 @@ def main() -> None:
     print(f"APK : {apk_dir.name} (versionCode {version_code}, {version_name})")
     print(f"Classe de configuration : {short(catalog.config.config_class)}, "
           f"racine {short(catalog.config.preference_root or '?')}, "
-          f"portées {short(catalog.config.scope_enum or '?')}")
+          f"portées {short(catalog.config.scope_enum or 'aucune')} "
+          f"(reconnue par : {catalog.config.criterion})")
     print(f"Part invariante : {base_path} ({base_path.stat().st_size:,} octets)")
     total = sum(size for _l, _n, _b, size in written)
     print(f"Textes : {out_dir}/ — {len(written)} fichiers de langue, {total:,} octets")
@@ -1108,6 +1571,9 @@ def main() -> None:
     print(f"Libellées : {len(labelled)} ; sans libellé : {len(base['unlabelled'])}")
     print(f"Données personnelles marquées : {len(personal)}")
     print(f"Écrans de réglages : {len(catalog.screens)}")
+    rewritten = sum(1 for entry in catalog.config.direct_reads.values() if entry["written"])
+    print(f"Lues sans être déclarées : {len(catalog.config.direct_reads)} "
+          f"({rewritten} réécrites par l'application)")
     print(f"Désaccords entre les deux sources : "
           f"{len(catalog.value_conflicts)} sur les valeurs, "
           f"{len(catalog.default_conflicts)} sur les défauts")

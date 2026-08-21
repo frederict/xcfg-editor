@@ -665,142 +665,30 @@ def survey_widgets(options, apk_dir: Path, corpus_dir: Path) -> dict:
     }
 
 
-# Les trois portées que XCTrack a toujours eues. `extract-preferences.py` reconnaît
-# l'énumération à l'**égalité** de ses constantes avec cet ensemble — vrai depuis la
-# `0.9.11`, faux avant : la `0.9.6.2` de 2022 en a une quatrième, `SENSITIVE`.
-# L'égalité stricte y rend `None`, et tout s'effondre **en silence** : plus de classe
-# de configuration, donc zéro préférence déclarée, donc ni type, ni défaut, ni portée
-# — et 67 clés d'un fichier `.xcfg` réel de 2022 absentes de son propre relevé. Le
-# relevé aurait eu l'air d'un simple « il y avait moins de réglages en 2022 ».
-#
-# On relâche donc en **inclusion** : l'énumération de portée est celle dont les
-# constantes contiennent les trois, la plus petite d'abord. Sur les versions
-# récentes, où elle en a exactement trois, la réponse est inchangée — la correction
-# ne déplace rien de ce qui marchait.
-SCOPE_CONSTANTS = frozenset({"PUBLIC", "INTERNAL", "SECURE"})
-
-
-# Combien de clés d'un `<clinit>` doivent se retrouver dans les écrans de réglages
-# pour qu'on tienne la classe pour celle de la configuration. Cinq suffisent
-# largement à écarter le concurrent : le `<clinit>` d'une table d'icônes construit
-# neuf cents objets sur des noms en forme de clé (`md_battery_full`), et pas un seul
-# ne figure dans un `PreferenceScreen`.
-SCREEN_OVERLAP_MINIMUM = 5
-
-
-def _screen_keys(prefs, labels, apk_dir: Path) -> set[str]:
-    """Les clés que les écrans de réglages déclarent — la vérité indépendante.
-
-    Lue avant le bytecode et sans lui : c'est ce qui permet de reconnaître la classe
-    de configuration d'une version qui n'a pas d'énumération de portée.
-    """
-    try:
-        table = labels.ResourceTable(apk_dir / "resources.arsc")
-        keys: set[str] = set()
-        for _name, _path, elements in prefs.discover_screens(apk_dir, table):
-            for element in elements:
-                key = element.text("key")
-                if key:
-                    keys.add(key)
-        return keys
-    except Exception:  # noqa: BLE001 — pas d'écrans lisibles : on retombe sur la portée
-        return set()
-
-
-def _relax_scope_enum(prefs, options, labels) -> None:
-    """Spécialise, **dans la copie chargée ici**, la découverte de la configuration.
-
-    `extract-preferences.py` sert le catalogue de la version courante et n'a jamais eu
-    à lire 2022 ni 2023. On ne le modifie pas — il est juste, pour ce qu'il fait — on
-    le spécialise le temps d'un relevé, sur deux points que la traversée de cinquante-
-    cinq versions a mis au jour et qu'une seule ne pouvait pas montrer :
-
-    1. **la portée se reconnaît par inclusion, plus par égalité** (voir
-       `SCOPE_CONSTANTS`) ;
-    2. **la classe de configuration se reconnaît sans la portée.** La `0.9.10-beta`
-       n'a aucune énumération de portée — `SECURE` n'apparaît nulle part dans son
-       bytecode, la notion n'existait pas encore. La condition d'origine y rendait
-       zéro déclaration, donc un relevé de 114 préférences au lieu de 219, sans rien
-       signaler. Le critère de repli est celui qui ne dépend d'aucun nommage : les
-       clés du `<clinit>` doivent se retrouver dans les `PreferenceScreen`.
-
-    Quand l'énumération de portée existe, le critère d'origine est appliqué **tel
-    quel** : la correction ne déplace rien de ce qui marchait.
-    """
-    class VersionedConfigReader(prefs.ConfigReader):
-        def __init__(self, apk_dir: Path):
-            self.screen_keys = _screen_keys(prefs, labels, apk_dir)
-            super().__init__(apk_dir)
-
-        def _scope_enum(self):
-            candidates = [(len(table["order"]), name)
-                          for name, table in self.enums.items()
-                          if SCOPE_CONSTANTS <= set(table["order"])]
-            return min(candidates)[1] if candidates else None
-
-        def _read_declarations(self) -> tuple[str, list]:
-            # Deux passes : d'abord le critère d'origine (la construction reçoit la
-            # portée), puis, s'il ne donne rien, le recoupement avec les écrans.
-            for require_scope in (True, False):
-                if require_scope and self.scope_enum is None:
-                    continue
-                found = self._best_clinit(require_scope)
-                if found[1]:
-                    return found
-            return ("", [])
-
-        def _best_clinit(self, require_scope: bool) -> tuple[str, list]:
-            best: tuple[str, list] = ("", [])
-            for name, methods in sorted(self.class_methods.items()):
-                dex, _cdata = self.owner[name]
-                for _idx, method_name, code_off in methods:
-                    if method_name != "<clinit>" or code_off == 0:
-                        continue
-                    found: list = []
-
-                    def on_new(cls, method_idx, args, dex=dex, found=found):
-                        types = dex.parameter_types(method_idx)
-                        keys = [a[1] for a, t in zip(args, types)
-                                if t == "Ljava/lang/String;" and a and a[0] == "str"
-                                and prefs.looks_like_key(a[1])]
-                        if keys:
-                            found.append((cls, keys[0], types, args))
-
-                    try:
-                        options.simulate(dex, code_off, on_new)
-                    except (struct.error, IndexError, KeyError):
-                        continue
-                    if require_scope:
-                        qualified = any(self.scope_enum in types
-                                        for _c, _k, types, _a in found)
-                    else:
-                        overlap = {key for _c, key, _t, _a in found} & self.screen_keys
-                        qualified = len(overlap) >= SCREEN_OVERLAP_MINIMUM
-                    if not qualified:
-                        break
-                    if len(found) > len(best[1]):
-                        best = (name, found)
-                    break
-            return best
-
-    prefs.ConfigReader = VersionedConfigReader
-
-
 def survey_preferences(prefs, apk_dir: Path) -> dict:
     """Préférences et écrans de réglages, tels que `extract-preferences.py` les lit.
 
     On garde la table telle quelle, libellés compris — mais ce sont ici des **noms de
     ressource** (`prefDisplayTheme`), pas des textes : les textes vivent dans le
     fichier de langues, une fois pour toutes les clés et toutes les langues.
+
+    Cette fonction ne spécialise plus rien. Elle l'a fait : la traversée des cinquante-
+    cinq versions avait dû relâcher, ici, la reconnaissance de l'énumération de portée
+    et celle de la classe de configuration. Les deux corrections vivent désormais dans
+    `extract-preferences.py`, où elles servent aussi le catalogue courant — et où un
+    relevé vide ne peut plus passer pour un résultat.
     """
     catalog = prefs.Catalog(apk_dir)
     return {
         "preferences": catalog.preferences,
+        "directReads": catalog.config.direct_reads,
         "screens": catalog.screens,
         "preferenceMeta": {
             "configClass": prefs.short(catalog.config.config_class),
             "preferenceRoot": prefs.short(catalog.config.preference_root or ""),
             "scopeEnum": prefs.short(catalog.config.scope_enum or ""),
+            "configCriterion": catalog.config.criterion,
+            "directReadCount": len(catalog.config.direct_reads),
             "preferenceCount": len(catalog.preferences),
             "declaredCount": len(catalog.config.declarations),
             "screenCount": len(catalog.screens),
@@ -833,7 +721,6 @@ def survey(apk_dir: Path, corpus_dir: Path) -> tuple[dict, dict]:
     # ce fichier-ci pour la lecture du manifeste. En tête, les deux s'appelleraient
     # sans fin ; dans une fonction, la copie qu'il charge n'appelle plus personne.
     prefs = _load("extract-preferences.py")
-    _relax_scope_enum(prefs, options, labels)
 
     result: dict = {}
     texts: dict = {}

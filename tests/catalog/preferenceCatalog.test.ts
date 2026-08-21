@@ -1,4 +1,7 @@
+import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { beforeAll, describe, expect, it } from 'vitest'
 import {
   PREFERENCE_FALLBACK_LANGUAGE,
@@ -8,6 +11,9 @@ import {
   type PreferenceCatalog
 } from '../../src/catalog/preferenceCatalog'
 import { BACKUP_2025, BACKUP_2026 } from '../fixtures/paths'
+
+/** Racine du dépôt, pour atteindre `tools/` sans dépendre du répertoire courant. */
+const PROJECT_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
 
 /**
  * La référence de ces tests n'est pas le catalogue lui-même — ce serait tautologique —
@@ -131,17 +137,29 @@ describe('catalogue des préférences', () => {
       expect(notExported).toEqual([])
     })
 
-    it('les 135 clés PUBLIC du bytecode sont exactement celles du fichier, moins une', () => {
+    it('les 136 clés PUBLIC du bytecode sont exactement celles du fichier', () => {
       // Le contrôle croisé central de l'extraction. Une clé `PUBLIC` de plus voudrait
       // dire qu'on a lu une portée pour une autre ; une de moins, qu'on en a manqué une.
-      // La 136ᵉ du fichier est `SafeSky.Interval`, qu'Android persiste depuis l'écran
-      // sans passer par la classe de configuration : elle n'a donc pas de portée.
+      //
+      // Il portait jusqu'ici une exception : `SafeSky.Interval` était réputée persistée
+      // par Android depuis l'écran, sans portée. Elle est en fait déclarée comme les
+      // autres — sa clé est posée par le constructeur de sa classe de préférence, pas au
+      // site de construction, et la lecture s'arrêtait au site. L'exception a disparu :
+      // 136 contre 136, sans reste des deux côtés.
       const declaredPublic = fr.keys()
         .filter((key) => fr.preference(key)?.scope === 'PUBLIC').sort()
       const inFile = [...preferenceKeys(BACKUP_2026)].sort()
-      expect(declaredPublic).toHaveLength(135)
-      expect(inFile.filter((key) => !declaredPublic.includes(key))).toEqual(['SafeSky.Interval'])
+      expect(declaredPublic).toHaveLength(136)
+      expect(inFile.filter((key) => !declaredPublic.includes(key))).toEqual([])
       expect(declaredPublic.filter((key) => !inFile.includes(key))).toEqual([])
+      const safeSky = fr.preference('SafeSky.Interval')!
+      expect(safeSky.declared).toBe(true)
+      expect(safeSky.scope).toBe('PUBLIC')
+      // Son défaut est calculé au démarrage : le bytecode ne le porte pas, et le type
+      // de la valeur ne s'en déduit plus. On ne le remplace pas par celui qu'un contrôle
+      // Android impliquerait — XCTrack persiste lui-même cette clé.
+      expect(safeSky.defaultSource).toBe('runtime')
+      expect(safeSky.valueKind).toBeNull()
     })
 
     it('les six clés exportables absentes du fichier sont nommées, et explicables', () => {
@@ -204,8 +222,8 @@ describe('catalogue des préférences', () => {
       expect(fr.preference('Sensors.ManualQnh')?.xmlDefault).toBe(1013.25)
     })
 
-    it("compte 85 clés sans libellé, et dit lesquelles plutôt que d'en inventer", () => {
-      expect(fr.unlabelled()).toHaveLength(85)
+    it("compte 86 clés sans libellé, et dit lesquelles plutôt que d'en inventer", () => {
+      expect(fr.unlabelled()).toHaveLength(86)
       // Les espaces aériens se règlent dans une activité à eux, qui construit ses
       // contrôles en code : la clé et son libellé n'y sont plus arguments du même appel.
       expect(fr.unlabelled()).toContain('Airspace.LabelsZoom')
@@ -221,10 +239,90 @@ describe('catalogue des préférences', () => {
       expect(keys.length - labelled.length).toBe(49)
     })
 
+    it("dit à quoi la classe de configuration a été reconnue, et n'est jamais vide", () => {
+      // Le mode d'échec que ces chiffres verrouillent : une énumération de portée que
+      // l'extracteur ne reconnaît plus laisse les écrans de réglages intacts, donc rend
+      // un catalogue *plausible* — des préférences, des libellés, des écrans — mais sans
+      // une seule déclaration, donc sans type, sans défaut et sans portée. Sur la
+      // 0.9.6.2, qui porte une quatrième constante `SENSITIVE`, cela faisait tomber le
+      // relevé de 203 clés à 105 sans le moindre message.
+      expect(fr.meta.declaredCount).toBeGreaterThan(0)
+      expect(fr.meta.declaredCount).toBe(211)
+      expect(fr.meta.preferenceCount).toBe(217)
+      // Reconnue par l'énumération de portée, qui existe dans cette version. `screens`
+      // serait la réponse d'une version d'avant la 0.9.11 ; une chaîne vide, jamais.
+      expect(fr.meta.configCriterion).toBe('scope')
+      expect(fr.meta.scopeEnum).not.toBe('')
+    })
+
     it('sait dire de quelle version il parle', () => {
       expect(fr.meta.versionCode).toBe(100030)
       expect(fr.meta.versionName).toBe('1.0.3-beta-5-gc036d8f2c')
       expect(fr.meta.package).toBe('org.xcontest.XCTrack')
+    })
+  })
+
+  describe("ce que la configuration lit sans le déclarer", () => {
+    it("relève les 24 clés lues à même les préférences partagées d'Android", () => {
+      const reads = fr.directReads()
+      expect(Object.keys(reads)).toHaveLength(24)
+      expect(fr.meta.directReadCount).toBe(24)
+      // `Sensors.ExtTypes` n'est ni dans le `<clinit>`, ni dans un écran : les deux
+      // sources croisées la manquent toutes les deux. Elle est pourtant écrite dans le
+      // bytecode, avec l'accesseur qui donne son type.
+      expect(reads['Sensors.ExtTypes']).toEqual({
+        read: 'getStringSet',
+        by: 'a.j0',
+        written: false
+      })
+    })
+
+    it('ne les fait pas passer pour des préférences', () => {
+      // Le point important. Leur portée n'est écrite nulle part, et `isExported()` rend
+      // vrai pour une clé sans portée : les ranger avec les préférences les dirait
+      // exportables sans que rien ne l'ait mesuré.
+      for (const key of Object.keys(fr.directReads())) {
+        if (fr.knows(key)) {
+          // Quatre d'entre elles sont *aussi* déclarées (`Mapsforge.MapFiles` et les
+          // trois `XContest.*`) ; c'est la déclaration qui fait foi, et elle porte une
+          // portée lue.
+          expect(fr.preference(key)!.declared, key).toBe(true)
+          continue
+        }
+        expect(fr.preference(key), key).toBeUndefined()
+        expect(fr.isExported(key), key).toBe(false)
+      }
+    })
+
+    it("dit qu'aucune n'est réécrite par la version courante", () => {
+      // Mesuré en suivant l'éditeur que rend `edit()`, pas supposé. C'est ce qui
+      // distingue une lecture de reprise d'un réglage vivant, et c'est la raison pour
+      // laquelle ces clés ne sont pas au catalogue des préférences.
+      const rewritten = Object.entries(fr.directReads())
+        .filter(([, read]) => read.written)
+        .map(([key]) => key)
+      expect(rewritten).toEqual([])
+    })
+  })
+
+  describe("le garde-fou de l'extracteur", () => {
+    it("échoue bruyamment plutôt que de publier un catalogue sans déclaration", () => {
+      // Ce test lance l'auto-vérification de `tools/extract-preferences.py`, qui rend
+      // l'énumération de portée méconnaissable sur des tables écrites à la main — donc
+      // sans APK — et vérifie que la lecture *lève* au lieu de rendre un relevé vide.
+      //
+      // C'est le seul endroit du dépôt où le mode d'échec est verrouillé : le catalogue
+      // publié, lui, ne peut montrer que le cas où tout va bien.
+      const output = execFileSync(
+        'python3',
+        [join(PROJECT_ROOT, 'tools', 'extract-preferences.py'), '--self-test'],
+        { encoding: 'utf8' }
+      )
+      expect(output).toContain('aucune en échec')
+      expect(output).toContain('quatre constantes (0.9.6.2) : reconnue')
+      expect(output).toContain('aucune énumération de portée : None')
+      expect(output).toContain('zéro déclaration : ExtractionFailed')
+      expect(output).not.toContain('ÉCHEC')
     })
   })
 
