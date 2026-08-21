@@ -1226,13 +1226,15 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
       'p', 'library__note',
       `Archive exportée le ${formatStamp(report.exportedAt ?? '')}. Aucune entrée ` +
       'existante n’a été écrasée : une entrée déjà présente sous d’autres octets est ' +
-      'rétablie à côté, suffixée.'
+      'replacée à côté, suffixée.'
     ))
     const list = el('ul', 'library__results')
     const labels: Record<string, string> = {
-      imported: 'rétablie',
+      // « replacée », et non « rétablie » : le troisième sens du mot (`i18n`,
+      // `library.entryRestored`). Les deux autres vivent ailleurs dans l'application.
+      imported: 'replacée',
       'already-present': 'déjà présente, rien à faire',
-      duplicated: 'rétablie à côté (identifiant déjà pris)',
+      duplicated: 'replacée à côté : son identifiant était déjà pris',
       rejected: 'refusée'
     }
     for (const result of report.results) {

@@ -172,6 +172,19 @@ function scene(selection: number | undefined): {
   return { page, root, chosen, document: serializeJson(doc) }
 }
 
+describe('le bouton du zoom dit sa destination, pas son geste', () => {
+  it('ne dit jamais « Rétablir » : deux sens du mot sont visibles en même temps', () => {
+    // « Rétablir » recouvrait trois gestes — refaire ce qu'on a annulé, remettre le zoom
+    // à 100 %, replacer une entrée de bibliothèque. Les deux premiers sont visibles
+    // ensemble en mode édition : un pilote qui venait d'annuler un déplacement et
+    // cherchait à le refaire avait une chance sur deux de perdre sa position de lecture.
+    const { root } = scene(undefined)
+    const buttons = [...root.querySelectorAll('button')].map((one) => one.textContent ?? '')
+    expect(buttons).toContain('Zoom 100 %')
+    for (const label of buttons) expect(label).not.toContain('Rétablir')
+  })
+})
+
 describe('consulter les réglages d’un widget sans entrer en édition', () => {
   it('le bandeau se pose en dernier, sous la page : rien ne partage sa largeur', () => {
     const { root } = scene(undefined)

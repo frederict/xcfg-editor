@@ -677,7 +677,12 @@ export function buildDetail(options: DetailOptions): HTMLElement {
     value.textContent = `${Math.round(factor * 100)} %`
     options.onZoom(factor)
   })
-  const reset = el('button', 'btn btn--ghost', 'Rétablir 100 %')
+  // « Rétablir » disait trois choses dans cette application, et deux étaient visibles en
+  // même temps en mode édition : refaire ce qu'on venait d'annuler (barre de tête) et
+  // remettre le zoom. Un pilote qui cherchait à refaire un déplacement avait donc une
+  // chance sur deux de perdre sa position de lecture. Ce bouton-ci dit désormais sa
+  // destination et non son geste — c'est l'arbitrage du socle (`i18n`, `zoom.resetTo`).
+  const reset = el('button', 'btn btn--ghost', 'Zoom 100 %')
   reset.type = 'button'
   reset.addEventListener('click', () => {
     slider.value = '1'
