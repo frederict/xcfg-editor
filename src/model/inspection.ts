@@ -308,8 +308,14 @@ export function unreachableWidgetRanks(page: Page): number[] {
  * fichier sans clé `navigations` ne dit pas que sa page est éteinte — il ne dit rien.
  * Les 21 fichiers du corpus portent tous la clé sur toutes leurs pages ; le garde-fou
  * n'a donc jamais servi, et c'est très bien ainsi.
+ *
+ * **Exportée** parce que c'est le seul prédicat de visibilité de page que l'appareil ait
+ * confirmé : `src/ui/pageManager.ts` s'en sert pour ses avertissements de suppression,
+ * qui reposaient jusqu'au 22 août 2026 sur la classe de la page — un critère mesuré faux
+ * (voir `PAGE_KINDS` dans `src/ui/views.ts`). Le doublon aurait été pire : deux lectures
+ * de `navigations`, dont une seule avec le garde-fou ci-dessus.
  */
-function isExplicitlyDisabled(page: Page): boolean {
+export function isShownForNoNavigation(page: Page): boolean {
   const node = getMember(page.node, 'navigations')
   if (node === undefined) return false
   if (node.kind === 'string') return page.navigations.kind === 'none'
@@ -595,7 +601,7 @@ function unreachableWidgetFindings(input: InspectionInput): Finding[] {
 function pageNeverShownFindings(input: InspectionInput): Finding[] {
   const findings: Finding[] = []
   for (const { page, orientation, pageRank } of eachPage(input.layout)) {
-    if (!isExplicitlyDisabled(page)) continue
+    if (!isShownForNoNavigation(page)) continue
     const count = page.widgets.length
     findings.push({
       ruleId: 'page-never-shown',

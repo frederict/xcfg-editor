@@ -9,7 +9,7 @@
  * Deux règles du cadre sont tenues ici comme ailleurs :
  *
  * 1. **le cadre est achromatique.** Aucune couleur n'est introduite : l'ambre est réservé
- *    aux pages masquées hors vol, le bleu au contour de focus. Ce qui distingue la valeur
+ *    aux avertissements, le bleu au contour de focus. Ce qui distingue la valeur
  *    d'origine de la valeur posée, c'est la graisse et la teinte d'encre, pas une couleur ;
  * 2. **les deux thèmes sont servis par les mêmes variables.** Aucune valeur en dur : tout
  *    passe par `--app-*`, donc le mode sombre suit sans une ligne de plus.
@@ -231,7 +231,7 @@
 
 /*
  * Ce qui reste malgré tout. Un filet à gauche, pas une couleur : la limite de la garantie
- * se lit, elle ne s'alarme pas — et l'ambre appartient aux pages masquées hors vol.
+ * se lit, elle ne s'alarme pas — et l'ambre appartient aux avertissements.
  */
 .sharing__caveat {
   margin: 0.3rem 0 0;

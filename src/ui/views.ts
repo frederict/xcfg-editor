@@ -48,39 +48,63 @@ export interface PageKind {
   shortName: string
   label: string
   note: string
-  /** Vrai si XCTrack saute la page hors contexte de vol — voir `PAGE_KINDS`. */
-  hiddenOutOfFlight: boolean
 }
 
 /**
- * Ce que la classe d'une page implique pour le pilote. Le fichier décrit plus de pages
- * que l'appareil n'en montre : `WPCompetition` et `WPThermalAssistant` sont masquées
- * hors contexte de vol (constaté sur l'appareil, `docs/reference/rendu-observe.md`) —
- * une surprise assez coûteuse en vol pour mériter d'être dite ici.
+ * Ce que la classe d'une page implique pour le pilote — et, depuis le 22 août 2026, ce
+ * qu'elle n'implique **pas** : le moment où l'appareil montre la page.
  *
- * `WPXCAssistant` n'a **pas** été observé : on n'affirme donc rien de son comportement
- * plutôt que de le supposer symétrique de l'assistant de thermique.
+ * ## Ce que cette table a affirmé de faux, et comment on le sait
+ *
+ * Elle portait un `hiddenOutOfFlight` qui marquait `WPCompetition` et
+ * `WPThermalAssistant` d'un badge « MASQUÉE HORS VOL » et faisait écrire à la vue
+ * d'ensemble « au sol, l'appareil n'en montre que 3 sur 5 ».
+ *
+ * **Mesuré, et faux.** Un pilote d'essai a importé une configuration de six pages sur
+ * son AIR³ 7.2 et fait défiler au sol, huit appuis de suite : **cinq** pages différentes
+ * revenaient en boucle, dont la page d'assistant de thermique que cette table disait
+ * masquée. La seule page réellement sautée était celle dont la clé `navigations` vaut
+ * `"none"` (`docs/reference/2026-08-22-essai-pilote.md` § 2).
+ *
+ * **D'où venait l'erreur.** D'une phrase de `docs/reference/rendu-observe.md`, section
+ * « Méthode, pour la prochaine fois », écrite pour expliquer après coup trois campagnes
+ * de capture ratées : « XCTrack saute les pages `WPThermalAssistant` et `WPCompetition`
+ * hors contexte de vol ». C'était une **déduction**, pas un relevé — et elle portait sur
+ * la configuration du propriétaire, dont la page `WPCompetition` porte justement
+ * `navigations: "none"`. Cette page-là était bien sautée, mais pour la raison d'à côté ;
+ * l'assistant de thermique a suivi par symétrie. Le commentaire d'origine citait
+ * pourtant la phrase comme « constaté sur l'appareil ».
+ *
+ * ## Ce qui décide vraiment, et que le projet savait par ailleurs
+ *
+ * La clé `navigations` de la page, jamais sa classe :
+ * `docs/reference/edition-native-exploration.md` § 5.4, relevé sur l'instrument —
+ * « à ne pas confondre avec la classe de page […] c'est `navigations` qui fait
+ * apparaître ou disparaître la page en vol selon la navigation choisie ». C'est
+ * `navigationsLabel` de `src/ui/pageManager.ts` qui le dit au pilote, page par page, et
+ * la règle 2 de `src/model/inspection.ts` qui le signale.
+ *
+ * Ne reste donc ici que ce que la classe fait réellement, et qui a une source : le jeu de
+ * gadgets posé à la création (§ 5.2), et — pour `WPThermalAssistant` — le fait d'être la
+ * classe visée par le basculement automatique en thermique (§ 5.4).
  */
 const PAGE_KINDS: Record<string, Omit<PageKind, 'shortName'>> = {
   WPEmpty: {
     label: 'Page libre',
-    note: 'Toujours atteignable par « page suivante ».',
-    hiddenOutOfFlight: false
+    note: 'Créée vide sur l’instrument, prête pour vos propres gadgets.'
   },
   WPCompetition: {
     label: 'Page de compétition',
-    note: 'XCTrack la masque hors contexte de vol : au sol, « page suivante » passe par-dessus.',
-    hiddenOutOfFlight: true
+    note: 'Créée avec le jeu de gadgets de compétition de l’instrument.'
   },
   WPThermalAssistant: {
     label: 'Page d’assistant de thermique',
-    note: 'XCTrack la masque hors contexte de vol : au sol, « page suivante » passe par-dessus.',
-    hiddenOutOfFlight: true
+    note: 'Créée avec le jeu de gadgets d’assistant de thermique. C’est la classe que ' +
+      'vise le basculement automatique en thermique.'
   },
   WPXCAssistant: {
     label: 'Page d’assistant XC',
-    note: 'Son comportement hors vol n’a pas été mesuré sur l’appareil.',
-    hiddenOutOfFlight: false
+    note: 'Créée avec le jeu de gadgets d’aide FAI et routes.'
   }
 }
 
@@ -91,8 +115,7 @@ export function pageKind(className: string): PageKind {
   return {
     shortName: shortName === '' ? '(type absent)' : shortName,
     label: 'Type de page non reconnu',
-    note: 'Ce type de page n’est pas décrit par cet éditeur ; son contenu reste affiché tel quel.',
-    hiddenOutOfFlight: false
+    note: 'Ce type de page n’est pas décrit par cet éditeur ; son contenu reste affiché tel quel.'
   }
 }
 
@@ -172,10 +195,6 @@ function pageCard(
   )
 
   card.append(head, screen, meta)
-  if (kind.hiddenOutOfFlight) {
-    card.classList.add('card--conditional')
-    card.append(el('span', 'flag', 'Masquée hors vol'))
-  }
   return card
 }
 
@@ -196,18 +215,6 @@ function orientationSection(
   if (pages.length === 0) {
     section.append(el('p', 'empty-note', 'Ce fichier ne décrit aucune page dans cette orientation.'))
     return section
-  }
-
-  const hidden = pages.filter((page) => pageKind(page.className).hiddenOutOfFlight).length
-  if (hidden > 0) {
-    section.append(el(
-      'p', 'section__note',
-      `${plural({
-        one: '{count} page est masquée',
-        other: '{count} pages sont masquées'
-      }, hidden)} hors contexte de vol : au sol, ` +
-      `l’appareil n’en montre que ${pages.length - hidden} sur ${pages.length}.`
-    ))
   }
 
   const grid = el('ol', 'grid')
@@ -600,7 +607,6 @@ export function buildDetail(options: DetailOptions): HTMLElement {
     el('span', 'chip', formatSizeMm(screenSize)),
     el('span', 'chip chip--quiet', ctx.device.label)
   )
-  if (kind.hiddenOutOfFlight) facts.append(el('span', 'flag', 'Masquée hors vol'))
   root.append(facts)
   root.append(el('p', 'detail__note', kind.note))
 

@@ -1,4 +1,5 @@
 import type { JsonNode } from '../core/jsonDocument'
+import { isShownForNoNavigation } from '../model/inspection'
 import type { Page } from '../model/layout'
 import {
   createPage,
@@ -79,27 +80,32 @@ export interface PageChoice {
 /**
  * Les quatre entrées de « Choisissez une nouvelle page », dans l'ordre et avec les mots
  * de l'appareil (§ 5.2) — un pilote qui a vu cet écran doit retrouver la même liste.
+ *
+ * Les descriptions sont celles de l'instrument, et rien de plus. Deux d'entre elles
+ * ajoutaient « Masquée hors contexte de vol », ce qui était faux : la classe d'une page
+ * ne décide pas du moment où l'appareil la montre, c'est sa clé `navigations` qui le
+ * fait — mesuré le 22 août 2026, voir `PAGE_KINDS` dans `src/ui/views.ts`.
  */
 export const PAGE_CHOICES: readonly PageChoice[] = [
   {
     className: 'WPThermalAssistant',
     label: 'Aide thermique',
-    description: 'Cible du basculement automatique en spirale. Masquée hors contexte de vol.'
+    description: 'Aide thermique. C’est la classe que vise le basculement automatique.'
   },
   {
     className: 'WPXCAssistant',
     label: 'Aide XC',
-    description: 'Aide FAI et routes. Aucun basculement automatique.'
+    description: 'Aide FAI et routes.'
   },
   {
     className: 'WPCompetition',
     label: 'Compétition',
-    description: 'Navigation en compétition. Masquée hors contexte de vol.'
+    description: 'Navigation en compétition.'
   },
   {
     className: 'WPEmpty',
     label: 'Vide',
-    description: 'Page ordinaire, toujours atteignable par « page suivante ».'
+    description: 'Page vide, prête pour vos propres gadgets.'
   }
 ]
 
@@ -216,9 +222,22 @@ export function autoSwitchTargetRank(pages: readonly Page[]): number | undefined
   return ranks.length === 0 ? undefined : ranks[ranks.length - 1]
 }
 
-/** Nombre de pages que l'appareil montre au sol, hors contexte de vol. */
-export function visibleOnGroundCount(pages: readonly Page[]): number {
-  return pages.filter((page) => !pageKind(page.className).hiddenOutOfFlight).length
+/**
+ * Nombre de pages qu'au moins une navigation affiche.
+ *
+ * Ce compte s'appelait `visibleOnGroundCount` et se calculait sur la **classe** de la
+ * page (`WPCompetition` et `WPThermalAssistant` étant réputées masquées hors vol). Le
+ * critère était faux : au sol, sur un AIR³ 7.2, la page d'assistant de thermique revient
+ * dans le défilement, et la seule page sautée est celle dont `navigations` vaut `"none"`
+ * (`docs/reference/2026-08-22-essai-pilote.md` § 2). Le prédicat vient donc maintenant de
+ * `src/model/inspection.ts`, qui lit la clé — avec son garde-fou sur la clé absente.
+ *
+ * Le compte ne dit plus « au sol » : ce qui est établi, c'est qu'une page activée pour
+ * aucune navigation n'est affichée pour aucune navigation. Que XCTrack la saute au sol
+ * est mesuré ; ce qu'il fait en vol reste ce que sa propre boîte de réglage annonce.
+ */
+export function navigablePageCount(pages: readonly Page[]): number {
+  return pages.filter((page) => !isShownForNoNavigation(page)).length
 }
 
 /** La classe qu'aurait la page de rang `index` après l'opération, s'il y en a une. */
@@ -312,11 +331,12 @@ export function operationAdvice(pages: readonly Page[], operation: PageOperation
         kind: 'visibility',
         text: 'C’est la dernière page de cette orientation : le fichier n’en décrirait plus aucune.'
       })
-    } else if (visibleOnGroundCount(pages) > 0 && visibleOnGroundCount(remaining) === 0) {
+    } else if (navigablePageCount(pages) > 0 && navigablePageCount(remaining) === 0) {
       advice.push({
         kind: 'visibility',
-        text: `Il ne resterait que des pages masquées hors contexte de vol : au sol, ` +
-          'l’appareil n’en montrerait plus aucune.'
+        text: 'Il ne resterait que des pages activées pour aucune navigation : quelle que ' +
+          'soit la navigation choisie, l’appareil n’aurait plus de page à montrer dans ' +
+          'cette orientation.'
       })
     }
     if (shortClassName(pages[operation.index]?.className ?? '') === THERMAL_ASSISTANT_CLASS) {
@@ -369,12 +389,11 @@ export function layoutAdvice(pages: readonly Page[]): Advice[] {
     })
   }
 
-  const hidden = pages.length - visibleOnGroundCount(pages)
-  if (pages.length > 0 && hidden === pages.length) {
+  if (pages.length > 0 && navigablePageCount(pages) === 0) {
     advice.push({
       kind: 'visibility',
-      text: 'Toutes les pages de cette orientation sont masquées hors contexte de vol : ' +
-        'au sol, l’appareil n’en montre aucune.'
+      text: 'Toutes les pages de cette orientation sont activées pour aucune navigation : ' +
+        'quelle que soit la navigation choisie, l’appareil n’a pas de page à montrer ici.'
     })
   }
 
@@ -469,6 +488,12 @@ function button(className: string, text: string, label?: string): HTMLButtonElem
  * (`docs/reference/edition-native-exploration.md` § 5.4). On ne va pas jusqu'à « jamais
  * affichée » pour `none` : ce que fait l'appareil hors navigation n'a pas été mesuré, et
  * l'affirmer ferait dire à l'outil plus qu'il ne sait.
+ *
+ * Ce qui a été mesuré depuis, et qui va dans le même sens : **au sol**, une page
+ * `navigations: "none"` est la seule que le défilement saute, et il ne saute qu'elle
+ * (`docs/reference/2026-08-22-essai-pilote.md` § 2). C'est cette phrase-ci que le pilote
+ * d'essai a retrouvée juste, quand le badge « Masquée hors vol » posé à côté d'elle
+ * disait le contraire — le badge est parti, elle est restée.
  */
 export function navigationsLabel(page: Page): string {
   const navigations = page.navigations
@@ -614,7 +639,10 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
     slot.draggable = true
 
     const card = el('article', 'pagecard')
-    if (kind.hiddenOutOfFlight) card.classList.add('pagecard--conditional')
+    // Le filet ambre marque la seule page dont on sache l'appareil qu'il la saute : celle
+    // qu'aucune navigation n'affiche. Il accompagne donc `pagecard__nav`, quelques lignes
+    // plus bas, et ne peut plus le contredire.
+    if (isShownForNoNavigation(page)) card.classList.add('pagecard--conditional')
 
     const head = el('div', 'pagecard__head')
     head.append(
@@ -640,7 +668,6 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
     )
     card.append(meta)
     card.append(el('p', 'pagecard__nav', navigationsLabel(page)))
-    if (kind.hiddenOutOfFlight) card.append(el('span', 'flag', 'Masquée hors vol'))
 
     // La cible du basculement automatique se dit sur la page concernée, là où le pilote
     // la cherche — et non seulement dans le bandeau du haut.

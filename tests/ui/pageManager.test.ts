@@ -15,6 +15,7 @@ import {
   creationLabel,
   describeOperation,
   layoutAdvice,
+  navigablePageCount,
   navigationsLabel,
   operationAdvice,
   operationAnnouncement,
@@ -22,7 +23,6 @@ import {
   renderPageManager,
   shortClassName,
   thermalAssistantRanks,
-  visibleOnGroundCount,
   type PageOperation
 } from '../../src/ui/pageManager'
 import type { ViewContext } from '../../src/ui/views'
@@ -62,8 +62,10 @@ describe('l’état du corpus', () => {
     expect(classesOf(document, 'landscape'))
       .toEqual(['WPEmpty', 'WPCompetition', 'WPEmpty', 'WPThermalAssistant', 'WPEmpty'])
     expect(thermalAssistantRanks(pagesOf(document, 'landscape'))).toEqual([4])
-    // Deux des cinq pages sont masquées au sol : la compétition et l'assistant.
-    expect(visibleOnGroundCount(pagesOf(document, 'landscape'))).toBe(3)
+    // Une seule des cinq n'est activée pour aucune navigation : la page de compétition.
+    // Sa CLASSE n'y est pour rien — l'assistant de thermique de rang 4 porte « all » et
+    // revient bel et bien dans le défilement au sol (essai pilote du 22 août 2026).
+    expect(navigablePageCount(pagesOf(document, 'landscape'))).toBe(4)
   })
 
   it('lit les navigations sous leurs trois formes', () => {
@@ -291,8 +293,9 @@ describe('changer la classe d’une page', () => {
     expect(page.className).toBe('org.xcontest.XCTrack.widget.wp.WPCompetition')
     expect(serializeJson(getMember(pagesNode(document, 'landscape').items[0]!, 'widgets')!))
       .toBe(widgetsBefore)
-    // La page devient masquée hors vol : c'est tout l'effet de la classe.
-    expect(visibleOnGroundCount(pagesOf(document, 'landscape'))).toBe(2)
+    // La classe ne décide pas de la visibilité : le compte des pages qu'une navigation
+    // affiche ne bouge pas d'un pouce, seule la clé `navigations` le ferait bouger.
+    expect(navigablePageCount(pagesOf(document, 'landscape'))).toBe(4)
   })
 
   it('revient à l’octet près quand on remet la classe d’origine', () => {
@@ -407,10 +410,11 @@ describe('avertir du décalage des rangs', () => {
     expect(advice[0]!.text).toContain('La page 5 devient 4')
   })
 
-  it('signale qu’il ne resterait aucune page visible au sol', () => {
+  it('signale qu’aucune page ne resterait activée pour une navigation', () => {
     const document = load()
-    // On ne garde qu'une page libre et la page de compétition : supprimer la libre laisse
-    // un appareil qui, au sol, ne montre plus rien.
+    // On ne garde que la page libre du rang 1 et la page de compétition du rang 2, la
+    // seule du fichier dont `navigations` vaut « none » : supprimer la libre ne laisse
+    // que des pages qu'aucune navigation n'affiche.
     applyPageOperation(document, 'landscape', { kind: 'remove', index: 4 })
     applyPageOperation(document, 'landscape', { kind: 'remove', index: 3 })
     applyPageOperation(document, 'landscape', { kind: 'remove', index: 2 })
@@ -420,7 +424,7 @@ describe('avertir du décalage des rangs', () => {
     const advice = operationAdvice(pages, { kind: 'remove', index: 0 })
       .filter((item) => item.kind === 'visibility')
     expect(advice).toHaveLength(1)
-    expect(advice[0]!.text).toContain('n’en montrerait plus aucune')
+    expect(advice[0]!.text).toContain('activées pour aucune navigation')
   })
 
   it('signale la disparition de la dernière page', () => {
@@ -433,15 +437,29 @@ describe('avertir du décalage des rangs', () => {
     expect(advice[0]!.text).toContain('dernière page')
   })
 
-  it('signale l’orientation entièrement masquée au sol', () => {
-    const document = load()
-    applyPageOperation(document, 'landscape', { kind: 'setClass', index: 0, className: 'WPCompetition' })
-    applyPageOperation(document, 'landscape', { kind: 'setClass', index: 2, className: 'WPCompetition' })
-    applyPageOperation(document, 'landscape', { kind: 'setClass', index: 4, className: 'WPCompetition' })
-    const advice = layoutAdvice(pagesOf(document, 'landscape'))
+  /**
+   * Le contre-exemple qui compte : passer trois pages en `WPCompetition` ne les masque
+   * plus, parce que la classe n'a jamais masqué quoi que ce soit. Seule la clé
+   * `navigations` le fait, et le carrousel ne la modifie pas — d'où la suppression des
+   * quatre autres pages pour ne garder que celle du fichier qui porte « none ».
+   */
+  it('ne dit rien quand trois pages changent de classe, tout quand aucune n’a de navigation', () => {
+    const byClass = load()
+    applyPageOperation(byClass, 'landscape', { kind: 'setClass', index: 0, className: 'WPCompetition' })
+    applyPageOperation(byClass, 'landscape', { kind: 'setClass', index: 2, className: 'WPCompetition' })
+    applyPageOperation(byClass, 'landscape', { kind: 'setClass', index: 4, className: 'WPCompetition' })
+    expect(layoutAdvice(pagesOf(byClass, 'landscape'))
+      .filter((item) => item.kind === 'visibility')).toHaveLength(0)
+
+    const byNavigations = load()
+    for (const index of [4, 3, 2, 0]) {
+      applyPageOperation(byNavigations, 'landscape', { kind: 'remove', index })
+    }
+    expect(classesOf(byNavigations, 'landscape')).toEqual(['WPCompetition'])
+    const advice = layoutAdvice(pagesOf(byNavigations, 'landscape'))
       .filter((item) => item.kind === 'visibility')
     expect(advice).toHaveLength(1)
-    expect(advice[0]!.text).toContain('au sol, l’appareil n’en montre aucune')
+    expect(advice[0]!.text).toContain('activées pour aucune navigation')
   })
 
   it('dit toujours que le changement de classe n’est pas vérifié sur l’appareil', () => {
@@ -636,11 +654,19 @@ describe('le carrousel', () => {
     expect(root.textContent).not.toContain('XCTrack ne permet pas de changer le type')
   })
 
-  it('marque les pages masquées hors vol et désigne la cible du basculement', () => {
+  /**
+   * Le filet ambre suit `navigations`, jamais la classe. Le rang 2 est la page de
+   * compétition, activée pour aucune navigation ; le rang 4 est l'assistant de thermique,
+   * activé pour toutes — et c'est lui que l'ancien badge « Masquée hors vol » marquait à
+   * tort, alors que l'appareil le montre au sol.
+   */
+  it('marque la page qu’aucune navigation n’affiche, et non une classe', () => {
     const { root } = build()
     const slots = query<HTMLElement>(root, '.pages__slot')
     expect(slots[1]!.querySelector('.pagecard--conditional')).not.toBeNull()
     expect(slots[0]!.querySelector('.pagecard--conditional')).toBeNull()
+    expect(slots[3]!.querySelector('.pagecard--conditional')).toBeNull()
+    expect(root.textContent).not.toContain('Masquée hors vol')
     expect(slots[3]!.querySelector('.pagecard__thermal')!.textContent)
       .toBe('Cible du basculement automatique en spirale.')
   })
