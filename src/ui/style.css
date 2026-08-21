@@ -71,8 +71,14 @@
      `dot_color` mesuré (`-26624` → `#ff9800`), flèche et libellé neutres. WVarioColumn
      ne partage plus ce dessin — voir --xc-variocol-* ci-dessous. */
   --xc-vscale-arrow: #101010;
-  --xc-vscale-label: #606060;
-  --xc-vscale-dot: #ff9800;
+  /* Gris du libellé d'échelle de `WVerticalGraph` : #9e9e9e relevé au pixel (561 px) sur
+     `2026-08-21_planche-sol-8-boussole-barres-graphiques-espace-aerien.png`. Le #606060
+     d'avant venait d'une lecture à l'œil. */
+  --xc-vscale-label: #9e9e9e;
+  /* Le violet du relevé des défauts (`dot_color: -8355585`), et non l'orange #ff9800 qui
+     n'était que la valeur écrite dans le fichier du PROPRIÉTAIRE. Cette variable ne sert
+     plus qu'au repli : le dessin lit la clé (verticalGraph.ts). */
+  --xc-vscale-dot: #8080ff;
   /* Jauge de vario — WVarioColumn (varioColumn.ts), écart 1.7. Quatre familles d'aplats
      relevées au pixel : une seule pour la descente, trois pour la montée selon
      l'amplitude. Sources : vol-page3.png et 2026-08-21_planche-vol-8-* (bleu),
@@ -1005,11 +1011,24 @@
 
 .xc-vscale__scene { width: 100%; height: 100%; display: block; }
 
-.xc-vscale__arrow line { stroke: var(--xc-vscale-arrow); stroke-width: 3; }
+/* `non-scaling-stroke` : la scène de `WVerticalGraph` est étirée
+   (`preserveAspectRatio="none"`), une épaisseur en unités de `viewBox` s'étirerait donc
+   avec elle. Exprimée ainsi, elle vaut des pixels du repère de rendu — le repère où la
+   hampe a été mesurée à 2 px et la trace à 17 (verticalGraph.ts). L'épaisseur elle-même
+   est posée en ligne par le dessin : elle dépend de `dot_size`. */
+.xc-vscale__arrow line {
+  stroke: var(--xc-vscale-arrow);
+  vector-effect: non-scaling-stroke;
+}
 .xc-vscale__arrowhead { fill: var(--xc-vscale-arrow); }
 
-.xc-vscale__label { fill: var(--xc-vscale-label); font-size: 30px; }
+.xc-vscale__label { fill: var(--xc-vscale-label); font-size: 32px; }
 
+.xc-vscale__trace {
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+}
+/* WVarioColumn dessine encore sa trace en cercles — voir varioColumn.ts. */
 .xc-vscale__trace circle { fill-opacity: 1; }
 
 /* Jauge de vario — WVarioColumn (varioColumn.ts). Une pile de barres partant de la

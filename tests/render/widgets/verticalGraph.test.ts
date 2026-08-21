@@ -31,8 +31,14 @@ describe('WVerticalGraph', () => {
   it('dessine la flèche à double pointe, sa valeur, et la trace pointillée', () => {
     const el = drawVerticalGraph(widget({}), settings, language)
     expect(el.querySelector('.xc-vscale__arrow')).not.toBeNull()
-    expect(el.querySelector('.xc-vscale__trace')).not.toBeNull()
-    expect(el.querySelectorAll('.xc-vscale__trace circle').length).toBeGreaterThan(10)
+    expect(el.querySelectorAll('.xc-vscale__arrowhead')).toHaveLength(2)
+    const trace = el.querySelector('.xc-vscale__trace')
+    expect(trace).not.toBeNull()
+    // Un chapelet de points, dessiné en tirets de longueur nulle à bout rond : dans une
+    // scène étirée, un `<circle>` devient une ellipse — c'est ce qui aplatissait la
+    // trace (voir le commentaire de tête de verticalGraph.ts).
+    expect((trace as SVGPathElement).style.strokeDasharray).toMatch(/^0\.01 /)
+    expect((trace as SVGPathElement).getAttribute('d')?.split(' L ').length).toBeGreaterThan(10)
   })
 
   it('affiche `vertical_step` comme valeur d’échelle, "50" par défaut (mesuré sur la capture)', () => {
@@ -42,21 +48,31 @@ describe('WVerticalGraph', () => {
     expect(withStep.querySelector('.xc-vscale__label')?.textContent).toBe('25')
   })
 
-  it('colore la trace avec `dot_color` (ARGB Android), orange par défaut', () => {
+  /**
+   * Écart 2.3 de la revue des 75 visuels : l'orange `#ff9800` était la valeur écrite dans
+   * le fichier du PROPRIÉTAIRE, prise pour un défaut. Le défaut du relevé des 75 gadgets
+   * est `-8355585`, soit `#8080ff`, et c'est ce que la capture montre (4 605 px).
+   */
+  it('prend la couleur du RELEVÉ quand la clé est absente, pas une constante en dur', () => {
     const withDefault = drawVerticalGraph(widget({}), settings, language)
-    // -26624 → #ff9800, mesuré sur le corpus (voir verticalGraph.ts).
     const withColor = drawVerticalGraph(widget({ dot_color: '-16776961' }), settings, language)
-    const defaultFill = (withDefault.querySelector('.xc-vscale__trace') as SVGGElement).getAttribute('fill')
-    const customFill = (withColor.querySelector('.xc-vscale__trace') as SVGGElement).getAttribute('fill')
-    expect(defaultFill).toBe('#ff9800')
-    expect(customFill).toBe('#0000ff')
+    expect(withDefault.querySelector('.xc-vscale__trace')?.getAttribute('stroke')).toBe('#8080ff')
+    expect(withColor.querySelector('.xc-vscale__trace')?.getAttribute('stroke')).toBe('#0000ff')
   })
 
-  it('`dot_size` module le rayon des points', () => {
-    const small = drawVerticalGraph(widget({ dot_size: '5' }), settings, language)
-    const large = drawVerticalGraph(widget({ dot_size: '30' }), settings, language)
-    const smallR = parseFloat(small.querySelector('.xc-vscale__trace circle')?.getAttribute('r') ?? '0')
-    const largeR = parseFloat(large.querySelector('.xc-vscale__trace circle')?.getAttribute('r') ?? '0')
-    expect(largeR).toBeGreaterThan(smallR)
+  /**
+   * 17 px d'épaisseur mesurés pour `dot_size: 15`, dans le repère de rendu — d'où
+   * `non-scaling-stroke` : une épaisseur en unités de `viewBox` s'étirerait avec la scène.
+   */
+  it('`dot_size` donne l’épaisseur de la trace, 17 px pour la valeur du relevé', () => {
+    const parDefaut = drawVerticalGraph(widget({}), settings, language)
+    expect((parDefaut.querySelector('.xc-vscale__trace') as SVGPathElement).style.strokeWidth).toBe('17.00px')
+    const gros = drawVerticalGraph(widget({ dot_size: '30' }), settings, language)
+    expect((gros.querySelector('.xc-vscale__trace') as SVGPathElement).style.strokeWidth).toBe('34.00px')
+  })
+
+  it('la hampe de la flèche fait 2 px du repère de rendu, comme sur l’appareil', () => {
+    const el = drawVerticalGraph(widget({}), settings, language)
+    expect((el.querySelector('.xc-vscale__arrow line') as SVGLineElement).style.strokeWidth).toBe('2px')
   })
 })
