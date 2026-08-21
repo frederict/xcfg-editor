@@ -100,11 +100,26 @@ export const PERSONAL_KIND_LABELS: Record<PersonalKind, string> = {
   sharing: 'partage'
 }
 
-/** Le mot affiché pour chaque base. Lu dans l'application, ou jugé par nous. */
+/**
+ * Ce que chaque base dit au pilote. Lu dans l'application, ou jugé par nous.
+ *
+ * ## Trois calques de l'anglais, remplacés par ce qu'ils voulaient dire
+ *
+ * - *scope* était devenu « **portée** lue dans l'application » : un pilote y lit la
+ *   portée d'un émetteur, ou une portée de musique. C'est un attribut que XCTrack déclare
+ *   lui-même sur ce réglage, et c'est ça qu'il faut dire ;
+ * - « champ de saisie **masqué** dans l'application » se lit « champ caché ». Il n'est
+ *   pas caché : il se saisit en points, comme un mot de passe ;
+ * - « jugement de **l'extraction** » ne dit ni qui juge, ni quoi. C'est **nous**.
+ *
+ * Ce que ces trois mots portent, et qu'il ne faut pas perdre : la **provenance de
+ * l'affirmation** — lue dans XCTrack, ou jugée par cet éditeur. C'est la distinction
+ * mesuré / supposé, appliquée aux données personnelles.
+ */
 export const PERSONAL_BASIS_LABELS: Record<PersonalBasis, string> = {
-  scope: 'portée lue dans l’application',
-  inputType: 'champ de saisie masqué dans l’application',
-  declared: 'jugement de l’extraction'
+  scope: 'XCTrack le déclare lui-même',
+  inputType: 'XCTrack le saisit en points, comme un mot de passe',
+  declared: 'c’est notre jugement, pas celui de XCTrack'
 }
 
 /** Vrai si l'affirmation est **lue** dans l'APK, faux si elle est jugée par nous. */

@@ -84,6 +84,23 @@ describe('données personnelles — le relevé des clés vient du catalogue, pas
     expect(Object.keys(PERSONAL_BASIS_LABELS)).toHaveLength(3)
     expect(PERSONAL_CAVEAT).toContain('ne prouve donc pas une absence')
   })
+
+  it('les trois bases disent d’où vient l’affirmation, sans calquer l’anglais', () => {
+    // « portée » traduisait *scope* — un pilote y lit la portée d'un émetteur ; « champ
+    // de saisie masqué » se lit « champ caché » alors qu'il se saisit en points ; et
+    // « jugement de l'extraction » ne disait ni qui juge, ni quoi. Ce que les trois
+    // portent, et qu'il ne faut pas perdre : lu dans XCTrack, ou jugé par nous.
+    expect(PERSONAL_BASIS_LABELS.scope).toBe('XCTrack le déclare lui-même')
+    expect(PERSONAL_BASIS_LABELS.inputType).toContain('comme un mot de passe')
+    expect(PERSONAL_BASIS_LABELS.declared).toBe('c’est notre jugement, pas celui de XCTrack')
+    for (const label of Object.values(PERSONAL_BASIS_LABELS)) {
+      expect(label).not.toMatch(/portée|masqué|extraction/)
+    }
+    // La distinction reste calculable, et c'est elle que les écrans hiérarchisent.
+    expect(isReadFromApk('scope')).toBe(true)
+    expect(isReadFromApk('inputType')).toBe(true)
+    expect(isReadFromApk('declared')).toBe(false)
+  })
 })
 
 /* ====================================================== où ça vit : ce qui voyage ou non */
