@@ -127,4 +127,27 @@ describe('style.css — corrections sans trace dans le DOM', () => {
       expect(rule).toContain('color: var(--xc-unit-ink);')
     })
   })
+  // § 5 de la revue des 75 widgets — les épaisseurs de trait de la boussole.
+  describe('boussole : des traits en pixels, pas à l’échelle du dessin', () => {
+    it('les quatre épaisseurs passent par --xc-compass-px', () => {
+      // L'appareil dessine la couronne à 9 px et les graduations à 7 px quelle que soit
+      // la taille du cadran (mesuré à 208, 348 et 355 px de rayon). Les nôtres suivaient
+      // l'échelle du `viewBox` : justes sur le cadran de 426 px de la planche, sur lequel
+      // elles avaient été calées, fausses partout ailleurs.
+      expect(css).toContain('--xc-compass-px: calc(200 / min(var(--xc-w, 200), var(--xc-h, 200)));')
+      for (const declaration of [
+        'stroke-width: calc(9 * var(--xc-compass-px))',
+        'stroke-width: calc(6.4 * var(--xc-compass-px))',
+        'stroke-width: calc(9.6 * var(--xc-compass-px))',
+        'stroke-width: calc(1.9 * var(--xc-compass-px))'
+      ]) {
+        expect(css).toContain(declaration)
+      }
+    })
+
+    it('aucune épaisseur de boussole ne reste un nombre nu du repère du viewBox', () => {
+      const bloc = css.slice(css.indexOf('.xc-compass {'), css.indexOf('.xc-compass__arrow'))
+      expect(bloc).not.toMatch(/stroke-width:\s*[\d.]+;/)
+    })
+  })
 })

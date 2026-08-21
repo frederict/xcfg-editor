@@ -714,20 +714,36 @@
 
 /* Boussole — WCompass (compass.ts). Instrument à fort contraste, aplats francs, aucun
    dégradé ni ombre — voir le commentaire de tête de compass.ts pour les mesures. */
+/* `--xc-compass-px` : ce que vaut UN pixel du repère de rendu dans les unités du
+   `viewBox` de 200 du cadran (compass.ts). Le cadran s'inscrit dans le carré du widget
+   avec `preserveAspectRatio` par défaut, donc son diamètre vaut le petit côté du widget
+   et l'échelle vaut `200 / petit côté`.
+
+   Sans cela, les épaisseurs de trait suivaient l'échelle du dessin : elles étaient
+   justes sur le cadran de 426 px de la planche, sur lequel elles avaient été calées, et
+   fausses partout ailleurs — trop fines sur un petit widget, trop épaisses en plein
+   écran. **L'appareil, lui, dessine la couronne à 9 px et les graduations à 7 px quelle
+   que soit la taille du cadran** : mesuré à 208, 348 et 355 px de rayon (revue des
+   75 widgets, § 5). Les quatre épaisseurs ci-dessous sont donc exprimées en pixels, à la
+   valeur qu'elles avaient déjà sur la planche — la comparaison au pixel avec
+   `2026-08-21_planche-sol-8-…png` y donne 7,0 / 6,8 / 7,0 px de graduation des deux
+   côtés, et il n'y a aucune raison de la perdre. */
 .xc-compass {
   width: 100%;
   height: 100%;
   display: flex;
+  --xc-compass-px: calc(200 / min(var(--xc-w, 200), var(--xc-h, 200)));
 }
 
 .xc-compass__scene { width: 100%; height: 100%; display: block; }
 
-/* Épaisseur mesurée : 9 px de couronne sur un cadran de 426 px de diamètre, soit 4,2
-   dans le repère de 200 du `viewBox` — l'ancienne valeur (8) doublait le trait. */
-.xc-compass__ring { stroke: var(--xc-compass-ring); stroke-width: 4.2; }
+/* Épaisseur mesurée : 9 px de couronne, 6,4 px de graduation ordinaire (7 px à l'écran
+   une fois l'anticrénelage compté, comme sur l'appareil) et 9,6 px de graduation
+   cardinale — voir `--xc-compass-px` ci-dessus pour pourquoi c'est en pixels. */
+.xc-compass__ring { stroke: var(--xc-compass-ring); stroke-width: calc(9 * var(--xc-compass-px)); }
 
-.xc-compass__tick { stroke: var(--xc-compass-ring); stroke-width: 3; }
-.xc-compass__tick--cardinal { stroke-width: 4.5; }
+.xc-compass__tick { stroke: var(--xc-compass-ring); stroke-width: calc(6.4 * var(--xc-compass-px)); }
+.xc-compass__tick--cardinal { stroke-width: calc(9.6 * var(--xc-compass-px)); }
 
 /* `middle` et non `hanging` : `compass.ts` pose le CENTRE optique de la lettre, la seule
    des trois références (sommet, centre, base) qui ne dépende pas de la hauteur de casse
@@ -759,7 +775,7 @@
    l'arc mesure 2 px sur un cadran de 355 : 0,9 dans le repère de 200, comme la
    graduation ramenée à la même échelle. */
 .xc-compass__wind-sector { fill: var(--xc-compass-wind-arc); }
-.xc-compass__wind-axis { stroke: var(--xc-compass-wind-axis); stroke-width: 0.9; }
+.xc-compass__wind-axis { stroke: var(--xc-compass-wind-axis); stroke-width: calc(1.9 * var(--xc-compass-px)); }
 .xc-compass__wind-sock-body {
   fill: var(--xc-compass-sock-body);
   stroke: var(--xc-compass-sock-outline);

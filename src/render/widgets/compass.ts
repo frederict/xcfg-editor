@@ -136,12 +136,18 @@ import { readRotation } from './rotation'
  * | graduations cardinales | de 0,704 R à 1,011 R | 68 → 98 |
  * | N — centre optique | 0,78 R (planche) / 0,81 R (plein écran) | 76 |
  *
- * **NON REPRODUIT** : les épaisseurs de trait de l'appareil sont constantes en pixels
- * (couronne 9 px, graduation 7 px) quelle que soit la taille du cadran ; les nôtres
- * suivent l'échelle du `viewBox`. Elles sont calées sur le cadran de 208 px de la
- * planche : plus grand, notre trait épaissit là où celui de l'appareil ne bouge pas.
- * De même la lettre N, dont la hauteur de casse passe de 0,18 R à 0,24 R entre les deux
- * tailles sur l'appareil — sa BASE, elle, reste à 0,68 R.
+ * **Les épaisseurs de trait sont en PIXELS, pas à l'échelle du dessin** (§ 5 de la revue
+ * des 75 widgets) : l'appareil dessine la couronne à 9 px et les graduations à 7 px quelle
+ * que soit la taille du cadran (mesuré à 208, 348 et 355 px de rayon). Les nôtres
+ * suivaient l'échelle du `viewBox` — justes sur le cadran de 426 px de la planche, sur
+ * lequel elles avaient été calées, trop fines sur un petit widget et trop épaisses en
+ * plein écran. La conversion se fait dans `style.css` (`--xc-compass-px`), à partir de
+ * `--xc-w` et `--xc-h` : rien à faire descendre jusqu'ici.
+ *
+ * **NON REPRODUIT en revanche** : la lettre N, dont la hauteur de casse passe de 0,18 R à
+ * 0,24 R entre les deux tailles sur l'appareil — sa BASE, elle, reste à 0,68 R. Elle
+ * n'est donc constante ni en pixels ni en fraction du cadran, et deux mesures ne suffisent
+ * pas à trancher entre les deux lectures possibles.
  *
  * **Le N appartient à la couronne et tourne avec elle** sous `rotation: "HEADING"`.
  * Aucune donnée réelle n'étant modélisée ici, tous les angles sont illustratifs.
