@@ -101,17 +101,34 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
   configuration embarque des ressources).
 - **Dessiner les pages** à la géométrie de l'instrument, sur huit gabarits d'écran
   (AIR³ 7.2, 7.3, 7.35, et cinq ratios courants), en paysage et en portrait.
-- **Signaler ce qui cloche** avant que vous ne le découvriez en vol. Sept règles, et
-  chacune dit ce qu'elle vaut : un gadget entièrement recouvert par un autre et donc
-  impossible à toucher ; une page qui ne s'affichera jamais ; une page d'assistant de
-  thermique que rien n'atteint automatiquement ; un gadget **peut-être** trop petit pour
-  être lu à bout de bras — le seuil vient d'une norme et s'applique à la taille physique
-  réelle de la dalle, mais le rapport entre hauteur du gadget et hauteur du texte reste
-  une hypothèse assumée, faute d'une campagne de mesure sur l'appareil ; deux cartes
-  routières sur la même page ; un gadget Pro dans un fichier qui ne déclare pas de
-  licence — celui-là est **une question, pas un constat** : ce que XCTrack en fait n'a
-  jamais été vérifié sur l'appareil, et la règle l'écrit ; et un réglage écrit par une
-  version antérieure de XCTrack. L'outil **signale, il ne corrige jamais tout seul**.
+- **Signaler ce qui cloche** avant que vous ne le découvriez en vol. Sept règles, rangées
+  dans les deux blocs de la vue d'ensemble — une seule, les deux cartes routières, monte
+  dans le bloc déplié, parce qu'une règle n'y a sa place que si elle est **à la fois grave
+  et établie**. Chacune dit ce qu'elle vaut :
+
+  - un gadget qu'aucun appui ne peut atteindre, **recouvert par les gadgets dessinés après
+    lui** — l'union de plusieurs, dont aucun ne le couvre seul, compte aussi, et un
+    masquant transparent également. **C'est une hypothèse** : ce qui est mesuré, c'est
+    qu'aucun clic ne l'atteint en édition ; le routage d'un appui *en vol* n'a jamais été
+    observé, et c'est justement ce qui compte pour un bouton. La règle **se tait** quand
+    l'avertissement de géométrie a déjà signalé le même montage : un même problème dit
+    deux fois vaut moins qu'une ;
+  - une page qui ne s'affichera jamais ; une page d'assistant de thermique que rien
+    n'atteint automatiquement ;
+  - un gadget **peut-être** trop petit pour être lu à bout de bras — le seuil vient d'une
+    norme et s'applique à la taille physique du **gabarit d'écran choisi**, mais le rapport
+    entre hauteur du gadget et hauteur du texte reste **une hypothèse assumée**, faute
+    d'une campagne de mesure sur l'appareil ;
+  - deux cartes routières sur la même page ;
+  - un gadget Pro dans un fichier qui ne déclare pas de licence — celui-là est **une
+    question, pas un constat** : ce que XCTrack en fait n'a jamais été vérifié sur
+    l'appareil, et la règle l'écrit ;
+  - et un réglage écrit par une version antérieure de XCTrack.
+
+  **Trois de ces sept sont des suppositions**, et se présentent comme telles : jamais dans
+  le bloc d'alerte, intitulé suffixé « à confirmer sur l'instrument », explication ouverte
+  par « ce n'est pas un constat mesuré mais une question ». L'outil **signale, il ne
+  corrige jamais tout seul**.
 - **Éditer** : déplacer, redimensionner, ajouter, supprimer et réordonner des gadgets ;
   régler leurs options ; gérer les pages (insérer, dupliquer, supprimer, réordonner).
   Annuler / rétablir.
