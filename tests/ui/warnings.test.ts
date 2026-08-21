@@ -262,16 +262,22 @@ describe('avertissements — défauts géométriques', () => {
   })
 
   it('ne signale pas un recouvrement par un widget transparent au repos, même opaque dans le fichier', () => {
-    // WButtonBrightness a _bg: 100 dans le corpus (fond opaque déclaré) mais ne peint
-    // rien sur l'appareil (registerTransparent, registry.ts) : il ne peut masquer
-    // personne, même quand sa boîte couvre entièrement l'autre widget.
+    // WLiveMessage a _bg: 100 dans les 10 occurrences du corpus (fond opaque déclaré au
+    // sens où canvas.ts le lit aujourd'hui) mais ne masque rien sur l'appareil : les
+    // deux WButtonNavig qu'il recouvre dans le fichier sont parfaitement visibles sur
+    // vol-thermalassistant-boutonsnavig.png. Il reste donc dans `registerTransparent`.
+    //
+    // WButtonBrightness, lui, en est SORTI (écart 1.6, buttons.ts) : la planche des 75
+    // widgets montre qu'il dessine un pictogramme. S'il disparaissait sur landscape[3]
+    // du corpus, c'est qu'un WThermalAssistant de bornes identiques est dessiné après
+    // lui — un recouvrement, pas une transparence.
     const masked = widget(1000, 1000, 2000, 2000)
-    const touchZone = `{
-      "CLASS": "org.xcontest.XCTrack.widget.w.WButtonBrightness",
+    const liveMessage = `{
+      "CLASS": "org.xcontest.XCTrack.widget.w.WLiveMessage",
       "X1": 0, "Y1": 0, "X2": 10000, "Y2": 10000,
-      "_border": false, "_bg": 100, "_theme": ""
+      "_border": false, "_bg": 100, "_theme": "", "line_count": 2, "show_time": 300
     }`
-    expect(kinds(warningsOf(documentWith([masked, touchZone])))).not.toContain('geometry')
+    expect(kinds(warningsOf(documentWith([masked, liveMessage])))).not.toContain('geometry')
   })
 })
 

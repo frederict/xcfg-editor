@@ -404,65 +404,107 @@
 .xc-status__percent,
 .xc-status__time { font-variant-numeric: tabular-nums; }
 
-/* Zones tactiles — WButtonBrightness / WButtonNavig (touchZone.ts). Rien de visible en
-   rendu normal : le fond opaque venant de _bg est déjà neutralisé en amont, côté
-   canvas.ts (voir registry.ts/registerTransparent) — ici, on s'assure seulement de ne
-   RIEN ajouter par nous-mêmes (pas de background, pas de border) qui masquerait la carte
-   dessous. Un contour en pointillés et l'étiquette n'apparaissent qu'au survol. */
-.xc-touch {
-  position: relative;
-  cursor: pointer;
-}
+/* Les neuf widgets « bouton » — buttons.ts, écart 1.6. L'appareil peint pour chacun un
+   grand pictogramme noir qui remplit la case : bbox mesurées entre 0,38 et 0,77 de la
+   hauteur de cellule sur 2026-08-21_planche-sol-5-boutons-autres-test.png, centrées.
+   `--xc-button-glyph` fixe cette proportion une fois pour toutes ; les variantes qui
+   empilent un titre ou un libellé la réduisent, comme sur la capture.
 
-.xc-touch__label {
-  display: none;
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  max-width: 90%;
-  padding: 0.25em 0.6em;
-  font-size: 0.75em;
-  font-weight: 600;
-  color: var(--xc-ink);
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid var(--xc-line);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  pointer-events: none;
-}
-
-/* Contour en pointillés, pas un cadre plein : discret, et seulement au survol. */
-.xc-touch:hover {
-  outline: 1px dashed var(--xc-line);
-  outline-offset: -1px;
-}
-
-.xc-touch:hover .xc-touch__label {
-  display: block;
-}
-
-/* Bouton de navigation — WButtonNavig (buttonNavig.ts). Correction en vol
-   (rendu-en-vol.md § 4) : pictogramme visible, à la différence de WButtonBrightness
-   (touchZone.ts) — fond blanc opaque peint par ce module lui-même (_bg n'est pas fiable
-   pour ce type, voir son commentaire de tête), cadre fourni par le mécanisme générique
-   (_border, canvas.ts). */
-.xc-navig {
+   Aucun fond n'est peint ici : le calque partagé `.xc-widget__bg` et `_border`
+   (canvas.ts) s'en chargent, comme pour tout autre widget dessiné. C'est la différence
+   avec l'ancien traitement, qui neutralisait les deux. */
+.xc-button {
   width: 100%;
   height: 100%;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.3em;
-  background: var(--xc-surface);
+  gap: 0.04em;
   color: var(--xc-ink);
   overflow: hidden;
+  font-size: calc(var(--xc-h, 100) * 1px);
+  --xc-button-glyph: 0.6;
 }
 
-.xc-navig__flag { width: 1.4em; height: 1.4em; flex: none; }
+/* Une valeur par type, calée sur la bbox mesurée : `--xc-button-glyph` est la hauteur du
+   CARRÉ de dessin, pas celle de l'encre — chaque pictogramme n'occupe qu'une fraction de
+   son `viewBox` de 24, et cette fraction diffère (0,50 pour le signe seul du zoom, 1,04
+   pour le soleil et ses rayons). Les valeurs ci-dessous sont donc le quotient
+   « hauteur visée sur l'appareil / taux de remplissage constaté », et non la hauteur
+   visée elle-même. */
+.xc-button--navig { --xc-button-glyph: 0.58; }
+.xc-button--phone { --xc-button-glyph: 0.98; }
+.xc-button--camera { --xc-button-glyph: 0.82; }
+.xc-button--zoom { --xc-button-glyph: 0.78; }
+.xc-button--vario { --xc-button-glyph: 0.69; }
+.xc-button--brightness { --xc-button-glyph: 0.57; }
+.xc-button--volume { --xc-button-glyph: 0.85; }
+.xc-button--volumereminder { --xc-button-glyph: 0.26; --xc-button-caption: 0.28; }
+.xc-button--intent { --xc-button-glyph: 0.38; --xc-button-caption: 0.45; }
 
-.xc-navig__slash { font-size: 1.6em; font-weight: 700; line-height: 1; }
+.xc-button__row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.06em;
+  max-width: 100%;
+}
+
+.xc-button__glyph {
+  width: calc(var(--xc-button-glyph) * 1em);
+  height: calc(var(--xc-button-glyph) * 1em);
+  flex: none;
+}
+
+/* Le signe de l'action : `+` de `WButtonZoom` mesuré à 0,39 de la hauteur de cellule,
+   d'un noir aussi franc que les pictogrammes. */
+.xc-button__sign {
+  font-size: calc(var(--xc-button-glyph) * 0.95em);
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Le `+` logé DANS le disque du soleil (WButtonBrightness) — dessiné en SVG, il suit le
+   `viewBox` de 24 et non la police du widget. Même encre que le reste du pictogramme :
+   sur la capture, le disque est au trait et le signe plein, tous deux noirs. */
+.xc-button__glyph-sign {
+  fill: currentColor;
+  stroke: none;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* Libellé sous le pictogramme (« Monter le son », « test », nom de contact) : noir, pas
+   de titre rouge — la capture le montre de la même encre que le dessin. */
+.xc-button__caption {
+  max-width: 96%;
+  font-size: calc(var(--xc-button-caption, 0.17) * 1em);
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* La clé `title` de WButtonIntentLauncher — un émoji par défaut, donc dessiné à la
+   taille d'un pictogramme et non d'un libellé. */
+.xc-button__mark {
+  font-size: calc(var(--xc-button-glyph) * 0.85em);
+  line-height: 1.05;
+}
+
+/* Titre de WButtonVario, commandé par `showTitle` : même taille et même couleur que les
+   titres de widget numérique — mesuré à 15 px de haut sur la capture, comme eux. */
+.xc-button__title {
+  font-size: calc(var(--xc-title, 15) * 1px);
+  font-weight: 700;
+  line-height: 1.1;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+}
 
 /* Cartes — WCompMap / WXCAssistant / WThermalAssistant (map.ts). Évocation sobre, pas
    une carte réelle : fond neutre, trace d'exemple, symbole du pilote, échelle,

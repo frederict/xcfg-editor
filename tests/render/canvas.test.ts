@@ -177,33 +177,43 @@ describe('widgets transparents (mécanisme)', () => {
   })
 })
 
-describe('widgets tactiles réels du corpus (intégration)', () => {
-  // landscape[3] : deux WButtonBrightness (_bg: 100, _border: false) couvrant la
-  // moitié centrale de l'écran — le cas cité par rendu-observe.md, « Widgets sans
-  // rendu visible ». _bg: 100 est le piège explicite de la tâche : sans neutralisation,
-  // l'opacité de fond resterait à 1 et masquerait la carte.
+describe('boutons réels du corpus (intégration)', () => {
+  // landscape[3] : deux WButtonBrightness (_bg: 100, _border: false) couvrant la moitié
+  // centrale de l'écran — le cas que rendu-observe.md lisait comme « ne dessine rien ».
+  // La planche des 75 widgets a tranché autrement (écart 1.6, buttons.ts) : ils
+  // dessinent, et s'ils n'apparaissent pas ici c'est qu'un WThermalAssistant de bornes
+  // identiques à l'union des deux est dessiné APRÈS eux. On vérifie donc le
+  // recouvrement, pas une transparence.
   const doc = parseJson(readFileSync(BACKUP_2026, 'utf8'))
   const settings = readRenderSettings(doc)
   const brightnessPage = readLayout(doc).landscape[3]!
-  // landscape[4] : deux WButtonNavig avec _border: true dans le fichier — correction en
-  // vol (rendu-en-vol.md § 4) : contrairement à WButtonBrightness, ce cadre s'affiche
-  // désormais bel et bien, via le mécanisme générique (_border, canvas.ts).
   const navigPage = readLayout(doc).landscape[4]!
 
-  it('neutralise le fond opaque de WButtonBrightness (_bg: 100 dans le fichier)', () => {
+  it('WButtonBrightness dessine son pictogramme et n’est plus une case vide', () => {
     const element = renderPage(brightnessPage, 16 / 9, settings, 'fr')
-    const widgets = [...element.querySelectorAll('.xc-widget')]
-    const brightnessWidgets = widgets.filter(w => w.querySelector('.xc-touch') !== null)
-    expect(brightnessWidgets).toHaveLength(2)
-    for (const w of brightnessWidgets) {
-      expect((w as HTMLElement).style.getPropertyValue('--xc-bg-opacity')).toBe('0')
+    const boutons = [...element.querySelectorAll('.xc-button--brightness')]
+    expect(boutons).toHaveLength(2)
+    for (const bouton of boutons) {
+      expect(bouton.querySelector('.xc-button__glyph--sun')).not.toBeNull()
     }
   })
 
-  it('respecte _border: true du fichier pour WButtonNavig — corrigé, n’est plus transparent', () => {
+  it('la carte qui les recouvre est bien dessinée APRÈS eux — c’est l’ordre, pas le type', () => {
+    const element = renderPage(brightnessPage, 16 / 9, settings, 'fr')
+    const widgets = [...element.querySelectorAll('.xc-widget')]
+    const rangs = widgets
+      .map((w, index) => (w.querySelector('.xc-button--brightness') !== null ? index : -1))
+      .filter((index) => index >= 0)
+    const dernierBouton = rangs[rangs.length - 1] ?? -1
+    const carte = widgets.findIndex(w => w.querySelector('.xc-map') !== null)
+    expect(dernierBouton).toBeGreaterThanOrEqual(0)
+    expect(carte).toBeGreaterThan(dernierBouton)
+  })
+
+  it('respecte _border: true du fichier pour WButtonNavig', () => {
     const element = renderPage(navigPage, 16 / 9, settings, 'fr')
     const widgets = [...element.querySelectorAll('.xc-widget')]
-    const navigWidgets = widgets.filter(w => w.querySelector('.xc-navig') !== null)
+    const navigWidgets = widgets.filter(w => w.querySelector('.xc-button--navig') !== null)
     expect(navigWidgets).toHaveLength(2)
     for (const w of navigWidgets) {
       expect(w.classList.contains('xc-widget--border')).toBe(true)

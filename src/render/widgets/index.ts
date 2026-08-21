@@ -1,8 +1,17 @@
 import { register, registerTransparent } from '../registry'
 import { drawNumeric } from './numeric'
 import { drawStatusLine } from './statusLine'
-import { drawTouchZone } from './touchZone'
-import { drawButtonNavig } from './buttonNavig'
+import {
+  drawButtonBrightness,
+  drawButtonCamera,
+  drawButtonIntentLauncher,
+  drawButtonNavig,
+  drawButtonPhone,
+  drawButtonVario,
+  drawButtonVolume,
+  drawButtonVolumeReminder,
+  drawButtonZoom
+} from './buttons'
 import { drawCompMap, drawThermalAssistant, drawXCAssistant } from './map'
 import { drawCompass } from './compass'
 import { drawVarioColumn } from './varioColumn'
@@ -67,14 +76,23 @@ register('WVerticalGraph', drawVerticalGraph)
 register('WSideView', drawSideView)
 register('WWindDirection', drawWindDirection)
 
-// Zone tactile sans rendu visible (rendu-observe.md, « Widgets sans rendu visible ») :
-// dessin dédié ET transparence forcée, quelles que soient _bg/_border dans le fichier.
-// WButtonNavig en est sorti — correction en vol, rendu-en-vol.md § 4 : voir
-// buttonNavig.ts, il dessine un pictogramme visible et reçoit le cadre générique.
-register('WButtonBrightness', drawTouchZone)
-registerTransparent('WButtonBrightness')
-
+// Les neuf boutons (buttons.ts) — écart 1.6 de la planche : l'appareil dessine pour
+// chacun un grand pictogramme noir, y compris pour WButtonBrightness, que nous rendions
+// en case vide. `registerTransparent('WButtonBrightness')` a donc disparu : il venait
+// d'une page où deux zones de luminosité étaient RECOUVERTES par un WThermalAssistant
+// dessiné après elles (landscape[3] de 2026-08-20_backup-00.xcfg, bornes identiques à
+// l'union des deux). Ce recouvrement-là se reproduit tout seul, canvas.ts empilant les
+// widgets dans l'ordre du fichier — voir le commentaire de tête de buttons.ts pour la
+// règle complète, et rendu-observe.md pour ce qui était affirmé et pourquoi c'était faux.
 register('WButtonNavig', drawButtonNavig)
+register('WButtonPhone', drawButtonPhone)
+register('WButtonCamera', drawButtonCamera)
+register('WButtonZoom', drawButtonZoom)
+register('WButtonVario', drawButtonVario)
+register('WButtonBrightness', drawButtonBrightness)
+register('WButtonVolume', drawButtonVolume)
+register('WButtonVolumeReminder', drawButtonVolumeReminder)
+register('WButtonIntentLauncher', drawButtonIntentLauncher)
 
 // Tâche 18, les trois derniers types du corpus. WAirspaceProximity est bien documenté
 // (capture réelle, voir airspaceProximity.ts) ; WLiveMessage et WCompTaskSummary ne le
