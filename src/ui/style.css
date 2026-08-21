@@ -17,12 +17,14 @@
      zone de compte de couleurs) sur `vol-numeriques-boussole-variocolumn.png` ET
      `vol-landscape3-en-vol.png` — les deux captures donnent exactement #a0ffa0 pour le
      remplissage et #000000 pour le cerne, malgré des vols différents.
-     `--xc-value-negative` n'a PAS été observé en vol (aucune mesure négative dans les
-     deux relevés) : on ne fait que conserver la symétrie du relevé au sol — un rose
-     dérivé par symétrie de teinte avec le vert confirmé, à la même clarté, jamais
-     mesuré directement. À corriger dès qu'une capture en vol montre un vario négatif. */
+     `--xc-value-negative` était, lui, un rose DÉDUIT par symétrie de teinte avec le vert
+     — jamais mesuré, et la réserve était écrite ici en toutes lettres. Elle est levée :
+     `2026-08-21_planche-sol-3-air-b-xcontest-navigation-a.png` en donne deux relevés
+     indépendants, « [-27] m » (5 923 px) et « 140 » du `WCompassDigital` (3 574 px), tous
+     deux **#ffa0a0** exactement — un rose plus chaud que le #ffa0c8 déduit. La revue des
+     75 visuels le confirme sur une troisième cellule (`competition-4`, « [-30:20] »). */
   --xc-value-positive: #a0ffa0;
-  --xc-value-negative: #ffa0c8;
+  --xc-value-negative: #ffa0a0;
   --xc-value-stroke: #000000;
   /* Barre d'état (WStatusLine) : fond gris clair mesuré au pixel, identique sur les deux
      captures (voir statusLine.ts). Le rouge d'alerte qui barrait `LIVE` et le capteur, et
@@ -275,7 +277,10 @@
     0.15,
     calc(
       var(--xc-w, 200) /
-      (1.02 * (var(--xc-value-em, 2) * var(--xc-value-size) + var(--xc-unit-h, 0) * var(--xc-h, 100)))
+      (1.02 * (
+        var(--xc-value-em, 2) * var(--xc-value-size) +
+        (var(--xc-unit-h, 0) + var(--xc-badge-h, 0)) * var(--xc-h, 100)
+      ))
     ),
     1
   );
@@ -330,6 +335,149 @@
   /* Absorbe à parts égales la place laissée par le titre : la ligne valeur + unité se
      centre dessous sans que le titre quitte le haut de la cellule (voir `.xc-num`). */
   margin: auto 0;
+}
+
+/* Pastille XContest, à gauche de la valeur de `WOptiResult` et de
+   `WOptiUnfinishedTriangle` (badge.ts, écart 2.9 de la revue des 75 visuels). Carrée,
+   0,185 fois la hauteur du widget — 41 px sur une cellule de 224 —, coins arrondis, trait
+   blanc et points noirs. Elle ne suit PAS `--xc-value-fit` : sur l'appareil elle garde sa
+   taille quand la valeur rétrécit, comme l'unité garde la sienne. */
+.xc-num__badge {
+  flex: none;
+  width: calc(var(--xc-h, 100) * 0.185px);
+  height: calc(var(--xc-h, 100) * 0.185px);
+  /* Devant la valeur, et séparée d'elle du même écart que sur la capture (badge.ts). */
+  order: -1;
+  margin-right: calc(var(--xc-h, 100) * 0.054px);
+  align-self: center;
+}
+.xc-num__badge-line {
+  stroke: #ffffff;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.xc-num__badge-dot { fill: #101010; }
+.xc-num__badge-vertex { fill: #ffffff; }
+.xc-num__badge-cross {
+  stroke: #e53935;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+
+/* « Potentiel FAI » (`WOptiUnfinishedFAIPotential`, optiPotential.ts) : trois lignes
+   sous le titre, flèche collée à gauche, valeur alignée à droite, unité grise. Mesuré sur
+   `captures-air3/2026-08-21_planche-vol-3-air-b-xcontest-navigation-a.png`, cellule de
+   326 × 199 px : hauteur de chiffre 31 à 35 px, flèche à 11 px du bord gauche. */
+.xc-opti {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  line-height: 1.1;
+}
+.xc-opti__lines {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  min-width: 0;
+}
+.xc-opti__line {
+  display: flex;
+  align-items: baseline;
+  gap: calc(var(--xc-h, 100) * 0.02px);
+  /* La valeur pousse l'unité à droite et laisse la flèche au bord gauche. */
+  justify-content: flex-end;
+  font-size: calc(var(--xc-h, 100) * 0.22px);
+  min-width: 0;
+}
+.xc-opti__glyph {
+  /* `margin-right: auto` plutôt qu'un `space-between` : la flèche reste à gauche même
+     quand une des trois lignes est masquée par sa clé. */
+  margin-right: auto;
+  color: var(--xc-ink);
+  font-size: 0.8em;
+}
+.xc-opti__value {
+  color: var(--xc-ink);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.xc-opti__unit {
+  color: var(--xc-unit-ink);
+  font-size: 0.8em;
+  white-space: nowrap;
+}
+
+/* « Boussole Point optimisé » (`WCompassDigital`, compassDigital.ts) : flèche, valeur sur
+   pastille, et un degré détaché à droite.
+
+   Tout est mesuré sur `captures-air3/2026-08-21_planche-sol-3-air-b-xcontest-navigation-a.png`,
+   cellule de 301 × 199 px :
+
+   | | relevé | ce qui est posé ici |
+   |---|---|---|
+   | flèche | 53 × 54 px | 0,27 × la hauteur, carrée |
+   | valeur « 140 » | 139 × 69 px, hauteur de chiffre ≈ 62 | police à 0,44 × la hauteur |
+   | anneau du degré | 20 × 20 px, `#505050`, à 6 px du filet droit | police à 0,28 × la hauteur |
+   | teinte | `#ffa0a0` cerné de noir, la MÊME que les valeurs négatives du vario | `.xc-num__row--negative` |
+
+   La flèche et la valeur se centrent ensemble dans la place laissée par le degré, qui
+   reste collé à droite : c'est la seule lecture qui rende les quatre marges relevées
+   (34 px à gauche de la flèche, 51 entre la valeur et l'anneau, 6 à droite). Le plafond
+   en `--xc-w` n'est pas une mise en page, c'est le même garde-fou que partout ailleurs
+   dans ce fichier : une cellule étroite réduit, elle ne tranche pas. */
+.xc-compdig {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  line-height: 1.1;
+}
+.xc-compdig__row {
+  flex: 1;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  font-size: min(
+    calc(var(--xc-h, 100) * 0.44px),
+    calc(var(--xc-w, 200) / 2.9 * 1px)
+  );
+}
+.xc-compdig__pair {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.05em;
+  min-width: 0;
+}
+.xc-compdig__arrow {
+  flex: none;
+  width: 0.61em;
+  height: 0.61em;
+  fill: var(--xc-value-negative);
+  stroke: var(--xc-ink);
+  stroke-width: 2.4;
+  stroke-linejoin: round;
+}
+/* Deux classes sur le même nœud : `.xc-num__value` lui donne la graisse et le cerne de
+   signe (`.xc-num__row--negative`), et ce sélecteur — plus spécifique, donc gagnant quel
+   que soit l'ordre du fichier — lui reprend la TAILLE, qui vient ici de la ligne et non
+   de `--xc-value-size`. Sans lui, la valeur repartait à 0,55 × la hauteur au lieu de
+   0,44 et débordait de la cellule. */
+.xc-compdig__row .xc-compdig__value {
+  font-size: 1em;
+  white-space: nowrap;
+}
+.xc-compdig__degree {
+  flex: none;
+  color: var(--xc-unit-ink);
+  font-size: 0.64em;
+  padding-right: 0.1em;
 }
 
 /* Une ligne SANS valeur — l'appareil dessine l'unité seule sur `WNettoVario`

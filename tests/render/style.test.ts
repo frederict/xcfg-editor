@@ -91,7 +91,9 @@ describe('style.css — corrections sans trace dans le DOM', () => {
       expect(regle).toContain('--xc-value-fit: clamp(')
       expect(regle).toContain('var(--xc-w, 200)')
       expect(regle).toContain('var(--xc-value-em, 2) * var(--xc-value-size)')
-      expect(regle).toContain('var(--xc-unit-h, 0) * var(--xc-h, 100)')
+      // La pastille XContest entre dans le même budget que l'unité : elle occupe une
+      // fraction FIXE de la hauteur et ne rétrécit pas avec la valeur (badge.ts).
+      expect(regle).toContain('(var(--xc-unit-h, 0) + var(--xc-badge-h, 0)) * var(--xc-h, 100)')
     })
 
     it('le plancher reste bas : réduire vaut toujours mieux que trancher', () => {

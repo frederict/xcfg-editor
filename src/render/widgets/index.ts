@@ -21,6 +21,8 @@ import { drawWindDirection } from './windDirection'
 import { drawAirspaceProximity } from './airspaceProximity'
 import { drawLiveMessage } from './liveMessage'
 import { drawCompTaskSummary } from './compTaskSummary'
+import { drawOptiPotential } from './optiPotential'
+import { drawCompassDigital } from './compassDigital'
 
 /**
  * Les types « titre + valeur + unité » : les 23 du corpus, puis les 19 que la revue des
@@ -136,3 +138,10 @@ register('WLiveMessage', drawLiveMessage)
 // son type serait à part. Voir registry.ts (commentaire de registerBlankAtRest).
 registerBlankAtRest('WLiveMessage')
 register('WCompTaskSummary', drawCompTaskSummary)
+
+// Écart 2.9 de la revue des 75 visuels — les deux gadgets dont l'appareil dessine autre
+// chose qu'une ligne « valeur + unité », et que le repli générique réduisait à « -- ».
+// Les pastilles XContest de WOptiResult et WOptiUnfinishedTriangle, elles, tiennent dans
+// le dessin numérique commun (badge.ts).
+register('WOptiUnfinishedFAIPotential', drawOptiPotential)
+register('WCompassDigital', drawCompassDigital)

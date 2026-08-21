@@ -1,6 +1,7 @@
 import type { Widget } from '../../model/widget'
 import type { RenderSettings } from '../../model/preferences'
 import { widgetBoolean, widgetString } from '../defaults'
+import { badgeWidthH, buildBadge, type BadgeKind } from './badge'
 import { formatDecimal } from '../locale'
 import { widgetTitle } from '../title'
 import { UNIT_FONT_WEIGHT, VALUE_FONT_WEIGHT, measuredWidthEm, titleWidthEm, valueWidthEm } from '../textMetrics'
@@ -24,6 +25,8 @@ interface NumericSpec {
   unit: string
   /** Valeur d'exemple statique — juge la mise en page, ne simule rien. */
   example: string
+  /** Pastille dessinée à GAUCHE de la valeur — voir `buildBadge`. */
+  badge?: BadgeKind
 }
 
 /**
@@ -56,8 +59,8 @@ const SPECS: Record<string, NumericSpec> = {
   WCompTimeToStart: { quantity: 'duration', unit: '', example: '0:32' },
   WCompTimeAtStart: { quantity: 'time', unit: '', example: '13:00' },
   WCompSpeedToStart: { quantity: 'speed', unit: 'km/h', example: '42' },
-  WOptiResult: { quantity: 'distance', unit: 'km', example: '87.3' },
-  WOptiUnfinishedTriangle: { quantity: 'distance', unit: 'km', example: '45.2' },
+  WOptiResult: { quantity: 'distance', unit: 'km', example: '87.3', badge: 'track' },
+  WOptiUnfinishedTriangle: { quantity: 'distance', unit: 'km', example: '45.2', badge: 'triangle' },
 
   /* ------------------------------------------------------------------------------
    * Écart 2.12 de la revue des 75 visuels — dix-neuf types que nous rendions « titre
@@ -529,6 +532,11 @@ export function drawNumeric(widget: Widget, settings: RenderSettings, language: 
   const strokeEm = colorClass === undefined ? 0 : VALUE_STROKE_EM
   element.style.setProperty('--xc-value-em', String(valueEm(valueText) + strokeEm))
   element.style.setProperty('--xc-unit-h', String(unitWidthH(unitText)))
+  // La pastille XContest occupe une place FIXE (fraction de la hauteur, comme l'unité) :
+  // elle entre donc dans le budget de largeur au même titre, faute de quoi la valeur
+  // déborderait de tout ce que la pastille lui prend.
+  element.style.setProperty('--xc-badge-h', String(badgeWidthH(spec.badge)))
+  if (spec.badge !== undefined) row.append(buildBadge(spec.badge))
 
   if (valueText.length > 0) {
     const value = document.createElement('span')
