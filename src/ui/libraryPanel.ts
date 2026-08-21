@@ -13,6 +13,8 @@ import {
   PERSONAL_CAVEAT,
   PERSONAL_KIND_LABELS
 } from '../model/personalData'
+import type { PluralForms } from '../i18n'
+import { plural } from './prose'
 
 /**
  * La **bibliothèque de configurations nommées**, côté pilote : ranger, retrouver, revenir
@@ -209,9 +211,8 @@ function fileStamp(when: Date): string {
     `${pad(when.getHours())}${pad(when.getMinutes())}`
 }
 
-function plural(count: number, singular: string, pluralForm: string): string {
-  return `${count} ${count > 1 ? pluralForm : singular}`
-}
+/** « 3 gadgets » — la fiche d'identité le dit, et la vignette de chaque entrée le redit. */
+const GADGET_COUNT: PluralForms = { one: '{count} gadget', other: '{count} gadgets' }
 
 /**
  * « enregistrée 3 fois ». `revision` vaut 1 au rangement et grandit d'une écriture à
@@ -295,8 +296,12 @@ export function identityCard(identity: EntryIdentity, language = 'fr'): Identity
   const pages = read.orientations.length === 0
     ? 'aucune page'
     : [
-      read.pageCount.landscape > 0 ? plural(read.pageCount.landscape, 'page paysage', 'pages paysage') : '',
-      read.pageCount.portrait > 0 ? plural(read.pageCount.portrait, 'page portrait', 'pages portrait') : ''
+      read.pageCount.landscape > 0
+        ? plural({ one: '{count} page paysage', other: '{count} pages paysage' }, read.pageCount.landscape)
+        : '',
+      read.pageCount.portrait > 0
+        ? plural({ one: '{count} page portrait', other: '{count} pages portrait' }, read.pageCount.portrait)
+        : ''
     ].filter((part) => part !== '').join(' · ')
 
   const topTypes = read.widgetTypes.slice(0, 5)
@@ -308,7 +313,10 @@ export function identityCard(identity: EntryIdentity, language = 'fr'): Identity
     {
       label: 'Conteneur',
       value: read.containerKind === 'xczfg'
-        ? `Archive .xczfg — ${plural(read.extraFileNames.length, 'fichier annexe', 'fichiers annexes')}`
+        ? `Archive .xczfg — ${plural({
+          one: '{count} fichier annexe',
+          other: '{count} fichiers annexes'
+        }, read.extraFileNames.length)}`
         : 'Fichier .xcfg',
       note: read.extraFileNames.length === 0
         ? undefined
@@ -330,8 +338,8 @@ export function identityCard(identity: EntryIdentity, language = 'fr'): Identity
     { label: 'Pages', value: pages },
     {
       label: 'Gadgets',
-      value: `${plural(read.widgetCount, 'gadget', 'gadgets')} de ` +
-        `${plural(read.widgetTypes.length, 'type', 'types')}`,
+      value: `${plural(GADGET_COUNT, read.widgetCount)} de ` +
+        `${plural({ one: '{count} type', other: '{count} types' }, read.widgetTypes.length)}`,
       note: topTypes === '' ? undefined : `Les plus employés : ${topTypes}.`
     },
     {
@@ -342,7 +350,7 @@ export function identityCard(identity: EntryIdentity, language = 'fr'): Identity
       label: 'Réglages enregistrés',
       value: read.preferenceKeyCount === 0
         ? 'aucune — ce fichier ne transporte pas vos préférences'
-        : plural(read.preferenceKeyCount, 'ligne', 'lignes'),
+        : plural({ one: '{count} ligne', other: '{count} lignes' }, read.preferenceKeyCount),
       note: read.preferenceKeyCount === 0
         ? undefined
         : 'Cet éditeur ne sait en nommer que quelques familles : le compte est là pour que ' +
@@ -353,7 +361,10 @@ export function identityCard(identity: EntryIdentity, language = 'fr'): Identity
   if (read.duplicateKeys.length > 0) {
     readFacts.push({
       label: 'Lignes en double',
-      value: plural(read.duplicateKeys.length, 'ligne en double', 'lignes en double'),
+      value: plural({
+        one: '{count} ligne en double',
+        other: '{count} lignes en double'
+      }, read.duplicateKeys.length),
       note: `XCTrack n’en lira qu’une : ${read.duplicateKeys.join(', ')}.`
     })
   }
@@ -899,12 +910,21 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
 
     section.append(el(
       'p', 'library__note',
-      `${plural(counts.total, 'donnée personnelle est présente', 'données personnelles sont présentes')} ` +
+      `${plural({
+        one: '{count} donnée personnelle est présente',
+        other: '{count} données personnelles sont présentes'
+      }, counts.total)} ` +
       `dans cette entrée : ${String(counts.layout)} dans la disposition, qui part avec les ` +
       `pages, et ${String(counts.preferences)} dans les préférences, qui restent chez vous ` +
       `dans un export « pages ». ` +
-      `${plural(counts.filled, 'est renseignée', 'sont renseignées')}, ` +
-      `${plural(counts.empty, 'est un emplacement vide', 'sont des emplacements vides')}. ` +
+      `${plural({
+        one: '{count} est renseignée',
+        other: '{count} sont renseignées'
+      }, counts.filled)}, ` +
+      `${plural({
+        one: '{count} est un emplacement vide',
+        other: '{count} sont des emplacements vides'
+      }, counts.empty)}. ` +
       'Elles sont montrées, jamais retirées : c’est vous qui décidez.'
     ))
 
@@ -1227,9 +1247,14 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
       download(archive, `xctrack-bibliotheque-${fileStamp(when)}.zip`)
       const tail = skipped.length === 0
         ? ''
-        : ` ${plural(skipped.length, 'entrée illisible n’y est pas',
-          'entrées illisibles n’y sont pas')} : la sauvegarde est incomplète, et le dit.`
-      say(`${plural(exported, 'configuration exportée', 'configurations exportées')} dans ` +
+        : ` ${plural({
+          one: '{count} entrée illisible n’y est pas',
+          other: '{count} entrées illisibles n’y sont pas'
+        }, skipped.length)} : la sauvegarde est incomplète, et le dit.`
+      say(`${plural({
+        one: '{count} configuration exportée',
+        other: '{count} configurations exportées'
+      }, exported)} dans ` +
         `une archive ZIP. Chaque .xcfg s’en extrait avec n’importe quel décompresseur.${tail}`)
     })
   }
@@ -1272,8 +1297,13 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
       choices: []
     })
     const rejected = counts.get('rejected') ?? 0
-    say(`${plural(report.results.length, 'entrée lue', 'entrées lues')} dans l’archive` +
-      (rejected === 0 ? '.' : ` — ${plural(rejected, 'refusée', 'refusées')}.`))
+    say(`${plural({
+      one: '{count} entrée lue',
+      other: '{count} entrées lues'
+    }, report.results.length)} dans l’archive` +
+      (rejected === 0
+        ? '.'
+        : ` — ${plural({ one: '{count} refusée', other: '{count} refusées' }, rejected)}.`))
   }
 
   /* ------------------------------------------------------------------------ le dessin */
@@ -1301,8 +1331,7 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
     meta.append(
       el('span', 'chip', exportTypeChip(entry.identity.read.exportType)),
       el('span', 'chip chip--quiet', formatByteSize(entry.byteLength)),
-      el('span', 'chip chip--quiet',
-        plural(entry.identity.read.widgetCount, 'gadget', 'gadgets'))
+      el('span', 'chip chip--quiet', plural(GADGET_COUNT, entry.identity.read.widgetCount))
     )
     if (entry.identity.read.containerKind === 'xczfg') {
       meta.append(el('span', 'chip chip--quiet', 'archive .xczfg'))
@@ -1313,8 +1342,14 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
       // personnelles » seul laisserait croire que les 16 voyagent. Ce qui décide de ce
       // qu'on peut envoyer, c'est le second.
       const flag = el('span', 'flag',
-        `${plural(personal.total, 'donnée personnelle', 'données personnelles')} · ` +
-        `${String(personal.inLayout)} ${personal.inLayout > 1 ? 'partent' : 'part'} avec les pages`)
+        `${plural({
+          one: '{count} donnée personnelle',
+          other: '{count} données personnelles'
+        }, personal.total)} · ` +
+        `${plural({
+          one: '{count} part avec les pages',
+          other: '{count} partent avec les pages'
+        }, personal.inLayout)}`)
       meta.append(flag)
     }
     main.append(meta)
@@ -1415,10 +1450,15 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
     const total = snapshot.entries.reduce((sum, entry) => sum + entry.byteLength, 0)
     foot.textContent = ''
     foot.append(el('span', 'library__footText',
-      `${plural(snapshot.entries.length, 'configuration rangée', 'configurations rangées')}` +
+      `${plural({
+        one: '{count} configuration rangée',
+        other: '{count} configurations rangées'
+      }, snapshot.entries.length)}` +
       `${snapshot.entries.length === 0 ? '' : ` — ${formatByteSize(total)} au total`}` +
-      `${snapshot.broken.length === 0 ? '' : `, ${plural(snapshot.broken.length,
-        'entrée illisible', 'entrées illisibles')}`}.`))
+      `${snapshot.broken.length === 0 ? '' : `, ${plural({
+        one: '{count} entrée illisible',
+        other: '{count} entrées illisibles'
+      }, snapshot.broken.length)}`}.`))
 
     if (options.requestPersistence !== undefined && snapshot.durable) {
       const ask = button('Empêcher le navigateur d’effacer ma bibliothèque',
@@ -1472,7 +1512,10 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
     if (snapshot.broken.length > 0) {
       const section = el('section', 'library__section library__section--broken')
       section.append(el('h3', 'library__heading',
-        plural(snapshot.broken.length, 'Entrée qui ne se relit pas', 'Entrées qui ne se relisent pas')))
+        plural({
+          one: '{count} Entrée qui ne se relit pas',
+          other: '{count} Entrées qui ne se relisent pas'
+        }, snapshot.broken.length)))
       const list = el('ul', 'library__list')
       for (const broken of snapshot.broken) list.append(brokenItem(broken))
       section.append(list)
