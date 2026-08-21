@@ -1,6 +1,7 @@
 import type { Page } from '../model/layout'
 import type { RenderSettings } from '../model/preferences'
 import { drawWidget, isTransparent } from './registry'
+import { TITLE_SIZE_RATIO } from './textMetrics'
 
 export interface Box { x1: number; y1: number; x2: number; y2: number; background: number }
 
@@ -59,19 +60,33 @@ export function widgetHeightPx(box: Box, aspectRatio: number): number {
   return (height / SCALE) * (REFERENCE_WIDTH / aspectRatio)
 }
 
-/**
- * Petit côté de la page dans le repère de référence — 720 px en paysage, où il se
- * confond avec la hauteur ; en portrait, c'est la largeur qui représente le petit côté
- * physique de l'écran, le repère de rendu étant alors bien plus haut que large.
- *
- * La barre d'état y puise sa taille de texte : celle-ci ne suit PAS la hauteur du
- * bandeau (deux captures d'AIR³, bandeaux de 74 et 99 px de haut, mêmes capitales à
- * 36 et 37 px — voir le commentaire de tête de `widgets/statusLine.ts`), mais reste
- * constante à l'échelle de l'écran.
- */
+/** Largeur du widget dans le même repère que `widgetHeightPx` — voir son commentaire. */
+export function widgetWidthPx(box: Box): number {
+  return ((box.x2 - box.x1) / SCALE) * REFERENCE_WIDTH
+}
+
+/** Petit côté de la page dans le repère de référence — voir `TITLE_SIZE_RATIO`. */
 export function pageShortSidePx(aspectRatio: number): number {
   if (aspectRatio <= 0) return 0
   return Math.min(REFERENCE_WIDTH, REFERENCE_WIDTH / aspectRatio)
+}
+
+/**
+ * Taille de police des titres de widget, en pixels du repère de référence.
+ *
+ * **Correction (comparaison à `2026-08-21_polices-reference.png`)** : elle ne dépend PAS
+ * de la hauteur du widget. Le rendu précédent la dérivait de `--xc-h`, ce qui donnait un
+ * titre correct sur les widgets plats (124 px de haut) mais 40 à 60 % trop gros sur les
+ * autres — d'où « Vitesse verticale / 2s » tronqué en « Vitesse vertic… » alors que
+ * l'appareil le fait tenir en entier. Sur l'appareil, dix-sept titres mesurés sur deux
+ * captures et des widgets hauts de 75 à 199 px partagent tous la même hauteur de casse.
+ *
+ * Elle dépend en revanche de la taille de la page (un même fichier se dessine en
+ * vignette comme en plein écran) et du réglage `Display.WidgetTitleSize` du fichier —
+ * les deux facteurs de `TITLE_SIZE_RATIO`.
+ */
+export function titleFontPx(aspectRatio: number, titleSizePercent: number): number {
+  return pageShortSidePx(aspectRatio) * TITLE_SIZE_RATIO * (titleSizePercent / 100)
 }
 
 /**
@@ -100,8 +115,10 @@ export function pageShortSidePx(aspectRatio: number): number {
 export function renderPage(page: Page, aspectRatio: number, settings: RenderSettings, language: string): SVGSVGElement {
   const canvas = document.createElement('div')
   canvas.className = 'xc-page'
-  // Mesure valable pour toute la page, héritée par tous les widgets : le petit côté de
-  // la page, dont la barre d'état tire sa taille de texte (statusLine.ts).
+  // Deux mesures valables pour toute la page, héritées par tous les widgets : la taille
+  // de police des titres (`titleFontPx`, constante sur l'appareil) et le petit côté de
+  // la page, dont la barre d'état tire sa propre taille de texte (statusLine.ts).
+  canvas.style.setProperty('--xc-title', String(titleFontPx(aspectRatio, settings.titleSizePercent)))
   canvas.style.setProperty('--xc-page-min', String(pageShortSidePx(aspectRatio)))
 
   for (const widget of page.widgets) {
@@ -124,6 +141,9 @@ export function renderPage(page: Page, aspectRatio: number, settings: RenderSett
     // Voir `widgetHeightPx` : donne au CSS la hauteur de CE widget, dans le même
     // repère que le `viewBox` du wrapper — hérité jusqu'à `.xc-num` (numeric.ts).
     element.style.setProperty('--xc-h', String(widgetHeightPx(widget, aspectRatio)))
+    // La largeur sert le garde-fou du titre (`.xc-num__title`, style.css) : réduire le
+    // titre uniquement s'il ne tenait pas, au lieu de le tronquer.
+    element.style.setProperty('--xc-w', String(widgetWidthPx(widget)))
     if (widget.border && !transparent) element.classList.add('xc-widget--border')
 
     // Le fond est un calque séparé : appliquer l'opacité au widget entier effacerait

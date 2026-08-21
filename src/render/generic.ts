@@ -1,6 +1,7 @@
 import type { Widget } from '../model/widget'
 import type { RenderSettings } from '../model/preferences'
 import { readableName } from '../catalog/widgetNames'
+import { titleWidthEm } from './textMetrics'
 
 /**
  * Rendu de repli : titre lisible et valeur d'exemple. 47 des 84 types de widgets de
@@ -14,8 +15,12 @@ export function drawGeneric(widget: Widget, settings: RenderSettings, language: 
   const title = document.createElement('span')
   title.className = 'xc-generic__title'
   title.style.color = settings.titleColor
-  title.style.fontSize = `${settings.titleSizePercent}%`
-  title.textContent = readableName(widget.shortName, language)
+  const text = readableName(widget.shortName, language)
+  // Même taille que les titres des widgets dessinés (`--xc-title`, posée par
+  // `canvas.ts`) : sur l'appareil, elle ne dépend pas du widget. `--xc-title-em` est le
+  // garde-fou de largeur, voir `.xc-generic__title` dans style.css.
+  title.style.setProperty('--xc-title-em', String(titleWidthEm(text)))
+  title.textContent = text
 
   const value = document.createElement('span')
   value.className = 'xc-generic__value'

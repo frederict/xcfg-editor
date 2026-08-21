@@ -10,6 +10,7 @@ import { drawWidget } from '../../../src/render/registry'
 // nécessaire au bloc « défaut 4 » plus bas, qui interroge `drawWidget` sur le corpus.
 import '../../../src/render/widgets'
 import { EXPORTS } from '../../fixtures/paths'
+import { titleWidthEm } from '../../../src/render/textMetrics'
 
 const settings: RenderSettings = {
   fromDefaults: false, theme: 'WhiteHCTheme', titleColor: '#f44336',
@@ -81,13 +82,16 @@ describe('widgets numériques', () => {
     expect(el.querySelector('.xc-num__title')).toBeNull()
   })
 
-  it('applique la couleur et la taille de titre des préférences', () => {
+  it('applique la couleur de titre des préférences', () => {
     const el = drawNumeric(widget('WSpeed', { _title: 'true', titletext: '""' }), settings, language)
     const title = el.querySelector('.xc-num__title') as HTMLElement
     // happy-dom ne normalise pas les couleurs en rgb() comme le fait Chrome :
     // la valeur se relit telle qu'elle a été écrite.
     expect(title.style.color).toBe('#f44336')
-    expect(title.style.fontSize).toBe('140%')
+    // La TAILLE, elle, ne se pose plus ici : elle vient de `--xc-title`, la même pour
+    // toute la page (canvas.ts/titleFontPx). C'est la correction mesurée sur
+    // 2026-08-21_polices-reference.png — voir textMetrics.ts.
+    expect(title.style.fontSize).toBe('')
   })
 
   it('utilise l’unité des préférences selon la grandeur mesurée', () => {
@@ -193,20 +197,33 @@ describe('widgets numériques', () => {
   })
 
   // Écart n°4 — le titre doit tenir dans la largeur du widget (rendu-observe.md,
-  // « Les titres doivent s'adapter à la place disponible »).
-  describe('taille du titre bornée par la largeur', () => {
-    it('un widget étroit reçoit une taille de titre inférieure à celle d’un widget large', () => {
+  // « Tailles de texte »). La règle a changé de nature : l'appareil ne réduit PAS le
+  // titre d'un widget étroit — il en garde partout la même taille (dix-sept mesures,
+  // deux captures) et « Altitude GPS » tient sans réduction dans 187 px. Ce qui reste
+  // ici n'est donc plus une taille mais la largeur ESTIMÉE du libellé, que style.css
+  // compare à `--xc-w` pour ne réduire que ce qui déborderait vraiment.
+  describe('garde-fou de largeur du titre', () => {
+    it('n’impose plus de taille de police : elle vient de --xc-title, commune à la page', () => {
       const narrow = drawNumeric(widget('WAltitude', { _title: 'true' }, { x1: 833, x2: 2292 }), settings, language)
       const wide = drawNumeric(widget('WAltitude', { _title: 'true' }, { x1: 0, x2: 10000 }), settings, language)
-      const narrowSize = parseFloat((narrow.querySelector('.xc-num__title') as HTMLElement).style.fontSize)
-      const wideSize = parseFloat((wide.querySelector('.xc-num__title') as HTMLElement).style.fontSize)
-      expect(narrowSize).toBeLessThan(wideSize)
+      expect((narrow.querySelector('.xc-num__title') as HTMLElement).style.fontSize).toBe('')
+      expect((wide.querySelector('.xc-num__title') as HTMLElement).style.fontSize).toBe('')
     })
 
-    it('un widget large garde la taille des préférences, inchangée', () => {
-      const wide = drawNumeric(widget('WAltitude', { _title: 'true' }, { x1: 0, x2: 10000 }), settings, language)
-      const title = wide.querySelector('.xc-num__title') as HTMLElement
-      expect(title.style.fontSize).toBe(`${settings.titleSizePercent}%`)
+    it('publie la largeur estimée du libellé, en cadratins, pour le garde-fou CSS', () => {
+      const el = drawNumeric(widget('WAltitude', { _title: 'true' }), settings, language)
+      const title = el.querySelector('.xc-num__title') as HTMLElement
+      const text = title.textContent ?? ''
+      expect(text).toBe('Altitude GPS')
+      expect(Number(title.style.getPropertyValue('--xc-title-em'))).toBeCloseTo(titleWidthEm(text), 6)
+    })
+
+    it('un libellé plus long publie une largeur plus grande', () => {
+      const court = drawNumeric(widget('WSpeed', { _title: 'true' }), settings, language)
+      const long = drawNumeric(widget('WVerticalSpeed', { _title: 'true', avg: '2000' }), settings, language)
+      const em = (el: HTMLElement): number =>
+        Number((el.querySelector('.xc-num__title') as HTMLElement).style.getPropertyValue('--xc-title-em'))
+      expect(em(long)).toBeGreaterThan(em(court))
     })
   })
 
@@ -232,44 +249,61 @@ describe('widgets numériques', () => {
     })
   })
 
-  // Défaut 1 (rapport de tâche) — le dimensionnement par hauteur seule (--xc-h,
-  // style.css) ignorait la largeur du widget : constaté en rendant landscape[3] de
-  // 2026-08-20_backup-00.xcfg à 640px, où « 1234 » s'affichait coupé en « 234 », le
-  // « m » de « 320 » disparaissait et « 045 » risquait de déborder de sa boîte.
-  describe('taille de la valeur bornée par la largeur du widget (défaut 1)', () => {
-    it('une valeur longue dans un widget étroit reçoit une taille inférieure à une valeur courte dans le même widget', () => {
-      // Même boîte étroite pour les deux (833/10000 de large, 1000/10000 de haut) : seule
-      // la longueur de l'exemple diffère (« 1234 » contre « 38 », voir SPECS).
+  // Défaut 1 (rapport de tâche) — la taille de la valeur vient désormais de style.css
+  // (`--xc-value-size` : la place restante sous le titre) ; ce module ne pose plus que
+  // le facteur de réduction de LARGEUR, `--xc-value-fit`. Que l'appareil fasse la même
+  // chose est maintenant mesuré : « 99 m » et « 0 km/h » sur deux widgets de taille
+  // identique de ecran-landscape3-17widgets.png donnent des chiffres de 66 et 73 px.
+  describe('réduction de largeur de la valeur (défaut 1)', () => {
+    const fit = (el: HTMLElement): number => Number(el.style.getPropertyValue('--xc-value-fit'))
+
+    it('une valeur longue dans un widget étroit est plus réduite qu’une valeur courte dans le même widget', () => {
+      // Même boîte étroite pour les deux : seule la longueur de l'exemple diffère
+      // (« 1234 » contre « 38 », voir SPECS).
       const bounds = { x1: 0, x2: 600 }
       const long = drawNumeric(widget('WAltitude', {}, bounds), settings, language)
       const short = drawNumeric(widget('WSpeed', {}, bounds), settings, language)
-      const longSize = parseFloat((long.querySelector('.xc-num__value') as HTMLElement).style.fontSize)
-      const shortSize = parseFloat((short.querySelector('.xc-num__value') as HTMLElement).style.fontSize)
-      expect(longSize).toBeLessThan(shortSize)
+      expect(fit(long)).toBeLessThan(fit(short))
     })
 
-    it('un widget large garde la taille de base (4em, avec titre), quelle que soit la valeur', () => {
-      // Bornes larges par défaut (x1: 0, x2: 10000, voir `widget()`) : aucune réduction
-      // de largeur ne doit s'appliquer, même à la valeur la plus longue du corpus.
+    it('un widget large ne réduit rien, quelle que soit la valeur', () => {
+      // Bornes larges par défaut (x1: 0, x2: 10000, voir `widget()`).
       const el = drawNumeric(widget('WAltitude', { _title: 'true' }), settings, language)
-      const value = el.querySelector('.xc-num__value') as HTMLElement
-      expect(value.style.fontSize).toBe('4em')
+      expect(fit(el)).toBe(1)
     })
 
-    it('sans titre, la taille de base est 5em plutôt que 4em', () => {
-      const el = drawNumeric(widget('WAltitude', { _title: 'false' }), settings, language)
-      const value = el.querySelector('.xc-num__value') as HTMLElement
-      expect(value.style.fontSize).toBe('5em')
+    it('la réduction ne descend jamais sous la moitié', () => {
+      const el = drawNumeric(widget('WAltitude', { _unit: 'true' }, { x1: 0, x2: 120 }), settings, language)
+      expect(fit(el)).toBe(0.5)
     })
 
-    it('l’unité suit la même réduction que la valeur, dans le rapport 0.4 (1.6/4 == 2/5, style.css)', () => {
+    it('la valeur et l’unité ne portent plus de taille en ligne : elles suivent --xc-value-fit', () => {
       const bounds = { x1: 0, x2: 600 }
       const el = drawNumeric(widget('WAltitude', { _unit: 'true' }, bounds), settings, language)
-      const value = el.querySelector('.xc-num__value') as HTMLElement
-      const unit = el.querySelector('.xc-num__unit') as HTMLElement
-      const valueEm = parseFloat(value.style.fontSize)
-      const unitEm = parseFloat(unit.style.fontSize)
-      expect(unitEm).toBeCloseTo(valueEm * 0.4, 5)
+      expect((el.querySelector('.xc-num__value') as HTMLElement).style.fontSize).toBe('')
+      expect((el.querySelector('.xc-num__unit') as HTMLElement).style.fontSize).toBe('')
+    })
+  })
+
+  // Mesuré sur 2026-08-21_polices-reference.png : à hauteur de widget égale (199 px),
+  // `km/h` se dessine à 51 px de police et `m/s` à 75, soit 1,41 fois plus gros — le
+  // rapport exact hampe / hauteur d'x de la police. XCTrack ajuste la fraction sur
+  // l'encombrement réel des deux lignes, pas sur une taille nominale.
+  describe('taille de la fraction d’unité selon ses glyphes', () => {
+    const ratio = (el: HTMLElement): number =>
+      Number((el.querySelector('.xc-num__unit--fraction') as HTMLElement).style.getPropertyValue('--xc-unit-fraction'))
+
+    it('m/s, sans hampe ni jambage, se dessine plus gros que km/h', () => {
+      const vario = drawNumeric(widget('WVerticalSpeed', { _unit: 'true' }), settings, language)
+      const speed = drawNumeric(widget('WSpeed', { _unit: 'true' }), settings, language)
+      expect(ratio(vario)).toBeGreaterThan(ratio(speed))
+      expect(ratio(vario) / ratio(speed)).toBeCloseTo(1.41, 1)
+    })
+
+    it('une unité simple ne porte pas ce réglage : elle suit la hauteur du widget', () => {
+      const el = drawNumeric(widget('WAltitudeAboveGround', { _unit: 'true' }), settings, language)
+      expect(el.querySelector('.xc-num__unit--fraction')).toBeNull()
+      expect((el.querySelector('.xc-num__unit') as HTMLElement).style.getPropertyValue('--xc-unit-fraction')).toBe('')
     })
   })
 

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { parseJson } from '../../src/core/parseJson'
 import { readLayout } from '../../src/model/layout'
 import { readRenderSettings } from '../../src/model/preferences'
-import { renderPage, widgetHeightPx, widgetStyle } from '../../src/render/canvas'
+import { renderPage, titleFontPx, widgetHeightPx, widgetWidthPx, widgetStyle } from '../../src/render/canvas'
 import { registerTransparent } from '../../src/render/registry'
 // Effet de bord : enregistre les dessins réels (numériques, barre d'état, zone
 // tactile) et marque WButtonBrightness comme transparent — nécessaire pour les tests
@@ -62,6 +62,28 @@ describe('repère de référence (défaut 1 — lisibilité à toute taille)', (
     expect(element.getAttribute('viewBox')).toBe('0 0 1280 2275.5555555555557')
   })
 
+  it('pose --xc-title et --xc-page-min sur la page entière, pas sur chaque widget', () => {
+    // Correction mesurée sur 2026-08-21_polices-reference.png : la taille des titres ne
+    // dépend PAS du widget — voir src/render/textMetrics.ts. Elle est donc posée une
+    // seule fois, sur `.xc-page`, et héritée.
+    const element = renderPage(page, 16 / 9, settings, 'fr')
+    const canvas = element.querySelector('.xc-page') as HTMLElement
+    expect(Number(canvas.style.getPropertyValue('--xc-page-min'))).toBe(720)
+    expect(Number(canvas.style.getPropertyValue('--xc-title'))).toBeCloseTo(titleFontPx(16 / 9, settings.titleSizePercent), 6)
+    for (const widget of element.querySelectorAll('.xc-widget')) {
+      expect((widget as HTMLElement).style.getPropertyValue('--xc-title')).toBe('')
+    }
+  })
+
+  it('pose --xc-w sur chaque widget, pour le garde-fou de largeur des titres', () => {
+    const element = renderPage(page, 16 / 9, settings, 'fr')
+    const widgets = [...element.querySelectorAll('.xc-widget')] as HTMLElement[]
+    // WVarioColumn (landscape[3]) : X1:0, X2:833 — le widget le plus étroit de la page.
+    const largeurs = widgets.map(w => Number(w.style.getPropertyValue('--xc-w')))
+    expect(Math.min(...largeurs)).toBeCloseTo(widgetWidthPx({ x1: 0, y1: 0, x2: 833, y2: 10000, background: 100 }), 6)
+    expect(Math.max(...largeurs)).toBeGreaterThan(Math.min(...largeurs))
+  })
+
   it('pose --xc-h sur chaque widget, proportionnel à sa hauteur normalisée', () => {
     const element = renderPage(page, 16 / 9, settings, 'fr')
     const widgets = [...element.querySelectorAll('.xc-widget')] as HTMLElement[]
@@ -73,6 +95,17 @@ describe('repère de référence (défaut 1 — lisibilité à toute taille)', (
     const tallH = Number(tall.style.getPropertyValue('--xc-h'))
     expect(flatH).toBeGreaterThan(0)
     expect(tallH).toBeGreaterThan(flatH)
+  })
+})
+
+describe('widgetWidthPx', () => {
+  it('vaut une fraction de REFERENCE_WIDTH proportionnelle à la largeur normalisée', () => {
+    expect(widgetWidthPx({ x1: 625, y1: 0, x2: 3125, y2: 2414, background: 100 })).toBeCloseTo(320, 5)
+  })
+
+  it('ne dépend pas des proportions de la page : la largeur du repère est fixe', () => {
+    const box = { x1: 0, y1: 0, x2: 5000, y2: 1000, background: 100 }
+    expect(widgetWidthPx(box)).toBeCloseTo(640, 5)
   })
 })
 

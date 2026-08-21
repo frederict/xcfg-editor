@@ -2,6 +2,7 @@ import type { Widget } from '../../model/widget'
 import type { RenderSettings } from '../../model/preferences'
 import { readBoolean, readNumber, readString } from '../../core/access'
 import { readableName } from '../../catalog/widgetNames'
+import { titleWidthEm, valueWidthEm } from '../textMetrics'
 
 /**
  * Grandeur mesurée par un widget numérique. Détermine quelle préférence d'unité du
@@ -82,16 +83,6 @@ function resolveUnit(widget: Widget, settings: RenderSettings, spec: NumericSpec
 }
 
 /**
- * Largeur normalisée (sur 10000, voir `src/render/canvas.ts`) en-deçà de laquelle le
- * titre doit rétrécir pour tenir dans le widget — observé sur « Altitude GPS » et
- * « Vitesse du vent », tronqués ou renvoyés à la ligne par `Display.WidgetTitleSize`
- * seul (rendu-observe.md). Valeurs relevées sur le corpus : les widgets numériques
- * étroits d'une page à 6 colonnes (« landscape[3] ») font 1458-1459 sur 10000.
- */
-const NARROW_WIDTH_THRESHOLD = 2000
-const MIN_TITLE_SCALE = 0.5
-
-/**
  * Grandeurs pour lesquelles XCTrack colore la valeur selon le signe de la mesure —
  * observé sur `WVerticalSpeed` (vario) et `WThermalAltGain` (gain dans le thermique)
  * uniquement. Une altitude ou une heure ordinaires ne se colorent pas (rendu-observe.md,
@@ -107,11 +98,18 @@ const SIGN_COLORED_TYPES = new Set(['WVerticalSpeed', 'WThermalAltGain'])
  * de « 320 » disparaissait (`WThermalAltGain`) alors que « 38 km/h » (`WSpeed`, même
  * largeur normalisée, moins de caractères) tenait très bien.
  *
- * Le nombre de caractères compte autant que la largeur elle-même — une police mesurée
- * au pixel près (`canvas.measureText`) supposerait une police effectivement chargée par
- * le navigateur cible, invérifiable sans lui. On estime donc plutôt un « budget de
- * largeur », sur le même principe que `NARROW_WIDTH_THRESHOLD` ci-dessus (une formule
- * calibrée par lecture d'écran, pas dérivée analytiquement) :
+ * **L'appareil fait la même chose, et c'est maintenant mesuré** (textMetrics.ts) : sur
+ * `ecran-landscape3-17widgets.png`, `WAltitude` (« 99 m ») et `WSpeed` (« 0 km/h »)
+ * occupent deux widgets de taille identique (187 × 148 et 187 × 149 px) — la vitesse
+ * s'affiche en chiffres de 73 px de haut, l'altitude en chiffres de 66 px, soit 10 % de
+ * moins pour un contenu plus large. XCTrack réduit donc bien la valeur au contenu, et
+ * pas seulement à la place verticale. C'est aussi pourquoi la comparaison de notre rendu
+ * à une capture n'a de sens qu'à contenu égal : notre « 1234 m » d'exemple ne se
+ * dimensionne pas comme le « 19 m » affiché ce jour-là par l'appareil.
+ *
+ * Une police mesurée au pixel près (`canvas.measureText`) supposerait une police
+ * effectivement chargée par le navigateur cible, invérifiable sans lui. On estime donc
+ * un « budget de largeur », en cadratins de la police de la valeur :
  *
  * - la « forme » du widget (`shape`) est le rapport largeur/hauteur en coordonnées
  *   normalisées (`x2-x1` sur `y2-y1`) — pas un rapport en pixels réels, qui dépendrait
@@ -120,58 +118,81 @@ const SIGN_COLORED_TYPES = new Set(['WVerticalSpeed', 'WThermalAltGain'])
  *   suppose une page de proportions « paysage » comme celle du corpus calibré : à
  *   vérifier si un jour un widget numérique doit se dimensionner sur une page portrait ;
  *   non couvert par les captures disponibles.
- * - `WIDTH_CAPACITY` est le nombre de caractères-équivalents tenables à `shape === 1`
- *   pour une police de base de 1em (donc indépendant de `hasTitle`, qui ne fait
- *   qu'échanger 4em contre 5em) ; calibré pour que `WSpeed` (« 38 km/h », peu de
- *   caractères) garde sa taille pleine, `WThermalAltGain` (« 320 m ») rétrécisse
- *   légèrement, et `WAltitude` (« 1234 m », la pire régression observée) rétrécisse
- *   nettement — les trois widgets partagent la même largeur normalisée (1459/10000) sur
- *   `landscape[3]`, seule leur hauteur ou leur contenu diffère.
- * - une unité simple compte pour sa longueur totale à `UNIT_EM_RATIO` (0.4 — le rapport
- *   1.6/4 et 2/5 de style.css) ; une unité composée (`km/h`) beaucoup moins, puisqu'elle
- *   s'empile en fraction (numérateur/dénominateur) au lieu de s'étaler horizontalement —
- *   seul le plus long des deux segments compte.
+ * - `WIDTH_BUDGET` est cette largeur tenable à `shape === 1`, recalibrée sur quatre cas
+ *   de l'appareil dont on connaît à la fois le contenu et la réduction appliquée :
+ *   `WAltitude` « 99 m » (réduit à 0,88), `WVerticalSpeed` « -0,0 m/s » (0,89),
+ *   `WSpeed` « 0 km/h » et `WAirTime` « 0:00 » (pleine taille). Le compromis retenu
+ *   réduit un peu moins que l'appareil sur le premier, un peu plus sur le deuxième, et
+ *   laisse les deux derniers intacts.
+ * - une unité simple compte pour sa largeur entière à `UNIT_TO_VALUE` près ; une unité
+ *   composée (`km/h`) beaucoup moins, puisqu'elle s'empile en fraction
+ *   (numérateur/dénominateur) au lieu de s'étaler horizontalement — seul le plus long
+ *   des deux segments compte, à `FRACTION_TO_VALUE` près.
  */
-const WIDTH_CAPACITY = 19
-const VALUE_EM_WITH_TITLE = 4 // doit rester égal à .xc-num__value (style.css)
-const VALUE_EM_NO_TITLE = 5 // doit rester égal à .xc-num--no-title .xc-num__value (style.css)
-const UNIT_EM_RATIO = 0.4 // 1.6/4 == 2/5 (style.css)
-const UNIT_GAP_CHARS = 0.3 // approxime le gap de `.xc-num__row` (0.15em) entre valeur et unité
+const WIDTH_BUDGET = 2.4
+const UNIT_GAP_EM = 0.15 // le gap de `.xc-num__row` (style.css)
 const MIN_VALUE_SCALE = 0.5
 
-/** Largeur, en caractères-équivalents à la taille de la valeur, d'une unité affichée. */
-function unitWidthChars(unitText: string): number {
-  const slash = unitText.indexOf('/')
-  if (slash === -1) return unitText.length * UNIT_EM_RATIO
-  const numeratorLength = slash
-  const denominatorLength = unitText.length - slash - 1
-  return Math.max(numeratorLength, denominatorLength) * UNIT_EM_RATIO
+/**
+ * Rapports « taille de l'unité / taille de la valeur » observés sur la page 1 de
+ * référence. Ils ne sont pas constants — l'unité suit la hauteur du widget alors que la
+ * valeur suit la place restante sous le titre (style.css) — mais ils suffisent à estimer
+ * la largeur que l'unité prendra. Mesurés : 0,55 à 0,62 pour une unité simple
+ * (`m`, `FL`), 0,30 à 0,33 pour une fraction (`km/h`).
+ */
+const UNIT_TO_VALUE = 0.55
+const FRACTION_TO_VALUE = 0.34
+
+/**
+ * Facteur de taille de la fraction d'unité, en fraction de la hauteur du widget — doit
+ * rester cohérent avec `.xc-num__unit--fraction` (style.css).
+ *
+ * **Deux valeurs, et c'est une observation, pas un raffinement gratuit** : sur des
+ * widgets de hauteur identique (199 px), `km/h` se dessine à 51 px de police et `m/s` à
+ * 75 px, soit 1,41 fois plus gros. Le rapport est exactement celui de la hampe à la
+ * hauteur d'x de Roboto (0,747 / 0,528) : XCTrack ajuste la fraction sur l'encombrement
+ * RÉEL des deux lignes, et `m`/`s`, sans hampe ni jambage, doivent grossir pour occuper
+ * la même place que `km`/`h`. On reproduit ce choix plutôt que d'en faire une moyenne
+ * qui serait fausse dans les deux cas.
+ */
+const FRACTION_SIZE_TALL = 0.254
+const FRACTION_SIZE_SHORT = 0.36
+
+/** Caractères qui montent (hampe, capitale, chiffre) ou descendent sous la ligne. */
+const TALL_CHARACTERS = /[A-Z0-9bdfhijklt()/]/
+
+function fractionSizeRatio(unitText: string): number {
+  return TALL_CHARACTERS.test(unitText.replace('/', '')) ? FRACTION_SIZE_TALL : FRACTION_SIZE_SHORT
 }
 
-/** Contenu total à loger dans la largeur du widget, en caractères-équivalents. */
-function contentWidthChars(valueText: string, unitText: string | undefined): number {
-  if (unitText === undefined || unitText.length === 0) return valueText.length
-  return valueText.length + UNIT_GAP_CHARS + unitWidthChars(unitText)
+/** Largeur, en cadratins de la police de la VALEUR, d'une unité affichée. */
+function unitWidthEm(unitText: string): number {
+  const slash = unitText.indexOf('/')
+  if (slash === -1) return valueWidthEm(unitText) * UNIT_TO_VALUE
+  const numerator = valueWidthEm(unitText.slice(0, slash))
+  const denominator = valueWidthEm(unitText.slice(slash + 1))
+  return Math.max(numerator, denominator) * FRACTION_TO_VALUE
+}
+
+/** Contenu total à loger dans la largeur du widget, en cadratins de la valeur. */
+function contentWidthEm(valueText: string, unitText: string | undefined): number {
+  if (unitText === undefined || unitText.length === 0) return valueWidthEm(valueText)
+  return valueWidthEm(valueText) + UNIT_GAP_EM + unitWidthEm(unitText)
 }
 
 /**
- * Taille de police finale de la valeur, en em (relatifs à `.xc-num`, donc déjà
- * proportionnels à `--xc-h`) : la taille de base (`hasTitle` choisit 4em ou 5em),
- * réduite si `valueText` + `unitText` dépassent le budget de largeur du widget — voir le
- * commentaire de `WIDTH_CAPACITY` ci-dessus.
+ * Facteur de réduction appliqué à la valeur ET à son unité quand le contenu ne tiendrait
+ * pas dans la largeur du widget — voir le commentaire de `WIDTH_BUDGET` ci-dessus. Vaut
+ * 1 quand tout tient, ce qui est le cas courant.
  */
-function valueFontSizeEm(widget: Widget, hasTitle: boolean, valueText: string, unitText: string | undefined): number {
-  const base = hasTitle ? VALUE_EM_WITH_TITLE : VALUE_EM_NO_TITLE
+function widthFit(widget: Widget, valueText: string, unitText: string | undefined): number {
   const heightUnits = widget.y2 - widget.y1
-  const content = contentWidthChars(valueText, unitText)
-  if (heightUnits <= 0 || content <= 0) return base
+  const content = contentWidthEm(valueText, unitText)
+  if (heightUnits <= 0 || content <= 0) return 1
 
   const shape = (widget.x2 - widget.x1) / heightUnits
-  // Capacité à la taille de base réellement utilisée (voir le commentaire de
-  // `WIDTH_CAPACITY` : la constante est calibrée pour une police de 1em).
-  const capacity = (WIDTH_CAPACITY * shape) / base
-  const scale = Math.min(1, capacity / content)
-  return base * Math.max(MIN_VALUE_SCALE, scale)
+  const scale = Math.min(1, (WIDTH_BUDGET * shape) / content)
+  return Math.max(MIN_VALUE_SCALE, scale)
 }
 
 /**
@@ -190,6 +211,10 @@ function buildUnit(unitText: string): HTMLElement {
   }
 
   unit.classList.add('xc-num__unit--fraction')
+  // Voir `fractionSizeRatio` : `km/h` et `m/s` ne se dessinent pas à la même taille sur
+  // l'appareil, et l'écart n'est pas un hasard de rendu — il vaut exactement le rapport
+  // hampe / hauteur d'x de la police.
+  unit.style.setProperty('--xc-unit-fraction', String(fractionSizeRatio(unitText)))
   const numerator = document.createElement('span')
   numerator.className = 'xc-num__unit-num'
   numerator.textContent = unitText.slice(0, slash)
@@ -235,19 +260,6 @@ function titleText(widget: Widget, language: string): string {
 }
 
 /**
- * `Display.WidgetTitleSize` seul fait déborder un libellé long sur un widget étroit
- * (« Altitude GPS » sur deux lignes, « Vitesse du vent » tronquée — rendu-observe.md).
- * En-deçà du seuil, la taille décroît linéairement avec la largeur normalisée du
- * widget, avec un plancher pour rester lisible.
- */
-function titleSizePercent(settings: RenderSettings, widget: Widget): number {
-  const width = widget.x2 - widget.x1
-  if (width >= NARROW_WIDTH_THRESHOLD) return settings.titleSizePercent
-  const scale = Math.max(MIN_TITLE_SCALE, width / NARROW_WIDTH_THRESHOLD)
-  return settings.titleSizePercent * scale
-}
-
-/**
  * Classe de couleur de fond pour la zone de valeur, selon le signe de l'exemple
  * statique — nos valeurs ne simulent rien, donc c'est le seul signe disponible.
  * Restreinte à `SIGN_COLORED_TYPES` : une distance ou une heure ne se colorent jamais,
@@ -279,8 +291,15 @@ export function drawNumeric(widget: Widget, settings: RenderSettings, language: 
     const title = document.createElement('span')
     title.className = 'xc-num__title'
     title.style.color = settings.titleColor
-    title.style.fontSize = `${titleSizePercent(settings, widget)}%`
-    title.textContent = titleText(widget, language)
+    const text = titleText(widget, language)
+    // La taille elle-même vient de `--xc-title` (canvas.ts) : elle est la même pour tous
+    // les widgets de la page, comme sur l'appareil. Ne reste ici qu'un garde-fou —
+    // la largeur estimée du libellé, en cadratins, que `.xc-num__title` (style.css)
+    // compare à la largeur du widget pour ne réduire QUE ce qui ne tiendrait pas.
+    // L'ancienne règle réduisait tous les widgets étroits, y compris ceux où l'appareil
+    // n'y touche pas (« Altitude GPS » tient sans réduction dans 187 px).
+    title.style.setProperty('--xc-title-em', String(titleWidthEm(text)))
+    title.textContent = text
     element.append(title)
   } else {
     // Sans titre à loger au-dessus, la valeur reçoit toute la hauteur du widget —
@@ -295,23 +314,21 @@ export function drawNumeric(widget: Widget, settings: RenderSettings, language: 
   const colorClass = rowSignClass(widget.shortName, spec.example)
   if (colorClass !== undefined) row.classList.add(colorClass)
 
-  // Défaut 1 (rapport de tâche) — bornée par la largeur du widget, pas seulement par sa
-  // hauteur (--xc-h, style.css) : voir le commentaire de `WIDTH_CAPACITY` plus haut.
-  const valueEm = valueFontSizeEm(widget, hasTitle, valueText, unitText)
+  // Défaut 1 (rapport de tâche) — la taille de la valeur vient de style.css (place
+  // restante sous le titre) ; ce facteur la borne par la largeur du widget, comme le
+  // fait l'appareil : voir le commentaire de `WIDTH_BUDGET` plus haut.
+  element.style.setProperty('--xc-value-fit', String(widthFit(widget, valueText, unitText)))
 
   const value = document.createElement('span')
   value.className = 'xc-num__value'
   value.textContent = valueText
-  value.style.fontSize = `${valueEm}em`
   row.append(value)
 
   if (unitText !== undefined) {
-    const unit = buildUnit(unitText)
-    // L'unité suit la même réduction que la valeur (rapport 1.6/4 == 2/5, style.css) :
-    // sans cela, une unité restée à sa taille pleine (`.xc-num__unit`) déborderait à son
-    // tour dès que la valeur elle-même a dû rétrécir.
-    unit.style.fontSize = `${valueEm * UNIT_EM_RATIO}em`
-    row.append(unit)
+    // L'unité suit la même réduction de largeur que la valeur (`--xc-value-fit`, posée
+    // sur l'élément parent) : sans cela, une unité restée à sa taille pleine déborderait
+    // à son tour dès que la valeur elle-même a dû rétrécir.
+    row.append(buildUnit(unitText))
   }
 
   element.append(row)

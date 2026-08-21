@@ -101,6 +101,26 @@
   box-sizing: border-box;
   overflow: hidden;
   display: flex;
+  /* Taille de police de la VALEUR d'un widget (numérique, direction du vent) : la place
+     restante sous le titre, à 0,973 près. Cet affine — et non un simple pourcentage de
+     la hauteur — est un ajustement à cinq mesures de
+     `docs/reference/captures-air3/2026-08-21_polices-reference.png` : hauteur de chiffre
+     59 px sur un widget de 124 px, 58 sur 125, 93 et 95 sur 174, 110 sur 199. Le rapport
+     chiffre/hauteur y passe de 0,47 à 0,55, précisément parce que le titre prend une
+     place FIXE (voir `--xc-title`, posée par `canvas.ts`) et non proportionnelle : c'est
+     l'ordonnée à l'origine, pas la pente, qui portait l'erreur de l'ancien rendu. Le
+     facteur 1.885 est la hauteur totale du bloc de titre rapportée à sa taille de police
+     (39,7 px pour 21,1 px de police). Les cinq mesures se retrouvent à 2 px près.
+     La borne `min()` empêche la ligne de dépasser la hauteur du widget sur un widget
+     très haut, la borne `max()` garde une valeur lisible sur un widget très plat — deux
+     cas qu'aucune capture ne couvre. */
+  --xc-value-size: max(
+    calc(var(--xc-h, 100) * 0.2),
+    min(
+      calc((var(--xc-h, 100) - var(--xc-title, 15) * 1.885) * 0.973),
+      calc(var(--xc-h, 100) * 0.88)
+    )
+  );
 }
 
 .xc-widget__bg {
@@ -129,26 +149,34 @@
   width: 100%;
 }
 
-.xc-generic__title { font-size: 0.8em; opacity: 0.8; }
+/* Même règle de taille que `.xc-num__title` plus bas — voir son commentaire. */
+.xc-generic__title {
+  font-size: max(
+    calc(var(--xc-title, 15) * 0.6px),
+    min(
+      calc(var(--xc-title, 15) * 1px),
+      calc(var(--xc-w, 200) / var(--xc-title-em, 6) * 1px)
+    )
+  );
+  opacity: 0.8;
+  max-width: 100%;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .xc-generic__value { font-weight: 600; }
 
-/* `--xc-h` (posée par `canvas.ts` sur `.xc-widget`, héritée jusqu'ici) est la hauteur
-   de CE widget dans le repère de référence de `renderPage` (même repère que le
-   `viewBox` du wrapper `<svg>` qui enveloppe toute la page — voir son commentaire de
-   tête) : un nombre, pas une longueur, d'où le `px` collé au multiplicateur plutôt
-   qu'à la variable. `calc(var(--xc-h) * 0.17px)` fixe le `1em` ambiant à 17 % de
-   cette hauteur — la seule dépendance de ce fichier à `--xc-h` : les autres types de
-   widgets (générique, barre d'état, boussole de vent, etc.) gardent leur taille de
-   police d'origine, relative au document, déjà correctement calibrée à
-   `REFERENCE_WIDTH` (`canvas.ts`) et donc déjà proportionnelle à la page entière une
-   fois celle-ci dans le `viewBox` — seule la valeur d'un widget numérique doit suivre
-   la hauteur de CE widget précis (elle peut être minuscule dans un widget plat, énorme
-   dans `WVarioColumn` qui occupe toute la hauteur de la page). Base calibrée sur
-   `WAltitude` de `landscape[3]` de `2026-08-20_backup-00.xcfg`
-   (`Display.WidgetTitleSize: 140`, largeur étroite donc titre réduit à ~102 % par
-   `titleSizePercent`, `numeric.ts`) comparée pixel par pixel à
-   `docs/reference/captures-air3/ecran-landscape3-17widgets.png` : le titre
-   « Altitude GPS » y occupe environ 17 % de la hauteur du widget. */
+/* Trois variables posées par `canvas.ts` — toutes des NOMBRES, pas des longueurs, d'où
+   le `px` collé au multiplicateur plutôt qu'à la variable. Elles s'expriment dans le
+   repère de référence de `renderPage` (même repère que le `viewBox` du `<svg>` qui
+   enveloppe la page, voir son commentaire de tête) :
+   - `--xc-h` / `--xc-w`, hauteur et largeur de CE widget ;
+   - `--xc-title`, taille de police des titres, la MÊME pour toute la page.
+
+   `calc(var(--xc-h) * 0.17px)` garde le `1em` ambiant à 17 % de la hauteur du widget :
+   il ne sert plus qu'aux écarts (`gap`) et aux marges internes, la valeur et l'unité
+   ayant chacune leur propre formule ci-dessous. */
 .xc-num {
   display: flex;
   flex-direction: column;
@@ -159,14 +187,33 @@
   font-size: calc(var(--xc-h, 100) * 0.17px);
 }
 
-/* Correction (rapport de tâche) : « Vitesse verticale / 2s » débordait sur deux lignes
-   dans un widget étroit et chevauchait la valeur en dessous — `titleSizePercent`
-   (numeric.ts) réduit déjà la police pour les widgets étroits, mais un titre long peut
-   rester trop large même réduit. `white-space: nowrap` interdit le retour à la ligne ;
-   `width: 100%` (au lieu du seul `max-width`) donne à `text-overflow: ellipsis` une
-   largeur bornée pour tronquer proprement plutôt que déborder ou chevaucher. */
+/* Sans titre à loger, toute la hauteur revient à la valeur (numeric.ts). Aucune capture
+   ne montre un widget numérique sans titre : on garde la borne haute, la seule des deux
+   formules ci-dessus qui ne dépende pas du titre. */
+.xc-num--no-title { --xc-value-size: calc(var(--xc-h, 100) * 0.88); }
+
+/* Le titre a la MÊME taille sur toute la page — `--xc-title`, posée par `canvas.ts`.
+   C'est la correction principale de ce rendu : la taille était auparavant dérivée de la
+   hauteur du widget, ce qui la rendait juste sur les widgets plats et 40 à 60 % trop
+   grosse ailleurs, d'où « Vitesse verticale / 2s » tronqué en « Vitesse vertic… » alors
+   que l'appareil le fait tenir. Dix-sept titres mesurés sur deux captures, des widgets
+   hauts de 75 à 199 px : une seule et même hauteur de casse (voir textMetrics.ts).
+
+   Le `min()` est un garde-fou, pas une règle de mise en page : `--xc-title-em` est la
+   largeur estimée du libellé en cadratins (posée par `numeric.ts`), `--xc-w` la largeur
+   du widget ; leur quotient est la plus grande police à laquelle le libellé tiendrait
+   encore. Le titre n'est donc réduit QUE s'il déborderait vraiment — contrairement à
+   l'ancienne règle, qui réduisait tout widget étroit, y compris ceux que l'appareil
+   laisse à pleine taille. `white-space: nowrap` + `text-overflow: ellipsis` restent le
+   dernier recours si même la police plancher ne suffit pas. */
 .xc-num__title {
-  font-size: 0.8em;
+  font-size: max(
+    calc(var(--xc-title, 15) * 0.6px),
+    min(
+      calc(var(--xc-title, 15) * 1px),
+      calc(var(--xc-w, 200) / var(--xc-title-em, 6) * 1px)
+    )
+  );
   opacity: 0.8;
   width: 100%;
   max-width: 100%;
@@ -218,28 +265,38 @@
 .xc-num__row--positive .xc-num__value { color: var(--xc-value-positive); }
 .xc-num__row--negative .xc-num__value { color: var(--xc-value-negative); }
 
-/* La valeur occupe presque toute la hauteur disponible du widget — comparé à
-   docs/reference/captures-air3/ecran-landscape3-17widgets.png (« 99 » sur
-   `WAltitude`, glyphe mesuré à ~48 % de la hauteur du widget, soit un `font-size`
-   d'environ 65-70 % de cette hauteur une fois la hauteur de casse du chiffre ôtée).
-   `em`, ici, est relatif au `1em` de `.xc-num` ci-dessus (17 % de la hauteur du
-   widget, lui-même dérivé de `--xc-h`) : 4em = 68 % de cette hauteur, dans la
-   fourchette mesurée, en laissant la marge nécessaire au titre au-dessus et à la
-   marge basse observée sur la capture ; sans titre à loger (`.xc-num--no-title`, voir
-   numeric.ts), toute la hauteur lui revient. Le rapport valeur/unité (0.4) reste
-   celui d'origine du projet. */
-.xc-num__value { font-size: 4em; font-weight: 600; }
-.xc-num__unit { font-size: 1.6em; opacity: 0.8; }
+/* Valeur et unité — `--xc-value-fit` (posée par `numeric.ts`) est la réduction de
+   largeur, 1 quand le contenu tient, ce qui est le cas courant.
 
-.xc-num--no-title .xc-num__value { font-size: 5em; }
-.xc-num--no-title .xc-num__unit { font-size: 2em; }
+   L'unité NE suit PAS la valeur : elle suit la hauteur du widget. C'est mesuré et
+   contre-intuitif — sur `2026-08-21_polices-reference.png`, la police de l'unité vaut
+   0,412 / 0,407 / 0,425 fois la hauteur du widget sur les trois widgets à unité simple
+   (`m` sur 124 px, `FL` sur 125 px, `m` sur 174 px), là où son rapport à la VALEUR
+   dérive de 0,62 à 0,55 sur les mêmes trois cas. Le rapport constant est donc celui à la
+   hauteur, pas celui à la valeur — l'ancienne règle (0.4 em de la valeur) donnait des
+   unités un tiers trop petites. */
+.xc-num__value {
+  font-size: calc(var(--xc-value-size) * var(--xc-value-fit, 1) * 1px);
+  font-weight: 600;
+}
 
-/* Unité composée (km/h, m/s) empilée en fraction : numérateur, filet, dénominateur. */
+.xc-num__unit {
+  font-size: calc(var(--xc-h, 100) * 0.41 * var(--xc-value-fit, 1) * 1px);
+  opacity: 0.8;
+}
+
+/* Unité composée (km/h, m/s) empilée en fraction : numérateur, filet, dénominateur.
+   `--xc-unit-fraction` vient de `numeric.ts` (voir `fractionSizeRatio`) : deux lignes
+   empilées tiennent dans moins de place qu'une seule, et l'appareil les dimensionne sur
+   l'encombrement réel des glyphes — `m/s`, sans hampe, se dessine 1,41 fois plus gros
+   que `km/h` à hauteur de widget égale. Doit venir APRÈS `.xc-num__unit` : même
+   spécificité, c'est l'ordre qui tranche. */
 .xc-num__unit--fraction {
   display: inline-flex;
   flex-direction: column;
   align-items: center;
   line-height: 1.15;
+  font-size: calc(var(--xc-h, 100) * var(--xc-unit-fraction, 0.254) * var(--xc-value-fit, 1) * 1px);
 }
 
 .xc-num__unit-num { border-bottom: 1px solid currentColor; padding: 0 0.15em; }
@@ -606,7 +663,26 @@
   overflow: hidden;
 }
 
-.xc-wind-dir__title { font-size: 0.8em; opacity: 0.8; max-width: 100%; }
+/* Titre et lettre suivent les mêmes mesures que les widgets numériques : sur
+   `2026-08-21_polices-reference.png`, « Direction du vent » a exactement la hauteur de
+   casse des autres titres (16 px) et le « N » celle d'un chiffre du même widget (93 px
+   sur 174 px de haut, là où `WSpeed` juste à côté donne 95). Les deux tailles étaient
+   auparavant relatives au document, donc trois fois trop petites. */
+.xc-wind-dir__title {
+  font-size: max(
+    calc(var(--xc-title, 15) * 0.6px),
+    min(
+      calc(var(--xc-title, 15) * 1px),
+      calc(var(--xc-w, 200) / var(--xc-title-em, 6) * 1px)
+    )
+  );
+  opacity: 0.8;
+  max-width: 100%;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 .xc-wind-dir__value {
   color: var(--xc-ink);
@@ -614,8 +690,11 @@
   line-height: 1;
 }
 
-.xc-wind-dir__value--letter { font-size: 3.2em; }
-.xc-wind-dir__value--degrees { font-size: 1.6em; }
+/* Même formule que `.xc-num__value` — voir `--xc-value-size` dans `.xc-num`. La forme
+   en degrés (« 240° »), jamais observée, garde un rapport plus modeste : quatre glyphes
+   au lieu d'un. */
+.xc-wind-dir__value--letter { font-size: calc(var(--xc-value-size, 60) * 1px); }
+.xc-wind-dir__value--degrees { font-size: calc(var(--xc-value-size, 60) * 0.5px); }
 
 /* Proximité d'espace aérien — WAirspaceProximity (airspaceProximity.ts). Blocs empilés
    en colonne par défaut, en ligne si `_splitdirection` vaut `HORIZONTAL` — voir le

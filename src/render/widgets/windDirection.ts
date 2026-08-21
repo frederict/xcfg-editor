@@ -2,6 +2,7 @@ import type { Widget } from '../../model/widget'
 import type { RenderSettings } from '../../model/preferences'
 import { readBoolean, readNumber, readString } from '../../core/access'
 import { readableName } from '../../catalog/widgetNames'
+import { titleWidthEm } from '../textMetrics'
 
 /**
  * `WWindDirection` — correction en vol (rendu-en-vol.md § 3). Le premier relevé, fait
@@ -34,7 +35,11 @@ export function drawWindDirection(widget: Widget, settings: RenderSettings, lang
     title.className = 'xc-wind-dir__title'
     title.style.color = settings.titleColor
     const custom = readString(widget.node, 'titletext')
-    title.textContent = custom !== undefined && custom.length > 0 ? custom : readableName(widget.shortName, language)
+    const text = custom !== undefined && custom.length > 0 ? custom : readableName(widget.shortName, language)
+    // Même taille que tous les autres titres de la page — voir `.xc-wind-dir__title`
+    // dans style.css et `titleFontPx` dans canvas.ts.
+    title.style.setProperty('--xc-title-em', String(titleWidthEm(text)))
+    title.textContent = text
     element.append(title)
   }
 

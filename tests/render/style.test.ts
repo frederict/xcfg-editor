@@ -11,8 +11,7 @@ import { describe, expect, it } from 'vitest'
  * ailleurs :
  * - le cerne du vario, trop fin ;
  * - le titre numérique qui débordait sur deux lignes ;
- * - `LIVE` et la disposition de la barre d'état, refaits sur
- *   `docs/reference/captures-air3/2026-08-21_barre-etat-reelle.png`.
+ * - `LIVE`, vert et non barré par défaut (rendu-en-vol.md § 5).
  */
 const here = path.dirname(fileURLToPath(import.meta.url))
 const css = readFileSync(path.join(here, '../../src/ui/style.css'), 'utf8')
@@ -28,7 +27,7 @@ describe('style.css — corrections sans trace dans le DOM', () => {
   })
 
   it('le titre numérique ne retourne jamais à la ligne et se tronque plutôt que de chevaucher la valeur', () => {
-    const rule = css.slice(css.indexOf('.xc-num__title {'), css.indexOf('.xc-num__title {') + 300)
+    const rule = css.slice(css.indexOf('.xc-num__title {'), css.indexOf('.xc-num__title {') + 600)
     expect(rule).toContain('white-space: nowrap;')
     expect(rule).toContain('text-overflow: ellipsis;')
   })
@@ -41,6 +40,19 @@ describe('style.css — corrections sans trace dans le DOM', () => {
     expect(css).toMatch(/\.xc-status__live\s*{[^}]*color:\s*var\(--xc-ink\)/)
     expect(css).not.toContain('--xc-status-live')
     expect(css).not.toContain('.xc-status__live::after')
+  })
+
+  it('les titres de widget ont tous la même taille : --xc-title, et non la hauteur du widget', () => {
+    // La correction centrale de ce rendu — dix-sept titres mesurés sur deux captures
+    // d'AIR³, des widgets hauts de 75 à 199 px, une seule hauteur de casse
+    // (textMetrics.ts). Les trois familles de titre partagent la formule.
+    for (const selecteur of ['.xc-num__title', '.xc-generic__title', '.xc-wind-dir__title']) {
+      const rule = css.slice(css.indexOf(`${selecteur} {`), css.indexOf(`${selecteur} {`) + 400)
+      expect(rule).toContain('var(--xc-title, 15)')
+      // Le garde-fou de largeur, qui ne mord que si le libellé déborderait vraiment.
+      expect(rule).toContain('var(--xc-title-em, 6)')
+      expect(rule).not.toContain('var(--xc-h')
+    }
   })
 
   it('la barre d’état groupe ses éléments au centre et tire sa police du petit côté de la page', () => {
