@@ -1,6 +1,4 @@
 import { readFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { loadVersionDatabase } from '../../src/catalog/widgetVersions'
 import type { JsonNode } from '../../src/core/jsonDocument'
@@ -324,15 +322,18 @@ describe('dans le panneau de diagnostic', () => {
 
 describe('le français des libellés', () => {
   it('le démonstratif ne s’accole pas au nombre', () => {
-    // « Voir 9 ces réglages » : le nombre se glisse entre le déterminant et le nom, et il
-    // disparaît au singulier. Le module a une fonction séparée pour ça, parce que la
-    // fonction de pluriel générale place le nombre devant le groupe — juste pour
-    // « 9 réglages retenus », faux pour un démonstratif.
-    const source = readFileSync(join(
-      dirname(fileURLToPath(import.meta.url)), '../../src/ui/cleanupPanel.ts'
-    ), 'utf8')
-    expect(source).not.toMatch(/plural\([^)]*'ce réglage'/)
-    expect(source).toContain("`ces ${french(count)} réglages`")
-    expect(source).toContain(": 'ce réglage'")
+    // « Enlever 9 ces réglages » : le nombre se glisse entre le déterminant et le nom, et
+    // il disparaît au singulier — « ce 1 réglage » ne se dit pas davantage. C'est ce que
+    // le repère nommé du pluriel permet, et qu'un `s` collé à un mot n'aurait jamais su
+    // rendre : la phrase du singulier ne porte pas de nombre, celle du pluriel le porte
+    // au milieu.
+    const panel = harnessOf(BACKUP_2026, 20)
+    expect(panel.button(/Enlever/)?.textContent).toBe('Enlever ces 9 réglages')
+
+    for (const box of panel.boxes().slice(1)) {
+      box.checked = false
+      box.dispatchEvent(new Event('change'))
+    }
+    expect(panel.button(/Enlever/)?.textContent).toBe('Enlever ce réglage')
   })
 })

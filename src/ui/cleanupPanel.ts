@@ -9,7 +9,9 @@ import {
   type CleanupOutcome,
   type CleanupPlan
 } from '../model/cleanup'
+import type { PluralForms } from '../i18n'
 import type { Layout } from '../model/layout'
+import { plural } from './prose'
 import './cleanupPanel.css'
 
 /**
@@ -105,24 +107,25 @@ function el<K extends keyof HTMLElementTagNameMap>(
   return node
 }
 
+/** « 9 réglages » et « 3 gadgets », dits à plusieurs endroits de cet écran. */
+const SETTING_COUNT: PluralForms = { one: '{count} réglage', other: '{count} réglages' }
+const GADGET_COUNT: PluralForms = { one: '{count} gadget', other: '{count} gadgets' }
+
 function french(value: number): string {
   return value.toLocaleString('fr-FR')
-}
-
-function plural(count: number, one: string, many: string): string {
-  return `${french(count)} ${count > 1 ? many : one}`
 }
 
 /**
  * « ce réglage » / « ces 9 réglages ».
  *
- * Écrit à part parce que `plural` place le nombre **devant** le groupe, ce qui est juste
- * pour « 9 réglages retenus » et faux pour un démonstratif : le français ne dit pas
- * « 9 ces réglages ». Le nombre s'y glisse entre le déterminant et le nom, et il
- * disparaît au singulier — « ce 1 réglage » ne se dit pas davantage.
+ * Le cas qu'aucun `s` collé n'aurait su rendre : le nombre se glisse **entre** le
+ * déterminant et le nom, et il disparaît au singulier — le français ne dit ni « 9 ces
+ * réglages » ni « ce 1 réglage ». C'est précisément ce que le repère nommé du socle
+ * permet : chaque forme est une phrase entière, libre de placer le nombre où sa langue
+ * l'exige, ou de ne pas le porter du tout.
  */
 function theseSettings(count: number): string {
-  return count > 1 ? `ces ${french(count)} réglages` : 'ce réglage'
+  return plural({ one: 'ce réglage', other: 'ces {count} réglages' }, count)
 }
 
 /**
@@ -171,7 +174,7 @@ function noteOf(db: VersionDatabase, entry: CleanupEntry): string {
     : `utilisé jusqu’à XCTrack ${release}`
   const value = safeValue(entry)
   const doubled = entry.occurrences > 1
-    ? `, écrit ${plural(entry.occurrences, 'fois', 'fois')} dans ce gadget`
+    ? `, écrit ${plural({ one: '{count} fois', other: '{count} fois' }, entry.occurrences)} dans ce gadget`
     : ''
   return value === null ? `${since}${doubled}` : `réglé sur ${value}, ${since}${doubled}`
 }
@@ -185,6 +188,9 @@ function gadgetSummary(entries: CleanupEntry[], language: string): string {
   }
   return [...counts]
     .sort((a, b) => b[1] - a[1])
+    // `count > 1` est ici une condition d'affichage et non un accord : le compte n'est
+    // écrit que s'il y en a plusieurs, « Boussole » se suffisant à lui-même. Rien à
+    // reverser sur le pluriel du socle, qui choisit une forme et ne décide pas d'omettre.
     .map(([name, count]) => (count > 1 ? `${name} (${french(count)})` : name))
     .join(', ')
 }
@@ -218,7 +224,7 @@ export function buildCleanupSection(options: CleanupSectionOptions): CleanupSect
       kind: 'applied',
       keyCount: outcome.keyCount,
       widgetCount: outcome.widgetCount,
-      description: `Enlever ${plural(outcome.keyCount, 'réglage', 'réglages')} d’une ` +
+      description: `Enlever ${plural(SETTING_COUNT, outcome.keyCount)} d’une ` +
         'ancienne version'
     })
   }
@@ -235,7 +241,7 @@ export function buildCleanupSection(options: CleanupSectionOptions): CleanupSect
       kind: 'reverted',
       keyCount: count,
       widgetCount: outcome.widgetCount,
-      description: `Remettre ${plural(count, 'réglage', 'réglages')} d’une ancienne version`
+      description: `Remettre ${plural(SETTING_COUNT, count)} d’une ancienne version`
     })
   }
 
@@ -246,8 +252,11 @@ export function buildCleanupSection(options: CleanupSectionOptions): CleanupSect
     const done = el('p', 'vclean__done')
     done.setAttribute('role', 'status')
     done.textContent =
-      `${plural(outcome.keyCount, 'réglage enlevé', 'réglages enlevés')} sur ` +
-      `${plural(outcome.widgetCount, 'gadget', 'gadgets')}. Votre appareil n’en sait ` +
+      `${plural({
+        one: '{count} réglage enlevé',
+        other: '{count} réglages enlevés'
+      }, outcome.keyCount)} sur ` +
+      `${plural(GADGET_COUNT, outcome.widgetCount)}. Votre appareil n’en sait ` +
       'encore rien : le fichier ne change que lorsque vous l’enregistrez.'
     root.append(done)
 
@@ -326,9 +335,13 @@ export function buildCleanupSection(options: CleanupSectionOptions): CleanupSect
     const count = selected.size
     const total = plan.entries.length
     tally.textContent = count === total
-      ? `${plural(total, 'réglage retenu', 'réglages retenus')}.`
-      : `${french(count)} ${count > 1 ? 'retenus' : 'retenu'} sur ${french(total)} — ` +
-        `${plural(total - count, 'réglage restera', 'réglages resteront')} en place.`
+      ? `${plural({ one: '{count} réglage retenu', other: '{count} réglages retenus' }, total)}.`
+      : `${plural({ one: '{count} retenu', other: '{count} retenus' }, count)} ` +
+        `sur ${french(total)} — ` +
+        `${plural({
+          one: '{count} réglage restera',
+          other: '{count} réglages resteront'
+        }, total - count)} en place.`
     go.textContent = count === 0
       ? 'Aucun réglage retenu'
       : `Enlever ${theseSettings(count)}`
@@ -349,9 +362,11 @@ export function buildCleanupSection(options: CleanupSectionOptions): CleanupSect
 
     const lead = el('p', 'vclean__lead')
     lead.textContent =
-      `${plural(plan.entries.length, 'réglage de ce fichier n’est plus utilisé',
-        'réglages de ce fichier ne sont plus utilisés')} par la version visée, sur ` +
-      `${plural(plan.widgetCount, 'gadget', 'gadgets')} : ` +
+      `${plural({
+        one: '{count} réglage de ce fichier n’est plus utilisé',
+        other: '{count} réglages de ce fichier ne sont plus utilisés'
+      }, plan.entries.length)} par la version visée, sur ` +
+      `${plural(GADGET_COUNT, plan.widgetCount)} : ` +
       `${gadgetSummary(plan.entries, language)}.`
     root.append(lead)
 
