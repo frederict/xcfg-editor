@@ -101,25 +101,38 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
   Les seize autres, la valeur JSON imbriquée et tout ce que la page ne sait pas nommer
   restent affichés **sans contrôle**, chacun disant pourquoi.
 - **Écrire, retirer, rétablir : trois gestes autour de la valeur d'usine**, et ils ne se
-  valent pas. Une clé absente du fichier vaut sa valeur d'usine de façon implicite ; une
-  clé écrite fige cette valeur. D'où :
+  valent pas — ni entre eux, ni selon l'écran où on les fait.
+
+  Ce qu'une clé **absente** signifie n'est pas la même chose des deux côtés, et c'est
+  mesuré des deux côtés. Sur un **gadget**, XCTrack complète à la relecture les options
+  qu'un fichier ne porte pas : la valeur d'usine s'applique implicitement (constaté sur la
+  planche des 75 gadgets). Dans les **réglages généraux**, non : à l'import
+  « Remplacer tout », l'appareil garde le réglage qu'il a déjà, et une clé absente du
+  fichier n'est pas touchée — mesuré sur l'AIR³, `Display.Theme` retirée d'une sauvegarde
+  puis réimportée, avec un témoin de contrôle dans la même manche. Sur un appareil qui n'y
+  a jamais touché, la valeur d'usine s'applique nécessairement : c'est une déduction, pas
+  une mesure, et les deux autres modes d'import n'ont pas été éprouvés.
+
   - **« Définir cette valeur »** écrit dans le fichier une valeur d'usine qui n'y est pas.
-    Sur les deux écrans : le panneau d'un gadget **comme** les réglages généraux. Cela ne
-    change rien à ce que fait l'appareil aujourd'hui ; ce que ça change est pour plus
-    tard — tant que la clé est absente, une mise à jour de XCTrack qui change cette valeur
-    d'usine change votre réglage sans prévenir, alors qu'une valeur écrite est figée.
-  - **« Retirer »** fait l'inverse : une valeur écrite qui vaut **déjà** la valeur d'usine
-    retourne à l'implicite. Dans les réglages généraux, et sur ce seul état — retirer une
-    valeur que vous avez choisie changerait le comportement de l'appareil, ce qu'un bouton
-    discret ne doit pas faire d'un clic. Neutre, lui aussi.
+    Sur les deux écrans : le panneau d'un gadget **comme** les réglages généraux. Sur un
+    gadget, cela ne change rien à ce que l'appareil fait aujourd'hui, et met le réglage à
+    l'abri d'une mise à jour de XCTrack qui changerait cette valeur d'usine. Sur une
+    préférence générale, c'est vrai d'un appareil qui n'a jamais réglé cela — et faux d'un
+    appareil déjà réglé, dont l'import remplacera la valeur.
+  - **« Retirer »** fait taire le fichier sur un réglage : une valeur écrite qui vaut
+    **déjà** la valeur d'usine disparaît. Réglages généraux seulement, et sur ce seul
+    état — faire taire le fichier sur une valeur que vous avez choisie priverait la
+    sauvegarde d'un réglage délibéré, ce qu'un bouton discret ne doit pas faire d'un clic.
+    Ce n'est **pas** un retour à la valeur d'usine : l'appareil gardera le sien.
   - **« Rétablir la valeur d'usine »** remplace une valeur que vous avez choisie par celle
     qu'un XCTrack neuf applique. Sur les deux écrans également. **C'est le seul des trois
-    qui change ce que fait l'appareil en vol** : il ne se révèle donc pas au survol, il
-    prend sa propre ligne sous le réglage, montre les deux valeurs en présence *avant* le
-    clic, et dit sur quelle version de XCTrack la valeur d'usine a été relevée dès que ce
-    n'est pas celle du fichier. Il **écrit** la valeur d'usine plutôt que d'effacer la
-    clé : la ligne passe alors à l'état d'usine, d'où « Retirer » devient offert. Deux
-    clics délibérés, deux effets séparés.
+    qui efface un réglage délibéré** — les deux autres ne touchent qu'à des valeurs qui
+    valaient déjà l'usine, ou qui n'étaient pas écrites du tout. Il ne se révèle donc pas
+    au survol : il prend sa propre ligne sous le réglage, montre les deux valeurs en
+    présence *avant* le clic, et dit sur quelle version de XCTrack la valeur d'usine a été
+    relevée dès que ce n'est pas celle du fichier. Il **écrit** la valeur d'usine plutôt
+    que d'effacer la clé : la ligne passe alors à l'état d'usine, d'où « Retirer » devient
+    offert. Deux clics délibérés, deux effets séparés.
 
   Aucun bouton là où la valeur d'usine n'est pas relevée, là où XCTrack la calcule au
   démarrage, là où il en publie deux qui se contredisent (`Sensors.ManualQnh` : 1013 et
