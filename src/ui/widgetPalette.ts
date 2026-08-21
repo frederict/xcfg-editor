@@ -2,14 +2,36 @@ import { encode } from '../core/access'
 import type { JsonNode } from '../core/jsonDocument'
 import type { Device } from '../catalog/devices'
 import { readableName } from '../catalog/widgetNames'
-import { WIDGET_OPTIONS } from '../catalog/widgetOptions'
+import type { WidgetCatalog } from '../catalog/widgetCatalog'
+import { defaultsFor, type DefaultObject, type DefaultValue } from '../catalog/widgetDefaults'
 import { gridFor, snapRect, NORMALIZED_MAX, type Grid, type Orientation } from '../model/grid'
 import { duplicateWidget, type Bounds } from '../model/mutations'
+import type { Page } from '../model/layout'
+import type { RenderSettings } from '../model/preferences'
 import { readWidget } from '../model/widget'
+import { renderPage, widgetHeightPx, widgetWidthPx } from '../render/canvas'
+import { isBlankAtRest, isRegistered } from '../render/registry'
+import { aspectRatioOf } from './views'
 
 /**
  * La palette d'ajout d'un gadget — l'équivalent de l'écran « Ajouter Gadget » de XCTrack
  * (`docs/reference/edition-native-exploration.md` § 3).
+ *
+ * ## Ce que la liste montre, et pourquoi dans cet ordre
+ *
+ * **Une seule colonne, groupée par famille, dans l'ordre de l'écran de l'appareil.** Les dix
+ * familles et le rang de chaque type viennent du registre extrait de l'APK
+ * (`catalog/widgetCatalog.ts`) : un pilote qui a mémorisé « la boussole est en tête de
+ * *Navigation* » la retrouve au même endroit ici. Deux colonnes rompaient cet ordre — l'œil
+ * descend une colonne puis remonte —, et une vignette ne tient pas dans une demi-largeur.
+ *
+ * **Chaque ligne porte une vignette, et cette vignette est le rendu du nœud que le clic
+ * posera.** Ce n'est pas une illustration choisie à part : `previewNode` et `buildWidget`
+ * partent du même modèle, avec le même rectangle. Pour un type déjà présent dans le fichier,
+ * la vignette montre donc **le widget du pilote, avec ses réglages à lui** ; pour un type
+ * absent, elle montre ce que XCTrack dessinera une fois qu'il aura complété les clés
+ * manquantes. Voir `previewNode` pour la seule différence entre les deux nœuds, et pourquoi
+ * elle existe.
  *
  * ## Deux chemins, et ils ne valent pas la même chose
  *
@@ -38,39 +60,29 @@ import { readWidget } from '../model/widget'
  * `thermals_labels`, épaisseurs FAI…). L'application migre en lisant : un widget minimal est
  * donc complété par elle, avec ses vraies valeurs par défaut, celles de la version installée.
  *
- * Nous **aurions pu** en écrire davantage : le catalogue extrait du bytecode donne une valeur
- * par défaut pour 40 de ses 225 options (`WidgetOption.default`), et les trois que l'on peut
- * confronter au relevé sur l'appareil tombent juste — `WCompass` : `rotation = HEADING` (« Cap
- * vers le haut »), `navigation_target = OPTIMIZED`, `windStyle = NONE`. La tentation est réelle.
- * Elle est refusée pour deux raisons :
+ * Nous **aurions pu** en écrire davantage. C'est refusé pour deux raisons :
  *
  * 1. **L'omission est strictement plus sûre que l'erreur.** Une clé absente est remplacée par
  *    XCTrack par la valeur juste ; une clé présente et fausse est conservée telle quelle et
- *    devient un réglage erroné que rien ne signale. Le catalogue ne couvre que les énumérations,
- *    et 40 options sur 225 : écrire ce sous-ensemble ne dispenserait de toute façon pas de la
- *    complétion par l'application.
- * 2. **Trois défauts vérifiés sur un seul type ne font pas une preuve** pour 84 types. Le relevé
- *    dit d'ailleurs lui-même que la taille par défaut, elle, varie selon le type (10 × 10 pour
- *    un assistant thermique contre 6 × 6 pour une boussole) : ce qui vaut pour la boussole ne
- *    vaut pas mécaniquement pour les autres.
+ *    devient un réglage erroné que rien ne signale.
+ * 2. **Trois défauts vérifiés sur un seul type ne font pas une preuve** pour 83 types.
  *
  * **Ce qui reste ouvert, et que ce module ne tranche pas** : nul n'a vérifié sur l'appareil
  * qu'un widget réduit à ses huit clés universelles est relu sans broncher. L'observation du § 6
  * porte sur des widgets *anciens auxquels des clés manquaient*, pas sur un widget minimal. Le
  * mécanisme est le même — un désérialiseur qui lit clé par clé avec un défaut de repli — mais
- * c'est une déduction, pas une mesure. L'interface le dit au pilote plutôt que de le taire, et
- * la palette pousse toujours la duplication en tête de liste.
+ * c'est une déduction, pas une mesure. L'interface le dit au pilote plutôt que de le taire.
  *
- * ## Ce que ce module n'a pas, faute de données
+ * ## Ce que le groupement par famille a coûté, et ce qui le rembourse
  *
- * La liste native porte pour chaque entrée une **description**, une **catégorie** (10 en tout)
- * et parfois un **badge Pro**. Rien de tout cela ne figure dans les catalogues extraits
- * (`widgetLabels.json` n'a que des libellés, `widgetOptions.json` que des options : ni
- * description, ni catégorie, ni marqueur Pro dans ses 248 chaînes). Les recopier depuis le § 3.2
- * du relevé reviendrait à figer à la main 75 textes français dans du code — un catalogue de
- * plus, non traduit, invérifiable et voué à diverger. La palette groupe donc par la seule
- * distinction qu'elle sait justifier, et c'est aussi la seule qui engage la fidélité du
- * fichier : **duplicable** ou **à créer**.
+ * L'ancienne palette groupait par **« déjà dans la configuration » / « absents »**. Ce
+ * groupement-là mettait le chemin sûr — la duplication — en tête de liste, ce qu'un
+ * classement par famille ne fait plus : la boussole du pilote est désormais noyée au rang 0
+ * de *Navigation*, entre soixante-quatorze types qu'il faudra créer. Trois marques le
+ * rendent : le **liseré plein** à gauche des types duplicables (pointillé pour les autres),
+ * la **vignette**, qui dessine les réglages réels du modèle et non un widget vierge, et la
+ * case **« Déjà dans le fichier »**, qui rend en un clic la liste courte que le groupement
+ * donnait gratuitement.
  */
 
 /** Le préfixe des classes de widgets : les 105 widgets du corpus le portent tous. */
@@ -101,23 +113,27 @@ const NEW_WIDGET_UNIVERSALS: Array<[key: string, raw: string, kind: JsonNode['ki
 ]
 
 /**
- * Les neuf types du catalogue que l'appareil **ne propose pas** à l'ajout.
+ * Le groupe de queue : les types **présents dans le fichier** que l'écran d'ajout de XCTrack
+ * ne propose pas.
  *
- * Le relevé exhaustif de la liste native (§ 3.2) compte 75 entrées, le catalogue 84. Les neuf
- * de l'écart sont la famille `WDebug*`, `WVTM` — dont les libellés n'existent d'ailleurs qu'en
- * anglais, signe qu'ils ne sont pas destinés au pilote — et `WProFallback`, dont le § 3.3
- * établit qu'il n'est proposé ni à l'ajout d'un widget ni à la création d'une page : tout
- * indique qu'il est fabriqué par l'application à la lecture, en substitut d'un widget Pro sans
- * licence.
+ * Deux populations s'y retrouvent, et elles ont la même conséquence pour le pilote — il ne
+ * peut que les dupliquer, jamais les créer :
  *
- * Ils sont écartés de la **création**. Ils restent proposés s'ils sont présents dans la
- * configuration ouverte : dupliquer un widget que le fichier contient déjà ne fabrique rien de
- * nouveau, et le refuser serait un jugement que nous n'avons pas à porter.
+ * - les 8 types de la famille masquée `debug_wgDebug` (`WDebug*`, `WVTM`), que XCTrack ne
+ *   montre qu'en mode développeur — le catalogue les porte avec `hidden: true` ;
+ * - `WProFallback` et `WPMissing`, absents du registre parce que l'application les fabrique
+ *   elle-même à la lecture d'un fichier (§ 3.3), et tout type d'une version future que ce
+ *   catalogue-ci ne connaît pas encore.
+ *
+ * Ils ne sont **jamais** proposés à la création : la palette ne dresse sa liste que sur
+ * `catalog.visibleFamilies()`. Ils apparaissent uniquement s'ils sont déjà dans la
+ * configuration ouverte — dupliquer un widget que le fichier contient déjà ne fabrique rien
+ * de nouveau, et le refuser serait un jugement que nous n'avons pas à porter.
  */
-export const NOT_OFFERED_BY_DEVICE: readonly string[] = [
-  'WDebug', 'WDebugActivelook', 'WDebugDetectedActivity', 'WDebugFPS', 'WDebugFont',
-  'WDebugHwAccTestMap', 'WDebugSystemInfo', 'WProFallback', 'WVTM'
-]
+export const NOT_OFFERED_FAMILY = 'xcNotOffered'
+
+/** Le libellé de ce groupe : il dit le fait, pas le jugement. */
+export const NOT_OFFERED_LABEL = 'Présents dans le fichier, non proposés par XCTrack'
 
 /* --------------------------------------------------------------------- la géométrie */
 
@@ -185,6 +201,23 @@ export function createWidgetNode(className: string, bounds: Bounds): JsonNode {
 /** Ce qui distingue les deux chemins, et ce que l'interface doit rendre visible. */
 export type PaletteOrigin = 'duplicate' | 'create'
 
+/** Les widgets de la configuration ouverte, séparés selon ce que la palette en tire. */
+export interface PaletteSources {
+  /**
+   * Les widgets de la **page affichée**. Ce sont eux, et eux seuls, qui allument
+   * l'indicateur de présence — c'est la question que le pilote se pose en ajoutant : « en
+   * ai-je déjà un **ici** ? ». Ils sont aussi les modèles préférés : dupliquer une boussole,
+   * c'est dupliquer celle qu'on a sous les yeux.
+   */
+  onPage: readonly JsonNode[]
+  /**
+   * Les widgets des **autres pages**, modèles de repli. Un type qui n'existe que là reste
+   * duplicable ; la ligne le dit (« ailleurs dans le fichier ») pour que le pilote sache
+   * d'où viendront les réglages.
+   */
+  elsewhere: readonly JsonNode[]
+}
+
 /** Un type de widget proposé par la palette. */
 export interface PaletteEntry {
   /** Le nom court (`WCompass`) : la clé du catalogue, et l'identité de l'entrée. */
@@ -193,11 +226,31 @@ export interface PaletteEntry {
   className: string
   /** Le libellé officiel dans la langue courante. */
   label: string
-  /** Nombre d'exemplaires dans la configuration ouverte. */
+  /**
+   * La famille du catalogue, qui donne l'en-tête sous lequel la ligne se range. Vaut
+   * `NOT_OFFERED_FAMILY` pour tout type que l'écran d'ajout ne propose pas — famille masquée
+   * comprise : voir le commentaire de cette constante.
+   */
+  family: string
+  /** Rang du type dans sa famille, à partir de 0 : l'ordre de l'écran de XCTrack. */
+  order: number
+  /** Vrai si XCTrack badge le type « Pro ». */
+  pro: boolean
+  /** La description du catalogue, ou `undefined` : jamais un texte inventé. */
+  description?: string
+  /** Exemplaires **sur la page affichée** — l'indicateur de présence. */
+  onPageCount: number
+  /** Exemplaires dans toute la configuration ouverte, page affichée comprise. */
   count: number
   origin: PaletteOrigin
   /** Le widget dont on partira, pour une entrée `duplicate`. */
   model?: JsonNode
+  /**
+   * Vrai si le modèle vient de la page affichée. Faux avec un modèle : il vient d'une autre
+   * page, et le pilote a le droit de savoir que les réglages copiés ne sont pas ceux qu'il a
+   * sous les yeux.
+   */
+  modelFromPage: boolean
   /**
    * Vrai si un autre type porte exactement le même libellé. Le cas est attesté :
    * « Luminosité de l'écran » désigne `WBrightnessInfo` (Système) **et** `WButtonBrightness`
@@ -217,51 +270,78 @@ function usableModel(node: JsonNode): boolean {
   return widget.x2 > widget.x1 && widget.y2 > widget.y1
 }
 
-/**
- * La liste des types proposés.
- *
- * `existing` est l'ensemble des widgets de la configuration ouverte, **dans l'ordre de
- * préférence** : le premier exemplaire rencontré d'un type est celui qui servira de modèle.
- * L'appelant choisit donc ce qu'il privilégie (les widgets de la page courante d'abord, par
- * exemple) ; la palette n'invente pas de règle à sa place.
- *
- * L'ordre du résultat : les types duplicables d'abord, les types à créer ensuite, chaque
- * groupe par ordre alphabétique de libellé — la liste native est groupée par catégorie, mais
- * les catégories ne figurent dans aucune donnée extraite (voir l'en-tête de ce module).
- */
-export function buildPaletteEntries(existing: JsonNode[], language = 'fr'): PaletteEntry[] {
-  const models = new Map<string, { className: string; count: number; model?: JsonNode }>()
-  for (const node of existing) {
+interface Seen {
+  className: string
+  count: number
+  onPageCount: number
+  model?: JsonNode
+  modelFromPage: boolean
+}
+
+/** Dépouille les widgets d'une provenance, en tenant les deux compteurs à jour. */
+function collect(seen: Map<string, Seen>, nodes: readonly JsonNode[], fromPage: boolean): void {
+  for (const node of nodes) {
     const widget = readWidget(node)
     if (widget.shortName === '') continue
-    const seen = models.get(widget.shortName)
-    if (seen === undefined) {
-      models.set(widget.shortName, {
-        className: widget.className,
-        count: 1,
-        ...(usableModel(node) ? { model: node } : {})
-      })
-    } else {
-      seen.count++
-      if (seen.model === undefined && usableModel(node)) seen.model = node
+    let entry = seen.get(widget.shortName)
+    if (entry === undefined) {
+      entry = { className: widget.className, count: 0, onPageCount: 0, modelFromPage: false }
+      seen.set(widget.shortName, entry)
+    }
+    entry.count++
+    if (fromPage) entry.onPageCount++
+    // Le premier modèle utilisable rencontré gagne, et la page passe en premier : c'est ce
+    // qui fait que dupliquer une boussole duplique celle qu'on a sous les yeux.
+    if (entry.model === undefined && usableModel(node)) {
+      entry.model = node
+      entry.modelFromPage = fromPage
     }
   }
+}
 
-  const shortNames = new Set<string>(models.keys())
-  for (const shortName of Object.keys(WIDGET_OPTIONS.widgets)) {
-    if (!NOT_OFFERED_BY_DEVICE.includes(shortName)) shortNames.add(shortName)
-  }
+/**
+ * La liste des types proposés, dans l'ordre de l'écran de XCTrack : famille par famille, et
+ * dans chaque famille le rang du registre.
+ *
+ * La liste offerte est celle des **familles visibles** du catalogue — 75 types dans la
+ * 1.0.3-beta5. S'y ajoutent, et seulement s'ils sont dans la configuration ouverte, les types
+ * que l'écran d'ajout ne propose pas : ils forment le groupe de queue `NOT_OFFERED_FAMILY`.
+ */
+export function buildPaletteEntries(
+  sources: PaletteSources, catalog: WidgetCatalog, language = 'fr'
+): PaletteEntry[] {
+  const seen = new Map<string, Seen>()
+  collect(seen, sources.onPage, true)
+  collect(seen, sources.elsewhere, false)
+
+  const families = catalog.visibleFamilies()
+  const familyRank = new Map<string, number>()
+  families.forEach((family, rank) => familyRank.set(family.id, rank))
+
+  /** Les types offerts, plus ceux que le fichier impose — sans doublon, sans ordre encore. */
+  const shortNames = new Set<string>()
+  for (const family of families) for (const shortName of family.widgets) shortNames.add(shortName)
+  for (const shortName of seen.keys()) shortNames.add(shortName)
 
   const entries: PaletteEntry[] = []
   for (const shortName of shortNames) {
-    const seen = models.get(shortName)
+    const found = seen.get(shortName)
+    const catalogued = catalog.catalogEntry(shortName)
+    const offered = catalogued !== undefined && familyRank.has(catalogued.family)
+    const description = catalog.widgetDescription(shortName)
     entries.push({
       shortName,
-      className: seen?.className ?? WIDGET_CLASS_PREFIX + shortName,
+      className: found?.className ?? WIDGET_CLASS_PREFIX + shortName,
       label: readableName(shortName, language),
-      count: seen?.count ?? 0,
-      origin: seen?.model === undefined ? 'create' : 'duplicate',
-      ...(seen?.model === undefined ? {} : { model: seen.model }),
+      family: offered ? catalogued.family : NOT_OFFERED_FAMILY,
+      order: offered ? catalogued.order : 0,
+      pro: catalog.isProWidget(shortName),
+      ...(description === undefined ? {} : { description }),
+      onPageCount: found?.onPageCount ?? 0,
+      count: found?.count ?? 0,
+      origin: found?.model === undefined ? 'create' : 'duplicate',
+      ...(found?.model === undefined ? {} : { model: found.model }),
+      modelFromPage: found?.modelFromPage ?? false,
       ambiguousLabel: false
     })
   }
@@ -270,9 +350,12 @@ export function buildPaletteEntries(existing: JsonNode[], language = 'fr'): Pale
   for (const entry of entries) byLabel.set(entry.label, (byLabel.get(entry.label) ?? 0) + 1)
   for (const entry of entries) entry.ambiguousLabel = (byLabel.get(entry.label) ?? 0) > 1
 
-  const rank = (entry: PaletteEntry): number => (entry.origin === 'duplicate' ? 0 : 1)
+  // Le groupe de queue passe après les dix familles ; à l'intérieur, faute de rang au
+  // registre, l'ordre alphabétique du libellé — le seul qui ne dépende pas du fichier lu.
+  const rank = (entry: PaletteEntry): number => familyRank.get(entry.family) ?? families.length
   entries.sort((a, b) => (
     rank(a) - rank(b) ||
+    a.order - b.order ||
     a.label.localeCompare(b.label, 'fr') ||
     a.shortName.localeCompare(b.shortName)
   ))
@@ -298,9 +381,10 @@ export interface PaletteChoice {
  */
 export function buildWidget(entry: PaletteEntry, bounds: Bounds): PaletteChoice {
   if (entry.model !== undefined) {
+    const origin = entry.modelFromPage ? 'de cette page' : 'd’une autre page'
     return {
       node: duplicateWidget(entry.model, bounds),
-      description: `Ajouter « ${entry.label} » — copie d’un widget de la configuration`,
+      description: `Ajouter « ${entry.label} » — copie d’un widget ${origin}`,
       entry
     }
   }
@@ -311,16 +395,143 @@ export function buildWidget(entry: PaletteEntry, bounds: Bounds): PaletteChoice 
   }
 }
 
+/* ---------------------------------------------------------------------- la vignette */
+
+/** Un relevé de `widgetDefaults.json` traduit en nœud JSON, pour le seul besoin du dessin. */
+function jsonFromDefault(value: DefaultValue): JsonNode {
+  if (typeof value === 'string') return { kind: 'string', raw: encode(value) }
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return { kind: 'literal', raw: String(value) }
+  }
+  if (Array.isArray(value)) return { kind: 'array', items: value.map(jsonFromDefault) }
+  return {
+    kind: 'object',
+    entries: Object.entries(value as DefaultObject)
+      .map(([key, item]): [string, JsonNode] => [encode(key), jsonFromDefault(item)])
+  }
+}
+
+/**
+ * Le nœud que la vignette dessine.
+ *
+ * **Duplication : exactement le nœud que le clic posera.** La vignette est alors une promesse
+ * tenue au pixel — le pilote voit sa carte, avec son échelle, sa trace et son thème, avant de
+ * l'ajouter.
+ *
+ * **Création : le nœud posé, plus les défauts relevés sur l'appareil.** C'est la seule
+ * différence entre les deux fonctions, et elle est délibérée. Ce que le fichier reçoit reste
+ * minimal — huit clés, voir `createWidgetNode` — parce qu'une clé omise est corrigée par
+ * XCTrack alors qu'une clé fausse ne l'est pas. Mais une vignette dessinée sur ces huit clés
+ * seules mentirait dans l'autre sens : elle montrerait un `WTime` sans secondes et un
+ * `WSpeed` sans unité, là où l'appareil complétera `showSec: true` et `_unit: true` dès la
+ * première lecture. `widgetDefaults.json` est précisément le relevé de cette complétion, fait
+ * sur les 75 types de l'écran d'ajout. La vignette montre donc l'écran que le pilote aura, et
+ * le fichier garde les octets les plus sûrs.
+ */
+export function previewNode(entry: PaletteEntry, bounds: Bounds): JsonNode {
+  if (entry.model !== undefined) return duplicateWidget(entry.model, bounds)
+
+  const node = createWidgetNode(entry.className, bounds)
+  const defaults = defaultsFor(entry.shortName)
+  if (defaults !== undefined && node.kind === 'object') {
+    for (const [key, value] of Object.entries(defaults)) {
+      node.entries.push([encode(key), jsonFromDefault(value)])
+    }
+  }
+  return node
+}
+
+/** Ce que la vignette peut montrer, et ce qu'il faut en dire au pilote. */
+export type PreviewKind =
+  /** L'éditeur a un dessin dédié pour ce type : la vignette approche l'appareil. */
+  | 'drawn'
+  /** Repli générique : le titre et un tiret, faute de dessin dédié. */
+  | 'generic'
+  /** L'appareil lui-même ne peint rien au repos — la case vide est le vrai rendu. */
+  | 'blank'
+
+export function previewKind(shortName: string): PreviewKind {
+  if (isBlankAtRest(shortName)) return 'blank'
+  return isRegistered(shortName) ? 'drawn' : 'generic'
+}
+
+/** La phrase qui accompagne chaque sorte de vignette. Aucune case vide sans explication. */
+export const PREVIEW_NOTES: Record<PreviewKind, string> = {
+  drawn:
+    'Aperçu dessiné par l’éditeur d’après les réglages du widget. Les valeurs affichées ' +
+    'sont des exemples fixes : rien n’est calculé depuis un vol.',
+  generic:
+    'Cet éditeur n’a pas de dessin dédié pour ce type : la vignette montre son titre et un ' +
+    'tiret à la place de la valeur. Sur l’appareil, il affichera ses données de vol.',
+  blank:
+    'Ce type ne peint rien au repos sur l’appareil : la vignette est vide parce que l’écran ' +
+    'l’est aussi tant qu’aucun message n’est arrivé.'
+}
+
+/**
+ * La vignette d'une entrée : la page dessinée par notre moteur, puis **recadrée sur le seul
+ * rectangle du widget** en resserrant le `viewBox` du `<svg>` que `renderPage` rend.
+ *
+ * ## Pourquoi un rendu, et non une capture de l'appareil
+ *
+ * Découper 75 vignettes dans les planches de l'AIR³ donnerait l'image vraie. Le prix en est
+ * triple, et chacun des trois est rédhibitoire ici : 75 images à porter dans un dépôt public
+ * alors que les planches vivent dans le dépôt **privé** — une cellule `WLocation` y affiche
+ * des coordonnées GPS réelles, et il a déjà fallu faire purger des images de ce dépôt-ci ;
+ * des images **figées**, qui ne suivraient aucune correction de rendu et mentiraient dès la
+ * version suivante de XCTrack ; et surtout une vignette qui ne pourrait montrer que le widget
+ * *par défaut*, jamais **celui du pilote** — or c'est justement ce que la duplication conserve
+ * et que la palette doit rendre visible.
+ *
+ * Le moteur, lui, ne coûte aucun octet de plus : `render/canvas.ts` et les treize dessins de
+ * `render/widgets/` sont déjà dans le morceau principal, chargés par la vue de la page.
+ *
+ * ## Le recadrage
+ *
+ * `renderPage` rend un `<svg viewBox="0 0 1280 720">` qui contient la page entière. Poser sur
+ * ce `viewBox` le rectangle du widget donne un zoom exact, sans toucher au moteur : la taille
+ * du titre, l'épaisseur des traits et les proportions restent celles qu'aura la page. Les
+ * quatre nombres sortent de `widgetWidthPx` / `widgetHeightPx`, les deux seules fonctions qui
+ * savent convertir des coordonnées normalisées dans le repère de rendu.
+ */
+export function renderThumbnail(
+  entry: PaletteEntry, bounds: Bounds, aspectRatio: number,
+  settings: RenderSettings, language: string
+): SVGSVGElement {
+  const node = previewNode(entry, bounds)
+  const page: Page = {
+    node: { kind: 'object', entries: [] },
+    className: '',
+    widgets: [readWidget(node)],
+    navigations: { kind: 'none' }
+  }
+  const scene = renderPage(page, aspectRatio, settings, language)
+
+  const at = (x1: number, y1: number, x2: number, y2: number): { w: number; h: number } => ({
+    w: widgetWidthPx({ x1, y1, x2, y2, background: 0 }),
+    h: widgetHeightPx({ x1, y1, x2, y2, background: 0 }, aspectRatio)
+  })
+  const offset = at(0, 0, bounds.x1, bounds.y1)
+  const size = at(bounds.x1, bounds.y1, bounds.x2, bounds.y2)
+  scene.setAttribute('viewBox', `${offset.w} ${offset.h} ${size.w} ${size.h}`)
+  // Purement décorative : tout ce qu'elle montre, l'intitulé de la ligne le dit en toutes
+  // lettres — nom, famille, présence, badge Pro, et la nature de l'aperçu.
+  scene.setAttribute('aria-hidden', 'true')
+  scene.setAttribute('focusable', 'false')
+  return scene
+}
+
 /* -------------------------------------------------------------------------- le rendu */
 
 export interface WidgetPaletteOptions {
-  /**
-   * Les widgets de la configuration ouverte, dans l'ordre de préférence (voir
-   * `buildPaletteEntries`). Une liste vide donne une palette où tout est à créer.
-   */
-  existing: JsonNode[]
+  /** Les widgets de la configuration ouverte, séparés page / reste — voir `PaletteSources`. */
+  sources: PaletteSources
+  /** Le catalogue **déjà chargé**, dans la langue de la session : familles, ordre, Pro. */
+  catalog: WidgetCatalog
   device: Device
   orientation: Orientation
+  /** Les préférences du fichier ouvert : les vignettes se dessinent avec, comme la page. */
+  settings: RenderSettings
   language?: string
   /** Appelé au choix d'un type, avec un nœud neuf prêt pour `insertWidget`. */
   onChoose?: (node: JsonNode, description: string) => void
@@ -331,6 +542,8 @@ export interface WidgetPalette {
   entries: PaletteEntry[]
   /** Filtre la liste. Chaîne vide : tout est visible. */
   filter: (query: string) => void
+  /** Restreint aux types déjà présents dans le fichier, cumulable avec la recherche. */
+  showOnlyPresent: (only: boolean) => void
 }
 
 function el<K extends keyof HTMLElementTagNameMap>(
@@ -347,25 +560,17 @@ function normalize(value: string): string {
   return value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 }
 
+interface Row {
+  element: HTMLElement
+  haystack: string
+  present: boolean
+}
+
 interface Group {
-  origin: PaletteOrigin
+  family: string
   head: HTMLElement
-  note: HTMLElement
-  rows: Array<{ element: HTMLElement; haystack: string }>
-}
-
-const GROUP_TITLES: Record<PaletteOrigin, string> = {
-  duplicate: 'Déjà dans la configuration',
-  create: 'Absents de la configuration'
-}
-
-const GROUP_NOTES: Record<PaletteOrigin, string> = {
-  duplicate:
-    'Le gadget est copié d’un widget que XCTrack a lui-même écrit : tous ses réglages sont ' +
-    'conservés, y compris ceux que cet éditeur ne sait pas présenter.',
-  create:
-    'Le gadget est créé avec ses seules clés universelles — cadre, fond, thème et position. ' +
-    'XCTrack complète les autres réglages à la lecture ; aucune valeur par défaut n’est inventée ici.'
+  count: HTMLElement
+  rows: Row[]
 }
 
 let paletteCount = 0
@@ -377,8 +582,9 @@ let paletteCount = 0
  */
 export function renderWidgetPalette(options: WidgetPaletteOptions): WidgetPalette {
   const language = options.language ?? 'fr'
-  const entries = buildPaletteEntries(options.existing, language)
+  const entries = buildPaletteEntries(options.sources, options.catalog, language)
   const id = `palette-${++paletteCount}`
+  const present = entries.filter((entry) => entry.origin === 'duplicate').length
 
   const root = el('section', 'palette')
   const head = el('header', 'palette__head')
@@ -388,12 +594,37 @@ export function renderWidgetPalette(options: WidgetPaletteOptions): WidgetPalett
   )
   root.append(head)
 
+  const tools = el('div', 'palette__tools')
   const search = el('input', 'palette__search')
   search.type = 'search'
   search.id = `${id}-search`
   search.placeholder = 'Rechercher un gadget'
   search.setAttribute('aria-label', 'Rechercher un gadget par nom ou par classe')
-  root.append(search)
+  tools.append(search)
+
+  // La case rend en un clic la liste courte que l'ancien groupement par présence donnait
+  // gratuitement — voir l'en-tête du module. Elle est absente quand il n'y a rien à filtrer.
+  let onlyBox: HTMLInputElement | undefined
+  if (present > 0) {
+    const label = el('label', 'palette__only')
+    onlyBox = el('input', 'palette__only-input')
+    onlyBox.type = 'checkbox'
+    onlyBox.id = `${id}-only`
+    label.htmlFor = onlyBox.id
+    label.append(onlyBox, el('span', undefined, `Déjà dans le fichier (${present})`))
+    label.title =
+      'Ces types-là seront copiés d’un widget que XCTrack a lui-même écrit : tous leurs ' +
+      'réglages sont conservés, y compris ceux que cet éditeur ne sait pas présenter.'
+    tools.append(label)
+  }
+  root.append(tools)
+
+  root.append(el(
+    'p', 'palette__legend',
+    'Liseré plein : le gadget sera copié d’un widget du fichier, avec tous ses réglages. ' +
+    'Liseré pointillé : il sera créé avec ses seules clés universelles, XCTrack complétant ' +
+    'le reste à la lecture. La vignette montre, dans les deux cas, ce que le clic posera.'
+  ))
 
   const empty = el('p', 'palette__empty', 'Aucun gadget ne porte ce nom.')
   empty.hidden = true
@@ -402,78 +633,174 @@ export function renderWidgetPalette(options: WidgetPaletteOptions): WidgetPalett
 
   const list = el('div', 'palette__list')
   const groups: Group[] = []
+  const bounds = newWidgetBounds(options.device, options.orientation)
+  const aspectRatio = aspectRatioOf(options.device, options.orientation)
 
-  for (const origin of ['duplicate', 'create'] as const) {
-    const own = entries.filter((entry) => entry.origin === origin)
+  const familyIds = [
+    ...options.catalog.visibleFamilies().map((family) => family.id),
+    NOT_OFFERED_FAMILY
+  ]
+  for (const family of familyIds) {
+    const own = entries.filter((entry) => entry.family === family)
     if (own.length === 0) continue
 
-    const groupHead = el('h3', 'palette__group', `${GROUP_TITLES[origin]} (${own.length})`)
-    groupHead.dataset.origin = origin
-    const note = el('p', 'palette__note', GROUP_NOTES[origin])
-    note.dataset.origin = origin
-    list.append(groupHead, note)
+    const groupHead = el('h3', 'palette__group')
+    groupHead.dataset.family = family
+    groupHead.append(el(
+      'span', 'palette__group-name',
+      family === NOT_OFFERED_FAMILY ? NOT_OFFERED_LABEL : options.catalog.familyLabel(family)
+    ))
+    const count = el('span', 'palette__group-count', String(own.length))
+    groupHead.append(count)
+    list.append(groupHead)
 
-    const group: Group = { origin, head: groupHead, note, rows: [] }
+    const group: Group = { family, head: groupHead, count, rows: [] }
     for (const entry of own) {
-      const row = buildRow(entry, options)
+      const element = buildRow(entry, options, bounds, aspectRatio, language)
       group.rows.push({
-        element: row,
-        haystack: normalize(`${entry.label} ${entry.shortName} ${entry.className}`)
+        element,
+        haystack: normalize(`${entry.label} ${entry.shortName} ${entry.className}`),
+        present: entry.origin === 'duplicate'
       })
-      list.append(row)
+      list.append(element)
     }
     groups.push(group)
   }
 
+  let query = ''
+  let onlyPresent = false
+
   /**
-   * Le filtre masque aussi les en-têtes vides. L'écran natif, lui, les laisse tous en place —
-   * le relevé (§ 3.1) qualifie lui-même la liste ainsi filtrée de « trompeuse ». On ne copie
-   * pas ce défaut-là.
+   * Le filtre masque aussi les **en-têtes de famille devenus vides**, et met à jour le compte
+   * de ceux qui restent. L'écran natif, lui, laisse tous ses en-têtes en place — le relevé
+   * (§ 3.1) qualifie lui-même la liste ainsi filtrée de « trompeuse » : dix titres de famille
+   * suivis de deux lignes font croire que la recherche n'a rien vu. On ne copie pas ce
+   * défaut-là. Un en-tête visible a donc toujours au moins une ligne sous lui, et son compte
+   * dit combien.
    */
-  function filter(query: string): void {
+  function apply(): void {
     const needle = normalize(query.trim())
     let visible = 0
     for (const group of groups) {
       let shown = 0
       for (const row of group.rows) {
-        const hidden = needle !== '' && !row.haystack.includes(needle)
+        const hidden = (needle !== '' && !row.haystack.includes(needle)) ||
+          (onlyPresent && !row.present)
         row.element.hidden = hidden
         if (!hidden) shown++
       }
       group.head.hidden = shown === 0
-      group.note.hidden = shown === 0
+      group.count.textContent = String(shown)
       visible += shown
     }
     empty.hidden = visible > 0
   }
 
+  function filter(value: string): void {
+    query = value
+    apply()
+  }
+
+  function showOnlyPresent(only: boolean): void {
+    onlyPresent = only
+    if (onlyBox !== undefined && onlyBox.checked !== only) onlyBox.checked = only
+    apply()
+  }
+
   search.addEventListener('input', () => { filter(search.value) })
+  onlyBox?.addEventListener('change', () => { showOnlyPresent(onlyBox.checked) })
 
   root.append(list)
-  return { element: root, entries, filter }
+  return { element: root, entries, filter, showOnlyPresent }
 }
 
-/** Une ligne : le libellé officiel, le nom court qui lève toute ambiguïté, le nombre d'exemplaires. */
-function buildRow(entry: PaletteEntry, options: WidgetPaletteOptions): HTMLElement {
+/** L'intitulé lu par l'assistance vocale : tout ce que la ligne montre, en toutes lettres. */
+function spokenLabel(entry: PaletteEntry, familyLabel: string): string {
+  const parts = [entry.label, entry.shortName, familyLabel]
+  if (entry.pro) parts.push('licence Pro')
+  if (entry.onPageCount > 0) {
+    parts.push(entry.onPageCount > 1
+      ? `déjà ${entry.onPageCount} fois sur cette page`
+      : 'déjà sur cette page')
+  }
+  parts.push(entry.origin === 'duplicate'
+    ? (entry.modelFromPage
+        ? 'sera copié avec les réglages du widget de cette page'
+        : 'sera copié avec les réglages d’un widget d’une autre page')
+    : 'sera créé avec ses seules clés universelles')
+  return parts.join(', ')
+}
+
+/**
+ * Une ligne : la vignette, le libellé officiel, le nom court qui lève toute ambiguïté, la
+ * description du catalogue, et les marques — Pro, présence, nombre d'exemplaires.
+ */
+function buildRow(
+  entry: PaletteEntry, options: WidgetPaletteOptions,
+  bounds: Bounds, aspectRatio: number, language: string
+): HTMLElement {
   const row = el('button', 'palette__entry')
   row.type = 'button'
   row.dataset.widget = entry.shortName
   row.dataset.origin = entry.origin
+  row.dataset.family = entry.family
+  // Les deux faits, lisibles depuis un test ou un harnais sans dépendre du style.
+  row.dataset.onPage = entry.onPageCount > 0 ? 'oui' : 'non'
+  const kind = previewKind(entry.shortName)
+  row.dataset.preview = kind
   if (entry.ambiguousLabel) row.dataset.ambiguous = 'true'
-  row.title = entry.className
+  const familyLabel = entry.family === NOT_OFFERED_FAMILY
+    ? NOT_OFFERED_LABEL
+    : options.catalog.familyLabel(entry.family)
+  row.setAttribute('aria-label', spokenLabel(entry, familyLabel))
 
-  row.append(el('span', 'palette__name', entry.label))
+  const thumb = el('span', 'palette__thumb')
+  thumb.dataset.preview = kind
+  thumb.title = PREVIEW_NOTES[kind]
+  thumb.append(renderThumbnail(entry, bounds, aspectRatio, options.settings, language))
+  // « rien à voir » écrit noir sur blanc plutôt qu'un cadre vide sans explication : le titre
+  // au survol dit pourquoi, le texte dit qu'il n'y a pas d'erreur.
+  if (kind === 'blank') thumb.append(el('span', 'palette__thumb-note', 'rien au repos'))
+  row.append(thumb)
+
+  const text = el('span', 'palette__text')
+  text.append(el('span', 'palette__name', entry.label))
   // Le nom court est affiché sur CHAQUE ligne, pas seulement sur les homonymes : c'est lui
   // qu'on retrouve dans le fichier, et le pilote qui compare deux sauvegardes le cherche.
-  row.append(el('span', 'palette__short', entry.shortName))
-  if (entry.count > 0) {
-    const badge = el('span', 'palette__badge', `× ${entry.count}`)
-    badge.title = `${entry.count} exemplaire${entry.count > 1 ? 's' : ''} dans la configuration`
-    row.append(badge)
+  text.append(el('span', 'palette__short', entry.shortName))
+  if (entry.description !== undefined) {
+    text.append(el('span', 'palette__desc', entry.description))
   }
+  row.append(text)
+
+  const marks = el('span', 'palette__marks')
+  if (entry.pro) {
+    const pro = el('span', 'palette__pro', 'Pro')
+    pro.title = 'XCTrack réserve ce gadget à la licence Pro.'
+    marks.append(pro)
+  }
+  if (entry.onPageCount > 0) {
+    const here = el('span', 'palette__here')
+    here.append(
+      el('span', 'palette__dot'),
+      el('span', undefined, entry.onPageCount > 1
+        ? `déjà ici × ${entry.onPageCount}`
+        : 'déjà ici')
+    )
+    here.title = entry.onPageCount > 1
+      ? `${entry.onPageCount} exemplaires de ce type sont déjà sur la page affichée.`
+      : 'Ce type est déjà sur la page affichée.'
+    marks.append(here)
+  } else if (entry.count > 0) {
+    const elsewhere = el('span', 'palette__elsewhere', 'ailleurs')
+    elsewhere.title =
+      `Absent de cette page, mais présent ${entry.count} fois ailleurs dans le fichier : ` +
+      'la copie partira de ce widget-là, avec ses réglages.'
+    marks.append(elsewhere)
+  }
+  if (marks.childElementCount > 0) row.append(marks)
 
   row.addEventListener('click', () => {
-    const bounds = newWidgetBounds(options.device, options.orientation)
     const choice = buildWidget(entry, bounds)
     options.onChoose?.(choice.node, choice.description)
   })

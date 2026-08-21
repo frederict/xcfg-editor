@@ -1720,14 +1720,25 @@ body.is-dragging .veil {
 
 /*
  * La palette reprend la boîte du panneau de propriétés — même fond, même bordure, même
- * champ de filtrage : c'est le même meuble, une colonne de droite qui liste et qui filtre.
+ * champ de filtrage : c'est le même meuble, une liste qui filtre.
  *
- * Une seule chose y est portée par le style plutôt que par le texte : la **différence entre
- * dupliquer et créer**. Elle ne passe pas par une couleur — le cadre est achromatique, la
- * couleur appartient à l'instrument — mais par le poids du trait : un liseré plein à gauche
- * des types duplicables, un liseré pointillé pour ceux qu'il faudra créer. Le pointillé dit
- * l'incertitude sans crier au danger, et il reste lisible en monochrome comme pour un œil
- * qui ne distingue pas les teintes.
+ * **Une seule colonne, quelle que soit la largeur.** Deux colonnes tenaient plus de types à
+ * l'écran, mais elles rompaient l'ordre de l'écran de XCTrack — l'œil descend une colonne
+ * puis remonte —, et une vignette de 88 px ne tient pas dans une demi-largeur avec un nom,
+ * un nom court et une description. La modale se resserre donc au lieu de s'étaler.
+ *
+ * Trois choses sont portées par le style plutôt que par le texte, et aucune par la couleur —
+ * le cadre est achromatique, la couleur appartient à l'instrument :
+ *
+ * 1. **Dupliquer ou créer**, par le poids du trait : liseré plein à gauche des types
+ *    duplicables, pointillé pour ceux qu'il faudra créer. Le pointillé dit l'incertitude sans
+ *    crier au danger, et reste lisible en monochrome comme pour un œil qui ne distingue pas
+ *    les teintes.
+ * 2. **La présence sur la page affichée**, par une pastille pleine devant le texte « déjà
+ *    ici ». Elle n'est jamais seule : le texte la double, et l'intitulé accessible aussi.
+ * 3. **La vignette**, qui reste CLAIRE en thème sombre. C'est l'écran d'un instrument :
+ *    `--xc-surface` n'a pas de variante sombre (style.css), et le cadre de la vignette
+ *    reprend la même surface pour que le rendu ne flotte pas sur un fond de nuit.
  */
 
 .palette {
@@ -1750,14 +1761,43 @@ body.is-dragging .veil {
   color: var(--app-ink-soft);
 }
 
+/* Recherche et case « déjà dans le fichier » sur une ligne, repliables : à 1100 px comme à
+   1500, la case ne pousse jamais le champ hors de la boîte. */
+.palette__tools {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  flex-wrap: wrap;
+}
+
 .palette__search {
   font: inherit;
   font-size: 13px;
+  flex: 1 1 14rem;
+  min-width: 0;
   padding: 0.35rem 0.5rem;
   border: 1px solid var(--app-line-strong);
   border-radius: 4px;
   background: var(--app-bg);
   color: var(--app-ink);
+}
+
+.palette__only {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: none;
+  font-size: 12px;
+  color: var(--app-ink-soft);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.palette__legend {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--app-ink-soft);
 }
 
 .palette__empty {
@@ -1771,9 +1811,14 @@ body.is-dragging .veil {
 
 .palette__list { display: flex; flex-direction: column; }
 
-/* L'en-tête de groupe de la liste native : un bandeau gris, en gras, plus petit que le nom. */
+/* L'en-tête de famille de la liste native : un bandeau gris, en gras, plus petit que le nom.
+   Son compte suit le filtre — un en-tête visible a toujours au moins une ligne sous lui. */
 .palette__group {
-  margin: 0.7rem 0 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin: 0.9rem 0 0;
   padding: 0.25rem 0.5rem;
   background: var(--app-bg);
   border-radius: 3px;
@@ -1786,22 +1831,24 @@ body.is-dragging .veil {
 
 .palette__group:first-child { margin-top: 0; }
 
-.palette__note {
-  margin: 0.35rem 0.5rem 0.4rem;
-  font-size: 12px;
-  line-height: 1.45;
-  color: var(--app-ink-soft);
+.palette__group-count {
+  flex: none;
+  font-family: var(--font-data);
+  font-weight: 400;
+  letter-spacing: 0;
 }
 
+/* Vignette | texte | marques. `auto` sur la première colonne : la vignette porte sa largeur,
+   les 75 lignes s'alignent donc au pixel sans que rien ne la calcule. */
 .palette__entry {
-  display: flex;
-  align-items: baseline;
-  gap: 0.55rem;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 0.7rem;
   width: 100%;
   /* Assez haut pour être visé au doigt : l'outil sert aussi sur une tablette. */
   min-height: 2.4rem;
-  padding: 0.35rem 0.5rem;
+  padding: 0.4rem 0.5rem;
   border: 0;
   border-bottom: 1px solid var(--app-line);
   border-left: 3px solid var(--app-line-strong);
@@ -1819,18 +1866,79 @@ body.is-dragging .veil {
 .palette__entry:hover { background: var(--app-bg); }
 .palette__entry:last-child { border-bottom: 0; }
 
-.palette__name { flex: 1 1 12rem; font-size: 14px; }
+/* La vignette : le rendu de la page, recadré sur le seul rectangle du widget
+   (`renderThumbnail`). Largeur fixe, hauteur libre — le `viewBox` du SVG porte le rapport,
+   identique pour les 75 types puisque tous arrivent au même gabarit de 6 × 6 cellules. */
+.palette__thumb {
+  position: relative;
+  flex: none;
+  display: block;
+  width: 88px;
+  overflow: hidden;
+  border: 1px solid var(--app-line-strong);
+  border-radius: 3px;
+  /* La surface de l'instrument, jamais celle de l'application : un rendu de page reste
+     clair en thème sombre. */
+  background: var(--xc-surface);
+}
+
+/* Un type qui ne peint rien au repos laisserait un cadre vide : la note dit que ce n'est
+   pas une panne. Le titre de la vignette dit pourquoi (PREVIEW_NOTES). */
+.palette__thumb-note {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 0.1rem 0.2rem;
+  background: var(--xc-surface);
+  color: var(--xc-ink);
+  font-family: var(--font-data);
+  font-size: 9px;
+  text-align: center;
+  opacity: 0.75;
+}
+
+.palette__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.palette__name { font-size: 14px; }
 
 /* Le nom court, toujours affiché : c'est lui qui sépare les deux « Luminosité de l'écran ». */
 .palette__short {
-  flex: none;
   font-family: var(--font-data);
   font-size: 11px;
   color: var(--app-ink-soft);
 }
 
-.palette__badge {
+/* La description du catalogue, bornée à deux lignes : elle éclaire sans faire enfler une
+   liste de 75 entrées. Le texte entier reste lisible par l'assistance vocale. */
+.palette__desc {
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--app-ink-soft);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+.palette__marks {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
   flex: none;
+}
+
+.palette__pro,
+.palette__here,
+.palette__elsewhere {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
   padding: 0.05rem 0.4rem;
   border: 1px solid var(--app-line-strong);
   border-radius: 999px;
@@ -1839,6 +1947,24 @@ body.is-dragging .veil {
   color: var(--app-ink-soft);
   white-space: nowrap;
 }
+
+/* L'indicateur de présence sur la page affichée : pastille pleine et cadre appuyé. C'est la
+   seule marque de la ligne qui réponde à la question posée en ajoutant un gadget — « en
+   ai-je déjà un ICI ? » —, et elle se lit avant le texte. */
+.palette__here {
+  border-color: var(--app-ink);
+  color: var(--app-ink);
+}
+
+.palette__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+
+.palette__elsewhere { border-style: dashed; }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
@@ -2166,13 +2292,17 @@ body.is-dragging .veil {
  * Poser un gadget est un geste ponctuel : on ouvre, on choisit, la boîte se ferme. Elle
  * prend la largeur d'une boîte de dialogue plutôt qu'une colonne permanente à côté de la
  * page — voir « rien ne partage la largeur avec la page », plus haut.
+ *
+ * 46 rem plutôt que les 52 d'avant : la liste n'a plus qu'une colonne, et une ligne de
+ * description plus large que 78 caractères se lit mal. `94vw` la tient dans une fenêtre
+ * étroite — à 1100 px, la boîte fait 736 px et rien ne déborde.
  */
 .modal--palette {
-  max-width: min(52rem, 94vw);
-  width: min(52rem, 94vw);
+  max-width: min(46rem, 94vw);
+  width: min(46rem, 94vw);
 }
 
-/* La boîte défile, et sa hauteur est bornée : 84 types ne tiennent pas dans une fenêtre. */
+/* La boîte défile, et sa hauteur est bornée : 75 types ne tiennent dans aucune fenêtre. */
 .modal--palette .modal__box {
   max-height: 86vh;
   overflow: auto;
@@ -2190,17 +2320,18 @@ body.is-dragging .veil {
   background: transparent;
 }
 
-/* La boîte est large : les types s'étalent en colonnes plutôt que de tirer une liste de
-   84 lignes sur toute la hauteur. */
-.modal--palette .palette__list {
-  display: block;
-  column-width: 15rem;
-  column-gap: 1.6rem;
+/* En dessous de 30 rem de boîte, la colonne des marques mangerait le nom : elles passent
+   sous le texte, en ligne. La vignette, elle, garde sa colonne — c'est le repère. */
+@media (max-width: 30rem) {
+  .palette__entry { grid-template-columns: auto minmax(0, 1fr); }
+  .palette__marks {
+    grid-column: 2;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
 }
-
-.modal--palette .palette__entry { break-inside: avoid; }
-.modal--palette .palette__group,
-.modal--palette .palette__note { break-inside: avoid; }
 
 /* --- le carrousel des pages, par-dessus la vue --- */
 
@@ -2249,29 +2380,4 @@ body.is-dragging .veil {
   font-size: 13px;
 }
 
-/*
- * Dans une colonne de 15 rem, une entrée de palette tient sur deux lignes : le libellé
- * au-dessus, le nom court en dessous, le compteur d'exemplaires à droite. Le module les
- * pose en ligne avec repli (`flex-wrap`), ce qui conviendrait à une ligne pleine largeur ;
- * repliée, la ligne débordait — un `<button>` ne recalcule pas sa hauteur pour un contenu
- * replié, si bien que les entrées se chevauchaient. Une grille à deux lignes explicites
- * donne au bouton une hauteur que le navigateur sait mesurer.
- */
-.modal--palette .palette__entry {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  column-gap: 0.5rem;
-  row-gap: 0.1rem;
-  align-items: baseline;
-  min-height: 0;
-  padding-block: 0.45rem;
-}
 
-.modal--palette .palette__name { grid-column: 1; grid-row: 1; }
-.modal--palette .palette__short { grid-column: 1; grid-row: 2; }
-
-.modal--palette .palette__badge {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  align-self: center;
-}

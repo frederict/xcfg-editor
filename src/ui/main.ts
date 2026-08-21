@@ -3,6 +3,7 @@ import './app.css'
 // Effet de bord : enregistre les dessins de widgets dans l'annuaire de `render/`.
 import '../render/widgets'
 import { deviceFor, type Device } from '../catalog/devices'
+import { loadWidgetCatalog, type WidgetCatalog } from '../catalog/widgetCatalog'
 import { readableName } from '../catalog/widgetNames'
 import { getMember, readNumber, readString } from '../core/access'
 import { exportContainer, openContainer, type Container } from '../core/container'
@@ -30,6 +31,9 @@ import {
 } from './views'
 import { computeWarnings, warningsAt, type Warning } from './warnings'
 import { renderWidgetList, type WidgetList } from './widgetList'
+// Type seul : effacé à la compilation, il ne ramène pas la palette dans le morceau
+// principal — même parti que `PropertyField` juste au-dessus.
+import type { PaletteSources } from './widgetPalette'
 
 interface Session {
   container: Container
@@ -639,22 +643,44 @@ function loadPalette(): Promise<PaletteModule> {
 }
 
 /**
- * Les widgets qui serviront de modèles, **dans l'ordre de préférence de la palette** :
- * ceux de la page affichée d'abord, les autres ensuite. La palette retient le premier
- * exemplaire rencontré de chaque type — dupliquer une boussole, c'est donc dupliquer
- * celle qu'on a sous les yeux plutôt qu'une homonyme réglée autrement à l'autre bout du
- * fichier.
+ * Le catalogue des familles, chargé à la demande comme la palette elle-même : c'est lui
+ * qui donne les dix familles, l'ordre de l'écran de XCTrack et le badge Pro. Un morceau
+ * par langue (`catalog/widgetCatalog.ts`), et un seul est téléchargé.
+ *
+ * On mémorise ici **par langue demandée**, et non par langue résolue : c'est cette
+ * langue-là que `fillPaletteDialog` a sous la main pour savoir si le catalogue qu'il
+ * faut est déjà arrivé. `loadWidgetCatalog` mémorise de son côté, un deuxième appel ne
+ * retéléchargera rien.
  */
-function paletteSources(current: Session, page: Page | undefined): JsonNode[] {
-  const nodes: JsonNode[] = []
-  if (page) for (const widget of page.widgets) nodes.push(widget.node)
+const paletteCatalogs = new Map<string, WidgetCatalog>()
+
+function loadPaletteCatalog(language: string): Promise<WidgetCatalog> {
+  return loadWidgetCatalog(language).then((catalog) => {
+    paletteCatalogs.set(language, catalog)
+    return catalog
+  })
+}
+
+/**
+ * Les widgets que la palette dépouille, séparés selon ce qu'elle en tire : ceux de la
+ * page affichée — qui allument l'indicateur « déjà ici » et servent de modèles
+ * préférés —, puis ceux du reste du fichier.
+ *
+ * Dupliquer une boussole, c'est donc dupliquer celle qu'on a sous les yeux plutôt qu'une
+ * homonyme réglée autrement à l'autre bout du fichier ; et si le type n'est nulle part
+ * sur cette page, la ligne dit « ailleurs » au lieu de laisser croire à une copie locale.
+ */
+function paletteSources(current: Session, page: Page | undefined): PaletteSources {
+  const onPage: JsonNode[] = []
+  const elsewhere: JsonNode[] = []
+  if (page) for (const widget of page.widgets) onPage.push(widget.node)
   for (const orientation of ['landscape', 'portrait'] as const) {
     for (const other of current.layout[orientation]) {
       if (other === page) continue
-      for (const widget of other.widgets) nodes.push(widget.node)
+      for (const widget of other.widgets) elsewhere.push(widget.node)
     }
   }
-  return nodes
+  return { onPage, elsewhere }
 }
 
 /** Vrai si la page peut recevoir un widget : encore faut-il qu'elle ait un tableau. */
@@ -736,18 +762,22 @@ function fillPaletteDialog(dialog: HTMLDialogElement): void {
   }
 
   const module = paletteModule
-  if (module === undefined) {
+  const catalog = paletteCatalogs.get(session.language)
+  if (module === undefined || catalog === undefined) {
     box.append(el('p', 'hint-note', 'Chargement de la palette…'))
     dialog.append(box)
     // La boîte a pu être fermée ou refaite entre-temps : ce résultat-ci serait périmé.
-    void loadPalette().then(() => { if (paletteDialog === dialog) fillPaletteDialog(dialog) })
+    void Promise.all([loadPalette(), loadPaletteCatalog(session.language)])
+      .then(() => { if (paletteDialog === dialog) fillPaletteDialog(dialog) })
     return
   }
 
   const palette = module.renderWidgetPalette({
-    existing: paletteSources(session, page),
+    sources: paletteSources(session, page),
+    catalog,
     device: session.device,
     orientation: view.orientation,
+    settings: session.settings,
     language: session.language,
     // On ouvre, on choisit, elle se ferme : le widget posé est sélectionné, et ses
     // réglages apparaissent dans le bandeau du bas sans un clic de plus.
@@ -1812,6 +1842,9 @@ editToggle.addEventListener('click', () => {
   if (editMode) {
     void loadProperties()
     void loadPalette()
+    // Le catalogue des familles est un morceau de plus, propre à la langue : amorcé ici
+    // aussi, il évite que la première ouverture de la palette attende deux téléchargements.
+    if (session) void loadPaletteCatalog(session.language)
   }
   // La sélection traverse le passage d'un mode à l'autre : le widget qu'on vient de lire
   // est celui qu'on veut régler, et l'inverse est tout aussi vrai. `buildEditing` et
