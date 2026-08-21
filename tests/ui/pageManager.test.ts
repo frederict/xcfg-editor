@@ -69,11 +69,15 @@ describe('l’état du corpus', () => {
   it('lit les navigations sous leurs trois formes', () => {
     const document = load()
     const landscape = pagesOf(document, 'landscape')
-    expect(navigationsLabel(landscape[0]!)).toBe('Toutes les navigations')
-    expect(navigationsLabel(landscape[1]!)).toBe('Aucune navigation')
+    // Les trois formes disent le sort de la page, pas un compte de navigations — et
+    // elles reprennent la phrase de l'appareil, « les types de navigations pour
+    // lesquelles la page sera affichée » (mesuré sur l'AIR³, § 5.4).
+    expect(navigationsLabel(landscape[0]!)).toBe('Affichée pour toutes les navigations')
+    expect(navigationsLabel(landscape[1]!)).toBe('Affichée pour aucune navigation')
     // Portrait page 1 : liste explicite de quatre classes `navig.*`.
     expect(navigationsLabel(pagesOf(document, 'portrait')[0]!))
-      .toBe('Retour au décollage, Fermeture de triangle, Vers une balise, Vers un pilote en direct')
+      .toBe('Affichée pour : Retour au décollage, Fermeture de triangle, Vers une balise, ' +
+        'Vers un pilote en direct')
   })
 })
 
@@ -462,7 +466,7 @@ describe('la description d’une opération', () => {
     expect(describe1({ kind: 'insert', index: 2, className: 'WPThermalAssistant' }))
       .toBe('Insérer une page « Aide thermique » au rang 3 (paysage)')
     expect(describe1({ kind: 'setClass', index: 0, className: 'WPCompetition' }))
-      .toBe('Changer la classe de la page 1 : « Vide » → « Compétition » (paysage)')
+      .toBe('Changer le type de la page 1 : « Vide » → « Compétition » (paysage)')
   })
 
   it('distingue les deux orientations', () => {
@@ -623,13 +627,13 @@ describe('le carrousel', () => {
     expect(captured[0]!.operation).toEqual({ kind: 'setClass', index: 0, className: 'WPCompetition' })
 
     // Et l'avertissement est visible en permanence, pas seulement au moment du geste.
-    expect(root.textContent).toContain('XCTrack ne permet pas de changer la classe')
+    expect(root.textContent).toContain('XCTrack ne permet pas de changer le type')
   })
 
   it('s’en tient à ce que fait l’appareil quand on le lui demande', () => {
     const { root } = build({ allowClassChange: false })
     expect(query(root, '.pagecard__class-select')).toHaveLength(0)
-    expect(root.textContent).not.toContain('XCTrack ne permet pas de changer la classe')
+    expect(root.textContent).not.toContain('XCTrack ne permet pas de changer le type')
   })
 
   it('marque les pages masquées hors vol et désigne la cible du basculement', () => {

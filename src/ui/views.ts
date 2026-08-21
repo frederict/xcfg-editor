@@ -87,9 +87,9 @@ export function pageKind(className: string): PageKind {
   const known = PAGE_KINDS[shortName]
   if (known) return { shortName, ...known }
   return {
-    shortName: shortName === '' ? '(classe absente)' : shortName,
-    label: 'Page de type inconnu',
-    note: 'Cette classe de page n’est pas décrite par cet éditeur ; son contenu reste affiché tel quel.',
+    shortName: shortName === '' ? '(type absent)' : shortName,
+    label: 'Type de page non reconnu',
+    note: 'Ce type de page n’est pas décrit par cet éditeur ; son contenu reste affiché tel quel.',
     hiddenOutOfFlight: false
   }
 }

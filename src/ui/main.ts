@@ -692,7 +692,10 @@ function warningCard(warning: Warning, level: 'h3' | 'h4' = 'h3'): HTMLElement {
 
     if (warning.items.length > 4) {
       const box = el('details', 'warning__more')
-      box.append(el('summary', 'warning__summary', `Voir les ${warning.items.length} éléments`), list)
+      // « éléments » ne nommait rien : selon l'avertissement, ce sont des pages, des
+      // gadgets, des fichiers ou des lignes du fichier. Le titre de la carte, juste
+      // au-dessus, dit déjà de quoi il s'agit ; il ne manquait que le nombre.
+      box.append(el('summary', 'warning__summary', `Voir le détail (${warning.items.length})`), list)
       card.append(box)
     } else {
       card.append(list)
@@ -1244,7 +1247,9 @@ function fillPaletteDialog(dialog: HTMLDialogElement): void {
   const module = paletteModule
   const catalog = paletteCatalogs.get(session.language)
   if (module === undefined || catalog === undefined) {
-    box.append(el('p', 'hint-note', 'Chargement de la palette…'))
+    // « palette » ne nomme rien que le pilote ait vu : le bouton qui ouvre cette boîte
+    // s'appelle « Ajouter un gadget ».
+    box.append(el('p', 'hint-note', 'Chargement…'))
     dialog.append(box)
     // La boîte a pu être fermée ou refaite entre-temps : ce résultat-ci serait périmé.
     void Promise.all([loadPalette(), loadPaletteCatalog(session.language)])

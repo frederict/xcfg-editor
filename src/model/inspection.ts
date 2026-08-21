@@ -714,8 +714,8 @@ function roadMapFindings(input: InspectionInput): Finding[] {
         certainty: 'documented',
         location: { orientation, pageRank, widgetRank: rank },
         message:
-          `« ${name} » est le ${ranks.indexOf(rank) + 1}ᵉ gadget de cette page à ` +
-          `demander une carte routière (le premier est le gadget ${first}). XCTrack ` +
+          `« ${name} » demande lui aussi une carte routière, et le gadget ${first} de ` +
+          `cette page en demande déjà une. XCTrack ` +
           'prévient dans ses propres réglages qu’une seule carte routière est possible ' +
           'par page, à cause d’une limitation de sa bibliothèque de cartes. Ce qui ' +
           's’affichera à la place n’est pas prévisible.'

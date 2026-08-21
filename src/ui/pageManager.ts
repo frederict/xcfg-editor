@@ -161,7 +161,7 @@ export function describeOperation(
       return `Déplacer la page ${operation.from + 1} au rang ${operation.to + 1}${where}`
     case 'setClass': {
       const before = creationLabel(pages[operation.index]?.className ?? '')
-      return `Changer la classe de la page ${operation.index + 1} : ` +
+      return `Changer le type de la page ${operation.index + 1} : ` +
         `« ${before} » → « ${creationLabel(operation.className)} »${where}`
     }
   }
@@ -330,11 +330,11 @@ export function operationAdvice(pages: readonly Page[], operation: PageOperation
  */
 export const CLASS_CHANGE_ADVICE: Advice = {
   kind: 'class',
-  text: 'XCTrack ne permet pas de changer la classe d’une page après sa création : elle s’y ' +
+  text: 'XCTrack ne permet pas de changer le type d’une page après sa création : il s’y ' +
     'fixe au moment du choix. Ce n’est pourtant qu’une ligne du fichier, et cet éditeur ' +
     'l’écrit ' +
     'volontiers — mais le comportement de l’appareil face à une page ainsi modifiée n’a PAS ' +
-    'été vérifié, et les gadgets de la page ne sont pas remplacés par ceux de la nouvelle classe.'
+    'été vérifié, et les gadgets de la page ne sont pas remplacés par ceux du nouveau type.'
 }
 
 /** Ce qu'il faut dire de l'état courant d'une orientation, indépendamment de tout geste. */
@@ -443,13 +443,25 @@ function button(className: string, text: string, label?: string): HTMLButtonElem
   return node
 }
 
-/** Ce que la clé `navigations` dit de la page, en clair. */
+/**
+ * Ce que la clé `navigations` dit de la page, en clair.
+ *
+ * Les trois formes disent maintenant la **même** chose — quand la page s'affiche — au
+ * lieu de nommer un réglage : « Toutes les navigations » et « Aucune navigation » se
+ * lisaient comme un compte de navigations, pas comme le sort de la page.
+ *
+ * La phrase est celle de l'appareil, mesurée sur l'AIR³ : sa boîte s'intitule « Choisir
+ * les types de navigations pour lesquelles la page sera affichée »
+ * (`docs/reference/edition-native-exploration.md` § 5.4). On ne va pas jusqu'à « jamais
+ * affichée » pour `none` : ce que fait l'appareil hors navigation n'a pas été mesuré, et
+ * l'affirmer ferait dire à l'outil plus qu'il ne sait.
+ */
 export function navigationsLabel(page: Page): string {
   const navigations = page.navigations
-  if (navigations.kind === 'all') return 'Toutes les navigations'
-  if (navigations.kind === 'none') return 'Aucune navigation'
-  if (navigations.classNames.length === 0) return 'Aucune navigation'
-  return navigations.classNames
+  if (navigations.kind === 'all') return 'Affichée pour toutes les navigations'
+  if (navigations.kind === 'none') return 'Affichée pour aucune navigation'
+  if (navigations.classNames.length === 0) return 'Affichée pour aucune navigation'
+  return 'Affichée pour : ' + navigations.classNames
     .map((name) => NAVIGATION_LABELS[shortClassName(name)] ?? shortClassName(name))
     .join(', ')
 }
@@ -683,7 +695,7 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
       const field = el('div', 'pagecard__class-field')
       const select = el('select', 'pagecard__class-select')
       select.id = `page-class-${orientation}-${index}`
-      const label = el('label', 'pagecard__class-label', 'Classe')
+      const label = el('label', 'pagecard__class-label', 'Type de page')
       label.htmlFor = select.id
 
       const known = PAGE_CHOICES.some((choice) => choice.className === kind.shortName)
@@ -691,7 +703,7 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
         // Une classe qu'aucune version connue ne documente reste proposée telle quelle :
         // la choisir de nouveau ne change rien, mais la faire disparaître de la liste
         // ferait croire à une page d'un des quatre types.
-        const current = el('option', undefined, `${kind.shortName} (classe du fichier)`)
+        const current = el('option', undefined, `${kind.shortName} (type inscrit dans le fichier)`)
         current.value = kind.shortName
         select.append(current)
       }
