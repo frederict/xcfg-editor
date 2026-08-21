@@ -11,7 +11,9 @@ import {
   type Orientation
 } from '../model/mutations'
 import { renderPage } from '../render/canvas'
+import type { PluralForms } from '../i18n'
 import { aspectRatioOf, pageKind, type ViewContext } from './views'
+import { plural } from './prose'
 
 /**
  * La gestion des pages : en insérer, en supprimer, en dupliquer, les réordonner.
@@ -137,9 +139,15 @@ function rangeLabel(firstRank: number, lastRank: number): string {
   return firstRank === lastRank ? String(firstRank) : `${firstRank} à ${lastRank}`
 }
 
-function plural(count: number, singular: string, pluralForm: string): string {
-  return count > 1 ? pluralForm : singular
-}
+/**
+ * « 3 gadgets ». Deux vignettes l'affichent, et l'intitulé d'accessibilité de la
+ * troisième le redit.
+ */
+const GADGET_COUNT: PluralForms = { one: '{count} gadget', other: '{count} gadgets' }
+
+/** « La page 3 devient la page 4 » — ou « Les pages 3 à 5 deviennent… ». */
+const THE_PAGES: PluralForms = { one: 'La page', other: 'Les pages' }
+const BECOMES: PluralForms = { one: 'devient', other: 'deviennent' }
 
 /**
  * La description qui part à l'historique. Elle nomme le **rang**, parce que c'est la
@@ -238,8 +246,8 @@ function shiftAdvice(pages: readonly Page[], operation: PageOperation): Advice |
     const moved = count - first
     return {
       kind: 'shift',
-      text: `${plural(moved, 'La page', 'Les pages')} ${rangeLabel(first + 1, count)} ` +
-        `${plural(moved, 'devient', 'deviennent')} ${rangeLabel(first + 2, count + 1)}. ${identity}`
+      text: `${plural(THE_PAGES, moved)} ${rangeLabel(first + 1, count)} ` +
+        `${plural(BECOMES, moved)} ${rangeLabel(first + 2, count + 1)}. ${identity}`
     }
   }
 
@@ -248,8 +256,8 @@ function shiftAdvice(pages: readonly Page[], operation: PageOperation): Advice |
     if (moved <= 0) return undefined
     return {
       kind: 'shift',
-      text: `${plural(moved, 'La page', 'Les pages')} ${rangeLabel(operation.index + 2, count)} ` +
-        `${plural(moved, 'devient', 'deviennent')} ${rangeLabel(operation.index + 1, count - 1)}. ${identity}`
+      text: `${plural(THE_PAGES, moved)} ${rangeLabel(operation.index + 2, count)} ` +
+        `${plural(BECOMES, moved)} ${rangeLabel(operation.index + 1, count - 1)}. ${identity}`
     }
   }
 
@@ -284,8 +292,12 @@ export function operationAdvice(pages: readonly Page[], operation: PageOperation
       const last = existing[existing.length - 1]!
       advice.push({
         kind: 'thermal',
-        text: `Ce fichier décrit déjà ${plural(existing.length, 'une page', 'des pages')} ` +
-          `d’assistant de thermique (${plural(existing.length, 'page', 'pages')} ${existing.join(', ')}). ` +
+        text: `Ce fichier décrit déjà ${plural({
+          one: 'une page', other: 'des pages'
+        }, existing.length)} ` +
+          `d’assistant de thermique (${plural({
+            one: 'page', other: 'pages'
+          }, existing.length)} ${existing.join(', ')}). ` +
           'XCTrack bascule en spirale vers la DERNIÈRE : en créer une autre après elle rend ' +
           `la page ${last} inatteignable par ce basculement, sans rien changer à son contenu.`
       })
@@ -349,8 +361,10 @@ export function layoutAdvice(pages: readonly Page[]): Advice[] {
       kind: 'thermal',
       text: `${thermal.length} pages d’assistant de thermique (pages ${thermal.join(', ')}). ` +
         `XCTrack ne bascule en spirale que vers la dernière, la page ${target} : ` +
-        `${plural(others.length, 'la page', 'les pages')} ${others.join(', ')} ` +
-        `${plural(others.length, 'reste atteignable', 'restent atteignables')} par « page ` +
+        `${plural({ one: 'la page', other: 'les pages' }, others.length)} ${others.join(', ')} ` +
+        `${plural({
+          one: 'reste atteignable', other: 'restent atteignables'
+        }, others.length)} par « page ` +
         'suivante », jamais par le basculement automatique.'
     })
   }
@@ -529,7 +543,7 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
     el('span', 'pages__name', orientation === 'landscape' ? 'Paysage' : 'Portrait'),
     el('span', 'pages__count', pages.length === 0
       ? 'aucune page'
-      : `${pages.length} ${plural(pages.length, 'page', 'pages')}`)
+      : plural({ one: '{count} page', other: '{count} pages' }, pages.length))
   )
   root.append(heading)
 
@@ -612,7 +626,7 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
     const screen = button(
       'pagecard__screen', '',
       `Ouvrir la page ${index + 1}, ${kind.label}, ` +
-      `${page.widgets.length} ${plural(page.widgets.length, 'gadget', 'gadgets')}`
+      `${plural(GADGET_COUNT, page.widgets.length)}`
     )
     screen.append(renderPage(page, aspectRatioOf(ctx.device, orientation), ctx.settings, ctx.language))
     if (options.onOpen) screen.addEventListener('click', () => options.onOpen?.(index))
@@ -622,8 +636,7 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
     const meta = el('div', 'pagecard__meta')
     meta.append(
       el('span', 'pagecard__class', kind.shortName),
-      el('span', 'pagecard__widgets',
-        `${page.widgets.length} ${plural(page.widgets.length, 'gadget', 'gadgets')}`)
+      el('span', 'pagecard__widgets', plural(GADGET_COUNT, page.widgets.length))
     )
     card.append(meta)
     card.append(el('p', 'pagecard__nav', navigationsLabel(page)))
