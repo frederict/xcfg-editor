@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { openContainer, exportContainer } from '../../src/core/container'
+import { serializeJson } from '../../src/core/serializeJson'
 import { EXPORTS } from '../fixtures/paths'
 
 describe('conteneur', () => {
@@ -37,8 +38,19 @@ describe('conteneur', () => {
     expect(reopened.parseError).toBeUndefined()
     expect(reopened.dosTime).toBe(container.dosTime)
     expect(reopened.dosDate).toBe(container.dosDate)
-    // Le document n'ayant pas changé, l'archive réécrite est celle d'origine.
-    expect(Buffer.from(exported).equals(Buffer.from(bytes))).toBe(true)
+
+    // Le document n'ayant pas changé, il ressort du conteneur réécrit à l'octet près.
+    // C'est la propriété utile, et elle porte sur *notre* code.
+    expect(serializeJson(reopened.document)).toBe(serializeJson(container.document))
+
+    // On ne compare pas `exported` aux octets d'origine : le flux `deflate` dépend de la
+    // zlib du moteur (mesuré : 7 658 octets sous zlib 1.2.12, 7 646 sous 1.3.1), pas de
+    // ce dépôt. Un tel test serait rouge ou vert selon la machine. La conformité aux
+    // octets de XCTrack reste éprouvée par `tests/core/zip.test.ts`, sur l'archive réelle
+    // quand elle est fournie. Ce qui est déterministe et donc exigé ici : réexporter
+    // deux fois donne deux fois les mêmes octets.
+    expect(Buffer.from(await exportContainer(container)).equals(Buffer.from(exported)))
+      .toBe(true)
   })
 
   it('un JSON invalide reste exportable', async () => {
