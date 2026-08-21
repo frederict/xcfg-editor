@@ -726,13 +726,42 @@
    Toutes les tailles viennent de `2026-08-21_barre-etat-reelle.png`, découpe 1:1 du
    widget réel (507 × 99 px) — voir le commentaire de tête de statusLine.ts.
 
-   La police est CONSTANTE, pas proportionnelle à la hauteur de la barre : deux captures
-   de barres hautes de 74 et 99 px donnent la même hauteur de capitale (36 et 37 px).
-   `--xc-page-min` (le petit côté de la page, posé par `canvas.ts`) porte donc la taille,
-   0,0736 × 720 = 53 px sur l'écran de référence ; le plafond `min()` à 0,72 fois la
-   hauteur du widget évite le débordement sur une barre très plate. Les éléments sont
-   groupés au centre : sur l'appareil ils remplissent la barre d'un bord à l'autre
-   (contenu 493 px sur 500), et non alignés à droite comme le faisait ce rendu. */
+   **La taille du texte est TRANCHÉE, et ce n'était ni « constante » ni « proportionnelle
+   à la hauteur ».** Elle suit le MINIMUM de deux contraintes — la hauteur du gadget ET sa
+   largeur :
+
+       hauteur d'encre ≈ min( 0,70 × hauteur , 0,077 × largeur )
+
+   Six barres de diagnostic le donnent d'un coup
+   (`captures-air3/2026-08-21_barre-etat-tailles.png`, hauteur du glyphe « % ») :
+
+   | largeur × hauteur | prédit | mesuré |
+   |---|---|---|
+   | 1280 × 50  | 35 | 33 |
+   | 1280 × 99  | 69 | 70 |
+   | 1280 × 199 | 99 | 99 |
+   |  251 × 198 | 19 | 19 |
+   |  402 × 198 | 31 | 30 |
+   |  627 × 198 | 48 | 49 |
+
+   Et il réconcilie EXACTEMENT les deux captures qui se contredisaient, sans rien changer
+   d'autre : 507 × 99 → min(69 ; 39) = 39, mesuré 39 ; 1280 × 100 → min(70 ; 98) = 70,
+   mesuré 71. Une barre large est limitée par sa hauteur, une barre étroite par sa
+   largeur — et la barre du propriétaire est étroite, ce qui explique que son texte
+   paraisse deux fois plus petit qu'attendu.
+
+   L'ancienne lecture — une police CONSTANTE de 53 px tirée de `--xc-page-min` — ne
+   tombait juste que sur la capture de référence, précisément parce qu'elle est étroite.
+   Sur la barre pleine largeur de la page 9 de la planche, elle donnait 38 px d'encre
+   contre 71 sur l'appareil.
+
+   Les facteurs ci-dessous sont ceux de la loi divisés par 0,73, hauteur des chiffres de
+   Roboto en fraction de la police : 0,70 / 0,73 = 0,959 et 0,077 / 0,73 = 0,1055.
+
+   Ce que le relevé laisse ouvert : le **nombre d'éléments affichés** (`showGps`,
+   `showLive`, `showBatteryPercent`…) devrait entrer dans le facteur de largeur, puisque
+   le contenu se répartit toujours de bord à bord. Les six barres du relevé portent toutes
+   les six mêmes éléments : NON VÉRIFIÉ. */
 .xc-status {
   width: 100%;
   height: 100%;
@@ -753,8 +782,8 @@
   font-weight: 700;
   overflow: hidden;
   font-size: min(
-    calc(var(--xc-page-min, 720) * 0.0736px),
-    calc(var(--xc-h, 100) * 0.72px)
+    calc(var(--xc-h, 100) * 0.959px),
+    calc(var(--xc-w, 200) * 0.1055px)
   );
 }
 
@@ -1349,8 +1378,14 @@
   );
 }
 
-/* Bandes teintées : le nom de la zone et son plancher-plafond, c'est-à-dire son
-   IDENTITÉ ; les deux distances restent sur blanc.
+/* Bandes teintées — **la règle est TRANCHÉE, et ce n'est pas le rang de la ligne** :
+   les deux lignes d'identité (nom, plancher-plafond) sont toujours teintées, et une ligne
+   de DISTANCE l'est quand la flèche de son pictogramme TRAVERSE la hachure. Voir le
+   commentaire de `buildHorizontalIcon` dans airspaceProximity.ts pour le relevé — quatre
+   widgets de hauteurs différentes, motif rigoureusement identique, une seule ligne
+   départageant les deux lectures envisagées auparavant.
+
+   Ancien commentaire, conservé pour mémoire de ce qu'il affirmait :
    **La règle n'est vérifiée qu'à 7 bandes sur 8**, et il faut le dire : sur la page 8 de
    la planche, la quatrième bande (distance horizontale de BEAUVECHAIN) est teintée alors
    que la huitième, son homologue de Charleroi, ne l'est pas — deux lignes de contenu
@@ -1367,7 +1402,13 @@
 /* 0,8 em et non 1 em : la flèche de l'appareil fait 44 × 45 px là où ses chiffres font
    47 px de haut (page 8 de la planche, ligne « ↑ 689 m »). À 1 em la nôtre montait à
    57 px et dominait la ligne. */
-.xc-airprox__icon { width: 0.8em; height: 0.8em; stroke: var(--xc-ink); fill: var(--xc-ink); flex: none; }
+.xc-airprox__icon {
+  width: 0.9em; height: 0.9em; stroke: var(--xc-ink); fill: var(--xc-ink); flex: none;
+  stroke-width: 2.4;
+}
+/* La hachure : le filet est plus épais que ses dents, comme sur la capture. */
+.xc-airprox__hatch { stroke-width: 2.8; stroke-linecap: round; }
+.xc-airprox__hatch-tooth { stroke-width: 1.6; stroke-linecap: round; }
 
 /* Filet rouge entre deux zones — horizontal en colonne (défaut), vertical en ligne.
    Épaisseur relevée à 4 px sur un widget de 646 px de haut, soit 0,6 % ; le plancher de

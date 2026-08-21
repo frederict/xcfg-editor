@@ -26,16 +26,43 @@ import { widgetBoolean } from '../defaults'
  *   rempli, mais un corps plein sombre (`#231f20`, relevé au pixel) portant des cellules
  *   vertes (`#8dc63f`) régulièrement espacées.
  *
- * **La taille du texte ne suit PAS la hauteur de la barre.** Deux captures le montrent :
- * la barre de `landscape[3]` (`ecran-landscape3-17widgets.png`, 480 × 74) affiche les
- * mêmes capitales à 36 px que celle-ci (507 × 99) à 37-39 px. Une taille proportionnelle
- * à la hauteur donnerait 27 px sur la première ; une taille constante d'environ 52 px
- * rend compte des deux à 5 % près. C'est le même constat que pour les titres de widgets
- * (voir `textMetrics.ts`), et c'est ce qui est implémenté — avec un plafond à 0,72 fois
- * la hauteur, pour qu'une barre très plate ne déborde pas. Les pictogrammes, eux, ne
- * suivent proprement ni la hauteur ni une taille fixe entre les deux captures (GPS 40 px
- * sur la barre de 74, 33 px sur celle de 99) : on suit la capture de référence, la plus
- * fraîche et la seule prise en pleine résolution du widget. **NON TRANCHÉ.**
+ * ## La taille du texte — TRANCHÉE, et c'est la LARGEUR qui manquait
+ *
+ * Ce module a longtemps posé une police **constante** (environ 53 px), sur la foi de deux
+ * captures de barres hautes de 74 et 99 px qui donnaient la même hauteur de capitale.
+ * L'explication était fausse, et la réserve écrite ici l'a été jusqu'à ce qu'une page de
+ * diagnostic portant **six barres** la tranche
+ * (`captures-air3/2026-08-21_barre-etat-tailles.png`, hauteur du glyphe « % ») :
+ *
+ * | largeur × hauteur | hauteur du « % » |
+ * |---|---|
+ * | 1280 × 50 | 33 |
+ * | 1280 × 99 | 70 |
+ * | 1280 × 199 | 99 |
+ * | 251 × 198 | 19 |
+ * | 402 × 198 | 30 |
+ * | 627 × 198 | 49 |
+ *
+ * À hauteur CONSTANTE (198 px), le texte passe de 19 à 49 px selon la largeur. Le modèle
+ * qui rend compte des six mesures est un minimum de deux contraintes :
+ *
+ * > hauteur d'encre ≈ min( 0,70 × hauteur du widget ; 0,077 × largeur du widget )
+ *
+ * Il réconcilie **exactement** les deux captures qui se contredisaient : 507 × 99 →
+ * min(69 ; 39) = 39, mesuré 39 ; 1280 × 100 → min(70 ; 98) = 70, mesuré 71. Autrement dit
+ * une barre large est limitée par sa hauteur, une barre étroite par sa largeur — et la
+ * barre du propriétaire est étroite (3958/10000 de la page), ce qui explique que son texte
+ * paraisse deux fois plus petit qu'attendu. La formule vit dans `.xc-status` (style.css),
+ * où les deux dimensions sont disponibles.
+ *
+ * Ce que le relevé laisse ouvert : le **nombre d'éléments affichés** devrait entrer dans le
+ * facteur de largeur, puisque le contenu se répartit toujours de bord à bord. Les six
+ * barres portent les mêmes six éléments — **NON VÉRIFIÉ**.
+ *
+ * Les pictogrammes, eux, ne suivent proprement ni la hauteur ni une taille fixe entre les
+ * deux captures (GPS 40 px sur la barre de 74, 33 px sur celle de 99) : on suit la capture
+ * de référence, la plus fraîche et la seule prise en pleine résolution du widget. **NON
+ * TRANCHÉ**, et distinct de la taille du texte, qui l'est désormais.
  *
  * **Ce qui est délibérément NON reproduit — état de l'appareil, pas trait du widget.**
  * Le fichier `.xcfg` ne porte aucune clé de ces états ; les inventer ferait dire au rendu

@@ -64,7 +64,12 @@ describe('style.css — corrections sans trace dans le DOM', () => {
     const rule = css.slice(css.indexOf('.xc-status {'), css.indexOf('.xc-status {') + 1400)
     expect(rule).toContain('justify-content: flex-start;')
     expect(rule).not.toContain('justify-content: center;')
-    expect(rule).toContain('var(--xc-page-min, 720)')
+    // La taille du texte suit le MINIMUM de la hauteur et de la LARGEUR de la barre —
+    // c'est la largeur qui manquait au modèle, et elle réconcilie les deux captures qui
+    // se contredisaient (507 × 99 → 39 px d'encre, 1280 × 100 → 70).
+    expect(rule).toContain('calc(var(--xc-h, 100) * 0.959px)')
+    expect(rule).toContain('calc(var(--xc-w, 200) * 0.1055px)')
+    expect(rule).not.toContain('var(--xc-page-min, 720)')
     const batterie = css.slice(css.indexOf('.xc-status__battery {'), css.indexOf('.xc-status__battery {') + 200)
     expect(batterie).toContain('margin-left: auto;')
   })
