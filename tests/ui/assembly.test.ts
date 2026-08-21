@@ -211,6 +211,23 @@ describe('assemblage — le bandeau de réglages s’ouvre quand il a quelque ch
   it('replié sans sélection, le bouton nomme la liste — le seul chemin vers les gadgets muraillés', () => {
     expect(main).toContain("'Liste des gadgets'")
   })
+
+  it('le repli tient : une fois le pilote prononcé, plus rien ne rouvre le bandeau', () => {
+    // Le dépliage de la première sélection est une amorce, pas une règle. Il se rejouait à
+    // chaque sélection : un bandeau replié à la main se rouvrait au clic suivant et
+    // reprenait les deux tiers bas de la page — « un combat contre l'interface », dit le
+    // pilote d'essai. Une préférence de l'outil ne discute pas avec un geste.
+    expect(main).toMatch(/^let dockSetByPilot = false$/m)
+    expect(main).toContain('if (dockSetByPilot || !dockCollapsed) return')
+    // Le drapeau se lève sur le bouton de repli, et sur lui seul : c'est là, et nulle part
+    // ailleurs, que le pilote se prononce sur le bandeau.
+    const toggle = main.slice(
+      main.indexOf("dockToggle.addEventListener('click'"),
+      main.indexOf("head.append(dockTitle")
+    )
+    expect(toggle).toContain('dockSetByPilot = true')
+    expect(main.match(/dockSetByPilot = true/g)).toHaveLength(1)
+  })
 })
 
 describe('assemblage — sélectionner un gadget l’amène sous les yeux du pilote', () => {

@@ -180,6 +180,22 @@ let paletteQuery = ''
 let dockCollapsed = true
 
 /**
+ * Vrai dès que le pilote a touché au bouton de repli, dans un sens ou dans l'autre.
+ *
+ * Le dépliage automatique de la première sélection est une **amorce**, pas une règle :
+ * elle sert tant que le pilote n'a rien dit du bandeau. Sans ce drapeau, elle se
+ * rejouait à chaque sélection — un bandeau replié à la main se rouvrait au clic suivant,
+ * reprenait les deux tiers bas de la page, et le pilote d'essai l'a décrit comme « un
+ * combat contre l'interface ». Le repli doit tenir jusqu'à ce qu'il en décide autrement,
+ * et c'est le bouton, et lui seul, qui porte cette décision.
+ *
+ * Replié, le bandeau ne disparaît pas pour autant : sa barre de tête nomme le gadget
+ * sélectionné et son bouton dit ce que le dépliage donnerait. Le pilote garde donc, sans
+ * rien reprendre à la page, de quoi savoir sur quoi il agit et comment y revenir.
+ */
+let dockSetByPilot = false
+
+/**
  * La liste des widgets, montrée ou masquée. Même durée de vie que `dockCollapsed`, et pour
  * la même raison : le pilote qui l'a masquée pour donner toute la largeur aux réglages ne
  * doit pas la voir revenir au widget suivant.
@@ -1552,9 +1568,12 @@ function syncDock(): void {
  * Le bandeau s'ouvre parce qu'il a enfin quelque chose à montrer. Appelé sur les gestes
  * de sélection du pilote — clic sur la page, ligne de la liste — et sur eux seuls : un
  * bandeau replié à la main ne doit pas se rouvrir au prochain `render()`.
+ *
+ * Ni au prochain clic, d'ailleurs : `dockSetByPilot` arrête ce dépliage dès que le pilote
+ * s'est prononcé. Une préférence de l'outil ne discute pas avec un geste de l'utilisateur.
  */
 function openDockForSelection(): void {
-  if (!dockCollapsed) return
+  if (dockSetByPilot || !dockCollapsed) return
   dockCollapsed = false
   syncDock()
 }
@@ -1824,6 +1843,9 @@ function buildDock(): HTMLElement {
   dockToggle = el('button', 'btn dock__toggle', 'Replier')
   dockToggle.type = 'button'
   dockToggle.addEventListener('click', () => {
+    // Le pilote vient de se prononcer : le dépliage automatique de la sélection s'arrête
+    // ici, définitivement, dans un sens comme dans l'autre.
+    dockSetByPilot = true
     dockCollapsed = !dockCollapsed
     syncDock()
   })
