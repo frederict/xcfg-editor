@@ -93,7 +93,10 @@ import {
  *
  * ## Ce que le fichier porte et que la page ne sait pas présenter
  *
- * 85 clés sur 216 n'ont aucun libellé, et un fichier réel en porte 49. Les faire
+ * 86 réglages sur 217 n'ont aucun libellé, et un fichier réel en porte 49. (Le compte
+ * de 217 est celui du catalogue extrait de 1.0.3-beta ; la base des versions en
+ * annonce 216 à son dernier palier, parce qu'elle ne compte pas la même chose — un
+ * inventaire de schéma n'est pas une liste de réglages relevés.) Les faire
  * disparaître serait mentir sur le contenu du fichier. Elles sont donc rassemblées en
  * fin de page, en trois groupes qui disent chacun **pourquoi** :
  *
