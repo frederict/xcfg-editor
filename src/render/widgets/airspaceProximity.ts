@@ -2,6 +2,7 @@ import type { Widget } from '../../model/widget'
 import type { RenderSettings } from '../../model/preferences'
 import { readString } from '../../core/access'
 import { widgetBoolean } from '../defaults'
+import { measuredWidthEm, valueWidthEm } from '../textMetrics'
 
 /**
  * `WAirspaceProximity` — proximité d'espace aérien (rendu-observe.md, « Proximité
@@ -92,13 +93,38 @@ function buildHorizontalIcon(): SVGSVGElement {
   return svg
 }
 
+/**
+ * Graisse du widget : tout y est en gras sur la capture, y compris la ligne
+ * plancher-plafond. Sert à mesurer les textes dans la police qui les dessinera.
+ */
+const LINE_FONT_WEIGHT = 700
+
+/**
+ * Place prise par le pictogramme d'une ligne de distance, en cadratins : la flèche fait
+ * 0,8 em (`.xc-airprox__icon`, style.css) et l'écart 0,3 em (`.xc-airprox__line`).
+ */
+const ICON_WIDTH_EM = 1.1
+
+/**
+ * Publie sur la ligne la largeur de son texte, en cadratins — mesurée dans la police du
+ * navigateur quand c'est possible. `style.css` s'en sert pour ne réduire une ligne QUE
+ * si elle ne tiendrait pas dans la largeur de la zone : c'est ce que fait l'appareil,
+ * où « Charleroi » se dessine à pleine taille (casse 49 px) et « BEAUVECHAIN », plus
+ * long dans la même largeur, à 33 px.
+ */
+function publishWidth(line: HTMLElement, text: string, extraEm = 0): void {
+  const em = (measuredWidthEm(text, LINE_FONT_WEIGHT) ?? valueWidthEm(text)) + extraEm
+  line.style.setProperty('--xc-line-em', String(Math.max(1, em)))
+}
+
 function buildDistance(className: string, icon: SVGSVGElement, text: string): HTMLElement {
   const row = document.createElement('span')
-  row.className = className
+  row.className = `xc-airprox__line ${className}`
   row.append(icon)
   const value = document.createElement('span')
   value.textContent = text
   row.append(value)
+  publishWidth(row, text, ICON_WIDTH_EM)
   return row
 }
 
@@ -107,8 +133,9 @@ function buildZone(widget: Widget, zone: ExampleZone): HTMLElement {
   el.className = 'xc-airprox__zone'
 
   const name = document.createElement('span')
-  name.className = 'xc-airprox__name'
+  name.className = 'xc-airprox__line xc-airprox__line--tinted xc-airprox__name'
   name.textContent = zone.name
+  publishWidth(name, zone.name)
   el.append(name)
 
   // Absente du fichier, la clé prend son défaut — `true` d'après le relevé des 75
@@ -118,8 +145,9 @@ function buildZone(widget: Widget, zone: ExampleZone): HTMLElement {
   // `=== true` la faisait alors disparaître.
   if (widgetBoolean(widget, '_showoriginalheightline') ?? false) {
     const range = document.createElement('span')
-    range.className = 'xc-airprox__range'
+    range.className = 'xc-airprox__line xc-airprox__line--tinted xc-airprox__range'
     range.textContent = zone.range
+    publishWidth(range, zone.range)
     el.append(range)
   }
 
@@ -133,9 +161,8 @@ export function drawAirspaceProximity(widget: Widget, _settings: RenderSettings,
   const element = document.createElement('div')
   element.className = 'xc-airprox'
 
-  if (readString(widget.node, '_splitdirection') === 'HORIZONTAL') {
-    element.classList.add('xc-airprox--row')
-  }
+  const horizontal = readString(widget.node, '_splitdirection') === 'HORIZONTAL'
+  if (horizontal) element.classList.add('xc-airprox--row')
 
   EXAMPLE_ZONES.forEach((zone, index) => {
     if (index > 0) {
@@ -145,6 +172,13 @@ export function drawAirspaceProximity(widget: Widget, _settings: RenderSettings,
     }
     element.append(buildZone(widget, zone))
   })
+
+  // Combien de lignes se superposent en hauteur, et combien de zones se partagent la
+  // largeur : `style.css` en tire la hauteur d'une bande, donc la taille du texte. Rien
+  // en CSS ne donne ce compte — `--xc-h` est la hauteur du widget entier.
+  const linesPerZone = element.querySelectorAll('.xc-airprox__zone')[0]?.childElementCount ?? 0
+  element.style.setProperty('--xc-airprox-rows', String(horizontal ? linesPerZone : linesPerZone * EXAMPLE_ZONES.length))
+  element.style.setProperty('--xc-airprox-cols', String(horizontal ? EXAMPLE_ZONES.length : 1))
 
   return element
 }

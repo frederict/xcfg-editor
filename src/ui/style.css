@@ -100,8 +100,8 @@
      très clair et filet rouge séparateur, observés sur ecran-non-identifie-4.png. Ce
      rouge pur est distinct du rouge des titres (#f44336) : deux rouges coexistent sur
      l'appareil, on ne suppose donc pas qu'il s'agit du même. */
-  --xc-airprox-bg: #dce6f8;
-  --xc-airprox-divider: #ff0000;
+  --xc-airprox-bg: #d3e1ff;
+  --xc-airprox-divider: #ff3232;
 }
 
 /* `renderPage` (canvas.ts) enveloppe `.xc-page` dans un `<svg viewBox>` +
@@ -906,15 +906,27 @@
 /* Proximité d'espace aérien — WAirspaceProximity (airspaceProximity.ts). Blocs empilés
    en colonne par défaut, en ligne si `_splitdirection` vaut `HORIZONTAL` — voir le
    commentaire de tête du module pour la corrélation observée avec la forme du widget. */
+/* Écart 1.5 de la revue des 75 widgets. Le rendu précédent posait quatre petites lignes
+   de texte en haut de chaque zone sur un aplat bleu uniforme : 729 px d'encre contre
+   29 577 sur l'appareil, 78 % du widget vide, casse de 9-10 px contre 32 à 53.
+   L'appareil, lui, découpe le widget en BANDES DE HAUTEUR ÉGALE, une par ligne, qui le
+   remplissent d'un bord à l'autre.
+
+   Mesuré sur la page 8 de la planche, widget de 320 × 646 px : huit lignes de texte
+   centrées à y = 39, 119, 198, 279, 361, 442, 521 et 599 — huit bandes de 80,75 px,
+   soit exactement la hauteur du widget divisée par le nombre de lignes. D'où
+   `--xc-airprox-rows` (posée par airspaceProximity.ts) : le CSS ne peut pas compter les
+   lignes, `--xc-h` étant la hauteur du widget entier. */
 .xc-airprox {
   width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: var(--xc-airprox-bg);
+  /* Le fond n'est plus bleu : ce sont les BANDES qui le sont. */
+  background: var(--xc-surface);
   color: var(--xc-ink);
-  font-size: 0.8em;
-  line-height: 1.3;
+  font-weight: 700;
+  line-height: 1;
   overflow: hidden;
 }
 
@@ -926,33 +938,69 @@
   flex: 1 1 0;
   min-width: 0;
   min-height: 0;
-  padding: 0.35em 0.5em;
-  gap: 0.1em;
 }
 
-.xc-airprox__name { font-weight: 700; }
-.xc-airprox__range { opacity: 0.85; }
+/* Une bande. `flex: 1 1 0` lui donne sa part exacte de la hauteur ; la taille du texte
+   s'en déduit — 0,78 fois la hauteur de bande, calé sur la capture : les chiffres des
+   lignes de distance y font 47 px de casse dans une bande de 80,75, les nôtres 47 après
+   ce calage (51 à 0,85, la valeur essayée d'abord).
+
+   La borne de largeur est le même garde-fou que sur les titres de widget
+   (`.xc-num__title`) : `--xc-line-em` est la largeur mesurée du texte en cadratins
+   (airspaceProximity.ts). L'appareil fait la même chose, et c'est ce qui explique les
+   deux tailles de la capture : « Charleroi » y tient à pleine taille (casse 49 px)
+   tandis que « BEAUVECHAIN », plus long dans la même largeur, tombe à 33 px. */
+.xc-airprox__line {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3em;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: min(
+    calc(var(--xc-h, 100) / var(--xc-airprox-rows, 8) * 0.78px),
+    calc(var(--xc-w, 200) / var(--xc-airprox-cols, 1) / var(--xc-line-em, 8) * 1px)
+  );
+}
+
+/* Bandes teintées : le nom de la zone et son plancher-plafond, c'est-à-dire son
+   IDENTITÉ ; les deux distances restent sur blanc.
+   **La règle n'est vérifiée qu'à 7 bandes sur 8**, et il faut le dire : sur la page 8 de
+   la planche, la quatrième bande (distance horizontale de BEAUVECHAIN) est teintée alors
+   que la huitième, son homologue de Charleroi, ne l'est pas — deux lignes de contenu
+   quasi identique (« 572 m » et « 573 m »), deux fonds différents. Aucune autre lecture
+   n'explique mieux les huit bandes : teinter tout sauf la distance verticale se trompe
+   d'exactement une bande elle aussi. **NON TRANCHÉ** : il faut une deuxième capture de
+   ce widget pour lever le doute. */
+.xc-airprox__line--tinted { background: var(--xc-airprox-bg); }
 
 .xc-airprox__dist {
   display: inline-flex;
-  align-items: center;
-  gap: 0.3em;
-  font-weight: 700;
 }
 
-.xc-airprox__icon { width: 1em; height: 1em; stroke: var(--xc-ink); fill: var(--xc-ink); flex: none; }
+/* 0,8 em et non 1 em : la flèche de l'appareil fait 44 × 45 px là où ses chiffres font
+   47 px de haut (page 8 de la planche, ligne « ↑ 689 m »). À 1 em la nôtre montait à
+   57 px et dominait la ligne. */
+.xc-airprox__icon { width: 0.8em; height: 0.8em; stroke: var(--xc-ink); fill: var(--xc-ink); flex: none; }
 
-/* Filet rouge entre deux zones — horizontal en colonne (défaut), vertical en ligne. */
+/* Filet rouge entre deux zones — horizontal en colonne (défaut), vertical en ligne.
+   Épaisseur relevée à 4 px sur un widget de 646 px de haut, soit 0,6 % ; le plancher de
+   1 px garde le filet visible sur une vignette. */
 .xc-airprox__divider {
   border: none;
   margin: 0;
   flex: none;
   background: var(--xc-airprox-divider);
-  height: 2px;
+  height: max(1px, calc(var(--xc-h, 100) * 0.006px));
   width: 100%;
 }
 
-.xc-airprox--row > .xc-airprox__divider { height: 100%; width: 2px; }
+.xc-airprox--row > .xc-airprox__divider {
+  height: 100%;
+  width: max(1px, calc(var(--xc-w, 200) * 0.006px));
+}
 
 /* Réception de messages — WLiveMessage (liveMessage.ts). L'appareil n'y dessine aucun
    contenu tant qu'aucun message n'est arrivé (registerBlankAtRest, widgets/index.ts —
