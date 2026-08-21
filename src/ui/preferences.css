@@ -513,6 +513,66 @@
 /* Le contrôle manque : la ligne le montre par sa valeur, en retrait comme une absence. */
 .prefs__row[data-settable='false'] .prefs__value { color: var(--prefs-soft); }
 
+/* ------------------------------------------------------------ les liaisons de touches */
+
+/*
+ * Une liaison de touche porte trois choses que l'entier du fichier mêle : la touche, son
+ * code, et l'appui. Elles s'écrivent l'une sous l'autre plutôt qu'en une phrase — la
+ * touche d'abord et en pleine encre, le détail technique en dessous et en retrait, et
+ * l'appui à part parce que c'est une **seconde** information sur la même touche.
+ *
+ * `column` et non `row` : sur une ligne de réglages, trois morceaux côte à côte pousseraient
+ * la valeur hors de la colonne dès le premier libellé un peu long.
+ */
+.prefs__binding {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+  font-size: 13px;
+  text-align: right;
+  min-width: 0;
+}
+
+.prefs__binding-key { overflow-wrap: anywhere; }
+
+.prefs__binding-detail {
+  font-family: var(--font-data, monospace);
+  font-size: 10.5px;
+  color: var(--prefs-soft);
+  overflow-wrap: anywhere;
+}
+
+/*
+ * L'appui long est mesuré — l'écran natif de XCTrack l'affiche en toutes lettres — et se
+ * porte donc comme un fait, non comme une réserve : un cartouche discret, pas un
+ * avertissement.
+ */
+.prefs__binding-press {
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
+  padding: 0.05rem 0.35rem;
+  border: 1px solid var(--prefs-line);
+  border-radius: 999px;
+  color: var(--prefs-soft);
+  white-space: nowrap;
+}
+
+/*
+ * Ce que notre relevé dit du **matériel**. En toutes lettres sous la ligne, jamais en
+ * infobulle : un propos sur le boîtier se lit au sol, pas au survol. Même sobriété que
+ * `prefs__refusal` — c'est un renseignement, pas une alarme, et le relevé ne couvre qu'un
+ * modèle.
+ */
+.prefs__hardware {
+  grid-column: 1 / -1;
+  margin: 0.35rem 0 0;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--prefs-soft);
+  max-width: 78ch;
+}
+
 /* Ce que le pilote vient de renseigner de personnel, dit au moment où il le fait. */
 .prefs__filled {
   margin: 0.6rem 0 0;

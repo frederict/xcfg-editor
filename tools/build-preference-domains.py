@@ -8,26 +8,28 @@ Deux familles de préférences échappent au catalogue courant, et pour deux rai
 différentes. Toutes deux laissent l'éditeur sans domaine, donc en champ de saisie
 libre — où le pilote peut écrire une valeur que XCTrack refusera.
 
-## `Unit.*` — huit listes que XCTrack remplit en code
+## `Unit.*` — huit listes que XCTrack remplit en code, et qu'on a relevées à l'écran
 
 Les huit `ListPreference` de `preferences_units` n'ont ni `android:entries` ni
 `android:entryValues` : l'écran ne porte que la clé et le titre, et XCTrack peuple la
 liste au moment de l'afficher. **Les cinquante-cinq relevés le confirment : aucune
 version, dans aucune langue, ne déclare ces listes en ressources.**
 
-Ce qu'on peut relever, et qu'on relève ici :
+Trois choses de nature différente entrent donc dans ce fichier, et elles ne se
+confondent pas :
 
 * le **vocabulaire** des unités — l'énumération d'unités du bytecode, dont chaque
   constante porte le code écrit dans le fichier (`m`, `km/h`, `FL`…). C'est
-  l'alphabet dans lequel une valeur est écrite ;
-* les valeurs **observées** dans des fichiers réels.
+  l'alphabet dans lequel une valeur est écrite, **extrait de l'APK** ;
+* les valeurs **observées** dans des fichiers réels ;
+* le **domaine** de chaque clé — la liste fermée que l'écran propose — qui ne se lit
+  nulle part et qui a donc été **relevé à la main sur l'appareil** : voir
+  `MEASURED_UNIT_DOMAINS`. C'est la seule donnée de ce fichier qui ne sorte ni du
+  bytecode ni d'un `.xcfg`.
 
-Ce qu'on ne relève **pas**, faute de pouvoir le lire : le sous-ensemble du
-vocabulaire que chaque clé accepte. `Unit.Distance` vaut `m,km` dans le corpus —
-deux codes séparés par une virgule, une échelle et non une unité — quand
-`Unit.Altitude` vaut `m`. Rien dans les relevés ne dit quelles combinaisons XCTrack
-propose. Le champ `domain` reste donc `null`, et c'est un renseignement : mieux vaut
-que l'éditeur se taise que de proposer une valeur qu'un vario refusera en vol.
+Ce relevé porte sur **un seul modèle d'appareil et une seule version de XCTrack**.
+Il ne se présente donc pas comme une propriété de XCTrack : `domainSource` dit sur
+quoi il a été fait, et l'interface doit le redire au pilote.
 
 ## `Keys.*` — un entier sans table de correspondance
 
@@ -41,7 +43,7 @@ Le niveau d'API relevé part dans le fichier : une table lue sur l'API 36 ne con
 pas les codes ajoutés plus tard, et un code inconnu doit rester `null` plutôt que de
 recevoir un nom inventé.
 
-### Le bit 0x01000000 : ce qu'on croit, et pourquoi on le dit ainsi
+### Le bit 0x01000000 : l'appui long, et il est maintenant mesuré
 
 Quatre valeurs du corpus dépassent 16 777 216 : `16777240`, `16777241`, `16777243`,
 `16777482`. Ôté le bit 0x01000000, il reste `24`, `25`, `27`, `266` — quatre codes
@@ -58,13 +60,33 @@ fichier portent sans le bit** :
 Deux ressources de texte vont dans le même sens : `keyLongPress` = « Long press: » et
 `keyExtLong` = « External key - long press ».
 
-C'est cohérent, c'est corroboré — **ce n'est pas lu dans le bytecode**. Le fichier
-porte donc `longPressBitBasis: "inferred"` avec ses preuves, et l'interface doit dire
-« bit 0x01000000 » ou « appui long (déduit) », jamais « appui long » comme un constat.
+Ce n'était qu'une déduction jusqu'à ce que l'écran natif de XCTrack la confirme :
+mise en regard d'une configuration portant `Keys.PreviousPage = 16777240`, la ligne
+affiche « **Appui long :** Augmenter le volume » — le bit posé, la touche 24, et le
+mot. Le fichier porte donc `longPressBitBasis: "measured"`, et l'interface peut
+écrire « appui long » sans réserve.
 
-Et le corpus ne vient que d'**un seul appareil** : ces quatre paires sont tout ce que
-nous avons. Une cinquième valeur qui contredirait la lecture renverserait la
-conclusion.
+Ce qui reste **non vérifié** et ne doit pas être gommé : le relevé a été fait sur un
+seul appareil et une seule version, et rien ne dit ce que le bit vaudrait sur une
+touche que cet appareil-là ne porte pas.
+
+## Les touches que l'appareil porte vraiment
+
+Un code de touche n'est pas une touche. `Keys.PrevWaypoint = 266` est une ligne
+parfaitement valide d'un fichier ; encore faut-il que le boîtier ait une touche qui
+émette 266. Sur l'AIR³ 7.2 relevé ici, il n'y en a que trois — voir
+`MEASURED_HARDWARE_KEYS`.
+
+⚠️ **Ce relevé ne vaut que pour ce modèle-là.** Les AIR³ plus récents portent
+davantage de touches physiques, et un réglage inerte sur l'un peut être vivant sur
+l'autre. Le fichier `.xcfg` déclarant son appareil (`info.device`), l'interface peut
+et doit conditionner son propos au modèle — et ne jamais écrire « cette touche
+n'existe pas ».
+
+⚠️ **Le fichier de disposition du contrôleur de clavier ne fait pas relevé.**
+`sn7326-key` déclare des touches que le boîtier n'a pas (`DPAD_*`, `BACK`, `CAMERA`
+en 27) : un fichier de configuration Android décrit ce que la puce sait faire, pas ce
+que le fabricant a soudé. Seul l'appui d'un doigt sur le boîtier fait foi.
 """
 from __future__ import annotations
 
@@ -97,6 +119,83 @@ UNIT_ENUM_MARKERS = {"m/s", "km/h", "m", "ft"}
 
 UNIT_PREFIX = "Unit."
 KEY_PREFIX = "Keys."
+
+# --------------------------------------------------------------------------
+# Ce qui a été relevé à la main, sur l'appareil
+# --------------------------------------------------------------------------
+#
+# Tout le reste de ce fichier sort d'un APK ou d'un `.xcfg`, et se régénère. Les deux
+# tables ci-dessous, non : elles ont été relevées **à l'œil et au doigt** sur un
+# appareil, et rien dans le code ne peut les revérifier. Elles sont donc écrites ici,
+# à la main, avec leur provenance — et le fichier produit la porte jusqu'à l'écran.
+
+# Le relevé des huit listes d'unités : chaque `ListPreference` dépliée sur l'écran
+# natif « Unités » de XCTrack, parcourue option par option, et chaque choix vérifié
+# par un export de la configuration.
+#
+# ⚠️ `value` est ce que le **fichier** porte, `label` ce que l'**écran** affiche, et
+# les deux diffèrent : l'appareil écrit « m, km » à l'écran et `"m,km"` dans le
+# fichier. Écrire l'espace dans le fichier produirait une valeur que XCTrack refuse.
+#
+# ⚠️ L'ordre est celui de l'appareil, et il n'est ni alphabétique ni logique
+# (`Unit.RelativeDistance` propose km, puis nm, puis mi). Le trier serait déjà ne
+# plus relever.
+MEASURED_UNIT_DOMAINS: dict[str, list[tuple[str, str]]] = {
+    "Unit.Distance": [("m,km", "m, km"), ("mi", "mi"), ("yd,mi", "yd, mi"),
+                      ("nm", "nm")],
+    "Unit.CompetitionDistance": [("m,km", "m, km"), ("mi", "mi"), ("nm", "nm")],
+    "Unit.RelativeDistance": [("km", "km"), ("nm", "nm"), ("mi", "mi")],
+    "Unit.Altitude": [("m", "m"), ("ft", "ft")],
+    "Unit.AirspaceAltitude": [("m", "m"), ("ft", "ft")],
+    "Unit.Speed": [("km/h", "km/h"), ("m/s", "m/s"), ("mph", "mph"), ("kt", "kt")],
+    "Unit.WindSpeed": [("km/h", "km/h"), ("m/s", "m/s"), ("mph", "mph"),
+                       ("kt", "kt")],
+    "Unit.VerticalSpeed": [("m/s", "m/s"), ("ft/min", "ft/min"),
+                           ("100ft/min", "100ft/min")],
+}
+
+UNIT_DOMAIN_SOURCE = {
+    "basis": "measured",
+    "device": "AIR3 AIR3-7.2 8.1.0",
+    "deviceLabel": "AIR³ 7.2",
+    "versionName": "1.0.3-beta",
+    "method": "écran natif « Unités » de XCTrack, chaque liste dépliée et parcourue "
+              "option par option, chaque choix vérifié par un export de la "
+              "configuration",
+    "caveats": [
+        "un seul modèle d'appareil et une seule version de XCTrack : une autre "
+        "pourrait proposer d'autres unités",
+        "l'appareil affiche « m, km » et écrit « m,km » : l'espace de l'écran n'est "
+        "pas dans le fichier",
+    ],
+}
+
+# Les touches **physiques** du boîtier, appuyées une à une, le code lu à l'arrivée.
+#
+# ⚠️ Ce n'est pas une propriété d'XCTrack ni d'Android : c'est ce que **ce
+# modèle-là** porte. Les AIR³ plus récents en ont davantage, et un réglage sans effet
+# sur celui-ci peut être parfaitement vivant sur un autre. Le `.xcfg` déclarant son
+# appareil (`info.device`), l'interface conditionne son propos au modèle.
+MEASURED_HARDWARE_KEYS = [
+    {
+        "deviceId": "air3-7.2",
+        "device": "AIR3 AIR3-7.2 8.1.0",
+        "label": "AIR³ 7.2",
+        "basis": "measured",
+        "keys": [
+            {"code": 24, "label": "volume haut"},
+            {"code": 25, "label": "volume bas"},
+            {"code": 26, "label": "marche/arrêt"},
+        ],
+        "caveats": [
+            "relevé sur ce modèle seul ; les AIR³ plus récents portent davantage de "
+            "touches physiques",
+            "le fichier de disposition du contrôleur de clavier « sn7326-key » "
+            "déclare des touches que le boîtier n'a pas (DPAD_*, BACK, CAMERA en "
+            "27) : il décrit ce que la puce sait faire, pas ce qui est soudé",
+        ],
+    },
+]
 
 # `0.9.11.11-464-g2c43a2932` : 464 commits après l'étiquette.
 BUILD_RE = re.compile(r"-(\d+)-g[0-9a-f]{6,}$")
@@ -262,6 +361,65 @@ def unit_vocabulary(surveys: list[dict]) -> tuple[list[str], dict]:
 
 
 # --------------------------------------------------------------------------
+# Le relevé fait à la main, confronté à ce que les sources lisibles disent
+# --------------------------------------------------------------------------
+
+def unit_domains(vocabulary: list[str], unit_keys: list[str],
+                 unit_values: dict[str, list]) -> dict[str, list[dict[str, str]]]:
+    """`MEASURED_UNIT_DOMAINS`, vérifié contre le bytecode et contre le corpus.
+
+    Un relevé à la main se fait contredire par le reste du fichier plutôt que par un
+    pilote en vol. Trois contradictions arrêtent la génération :
+
+    * une clé d'unité du dernier relevé sans domaine relevé, ou l'inverse ;
+    * un code qui n'est pas du vocabulaire de l'énumération — le relevé aurait alors
+      été fait sur autre chose que ces unités-là ;
+    * une valeur qu'un `.xcfg` réel porte et que le domaine ne propose pas — c'est
+      le signe qu'une option a été manquée, et fermer la liste dessus retirerait au
+      pilote une valeur que son appareil accepte."""
+    known = set(vocabulary)
+    measured = set(MEASURED_UNIT_DOMAINS)
+    declared = set(unit_keys)
+    if measured != declared:
+        raise SystemExit(
+            f"relevé des unités et relevé de version en désaccord : "
+            f"{sorted(measured - declared)} relevées en trop, "
+            f"{sorted(declared - measured)} sans domaine relevé — rien n'est écrit.")
+    for key, choices in MEASURED_UNIT_DOMAINS.items():
+        for value, _label in choices:
+            for code in value.split(","):
+                if code not in known:
+                    raise SystemExit(f"{key} : « {code} » n'est pas du vocabulaire "
+                                     "de l'énumération d'unités — rien n'est écrit.")
+        offered = {value for value, _label in choices}
+        for seen in unit_values.get(key, []):
+            if seen not in offered:
+                raise SystemExit(
+                    f"{key} : un fichier réel porte « {seen} », que le domaine relevé "
+                    "ne propose pas — une option a été manquée, rien n'est écrit.")
+    return {key: [{"value": value, "label": label} for value, label in choices]
+            for key, choices in MEASURED_UNIT_DOMAINS.items()}
+
+
+def hardware_keys(table: dict[int, str]) -> list[dict]:
+    """`MEASURED_HARDWARE_KEYS`, chaque code confronté à la table d'Android.
+
+    Un code relevé au doigt qu'Android ne nomme pas serait une faute de frappe, pas
+    une touche."""
+    for device in MEASURED_HARDWARE_KEYS:
+        for key in device["keys"]:
+            if key["code"] not in table:
+                raise SystemExit(f"{device['deviceId']} : le code {key['code']} n'est "
+                                 "dans aucune table de touches Android lue ici — "
+                                 "rien n'est écrit.")
+    return [
+        {**device,
+         "keys": [{**key, "name": table[key["code"]]} for key in device["keys"]]}
+        for device in MEASURED_HARDWARE_KEYS
+    ]
+
+
+# --------------------------------------------------------------------------
 # Ce que les fichiers réels portent
 # --------------------------------------------------------------------------
 
@@ -335,6 +493,9 @@ def main() -> None:
     unit_keys = sorted(k for k in latest if k.startswith(UNIT_PREFIX))
     key_keys = sorted(k for k in latest if k.startswith(KEY_PREFIX))
 
+    domains = unit_domains(vocabulary, unit_keys, unit_values)
+    devices = hardware_keys(table)
+
     payload = {
         "meta": {
             "generatedBy": "tools/build-preference-domains.py",
@@ -346,30 +507,42 @@ def main() -> None:
             # L'alphabet des codes d'unité, dans l'ordre des ordinaux.
             "vocabulary": vocabulary,
             "vocabularySource": provenance,
-            # Par clé : ce qu'un fichier réel porte, et le domaine — toujours `null`,
-            # parce qu'aucune source lisible ne le donne. Voir l'en-tête.
-            "keys": {key: {"observed": unit_values.get(key, []), "domain": None}
+            # D'où vient le domaine des huit clés : un relevé fait à la main, sur un
+            # appareil et une version. Il voyage avec les valeurs qu'il justifie.
+            "domainSource": UNIT_DOMAIN_SOURCE,
+            # Par clé : ce qu'un fichier réel porte, et la liste que l'écran natif
+            # propose — `value` tel que le fichier l'écrit, `label` tel que l'écran
+            # l'affiche. Voir `MEASURED_UNIT_DOMAINS`.
+            "keys": {key: {"observed": unit_values.get(key, []),
+                           "domain": domains[key]}
                      for key in unit_keys},
         },
         "keyCodes": {
             "androidApiLevel": api_level,
             "source": args.android_jar.name,
             "codes": {str(code): name for code, name in sorted(table.items())},
-            # Ôté ce bit, il reste un code de touche Android. Ce que le bit *signifie*
-            # n'est pas lu dans le bytecode : voir `longPressBitBasis`.
+            # Ôté ce bit, il reste un code de touche Android, et le bit vaut appui
+            # long — l'écran natif le dit maintenant en toutes lettres.
             "longPressBit": 0x01000000,
-            "longPressBitBasis": "inferred",
+            "longPressBitBasis": "measured",
             "longPressBitEvidence": [
+                "écran natif de XCTrack, réglage des touches : la ligne portant "
+                "16777240 (= 24 | 0x1000000) affiche « Appui long : Augmenter le "
+                "volume »",
                 "quatre valeurs du corpus valent un code Android valide une fois le "
                 "bit ôté : 16777240→24, 16777241→25, 16777243→27, 16777482→266",
                 "ces quatre codes sont exactement ceux que d'autres liaisons du même "
                 "fichier portent sans le bit",
                 "ressources de texte keyLongPress = « Long press: » et "
                 "keyExtLong = « External key - long press »",
-                "corpus d'un seul appareil : quatre paires, pas davantage",
+                "relevé sur un seul appareil et une seule version : ce que le bit "
+                "vaudrait sur une touche que cet appareil ne porte pas n'est pas vérifié",
             ],
-            # -1 : aucune touche affectée. C'est le défaut déclaré des quinze liaisons.
+            # -1 : aucune touche affectée. C'est la valeur d'usine des quinze liaisons.
             "unsetValue": -1,
+            # Les touches physiques relevées, par modèle d'appareil. Le `.xcfg` déclare
+            # le sien : c'est ce qui autorise l'interface à parler du matériel.
+            "hardwareKeys": devices,
             "keys": {key: {"observed": key_values.get(key, [])}
                      for key in key_keys
                      if latest[key].get("control") == "action"},
@@ -390,8 +563,13 @@ def main() -> None:
                   f"{other['versionNames'][:3]}")
     print(f"Relevés sans l'énumération d'unités : {provenance['surveysWithout']}")
     print(f"Clés Unit.*      : {len(unit_keys)} ; valeurs vues : "
-          f"{sum(len(v['observed']) for v in payload['units']['keys'].values())}")
+          f"{sum(len(v['observed']) for v in payload['units']['keys'].values())} ; "
+          f"domaines relevés : "
+          f"{sum(len(v['domain']) for v in payload['units']['keys'].values())} options")
     print(f"Clés Keys.* (action) : {len(payload['keyCodes']['keys'])}")
+    for device in devices:
+        names = ", ".join(f"{k['name']} ({k['code']})" for k in device["keys"])
+        print(f"Touches relevées : {device['label']} — {names}")
     print(f"{args.out} : {args.out.stat().st_size:,} octets")
 
 

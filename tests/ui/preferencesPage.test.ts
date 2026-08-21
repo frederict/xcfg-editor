@@ -12,6 +12,10 @@ import {
   loadPreferenceCatalog,
   type PreferenceCatalog
 } from '../../src/catalog/preferenceCatalog'
+import {
+  loadPreferenceDomains,
+  type PreferenceDomainCatalog
+} from '../../src/catalog/preferenceDomains'
 import { DEFAULTS_VERSION_NAME } from '../../src/catalog/widgetDefaults'
 import {
   applyPattern,
@@ -42,9 +46,17 @@ import {
  * juste sur les octets que l'appareil a écrits.
  */
 let catalog: PreferenceCatalog
+/**
+ * Les domaines relevés — unités et touches — sont passés **partout** dans ces tests,
+ * parce que `openPreferencesPage` les passe toujours : les éprouver sans eux
+ * n'éprouverait que le repli. Ce repli a son propre test, et un seul.
+ */
+let domains: PreferenceDomainCatalog
 
 beforeAll(async () => {
-  catalog = await loadPreferenceCatalog('fr')
+  [catalog, domains] = await Promise.all([
+    loadPreferenceCatalog('fr'), loadPreferenceDomains()
+  ])
 })
 
 function documentOf(path: string): JsonNode {
@@ -52,7 +64,7 @@ function documentOf(path: string): JsonNode {
 }
 
 function inventoryOf(path: string) {
-  return buildPreferenceInventory(documentOf(path), catalog)
+  return buildPreferenceInventory(documentOf(path), catalog, domains)
 }
 
 function allRows(path: string): PreferenceRow[] {
@@ -305,7 +317,11 @@ describe('la comparaison à la valeur d’usine dit ce qu’elle vaut', () => {
 
     // Une touche non attribuée : « -1 » ne dit rien, « aucune touche » dit tout.
     expect(rowFor(BACKUP_2026, 'Keys.EnterPan').value).toBe('aucune touche')
-    expect(rowFor(BACKUP_2026, 'Keys.ZoomIn').value).toBe('code 24')
+    // Et une touche attribuée ne se dit plus « code 24 » : la touche telle qu'elle est
+    // sur le boîtier relevé, son code et son nom Android pour le rapport de panne, et
+    // l'appui — trois choses que l'entier du fichier mêlait en une.
+    expect(rowFor(BACKUP_2026, 'Keys.ZoomIn').value)
+      .toBe('volume haut (code 24, KEYCODE_VOLUME_UP), appui simple')
   })
 
   it('substitue la valeur dans les gabarits de ressource Android', () => {
@@ -586,7 +602,7 @@ function editable(path: string): {
   const document = parseJson(source)
   const edits: PreferenceEdit[] = []
   const page = renderPreferencesPage({
-    document, catalog, onEdit: (edit) => { edits.push(edit) }
+    document, catalog, domains, onEdit: (edit) => { edits.push(edit) }
   })
   return { source, document, page, edits }
 }
@@ -700,17 +716,69 @@ describe('ce qui se règle, et ce qui ne se règle pas', () => {
     expect(page.element.querySelectorAll('.prefs__leftover .prefs__row')).toHaveLength(49)
   })
 
-  it('donne un champ texte, jamais une liste, aux huit unités sans domaine relevé', () => {
+  /**
+   * Les huit unités n'ont aucune liste dans les ressources — XCTrack la remplit en code
+   * — et la page les laissait donc en saisie libre, où un pilote pouvait écrire une
+   * valeur que son instrument refuserait. Le domaine est désormais **relevé sur
+   * l'appareil**, et la liste se ferme dessus.
+   */
+  it('ferme les huit unités sur le domaine relevé, à la place du champ libre', () => {
     const { page } = editable(BACKUP_2026)
     const unites = catalog.keys().filter((key) => key.startsWith('Unit.'))
       .filter((key) => catalog.values(key).length === 0)
     expect(unites).toHaveLength(8)
-    for (const key of ['Unit.Altitude', 'Unit.Speed', 'Unit.VerticalSpeed']) {
+    for (const key of unites) {
+      // Plus aucun champ libre sur ces huit-là.
+      expect(rowElement(page, key).querySelector('input.prefs__text'), key).toBeNull()
+      const select = controlOf<HTMLSelectElement>(page, key, 'select')
+      expect(select.options.length, key).toBeGreaterThan(1)
+      // La provenance voyage avec la liste : ce n'est pas une propriété de XCTrack,
+      // c'est un relevé, sur un appareil et une version.
+      expect(select.title, key).toContain('relevée sur AIR³ 7.2')
+    }
+  })
+
+  it('propose l’ordre de l’appareil, et écrit ce que le fichier porte', () => {
+    const { page } = editable(BACKUP_2026)
+    const distance = controlOf<HTMLSelectElement>(page, 'Unit.Distance', 'select')
+    // L'ordre est celui de l'écran natif : ni alphabétique, ni trié.
+    expect([...distance.options].map((one) => one.value))
+      .toEqual(['m,km', 'mi', 'yd,mi', 'nm'])
+    // ⚠️ Le piège mesuré : l'écran affiche « m, km », le fichier porte « m,km ».
+    expect(distance.options[0]?.textContent).toBe('m, km')
+    expect(distance.value).toBe('m,km')
+
+    const vertical = controlOf<HTMLSelectElement>(page, 'Unit.VerticalSpeed', 'select')
+    expect([...vertical.options].map((one) => one.value))
+      .toEqual(['m/s', 'ft/min', '100ft/min'])
+  })
+
+  it('écrit dans le fichier le code, jamais le libellé de l’écran', () => {
+    const { document, page, edits } = editable(BACKUP_2026)
+    const select = controlOf<HTMLSelectElement>(page, 'Unit.Distance', 'select')
+    select.value = 'yd,mi'
+    select.dispatchEvent(new Event('change'))
+    expect(edits.at(-1)?.text).toBe('yd,mi')
+    // Le libellé « yd, mi » de l'écran n'entre jamais dans le document : XCTrack
+    // refuserait l'espace.
+    expect(serializeJson(document, '')).toContain('"Unit.Distance": "yd,mi"')
+  })
+
+  it('sans domaines chargés, retombe sur le champ libre plutôt que sur une liste vide', () => {
+    // Le repli : les domaines sont facultatifs, et une page qui s'effondrerait faute
+    // d'un fichier de données annexe serait moins utile qu'une page qui en sait moins.
+    const page = renderPreferencesPage({
+      document: documentOf(BACKUP_2026), catalog, onEdit: () => {}
+    })
+    for (const key of ['Unit.Altitude', 'Unit.Speed']) {
       expect(rowElement(page, key).querySelector('select'), key).toBeNull()
       const field = controlOf<HTMLInputElement>(page, key, 'input.prefs__text')
       expect(field.type).toBe('text')
       expect(field.title).toContain('XCTrack remplit cette liste en code')
     }
+    // Et les touches y restent des entiers nus : mieux qu'un nom deviné.
+    expect(rowElement(page, 'Keys.ZoomIn').querySelector('.prefs__value')?.textContent)
+      .toBe('code 24')
   })
 
   it('propose la liste de l’écran quand le catalogue en relève une', () => {
@@ -719,6 +787,129 @@ describe('ce qui se règle, et ce qui ne se règle pas', () => {
     expect(select.value).toBe('WhiteHCTheme')
     expect([...select.options].map((option) => option.value))
       .toEqual(catalog.values('Display.Theme').map((choice) => choice.value))
+  })
+})
+
+/* ------------------------------------------------------- les liaisons de touches */
+
+/**
+ * ⚠️ **Le plus délicat de cette page.** Une liaison de touche mêle deux choses dans un
+ * entier — la touche et l'appui long — et ce qu'on peut en dire touche au **matériel**,
+ * qui n'est pas le même d'un AIR³ à l'autre. Ces tests épinglent les deux : ce que la
+ * page montre, et surtout ce qu'elle se refuse à affirmer.
+ */
+describe('une liaison de touche se lit, et en trois morceaux', () => {
+  it('sépare la touche de l’appui long, avec le nom Android', () => {
+    const { page } = editable(BACKUP_2026)
+    // `Keys.PreviousPage` vaut 16777240 = 24 | 0x1000000.
+    const row = rowElement(page, 'Keys.PreviousPage')
+    expect(row.querySelector('.prefs__binding-key')?.textContent).toBe('volume haut')
+    expect(row.querySelector('.prefs__binding-detail')?.textContent)
+      .toBe('code 24, KEYCODE_VOLUME_UP')
+    expect(row.querySelector('.prefs__binding-press')?.textContent).toBe('appui long')
+
+    // La même touche sans le bit : même touche, autre appui. C'est exactement ce que
+    // l'entier du fichier ne laissait pas voir.
+    const zoom = rowElement(page, 'Keys.ZoomIn')
+    expect(zoom.querySelector('.prefs__binding-key')?.textContent).toBe('volume haut')
+    expect(zoom.querySelector('.prefs__binding-press')?.textContent).toBe('appui simple')
+  })
+
+  it('nomme un code que le boîtier relevé ne porte pas, sans rien inventer', () => {
+    const { page } = editable(BACKUP_2026)
+    // 266 : Android le nomme, notre relevé matériel ne le porte pas. Le nom Android
+    // reste le meilleur qu'on sache dire — jamais un libellé inventé.
+    const row = rowElement(page, 'Keys.PrevWaypoint')
+    expect(row.querySelector('.prefs__binding-key')?.textContent).toBe('KEYCODE_STEM_2')
+    expect(row.querySelector('.prefs__binding-detail')?.textContent).toBe('code 266')
+    expect(row.querySelector('.prefs__binding-press')?.textContent).toBe('appui simple')
+  })
+
+  it('laisse « aucune touche » tel quel, sans le découper en trois', () => {
+    const { page } = editable(BACKUP_2026)
+    const row = rowElement(page, 'Keys.Menu')
+    expect(row.querySelector('.prefs__binding')).toBeNull()
+    expect(row.querySelector('.prefs__value')?.textContent).toBe('aucune touche')
+  })
+})
+
+describe('ce que la page dit du matériel, et ce qu’elle ne dira jamais', () => {
+  it('dit ce que le relevé porte, en nommant le modèle du relevé', () => {
+    const { page } = editable(BACKUP_2026)
+    // Ce fichier déclare un AIR³ 7.2 : c'est le modèle relevé, la page peut donc parler.
+    // Une fois sous le bloc, comme la phrase de refus — pas deux fois entre deux lignes.
+    const bloc = page.element
+      .querySelector('.prefs__screen[data-screen="preferences_keybindings"]')
+    const notes = bloc?.querySelectorAll('.prefs__hardware') ?? []
+    expect(notes).toHaveLength(1)
+    const said = notes[0]?.textContent ?? ''
+    expect(said).toContain('AIR³ 7.2')
+    expect(said).toContain('le modèle que ce fichier déclare')
+    expect(said).toContain('volume haut (24)')
+    expect(said).toContain('Le code 266 n’est aucune d’elles')
+    // Et la réserve part avec l'affirmation, pas ailleurs.
+    expect(said).toContain('un seul boîtier')
+    expect(said).toContain('modèles plus récents en portent davantage')
+  })
+
+  it('marque les lignes concernées, et elles seules', () => {
+    const { page } = editable(BACKUP_2026)
+    for (const key of ['Keys.PrevWaypoint', 'Keys.NextWaypoint']) {
+      expect(rowElement(page, key).dataset.hardware, key).toBe('unmatched')
+      // L'infobulle renvoie à la note du bloc ; elle ne la remplace pas.
+      const title = rowElement(page, key).querySelector<HTMLElement>('.prefs__binding')?.title
+      expect(title, key).toContain('n’émet le code 266')
+    }
+    for (const key of ['Keys.ZoomIn', 'Keys.ZoomOut', 'Keys.PreviousPage', 'Keys.Menu']) {
+      expect(rowElement(page, key).dataset.hardware, key).toBeUndefined()
+    }
+  })
+
+  it('n’affirme jamais qu’une touche n’existe pas ni qu’un réglage est sans effet', () => {
+    // Le propriétaire l'a signalé : son 7.2 n'a que trois touches, mais le parc n'est
+    // pas homogène. Sur un modèle plus récent, `Keys.PrevWaypoint` peut être vivant.
+    // Une page qui trancherait ferait retirer un réglage qui marche.
+    for (const path of [BACKUP_2026, BACKUP_2025]) {
+      const { page } = editable(path)
+      const said = [
+        page.element.textContent ?? '',
+        ...[...page.element.querySelectorAll<HTMLElement>('[title]')].map((one) => one.title)
+      ].join('\n')
+      for (const forbidden of [
+        'n’existe pas', 'inerte', 'sans effet', 'ne fait rien', 'ne sert à rien',
+        'ne répond à rien', 'inutile'
+      ]) {
+        expect(said, `${path} — ${forbidden}`).not.toContain(forbidden)
+      }
+    }
+  })
+
+  it('se tait sur un appareil qu’il n’a pas relevé, et dit qu’il se tait', () => {
+    // Le fichier déclare un AIR³ 7.3 : `hardwareKeysFor` rend `null`, et se rabattre
+    // sur le 7.2 ferait dire d'un boîtier ce qui a été relevé sur un autre.
+    const source = readFileSync(BACKUP_2026, 'utf8')
+      .replace('AIR3 AIR3-7.2 8.1.0', 'AIR3 AIR3-7.3 11')
+    const page = renderPreferencesPage({
+      document: parseJson(source), catalog, domains, onEdit: () => {}
+    })
+    // Plus une seule phrase sur une ligne : nous ne savons rien de ce boîtier-là.
+    expect(page.element.querySelectorAll('.prefs__row .prefs__hardware')).toHaveLength(0)
+    // Mais le bloc dit qu'il ne sait pas, sans quoi le silence se lirait « tout va ».
+    const bloc = page.element.querySelector('.prefs__screen[data-screen="preferences_keybindings"]')
+    const scope = bloc?.querySelector(':scope > .prefs__hardware')?.textContent ?? ''
+    expect(scope).toContain('que sur AIR³ 7.2')
+    expect(scope).toContain('AIR3 AIR3-7.3 11')
+    expect(scope).toContain('nous ne savons pas quelle touche de ce boîtier-là l’émet')
+    // Les touches restent lues et nommées : ne pas savoir d'où vient le boîtier
+    // n'empêche pas de lire le code.
+    expect(rowElement(page, 'Keys.ZoomIn').querySelector('.prefs__binding-key')?.textContent)
+      .toBe('KEYCODE_VOLUME_UP')
+  })
+
+  it('ne parle pas du boîtier là où le fichier n’a aucune touche affectée', () => {
+    // `formes-preservees.xcfg` ne porte aucune ligne `Keys.*` : rien à dire.
+    const { page } = editable(FORMES_PRESERVEES)
+    expect(page.element.querySelectorAll('.prefs__hardware')).toHaveLength(0)
   })
 })
 
@@ -1088,12 +1279,24 @@ describe('preferences.css habille les contrôles sans sortir du cadre', () => {
     for (const rule of ['.prefs__select', '.prefs__text', '.prefs__number', '.prefs__slider',
       '.prefs__checkbox', '.prefs__adopt', '.prefs__drop', '.prefs__aside',
       '.prefs__implicit', '.prefs__refusal', '.prefs__filled',
-      '.prefs__restore', '.prefs__restore-btn', '.prefs__restore-note']) {
+      '.prefs__restore', '.prefs__restore-btn', '.prefs__restore-note',
+      '.prefs__binding', '.prefs__binding-key', '.prefs__binding-detail',
+      '.prefs__binding-press', '.prefs__hardware']) {
       expect(css, rule).toContain(rule)
     }
     const rules = css.replace(/\/\*[\s\S]*?\*\//g, '')
     expect(rules).not.toMatch(/^\s*--app-[a-z-]+:/m)
     expect(rules).not.toContain('prefers-color-scheme')
+  })
+
+  it('empile les trois morceaux d’une liaison au lieu de les aligner', () => {
+    // Trois morceaux côte à côte pousseraient la valeur hors de sa colonne dès le
+    // premier libellé un peu long : la colonne de cette page existe pour tenir.
+    const binding = /\.prefs__binding \{[^}]*\}/.exec(css)?.[0] ?? ''
+    expect(binding).toContain('flex-direction: column')
+    // La phrase sur le matériel prend la ligne entière, comme l'aide juste au-dessus.
+    const hardware = /\.prefs__hardware \{[^}]*\}/.exec(css)?.[0] ?? ''
+    expect(hardware).toContain('grid-column: 1 / -1')
   })
 })
 

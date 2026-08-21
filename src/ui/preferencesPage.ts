@@ -15,6 +15,12 @@ import {
   type PreferenceScope
 } from '../catalog/preferenceCatalog'
 import {
+  loadPreferenceDomains,
+  type HardwareKeySurvey,
+  type KeyBinding,
+  type PreferenceDomainCatalog
+} from '../catalog/preferenceDomains'
+import {
   collectPersonalData,
   PERSONAL_BASIS_LABELS,
   PERSONAL_CAVEAT,
@@ -53,10 +59,11 @@ import {
  *    Elle ne le déballera pas davantage pour l'écrire.
  * 3. **Seuls six types de contrôle sont offerts** — voir `EDITABLE_CONTROLS`. Les
  *    dix-huit lignes de contrôle `action` ouvrent, sur l'appareil, une boîte que rien ne
- *    remplace ici : `Keys.*` attend une **touche pressée** et enregistre son code Android,
- *    dont ce catalogue ne relève aucune correspondance ; `Sensors.AcousticVario.
- *    CustomProfileEnabled` commande la table de 16 entrées qu'on ne réécrit pas. La ligne
- *    reste affichée, avec sa valeur, et dit pourquoi elle ne se règle pas.
+ *    remplace ici : `Keys.*` attend une **touche pressée sur l'instrument**, qu'un
+ *    navigateur posé devant un autre appareil ne peut pas capturer ;
+ *    `Sensors.AcousticVario.CustomProfileEnabled` commande la table de 16 entrées qu'on
+ *    ne réécrit pas. La ligne reste affichée, avec sa valeur, et dit pourquoi elle ne se
+ *    règle pas — mais elle est désormais **lisible** : voir « Les touches » plus bas.
  *
  * ## Écrire sans dégrader
  *
@@ -98,6 +105,38 @@ import {
  * - *inconnue de ce catalogue* — une clé d'une autre version de XCTrack. Le fichier de
  *   2025 en porte 27. La page dit « je ne sais pas » : jamais « supprimable », jamais
  *   « inconnue donc ignorée ».
+ *
+ * ## Les unités et les touches, deux domaines qui ne venaient d'aucune lecture
+ *
+ * `preferenceDomains.ts` porte ce que les écrans de réglages ne déclarent pas, et cette
+ * page s'en sert à deux endroits — **seulement si `domains` est fourni** ; sans lui, elle
+ * retombe exactement sur ce qu'elle faisait avant, champ libre compris.
+ *
+ * - **Les huit `Unit.*`** reçoivent la liste fermée **relevée sur l'appareil**, à la
+ *   place du champ de saisie libre où le pilote pouvait écrire une valeur que son
+ *   instrument refuserait. La valeur du fichier qui n'y serait pas reste offerte, comme
+ *   pour toute autre liste : fermer ne veut pas dire effacer.
+ * - **Les quinze `Keys.*`** cessent d'afficher l'entier du fichier. « 16777240 » mêle
+ *   deux choses ; la ligne les sépare : la **touche** d'un côté (avec son nom Android
+ *   quand la table le donne), l'**appui long** de l'autre.
+ *
+ * ## Ce que la page peut dire du matériel, et ce qu'elle ne dira jamais
+ *
+ * Un code de touche n'est pas une touche. `Keys.PrevWaypoint = 266` est une ligne
+ * parfaitement valide ; encore faut-il que le boîtier porte une touche qui émette 266.
+ * Le relevé des touches physiques ne couvre **qu'un modèle**, l'AIR³ 7.2, et le parc
+ * n'est pas homogène — les AIR³ plus récents en portent davantage.
+ *
+ * La page ne doit donc **jamais** écrire « cette touche n'existe pas » ni « ce réglage
+ * est inerte ». Elle dit au plus ce qu'elle a relevé, en nommant le modèle du relevé, et
+ * laisse le pilote conclure. Deux choses le lui permettent :
+ *
+ * - le fichier **déclare son appareil** (`info.device`), ce qui conditionne le propos au
+ *   modèle : `hardwareKeysFor()` rend `null` dès qu'il ne le reconnaît pas, et la page se
+ *   contente alors de dire qu'elle ne sait pas ;
+ * - ⚠️ le fichier de disposition du contrôleur de clavier **ne fait pas relevé** :
+ *   `sn7326-key` déclare des touches que le boîtier n'a pas. Un fichier de configuration
+ *   Android décrit ce que la puce sait faire, pas ce que le fabricant a soudé.
  *
  * ## Une clé absente ne dit rien — et surtout pas « valeur d'usine »
  *
@@ -249,6 +288,20 @@ export interface PreferenceRow {
   /** Pourquoi il n'y a rien à comparer, quand l'état vaut `undecidable`. */
   undecidableReason?: string
   personal?: PersonalData
+  /**
+   * La liaison de touche relue — la touche d'un côté, l'appui long de l'autre. Définie
+   * pour les quinze `Keys.*` quand les domaines sont chargés, absente sinon.
+   */
+  binding?: KeyBinding
+  /**
+   * Vrai quand notre relevé matériel **couvre** le modèle de ce fichier et que ce code-là
+   * n'est aucune des touches relevées.
+   *
+   * ⚠️ Ce n'est pas « cette touche n'existe pas » : le relevé ne couvre qu'un modèle et
+   * le parc n'est pas homogène. C'est la marque qui renvoie à la note du bloc, laquelle
+   * dit ce que le relevé vaut — voir `hardwareNote`.
+   */
+  unmatchedKey?: boolean
   /** Vrai si la valeur est un objet ou un tableau : on n'en montre que la taille. */
   structured: boolean
   /** Défini pour une ligne du bloc de fin — voir `LeftoverReason`. */
@@ -455,6 +508,19 @@ function readFilePreferences(document: JsonNode): Map<string, JsonNode> {
   return found
 }
 
+/**
+ * L'appareil que le fichier déclare (`info.device`), ou `undefined`.
+ *
+ * C'est ce qui autorise la page à parler du **matériel** : sans lui, elle ne sait pas de
+ * quel boîtier ce fichier vient et ne peut donc rien en dire.
+ */
+export function fileDevice(document: JsonNode): string | undefined {
+  const info = getMember(document, 'info')
+  if (info === undefined || info.kind !== 'object') return undefined
+  const device = getMember(info, 'device')
+  return device?.kind === 'string' ? decode(device.raw) : undefined
+}
+
 /** Vrai si le fichier porte bien une section `preferences`, fût-elle vide. */
 function hasPreferencesSection(document: JsonNode): boolean {
   const section = getMember(document, 'preferences')
@@ -497,6 +563,135 @@ function formatCount(value: number): string {
 }
 
 
+/* ------------------------------------------------------- une liaison de touche, lisible */
+
+/**
+ * Ce dont la page a besoin pour relire une liaison de touche : la table des codes, et le
+ * relevé matériel du modèle que **ce fichier-ci** déclare.
+ */
+export interface BindingContext {
+  domains?: PreferenceDomainCatalog
+  hardware?: HardwareKeySurvey | null
+}
+
+/**
+ * Une liaison de touche en trois morceaux, parce qu'elle en porte trois et que l'entier
+ * du fichier les mêle : « 16777240 » est la touche 24 **et** l'appui long.
+ */
+export interface BindingParts {
+  /**
+   * Ce que la touche est, dit du mieux qu'on sache : son nom sur le boîtier quand notre
+   * relevé couvre ce modèle, son nom Android sinon, son code seul en dernier recours.
+   */
+  key: string
+  /** Le code, et le nom Android s'il n'est pas déjà dans `key`. Le détail technique. */
+  detail?: string
+  /**
+   * « appui long » ou « appui simple ».
+   *
+   * Le bit `0x01000000` vaut appui long, et c'est **mesuré** — l'écran natif de XCTrack
+   * l'affiche en toutes lettres. « appui simple » est son complément : le bit n'y est pas.
+   */
+  press: string
+}
+
+/**
+ * Découpe une liaison relue en ce qui s'affiche. Ne dit **rien** du matériel : c'est
+ * `bindingNote` qui s'en charge, et lui seul, parce que c'est le propos qui demande de la
+ * prudence.
+ */
+export function bindingParts(
+  binding: KeyBinding, hardware: HardwareKeySurvey | null | undefined
+): BindingParts {
+  const press = binding.longPress ? 'appui long' : 'appui simple'
+  const physical = hardware?.keys.find((one) => one.code === binding.code)
+  if (physical !== undefined) {
+    return { key: physical.label, detail: `code ${binding.code}, ${physical.name}`, press }
+  }
+  if (binding.name !== null) {
+    return { key: binding.name, detail: `code ${binding.code}`, press }
+  }
+  // Ni touche relevée ni nom Android : le code brut, et pas un mot de plus. Inventer un
+  // nom pour un code que la table ne connaît pas serait le pire des services.
+  return { key: `code ${binding.code}`, press }
+}
+
+/** Les trois morceaux en une phrase, pour le texte de la ligne et pour le filtre. */
+export function bindingText(parts: BindingParts): string {
+  const named = parts.detail === undefined ? parts.key : `${parts.key} (${parts.detail})`
+  return `${named}, ${parts.press}`
+}
+
+/** Vrai si notre relevé matériel couvre le modèle du fichier **et** ignore ce code-là. */
+export function unmatchedByHardware(
+  binding: KeyBinding | undefined, hardware: HardwareKeySurvey | null | undefined
+): boolean {
+  if (binding === undefined || binding.unset) return false
+  if (hardware === undefined || hardware === null) return false
+  return !hardware.keys.some((one) => one.code === binding.code)
+}
+
+/**
+ * Ce que notre relevé de touches physiques dit des liaisons d'un bloc, ou `undefined`
+ * s'il n'en dit rien.
+ *
+ * ⚠️ **C'est la phrase la plus délicate de cette page.** Elle parle de matériel, et le
+ * relevé ne couvre qu'un modèle quand le parc n'est pas homogène : sur un AIR³ plus
+ * récent, un code sans écho ici peut commander une vraie touche. Elle ne dira donc
+ * jamais qu'une touche n'existe pas ni qu'un réglage est sans effet — elle nomme le
+ * modèle du relevé, énumère ce qu'il porte, et s'arrête là. Le pilote conclut.
+ *
+ * Elle est écrite **une fois par bloc**, comme la phrase de refus juste à côté et pour
+ * la même raison : deux lignes de suite portant le même paragraphe le font lire zéro
+ * fois. Chaque ligne concernée garde sa marque et son infobulle.
+ *
+ * Deux propos, et un silence :
+ *
+ * - le modèle du fichier **est** celui du relevé, et un code n'est aucune des touches
+ *   relevées : on énumère ce qu'on a relevé, et on s'arrête ;
+ * - le modèle du fichier **n'a pas** été relevé : on dit qu'on ne sait pas, parce que le
+ *   silence se lirait sinon comme un acquiescement ;
+ * - aucune touche n'est affectée, ou rien n'a été relevé du tout : rien à dire.
+ */
+export function hardwareNote(
+  bindings: readonly KeyBinding[], hardware: HardwareKeySurvey | null | undefined,
+  surveys: readonly HardwareKeySurvey[], device: string | undefined
+): string | undefined {
+  const assigned = bindings.filter((one) => !one.unset)
+  if (assigned.length === 0) return undefined
+
+  if (hardware === undefined || hardware === null) {
+    if (surveys.length === 0) return undefined
+    const models = surveys.map((one) => one.label).join(', ')
+    const origin = device === undefined
+      ? 'ce fichier ne dit pas de quel appareil il vient'
+      : `ce fichier vient d’un autre appareil (${device})`
+    return `Nous n’avons relevé les touches physiques que sur ${models}, et ${origin}. ` +
+      `Le code de chaque liaison est lu et nommé ci-dessus, mais nous ne savons pas ` +
+      `quelle touche de ce boîtier-là l’émet.`
+  }
+
+  const strangers = [...new Set(assigned
+    .filter((one) => !hardware.keys.some((key) => key.code === one.code))
+    .map((one) => one.code))].sort((a, b) => a - b)
+  if (strangers.length === 0) return undefined
+
+  const listed = hardware.keys.map((one) => `${one.label} (${one.code})`).join(', ')
+  const missing = strangers.length === 1
+    ? `Le code ${strangers[0]} n’est aucune d’elles`
+    : `Les codes ${strangers.join(', ')} n’en sont aucune`
+  return `Sur ${hardware.label} — le modèle que ce fichier déclare — nous n’avons relevé ` +
+    `que ${plural(hardware.keys.length, 'touche physique', 'touches physiques')} : ` +
+    `${listed}. ${missing}. Le relevé a été fait sur un seul boîtier, et les modèles ` +
+    `plus récents en portent davantage.`
+}
+
+/** L'infobulle d'une liaison dont le code n'est aucune des touches relevées. */
+function unmatchedTitle(binding: KeyBinding, hardware: HardwareKeySurvey): string {
+  return `Aucune des touches que nous avons relevées sur ${hardware.label} n’émet le ` +
+    `code ${binding.code}. La note sous ce bloc dit ce que ce relevé vaut.`
+}
+
 /** Au-delà, une valeur scalaire est abrégée à l'affichage. */
 const LONG_VALUE = 80
 
@@ -508,7 +703,8 @@ const LONG_VALUE = 80
  * taille, ce qui suffit à savoir qu'elle est là et ce qu'elle pèse.
  */
 export function readableValue(
-  node: JsonNode, entry: PreferenceEntry | undefined, catalog: PreferenceCatalog, key: string
+  node: JsonNode, entry: PreferenceEntry | undefined, catalog: PreferenceCatalog,
+  key: string, keys?: BindingContext
 ): string {
   if (node.kind === 'object') {
     return `objet JSON, ${formatCount(structuredSize(node))} caractères`
@@ -532,7 +728,16 @@ export function readableValue(
   }
   // Une touche non attribuée vaut -1 : « -1 » ne dit rien, « aucune touche » dit tout.
   if (entry?.family === 'Keys' && entry.control === 'action') {
-    return text === '-1' ? 'aucune touche' : `code ${text}`
+    if (text === '-1') return 'aucune touche'
+    // Sans les domaines, on en reste au code brut : mieux vaut un entier nu qu'un nom
+    // deviné. Avec eux, la touche et l'appui long se disent séparément.
+    const raw = Number(text)
+    const binding = keys?.domains === undefined || !Number.isInteger(raw)
+      ? undefined
+      : keys.domains.decodeKeyBinding(raw)
+    return binding === undefined
+      ? `code ${text}`
+      : bindingText(bindingParts(binding, keys?.hardware))
   }
 
   const choices = entry === undefined ? [] : catalog.values(key)
@@ -594,6 +799,15 @@ interface RowContext {
   file: Map<string, JsonNode>
   /** Les clés que XCTrack se contredit lui-même à défaillir — voir `meta.defaultConflicts`. */
   conflicts: Set<string>
+  /** Les domaines relevés, s'ils ont été chargés. Sans eux, la page reste ce qu'elle était. */
+  domains?: PreferenceDomainCatalog
+  /**
+   * Le relevé de touches physiques du modèle que **ce fichier-ci** déclare.
+   *
+   * `null` est la réponse normale — un seul modèle a été relevé — et veut dire « nous ne
+   * savons pas ce que porte cet appareil-là », jamais « il ne porte rien ».
+   */
+  hardware?: HardwareKeySurvey | null
 }
 
 function buildRow(key: string, ctx: RowContext): PreferenceRow {
@@ -630,7 +844,14 @@ function buildRow(key: string, ctx: RowContext): PreferenceRow {
     return row
   }
 
-  row.value = readableValue(node, entry, catalog, key)
+  row.value = readableValue(node, entry, catalog, key, ctx)
+  if (entry?.family === 'Keys' && entry.control === 'action' && ctx.domains !== undefined) {
+    const raw = Number(scalarText(node) ?? '')
+    if (Number.isInteger(raw)) {
+      row.binding = ctx.domains.decodeKeyBinding(raw)
+      if (unmatchedByHardware(row.binding, ctx.hardware)) row.unmatchedKey = true
+    }
+  }
   if (help !== undefined) row.help = applyPattern(help, row.value)
   row.raw = node.kind === 'object' || node.kind === 'array'
     ? serializeJson(node, PREFERENCE_INDENT)
@@ -748,8 +969,14 @@ export function editRefusal(row: PreferenceRow): string | undefined {
     if (row.control === 'action') {
       // Formulé sans nombre : la même phrase sert d'infobulle sur une ligne et de note
       // sous un bloc de quinze.
+      //
+      // Elle disait « dont cet éditeur ne relève pas le domaine ». Ce n'est plus vrai des
+      // touches : leur codage est relevé, et la ligne se lit. Ce qui manque est ailleurs,
+      // et c'est du matériel — une touche se règle en la pressant sur l'instrument, ce
+      // qu'un navigateur posé devant un autre appareil ne peut pas faire.
       return 'Sur l’appareil, cela s’obtient par une boîte de dialogue — une touche à ' +
-        'presser, une adresse à choisir — dont cet éditeur ne relève pas le domaine.'
+        'presser sur l’instrument, une table à bâtir — que cette page ne peut pas tenir ' +
+        'à sa place. La valeur reste lue, et le document ressort intact.'
     }
     return 'Cela ne se saisit pas : la ligne commande, elle ne porte pas de valeur.'
   }
@@ -894,13 +1121,17 @@ export interface PreferenceEdit {
  * construire la page.
  */
 export function buildPreferenceInventory(
-  document: JsonNode, catalog: PreferenceCatalog
+  document: JsonNode, catalog: PreferenceCatalog, domains?: PreferenceDomainCatalog
 ): PreferenceInventory {
   const file = readFilePreferences(document)
   const ctx: RowContext = {
     catalog,
     file,
-    conflicts: new Set(catalog.meta.defaultConflicts)
+    conflicts: new Set(catalog.meta.defaultConflicts),
+    domains,
+    // Résolu une fois pour tout le fichier : c'est l'appareil du fichier, pas celui
+    // d'une ligne. `null` quand le modèle n'a pas été relevé — le cas ordinaire.
+    hardware: domains?.hardwareKeysFor(fileDevice(document)) ?? null
   }
 
   const inventory = collectPersonalData(document)
@@ -1105,6 +1336,15 @@ export interface PreferencesPageOptions {
   document: JsonNode
   /** Le catalogue déjà chargé, dans la langue voulue. Voir `openPreferencesPage`. */
   catalog: PreferenceCatalog
+  /**
+   * Les domaines relevés (unités, touches), s'ils ont pu être chargés.
+   *
+   * **Facultatif, et c'est délibéré** : sans eux la page reste exactement ce qu'elle
+   * était — champ libre pour les huit `Unit.*`, code brut pour les quinze `Keys.*`. Une
+   * page qui s'effondrerait faute d'un fichier de données annexe serait moins utile
+   * qu'une page qui en sait moins.
+   */
+  domains?: PreferenceDomainCatalog
   /** Le nom du fichier, pour la tête de page. */
   fileName?: string
   /** `info.versionName` du fichier, pour dire d'où il vient. */
@@ -1229,6 +1469,17 @@ interface RenderedRow {
 interface PageContext {
   collected: RenderedRow[]
   edit?: EditContext
+  /**
+   * Le relevé matériel du modèle de ce fichier, ou `null` s'il n'a pas été relevé.
+   *
+   * Il est ici et non seulement dans `edit` : lire une liaison de touche n'a rien à voir
+   * avec le fait de pouvoir la changer, et la page en lecture seule la lit tout autant.
+   */
+  hardware?: HardwareKeySurvey | null
+  /** Les domaines relevés, pour ce que le rendu doit en dire. */
+  domains?: PreferenceDomainCatalog
+  /** L'appareil que le fichier déclare (`info.device`), tel quel. */
+  device?: string
 }
 
 /** Ce qu'il faut pour écrire, et pour dire à la page ce qui vient d'être écrit. */
@@ -1236,6 +1487,10 @@ interface EditContext {
   document: JsonNode
   catalog: PreferenceCatalog
   conflicts: Set<string>
+  /** Les domaines relevés, s'ils ont été chargés — voir l'en-tête. */
+  domains?: PreferenceDomainCatalog
+  /** Le relevé matériel du modèle de ce fichier, ou `null` s'il n'a pas été relevé. */
+  hardware?: HardwareKeySurvey | null
   /**
    * Ce que vaut la comparaison au catalogue pour ce fichier — voir `catalogTrust`.
    *
@@ -1269,6 +1524,31 @@ function readOnlyValue(row: PreferenceRow): HTMLElement {
   return value
 }
 
+/**
+ * Une liaison de touche à l'écran : la touche, le détail technique, l'appui — **trois
+ * éléments**, et non une phrase.
+ *
+ * Séparés parce qu'ils sont de nature différente : ce que le pilote cherche est la
+ * touche ; le code et son nom Android sont ce qu'il recopiera pour signaler un problème ;
+ * l'appui long est une **seconde** information sur la même touche, et la noyer dans la
+ * première est précisément ce que l'entier du fichier faisait.
+ */
+function bindingValue(
+  binding: KeyBinding, hardware: HardwareKeySurvey | null | undefined, unmatched: boolean
+): HTMLElement {
+  const parts = bindingParts(binding, hardware)
+  const wrap = el('span', 'prefs__binding')
+  // L'infobulle renvoie à la note du bloc ; elle ne la remplace pas. Un propos sur le
+  // matériel doit rester lisible sans survol, et il l'est — trois lignes plus bas.
+  if (unmatched && hardware != null) wrap.title = unmatchedTitle(binding, hardware)
+  wrap.append(el('span', 'prefs__binding-key', parts.key))
+  if (parts.detail !== undefined) {
+    wrap.append(el('span', 'prefs__binding-detail', parts.detail))
+  }
+  wrap.append(el('span', 'prefs__binding-press', parts.press))
+  return wrap
+}
+
 /** Le nœud que la section `preferences` porte aujourd'hui pour cette clé. */
 function currentNode(document: JsonNode, key: string): JsonNode | undefined {
   const section = getMember(document, 'preferences')
@@ -1288,7 +1568,7 @@ function restate(
   const node: JsonNode = asString
     ? { kind: 'string', raw: encode(text) }
     : { kind: 'literal', raw: text }
-  row.value = readableValue(node, entry, ctx.catalog, row.key)
+  row.value = readableValue(node, entry, ctx.catalog, row.key, ctx)
   row.raw = node.raw
   if (ctx.conflicts.has(row.key) && entry.default !== undefined && entry.xmlDefault !== undefined) {
     row.state = 'conflict'
@@ -1459,7 +1739,12 @@ function buildRowElement(row: PreferenceRow, ctx: PageContext): HTMLElement {
     cell.textContent = ''
     const context = ctx.edit
     if (!settable || context === undefined || entry === undefined) {
-      cell.append(readOnlyValue(row))
+      // Une liaison de touche ne se règle pas ici — il y faudrait la touche pressée sur
+      // l'instrument — mais elle se **lit**, et en trois morceaux plutôt qu'en un entier.
+      // Sans touche affectée, rien à découper : « aucune touche » se dit comme une valeur.
+      cell.append(row.binding === undefined || row.binding.unset
+        ? readOnlyValue(row)
+        : bindingValue(row.binding, ctx.hardware, row.unmatchedKey === true))
       return
     }
     if (row.state === 'absent' || row.state === 'unwritten') {
@@ -1499,6 +1784,13 @@ function buildRowElement(row: PreferenceRow, ctx: PageContext): HTMLElement {
   if (restoreSlot !== undefined) element.append(restoreSlot)
   fillRestore()
   if (row.help !== undefined) element.append(el('p', 'prefs__help', row.help))
+  // Ce que notre relevé de touches physiques dit de ce code-là. Sous la ligne, en toutes
+  // lettres et non en infobulle : un propos sur le matériel se découvre avant le vol, pas
+  // au survol. Il n'existe que là où le modèle du fichier a été relevé — voir `bindingNote`.
+  // ⚠️ La **marque** seulement, jamais la phrase : celle-ci s’écrit une fois par bloc
+  // (`hardwareNote`), comme la phrase de refus juste à côté. Deux lignes de suite portant
+  // le même paragraphe le font lire zéro fois.
+  if (row.unmatchedKey === true) element.dataset.hardware = 'unmatched'
 
   // Une ligne qui ne se règle pas dans une page qui se règle doit dire pourquoi — mais
   // **une fois par bloc**, pas quinze fois de suite : l'écran des touches en compte
@@ -1715,14 +2007,42 @@ function buildField(
   }
   if (entry.control === 'list') {
     const choices = ctx.catalog.values(row.key)
-    // ⚠️ Les huit `Unit.*` et les deux listes de voile n'ont **aucun domaine relevé** :
-    // XCTrack les remplit en code. Une liste vide serait un piège, une liste inventée
-    // serait pire — un champ texte est la seule chose honnête tant qu'on ne les a pas
-    // extraites du bytecode.
-    if (choices.length === 0) return buildTextField(id, text, row, ctx, commit, true)
+    if (choices.length === 0) {
+      // Les huit `Unit.*` : XCTrack remplit leur liste en code, aucune ressource ne la
+      // déclare, et elle a donc été **relevée à l'écran de l'appareil**. Fermer la liste
+      // n'est légitime que là — voir `unitDomainSource` pour ce que vaut ce relevé.
+      const measured = ctx.domains?.unitDomain(row.key)
+      if (measured != null && measured.length > 0) {
+        return buildSelect(id, text, measured.map((one) => ({
+          // ⚠️ `value` va dans le fichier, `label` à l'écran : l'appareil affiche
+          // « m, km » et écrit « m,km ». Les confondre écrirait une valeur refusée.
+          value: one.value, label: one.label
+        })), commit, unitListNote(ctx))
+      }
+      // Les deux listes de voile n'ont ni ressource ni relevé : un champ libre reste la
+      // seule chose honnête. Une liste vide serait un piège, une liste inventée pire.
+      return buildTextField(id, text, row, ctx, commit, true)
+    }
     return buildSelect(id, text, choices, commit)
   }
   return buildTextField(id, text, row, ctx, commit, false)
+}
+
+/**
+ * D'où vient la liste d'unités qu'on vient de fermer, dite au survol du contrôle.
+ *
+ * Elle n'est ni dans l'APK ni dans un fichier : elle a été relevée à la main, sur un
+ * appareil et une version. Le pilote qui règle son vario mérite de savoir que la liste
+ * qu'on lui présente n'est pas une propriété de XCTrack mais un relevé — et lequel.
+ */
+function unitListNote(ctx: EditContext): string | undefined {
+  const source = ctx.domains?.unitDomainSource()
+  if (source === undefined) return undefined
+  // Les réserves sont des fragments de phrase dans la donnée : elles s'enchaînent après
+  // deux points plutôt que collées bout à bout, où la première commencerait en minuscule
+  // juste après un point.
+  return `Cette liste a été relevée sur ${source.deviceLabel}, XCTrack ` +
+    `${source.versionName} : ${source.method}. À savoir : ${source.caveats.join(' ; ')}.`
 }
 
 function buildCheckbox(
@@ -1738,10 +2058,11 @@ function buildCheckbox(
 
 function buildSelect(
   id: string, text: string, choices: readonly { value: string; label: string }[],
-  commit: (text: string, continuous: boolean) => boolean
+  commit: (text: string, continuous: boolean) => boolean, note?: string
 ): HTMLElement {
   const select = el('select', 'prefs__select')
   select.id = id
+  if (note !== undefined) select.title = note
   for (const choice of choices) {
     const option = el('option', undefined, choice.label)
     option.value = choice.value
@@ -2213,7 +2534,8 @@ function buildEmptyNote(
  * qui l'a chargé, ou l'appelant qui le fournit.
  */
 export function renderPreferencesPage(options: PreferencesPageOptions): PreferencesPage {
-  const inventory = buildPreferenceInventory(options.document, options.catalog)
+  const inventory = buildPreferenceInventory(options.document, options.catalog, options.domains)
+  const hardware = options.domains?.hardwareKeysFor(fileDevice(options.document)) ?? null
   const root = el('section', 'prefs')
   // Un fichier sans préférence n'a rien à régler : la page y reste ce qu'elle est, une
   // explication. `onEdit` branché n'y change rien.
@@ -2238,7 +2560,10 @@ export function renderPreferencesPage(options: PreferencesPageOptions): Preferen
   head.append(actions)
   root.append(head)
 
-  const ctx: PageContext = { collected: [] }
+  const ctx: PageContext = {
+    collected: [], hardware, domains: options.domains,
+    device: fileDevice(options.document)
+  }
 
   if (inventory.summary.empty) {
     root.append(buildEmptyNote(options, inventory.summary.personalCounts))
@@ -2263,6 +2588,8 @@ export function renderPreferencesPage(options: PreferencesPageOptions): Preferen
       document: options.document,
       catalog: options.catalog,
       conflicts: new Set(options.catalog.meta.defaultConflicts),
+      domains: options.domains,
+      hardware,
       trust: catalogTrust(options),
       onEdit,
       secrets: [],
@@ -2383,6 +2710,9 @@ function buildMenuElement(entry: PreferenceMenuEntry, ctx: PageContext): HTMLEle
       }
     }
 
+    const scope = hardwareScopeNote(screen, ctx)
+    if (scope !== undefined) block.append(el('p', 'prefs__hardware', scope))
+
     if (screen.neverExported > 0) {
       block.append(el('p', 'prefs__never',
         `${plural(screen.neverExported, 'réglage de cet écran ne quitte', 'réglages de cet écran ne quittent')} ` +
@@ -2391,6 +2721,22 @@ function buildMenuElement(entry: PreferenceMenuEntry, ctx: PageContext): HTMLEle
     section.append(block)
   }
   return section
+}
+
+/**
+ * Ce que notre relevé dit — ou ne dit pas — du **boîtier** dont vient ce fichier, une
+ * fois sous le bloc. Tout le propos est dans `hardwareNote` : ici on ne fait que
+ * rassembler les liaisons de l'écran.
+ */
+function hardwareScopeNote(
+  screen: PreferenceScreenBlock, ctx: PageContext
+): string | undefined {
+  if (ctx.domains === undefined) return undefined
+  const bindings = screen.blocks
+    .flatMap((group) => group.rows)
+    .map((row) => row.binding)
+    .filter((one): one is KeyBinding => one !== undefined)
+  return hardwareNote(bindings, ctx.hardware, ctx.domains.hardwareKeySurveys(), ctx.device)
 }
 
 /**
@@ -2542,29 +2888,41 @@ export interface OpenPreferencesOptions extends Omit<PreferencesPageOptions, 'ca
 export async function openPreferencesPage(
   options: OpenPreferencesOptions
 ): Promise<PreferencesPage> {
-  const catalog = await loadPreferenceCatalog(options.language)
-  return renderPreferencesPage({ ...options, catalog })
+  // Les deux chargements partent ensemble : ils ne se conditionnent pas l'un l'autre, et
+  // les enchaîner ajouterait un aller-retour à l'ouverture de la page.
+  //
+  // Les domaines sont **facultatifs** — sans eux la page perd les listes d'unités et la
+  // lecture des touches, elle ne perd rien d'autre. Leur échec ne doit donc pas empêcher
+  // le pilote d'ouvrir ses réglages : il est avalé ici, et la page se construit sans.
+  const [catalog, domains] = await Promise.all([
+    loadPreferenceCatalog(options.language),
+    loadPreferenceDomains().catch(() => undefined)
+  ])
+  return renderPreferencesPage({ ...options, catalog, domains })
 }
 
 /**
  * Ce que cette page coûte au réseau — **mesuré** sur `vite build`, pas estimé — pour que
  * l'assembleur sache ce qu'il déclenche et le dise au pilote s'il le juge utile.
  *
- * Quatre morceaux, tous chargés à la demande, aucun dans le morceau principal :
+ * Cinq morceaux, tous chargés à la demande, aucun dans le morceau principal :
  *
- * | morceau                  |  émis   |  gzip   |
- * |--------------------------|---------|---------|
- * | `preferencesPage-*.js`   | 38,0 Ko | 12,7 Ko |
- * | `preferencesPage-*.css`  |  8,5 Ko |  2,1 Ko |
- * | `preferenceCatalog/base` | 98,8 Ko | 14,8 Ko |
- * | `preferenceCatalog/<lg>` | 24,4 Ko |  6,0 Ko |
+ * | morceau                   |  émis   |  gzip   |
+ * |---------------------------|---------|---------|
+ * | `preferencesPage-*.js`    | 44,4 Ko | 14,7 Ko |
+ * | `preferencesPage-*.css`   |  9,7 Ko |  2,3 Ko |
+ * | `preferenceDomains-*.js`  | 12,7 Ko |  4,3 Ko |
+ * | `preferenceCatalog/base`  | 98,9 Ko | 14,8 Ko |
+ * | `preferenceCatalog/<lg>`  | 24,4 Ko |  6,0 Ko |
  *
- * Soit **170 Ko émis, environ 36 Ko transférés** à la première ouverture, puis 24 Ko de
+ * Soit **190 Ko émis, environ 42 Ko transférés** à la première ouverture, puis 24 Ko de
  * plus par langue supplémentaire — la part invariante ne se retélécharge pas.
  *
  * Le module a pris 11,2 Ko en devenant modifiable : les contrôles, l'écriture, le couple
- * implicite / explicite et le recalcul des comptes. Ils partent avec le reste, à la
- * demande — un pilote qui n'ouvre jamais cette page ne les télécharge pas.
+ * implicite / explicite et le recalcul des comptes. Puis 6,4 Ko de plus, et un cinquième
+ * morceau de 12,7 Ko, en fermant les listes d'unités et en rendant les touches lisibles.
+ * Tout part avec le reste, à la demande — un pilote qui n'ouvre jamais cette page ne
+ * télécharge rien de tout cela.
  *
  * ⚠️ Le chiffre du module est un **majorant** : il a été relevé sur un point d'entrée qui
  * n'importe rien d'autre, donc il emporte `core/access`, `core/serializeJson` et
@@ -2572,13 +2930,18 @@ export async function openPreferencesPage(
  */
 export const PREFERENCES_PAGE_WEIGHT = {
   /** Le module de page, une fois construit. */
-  moduleKb: 38,
+  moduleKb: 44.4,
   /** Sa feuille de style, émise à part par Vite. */
-  styleKb: 8.5,
+  styleKb: 9.7,
+  /**
+   * Les domaines relevés — vocabulaire des unités, 338 codes de touche, les huit listes
+   * relevées à l'écran et les touches physiques d'un boîtier.
+   */
+  domainsKb: 12.7,
   /** La part invariante du catalogue : préférences, écrans, valeurs, défauts, portées. */
-  catalogBaseKb: 98.8,
+  catalogBaseKb: 98.9,
   /** Le fichier de textes d'une langue, repli anglais déjà fusionné. */
   catalogLanguageKb: 24.4,
   /** Ce que le réseau transporte réellement à la première ouverture, en gzip. */
-  transferredKb: 36
+  transferredKb: 42
 } as const
