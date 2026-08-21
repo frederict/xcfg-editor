@@ -3,7 +3,7 @@
 Dérive les fixtures de `tests/fixtures/exports/` depuis les fichiers réels du
 propriétaire — script à **usage unique et local**, qui ne tourne que sur son poste.
 
-    python3 tests/fixtures/deriver-exemples.py
+    python3 tests/fixtures/deriver-exemples.py <répertoire des fichiers réels>
 
 ⚠️ Ce script ne fait pas partie du produit et n'est jamais exécuté par les tests ni par
 la CI : les fixtures qu'il produit sont versionnées, ce sont *elles* qui font foi. Il est
@@ -61,7 +61,9 @@ import re
 import sys
 from pathlib import Path
 
-SOURCE = Path('/Users/fred/DEV/XCTrack/Exemples')
+# Le répertoire des fichiers réels est passé en argument, jamais écrit ici : ce dépôt
+# est public, et le chemin d'un poste n'a rien à y faire.
+SOURCE = Path(sys.argv[1]) if len(sys.argv) > 1 else None
 CIBLE = Path(__file__).resolve().parent / 'exports'
 
 # Les fichiers réels, et le nom qu'ils portent une fois anonymisés. Les deux fichiers de
@@ -203,6 +205,8 @@ def verifier(nom: str, texte: str) -> None:
 
 
 def main() -> None:
+    if SOURCE is None or not SOURCE.is_dir():
+        sys.exit('usage : deriver-exemples.py <répertoire des fichiers réels>')
     CIBLE.mkdir(parents=True, exist_ok=True)
     for origine, destination in FICHIERS.items():
         texte = (SOURCE / origine).read_text(encoding='utf8')

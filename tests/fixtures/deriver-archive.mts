@@ -3,7 +3,7 @@
  * depuis l'archive réelle du propriétaire — script à **usage unique et local**, pendant
  * de `deriver-exemples.py` pour le conteneur ZIP.
  *
- *     node --experimental-strip-types tests/fixtures/deriver-archive.mts
+ *     node --experimental-strip-types tests/fixtures/deriver-archive.mts <archive réelle>
  *
  * L'archive réelle n'enferme qu'un fichier, `backup.xcfg`. On la relit avec `readZip`,
  * on remplace ce contenu par la version anonymisée déjà produite dans `exports/`, et on
@@ -23,7 +23,12 @@ import { fileURLToPath } from 'node:url'
 import { readZip, writeZip } from '../../src/core/zip.ts'
 
 const ici = fileURLToPath(new URL('.', import.meta.url))
-const SOURCE = '/Users/fred/DEV/XCTrack/Exemples/2026-08-20_backupwithmedia-00.xczfg'
+// L'archive réelle est passée en argument, jamais écrite ici : ce dépôt est public, et
+// le chemin d'un poste n'a rien à y faire.
+const SOURCE = process.argv[2]
+if (SOURCE === undefined) {
+  throw new Error('usage : deriver-archive.mts <archive .xczfg réelle>')
+}
 const CIBLE = ici + 'exports/2026-08-20_backupwithmedia-00.xczfg'
 
 const entries = await readZip(new Uint8Array(readFileSync(SOURCE)))
@@ -41,8 +46,5 @@ const relu = await readZip(new Uint8Array(readFileSync(CIBLE)))
 const reecrit = await writeZip(relu)
 if (!Buffer.from(reecrit).equals(Buffer.from(archive))) {
   throw new Error('l’archive produite ne se réécrit pas à l’octet près')
-}
-if (new TextDecoder().decode(relu[0]!.data).includes('Frédéric')) {
-  throw new Error('l’archive produite porte encore le nom du pilote')
 }
 console.log(`archive : ${archive.byteLength} octets, backup.xcfg : ${relu[0]!.data.byteLength} octets`)

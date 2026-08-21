@@ -6,8 +6,8 @@ import { fileURLToPath } from 'node:url'
  *
  * ## Pourquoi ces chemins-là, et pas ceux du poste du propriétaire
  *
- * Vingt fichiers de tests lisaient jusqu'ici `/Users/fred/DEV/XCTrack/Exemples/`, les
- * configurations de vol réelles du propriétaire — volontairement non versionnées, parce
+ * Vingt fichiers de tests lisaient jusqu'ici un répertoire absolu du poste de l'auteur :
+ * ses configurations de vol réelles — volontairement non versionnées, parce
  * qu'elles portent son nom, sa voile, ses coordonnées et le nom de la compétition à
  * laquelle il participe. Cloné ailleurs, le dépôt avait donc vingt fichiers de tests en
  * échec, et la CI rouge dès le premier commit.
