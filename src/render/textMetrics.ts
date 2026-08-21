@@ -71,6 +71,11 @@ export function titleWidthEm(text: string): number {
  */
 export function valueGlyphEm(character: string): number {
   if ('.,:'.includes(character)) return 0.3
+  // Les crochets des valeurs estimées (`use_brackets`, voir `numeric.ts`) : une avance
+  // de 0,335 em dans Roboto, entre la ponctuation étroite et le chiffre. Les compter
+  // comme des chiffres surestimerait de 40 % la largeur d'un « [37] », et le budget de
+  // largeur réduirait la valeur sans raison.
+  if ('[]'.includes(character)) return 0.35
   if ('+-'.includes(character)) return 0.55
   if ('mMwW'.includes(character)) return 0.87
   if (character === ' ') return 0.28

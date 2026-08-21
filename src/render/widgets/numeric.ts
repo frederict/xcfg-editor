@@ -1,7 +1,8 @@
 import type { Widget } from '../../model/widget'
 import type { RenderSettings } from '../../model/preferences'
-import { readBoolean, readNumber, readString } from '../../core/access'
-import { readableName } from '../../catalog/widgetNames'
+import { widgetBoolean, widgetString } from '../defaults'
+import { formatDecimal } from '../locale'
+import { widgetTitle } from '../title'
 import { titleWidthEm, valueWidthEm } from '../textMetrics'
 
 /**
@@ -69,7 +70,7 @@ const FALLBACK_SPEC: NumericSpec = { quantity: 'none', unit: '', example: '--' }
  * s'il diffère de ce jeton — ce qu'aucun fichier connu ne fait à ce jour.
  */
 function resolveUnit(widget: Widget, settings: RenderSettings, spec: NumericSpec): string {
-  const forced = readString(widget.node, '_units')
+  const forced = widgetString(widget, '_units')
   if (forced !== undefined && forced !== 'SYS_UNIT') return forced
 
   switch (spec.quantity) {
@@ -142,7 +143,24 @@ const SIGN_COLORED_TYPES = new Set(['WVerticalSpeed', 'WThermalAltGain'])
  */
 const WIDTH_BUDGET = 2.1
 const UNIT_GAP_EM = 0.15 // le gap de `.xc-num__row` (style.css)
-const MIN_VALUE_SCALE = 0.5
+
+/**
+ * Plancher de la réduction : une soupape, pas un réglage. Elle empêche un contenu
+ * pathologique de réduire la valeur jusqu'à l'illisible ; elle n'a pas à contredire le
+ * budget lui-même.
+ *
+ * **Abaissé de 0,50 à 0,45** en branchant les valeurs par défaut : les crochets de
+ * `use_brackets` allongent la valeur de deux caractères, et sur la cellule 320 × 223 de
+ * la planche, « [1800] m » demandait 0,4645 — le budget avait raison, le plancher
+ * l'écrasait à 0,50 et le « m » sortait de la cellule (19 px d'encre sur le bord droit,
+ * mesuré). À 0,45, le budget s'applique et l'encre revient à 300 px dans 320.
+ *
+ * Ce n'est **pas** la correction de l'écart 1.1 de la revue (le budget de largeur des
+ * 40 widgets numériques, qui mérite sa propre passe avec mesure avant/après) : c'est le
+ * strict nécessaire pour que le branchement des défauts ne fasse pas déborder une
+ * cellule qui ne débordait pas.
+ */
+const MIN_VALUE_SCALE = 0.45
 
 /**
  * Rapports « taille de l'unité / taille de la valeur » observés sur la page 1 de
@@ -237,37 +255,22 @@ function buildUnit(unitText: string): HTMLElement {
 }
 
 /**
- * Défaut 3 (rapport de tâche) — XCTrack suit la langue de l'appareil pour le séparateur
- * décimal : virgule en français (« +3,5 », « +2,2 m/s », « -0,1 » — vol-numeriques-
- * boussole-variocolumn.png, vol-carte-kk7-sideview.png), point ailleurs. Les valeurs
- * d'exemple de `SPECS` sont écrites avec un point ; seule la présentation change ici,
- * jamais la donnée — ce sont des exemples statiques, aucun ne se recalcule.
+ * Les valeurs estimées s'écrivent **entre crochets** — `[37] m`, `[∞]`, `[-27] m`,
+ * `[11] km/h` — quand la clé `use_brackets` vaut `true`, ce qui est le **défaut** des six
+ * widgets de navigation qui la portent (`docs/reference/planche-widgets-air3.md` § 4,
+ * et la capture `2026-08-21_planche-sol-3-air-b-xcontest-navigation-a.png`).
  *
- * `language` peut être un code de langue système complet (`navigator.language`, ex.
- * `fr-FR`) et pas seulement le code court du fichier (`fr`) — voir `resolveLanguage`
- * dans `src/model/preferences.ts` — d'où `startsWith` plutôt qu'une égalité stricte.
+ * Deux détails mesurés sur cette capture, et reproduits ici :
+ * - **l'unité reste dehors** : `[37]` puis `m` en gris, jamais `[37 m]` ;
+ * - **le signe reste dedans** : `[-27]`, et la pastille de couleur couvre les crochets
+ *   avec le nombre.
+ *
+ * Ce n'est pas un ornement : deux crochets ajoutent 0,67 cadratin à la valeur, que le
+ * budget de largeur (`widthFit`) répercute aussitôt en réduction — c'est précisément
+ * l'effet que le pilote doit voir avant d'emporter sa page en vol.
  */
-function formatDecimal(text: string, language: string): string {
-  if (!language.toLowerCase().startsWith('fr')) return text
-  return text.replace('.', ',')
-}
-
-/**
- * Le titre porte la période de moyennage (clé `avg`, en millisecondes) quand elle est
- * présente et non nulle : « Finesse / 2s », « Vitesse verticale / 2s » (rendu-observe.md).
- * Un titre personnalisé (`titletext` renseigné) n'en hérite pas. Aucun widget du corpus
- * ne combine `avg` et un `titletext` non vide — l'hypothèse n'est donc pas vérifiable
- * sur les données disponibles — mais c'est la seule lecture cohérente avec la consigne
- * qui la formule explicitement.
- */
-function titleText(widget: Widget, language: string): string {
-  const custom = readString(widget.node, 'titletext')
-  if (custom !== undefined && custom.length > 0) return custom
-
-  const base = readableName(widget.shortName, language)
-  const avg = readNumber(widget.node, 'avg')
-  if (avg === undefined || avg === 0) return base
-  return `${base} / ${avg / 1000}s`
+function bracketed(widget: Widget, valueText: string): string {
+  return widgetBoolean(widget, 'use_brackets') === true ? `[${valueText}]` : valueText
 }
 
 /**
@@ -285,6 +288,12 @@ function rowSignClass(shortName: string, example: string): string | undefined {
 
 /**
  * `_title` et `_unit` ABSENTS valent `true`, pas `false` — et c'est mesuré, pas déduit.
+ *
+ * **Ces deux constantes ne sont plus le chemin normal** : `widgetBoolean` (`defaults.ts`)
+ * va chercher la valeur dans le relevé des 75 widgets, type par type, ce qui vaut aussi
+ * pour les clés que ce module ne connaît pas. Elles ne servent plus que de dernier
+ * recours, pour un type absent du relevé — un type apparu après lui, donc, et dont on
+ * n'a que la convention générale des widgets numériques.
  *
  * La planche des 75 widgets (`docs/reference/planche-widgets-air3.md` § 3) a été écrite
  * avec les 8 clés universelles SEULEMENT ; XCTrack l'a relue en complétant le reste, et
@@ -309,10 +318,10 @@ const UNIT_BY_DEFAULT = true
  */
 export function drawNumeric(widget: Widget, settings: RenderSettings, language: string): HTMLElement {
   const spec = SPECS[widget.shortName] ?? FALLBACK_SPEC
-  const hasTitle = readBoolean(widget.node, '_title') ?? TITLE_BY_DEFAULT
-  const hasUnit = readBoolean(widget.node, '_unit') ?? UNIT_BY_DEFAULT
+  const hasTitle = widgetBoolean(widget, '_title') ?? TITLE_BY_DEFAULT
+  const hasUnit = widgetBoolean(widget, '_unit') ?? UNIT_BY_DEFAULT
   const unitText = hasUnit ? resolveUnit(widget, settings, spec) : undefined
-  const valueText = formatDecimal(spec.example, language)
+  const valueText = bracketed(widget, formatDecimal(spec.example, language))
 
   const element = document.createElement('div')
   element.className = 'xc-num'
@@ -321,7 +330,7 @@ export function drawNumeric(widget: Widget, settings: RenderSettings, language: 
     const title = document.createElement('span')
     title.className = 'xc-num__title'
     title.style.color = settings.titleColor
-    const text = titleText(widget, language)
+    const text = widgetTitle(widget, language)
     // La taille elle-même vient de `--xc-title` (canvas.ts) : elle est la même pour tous
     // les widgets de la page, comme sur l'appareil. Ne reste ici qu'un garde-fou —
     // la largeur estimée du libellé, en cadratins, que `.xc-num__title` (style.css)

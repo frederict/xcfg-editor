@@ -181,9 +181,18 @@ describe('widgets numériques', () => {
       expect(el.querySelector('.xc-num__title')?.textContent).toBe('Finesse / 8s')
     })
 
-    it('n’ajoute rien quand `avg` est absent', () => {
+    it('reprend le défaut de XCTrack quand `avg` est absent du fichier', () => {
+      // Le relevé donne `avg: 2000` à `WGlide` : l'appareil écrit « Finesse / 2s » sur un
+      // widget qui ne porte que ses huit clés universelles
+      // (`captures-air3/2026-08-21_planche-sol-2-vol-b-et-air-a.png`). Ce test disait
+      // l'inverse avant que le rendu consulte les valeurs par défaut.
       const el = drawNumeric(widget('WGlide', { _title: 'true' }), settings, language)
-      expect(el.querySelector('.xc-num__title')?.textContent).toBe('Finesse')
+      expect(el.querySelector('.xc-num__title')?.textContent).toBe('Finesse / 2s')
+    })
+
+    it('n’ajoute rien quand ni le fichier ni le relevé ne portent `avg`', () => {
+      const el = drawNumeric(widget('WAltitude', { _title: 'true' }), settings, language)
+      expect(el.querySelector('.xc-num__title')?.textContent).toBe('Altitude GPS')
     })
 
     it('n’ajoute rien quand `avg` vaut 0', () => {
@@ -197,6 +206,43 @@ describe('widgets numériques', () => {
       // seule lecture cohérente avec la consigne qui la formule explicitement.
       const el = drawNumeric(widget('WGlide', { _title: 'true', titletext: '"Ma finesse"', avg: '2000' }), settings, language)
       expect(el.querySelector('.xc-num__title')?.textContent).toBe('Ma finesse')
+    })
+  })
+
+  // Revue des visuels § 1.4 — les valeurs estimées s'écrivent entre crochets, et
+  // `use_brackets: true` est le DÉFAUT des six widgets de navigation qui portent la clé.
+  // Mesuré sur `captures-air3/2026-08-21_planche-sol-3-air-b-xcontest-navigation-a.png` :
+  // `[37] m`, `[∞]`, `[-27] m`.
+  describe('crochets des valeurs estimées', () => {
+    it('encadre la valeur d’un widget qui ne porte que ses clés universelles', () => {
+      const el = drawNumeric(widget('WNextTurnpointDistance', {}), settings, language)
+      expect(el.querySelector('.xc-num__value')?.textContent).toBe('[12,4]')
+    })
+
+    it('laisse l’unité DEHORS des crochets, comme l’appareil', () => {
+      const el = drawNumeric(widget('WNextTurnpointAlt', {}), settings, language)
+      expect(el.querySelector('.xc-num__value')?.textContent).toBe('[1800]')
+      expect(el.querySelector('.xc-num__unit')?.textContent).toBe('m')
+    })
+
+    it('n’encadre rien quand le fichier met `use_brackets` à false', () => {
+      const el = drawNumeric(widget('WNextTurnpointDistance', { use_brackets: 'false' }), settings, language)
+      expect(el.querySelector('.xc-num__value')?.textContent).toBe('12,4')
+    })
+
+    it('n’encadre pas un widget dont le relevé ne porte pas la clé', () => {
+      const el = drawNumeric(widget('WAltitude', {}), settings, language)
+      expect(el.querySelector('.xc-num__value')?.textContent).toBe('1234')
+    })
+
+    it('répercute les deux crochets sur le budget de largeur', () => {
+      // Deux caractères de plus, donc une valeur plus petite : c'est tout l'intérêt de
+      // les dessiner — ils changent la place occupée, et le pilote doit le voir.
+      const bounds = { x1: 0, x2: 1400 }
+      const avec = drawNumeric(widget('WNextTurnpointDistance', {}, bounds), settings, language)
+      const sans = drawNumeric(widget('WNextTurnpointDistance', { use_brackets: 'false' }, bounds), settings, language)
+      const fit = (el: HTMLElement): number => Number(el.style.getPropertyValue('--xc-value-fit'))
+      expect(fit(avec)).toBeLessThan(fit(sans))
     })
   })
 
@@ -305,9 +351,13 @@ describe('widgets numériques', () => {
       expect(fit(el)).toBe(1)
     })
 
-    it('la réduction ne descend jamais sous la moitié', () => {
+    it('la réduction ne descend jamais sous le plancher', () => {
+      // Plancher abaissé de 0,50 à 0,45 en branchant les valeurs par défaut : les
+      // crochets de `use_brackets` allongent la valeur de deux caractères et le
+      // plancher écrasait alors un budget qui, lui, avait raison — voir
+      // `MIN_VALUE_SCALE` dans numeric.ts.
       const el = drawNumeric(widget('WAltitude', { _unit: 'true' }, { x1: 0, x2: 120 }), settings, language)
-      expect(fit(el)).toBe(0.5)
+      expect(fit(el)).toBe(0.45)
     })
 
     it('la valeur et l’unité ne portent plus de taille en ligne : elles suivent --xc-value-fit', () => {
