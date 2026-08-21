@@ -141,8 +141,18 @@ let paletteQuery = ''
  * Le bandeau de réglages, replié ou déployé. L'état survit à la sélection suivante et à la
  * reconstruction de la vue : un pilote qui déplace dix widgets à la suite l'a replié une
  * fois, pas dix. Il vit donc ici, hors de tout ce que `render()` renouvelle.
+ *
+ * **Il s'ouvre replié**, et ne se déploie qu'à la première sélection — c'est-à-dire quand
+ * il a quelque chose à montrer. Déployé d'emblée, il prenait 348 px à la page pour y
+ * écrire « Aucun gadget sélectionné » : mesuré en fenêtre de 1500 × 950, cela laissait
+ * 156 px de page visible sur 331 à 100 % de zoom, et 41 px sur une fenêtre de 1100 px.
+ * Replié il n'en prend que 49, et la page entière tient à l'écran.
+ *
+ * Ce n'est **pas** la hauteur du bandeau qui change ici : celle-là est réglée à la
+ * poignée, retenue d'une session à l'autre (`dockHeight`), et se retrouve intacte au
+ * dépliage.
  */
-let dockCollapsed = false
+let dockCollapsed = true
 
 /**
  * La liste des widgets, montrée ou masquée. Même durée de vie que `dockCollapsed`, et pour
@@ -1069,7 +1079,13 @@ window.addEventListener('resize', () => applyDockHeight())
 function syncDock(): void {
   if (!dockElement || !dockToggle || !panelHost) return
   dockElement.classList.toggle('dock--collapsed', dockCollapsed)
-  dockToggle.textContent = dockCollapsed ? 'Déplier les réglages' : 'Replier'
+  // Replié, le bandeau emporte la liste des widgets avec ses réglages — et la liste est
+  // le seul chemin vers les widgets qu'aucun clic n'atteint. Sans sélection, le bouton
+  // nomme donc ce que le dépliage donne à cet instant : la liste, pas des réglages qui
+  // n'existent pas encore.
+  dockToggle.textContent = dockCollapsed
+    ? (selection === undefined ? 'Liste des gadgets' : 'Déplier les réglages')
+    : 'Replier'
   dockToggle.setAttribute('aria-expanded', String(!dockCollapsed))
   // Replié, c'est le corps entier qui disparaît : ses deux zones, et la place qu'il prend.
   if (dockBody) dockBody.hidden = dockCollapsed
@@ -1082,6 +1098,17 @@ function syncDock(): void {
     listToggle.textContent = listHidden ? 'Afficher la liste' : 'Masquer la liste'
     listToggle.setAttribute('aria-pressed', String(!listHidden))
   }
+}
+
+/**
+ * Le bandeau s'ouvre parce qu'il a enfin quelque chose à montrer. Appelé sur les gestes
+ * de sélection du pilote — clic sur la page, ligne de la liste — et sur eux seuls : un
+ * bandeau replié à la main ne doit pas se rouvrir au prochain `render()`.
+ */
+function openDockForSelection(): void {
+  if (!dockCollapsed) return
+  dockCollapsed = false
+  syncDock()
 }
 
 /**
@@ -1171,6 +1198,8 @@ function syncSelectionMarks(): void {
 /** Reconstruit le bandeau depuis le rang sélectionné — jamais depuis un nœud retenu. */
 function refreshPanel(): void {
   if (!panelHost || !session) return
+  // L'intitulé du bouton de repli dépend de la sélection, qui vient peut-être de changer.
+  syncDock()
   const page = currentPage()
   const widget = selection === undefined ? undefined : page?.widgets[selection]
   const name = widget === undefined ? undefined : readableName(widget.shortName, session.language)
@@ -1188,7 +1217,9 @@ function refreshPanel(): void {
 
   // La barre de tête du bandeau redit ces trois faits : elle reste visible une fois le
   // bandeau replié, où le panneau lui-même a disparu.
-  if (dockTitle) dockTitle.textContent = name ?? 'Aucun gadget sélectionné'
+  // Sans sélection, la barre de tête n'annonce pas un manque : elle dit le geste à faire.
+  // C'est le seul texte que le bandeau replié — son état d'arrivée — laisse voir.
+  if (dockTitle) dockTitle.textContent = name ?? 'Choisissez un gadget pour voir ses réglages'
   if (dockClass) dockClass.textContent = widget?.shortName ?? ''
   if (dockCount) dockCount.textContent = ''
 
@@ -1270,10 +1301,7 @@ function refreshWidgetList(): void {
     onSelect: (index) => {
       // Choisir une ligne, c'est ouvrir les réglages du widget : replié, le bandeau se
       // déplie — sans quoi le pilote choisirait dans le vide.
-      if (dockCollapsed) {
-        dockCollapsed = false
-        syncDock()
-      }
+      openDockForSelection()
       selection = index
       // Le calque est la référence de la sélection : il pose ses marques sur la page et
       // rappelle `onSelectionChange`, qui met le panneau à jour. En consultation il n'y a
@@ -1389,10 +1417,7 @@ function buildInspecting(page: Page): DetailInspecting {
     selection,
     onSelect: (index) => {
       // Choisir un widget, c'est vouloir lire ses réglages : replié, le bandeau se déplie.
-      if (index !== undefined && dockCollapsed) {
-        dockCollapsed = false
-        syncDock()
-      }
+      if (index !== undefined) openDockForSelection()
       selection = index
       refreshPanel()
       syncSelectionMarks()
@@ -1457,10 +1482,13 @@ function buildEditing(current: Session, page: Page, orientation: Orientation): D
       selection = index
       refreshPanel()
       // Un clic sur la page, une flèche, une action de la barre d'outils : c'est un geste
-      // du pilote, et il a droit au gadget sous les yeux. La sélection reposée par
-      // `buildEditing` après une reconstruction, elle, n'en est pas un — voir
-      // `restoringSelection`.
-      if (index !== undefined && !restoringSelection) revealSelection()
+      // du pilote, et il a droit au bandeau ouvert et au gadget sous les yeux. La
+      // sélection reposée par `buildEditing` après une reconstruction, elle, n'en est pas
+      // un — voir `restoringSelection`.
+      if (index !== undefined && !restoringSelection) {
+        openDockForSelection()
+        revealSelection()
+      }
     }
   })
 

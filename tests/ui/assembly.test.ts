@@ -178,6 +178,33 @@ describe('assemblage — les deux lectures du fichier sont dans le bandeau du fi
  * `main.ts` monte un DOM entier et branche des écoutes de fenêtre. Le calcul, lui, est
  * dans `views.ts` et a ses propres tests d'exécution.
  */
+describe('assemblage — le bandeau de réglages s’ouvre quand il a quelque chose à montrer', () => {
+  it('l’état d’arrivée est replié', () => {
+    // Déployé d'emblée, le bandeau prenait 348 px à la page pour écrire « Aucun gadget
+    // sélectionné » : 156 px de page visible sur 331 en fenêtre de 1500 × 950, 43 px à
+    // 1100 px de large. Replié, il n'en prend que 49.
+    expect(main).toMatch(/^let dockCollapsed = true$/m)
+  })
+
+  it('ce n’est pas la hauteur réglée par le pilote qui change', () => {
+    // La hauteur vit dans `dockHeight`, relue de `localStorage` au démarrage : le repli
+    // initial ne doit toucher ni à sa lecture ni à son écriture.
+    expect(main).toContain('let dockHeight: number | undefined = readDockHeight(window.localStorage)')
+    expect(main).toContain('function saveDockHeight')
+  })
+
+  it('un seul chemin déplie le bandeau, et il ne part que d’un geste du pilote', () => {
+    expect(main).toContain('function openDockForSelection(): void')
+    // La sélection reposée par `buildEditing` après une reconstruction n'est pas un geste :
+    // une annulation ne doit pas rouvrir un bandeau replié à la main.
+    expect(main).toMatch(/restoringSelection = true\s*\n\s*editor\.select\(selection\)\s*\n\s*restoringSelection = false/)
+  })
+
+  it('replié sans sélection, le bouton nomme la liste — le seul chemin vers les gadgets muraillés', () => {
+    expect(main).toContain("'Liste des gadgets'")
+  })
+})
+
 describe('assemblage — sélectionner un gadget l’amène sous les yeux du pilote', () => {
   it('les trois chemins de sélection défilent vers le gadget', () => {
     // Liste du bandeau, clic sur la page en consultation, calque d'édition : trois
