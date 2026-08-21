@@ -459,6 +459,31 @@ describe('calque d’édition', () => {
     expect(marks.querySelectorAll('.editor__grip')).toHaveLength(1)
   })
 
+  /**
+   * Le calque se pose sur le gadget **dessiné**, pas sur ses coordonnées brutes : le
+   * moteur aimante les bords sur la grille de rendu de XCTrack (51 × 29,
+   * `render/canvas.ts`) avant de tracer. Sans cette correction, le cadre de sélection
+   * flotterait jusqu'à 12,5 px à côté du gadget qu'il désigne.
+   *
+   * Ce qui est ÉCRIT ne change pas : c'est la grille d'édition (48 × 29) qui l'aimante.
+   */
+  it('pose les marques sur les bords dessinés, aimantés sur la grille de rendu', () => {
+    const { page, instance } = editor(0)
+    instance.element.dispatchEvent(new MouseEvent('pointerdown', { clientX: 500, clientY: 250, bubbles: true }))
+    window.dispatchEvent(new MouseEvent('pointerup', { clientX: 500, clientY: 250, bubbles: true }))
+
+    const index = instance.selection()!
+    const rect = currentBoxes(page)[index]!
+    const marks = instance.element.querySelector('.editor__marks') as HTMLElement
+    // Chaque bord tombe sur un multiple exact de 1/51 en X et de 1/29 en Y.
+    const gauche = Number.parseFloat(marks.style.left)
+    const haut = Number.parseFloat(marks.style.top)
+    expect((gauche * 51) / 100).toBeCloseTo(Math.round((gauche * 51) / 100), 6)
+    expect((haut * 29) / 100).toBeCloseTo(Math.round((haut * 29) / 100), 6)
+    // Et il ne s'en éloigne jamais de plus d'une demi-cellule du rectangle écrit.
+    expect(Math.abs(gauche * 100 - rect.x1)).toBeLessThanOrEqual(10000 / 51 / 2 + 1e-6)
+  })
+
   it('déplace le widget saisi et signale la modification', () => {
     const { page, edits, instance } = editor(0)
     const before = currentBoxes(page)

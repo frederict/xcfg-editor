@@ -3,6 +3,7 @@ import { readableName } from '../catalog/widgetNames'
 import type { JsonNode } from '../core/jsonDocument'
 import type { Page } from '../model/layout'
 import { gridFor, snapValue, NORMALIZED_MAX, type Grid, type Orientation, type Rect } from '../model/grid'
+import { snapBox } from '../render/canvas'
 import {
   duplicateWidget, insertWidget, readWidgetBounds, removeWidget, reorderWidget, setWidgetBounds,
   type Bounds
@@ -763,6 +764,26 @@ function el<K extends keyof HTMLElementTagNameMap>(
   return node
 }
 
+/**
+ * Le rectangle tel que le MOTEUR le dessine : bords aimantés sur la grille de rendu de
+ * XCTrack — 51 × 29, voir `snapBox` dans `render/canvas.ts`.
+ *
+ * **Deux grilles, deux usages, à ne pas confondre.** Ce que l'éditeur ÉCRIT dans le
+ * fichier reste aimanté sur la grille d'édition (48 × 29, `model/grid.ts`) : ce sont les
+ * valeurs que XCTrack lui-même écrirait. Mais ce que l'éditeur DESSINE passe par la
+ * grille de rendu, parce que c'est ce que fait l'appareil avant de tracer. Le calque de
+ * sélection doit suivre le dessin, faute de quoi le cadre et les poignées flottent
+ * jusqu'à 12,5 px à côté du gadget qu'ils désignent.
+ *
+ * Le rapport largeur/hauteur exact n'importe pas ici : `renderGrid` ne lit que le sens
+ * de la page, le grand côté portant 51 divisions et le petit 29.
+ */
+const RENDER_ASPECT: Record<Orientation, number> = { landscape: 16 / 9, portrait: 9 / 16 }
+
+function drawnRect(rect: Rect, orientation: Orientation): Rect {
+  return snapBox(rect, RENDER_ASPECT[orientation])
+}
+
 /** Positionne un élément absolu sur un rectangle de page, en pourcentages. */
 function place(node: HTMLElement, rect: Rect): void {
   node.style.left = `${rect.x1 / 100}%`
@@ -963,7 +984,8 @@ export function createEditor(options: EditorOptions): Editor {
       return
     }
     const count = options.page.widgets.length
-    const rect = currentBounds(options.page, selected)
+    // La barre s'accroche aux bords DESSINÉS du gadget — voir `drawnRect`.
+    const rect = drawnRect(currentBounds(options.page, selected), options.orientation)
     toolbar.hidden = false
     rank.textContent = stackLabel(selected, count)
     for (const [action, button] of stackButtons) {
@@ -989,7 +1011,7 @@ export function createEditor(options: EditorOptions): Editor {
       marks.hidden = true
     } else {
       marks.hidden = false
-      place(marks, currentBounds(options.page, selected))
+      place(marks, drawnRect(currentBounds(options.page, selected), options.orientation))
     }
     drawToolbar()
   }
@@ -1002,7 +1024,9 @@ export function createEditor(options: EditorOptions): Editor {
       return
     }
     preview.hidden = false
-    place(preview, gesture.rect)
+    // L'aperçu montre où le gadget SERA dessiné une fois le geste relâché : il passe donc
+    // par la grille de rendu, comme le calque de sélection qui le remplacera.
+    place(preview, drawnRect(gesture.rect, options.orientation))
 
     const finger = fingerRect(gesture.startRect, gesture.handle, gesture.delta)
     ghost.hidden = false
@@ -1017,8 +1041,11 @@ export function createEditor(options: EditorOptions): Editor {
     }
     badge.hidden = false
     badge.textContent = sizeLabel(gesture.rect, options.device, options.orientation)
-    badge.style.left = `${gesture.rect.x1 / 100}%`
-    badge.style.top = `${gesture.rect.y2 / 100}%`
+    // La cote reste celle du rectangle ÉCRIT (c'est elle que le pilote emporte), mais elle
+    // se pose au coin DESSINÉ, sous l'aperçu qu'elle légende.
+    const coin = drawnRect(gesture.rect, options.orientation)
+    badge.style.left = `${coin.x1 / 100}%`
+    badge.style.top = `${coin.y2 / 100}%`
   }
 
   const setSelection = (index: number | undefined): void => {
