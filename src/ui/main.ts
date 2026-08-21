@@ -49,6 +49,7 @@ import type { SharingResult, SharingSource } from './sharingDialog'
 import type { VersionPanel } from './versionDiagnostic'
 import type { CleanupEvent } from './cleanupPanel'
 import type { Library } from '../library/library'
+import { initialUiLanguage, loadTranslator, type Translator } from '../i18n'
 
 interface Session {
   container: Container
@@ -99,6 +100,18 @@ type View =
   | { kind: 'overview' }
   | { kind: 'detail'; orientation: Orientation; index: number }
   | { kind: 'preferences' }
+
+/**
+ * Le traducteur de **notre prose**, dans la langue que le pilote a choisie — jamais celle
+ * des libellés de XCTrack, qui suit le fichier ouvert (`session.language`). Voir
+ * `src/i18n/axes.ts` : confondre les deux axes casserait la promesse de l'outil.
+ *
+ * `undefined` avant le premier rendu, et à ce moment-là seulement : le catalogue de la
+ * langue est un morceau téléchargé à part, et l'amorçage en bas de ce fichier n'appelle
+ * `render()` qu'une fois qu'il est arrivé. Les rendus suivants viennent tous d'un geste
+ * du pilote, donc bien après.
+ */
+let tr: Translator | undefined
 
 let session: Session | undefined
 let failure: string | undefined
@@ -3037,4 +3050,22 @@ window.addEventListener('keydown', (event) => {
   if (event.key === 'ArrowLeft' && current.index > 0) go(current.index - 1)
 })
 
-render()
+/* ------------------------------------------------------------------------- amorçage */
+
+/**
+ * Le premier rendu attend le catalogue de la langue.
+ *
+ * L'application n'affichait rien avant que ce fichier soit lu ; elle n'affiche désormais
+ * rien avant qu'un morceau de plus soit arrivé — un seul, celui d'une seule langue
+ * (`src/i18n/catalog.ts`). C'est le prix du chargement à la demande, et il se paie ici
+ * plutôt qu'en montrant d'abord un écran français à qui a demandé autre chose.
+ *
+ * `void` parce que rien n'attend cette promesse : ce module est le point d'entrée, il n'a
+ * personne à qui rendre l'échec. Un catalogue qui n'arrive pas laisse l'écran vide, et
+ * `loadMessages` oublie l'échec pour qu'un rechargement retente.
+ */
+const uiLanguage = initialUiLanguage(window.localStorage, [...navigator.languages])
+void loadTranslator(uiLanguage).then((loaded) => {
+  tr = loaded
+  render()
+})
