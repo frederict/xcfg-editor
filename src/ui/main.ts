@@ -46,6 +46,7 @@ import type { CurrentDocument, LibraryDialogHandle } from './libraryPanel'
 import type { PreferenceEdit } from './preferencesPage'
 import type { SharingResult, SharingSource } from './sharingDialog'
 import type { VersionPanel } from './versionDiagnostic'
+import type { CleanupEvent } from './cleanupPanel'
 import type { Library } from '../library/library'
 
 interface Session {
@@ -2260,11 +2261,16 @@ function openVersionDialog(): void {
   head.append(close)
   box.append(head)
 
+  // Le constat vient d'abord, l'action ensuite et seulement en édition. La phrase disait
+  // « rien n'est supprimé ni modifié » : c'était vrai tant que la boîte ne savait que
+  // constater. Elle sait maintenant retirer, et promettre le contraire de ce qu'un bouton
+  // fait quelques centimètres plus bas serait le pire des deux textes.
   box.append(el(
     'p', 'modal__lead',
     'Le format de XCTrack change à chaque version. Choisissez la version visée : ' +
     'l’éditeur dit alors ce que ce fichier porte qu’elle ne connaît pas, et ce qu’elle ' +
-    'attend qu’il n’a pas. Rien n’est supprimé ni modifié — c’est un constat.'
+    'attend qu’il n’a pas. C’est un constat : rien ne bouge tant que vous ne le ' +
+    'demandez pas.'
   ))
 
   const host = el('div', 'modal__slot')
@@ -2285,7 +2291,22 @@ function openVersionDialog(): void {
   void import('./versionDiagnostic')
     .then((module) => module.buildVersionPanel({
       document: current.container.document,
-      language: current.language
+      language: current.language,
+      // Le geste n'est offert qu'en édition : hors de ce mode, l'outil promet de ne rien
+      // écrire, et un bouton qui retire des réglages y serait un reniement.
+      //
+      // Volontairement branché sur `repaint()` et non sur le rendu complet : celui-ci
+      // passe par `syncVersionDialog()`, qui remet le panneau à zéro et effacerait
+      // l'offre de remise en place à l'instant précis où elle sert. Le nettoyage retire
+      // des réglages que la version visée ne lit pas — le dessin ne change donc pas, et
+      // l'identité des nœuds est préservée, si bien que `session.layout` reste valide.
+      ...(editMode ? { onCleanup: (event: CleanupEvent) => {
+        current.container.modified = true
+        current.history.record(event.description)
+        repaint()
+        refreshWidgetList()
+        syncEditControls()
+      } } : {})
     }))
     .then((panel) => {
       if (token !== versionToken) return

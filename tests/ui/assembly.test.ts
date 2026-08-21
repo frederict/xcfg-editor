@@ -503,3 +503,35 @@ describe('écrire une valeur d’usine depuis le panneau', () => {
     expect(editBranch).toContain('...fileVersion')
   })
 })
+
+/**
+ * Le nettoyage des réglages d'une ancienne version. C'est la seule fonction de
+ * l'application qui **retire** quelque chose du document du pilote : son branchement
+ * porte deux pièges que rien n'attrape à l'exécution.
+ */
+describe('brancher le nettoyage sur la boîte de version', () => {
+  it('le geste n’est offert qu’en édition', () => {
+    // Hors édition, l'outil promet de ne rien écrire. `onCleanup` absent suffit à
+    // désactiver la fonction entière côté panneau — c'est son interrupteur.
+    expect(main).toContain('...(editMode ? { onCleanup:')
+  })
+
+  it('le rappel redessine sans repasser par le rendu complet', () => {
+    // `render()` appelle `syncVersionDialog()`, qui remet le panneau à zéro : l'offre de
+    // remise en place disparaîtrait à l'instant même où elle sert. `repaint()` suffit,
+    // puisque le nettoyage ne retire que des réglages que la version visée ne lit pas.
+    const branch = main.slice(main.indexOf('...(editMode ? { onCleanup:'))
+    const body = branch.slice(0, branch.indexOf('} } : {})'))
+    expect(body).toContain('current.history.record(event.description)')
+    expect(body).toContain('repaint()')
+    expect(body).not.toContain('render()')
+    expect(body).not.toContain('syncVersionDialog()')
+  })
+
+  it('la boîte ne promet plus que rien ne sera supprimé', () => {
+    // Elle sait maintenant retirer. Promettre le contraire quelques centimètres au-dessus
+    // du bouton qui le fait serait le pire des deux textes.
+    expect(main).not.toContain('Rien n’est supprimé ni modifié')
+    expect(main).toContain('rien ne bouge tant que vous ne le ')
+  })
+})
