@@ -229,8 +229,8 @@ function resultingClassName(operation: PageOperation, pages: readonly Page[]): s
  */
 function shiftAdvice(pages: readonly Page[], operation: PageOperation): Advice | undefined {
   const count = pages.length
-  const identity = 'Le rang est la seule identité d’une page : c’est lui que le pilote ' +
-    'parcourt en vol.'
+  const identity = 'Le rang est la seule identité d’une page : c’est lui que vous ' +
+    'parcourez en vol.'
 
   if (operation.kind === 'insert' || operation.kind === 'duplicate') {
     const first = operation.kind === 'insert' ? operation.index : operation.index + 1

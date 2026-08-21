@@ -245,11 +245,11 @@ interface LayoutKeyRule {
 const LAYOUT_KEY_RULES: Record<string, LayoutKeyRule> = {
   titletext: {
     kind: 'freeText',
-    reason: 'titre personnalisé d’un gadget, écrit par le pilote'
+    reason: 'titre personnalisé d’un gadget, écrit par vous'
   },
   text: {
     kind: 'freeText',
-    reason: 'contenu entier d’un gadget de texte libre, écrit par le pilote'
+    reason: 'contenu entier d’un gadget de texte libre, écrit par vous'
   },
   fullName: {
     kind: 'contact',
@@ -265,7 +265,7 @@ const LAYOUT_KEY_RULES: Record<string, LayoutKeyRule> = {
   },
   title: {
     kind: 'freeText',
-    reason: 'libellé d’un bouton de lancement, écrit par le pilote'
+    reason: 'libellé d’un bouton de lancement, écrit par vous'
   },
   name: {
     kind: 'freeText',
@@ -277,15 +277,15 @@ const LAYOUT_KEY_RULES: Record<string, LayoutKeyRule> = {
   },
   filter: {
     kind: 'freeText',
-    reason: 'filtre de journal saisi par le pilote'
+    reason: 'filtre de journal que vous avez saisi'
   },
   suffix: {
     kind: 'freeText',
-    reason: 'texte placé après la valeur affichée, écrit par le pilote'
+    reason: 'texte placé après la valeur affichée, écrit par vous'
   },
   event: {
     kind: 'freeText',
-    reason: 'nom d’événement saisi par le pilote'
+    reason: 'nom d’événement que vous avez saisi'
   }
 }
 

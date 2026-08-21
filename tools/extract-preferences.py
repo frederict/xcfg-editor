@@ -1066,22 +1066,22 @@ DECLARED_PERSONAL = {
     "SafeSky.AutoIcao": ("identity", "immatriculation déduite"),
     "SafeSky.AnonymousUUID": ("device", "identifiant d'appareil, stable entre les vols"),
     "Livetrack.DeviceId": ("device", "identifiant d'appareil du service de suivi"),
-    "Livetrack.QuickMessages": ("freeText", "messages écrits par le pilote"),
+    "Livetrack.QuickMessages": ("freeText", "messages écrits par vous"),
     "Sensors.Configuration": ("device", "les capteurs appairés, adresses Bluetooth comprises"),
     "ActiveLook.Device": ("device", "les lunettes appairées"),
     "ActiveLook.Name": ("device", "le nom des lunettes appairées"),
     "Maverick.SdkKey": ("credential", "clé d'accès au SDK Everysight"),
     "Navigation.WaypointFiles": ("file", "fichiers de waypoints — le nom désigne souvent la compétition"),
     "Navigation.State": ("location", "la tâche en cours, points de virage et coordonnées compris"),
-    "Airspace.Files": ("file", "fichiers d'espaces aériens chargés par le pilote"),
+    "Airspace.Files": ("file", "fichiers d'espaces aériens que vous avez chargés"),
     "Mapsforge.MapFiles": ("file", "cartes hors-ligne téléchargées"),
-    "Mapsforge.ThemeFile": ("file", "thème de carte installé par le pilote"),
+    "Mapsforge.ThemeFile": ("file", "thème de carte que vous avez installé"),
     "App.GuessLatitude": ("location", "la position présumée de l'appareil — le domicile, en pratique"),
     "App.GuessLongitude": ("location", "la position présumée de l'appareil — le domicile, en pratique"),
     "Sensors.LastNetLocation": ("location", "la dernière position ayant servi à interroger le QNH"),
     "Testing.IGCReplayFilename": ("file", "un fichier de trace du pilote"),
-    "Devel.TTS": ("freeText", "texte saisi par le pilote"),
-    "Devel.TTSAbbr": ("freeText", "texte saisi par le pilote"),
+    "Devel.TTS": ("freeText", "texte que vous avez saisi"),
+    "Devel.TTSAbbr": ("freeText", "texte que vous avez saisi"),
 }
 
 # Les préférences de diffusion : pas des données personnelles, mais des **choix** sur
@@ -1113,7 +1113,7 @@ def personal_of(key: str, scope: str | None, input_type) -> dict | None:
         return {"kind": declared[0], "basis": "declared", "reason": declared[1]}
     if key.startswith(SHARING_PREFIX):
         return {"kind": "sharing", "basis": "declared",
-                "reason": "un choix de diffusion du pilote, pas une donnée en soi"}
+                "reason": "un choix de diffusion que vous avez fait, pas une donnée en soi"}
     return None
 
 

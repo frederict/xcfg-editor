@@ -522,7 +522,7 @@
    "personal": {
     "kind": "file",
     "basis": "declared",
-    "reason": "fichiers d'espaces aériens chargés par le pilote"
+    "reason": "fichiers d'espaces aériens que vous avez chargés"
    }
   },
   "Airspace.Filling": {
@@ -1138,7 +1138,7 @@
    "personal": {
     "kind": "freeText",
     "basis": "declared",
-    "reason": "texte saisi par le pilote"
+    "reason": "texte que vous avez saisi"
    }
   },
   "Devel.TTSAbbr": {
@@ -1156,7 +1156,7 @@
    "personal": {
     "kind": "freeText",
     "basis": "declared",
-    "reason": "texte saisi par le pilote"
+    "reason": "texte que vous avez saisi"
    }
   },
   "Devel.XContestAPIDev": {
@@ -2149,7 +2149,7 @@
    "personal": {
     "kind": "sharing",
     "basis": "declared",
-    "reason": "un choix de diffusion du pilote, pas une donnée en soi"
+    "reason": "un choix de diffusion que vous avez fait, pas une donnée en soi"
    }
   },
   "Livetrack.DeviceId": {
@@ -2186,7 +2186,7 @@
    "personal": {
     "kind": "sharing",
     "basis": "declared",
-    "reason": "un choix de diffusion du pilote, pas une donnée en soi"
+    "reason": "un choix de diffusion que vous avez fait, pas une donnée en soi"
    }
   },
   "Livetrack.FlightPublic": {
@@ -2203,7 +2203,7 @@
    "personal": {
     "kind": "sharing",
     "basis": "declared",
-    "reason": "un choix de diffusion du pilote, pas une donnée en soi"
+    "reason": "un choix de diffusion que vous avez fait, pas une donnée en soi"
    }
   },
   "Livetrack.QuickMessages": {
@@ -2218,7 +2218,7 @@
    "personal": {
     "kind": "freeText",
     "basis": "declared",
-    "reason": "messages écrits par le pilote"
+    "reason": "messages écrits par vous"
    }
   },
   "Livetrack.ShowPublic": {
@@ -2235,7 +2235,7 @@
    "personal": {
     "kind": "sharing",
     "basis": "declared",
-    "reason": "un choix de diffusion du pilote, pas une donnée en soi"
+    "reason": "un choix de diffusion que vous avez fait, pas une donnée en soi"
    }
   },
   "Mapsforge.MapFiles": {
@@ -2277,7 +2277,7 @@
    "personal": {
     "kind": "file",
     "basis": "declared",
-    "reason": "thème de carte installé par le pilote"
+    "reason": "thème de carte que vous avez installé"
    }
   },
   "Maverick.AutoBrightness": {

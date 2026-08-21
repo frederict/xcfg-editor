@@ -22,7 +22,7 @@
   "Airspace.Files": {
    "kind": "file",
    "basis": "declared",
-   "reason": "fichiers d'espaces aériens chargés par le pilote",
+   "reason": "fichiers d'espaces aériens que vous avez chargés",
    "scope": "PUBLIC"
   },
   "App.GuessLatitude": {
@@ -40,13 +40,13 @@
   "Devel.TTS": {
    "kind": "freeText",
    "basis": "declared",
-   "reason": "texte saisi par le pilote",
+   "reason": "texte que vous avez saisi",
    "scope": null
   },
   "Devel.TTSAbbr": {
    "kind": "freeText",
    "basis": "declared",
-   "reason": "texte saisi par le pilote",
+   "reason": "texte que vous avez saisi",
    "scope": null
   },
   "Glider.Ctg": {
@@ -88,7 +88,7 @@
   "Livetrack.ClaimContest": {
    "kind": "sharing",
    "basis": "declared",
-   "reason": "un choix de diffusion du pilote, pas une donnée en soi",
+   "reason": "un choix de diffusion que vous avez fait, pas une donnée en soi",
    "scope": "PUBLIC"
   },
   "Livetrack.DeviceId": {
@@ -100,25 +100,25 @@
   "Livetrack.Enabled": {
    "kind": "sharing",
    "basis": "declared",
-   "reason": "un choix de diffusion du pilote, pas une donnée en soi",
+   "reason": "un choix de diffusion que vous avez fait, pas une donnée en soi",
    "scope": "PUBLIC"
   },
   "Livetrack.FlightPublic": {
    "kind": "sharing",
    "basis": "declared",
-   "reason": "un choix de diffusion du pilote, pas une donnée en soi",
+   "reason": "un choix de diffusion que vous avez fait, pas une donnée en soi",
    "scope": "PUBLIC"
   },
   "Livetrack.QuickMessages": {
    "kind": "freeText",
    "basis": "declared",
-   "reason": "messages écrits par le pilote",
+   "reason": "messages écrits par vous",
    "scope": "PUBLIC"
   },
   "Livetrack.ShowPublic": {
    "kind": "sharing",
    "basis": "declared",
-   "reason": "un choix de diffusion du pilote, pas une donnée en soi",
+   "reason": "un choix de diffusion que vous avez fait, pas une donnée en soi",
    "scope": "PUBLIC"
   },
   "Mapsforge.MapFiles": {
@@ -130,7 +130,7 @@
   "Mapsforge.ThemeFile": {
    "kind": "file",
    "basis": "declared",
-   "reason": "thème de carte installé par le pilote",
+   "reason": "thème de carte que vous avez installé",
    "scope": "PUBLIC"
   },
   "Maverick.SdkKey": {

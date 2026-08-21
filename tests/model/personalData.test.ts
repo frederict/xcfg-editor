@@ -289,3 +289,26 @@ describe('données personnelles — l’inventaire est une lecture', () => {
     expect(JSON.stringify(document)).toBe(JSON.stringify(parseJson(source)))
   })
 })
+
+/* ============================================ l'inventaire parle AU pilote, pas DE lui */
+
+describe('données personnelles — les raisons disent « vous »', () => {
+  /**
+   * Ces raisons s'affichent dans la boîte de partage et sur la carte d'identité de la
+   * bibliothèque. « écrit par le pilote » y donnait au pilote l'impression de lire le
+   * dossier de quelqu'un d'autre, au moment précis où on lui montre ce que son propre
+   * fichier révèle de lui.
+   */
+  it('aucune raison ne parle du pilote à la troisième personne', () => {
+    const inventory = collectPersonalData(documentOf(BACKUP_2026))
+    for (const finding of inventory.findings) {
+      expect(finding.reason, finding.key).not.toContain('le pilote')
+    }
+  })
+
+  it('le titre d’un gadget et le texte libre sont dits « écrits par vous »', () => {
+    const inventory = collectPersonalData(documentOf(BACKUP_2026))
+    const written = inventory.findings.filter((f) => f.reason.includes('par vous'))
+    expect(written.length).toBeGreaterThan(0)
+  })
+})
