@@ -1,0 +1,5534 @@
+{
+ "meta": {
+  "source": "XCTrack-1.0.3-beta5",
+  "generatedBy": "tools/extract-preferences.py",
+  "versionCode": 100030,
+  "versionName": "1.0.3-beta-5-gc036d8f2c",
+  "package": "org.xcontest.XCTrack",
+  "configClass": "a",
+  "preferenceRoot": "fp6",
+  "scopeEnum": "gp6",
+  "languages": [
+   "bg",
+   "bs",
+   "ca",
+   "cs",
+   "da",
+   "de",
+   "el",
+   "en",
+   "es",
+   "eu",
+   "fa",
+   "fi",
+   "fr",
+   "gl",
+   "hi",
+   "hr",
+   "hu",
+   "it",
+   "ja",
+   "ko",
+   "lt",
+   "nl",
+   "no",
+   "pl",
+   "pt",
+   "ro",
+   "ru",
+   "sk",
+   "sl",
+   "sr",
+   "tr",
+   "uk",
+   "vi",
+   "zh",
+   "zh-TW"
+  ],
+  "preferenceCount": 216,
+  "declaredCount": 209,
+  "exportedCount": 135,
+  "labelledCount": 131,
+  "personalCount": 43,
+  "screenCount": 20,
+  "stringCount": 217,
+  "arrayCount": 13,
+  "valueConflicts": [],
+  "defaultConflicts": [
+   "Display.WidgetTitleOutlineColor",
+   "Sensors.ManualQnh"
+  ]
+ },
+ "families": {
+  "": [
+   "EventMappingJs",
+   "FirstStart",
+   "LandingDetectionType",
+   "Sounds",
+   "TakeoffSpeed",
+   "_ttsPitch",
+   "_ttsSpeed"
+  ],
+  "ActiveLook": [
+   "ActiveLook.Alb",
+   "ActiveLook.Device",
+   "ActiveLook.HShift",
+   "ActiveLook.Layout",
+   "ActiveLook.Luma",
+   "ActiveLook.Name",
+   "ActiveLook.VShift"
+  ],
+  "Airspace": [
+   "Airspace.ClassColors",
+   "Airspace.EventSuppressionInside",
+   "Airspace.EventSuppressionObstacle2",
+   "Airspace.EventSuppressionOrange",
+   "Airspace.EventSuppressionRed",
+   "Airspace.Files",
+   "Airspace.Filling",
+   "Airspace.Filling.Alpha",
+   "Airspace.ForceGpsAltitude",
+   "Airspace.LabelsAlways",
+   "Airspace.LabelsForTemporaryAlways",
+   "Airspace.LabelsSkipAMSL",
+   "Airspace.LabelsZoom",
+   "Airspace.MaxDiscoverDistnace",
+   "Airspace.SharktoothBorderEnabled",
+   "Airspace.SharktoothBorderZoom",
+   "Airspace.State2",
+   "Airspace.autoUpdate"
+  ],
+  "App": [
+   "App.Config.Version",
+   "App.GuessLatitude",
+   "App.GuessLongitude",
+   "App.ScreenOccupation.X",
+   "App.ScreenOccupation.Y"
+  ],
+  "Comp": [
+   "Comp.AlertBeforeSSS"
+  ],
+  "Contest": [
+   "Contest.CoefFT",
+   "Contest.CoefPT",
+   "Contest.CoefVP5",
+   "Contest.TriangleClosing"
+  ],
+  "Devel": [
+   "Devel.ActiveLookBitmap",
+   "Devel.AirspaceAPIDev",
+   "Devel.BssAPIDev",
+   "Devel.DoNotDeleteShortTracklog",
+   "Devel.FlarmDuringReplay",
+   "Devel.InertialLogging",
+   "Devel.LivetrackAPIDev",
+   "Devel.LivetrackDuringReplay",
+   "Devel.LogSensors",
+   "Devel.ManualWind",
+   "Devel.ManualWindDir",
+   "Devel.ManualWindSpeed",
+   "Devel.OAuthAPIDev",
+   "Devel.RememberIGCReplay",
+   "Devel.ShowAllEvents",
+   "Devel.ShowObstaclePolygon",
+   "Devel.StrictMode",
+   "Devel.SyncAPIDev",
+   "Devel.TAShowWindLines",
+   "Devel.TTS",
+   "Devel.TTSAbbr",
+   "Devel.XContestAPIDev"
+  ],
+  "Display": [
+   "Display.Fullscreen",
+   "Display.Language",
+   "Display.Orientation",
+   "Display.RepaintInterval",
+   "Display.Theme",
+   "Display.WidgetTitleColor",
+   "Display.WidgetTitleFont",
+   "Display.WidgetTitleOutline",
+   "Display.WidgetTitleOutlineColor",
+   "Display.WidgetTitleSize"
+  ],
+  "Glider": [
+   "Glider.Ctg",
+   "Glider.CtgHG",
+   "Glider.EngineType",
+   "Glider.FAIClass",
+   "Glider.GoalGlideRatio",
+   "Glider.Name",
+   "Glider.TrimSpeed",
+   "Glider._ctg",
+   "Glider._ctgHG",
+   "Glider._model",
+   "Glider._producer",
+   "Glider._tandem"
+  ],
+  "Internal": [
+   "Internal.ActiveLookDevInfo",
+   "Internal.ActiveLookOldFw",
+   "Internal.CameraBack",
+   "Internal.FlarmDbVisited",
+   "Internal.GliderListRefreshed",
+   "Internal.LiveTempDontShare",
+   "Internal.LiveTempShortDelay",
+   "Internal.PreV5SelectedChannels",
+   "Internal.SntpVsGpsOffset",
+   "Internal.TrackingRunning",
+   "Internal.VolumeInitial",
+   "Internal.VolumeSkipWarning",
+   "Internal.XCNavigationVisited"
+  ],
+  "Keys": [
+   "Keys.BrightnessDec",
+   "Keys.BrightnessInc",
+   "Keys.EnterPan",
+   "Keys.IntentLaunch",
+   "Keys.MapPanDown",
+   "Keys.MapPanLeft",
+   "Keys.MapPanRight",
+   "Keys.MapPanStepSize",
+   "Keys.MapPanUp",
+   "Keys.Menu",
+   "Keys.NextPage",
+   "Keys.NextWaypoint",
+   "Keys.PrevWaypoint",
+   "Keys.PreviousPage",
+   "Keys.ProximityScreenOn",
+   "Keys.ZoomIn",
+   "Keys.ZoomOut"
+  ],
+  "Livetrack": [
+   "Livetrack.ClaimContest",
+   "Livetrack.DeviceId",
+   "Livetrack.Enabled",
+   "Livetrack.FlightPublic",
+   "Livetrack.QuickMessages",
+   "Livetrack.ShowPublic"
+  ],
+  "Mapsforge": [
+   "Mapsforge.MapFiles",
+   "Mapsforge.Terrain",
+   "Mapsforge.ThemeFile"
+  ],
+  "Maverick": [
+   "Maverick.AutoBrightness",
+   "Maverick.Brightness",
+   "Maverick.Calibration",
+   "Maverick.Layout",
+   "Maverick.SdkKey"
+  ],
+  "Navigation": [
+   "Navigation.State",
+   "Navigation.WaypointFiles"
+  ],
+  "Obstacles": [
+   "Obstacles.SafeAltMargin",
+   "Obstacles.SafeDistanceTimeS",
+   "Obstacles.ShowLabelsOnMap"
+  ],
+  "Pilot": [
+   "Pilot.Name"
+  ],
+  "SafeSky": [
+   "SafeSky.Address",
+   "SafeSky.Amt",
+   "SafeSky.Anonymous",
+   "SafeSky.AnonymousUUID",
+   "SafeSky.AutoIcao",
+   "SafeSky.Enabled",
+   "SafeSky.Icao",
+   "SafeSky.Interval",
+   "SafeSky.Salt",
+   "SafeSky.Sandbox",
+   "SafeSky.Terms"
+  ],
+  "Sec": [
+   "Sec.GpsTimeOffset",
+   "Sec.ProToTimestamp",
+   "Sec.ProUid",
+   "Sec.Xcontest.Uid",
+   "Sec.test"
+  ],
+  "Sensor": [
+   "Sensor.AcousticVario.DynamicFreq"
+  ],
+  "Sensors": [
+   "Sensors.AcousticVario.Averaging",
+   "Sensors.AcousticVario.AvgLift",
+   "Sensors.AcousticVario.BeepLimit",
+   "Sensors.AcousticVario.BueeLimit",
+   "Sensors.AcousticVario.CustomProfileEnabled",
+   "Sensors.AcousticVario.Enabled",
+   "Sensors.AcousticVario.LongAveraging",
+   "Sensors.AcousticVario.MuteWhenLanded",
+   "Sensors.AcousticVario.Volume",
+   "Sensors.AcousticVario.WarnNoData",
+   "Sensors.AcousticVario.WeakLiftVolume",
+   "Sensors.AutoUpdateManual",
+   "Sensors.Configuration",
+   "Sensors.LastNetLocation",
+   "Sensors.LastNetTime",
+   "Sensors.LastNetValue",
+   "Sensors.ManualQnh",
+   "Sensors.QnhNetworkSource",
+   "Sensors.QnhNetworkSourceType"
+  ],
+  "SkySight": [
+   "SkySight.Password",
+   "SkySight.Username"
+  ],
+  "Sound": [
+   "Sound.AcousticVario.CustomProfile",
+   "Sound.TTS.Pitch",
+   "Sound.TTS.Speed"
+  ],
+  "Testing": [
+   "Testing.ExternalSensorLog",
+   "Testing.FirstRunWizardAgain",
+   "Testing.IGCReplayFilename",
+   "Testing.InternalSensorLog",
+   "Testing.Log",
+   "Testing.WebViewDebug"
+  ],
+  "Thermalling": [
+   "Thermalling.DetectionIntervalMs",
+   "Thermalling.StartMinTurn",
+   "Thermalling.StartMinVario",
+   "Thermalling.StopMaxTurn",
+   "Thermalling.StopMaxVario"
+  ],
+  "Tweak": [
+   "Tweak.AnnounceEventsByIntents",
+   "Tweak.AudioFocus",
+   "Tweak.BlockKeys",
+   "Tweak.DisableNotif",
+   "Tweak.HWAccel",
+   "Tweak.KeepDisplayOn",
+   "Tweak.MasterSyncAutoOff",
+   "Tweak.MutePhone",
+   "Tweak.RejectCalls",
+   "Tweak.VolumePct",
+   "Tweak.VolumeUp"
+  ],
+  "Unit": [
+   "Unit.AirspaceAltitude",
+   "Unit.Altitude",
+   "Unit.CompetitionDistance",
+   "Unit.Distance",
+   "Unit.RelativeDistance",
+   "Unit.Speed",
+   "Unit.VerticalSpeed",
+   "Unit.WindSpeed"
+  ],
+  "XContest": [
+   "XContest.AuthToken",
+   "XContest.Password",
+   "XContest.Username"
+  ],
+  "_CrashDetect": [
+   "_CrashDetect.DontAskAgain",
+   "_CrashDetect.Flying"
+  ],
+  "_Diag": [
+   "_Diag.LastReportedExit"
+  ],
+  "_temp": [
+   "_temp.brightness",
+   "_temp.lastMuteState",
+   "_temp.masterSyncWasEnabled"
+  ]
+ },
+ "preferences": {
+  "ActiveLook.Alb": {
+   "family": "ActiveLook",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": "prefActiveLookAlb",
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_activelook",
+   "order": 3
+  },
+  "ActiveLook.Device": {
+   "family": "ActiveLook",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "string",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": "",
+   "defaultSource": "declared",
+   "personal": {
+    "kind": "device",
+    "basis": "declared",
+    "reason": "les lunettes appairées"
+   }
+  },
+  "ActiveLook.HShift": {
+   "family": "ActiveLook",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": "slider",
+   "label": "prefActiveLookHShift",
+   "help": null,
+   "impl": "k24",
+   "default": 0,
+   "defaultSource": "declared",
+   "screen": "preferences_activelook",
+   "order": 5,
+   "min": -100,
+   "max": 100,
+   "unit": "%"
+  },
+  "ActiveLook.Layout": {
+   "family": "ActiveLook",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "json",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yh3"
+  },
+  "ActiveLook.Luma": {
+   "family": "ActiveLook",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": "slider",
+   "label": "prefActiveLookLuma",
+   "help": null,
+   "impl": "k24",
+   "default": 4,
+   "defaultSource": "declared",
+   "screen": "preferences_activelook",
+   "order": 4,
+   "min": 0,
+   "max": 15,
+   "unit": ""
+  },
+  "ActiveLook.Name": {
+   "family": "ActiveLook",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "string",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": "",
+   "defaultSource": "declared",
+   "personal": {
+    "kind": "device",
+    "basis": "declared",
+    "reason": "le nom des lunettes appairées"
+   }
+  },
+  "ActiveLook.VShift": {
+   "family": "ActiveLook",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": "slider",
+   "label": "prefActiveLookVShift",
+   "help": null,
+   "impl": "k24",
+   "default": 0,
+   "defaultSource": "declared",
+   "screen": "preferences_activelook",
+   "order": 6,
+   "min": -100,
+   "max": 100,
+   "unit": "%"
+  },
+  "Airspace.ClassColors": {
+   "family": "Airspace",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "json",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yh3"
+  },
+  "Airspace.EventSuppressionInside": {
+   "family": "Airspace",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "k24",
+   "default": 10000,
+   "defaultSource": "declared"
+  },
+  "Airspace.EventSuppressionObstacle2": {
+   "family": "Airspace",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "k24",
+   "default": 5000,
+   "defaultSource": "declared"
+  },
+  "Airspace.EventSuppressionOrange": {
+   "family": "Airspace",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "k24",
+   "default": 10000,
+   "defaultSource": "declared"
+  },
+  "Airspace.EventSuppressionRed": {
+   "family": "Airspace",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "k24",
+   "default": 10000,
+   "defaultSource": "declared"
+  },
+  "Airspace.Files": {
+   "family": "Airspace",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "json",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yh3",
+   "personal": {
+    "kind": "file",
+    "basis": "declared",
+    "reason": "fichiers d'espaces aériens chargés par le pilote"
+   }
+  },
+  "Airspace.Filling": {
+   "family": "Airspace",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "enum",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": "NONE",
+   "defaultSource": "declared",
+   "enum": "rc1",
+   "enumValues": [
+    "NONE",
+    "OUTLINE",
+    "WHOLE"
+   ],
+   "values": [
+    "NONE",
+    "OUTLINE",
+    "WHOLE"
+   ],
+   "valuesSource": "enum"
+  },
+  "Airspace.Filling.Alpha": {
+   "family": "Airspace",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "k24",
+   "default": 45,
+   "defaultSource": "declared"
+  },
+  "Airspace.ForceGpsAltitude": {
+   "family": "Airspace",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": "airspaceAltitudeSettingsForceGps",
+   "help": "airspaceAltitudeSettingsForceGpsLegend",
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_atmosphere",
+   "order": 6,
+   "category": "prefAirspaces"
+  },
+  "Airspace.LabelsAlways": {
+   "family": "Airspace",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared"
+  },
+  "Airspace.LabelsForTemporaryAlways": {
+   "family": "Airspace",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": true,
+   "defaultSource": "declared"
+  },
+  "Airspace.LabelsSkipAMSL": {
+   "family": "Airspace",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared"
+  },
+  "Airspace.LabelsZoom": {
+   "family": "Airspace",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "k24",
+   "default": 21,
+   "defaultSource": "declared"
+  },
+  "Airspace.MaxDiscoverDistnace": {
+   "family": "Airspace",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "k24",
+   "default": 10000,
+   "defaultSource": "declared"
+  },
+  "Airspace.SharktoothBorderEnabled": {
+   "family": "Airspace",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": true,
+   "defaultSource": "declared"
+  },
+  "Airspace.SharktoothBorderZoom": {
+   "family": "Airspace",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "k24",
+   "default": 27,
+   "defaultSource": "declared"
+  },
+  "Airspace.State2": {
+   "family": "Airspace",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "json",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yh3"
+  },
+  "Airspace.autoUpdate": {
+   "family": "Airspace",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": true,
+   "defaultSource": "declared"
+  },
+  "App.Config.Version": {
+   "family": "App",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "int",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "k24",
+   "default": -1,
+   "defaultSource": "declared"
+  },
+  "App.GuessLatitude": {
+   "family": "App",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "float",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": 40.0,
+   "defaultSource": "declared",
+   "personal": {
+    "kind": "location",
+    "basis": "declared",
+    "reason": "la position présumée de l'appareil — le domicile, en pratique"
+   }
+  },
+  "App.GuessLongitude": {
+   "family": "App",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "float",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": -40.0,
+   "defaultSource": "declared",
+   "personal": {
+    "kind": "location",
+    "basis": "declared",
+    "reason": "la position présumée de l'appareil — le domicile, en pratique"
+   }
+  },
+  "App.ScreenOccupation.X": {
+   "family": "App",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "int",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "k24",
+   "default": 0,
+   "defaultSource": "declared"
+  },
+  "App.ScreenOccupation.Y": {
+   "family": "App",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "int",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "k24",
+   "default": 0,
+   "defaultSource": "declared"
+  },
+  "Comp.AlertBeforeSSS": {
+   "family": "Comp",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "json",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yh3"
+  },
+  "Contest.CoefFT": {
+   "family": "Contest",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "float",
+   "control": "number",
+   "label": "prefContestCoefFT",
+   "help": null,
+   "impl": "yd0",
+   "default": 1.4,
+   "defaultSource": "declared",
+   "screen": "preferences_contest",
+   "order": 4,
+   "category": "_contestCoef",
+   "decimals": 2
+  },
+  "Contest.CoefPT": {
+   "family": "Contest",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "float",
+   "control": "number",
+   "label": "prefContestCoefPT",
+   "help": null,
+   "impl": "yd0",
+   "default": 1.2,
+   "defaultSource": "declared",
+   "screen": "preferences_contest",
+   "order": 3,
+   "category": "_contestCoef",
+   "decimals": 2
+  },
+  "Contest.CoefVP5": {
+   "family": "Contest",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "float",
+   "control": "number",
+   "label": "prefContestCoefVP5",
+   "help": null,
+   "impl": "yd0",
+   "default": 1.0,
+   "defaultSource": "declared",
+   "screen": "preferences_contest",
+   "order": 2,
+   "category": "_contestCoef",
+   "decimals": 2
+  },
+  "Contest.TriangleClosing": {
+   "family": "Contest",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "float",
+   "control": "number",
+   "label": "prefContestTriangleClosing",
+   "help": null,
+   "impl": "yd0",
+   "default": 20.0,
+   "defaultSource": "declared",
+   "screen": "preferences_contest",
+   "order": 0,
+   "decimals": 1
+  },
+  "Devel.ActiveLookBitmap": {
+   "family": "Devel",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_extra",
+   "order": 10,
+   "labelText": "ActiveLook simulator"
+  },
+  "Devel.AirspaceAPIDev": {
+   "family": "Devel",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_devel",
+   "order": 6,
+   "labelText": "Airspace API Dev",
+   "helpText": "Use development airspace server"
+  },
+  "Devel.BssAPIDev": {
+   "family": "Devel",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_devel",
+   "order": 4,
+   "labelText": "BSS API Dev",
+   "helpText": "Use development bss backend"
+  },
+  "Devel.DoNotDeleteShortTracklog": {
+   "family": "Devel",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_extra",
+   "order": 6,
+   "labelText": "Do not delete short tracklog"
+  },
+  "Devel.FlarmDuringReplay": {
+   "family": "Devel",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_devel",
+   "order": 13,
+   "labelText": "Allow receiving FLARM from external devices during replay"
+  },
+  "Devel.InertialLogging": {
+   "family": "Devel",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_devel",
+   "order": 15,
+   "labelText": "Inertial logging",
+   "helpText": "Log accelerometer/gyroscope data to .accel files while flying"
+  },
+  "Devel.LivetrackAPIDev": {
+   "family": "Devel",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_devel",
+   "order": 2,
+   "labelText": "Livetrack API Dev",
+   "helpText": "Use development livetracking backend"
+  },
+  "Devel.LivetrackDuringReplay": {
+   "family": "Devel",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_extra",
+   "order": 0,
+   "labelText": "Livetrack during replay",
+   "helpText": "Livetracking during replay (!!!)"
+  },
+  "Devel.LogSensors": {
+   "family": "Devel",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_devel",
+   "order": 14,
+   "labelText": "Log sensors in IGC File"
+  },
+  "Devel.ManualWind": {
+   "family": "Devel",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_extra",
+   "order": 12,
+   "labelText": "Manual wind"
+  },
+  "Devel.ManualWindDir": {
+   "family": "Devel",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "float",
+   "control": "number",
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": 42.0,
+   "defaultSource": "declared",
+   "screen": "preferences_extra",
+   "order": 14,
+   "labelText": "Manual wind direction",
+   "min": 0,
+   "max": 360,
+   "decimals": 0,
+   "unit": "°"
+  },
+  "Devel.ManualWindSpeed": {
+   "family": "Devel",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "float",
+   "control": "number",
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": 5.0,
+   "defaultSource": "declared",
+   "screen": "preferences_extra",
+   "order": 13,
+   "labelText": "Manual wind speed",
+   "min": 0,
+   "max": 100,
+   "decimals": 1,
+   "unit": "m/s"
+  },
+  "Devel.OAuthAPIDev": {
+   "family": "Devel",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_devel",
+   "order": 5,
+   "labelText": "Oauth API Dev",
+   "helpText": "Use development oauth backend. You probably want this checked if you have dev livetrack or dev sync"
+  },
+  "Devel.RememberIGCReplay": {
+   "family": "Devel",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_devel",
+   "order": 8,
+   "labelText": "Remember IGC Replay",
+   "helpText": "Remember IGC Replay settings over application restarts"
+  },
+  "Devel.ShowAllEvents": {
+   "family": "Devel",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_extra",
+   "order": 1,
+   "labelText": "Show all events"
+  },
+  "Devel.ShowObstaclePolygon": {
+   "family": "Devel",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_devel",
+   "order": 12,
+   "labelText": "Show obstacle detection polygon on map"
+  },
+  "Devel.StrictMode": {
+   "family": "Devel",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_extra",
+   "order": 2,
+   "labelText": "StrictMode (main-thread violation detector)",
+   "helpText": "Flags slow operations done on the UI (main) thread - disk reads/writes, network, and VM problems like leaked closeables. On Android 9+ each violation is written to the application log and logcat (filter for 'StrictMode') and sent to Crashlytics as a non-fatal (Crashlytics console - Non-fatals); on older Android it only reaches logcat. Takes effect after restarting the app. Leave OFF in normal use - it only helps when chasing jank/ANRs."
+  },
+  "Devel.SyncAPIDev": {
+   "family": "Devel",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_devel",
+   "order": 3,
+   "labelText": "Sync API Dev",
+   "helpText": "Use development sync backend"
+  },
+  "Devel.TAShowWindLines": {
+   "family": "Devel",
+   "scope": null,
+   "declared": false,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": null,
+   "help": null,
+   "screen": "preferences_devel",
+   "order": 0,
+   "labelText": "Show Wind Lines in TA"
+  },
+  "Devel.TTS": {
+   "family": "Devel",
+   "scope": null,
+   "declared": false,
+   "valueKind": "string",
+   "control": "text",
+   "label": null,
+   "help": null,
+   "screen": "preferences_extra",
+   "order": 15,
+   "labelText": "Enter a text for TTS",
+   "personal": {
+    "kind": "freeText",
+    "basis": "declared",
+    "reason": "texte saisi par le pilote"
+   }
+  },
+  "Devel.TTSAbbr": {
+   "family": "Devel",
+   "scope": null,
+   "declared": false,
+   "valueKind": "string",
+   "control": "text",
+   "label": null,
+   "help": null,
+   "screen": "preferences_extra",
+   "order": 16,
+   "labelText": "Enter a text for abbreviated TTS",
+   "helpText": "Some of the event arguments are abbreviated (like names of airspaces) - test it here",
+   "personal": {
+    "kind": "freeText",
+    "basis": "declared",
+    "reason": "texte saisi par le pilote"
+   }
+  },
+  "Devel.XContestAPIDev": {
+   "family": "Devel",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_devel",
+   "order": 1,
+   "labelText": "XContest API Dev",
+   "helpText": "Use development version of XContest API"
+  },
+  "Display.Fullscreen": {
+   "family": "Display",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": "prefDisplayFullscreen",
+   "help": null,
+   "impl": "yd0",
+   "default": true,
+   "defaultSource": "declared",
+   "screen": "preferences_display",
+   "order": 3
+  },
+  "Display.Language": {
+   "family": "Display",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "string",
+   "control": "list",
+   "label": "prefDisplayLanguage",
+   "help": null,
+   "impl": "yd0",
+   "default": "",
+   "defaultSource": "declared",
+   "screen": "preferences_display",
+   "order": 0,
+   "entryLabels": "prefLanguage",
+   "values": [
+    "",
+    "bg",
+    "ca",
+    "cs",
+    "de",
+    "en",
+    "es",
+    "eu",
+    "fr",
+    "gl",
+    "el",
+    "hi",
+    "hr",
+    "it",
+    "ko",
+    "lt",
+    "hu",
+    "nl",
+    "no",
+    "ja",
+    "pl",
+    "pt",
+    "ro",
+    "ru",
+    "sk",
+    "sl",
+    "fi",
+    "vi",
+    "tr",
+    "uk",
+    "zh",
+    "zh-TW"
+   ],
+   "valuesSource": "entryValues"
+  },
+  "Display.Orientation": {
+   "family": "Display",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "enum",
+   "control": "list",
+   "label": "prefDisplayOrientation",
+   "help": null,
+   "impl": "yd0",
+   "default": "PORTRAIT",
+   "defaultSource": "declared",
+   "enum": "sc1",
+   "enumValues": [
+    "SENSOR",
+    "LANDSCAPE",
+    "PORTRAIT",
+    "REVERSE_LANDSCAPE",
+    "REVERSE_PORTRAIT"
+   ],
+   "screen": "preferences_display",
+   "order": 4,
+   "entryLabels": "prefOrientation",
+   "values": [
+    "SENSOR",
+    "PORTRAIT",
+    "LANDSCAPE",
+    "REVERSE_PORTRAIT",
+    "REVERSE_LANDSCAPE"
+   ],
+   "valuesSource": "entryValues"
+  },
+  "Display.RepaintInterval": {
+   "family": "Display",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "string",
+   "control": "list",
+   "label": "prefDisplayRepaintInterval",
+   "help": null,
+   "impl": "yd0",
+   "default": "500",
+   "defaultSource": "declared",
+   "screen": "preferences_display",
+   "order": 5,
+   "entryLabels": "prefDisplayRepaintIntervalTexts",
+   "values": [
+    "5000",
+    "2000",
+    "1000",
+    "500",
+    "250",
+    "125",
+    "1"
+   ],
+   "valuesSource": "entryValues"
+  },
+  "Display.Theme": {
+   "family": "Display",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "string",
+   "control": "list",
+   "label": "prefDisplayTheme",
+   "help": null,
+   "impl": "yd0",
+   "default": "WhiteTheme",
+   "defaultSource": "declared",
+   "screen": "preferences_display",
+   "order": 2,
+   "entryLabels": "prefTheme",
+   "values": [
+    "BlackTheme",
+    "BlackHCTheme",
+    "WhiteTheme",
+    "WhiteHCTheme",
+    "WhiteEInkTheme"
+   ],
+   "valuesSource": "entryValues"
+  },
+  "Display.WidgetTitleColor": {
+   "family": "Display",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": "color",
+   "label": "prefDisplayWidgetTitleColor",
+   "help": null,
+   "impl": "k24",
+   "screen": "preferences_display",
+   "order": 9,
+   "category": "prefDisplayWidgetTitles",
+   "default": -8553091,
+   "defaultSource": "xml"
+  },
+  "Display.WidgetTitleFont": {
+   "family": "Display",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "string",
+   "control": "list",
+   "label": "prefDisplayWidgetTitleFont",
+   "help": null,
+   "impl": "yd0",
+   "default": "default",
+   "defaultSource": "declared",
+   "screen": "preferences_display",
+   "order": 8,
+   "category": "prefDisplayWidgetTitles",
+   "entryLabels": "prefDisplayWidgetTitleFontTexts",
+   "values": [
+    "normal",
+    "condensed"
+   ],
+   "valuesSource": "entryValues"
+  },
+  "Display.WidgetTitleOutline": {
+   "family": "Display",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": "prefDisplayWidgetTitleOutline",
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_display",
+   "order": 10,
+   "category": "prefDisplayWidgetTitles"
+  },
+  "Display.WidgetTitleOutlineColor": {
+   "family": "Display",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": "color",
+   "label": "prefDisplayWidgetTitleOutlineColor",
+   "help": null,
+   "impl": "k24",
+   "default": -1,
+   "defaultSource": "declared",
+   "screen": "preferences_display",
+   "order": 11,
+   "category": "prefDisplayWidgetTitles",
+   "xmlDefault": -3355444
+  },
+  "Display.WidgetTitleSize": {
+   "family": "Display",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "string",
+   "control": "list",
+   "label": "prefDisplayWidgetTitleSize",
+   "help": null,
+   "impl": "yd0",
+   "default": "100",
+   "defaultSource": "declared",
+   "screen": "preferences_display",
+   "order": 7,
+   "category": "prefDisplayWidgetTitles",
+   "entryLabels": "prefDisplayWidgetTitleSizeTexts",
+   "values": [
+    "70",
+    "80",
+    "90",
+    "100",
+    "110",
+    "120",
+    "140",
+    "160",
+    "180",
+    "200",
+    "220",
+    "240",
+    "260",
+    "280",
+    "300",
+    "320"
+   ],
+   "valuesSource": "entryValues"
+  },
+  "EventMappingJs": {
+   "family": "",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "json",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yh3"
+  },
+  "FirstStart": {
+   "family": "",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": true,
+   "defaultSource": "declared"
+  },
+  "Glider.Ctg": {
+   "family": "Glider",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "string",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": "",
+   "defaultSource": "declared",
+   "personal": {
+    "kind": "equipment",
+    "basis": "declared",
+    "reason": "catégorie de la voile"
+   }
+  },
+  "Glider.CtgHG": {
+   "family": "Glider",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "string",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": "",
+   "defaultSource": "declared",
+   "personal": {
+    "kind": "equipment",
+    "basis": "declared",
+    "reason": "catégorie de l'aile delta"
+   }
+  },
+  "Glider.EngineType": {
+   "family": "Glider",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "string",
+   "control": "list",
+   "label": "prefAircraftEngineType",
+   "help": null,
+   "impl": "yd0",
+   "default": "T",
+   "defaultSource": "declared",
+   "screen": "preferences_glider",
+   "order": 8,
+   "entryLabels": "prefAircraftEngineType",
+   "values": [
+    "T",
+    "E"
+   ],
+   "valuesSource": "entryValues"
+  },
+  "Glider.FAIClass": {
+   "family": "Glider",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "string",
+   "control": "list",
+   "label": "prefGliderFAIClass",
+   "help": null,
+   "impl": "yd0",
+   "default": "3",
+   "defaultSource": "declared",
+   "screen": "preferences_glider",
+   "order": 0,
+   "entryLabels": "prefGliderFAIClass",
+   "values": [
+    "3",
+    "1",
+    "5",
+    "2",
+    "11",
+    "12",
+    "13",
+    "14",
+    "15",
+    "16"
+   ],
+   "valuesSource": "entryValues"
+  },
+  "Glider.GoalGlideRatio": {
+   "family": "Glider",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "float",
+   "control": "number",
+   "label": "prefGliderGoalGlideRatio",
+   "help": null,
+   "impl": "yd0",
+   "default": 9.0,
+   "defaultSource": "declared",
+   "screen": "preferences_glider",
+   "order": 10,
+   "decimals": 2
+  },
+  "Glider.Name": {
+   "family": "Glider",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "string",
+   "control": "text",
+   "label": "prefAircraftName",
+   "help": null,
+   "impl": "yd0",
+   "default": "",
+   "defaultSource": "declared",
+   "screen": "preferences_glider",
+   "order": 4,
+   "personal": {
+    "kind": "identity",
+    "basis": "declared",
+    "reason": "la voile du pilote — modèle et taille identifient un pilote dans un club"
+   }
+  },
+  "Glider.TrimSpeed": {
+   "family": "Glider",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "float",
+   "control": "number",
+   "label": "prefGliderTrimSpeed",
+   "help": null,
+   "impl": "yd0",
+   "default": 38.0,
+   "defaultSource": "declared",
+   "screen": "preferences_glider",
+   "order": 9,
+   "decimals": 1
+  },
+  "Glider._ctg": {
+   "family": "Glider",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "string",
+   "control": "list",
+   "label": "prefGliderCategory",
+   "help": null,
+   "impl": "yd0",
+   "default": "",
+   "defaultSource": "declared",
+   "screen": "preferences_glider",
+   "order": 5,
+   "entryLabels": "prefGliderCtg",
+   "values": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "Z"
+   ],
+   "valuesSource": "entryValues"
+  },
+  "Glider._ctgHG": {
+   "family": "Glider",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "string",
+   "control": "list",
+   "label": "prefGliderCategory",
+   "help": null,
+   "impl": "yd0",
+   "default": "",
+   "defaultSource": "declared",
+   "screen": "preferences_glider",
+   "order": 6,
+   "entryLabels": "prefGliderCtgHG",
+   "values": [
+    "M",
+    "N",
+    "O"
+   ],
+   "valuesSource": "entryValues"
+  },
+  "Glider._model": {
+   "family": "Glider",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "string",
+   "control": "list",
+   "label": "prefGliderModel",
+   "help": null,
+   "impl": "yd0",
+   "default": "",
+   "defaultSource": "declared",
+   "screen": "preferences_glider",
+   "order": 2,
+   "personal": {
+    "kind": "equipment",
+    "basis": "declared",
+    "reason": "modèle de la voile"
+   }
+  },
+  "Glider._producer": {
+   "family": "Glider",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "string",
+   "control": "list",
+   "label": "prefGliderProducer",
+   "help": null,
+   "impl": "yd0",
+   "default": "",
+   "defaultSource": "declared",
+   "screen": "preferences_glider",
+   "order": 1,
+   "personal": {
+    "kind": "equipment",
+    "basis": "declared",
+    "reason": "constructeur de la voile"
+   }
+  },
+  "Glider._tandem": {
+   "family": "Glider",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": "prefAircraftTandemBiplace",
+   "help": "prefAircraftTandemBiplaceSummary",
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_glider",
+   "order": 7
+  },
+  "Internal.ActiveLookDevInfo": {
+   "family": "Internal",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "string",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": "",
+   "defaultSource": "declared"
+  },
+  "Internal.ActiveLookOldFw": {
+   "family": "Internal",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared"
+  },
+  "Internal.CameraBack": {
+   "family": "Internal",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": true,
+   "defaultSource": "declared"
+  },
+  "Internal.FlarmDbVisited": {
+   "family": "Internal",
+   "scope": null,
+   "declared": false,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": null,
+   "help": null,
+   "screen": "preferences_extra",
+   "order": 9,
+   "labelText": "Internal.FlarmDbVisited"
+  },
+  "Internal.GliderListRefreshed": {
+   "family": "Internal",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "string",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": "",
+   "defaultSource": "declared"
+  },
+  "Internal.LiveTempDontShare": {
+   "family": "Internal",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "action",
+   "label": "livePrefTempDisabled",
+   "help": "livePrefTempDisabledSummary",
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_live",
+   "order": 0
+  },
+  "Internal.LiveTempShortDelay": {
+   "family": "Internal",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_extra",
+   "order": 7,
+   "labelText": "Short delay for livetrack startup confirmation"
+  },
+  "Internal.PreV5SelectedChannels": {
+   "family": "Internal",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": null,
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0"
+  },
+  "Internal.SntpVsGpsOffset": {
+   "family": "Internal",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": null,
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0"
+  },
+  "Internal.TrackingRunning": {
+   "family": "Internal",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared"
+  },
+  "Internal.VolumeInitial": {
+   "family": "Internal",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "int",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "k24",
+   "default": -1,
+   "defaultSource": "declared"
+  },
+  "Internal.VolumeSkipWarning": {
+   "family": "Internal",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_devel",
+   "order": 9,
+   "labelText": "Skip volume warn",
+   "helpText": "internal skip volume warning"
+  },
+  "Internal.XCNavigationVisited": {
+   "family": "Internal",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_extra",
+   "order": 8,
+   "labelText": "Internal.XCNavigationVisited"
+  },
+  "Keys.BrightnessDec": {
+   "family": "Keys",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": "action",
+   "label": "prefKeyBindingsBrightnessDecrease",
+   "help": null,
+   "impl": "k24",
+   "default": -1,
+   "defaultSource": "declared",
+   "screen": "preferences_keybindings",
+   "order": 14,
+   "category": "prefKeyBindings"
+  },
+  "Keys.BrightnessInc": {
+   "family": "Keys",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": "action",
+   "label": "prefKeyBindingsBrightnessIncrease",
+   "help": null,
+   "impl": "k24",
+   "default": -1,
+   "defaultSource": "declared",
+   "screen": "preferences_keybindings",
+   "order": 13,
+   "category": "prefKeyBindings"
+  },
+  "Keys.EnterPan": {
+   "family": "Keys",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": "action",
+   "label": "prefKeyBindingsTogglePanMode",
+   "help": null,
+   "impl": "k24",
+   "default": -1,
+   "defaultSource": "declared",
+   "screen": "preferences_keybindings",
+   "order": 5,
+   "category": "prefKeyBindings"
+  },
+  "Keys.IntentLaunch": {
+   "family": "Keys",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": "action",
+   "label": "prefKeyBindingsIntentLaunch",
+   "help": null,
+   "impl": "k24",
+   "default": -1,
+   "defaultSource": "declared",
+   "screen": "preferences_keybindings",
+   "order": 15,
+   "category": "prefKeyBindings"
+  },
+  "Keys.MapPanDown": {
+   "family": "Keys",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": "action",
+   "label": "prefKeyBindingsMapPanDown",
+   "help": null,
+   "impl": "k24",
+   "default": -1,
+   "defaultSource": "declared",
+   "screen": "preferences_keybindings",
+   "order": 9,
+   "category": "prefKeyBindings"
+  },
+  "Keys.MapPanLeft": {
+   "family": "Keys",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": "action",
+   "label": "prefKeyBindingsMapPanLeft",
+   "help": null,
+   "impl": "k24",
+   "default": -1,
+   "defaultSource": "declared",
+   "screen": "preferences_keybindings",
+   "order": 6,
+   "category": "prefKeyBindings"
+  },
+  "Keys.MapPanRight": {
+   "family": "Keys",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": "action",
+   "label": "prefKeyBindingsMapPanRight",
+   "help": null,
+   "impl": "k24",
+   "default": -1,
+   "defaultSource": "declared",
+   "screen": "preferences_keybindings",
+   "order": 7,
+   "category": "prefKeyBindings"
+  },
+  "Keys.MapPanStepSize": {
+   "family": "Keys",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "float",
+   "control": "number",
+   "label": "prefKeyBindingsMapPanStepSize",
+   "help": null,
+   "impl": "yd0",
+   "default": 33.3,
+   "defaultSource": "declared",
+   "screen": "preferences_keybindings",
+   "order": 18,
+   "category": "prefKeyBindingsOtherSettings",
+   "min": 1,
+   "max": 100,
+   "decimals": 1,
+   "unit": "%"
+  },
+  "Keys.MapPanUp": {
+   "family": "Keys",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": "action",
+   "label": "prefKeyBindingsMapPanUp",
+   "help": null,
+   "impl": "k24",
+   "default": -1,
+   "defaultSource": "declared",
+   "screen": "preferences_keybindings",
+   "order": 8,
+   "category": "prefKeyBindings"
+  },
+  "Keys.Menu": {
+   "family": "Keys",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": "action",
+   "label": "prefKeyBindingsToggleMenu",
+   "help": null,
+   "impl": "k24",
+   "default": -1,
+   "defaultSource": "declared",
+   "screen": "preferences_keybindings",
+   "order": 10,
+   "category": "prefKeyBindings"
+  },
+  "Keys.NextPage": {
+   "family": "Keys",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": "action",
+   "label": "prefKeyBindingsPageRight",
+   "help": null,
+   "impl": "k24",
+   "default": -1,
+   "defaultSource": "declared",
+   "screen": "preferences_keybindings",
+   "order": 2,
+   "category": "prefKeyBindings"
+  },
+  "Keys.NextWaypoint": {
+   "family": "Keys",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": "action",
+   "label": "prefKeyBindingsNextWaypoint",
+   "help": null,
+   "impl": "k24",
+   "default": -1,
+   "defaultSource": "declared",
+   "screen": "preferences_keybindings",
+   "order": 12,
+   "category": "prefKeyBindings"
+  },
+  "Keys.PrevWaypoint": {
+   "family": "Keys",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": "action",
+   "label": "prefKeyBindingsPrevWaypoint",
+   "help": null,
+   "impl": "k24",
+   "default": -1,
+   "defaultSource": "declared",
+   "screen": "preferences_keybindings",
+   "order": 11,
+   "category": "prefKeyBindings"
+  },
+  "Keys.PreviousPage": {
+   "family": "Keys",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": "action",
+   "label": "prefKeyBindingsPageLeft",
+   "help": null,
+   "impl": "k24",
+   "default": -1,
+   "defaultSource": "declared",
+   "screen": "preferences_keybindings",
+   "order": 1,
+   "category": "prefKeyBindings"
+  },
+  "Keys.ProximityScreenOn": {
+   "family": "Keys",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": "prefKeyBindingsProximityScreenOn",
+   "help": "prefKeyBindingsProximityScreenOnSummary",
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_keybindings",
+   "order": 17,
+   "category": "prefKeyBindingsOtherSettings"
+  },
+  "Keys.ZoomIn": {
+   "family": "Keys",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": "action",
+   "label": "prefKeyBindingsZoomIn",
+   "help": null,
+   "impl": "k24",
+   "default": -1,
+   "defaultSource": "declared",
+   "screen": "preferences_keybindings",
+   "order": 3,
+   "category": "prefKeyBindings"
+  },
+  "Keys.ZoomOut": {
+   "family": "Keys",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": "action",
+   "label": "prefKeyBindingsZoomOut",
+   "help": null,
+   "impl": "k24",
+   "default": -1,
+   "defaultSource": "declared",
+   "screen": "preferences_keybindings",
+   "order": 4,
+   "category": "prefKeyBindings"
+  },
+  "LandingDetectionType": {
+   "family": "",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "enum",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": "LANDING_AUTOMATIC",
+   "defaultSource": "declared",
+   "enum": "vc1",
+   "enumValues": [
+    "LANDING_AUTOMATIC",
+    "LANDING_MANUAL",
+    "LANDING_NODETECTION"
+   ],
+   "values": [
+    "LANDING_AUTOMATIC",
+    "LANDING_MANUAL",
+    "LANDING_NODETECTION"
+   ],
+   "valuesSource": "enum"
+  },
+  "Livetrack.ClaimContest": {
+   "family": "Livetrack",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": "livePrefClaimTitle",
+   "help": "livePrefClaimDescr",
+   "impl": "yd0",
+   "default": true,
+   "defaultSource": "declared",
+   "screen": "preferences_live",
+   "order": 4,
+   "category": "_xclive",
+   "personal": {
+    "kind": "sharing",
+    "basis": "declared",
+    "reason": "un choix de diffusion du pilote, pas une donnée en soi"
+   }
+  },
+  "Livetrack.DeviceId": {
+   "family": "Livetrack",
+   "scope": "SECURE",
+   "declared": true,
+   "valueKind": "string",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": "",
+   "defaultSource": "declared",
+   "personal": {
+    "kind": "credential",
+    "basis": "scope",
+    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+   }
+  },
+  "Livetrack.Enabled": {
+   "family": "Livetrack",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": "liveEnabledTitle",
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_live",
+   "order": 3,
+   "category": "_xclive",
+   "personal": {
+    "kind": "sharing",
+    "basis": "declared",
+    "reason": "un choix de diffusion du pilote, pas une donnée en soi"
+   }
+  },
+  "Livetrack.FlightPublic": {
+   "family": "Livetrack",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": true,
+   "defaultSource": "declared",
+   "personal": {
+    "kind": "sharing",
+    "basis": "declared",
+    "reason": "un choix de diffusion du pilote, pas une donnée en soi"
+   }
+  },
+  "Livetrack.QuickMessages": {
+   "family": "Livetrack",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "json",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yh3",
+   "personal": {
+    "kind": "freeText",
+    "basis": "declared",
+    "reason": "messages écrits par le pilote"
+   }
+  },
+  "Livetrack.ShowPublic": {
+   "family": "Livetrack",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": true,
+   "defaultSource": "declared",
+   "personal": {
+    "kind": "sharing",
+    "basis": "declared",
+    "reason": "un choix de diffusion du pilote, pas une donnée en soi"
+   }
+  },
+  "Mapsforge.MapFiles": {
+   "family": "Mapsforge",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "json",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yh3",
+   "personal": {
+    "kind": "file",
+    "basis": "declared",
+    "reason": "cartes hors-ligne téléchargées"
+   }
+  },
+  "Mapsforge.Terrain": {
+   "family": "Mapsforge",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "json",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yh3"
+  },
+  "Mapsforge.ThemeFile": {
+   "family": "Mapsforge",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "string",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": "DEFAULT",
+   "defaultSource": "declared",
+   "personal": {
+    "kind": "file",
+    "basis": "declared",
+    "reason": "thème de carte installé par le pilote"
+   }
+  },
+  "Maverick.AutoBrightness": {
+   "family": "Maverick",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": "prefActiveLookAlb",
+   "help": null,
+   "impl": "yd0",
+   "default": true,
+   "defaultSource": "declared",
+   "screen": "preferences_maverick",
+   "order": 3
+  },
+  "Maverick.Brightness": {
+   "family": "Maverick",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": "slider",
+   "label": "prefActiveLookLuma",
+   "help": null,
+   "impl": "k24",
+   "default": 150,
+   "defaultSource": "declared",
+   "screen": "preferences_maverick",
+   "order": 4,
+   "min": 1,
+   "max": 255,
+   "unit": ""
+  },
+  "Maverick.Calibration": {
+   "family": "Maverick",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "json",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yh3"
+  },
+  "Maverick.Layout": {
+   "family": "Maverick",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "json",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yh3"
+  },
+  "Maverick.SdkKey": {
+   "family": "Maverick",
+   "scope": "SECURE",
+   "declared": true,
+   "valueKind": "string",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": "",
+   "defaultSource": "declared",
+   "personal": {
+    "kind": "credential",
+    "basis": "scope",
+    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+   }
+  },
+  "Navigation.State": {
+   "family": "Navigation",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "json",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yh3",
+   "personal": {
+    "kind": "location",
+    "basis": "declared",
+    "reason": "la tâche en cours, points de virage et coordonnées compris"
+   }
+  },
+  "Navigation.WaypointFiles": {
+   "family": "Navigation",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "json",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yh3",
+   "personal": {
+    "kind": "file",
+    "basis": "declared",
+    "reason": "fichiers de waypoints — le nom désigne souvent la compétition"
+   }
+  },
+  "Obstacles.SafeAltMargin": {
+   "family": "Obstacles",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "k24",
+   "default": 60,
+   "defaultSource": "declared"
+  },
+  "Obstacles.SafeDistanceTimeS": {
+   "family": "Obstacles",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "k24",
+   "default": 16,
+   "defaultSource": "declared"
+  },
+  "Obstacles.ShowLabelsOnMap": {
+   "family": "Obstacles",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": true,
+   "defaultSource": "declared"
+  },
+  "Pilot.Name": {
+   "family": "Pilot",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "string",
+   "control": "text",
+   "label": "prefPilotName",
+   "help": null,
+   "impl": "yd0",
+   "default": "",
+   "defaultSource": "declared",
+   "screen": "preferences_pilot",
+   "order": 0,
+   "personal": {
+    "kind": "identity",
+    "basis": "declared",
+    "reason": "le nom du pilote, saisi tel quel"
+   }
+  },
+  "SafeSky.Address": {
+   "family": "SafeSky",
+   "scope": "SECURE",
+   "declared": true,
+   "valueKind": null,
+   "control": "action",
+   "label": "safeskyAddress",
+   "help": null,
+   "impl": "yd0",
+   "screen": "preferences_live",
+   "order": 11,
+   "category": "_safesky",
+   "personal": {
+    "kind": "credential",
+    "basis": "scope",
+    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+   }
+  },
+  "SafeSky.Amt": {
+   "family": "SafeSky",
+   "scope": "SECURE",
+   "declared": true,
+   "valueKind": "int",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "k24",
+   "default": 9,
+   "defaultSource": "declared",
+   "personal": {
+    "kind": "credential",
+    "basis": "scope",
+    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+   }
+  },
+  "SafeSky.Anonymous": {
+   "family": "SafeSky",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": "safeskyAnonymousTitle",
+   "help": "safeskyAnonymousDescription",
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_live",
+   "order": 10,
+   "category": "_safesky"
+  },
+  "SafeSky.AnonymousUUID": {
+   "family": "SafeSky",
+   "scope": "SECURE",
+   "declared": true,
+   "valueKind": null,
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "personal": {
+    "kind": "credential",
+    "basis": "scope",
+    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+   }
+  },
+  "SafeSky.AutoIcao": {
+   "family": "SafeSky",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": null,
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "personal": {
+    "kind": "identity",
+    "basis": "declared",
+    "reason": "immatriculation déduite"
+   }
+  },
+  "SafeSky.Enabled": {
+   "family": "SafeSky",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": "safeskyEnabled",
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_live",
+   "order": 8,
+   "category": "_safesky"
+  },
+  "SafeSky.Icao": {
+   "family": "SafeSky",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": null,
+   "control": "text",
+   "label": "safeskyIcao",
+   "help": null,
+   "impl": "yd0",
+   "screen": "preferences_live",
+   "order": 13,
+   "category": "_safesky",
+   "personal": {
+    "kind": "identity",
+    "basis": "declared",
+    "reason": "immatriculation de l'aéronef"
+   }
+  },
+  "SafeSky.Interval": {
+   "family": "SafeSky",
+   "scope": null,
+   "declared": false,
+   "valueKind": "string",
+   "control": "list",
+   "label": "safeSkyFrequencyTitle",
+   "help": null,
+   "screen": "preferences_live",
+   "order": 9,
+   "category": "_safesky",
+   "entryLabels": "safeSkyFrequency",
+   "values": [
+    "1",
+    "5",
+    "10"
+   ],
+   "valuesSource": "entryValues"
+  },
+  "SafeSky.Salt": {
+   "family": "SafeSky",
+   "scope": "SECURE",
+   "declared": true,
+   "valueKind": null,
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "personal": {
+    "kind": "credential",
+    "basis": "scope",
+    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+   }
+  },
+  "SafeSky.Sandbox": {
+   "family": "SafeSky",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_devel",
+   "order": 7,
+   "labelText": "Safesky API Dev",
+   "helpText": "Use safesky sandbox server"
+  },
+  "SafeSky.Terms": {
+   "family": "SafeSky",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_devel",
+   "order": 11,
+   "labelText": "Safesky Terms accepted"
+  },
+  "Sec.GpsTimeOffset": {
+   "family": "Sec",
+   "scope": "SECURE",
+   "declared": true,
+   "valueKind": null,
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "personal": {
+    "kind": "credential",
+    "basis": "scope",
+    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+   }
+  },
+  "Sec.ProToTimestamp": {
+   "family": "Sec",
+   "scope": "SECURE",
+   "declared": true,
+   "valueKind": null,
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "personal": {
+    "kind": "credential",
+    "basis": "scope",
+    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+   }
+  },
+  "Sec.ProUid": {
+   "family": "Sec",
+   "scope": "SECURE",
+   "declared": true,
+   "valueKind": null,
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "personal": {
+    "kind": "credential",
+    "basis": "scope",
+    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+   }
+  },
+  "Sec.Xcontest.Uid": {
+   "family": "Sec",
+   "scope": "SECURE",
+   "declared": true,
+   "valueKind": null,
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "personal": {
+    "kind": "credential",
+    "basis": "scope",
+    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+   }
+  },
+  "Sec.test": {
+   "family": "Sec",
+   "scope": "SECURE",
+   "declared": true,
+   "valueKind": "string",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": "",
+   "defaultSource": "declared",
+   "personal": {
+    "kind": "credential",
+    "basis": "scope",
+    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+   }
+  },
+  "Sensor.AcousticVario.DynamicFreq": {
+   "family": "Sensor",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared"
+  },
+  "Sensors.AcousticVario.Averaging": {
+   "family": "Sensors",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "float",
+   "control": "number",
+   "label": "prefSensorsAcousticVarioAveraging",
+   "help": null,
+   "impl": "yd0",
+   "default": 0.2,
+   "defaultSource": "declared",
+   "screen": "preferences_acoustic_vario",
+   "order": 8,
+   "min": 0.1,
+   "max": 60,
+   "decimals": 1,
+   "unit": "s"
+  },
+  "Sensors.AcousticVario.AvgLift": {
+   "family": "Sensors",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": "prefSensorsAcousticVarioAvgLift",
+   "help": null,
+   "impl": "yd0",
+   "default": true,
+   "defaultSource": "declared",
+   "screen": "preferences_acoustic_vario",
+   "order": 9
+  },
+  "Sensors.AcousticVario.BeepLimit": {
+   "family": "Sensors",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "float",
+   "control": "number",
+   "label": "prefSensorsAcousticVarioBeepLimit",
+   "help": null,
+   "impl": "yd0",
+   "default": 0.2,
+   "defaultSource": "declared",
+   "screen": "preferences_acoustic_vario",
+   "order": 5,
+   "min": 0,
+   "max": 20,
+   "decimals": 1,
+   "unit": "m/s"
+  },
+  "Sensors.AcousticVario.BueeLimit": {
+   "family": "Sensors",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "float",
+   "control": "number",
+   "label": "prefSensorsAcousticVarioBueeLimit",
+   "help": null,
+   "impl": "yd0",
+   "default": 2.0,
+   "defaultSource": "declared",
+   "screen": "preferences_acoustic_vario",
+   "order": 6,
+   "min": 0.1,
+   "max": 20,
+   "decimals": 1,
+   "unit": "m/s"
+  },
+  "Sensors.AcousticVario.CustomProfileEnabled": {
+   "family": "Sensors",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "action",
+   "label": "prefSensorsAcousticVarioCustomProfileEnabled",
+   "help": "prefSensorsAcousticVarioCustomProfileEnabledSummary",
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_acoustic_vario",
+   "order": 3
+  },
+  "Sensors.AcousticVario.Enabled": {
+   "family": "Sensors",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": "prefSensorsAcousticVarioEnabled",
+   "help": "prefSensorsAcousticVarioNotice",
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_acoustic_vario",
+   "order": 0
+  },
+  "Sensors.AcousticVario.LongAveraging": {
+   "family": "Sensors",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "float",
+   "control": "number",
+   "label": "prefSensorsAcousticVarioLongAveraging",
+   "help": null,
+   "impl": "yd0",
+   "default": 10.0,
+   "defaultSource": "declared",
+   "screen": "preferences_acoustic_vario",
+   "order": 10,
+   "min": 0.1,
+   "max": 60,
+   "decimals": 1,
+   "unit": "s"
+  },
+  "Sensors.AcousticVario.MuteWhenLanded": {
+   "family": "Sensors",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": "prefSensorsAcousticVarioMuteWhenLanded",
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_acoustic_vario",
+   "order": 1
+  },
+  "Sensors.AcousticVario.Volume": {
+   "family": "Sensors",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": "slider",
+   "label": "prefSensorsAcousticVarioVolume",
+   "help": null,
+   "impl": "k24",
+   "default": 100,
+   "defaultSource": "declared",
+   "screen": "preferences_acoustic_vario",
+   "order": 4
+  },
+  "Sensors.AcousticVario.WarnNoData": {
+   "family": "Sensors",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": "prefSensorsAcousticWarnUnavailable",
+   "help": null,
+   "impl": "yd0",
+   "default": true,
+   "defaultSource": "declared",
+   "screen": "preferences_acoustic_vario",
+   "order": 2
+  },
+  "Sensors.AcousticVario.WeakLiftVolume": {
+   "family": "Sensors",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": "slider",
+   "label": "prefSensorsAcousticVarioWeakLift",
+   "help": null,
+   "impl": "k24",
+   "default": 100,
+   "defaultSource": "declared",
+   "screen": "preferences_acoustic_vario",
+   "order": 7
+  },
+  "Sensors.AutoUpdateManual": {
+   "family": "Sensors",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": "prefSensorsQnhAutoUpdate",
+   "help": "prefSensorsQnhAutoUpdateSummary",
+   "impl": "yd0",
+   "default": true,
+   "defaultSource": "declared",
+   "screen": "preferences_atmosphere",
+   "order": 3
+  },
+  "Sensors.Configuration": {
+   "family": "Sensors",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "json",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yh3",
+   "personal": {
+    "kind": "device",
+    "basis": "declared",
+    "reason": "les capteurs appairés, adresses Bluetooth comprises"
+   }
+  },
+  "Sensors.LastNetLocation": {
+   "family": "Sensors",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "string",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": "",
+   "defaultSource": "declared",
+   "personal": {
+    "kind": "location",
+    "basis": "declared",
+    "reason": "la dernière position ayant servi à interroger le QNH"
+   }
+  },
+  "Sensors.LastNetTime": {
+   "family": "Sensors",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": null,
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0"
+  },
+  "Sensors.LastNetValue": {
+   "family": "Sensors",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "float",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": 1013.0,
+   "defaultSource": "declared"
+  },
+  "Sensors.ManualQnh": {
+   "family": "Sensors",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "float",
+   "control": "number",
+   "label": "prefSensorsQnhManual",
+   "help": null,
+   "impl": "yd0",
+   "default": 1013.0,
+   "defaultSource": "declared",
+   "screen": "preferences_atmosphere",
+   "order": 4,
+   "min": 900,
+   "max": 1100,
+   "decimals": 1,
+   "unit": "HPa",
+   "xmlDefault": 1013.25
+  },
+  "Sensors.QnhNetworkSource": {
+   "family": "Sensors",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": "prefSensorsQnhNetworkSource",
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_atmosphere",
+   "order": 1
+  },
+  "Sensors.QnhNetworkSourceType": {
+   "family": "Sensors",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "enum",
+   "control": "list",
+   "label": "prefSensorsQnhNetworkType",
+   "help": null,
+   "impl": "yd0",
+   "default": "METEO",
+   "defaultSource": "declared",
+   "enum": "tv",
+   "enumValues": [
+    "METEO",
+    "METAR"
+   ],
+   "screen": "preferences_atmosphere",
+   "order": 2,
+   "entryLabels": "prefQnhNetTypes",
+   "values": [
+    "METEO",
+    "METAR"
+   ],
+   "valuesSource": "entryValues"
+  },
+  "SkySight.Password": {
+   "family": "SkySight",
+   "scope": "SECURE",
+   "declared": true,
+   "valueKind": "string",
+   "control": "text",
+   "label": "prefSkySightPassword",
+   "help": null,
+   "impl": "yd0",
+   "default": "",
+   "defaultSource": "declared",
+   "screen": "preferences_pilot",
+   "order": 8,
+   "category": "_pilot3rdParty",
+   "personal": {
+    "kind": "credential",
+    "basis": "scope",
+    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+   }
+  },
+  "SkySight.Username": {
+   "family": "SkySight",
+   "scope": "SECURE",
+   "declared": true,
+   "valueKind": "string",
+   "control": "text",
+   "label": "prefSkySightUsername",
+   "help": null,
+   "impl": "yd0",
+   "default": "",
+   "defaultSource": "declared",
+   "screen": "preferences_pilot",
+   "order": 7,
+   "category": "_pilot3rdParty",
+   "personal": {
+    "kind": "credential",
+    "basis": "scope",
+    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+   }
+  },
+  "Sound.AcousticVario.CustomProfile": {
+   "family": "Sound",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "json",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yh3"
+  },
+  "Sound.TTS.Pitch": {
+   "family": "Sound",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "k24",
+   "default": 100,
+   "defaultSource": "declared"
+  },
+  "Sound.TTS.Speed": {
+   "family": "Sound",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "k24",
+   "default": 100,
+   "defaultSource": "declared"
+  },
+  "Sounds": {
+   "family": "",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "json",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yh3"
+  },
+  "TakeoffSpeed": {
+   "family": "",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "float",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": 1.666667,
+   "defaultSource": "declared"
+  },
+  "Testing.ExternalSensorLog": {
+   "family": "Testing",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": "prefTestingExternalSensorLog",
+   "help": "prefTestingExternalSensorLogDescription",
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_testing_debug",
+   "order": 2,
+   "category": "prefTestingLogging"
+  },
+  "Testing.FirstRunWizardAgain": {
+   "family": "Testing",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": "prefFirstRunWizardAgainTitle",
+   "help": "prefFirstRunWizardAgainSummary",
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_testing_debug",
+   "order": 9,
+   "category": "prefGroupConfiguration"
+  },
+  "Testing.IGCReplayFilename": {
+   "family": "Testing",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "string",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": "",
+   "defaultSource": "declared",
+   "personal": {
+    "kind": "file",
+    "basis": "declared",
+    "reason": "un fichier de trace du pilote"
+   }
+  },
+  "Testing.InternalSensorLog": {
+   "family": "Testing",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": "prefTestingInternalSensorLog",
+   "help": "prefTestingInternalSensorLogDescription",
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_testing_debug",
+   "order": 3,
+   "category": "prefTestingLogging"
+  },
+  "Testing.Log": {
+   "family": "Testing",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": "prefTestingLog",
+   "help": "prefTestingLogDescription",
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_testing_debug",
+   "order": 1,
+   "category": "prefTestingLogging"
+  },
+  "Testing.WebViewDebug": {
+   "family": "Testing",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": "prefTestingWebViewDebug",
+   "help": "prefTestingWebViewDebugSummary",
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_testing_debug",
+   "order": 7,
+   "category": "prefTestingWebView"
+  },
+  "Thermalling.DetectionIntervalMs": {
+   "family": "Thermalling",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "k24",
+   "default": 30000,
+   "defaultSource": "declared"
+  },
+  "Thermalling.StartMinTurn": {
+   "family": "Thermalling",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "float",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": 90.0,
+   "defaultSource": "declared"
+  },
+  "Thermalling.StartMinVario": {
+   "family": "Thermalling",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "float",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": -0.5,
+   "defaultSource": "declared"
+  },
+  "Thermalling.StopMaxTurn": {
+   "family": "Thermalling",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "float",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": 30.0,
+   "defaultSource": "declared"
+  },
+  "Thermalling.StopMaxVario": {
+   "family": "Thermalling",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "float",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": -0.5,
+   "defaultSource": "declared"
+  },
+  "Tweak.AnnounceEventsByIntents": {
+   "family": "Tweak",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": "prefTweakAnnounceEventsByIntents",
+   "help": "prefTweakAnnounceEventsByIntentsDescription",
+   "impl": "yd0",
+   "default": true,
+   "defaultSource": "declared",
+   "screen": "preferences_tweaks",
+   "order": 9
+  },
+  "Tweak.AudioFocus": {
+   "family": "Tweak",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": "prefTweakAudioFocus",
+   "help": "prefTweakAudioFocusDescription",
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_tweaks",
+   "order": 2
+  },
+  "Tweak.BlockKeys": {
+   "family": "Tweak",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": "prefTweakBlockKeys",
+   "help": "prefTweakBlockKeysDescription",
+   "impl": "yd0",
+   "default": true,
+   "defaultSource": "declared",
+   "screen": "preferences_tweaks",
+   "order": 0
+  },
+  "Tweak.DisableNotif": {
+   "family": "Tweak",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": "prefTweakDisableNotif",
+   "help": "prefTweakDisableNotifDescription",
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_tweaks",
+   "order": 7
+  },
+  "Tweak.HWAccel": {
+   "family": "Tweak",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "enum",
+   "control": "list",
+   "label": "prefTweakHWAcceleration",
+   "help": null,
+   "impl": "yd0",
+   "default": "ENABLED",
+   "defaultSource": "declared",
+   "enum": "tc1",
+   "enumValues": [
+    "ENABLED",
+    "DISABLED_ON_MAPS",
+    "DISABLED"
+   ],
+   "screen": "preferences_tweaks",
+   "order": 8,
+   "entryLabels": "prefTweakHWAccel",
+   "values": [
+    "ENABLED",
+    "DISABLED_ON_MAPS",
+    "DISABLED"
+   ],
+   "valuesSource": "entryValues"
+  },
+  "Tweak.KeepDisplayOn": {
+   "family": "Tweak",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": "prefTweakKeepDisplayOn",
+   "help": "prefTweakKeepDisplayOnDescription",
+   "impl": "yd0",
+   "default": true,
+   "defaultSource": "declared",
+   "screen": "preferences_tweaks",
+   "order": 1
+  },
+  "Tweak.MasterSyncAutoOff": {
+   "family": "Tweak",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": "prefTweakMasterSyncOff",
+   "help": "prefTweakMasterSyncOffDescription",
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_tweaks",
+   "order": 4
+  },
+  "Tweak.MutePhone": {
+   "family": "Tweak",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": "prefTweakMutePhone",
+   "help": "prefTweakMutePhoneDescription",
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_tweaks",
+   "order": 5
+  },
+  "Tweak.RejectCalls": {
+   "family": "Tweak",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": "prefTweakRejectCalls",
+   "help": "prefTweakRejectCallsDescription2",
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_tweaks",
+   "order": 6
+  },
+  "Tweak.VolumePct": {
+   "family": "Tweak",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "int",
+   "control": "slider",
+   "label": "prefTweakVolumePct",
+   "help": "prefTweakVolumePctDescription",
+   "impl": "k24",
+   "default": 100,
+   "defaultSource": "declared",
+   "screen": "preferences_sound",
+   "order": 4,
+   "category": "_soundAutomaticVolume"
+  },
+  "Tweak.VolumeUp": {
+   "family": "Tweak",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": "prefTweakVolumeUp2",
+   "help": "prefTweakVolumeUpDescription2",
+   "impl": "yd0",
+   "default": true,
+   "defaultSource": "declared",
+   "screen": "preferences_sound",
+   "order": 3,
+   "category": "_soundAutomaticVolume"
+  },
+  "Unit.AirspaceAltitude": {
+   "family": "Unit",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": null,
+   "control": "list",
+   "label": "unitAirspaceAltitude",
+   "help": null,
+   "impl": "yd0",
+   "defaultSource": "runtime",
+   "screen": "preferences_units",
+   "order": 4
+  },
+  "Unit.Altitude": {
+   "family": "Unit",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": null,
+   "control": "list",
+   "label": "unitAltitude",
+   "help": null,
+   "impl": "yd0",
+   "defaultSource": "runtime",
+   "screen": "preferences_units",
+   "order": 3
+  },
+  "Unit.CompetitionDistance": {
+   "family": "Unit",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": null,
+   "control": "list",
+   "label": "unitCompetitionDistance",
+   "help": null,
+   "impl": "yd0",
+   "defaultSource": "runtime",
+   "screen": "preferences_units",
+   "order": 1
+  },
+  "Unit.Distance": {
+   "family": "Unit",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": null,
+   "control": "list",
+   "label": "unitDistance",
+   "help": null,
+   "impl": "yd0",
+   "defaultSource": "runtime",
+   "screen": "preferences_units",
+   "order": 0
+  },
+  "Unit.RelativeDistance": {
+   "family": "Unit",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": null,
+   "control": "list",
+   "label": "unitRelativeDistance",
+   "help": null,
+   "impl": "yd0",
+   "defaultSource": "runtime",
+   "screen": "preferences_units",
+   "order": 2
+  },
+  "Unit.Speed": {
+   "family": "Unit",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": null,
+   "control": "list",
+   "label": "unitSpeed",
+   "help": null,
+   "impl": "yd0",
+   "defaultSource": "runtime",
+   "screen": "preferences_units",
+   "order": 5
+  },
+  "Unit.VerticalSpeed": {
+   "family": "Unit",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": null,
+   "control": "list",
+   "label": "unitVerticalSpeed",
+   "help": null,
+   "impl": "yd0",
+   "defaultSource": "runtime",
+   "screen": "preferences_units",
+   "order": 7
+  },
+  "Unit.WindSpeed": {
+   "family": "Unit",
+   "scope": "PUBLIC",
+   "declared": true,
+   "valueKind": null,
+   "control": "list",
+   "label": "unitWindSpeed",
+   "help": null,
+   "impl": "yd0",
+   "defaultSource": "runtime",
+   "screen": "preferences_units",
+   "order": 6
+  },
+  "XContest.AuthToken": {
+   "family": "XContest",
+   "scope": "SECURE",
+   "declared": true,
+   "valueKind": null,
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "personal": {
+    "kind": "credential",
+    "basis": "scope",
+    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+   }
+  },
+  "XContest.Password": {
+   "family": "XContest",
+   "scope": "SECURE",
+   "declared": true,
+   "valueKind": "string",
+   "control": "text",
+   "label": "prefPilotPassword",
+   "help": null,
+   "impl": "yd0",
+   "default": "",
+   "defaultSource": "declared",
+   "screen": "preferences_pilot",
+   "order": 3,
+   "category": "_pilotXContest",
+   "personal": {
+    "kind": "credential",
+    "basis": "scope",
+    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+   }
+  },
+  "XContest.Username": {
+   "family": "XContest",
+   "scope": "SECURE",
+   "declared": true,
+   "valueKind": "string",
+   "control": "text",
+   "label": "prefPilotUsername",
+   "help": null,
+   "impl": "yd0",
+   "default": "",
+   "defaultSource": "declared",
+   "screen": "preferences_pilot",
+   "order": 2,
+   "category": "_pilotXContest",
+   "personal": {
+    "kind": "credential",
+    "basis": "scope",
+    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+   }
+  },
+  "_CrashDetect.DontAskAgain": {
+   "family": "_CrashDetect",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": "checkbox",
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared",
+   "screen": "preferences_devel",
+   "order": 10,
+   "labelText": "Skip HW accel crash detection",
+   "helpText": "Do not ask to turn off HW accel when crash detected"
+  },
+  "_CrashDetect.Flying": {
+   "family": "_CrashDetect",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared"
+  },
+  "_Diag.LastReportedExit": {
+   "family": "_Diag",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": null,
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0"
+  },
+  "_temp.brightness": {
+   "family": "_temp",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "float",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": -1.0,
+   "defaultSource": "declared"
+  },
+  "_temp.lastMuteState": {
+   "family": "_temp",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "int",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "k24",
+   "default": -1,
+   "defaultSource": "declared"
+  },
+  "_temp.masterSyncWasEnabled": {
+   "family": "_temp",
+   "scope": "INTERNAL",
+   "declared": true,
+   "valueKind": "boolean",
+   "control": null,
+   "label": null,
+   "help": null,
+   "impl": "yd0",
+   "default": false,
+   "defaultSource": "declared"
+  },
+  "_ttsPitch": {
+   "family": "",
+   "scope": null,
+   "declared": false,
+   "valueKind": "int",
+   "control": "slider",
+   "label": "prefSoundTTSPitch",
+   "help": "prefSoundTTSPitchSum",
+   "screen": "preferences_sound",
+   "order": 8,
+   "category": "_ttsSetting"
+  },
+  "_ttsSpeed": {
+   "family": "",
+   "scope": null,
+   "declared": false,
+   "valueKind": "int",
+   "control": "slider",
+   "label": "prefSoundTTSSpeed",
+   "help": "prefSoundTTSSpeedSum",
+   "screen": "preferences_sound",
+   "order": 7,
+   "category": "_ttsSetting"
+  }
+ },
+ "screens": [
+  {
+   "id": "preferences",
+   "file": "DZ.xml",
+   "title": null,
+   "rows": [
+    {
+     "tag": "Preference",
+     "key": "_pilot",
+     "title": "prefPilotAndAccounts",
+     "depth": 1,
+     "opens": "fragment"
+    },
+    {
+     "tag": "Preference",
+     "key": "_glider",
+     "title": "prefAircraft",
+     "depth": 1,
+     "opens": "fragment"
+    },
+    {
+     "tag": "Preference",
+     "key": "_livetracking",
+     "title": "prefLivetracking",
+     "depth": 1,
+     "opens": "fragment"
+    },
+    {
+     "tag": "Preference",
+     "key": "_contest",
+     "title": "prefContestAndCompetition",
+     "depth": 1,
+     "opens": "fragment"
+    },
+    {
+     "tag": "Preference",
+     "key": "_sensorsQnh",
+     "title": "prefSensorsQnhTitle",
+     "depth": 1,
+     "opens": "fragment"
+    },
+    {
+     "tag": "Preference",
+     "key": "_airspaces",
+     "title": "prefAirspacesObstacles",
+     "depth": 1,
+     "opens": "activity"
+    },
+    {
+     "tag": "Preference",
+     "key": "_maps",
+     "title": "prefMaps",
+     "depth": 1,
+     "opens": "activity"
+    },
+    {
+     "tag": "Preference",
+     "key": "_sound",
+     "title": "prefSoundAndAlerts",
+     "depth": 1,
+     "opens": "fragment"
+    },
+    {
+     "tag": "Preference",
+     "key": "_display",
+     "title": "prefDisplay",
+     "depth": 1,
+     "opens": "fragment"
+    },
+    {
+     "tag": "Preference",
+     "key": "_activelook",
+     "title": "prefActiveLook",
+     "depth": 1,
+     "opens": "fragment"
+    },
+    {
+     "tag": "Preference",
+     "key": "_maverick",
+     "title": "prefMaverick",
+     "depth": 1,
+     "opens": "fragment"
+    },
+    {
+     "tag": "Preference",
+     "key": "_editPageSet",
+     "title": "prefPagesLayout",
+     "depth": 1,
+     "opens": "activity"
+    },
+    {
+     "tag": "Preference",
+     "key": "_keyBindings",
+     "title": "prefKeyBindings",
+     "depth": 1,
+     "opens": "fragment"
+    },
+    {
+     "tag": "Preference",
+     "key": "_eventMapping",
+     "title": "prefEventMapping",
+     "depth": 1,
+     "opens": "activity"
+    },
+    {
+     "tag": "Preference",
+     "key": "_sensors",
+     "title": "prefConnectionsSensors",
+     "depth": 1,
+     "opens": "fragment"
+    },
+    {
+     "tag": "Preference",
+     "key": "_shareconfig",
+     "title": "prefShareConfig",
+     "depth": 1,
+     "opens": "fragment"
+    },
+    {
+     "tag": "Preference",
+     "key": "_tweaks",
+     "title": "prefTweaks",
+     "depth": 1,
+     "opens": "fragment"
+    },
+    {
+     "tag": "Preference",
+     "key": "_testing",
+     "title": "prefTesting",
+     "depth": 1,
+     "opens": "fragment"
+    },
+    {
+     "tag": "Preference",
+     "key": "_pro",
+     "title": "proTitle",
+     "depth": 1,
+     "opens": "activity"
+    },
+    {
+     "tag": "Preference",
+     "key": "_about",
+     "title": "prefAbout",
+     "depth": 1,
+     "opens": "fragment"
+    },
+    {
+     "tag": "Preference",
+     "title": "prefAboutPartners",
+     "depth": 1,
+     "opens": "fragment"
+    },
+    {
+     "tag": "Preference",
+     "key": "_extra",
+     "titleText": "- extra -",
+     "depth": 1,
+     "opens": "fragment"
+    },
+    {
+     "tag": "Preference",
+     "key": "_devel",
+     "titleText": "- development -",
+     "depth": 1,
+     "opens": "fragment"
+    }
+   ]
+  },
+  {
+   "id": "preferences_about",
+   "file": "kJ.xml",
+   "title": null,
+   "rows": [
+    {
+     "tag": "Preference",
+     "key": "About.About",
+     "title": "prefAbout",
+     "depth": 1,
+     "opens": "activity"
+    },
+    {
+     "tag": "Preference",
+     "titleText": "xcontest.org",
+     "depth": 1,
+     "opens": "activity"
+    },
+    {
+     "tag": "Preference",
+     "key": "About.Privacy",
+     "title": "prefAboutPrivacy",
+     "depth": 1,
+     "opens": "activity"
+    },
+    {
+     "tag": "Preference",
+     "key": "About.Changelog",
+     "title": "prefAboutChangelog",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "About.VersionText",
+     "title": "prefTestingXCTrackVersion",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "About.ProText",
+     "title": "prefAboutPro",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "About.DataDir",
+     "title": "prefAboutDataDir",
+     "depth": 1
+    }
+   ]
+  },
+  {
+   "id": "preferences_acoustic_vario",
+   "file": "wV.xml",
+   "title": null,
+   "rows": [
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Sensors.AcousticVario.Enabled",
+     "title": "prefSensorsAcousticVarioEnabled",
+     "summary": "prefSensorsAcousticVarioNotice",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Sensors.AcousticVario.MuteWhenLanded",
+     "title": "prefSensorsAcousticVarioMuteWhenLanded",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Sensors.AcousticVario.WarnNoData",
+     "title": "prefSensorsAcousticWarnUnavailable",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "Sensors.AcousticVario.CustomProfileEnabled",
+     "title": "prefSensorsAcousticVarioCustomProfileEnabled",
+     "summary": "prefSensorsAcousticVarioCustomProfileEnabledSummary",
+     "depth": 1,
+     "opens": "activity"
+    },
+    {
+     "tag": "org.xcontest.XCTrack.config.VolumePreference",
+     "key": "Sensors.AcousticVario.Volume",
+     "title": "prefSensorsAcousticVarioVolume",
+     "depth": 1
+    },
+    {
+     "tag": "org.xcontest.XCTrack.config.FloatPreference",
+     "key": "Sensors.AcousticVario.BeepLimit",
+     "title": "prefSensorsAcousticVarioBeepLimit",
+     "depth": 1
+    },
+    {
+     "tag": "org.xcontest.XCTrack.config.FloatPreference",
+     "key": "Sensors.AcousticVario.BueeLimit",
+     "title": "prefSensorsAcousticVarioBueeLimit",
+     "depth": 1
+    },
+    {
+     "tag": "org.xcontest.XCTrack.config.VolumePreference",
+     "key": "Sensors.AcousticVario.WeakLiftVolume",
+     "title": "prefSensorsAcousticVarioWeakLift",
+     "depth": 1
+    },
+    {
+     "tag": "org.xcontest.XCTrack.config.FloatPreference",
+     "key": "Sensors.AcousticVario.Averaging",
+     "title": "prefSensorsAcousticVarioAveraging",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Sensors.AcousticVario.AvgLift",
+     "title": "prefSensorsAcousticVarioAvgLift",
+     "depth": 1
+    },
+    {
+     "tag": "org.xcontest.XCTrack.config.FloatPreference",
+     "key": "Sensors.AcousticVario.LongAveraging",
+     "title": "prefSensorsAcousticVarioLongAveraging",
+     "depth": 1
+    }
+   ]
+  },
+  {
+   "id": "preferences_activelook",
+   "file": "h4-1.xml",
+   "title": null,
+   "rows": [
+    {
+     "tag": "Preference",
+     "key": "_activelook.device",
+     "title": "prefActiveLookDevice",
+     "depth": 1,
+     "opens": "activity"
+    },
+    {
+     "tag": "Preference",
+     "key": "_activelook.oldfw",
+     "title": "prefActiveLookOldFwTitle",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "_activelook.designer",
+     "title": "prefActiveLookDesigner",
+     "depth": 1,
+     "opens": "activity"
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "ActiveLook.Alb",
+     "title": "prefActiveLookAlb",
+     "depth": 1
+    },
+    {
+     "tag": "org.xcontest.XCTrack.config.VolumePreference",
+     "key": "ActiveLook.Luma",
+     "title": "prefActiveLookLuma",
+     "depth": 1
+    },
+    {
+     "tag": "org.xcontest.XCTrack.config.VolumePreference",
+     "key": "ActiveLook.HShift",
+     "title": "prefActiveLookHShift",
+     "depth": 1
+    },
+    {
+     "tag": "org.xcontest.XCTrack.config.VolumePreference",
+     "key": "ActiveLook.VShift",
+     "title": "prefActiveLookVShift",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "_activelook.info",
+     "title": "prefActiveLookDeviceInfo",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "_activelook.battery",
+     "title": "prefActiveLookBattery",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "_activelook.reset",
+     "title": "prefActiveLookReset",
+     "depth": 1
+    }
+   ]
+  },
+  {
+   "id": "preferences_atmosphere",
+   "file": "eU.xml",
+   "title": null,
+   "rows": [
+    {
+     "tag": "Preference",
+     "key": "_sensorsQnhValue",
+     "title": "prefSensorsQnhValue",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Sensors.QnhNetworkSource",
+     "title": "prefSensorsQnhNetworkSource",
+     "depth": 1
+    },
+    {
+     "tag": "ListPreference",
+     "key": "Sensors.QnhNetworkSourceType",
+     "title": "prefSensorsQnhNetworkType",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Sensors.AutoUpdateManual",
+     "title": "prefSensorsQnhAutoUpdate",
+     "summary": "prefSensorsQnhAutoUpdateSummary",
+     "depth": 1
+    },
+    {
+     "tag": "org.xcontest.XCTrack.config.FloatPreference",
+     "key": "Sensors.ManualQnh",
+     "title": "prefSensorsQnhManual",
+     "depth": 1
+    },
+    {
+     "tag": "PreferenceCategory",
+     "title": "prefAirspaces",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Airspace.ForceGpsAltitude",
+     "title": "airspaceAltitudeSettingsForceGps",
+     "summary": "airspaceAltitudeSettingsForceGpsLegend",
+     "depth": 2,
+     "category": "prefAirspaces"
+    }
+   ]
+  },
+  {
+   "id": "preferences_contest",
+   "file": "RN.xml",
+   "title": null,
+   "rows": [
+    {
+     "tag": "org.xcontest.XCTrack.config.TriangleClosingPreference",
+     "key": "Contest.TriangleClosing",
+     "title": "prefContestTriangleClosing",
+     "depth": 1
+    },
+    {
+     "tag": "PreferenceCategory",
+     "key": "_contestCoef",
+     "title": "prefContestCoef",
+     "depth": 1
+    },
+    {
+     "tag": "org.xcontest.XCTrack.config.FloatPreference",
+     "key": "Contest.CoefVP5",
+     "title": "prefContestCoefVP5",
+     "depth": 2,
+     "category": "_contestCoef"
+    },
+    {
+     "tag": "org.xcontest.XCTrack.config.FloatPreference",
+     "key": "Contest.CoefPT",
+     "title": "prefContestCoefPT",
+     "depth": 2,
+     "category": "_contestCoef"
+    },
+    {
+     "tag": "org.xcontest.XCTrack.config.FloatPreference",
+     "key": "Contest.CoefFT",
+     "title": "prefContestCoefFT",
+     "depth": 2,
+     "category": "_contestCoef"
+    }
+   ]
+  },
+  {
+   "id": "preferences_devel",
+   "file": "lo-1.xml",
+   "title": null,
+   "rows": [
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Devel.TAShowWindLines",
+     "titleText": "Show Wind Lines in TA",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Devel.XContestAPIDev",
+     "titleText": "XContest API Dev",
+     "summaryText": "Use development version of XContest API",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Devel.LivetrackAPIDev",
+     "titleText": "Livetrack API Dev",
+     "summaryText": "Use development livetracking backend",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Devel.SyncAPIDev",
+     "titleText": "Sync API Dev",
+     "summaryText": "Use development sync backend",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Devel.BssAPIDev",
+     "titleText": "BSS API Dev",
+     "summaryText": "Use development bss backend",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Devel.OAuthAPIDev",
+     "titleText": "Oauth API Dev",
+     "summaryText": "Use development oauth backend. You probably want this checked if you have dev livetrack or dev sync",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Devel.AirspaceAPIDev",
+     "titleText": "Airspace API Dev",
+     "summaryText": "Use development airspace server",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "SafeSky.Sandbox",
+     "titleText": "Safesky API Dev",
+     "summaryText": "Use safesky sandbox server",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Devel.RememberIGCReplay",
+     "titleText": "Remember IGC Replay",
+     "summaryText": "Remember IGC Replay settings over application restarts",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Internal.VolumeSkipWarning",
+     "titleText": "Skip volume warn",
+     "summaryText": "internal skip volume warning",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "_CrashDetect.DontAskAgain",
+     "titleText": "Skip HW accel crash detection",
+     "summaryText": "Do not ask to turn off HW accel when crash detected",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "SafeSky.Terms",
+     "titleText": "Safesky Terms accepted",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Devel.ShowObstaclePolygon",
+     "titleText": "Show obstacle detection polygon on map",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Devel.FlarmDuringReplay",
+     "titleText": "Allow receiving FLARM from external devices during replay",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Devel.LogSensors",
+     "titleText": "Log sensors in IGC File",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Devel.InertialLogging",
+     "titleText": "Inertial logging",
+     "summaryText": "Log accelerometer/gyroscope data to .accel files while flying",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "Devel.ObfuscationCheck",
+     "titleText": "obfuscation check",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "Devel.CrashNOW",
+     "titleText": "CRASH",
+     "summaryText": "Crash the app right now.",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "Devel.SyncAdverts",
+     "titleText": "Sync adverts",
+     "summaryText": "download adverts from server",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "Devel.TestSigning",
+     "titleText": "Bootstrap signing test",
+     "summaryText": "click",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "Devel.GetImei",
+     "titleText": "Get IMEI",
+     "summaryText": "try to get imei without special permission",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "Devel.TestSecPref",
+     "titleText": "Test secured preferences",
+     "summaryText": "try set and get to/from secured preferences",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "Devel.RebuildPlaces",
+     "titleText": "Rebuild the Places database",
+     "summaryText": "Clear up takoffs/cities table and fill it again",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "Devel.DeleteAirspaceData",
+     "titleText": "Delete all airspace data",
+     "summaryText": "Wipe airspace DB tables and cached JSON files",
+     "depth": 1
+    }
+   ]
+  },
+  {
+   "id": "preferences_display",
+   "file": "a7.xml",
+   "title": null,
+   "rows": [
+    {
+     "tag": "ListPreference",
+     "key": "Display.Language",
+     "title": "prefDisplayLanguage",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "_units",
+     "title": "prefUnits",
+     "depth": 1,
+     "opens": "fragment"
+    },
+    {
+     "tag": "ListPreference",
+     "key": "Display.Theme",
+     "title": "prefDisplayTheme",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Display.Fullscreen",
+     "title": "prefDisplayFullscreen",
+     "depth": 1
+    },
+    {
+     "tag": "ListPreference",
+     "key": "Display.Orientation",
+     "title": "prefDisplayOrientation",
+     "depth": 1
+    },
+    {
+     "tag": "ListPreference",
+     "key": "Display.RepaintInterval",
+     "title": "prefDisplayRepaintInterval",
+     "depth": 1
+    },
+    {
+     "tag": "PreferenceCategory",
+     "title": "prefDisplayWidgetTitles",
+     "depth": 1
+    },
+    {
+     "tag": "ListPreference",
+     "key": "Display.WidgetTitleSize",
+     "title": "prefDisplayWidgetTitleSize",
+     "depth": 2,
+     "category": "prefDisplayWidgetTitles"
+    },
+    {
+     "tag": "ListPreference",
+     "key": "Display.WidgetTitleFont",
+     "title": "prefDisplayWidgetTitleFont",
+     "depth": 2,
+     "category": "prefDisplayWidgetTitles"
+    },
+    {
+     "tag": "org.xcontest.XCTrack.config.ColorPickerPreferencePro",
+     "key": "Display.WidgetTitleColor",
+     "title": "prefDisplayWidgetTitleColor",
+     "depth": 2,
+     "category": "prefDisplayWidgetTitles"
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Display.WidgetTitleOutline",
+     "title": "prefDisplayWidgetTitleOutline",
+     "depth": 2,
+     "category": "prefDisplayWidgetTitles"
+    },
+    {
+     "tag": "org.xcontest.XCTrack.config.ColorPickerPreferencePro",
+     "key": "Display.WidgetTitleOutlineColor",
+     "title": "prefDisplayWidgetTitleOutlineColor",
+     "depth": 2,
+     "category": "prefDisplayWidgetTitles"
+    }
+   ]
+  },
+  {
+   "id": "preferences_extra",
+   "file": "MH.xml",
+   "title": null,
+   "rows": [
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Devel.LivetrackDuringReplay",
+     "titleText": "Livetrack during replay",
+     "summaryText": "Livetracking during replay (!!!)",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Devel.ShowAllEvents",
+     "titleText": "Show all events",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Devel.StrictMode",
+     "titleText": "StrictMode (main-thread violation detector)",
+     "summaryText": "Flags slow operations done on the UI (main) thread - disk reads/writes, network, and VM problems like leaked closeables. On Android 9+ each violation is written to the application log and logcat (filter for 'StrictMode') and sent to Crashlytics as a non-fatal (Crashlytics console - Non-fatals); on older Android it only reaches logcat. Takes effect after restarting the app. Leave OFF in normal use - it only helps when chasing jank/ANRs.",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "Devel.StrictModeCount",
+     "titleText": "StrictMode violations",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "Devel.LastAnr",
+     "titleText": "Last ANR detected",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "Devel.TriggerAnr",
+     "titleText": "Trigger artificial ANR (test)",
+     "summaryText": "Blocks the UI thread for 8 s to test the watchdog and ANR reporting. The app will freeze and Android may show 'app not responding'.",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Devel.DoNotDeleteShortTracklog",
+     "titleText": "Do not delete short tracklog",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Internal.LiveTempShortDelay",
+     "titleText": "Short delay for livetrack startup confirmation",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Internal.XCNavigationVisited",
+     "titleText": "Internal.XCNavigationVisited",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Internal.FlarmDbVisited",
+     "titleText": "Internal.FlarmDbVisited",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Devel.ActiveLookBitmap",
+     "titleText": "ActiveLook simulator",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "Devel.MaverickLayout",
+     "titleText": "Maverick layout settings",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Devel.ManualWind",
+     "titleText": "Manual wind",
+     "depth": 1
+    },
+    {
+     "tag": "org.xcontest.XCTrack.config.FloatPreference",
+     "key": "Devel.ManualWindSpeed",
+     "titleText": "Manual wind speed",
+     "depth": 1
+    },
+    {
+     "tag": "org.xcontest.XCTrack.config.FloatPreference",
+     "key": "Devel.ManualWindDir",
+     "titleText": "Manual wind direction",
+     "depth": 1
+    },
+    {
+     "tag": "EditTextPreference",
+     "key": "Devel.TTS",
+     "titleText": "Enter a text for TTS",
+     "depth": 1
+    },
+    {
+     "tag": "EditTextPreference",
+     "key": "Devel.TTSAbbr",
+     "titleText": "Enter a text for abbreviated TTS",
+     "summaryText": "Some of the event arguments are abbreviated (like names of airspaces) - test it here",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "Devel.BuildTimestamp",
+     "titleText": "build timestamp",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "Devel.AttestationInfo",
+     "titleText": "Attestation info",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "Devel.AttestationKeyDelete",
+     "titleText": "Delete attestation key",
+     "summaryText": "Exit & reenter preferences after deleting the key",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "Devel.TestingEvent",
+     "titleText": "Testing event",
+     "summaryText": "Emit testing event with sound.",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "Devel.TogglePro",
+     "titleText": "Toggle Pro",
+     "summaryText": "Temporary suspend/renew (if you have a right) pro. Gps signal catch can turn it up again.",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "Devel.ResetPro",
+     "titleText": "Reset Pro",
+     "summaryText": "Remove Pro information from secured preferences",
+     "depth": 1
+    }
+   ]
+  },
+  {
+   "id": "preferences_glider",
+   "file": "eO-1.xml",
+   "title": "prefAircraft",
+   "rows": [
+    {
+     "tag": "ListPreference",
+     "key": "Glider.FAIClass",
+     "title": "prefGliderFAIClass",
+     "depth": 1
+    },
+    {
+     "tag": "ListPreference",
+     "key": "Glider._producer",
+     "title": "prefGliderProducer",
+     "depth": 1
+    },
+    {
+     "tag": "ListPreference",
+     "key": "Glider._model",
+     "title": "prefGliderModel",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "Glider._refresh",
+     "title": "prefGliderRefreshTitle",
+     "summary": "prefGliderRefreshSummary",
+     "depth": 1
+    },
+    {
+     "tag": "EditTextPreference",
+     "key": "Glider.Name",
+     "title": "prefAircraftName",
+     "depth": 1
+    },
+    {
+     "tag": "ListPreference",
+     "key": "Glider._ctg",
+     "title": "prefGliderCategory",
+     "depth": 1
+    },
+    {
+     "tag": "ListPreference",
+     "key": "Glider._ctgHG",
+     "title": "prefGliderCategory",
+     "depth": 1
+    },
+    {
+     "tag": "CheckBoxPreference",
+     "key": "Glider._tandem",
+     "title": "prefAircraftTandemBiplace",
+     "summary": "prefAircraftTandemBiplaceSummary",
+     "depth": 1
+    },
+    {
+     "tag": "ListPreference",
+     "key": "Glider.EngineType",
+     "title": "prefAircraftEngineType",
+     "depth": 1
+    },
+    {
+     "tag": "org.xcontest.XCTrack.config.FloatPreference",
+     "key": "Glider.TrimSpeed",
+     "title": "prefGliderTrimSpeed",
+     "depth": 1
+    },
+    {
+     "tag": "org.xcontest.XCTrack.config.FloatPreference",
+     "key": "Glider.GoalGlideRatio",
+     "title": "prefGliderGoalGlideRatio",
+     "depth": 1
+    }
+   ]
+  },
+  {
+   "id": "preferences_keybindings",
+   "file": "ae-1.xml",
+   "title": null,
+   "rows": [
+    {
+     "tag": "PreferenceCategory",
+     "title": "prefKeyBindings",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "Keys.PreviousPage",
+     "title": "prefKeyBindingsPageLeft",
+     "depth": 2,
+     "category": "prefKeyBindings"
+    },
+    {
+     "tag": "Preference",
+     "key": "Keys.NextPage",
+     "title": "prefKeyBindingsPageRight",
+     "depth": 2,
+     "category": "prefKeyBindings"
+    },
+    {
+     "tag": "Preference",
+     "key": "Keys.ZoomIn",
+     "title": "prefKeyBindingsZoomIn",
+     "depth": 2,
+     "category": "prefKeyBindings"
+    },
+    {
+     "tag": "Preference",
+     "key": "Keys.ZoomOut",
+     "title": "prefKeyBindingsZoomOut",
+     "depth": 2,
+     "category": "prefKeyBindings"
+    },
+    {
+     "tag": "Preference",
+     "key": "Keys.EnterPan",
+     "title": "prefKeyBindingsTogglePanMode",
+     "depth": 2,
+     "category": "prefKeyBindings"
+    },
+    {
+     "tag": "Preference",
+     "key": "Keys.MapPanLeft",
+     "title": "prefKeyBindingsMapPanLeft",
+     "depth": 2,
+     "category": "prefKeyBindings"
+    },
+    {
+     "tag": "Preference",
+     "key": "Keys.MapPanRight",
+     "title": "prefKeyBindingsMapPanRight",
+     "depth": 2,
+     "category": "prefKeyBindings"
+    },
+    {
+     "tag": "Preference",
+     "key": "Keys.MapPanUp",
+     "title": "prefKeyBindingsMapPanUp",
+     "depth": 2,
+     "category": "prefKeyBindings"
+    },
+    {
+     "tag": "Preference",
+     "key": "Keys.MapPanDown",
+     "title": "prefKeyBindingsMapPanDown",
+     "depth": 2,
+     "category": "prefKeyBindings"
+    },
+    {
+     "tag": "Preference",
+     "key": "Keys.Menu",
+     "title": "prefKeyBindingsToggleMenu",
+     "depth": 2,
+     "category": "prefKeyBindings"
+    },
+    {
+     "tag": "Preference",
+     "key": "Keys.PrevWaypoint",
+     "title": "prefKeyBindingsPrevWaypoint",
+     "depth": 2,
+     "category": "prefKeyBindings"
+    },
+    {
+     "tag": "Preference",
+     "key": "Keys.NextWaypoint",
+     "title": "prefKeyBindingsNextWaypoint",
+     "depth": 2,
+     "category": "prefKeyBindings"
+    },
+    {
+     "tag": "Preference",
+     "key": "Keys.BrightnessInc",
+     "title": "prefKeyBindingsBrightnessIncrease",
+     "depth": 2,
+     "category": "prefKeyBindings"
+    },
+    {
+     "tag": "Preference",
+     "key": "Keys.BrightnessDec",
+     "title": "prefKeyBindingsBrightnessDecrease",
+     "depth": 2,
+     "category": "prefKeyBindings"
+    },
+    {
+     "tag": "Preference",
+     "key": "Keys.IntentLaunch",
+     "title": "prefKeyBindingsIntentLaunch",
+     "depth": 2,
+     "category": "prefKeyBindings"
+    },
+    {
+     "tag": "PreferenceCategory",
+     "title": "prefKeyBindingsOtherSettings",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Keys.ProximityScreenOn",
+     "title": "prefKeyBindingsProximityScreenOn",
+     "summary": "prefKeyBindingsProximityScreenOnSummary",
+     "depth": 2,
+     "category": "prefKeyBindingsOtherSettings"
+    },
+    {
+     "tag": "org.xcontest.XCTrack.config.FloatPreference",
+     "key": "Keys.MapPanStepSize",
+     "title": "prefKeyBindingsMapPanStepSize",
+     "depth": 2,
+     "category": "prefKeyBindingsOtherSettings"
+    }
+   ]
+  },
+  {
+   "id": "preferences_live",
+   "file": "xd-1.xml",
+   "title": null,
+   "rows": [
+    {
+     "tag": "Preference",
+     "key": "Internal.LiveTempDontShare",
+     "title": "livePrefTempDisabled",
+     "summary": "livePrefTempDisabledSummary",
+     "depth": 1
+    },
+    {
+     "tag": "PreferenceCategory",
+     "key": "_xclive",
+     "title": "prefLivetrackingCategory",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "_xclive.descr",
+     "summary": "liveEnabledSummary",
+     "depth": 2,
+     "category": "_xclive"
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Livetrack.Enabled",
+     "title": "liveEnabledTitle",
+     "depth": 2,
+     "category": "_xclive"
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Livetrack.ClaimContest",
+     "title": "livePrefClaimTitle",
+     "summary": "livePrefClaimDescr",
+     "depth": 2,
+     "category": "_xclive"
+    },
+    {
+     "tag": "Preference",
+     "key": "_livetrack.quick_msgs",
+     "title": "liveMainQuickMessagesEditTitle",
+     "depth": 2,
+     "category": "_xclive",
+     "opens": "activity"
+    },
+    {
+     "tag": "PreferenceCategory",
+     "key": "_safesky",
+     "title": "prefSafeskyCategory",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "_safesky.descr",
+     "titleText": "",
+     "summary": "safeSkyDescription",
+     "depth": 2,
+     "category": "_safesky"
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "SafeSky.Enabled",
+     "title": "safeskyEnabled",
+     "depth": 2,
+     "category": "_safesky"
+    },
+    {
+     "tag": "ListPreference",
+     "key": "SafeSky.Interval",
+     "title": "safeSkyFrequencyTitle",
+     "depth": 2,
+     "category": "_safesky"
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "SafeSky.Anonymous",
+     "title": "safeskyAnonymousTitle",
+     "summary": "safeskyAnonymousDescription",
+     "depth": 2,
+     "category": "_safesky"
+    },
+    {
+     "tag": "Preference",
+     "key": "SafeSky.Address",
+     "title": "safeskyAddress",
+     "depth": 2,
+     "category": "_safesky"
+    },
+    {
+     "tag": "Preference",
+     "key": "_safesky.terms",
+     "title": "safeskyTermsConditions",
+     "depth": 2,
+     "category": "_safesky"
+    },
+    {
+     "tag": "EditTextPreference",
+     "key": "SafeSky.Icao",
+     "title": "safeskyIcao",
+     "depth": 2,
+     "category": "_safesky"
+    }
+   ]
+  },
+  {
+   "id": "preferences_maverick",
+   "file": "IG.xml",
+   "title": null,
+   "rows": [
+    {
+     "tag": "Preference",
+     "key": "_maverick.connect",
+     "title": "prefActiveLookDevice",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "_maverick.designer",
+     "title": "prefActiveLookDesigner",
+     "depth": 1,
+     "opens": "activity"
+    },
+    {
+     "tag": "Preference",
+     "key": "_maverick.calibrate",
+     "title": "prefMaverickCalibrate",
+     "depth": 1,
+     "opens": "fragment"
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Maverick.AutoBrightness",
+     "title": "prefActiveLookAlb",
+     "depth": 1
+    },
+    {
+     "tag": "org.xcontest.XCTrack.config.VolumePreference",
+     "key": "Maverick.Brightness",
+     "title": "prefActiveLookLuma",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "_maverick.fwversion",
+     "title": "prefActiveLookDeviceInfo",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "_maverick.battery",
+     "title": "prefActiveLookBattery",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "_maverick.sdkkey",
+     "title": "mavSdkKey",
+     "depth": 1
+    }
+   ]
+  },
+  {
+   "id": "preferences_pilot",
+   "file": "lH.xml",
+   "title": null,
+   "rows": [
+    {
+     "tag": "EditTextPreference",
+     "key": "Pilot.Name",
+     "title": "prefPilotName",
+     "depth": 1
+    },
+    {
+     "tag": "PreferenceCategory",
+     "key": "_pilotXContest",
+     "title": "prefPilotXContest",
+     "depth": 1
+    },
+    {
+     "tag": "EditTextPreference",
+     "key": "XContest.Username",
+     "title": "prefPilotUsername",
+     "depth": 2,
+     "category": "_pilotXContest"
+    },
+    {
+     "tag": "EditTextPreference",
+     "key": "XContest.Password",
+     "title": "prefPilotPassword",
+     "depth": 2,
+     "category": "_pilotXContest"
+    },
+    {
+     "tag": "org.xcontest.XCTrack.config.ButtonPreference",
+     "key": "XContest.Login",
+     "title": "liveLoginButton",
+     "depth": 2,
+     "category": "_pilotXContest"
+    },
+    {
+     "tag": "PreferenceCategory",
+     "key": "_pilot3rdParty",
+     "title": "prefPilot3rdPartyLogins",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "SkySight.Toggle",
+     "title": "prefPilotSkySight",
+     "depth": 2,
+     "category": "_pilot3rdParty"
+    },
+    {
+     "tag": "EditTextPreference",
+     "key": "SkySight.Username",
+     "title": "prefSkySightUsername",
+     "depth": 2,
+     "category": "_pilot3rdParty"
+    },
+    {
+     "tag": "EditTextPreference",
+     "key": "SkySight.Password",
+     "title": "prefSkySightPassword",
+     "depth": 2,
+     "category": "_pilot3rdParty"
+    },
+    {
+     "tag": "org.xcontest.XCTrack.config.ButtonPreference",
+     "key": "SkySight.Login",
+     "title": "prefSkySightLoginButton",
+     "depth": 2,
+     "category": "_pilot3rdParty"
+    }
+   ]
+  },
+  {
+   "id": "preferences_sensors",
+   "file": "x_.xml",
+   "title": null,
+   "rows": [
+    {
+     "tag": "PreferenceCategory",
+     "key": "_sensorsFAICompliance",
+     "title": "prefFAICompliance",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "_faicivldescription",
+     "summary": "prefFAIComplianceDescription",
+     "depth": 2,
+     "category": "_sensorsFAICompliance"
+    },
+    {
+     "tag": "Preference",
+     "key": "_faicivlcheck",
+     "depth": 2,
+     "category": "_sensorsFAICompliance"
+    },
+    {
+     "tag": "PreferenceCategory",
+     "key": "_sensorsConnection",
+     "title": "prefConnection",
+     "depth": 1
+    },
+    {
+     "tag": "org.xcontest.XCTrack.config.ButtonPreference",
+     "key": "_addSensor",
+     "title": "prefSensorsAddSensor",
+     "summary": "prefSensorsAddSensorDescription",
+     "depth": 2,
+     "category": "_sensorsConnection"
+    },
+    {
+     "tag": "PreferenceCategory",
+     "key": "_sensorsBarometer",
+     "title": "prefSensorsBarometer",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "_sensorsAcousticVario",
+     "title": "prefSensorsAcousticVario",
+     "depth": 2,
+     "category": "_sensorsBarometer",
+     "opens": "fragment"
+    }
+   ]
+  },
+  {
+   "id": "preferences_shareconfig",
+   "file": "Ft-1.xml",
+   "title": null,
+   "rows": [
+    {
+     "tag": "PreferenceCategory",
+     "title": "prefGroupConfiguration",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "_exportConfig",
+     "title": "prefExportConfig",
+     "summary": "prefExportConfigDescription",
+     "depth": 2,
+     "category": "prefGroupConfiguration"
+    },
+    {
+     "tag": "Preference",
+     "key": "_importConfig",
+     "title": "prefImportConfig",
+     "summary": "prefImportConfigDescription",
+     "depth": 2,
+     "category": "prefGroupConfiguration"
+    }
+   ]
+  },
+  {
+   "id": "preferences_sound",
+   "file": "M2.xml",
+   "title": null,
+   "rows": [
+    {
+     "tag": "PreferenceCategory",
+     "key": "_sensorsAcousticVarioCat",
+     "title": "prefSensorsAcousticVario",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "_sensorsAcousticVario",
+     "title": "prefSensorsAcousticVario",
+     "depth": 2,
+     "category": "_sensorsAcousticVarioCat",
+     "opens": "fragment"
+    },
+    {
+     "tag": "PreferenceCategory",
+     "key": "_soundAutomaticVolume",
+     "title": "prefSoundAutoVolume",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Tweak.VolumeUp",
+     "title": "prefTweakVolumeUp2",
+     "summary": "prefTweakVolumeUpDescription2",
+     "depth": 2,
+     "category": "_soundAutomaticVolume"
+    },
+    {
+     "tag": "org.xcontest.XCTrack.config.VolumePreference",
+     "key": "Tweak.VolumePct",
+     "title": "prefTweakVolumePct",
+     "summary": "prefTweakVolumePctDescription",
+     "depth": 2,
+     "category": "_soundAutomaticVolume"
+    },
+    {
+     "tag": "PreferenceCategory",
+     "key": "_ttsSetting",
+     "title": "prefSoundTTSAdjustment",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "_ttsAvailability",
+     "title": "prefSoundTTSAvailability",
+     "depth": 2,
+     "category": "_ttsSetting"
+    },
+    {
+     "tag": "SeekBarPreference",
+     "key": "_ttsSpeed",
+     "title": "prefSoundTTSSpeed",
+     "summary": "prefSoundTTSSpeedSum",
+     "depth": 2,
+     "category": "_ttsSetting"
+    },
+    {
+     "tag": "SeekBarPreference",
+     "key": "_ttsPitch",
+     "title": "prefSoundTTSPitch",
+     "summary": "prefSoundTTSPitchSum",
+     "depth": 2,
+     "category": "_ttsSetting"
+    },
+    {
+     "tag": "PreferenceCategory",
+     "key": "_globalSwitchCat",
+     "titleText": "global switch ( for -extra- users only)",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "_enableAllSound",
+     "titleText": "Enable all sounds",
+     "depth": 2,
+     "category": "_globalSwitchCat"
+    },
+    {
+     "tag": "Preference",
+     "key": "_disableAllSound",
+     "titleText": "Disable all sounds",
+     "depth": 2,
+     "category": "_globalSwitchCat"
+    },
+    {
+     "tag": "PreferenceCategory",
+     "key": "_events",
+     "title": "prefSoundEventsTitle",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "_eventsDescription",
+     "summary": "prefSoundEventsDescription",
+     "depth": 2,
+     "category": "_events"
+    },
+    {
+     "tag": "PreferenceCategory",
+     "key": "_systemSounds",
+     "title": "prefSoundSystem",
+     "depth": 1
+    },
+    {
+     "tag": "PreferenceCategory",
+     "key": "_flightSounds",
+     "title": "prefSoundFlight",
+     "depth": 1
+    },
+    {
+     "tag": "PreferenceCategory",
+     "key": "_competitionSounds",
+     "title": "prefSoundComp",
+     "depth": 1
+    },
+    {
+     "tag": "PreferenceCategory",
+     "key": "_livetrackSounds",
+     "title": "prefSoundLivetrack",
+     "depth": 1
+    },
+    {
+     "tag": "PreferenceCategory",
+     "key": "_buttonSounds",
+     "title": "prefSoundButton",
+     "depth": 1
+    },
+    {
+     "tag": "PreferenceCategory",
+     "key": "_testing",
+     "title": "wgTesting",
+     "depth": 1
+    }
+   ]
+  },
+  {
+   "id": "preferences_testing_debug",
+   "file": "UP.xml",
+   "title": null,
+   "rows": [
+    {
+     "tag": "PreferenceCategory",
+     "title": "prefTestingLogging",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Testing.Log",
+     "title": "prefTestingLog",
+     "summary": "prefTestingLogDescription",
+     "depth": 2,
+     "category": "prefTestingLogging"
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Testing.ExternalSensorLog",
+     "title": "prefTestingExternalSensorLog",
+     "summary": "prefTestingExternalSensorLogDescription",
+     "depth": 2,
+     "category": "prefTestingLogging"
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Testing.InternalSensorLog",
+     "title": "prefTestingInternalSensorLog",
+     "summary": "prefTestingInternalSensorLogDescription",
+     "depth": 2,
+     "category": "prefTestingLogging"
+    },
+    {
+     "tag": "Preference",
+     "key": "_shareLogFile",
+     "title": "prefShareALogFileTitle",
+     "summary": "prefShareALogFileDesc",
+     "depth": 2,
+     "category": "prefTestingLogging"
+    },
+    {
+     "tag": "Preference",
+     "key": "_lastExits",
+     "title": "prefTestingLastExitsTitle",
+     "summary": "prefTestingLastExitsSummary",
+     "depth": 2,
+     "category": "prefTestingLogging"
+    },
+    {
+     "tag": "PreferenceCategory",
+     "title": "prefTestingWebView",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Testing.WebViewDebug",
+     "title": "prefTestingWebViewDebug",
+     "summary": "prefTestingWebViewDebugSummary",
+     "depth": 2,
+     "category": "prefTestingWebView"
+    },
+    {
+     "tag": "PreferenceCategory",
+     "title": "prefGroupConfiguration",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Testing.FirstRunWizardAgain",
+     "title": "prefFirstRunWizardAgainTitle",
+     "summary": "prefFirstRunWizardAgainSummary",
+     "depth": 2,
+     "category": "prefGroupConfiguration"
+    },
+    {
+     "tag": "PreferenceCategory",
+     "title": "prefTestingGroupVersion",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "Testing.DownloadTranslationsUpdate",
+     "title": "prefTestingDownloadTranslations",
+     "summary": "prefTestingDownloadTranslationsSummary",
+     "depth": 2,
+     "category": "prefTestingGroupVersion",
+     "opens": "activity"
+    },
+    {
+     "tag": "Preference",
+     "key": "Testing.Version",
+     "title": "prefTestingXCTrackVersion",
+     "depth": 2,
+     "category": "prefTestingGroupVersion",
+     "opens": "activity"
+    },
+    {
+     "tag": "PreferenceCategory",
+     "title": "prefTestingOEM",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "Testing.OEMReprocessBootstraps",
+     "title": "prefTestingOEMReprocessBootstraps",
+     "summary": "prefTestingOEMReprocessBootstrapsSummary",
+     "depth": 2,
+     "category": "prefTestingOEM"
+    },
+    {
+     "tag": "PreferenceCategory",
+     "title": "wgOthers",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "Testing.ManualTakeoff",
+     "title": "prefTestingManualTakeoffTitle",
+     "summary": "prefTestingManualTakeoffSum",
+     "depth": 2,
+     "category": "wgOthers"
+    }
+   ]
+  },
+  {
+   "id": "preferences_tweaks",
+   "file": "7Z.xml",
+   "title": null,
+   "rows": [
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Tweak.BlockKeys",
+     "title": "prefTweakBlockKeys",
+     "summary": "prefTweakBlockKeysDescription",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Tweak.KeepDisplayOn",
+     "title": "prefTweakKeepDisplayOn",
+     "summary": "prefTweakKeepDisplayOnDescription",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Tweak.AudioFocus",
+     "title": "prefTweakAudioFocus",
+     "summary": "prefTweakAudioFocusDescription",
+     "depth": 1
+    },
+    {
+     "tag": "Preference",
+     "key": "Tweak.IgnorePowerOpti",
+     "title": "prefTweakIgnorePowerOpti",
+     "summaryText": "",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Tweak.MasterSyncAutoOff",
+     "title": "prefTweakMasterSyncOff",
+     "summary": "prefTweakMasterSyncOffDescription",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Tweak.MutePhone",
+     "title": "prefTweakMutePhone",
+     "summary": "prefTweakMutePhoneDescription",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Tweak.RejectCalls",
+     "title": "prefTweakRejectCalls",
+     "summary": "prefTweakRejectCallsDescription2",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Tweak.DisableNotif",
+     "title": "prefTweakDisableNotif",
+     "summary": "prefTweakDisableNotifDescription",
+     "depth": 1
+    },
+    {
+     "tag": "ListPreference",
+     "key": "Tweak.HWAccel",
+     "title": "prefTweakHWAcceleration",
+     "depth": 1
+    },
+    {
+     "tag": "SwitchPreferenceCompat",
+     "key": "Tweak.AnnounceEventsByIntents",
+     "title": "prefTweakAnnounceEventsByIntents",
+     "summary": "prefTweakAnnounceEventsByIntentsDescription",
+     "depth": 1
+    }
+   ]
+  },
+  {
+   "id": "preferences_units",
+   "file": "oN.xml",
+   "title": null,
+   "rows": [
+    {
+     "tag": "ListPreference",
+     "key": "Unit.Distance",
+     "title": "unitDistance",
+     "depth": 1
+    },
+    {
+     "tag": "ListPreference",
+     "key": "Unit.CompetitionDistance",
+     "title": "unitCompetitionDistance",
+     "depth": 1
+    },
+    {
+     "tag": "ListPreference",
+     "key": "Unit.RelativeDistance",
+     "title": "unitRelativeDistance",
+     "depth": 1
+    },
+    {
+     "tag": "ListPreference",
+     "key": "Unit.Altitude",
+     "title": "unitAltitude",
+     "depth": 1
+    },
+    {
+     "tag": "ListPreference",
+     "key": "Unit.AirspaceAltitude",
+     "title": "unitAirspaceAltitude",
+     "depth": 1
+    },
+    {
+     "tag": "ListPreference",
+     "key": "Unit.Speed",
+     "title": "unitSpeed",
+     "depth": 1
+    },
+    {
+     "tag": "ListPreference",
+     "key": "Unit.WindSpeed",
+     "title": "unitWindSpeed",
+     "depth": 1
+    },
+    {
+     "tag": "ListPreference",
+     "key": "Unit.VerticalSpeed",
+     "title": "unitVerticalSpeed",
+     "depth": 1
+    }
+   ]
+  }
+ ],
+ "unlabelled": [
+  "ActiveLook.Device",
+  "ActiveLook.Layout",
+  "ActiveLook.Name",
+  "Airspace.ClassColors",
+  "Airspace.EventSuppressionInside",
+  "Airspace.EventSuppressionObstacle2",
+  "Airspace.EventSuppressionOrange",
+  "Airspace.EventSuppressionRed",
+  "Airspace.Files",
+  "Airspace.Filling",
+  "Airspace.Filling.Alpha",
+  "Airspace.LabelsAlways",
+  "Airspace.LabelsForTemporaryAlways",
+  "Airspace.LabelsSkipAMSL",
+  "Airspace.LabelsZoom",
+  "Airspace.MaxDiscoverDistnace",
+  "Airspace.SharktoothBorderEnabled",
+  "Airspace.SharktoothBorderZoom",
+  "Airspace.State2",
+  "Airspace.autoUpdate",
+  "App.Config.Version",
+  "App.GuessLatitude",
+  "App.GuessLongitude",
+  "App.ScreenOccupation.X",
+  "App.ScreenOccupation.Y",
+  "Comp.AlertBeforeSSS",
+  "EventMappingJs",
+  "FirstStart",
+  "Glider.Ctg",
+  "Glider.CtgHG",
+  "Internal.ActiveLookDevInfo",
+  "Internal.ActiveLookOldFw",
+  "Internal.CameraBack",
+  "Internal.GliderListRefreshed",
+  "Internal.PreV5SelectedChannels",
+  "Internal.SntpVsGpsOffset",
+  "Internal.TrackingRunning",
+  "Internal.VolumeInitial",
+  "LandingDetectionType",
+  "Livetrack.DeviceId",
+  "Livetrack.FlightPublic",
+  "Livetrack.QuickMessages",
+  "Livetrack.ShowPublic",
+  "Mapsforge.MapFiles",
+  "Mapsforge.Terrain",
+  "Mapsforge.ThemeFile",
+  "Maverick.Calibration",
+  "Maverick.Layout",
+  "Maverick.SdkKey",
+  "Navigation.State",
+  "Navigation.WaypointFiles",
+  "Obstacles.SafeAltMargin",
+  "Obstacles.SafeDistanceTimeS",
+  "Obstacles.ShowLabelsOnMap",
+  "SafeSky.Amt",
+  "SafeSky.AnonymousUUID",
+  "SafeSky.AutoIcao",
+  "SafeSky.Salt",
+  "Sec.GpsTimeOffset",
+  "Sec.ProToTimestamp",
+  "Sec.ProUid",
+  "Sec.Xcontest.Uid",
+  "Sec.test",
+  "Sensor.AcousticVario.DynamicFreq",
+  "Sensors.Configuration",
+  "Sensors.LastNetLocation",
+  "Sensors.LastNetTime",
+  "Sensors.LastNetValue",
+  "Sound.AcousticVario.CustomProfile",
+  "Sound.TTS.Pitch",
+  "Sound.TTS.Speed",
+  "Sounds",
+  "TakeoffSpeed",
+  "Testing.IGCReplayFilename",
+  "Thermalling.DetectionIntervalMs",
+  "Thermalling.StartMinTurn",
+  "Thermalling.StartMinVario",
+  "Thermalling.StopMaxTurn",
+  "Thermalling.StopMaxVario",
+  "XContest.AuthToken",
+  "_CrashDetect.Flying",
+  "_Diag.LastReportedExit",
+  "_temp.brightness",
+  "_temp.lastMuteState",
+  "_temp.masterSyncWasEnabled"
+ ]
+}

@@ -213,6 +213,51 @@ diffèrent. Voir l'en-tête de `src/catalog/widgetVersions.ts`.
 
 Ce dépôt ne fournit pas d'outil pour rassembler les APK : chacun apporte les siens.
 
+### Régénérer le catalogue des préférences générales
+
+`src/catalog/preferenceCatalog/` décrit les réglages qui vivent **hors des pages** : les
+unités, les touches, le son, les capteurs, les espaces aériens — la section `preferences`
+d'un export `backup`. **L'éditeur ne les modifie pas encore** ; le catalogue est le
+préalable, et il est mesurable dès maintenant.
+
+```bash
+unzip -o mon-xctrack.apk AndroidManifest.xml resources.arsc 'classes*.dex' \
+      'res/*' -d /tmp/xct
+python3 tools/extract-preferences.py /tmp/xct
+```
+
+Deux exécutions produisent des fichiers identiques à l'octet près ; aucun JSON n'est
+jamais édité à la main.
+
+Deux sources sont lues séparément, puis croisées :
+
+- **les écrans de réglages** (`res/xml/preferences_*.xml`), où la clé et son libellé sont
+  deux attributs du *même* élément — l'appariement le plus sûr du projet ;
+- **la classe de configuration** dans le bytecode, qui donne le type de la valeur, son
+  défaut, et la **portée** : `PUBLIC` (écrite dans un export), `INTERNAL` (locale à
+  l'appareil), `SECURE` (chiffrée).
+
+Le croisement se vérifie : sur XCTrack 1.0.3-beta5, les 135 clés `PUBLIC` du bytecode plus
+la seule qu'Android persiste sans passer par cette classe font **exactement** les 136 clés
+d'une sauvegarde réelle. Ni une de plus, ni une de moins.
+
+**Ce que le catalogue ne sait pas, il le dit.** 85 clés sur 216 n'ont pas de libellé,
+dont 49 des 136 qu'un fichier réel porte : XCTrack les règle dans des écrans construits en
+code (espaces aériens, cartes, actions automatiques, sons), où la clé n'est plus argument
+du même appel que son libellé, ou bien ce ne sont pas des réglages mais de l'état
+sérialisé. Elles restent au catalogue avec `label: null` — un éditeur doit savoir qu'il
+les rencontrera. La liste est publiée, pas laissée à recalculer.
+
+Le catalogue marque aussi **les clés qui portent une donnée personnelle**, en distinguant
+ce qui est lu dans l'APK (une portée `SECURE`, un champ de saisie masqué) de ce qui est
+affirmé sur le contenu d'une clé, qui ne se lit nulle part. Voir l'en-tête de
+`src/catalog/preferenceCatalog.ts`.
+
+⚠️ **La dimension « version » n'est pas construite** : `src/catalog/widgetVersions/` ne
+couvre que les widgets. Le catalogue des préférences dit de quelle version il parle
+(`meta.versionCode`) et rien de plus. Sur un `backup` écrit par 0.9.12.3, 27 des 148 clés
+sont inconnues de la 1.0.3-beta5 — c'est la mesure de ce que cette absence coûte.
+
 ## Licence
 
 MIT — voir [LICENSE](LICENSE).
