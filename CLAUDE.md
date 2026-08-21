@@ -24,8 +24,9 @@ relecteur suivant se posera la question.
 
 ## Les captures d'écran
 
-Le `README.md` en porte, et c'est un attendu, pas un agrément : un éditeur visuel qui ne
-montre rien demande un acte de foi.
+Le `README.md` **doit** en porter — c'est un attendu, pas un agrément : un éditeur visuel
+qui ne montre rien demande un acte de foi. *À l'heure où ces lignes sont écrites, il n'en
+porte aucune : c'est un manque à combler, pas un état à préserver.*
 
 Deux règles absolues :
 
