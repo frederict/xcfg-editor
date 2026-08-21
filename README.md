@@ -154,10 +154,11 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
   conserve les réglages qu'il ne connaît plus : une sauvegarde de 2026 traîne encore des
   interrupteurs de 2023. C'est le seul endroit où l'outil propose **de lui-même** de
   retirer quelque chose du document, et le tri est volontairement étroit : un réglage
-  n'est proposé que lorsqu'un fichier réel du corpus atteste le reliquat. Un trou de notre
-  relevé — le réglage existait, c'est notre extraction qui l'a manqué — ou une clé que
-  cette extraction n'a jamais vue ne sont **jamais** proposés ; et même un reliquat
-  attesté dont le relevé ne sait pas dire depuis quand il ne sert plus reste en place, car
+  n'est proposé que lorsqu'un fichier réel l'atteste — l'écran le dit **périmé**. Un trou
+  de notre lecture des versions — le réglage existait, c'est notre extraction qui l'a
+  manqué — ou un réglage qu'elle n'a jamais vu sont dits **angle mort** et **inconnu**, et
+  ne sont **jamais** proposés ; même un réglage périmé dont nous ne savons pas dire depuis
+  quand il ne sert plus reste en place, car
   on ne propose pas de supprimer ce qu'on ne saurait pas expliquer. Ne rien enlever ne
   casse rien, enlever à tort casse une configuration de vol : tout le tri est bâti sur ce
   déséquilibre.
@@ -172,7 +173,8 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
 - **Dire ce que votre fichier révèle de vous** avant que vous ne le partagiez. Un export
   `backup` porte votre nom, votre voile, vos capteurs appairés, vos fichiers de waypoints
   — jusqu'au nom de la compétition à laquelle vous participez. Au moment d'enregistrer,
-  l'outil propose donc deux issues : le **fichier complet**, à l'octet près, ou une
+  l'outil propose donc deux issues : **« Votre configuration, telle qu'elle est »**,
+  restituée à l'octet près, ou une
   **version partageable** — un export `pages` dont les textes que vous avez écrits sont
   remplacés, avec l'inventaire de chaque remplacement, son emplacement et sa raison,
   montré *avant* le téléchargement. Le nom du fichier produit est horodaté et **ne
@@ -199,8 +201,8 @@ un domicile au bâtiment près.*
   État ....... la boussole de la première page paysage (13e gadget de la page, la seule
                du corpus qui porte `windStyle`) : elle offre quatre lignes « Rétablir la
                valeur d'usine », dont celle de `windStyle`, les deux valeurs en présence
-               lisibles. Faire tenir dans le même cadre le bloc des clés absentes de fin
-               de panneau, avec son bouton « Définir cette valeur ».
+               lisibles. Faire tenir dans le même cadre le bloc des réglages que le
+               gadget n'écrit pas, avec son bouton « Définir cette valeur ».
   Refaire .... npm run dev, déposer le fichier, passer en « Modifier », choisir la
                boussole dans la liste des gadgets.
 -->
@@ -237,8 +239,8 @@ un domicile au bâtiment près.*
 
 <!--
   CAPTURE À PRENDRE — captures/enregistrer-et-partager.png
-  Écran ...... la boîte d'enregistrement, ses deux issues : « fichier complet » et
-               « version partageable ».
+  Écran ...... la boîte d'enregistrement, ses deux issues : « Votre configuration,
+               telle qu'elle est » et « version partageable ».
   Fichier .... tests/fixtures/formes/formes-preservees.xcfg — c'est la fixture qui
                porte un téléphone et une fiche de contact, donc la seule où
                l'inventaire des remplacements a quelque chose à montrer. (Sur
