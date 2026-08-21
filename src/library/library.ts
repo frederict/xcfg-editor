@@ -1,4 +1,5 @@
 import { openContainer, type Container } from '../core/container'
+import { formatTechnicalDetail } from '../core/technicalDetail'
 import { sameDigest, sha256Hex } from './digest'
 import { LibraryError } from './errors'
 import { describeContainer, type DescribeOptions, type EntryIdentity } from './identity'
@@ -280,7 +281,8 @@ export function createLibrary(options: LibraryOptions): Library {
     } catch (error) {
       throw new LibraryError(
         'unreadable',
-        `« ${fileName} » n’a pas pu être ouvert : ${String(error)}`,
+        `« ${fileName} » n’a pas pu être ouvert : ce n’est pas une configuration ` +
+        `XCTrack lisible. ${formatTechnicalDetail(error)}`,
         { cause: error }
       )
     }

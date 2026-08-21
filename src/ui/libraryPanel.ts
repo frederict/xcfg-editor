@@ -1,5 +1,6 @@
 import './libraryPanel.css'
 import { readableName } from '../catalog/widgetNames'
+import { formatTechnicalDetail } from '../core/technicalDetail'
 import { sha256Hex } from '../library/digest'
 import { LibraryError } from '../library/errors'
 import { personalInventoryOf, type EntryIdentity, type PersonalDatum } from '../library/identity'
@@ -353,9 +354,9 @@ export function identityCard(identity: EntryIdentity, language = 'fr'): Identity
   if (read.parseError !== undefined) {
     readFacts.push({
       label: 'Analyse',
-      value: `Le contenu n’a pas pu être analysé : ${read.parseError}`,
+      value: 'Le contenu n’a pas pu être analysé',
       note: 'Les octets sont rangés et ressortiront tels quels ; c’est leur description ' +
-        'qui manque.'
+        `qui manque. Détail technique : ${read.parseError}.`
     })
   }
 
@@ -836,7 +837,13 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
       say(error.message, 'trouble')
       return
     }
-    say(`${context} : ${String(error)}`, 'trouble')
+    // Le contexte est une phrase du pilote (« Suppression », « Rangement ») ; le détail
+    // vient après, nommé, et sans le « Error: » du moteur JavaScript.
+    say(
+      `${context} : l’opération n’a pas abouti. Détail technique : ` +
+      `${formatTechnicalDetail(error)}`,
+      'trouble'
+    )
   }
 
   const guard = async (context: string, body: () => Promise<void>): Promise<void> => {
@@ -1164,13 +1171,26 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
     })
   }
 
+  /**
+   * Ce qu'on dit d'une entrée qu'on ne sait plus relire : la conséquence d'abord,
+   * l'identifiant interne et la cause ensuite. Le pilote décide sur la première phrase ;
+   * la seconde est ce qu'il recopiera s'il signale le problème.
+   */
+  const brokenBody = (broken: BrokenEntry): HTMLElement => {
+    const body = el('div')
+    body.append(el('p', 'library__note',
+      'Cette entrée ne se relit pas : on ne sait pas ce qu’elle contenait. La supprimer ' +
+      'libère sa place et ne perd rien de lisible.'))
+    body.append(el('p', 'library__note library__note--technical',
+      `Identifiant interne ${broken.id}. Détail technique : ${broken.reason}.`))
+    return body
+  }
+
   const askRemoveBroken = (broken: BrokenEntry): void => {
     views.open({
       title: 'Supprimer cette entrée illisible ?',
       tone: 'grave',
-      body: el('p', 'library__note',
-        `L’entrée ${broken.id} ne se relit pas : ${broken.reason}. On ne sait pas ce ` +
-        'qu’elle contenait ; la supprimer libère sa place et ne perd rien de lisible.'),
+      body: brokenBody(broken),
       choices: [{
         label: 'Supprimer',
         primary: true,

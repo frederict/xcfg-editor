@@ -219,7 +219,7 @@ describe('avertissements — structure inattendue', () => {
     const document = parseJson(`{
       "layout": { "landscape": [{ "navigations": "all", "widgets": [] }], "portrait": [] }
     }`)
-    expect(textOf(pick(warningsOf(document), 'structure'))).toMatch(/classe de page absente/)
+    expect(textOf(pick(warningsOf(document), 'structure'))).toMatch(/ne dit pas son type/)
   })
 
   it('signale « navigations » d’un type non reconnu', () => {

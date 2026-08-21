@@ -33,6 +33,8 @@ export type LibraryFailure =
   /** L'archive proposée à l'import n'est pas une bibliothèque lisible. */
   | 'unreadable'
 
+import { formatTechnicalDetail } from '../core/technicalDetail'
+
 export class LibraryError extends Error {
   readonly failure: LibraryFailure
 
@@ -86,5 +88,11 @@ export function toLibraryError(error: unknown, context: string): LibraryError {
       { cause: error }
     )
   }
-  return new LibraryError('unavailable', `${context} : ${String(error)}`, { cause: error })
+  // Le message garde le contexte en clair et le détail technique **à la fin**, sans le
+  // « Error: » du moteur : c'est l'appelant qui décide de le replier ou non.
+  return new LibraryError(
+    'unavailable',
+    `${context} : le navigateur n’a pas pu répondre. ${formatTechnicalDetail(error)}`,
+    { cause: error }
+  )
 }

@@ -336,7 +336,7 @@ function structureWarning(input: WarningInput): Warning | undefined {
     input.layout[orientation].forEach((page, index) => {
       const where = `${ORIENTATION_LABELS[orientation]}, page ${index + 1}`
 
-      if (page.className === '') items.push(`${where} : classe de page absente (clé CLASS)`)
+      if (page.className === '') items.push(`${where} : cette page ne dit pas son type`)
 
       const navigations = getMember(page.node, 'navigations')
       const unknownNavigations =
@@ -344,7 +344,12 @@ function structureWarning(input: WarningInput): Warning | undefined {
         navigations.kind !== 'array' &&
         !(navigations.kind === 'string' && ['all', 'none'].includes(decode(navigations.raw)))
       if (unknownNavigations) {
-        items.push(`${where} : « navigations » d’un type non reconnu (${navigations.kind})`)
+        // Le type JavaScript de la valeur ne disait rien à personne. Ce qui compte est
+        // la conséquence : cet outil ne sait pas dire quand cette page s'affiche.
+        items.push(
+          `${where} : cet outil ne sait pas dire quand cette page s’affiche — la valeur ` +
+          `« navigations » n’est ni « all », ni « none », ni une liste`
+        )
       }
 
       page.widgets.forEach((widget, position) => {
@@ -437,13 +442,23 @@ function scanPage(page: Page, where: string, language: string, found: GeometryFi
     const name = readableName(widget.shortName, language)
     const who = `${where}, gadget ${position + 1} (${name})`
 
-    if (widget.x2 <= widget.x1) found.defects.push(`${who} : X2 n’est pas au-delà de X1 — ${box(widget)}`)
-    if (widget.y2 <= widget.y1) found.defects.push(`${who} : Y2 n’est pas au-delà de Y1 — ${box(widget)}`)
+    // La conséquence, en français, puis les coordonnées entre parenthèses. « X2 n'est
+    // pas au-delà de X1 — X1 3000, Y1 0, X2 3000, Y2 5000 » ne disait rien à un pilote,
+    // alors que l'intitulé du bloc, trois lignes plus haut, le dit déjà très bien :
+    // « boîte de largeur ou de hauteur nulle, coordonnées hors des bornes ».
+    if (widget.x2 <= widget.x1) {
+      found.defects.push(`${who} : largeur nulle, il n’a aucune surface — ${box(widget)}`)
+    }
+    if (widget.y2 <= widget.y1) {
+      found.defects.push(`${who} : hauteur nulle, il n’a aucune surface — ${box(widget)}`)
+    }
 
-    const outside = ([['X1', widget.x1], ['Y1', widget.y1], ['X2', widget.x2], ['Y2', widget.y2]] as const)
-      .filter(([, value]) => value < 0 || value > SCALE)
-    for (const [key, value] of outside) {
-      found.defects.push(`${who} : ${key} = ${value}, hors des bornes 0–10000`)
+    const outside = ([
+      ['son bord gauche', widget.x1], ['son bord haut', widget.y1],
+      ['son bord droit', widget.x2], ['son bord bas', widget.y2]
+    ] as const).filter(([, value]) => value < 0 || value > SCALE)
+    for (const [edge, value] of outside) {
+      found.defects.push(`${who} : sort de la page, ${edge} est à ${value} — ${box(widget)}`)
     }
 
     // Plus haut dans la pile = plus loin dans le tableau : c'est l'ordre de dessin, et

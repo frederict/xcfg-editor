@@ -8,6 +8,7 @@ import { readableName } from '../catalog/widgetNames'
 import { getMember, readNumber, readString } from '../core/access'
 import { exportContainer, openContainer, type Container } from '../core/container'
 import type { JsonNode } from '../core/jsonDocument'
+import { formatTechnicalDetail } from '../core/technicalDetail'
 import { gridFor } from '../model/grid'
 import { createHistory, type EditHistory } from '../model/history'
 import { readLayout, type Layout, type Page } from '../model/layout'
@@ -609,11 +610,32 @@ function landing(): HTMLElement {
   return panel
 }
 
-function problem(title: string, message: string, hint?: string): HTMLElement {
+function problem(
+  title: string, message: string, hint?: string, detail?: string
+): HTMLElement {
   const panel = el('section', 'problem')
   panel.append(el('h2', 'problem__title', title), el('p', 'problem__message', message))
   if (hint !== undefined) panel.append(el('p', 'problem__hint', hint))
+  if (detail !== undefined) panel.append(technicalDetail(detail))
   return panel
+}
+
+/**
+ * Le détail technique d'une panne, **replié**.
+ *
+ * Le pilote lisait « Ce fichier n'a pas pu être analysé : Error: données résiduelles à
+ * 6 ». Le mot `Error:` vient du moteur JavaScript ; il n'est ni traduit ni traduisible,
+ * et il arrive au moment précis où le pilote vient de confier son fichier à cet outil.
+ *
+ * Le détail ne disparaît pas pour autant : c'est ce qu'on recopie pour signaler un
+ * problème, et sans lui le rapport de panne ne vaut rien. Il passe en second rang,
+ * derrière un triangle qu'on ouvre — l'explication d'abord, la mécanique ensuite.
+ */
+function technicalDetail(detail: string): HTMLElement {
+  const box = el('details', 'problem__detail')
+  box.append(el('summary', 'problem__detailSummary', 'Détail technique'))
+  box.append(el('p', 'problem__detailText', detail))
+  return box
 }
 
 function metaStrip(current: Session): HTMLElement {
@@ -1931,7 +1953,14 @@ function runPageOperation(
   try {
     applyPageOperation(session.container.document, orientation, operation)
   } catch (error) {
-    pagesMessage = { orientation, text: `Opération impossible : ${String(error)}` }
+    // Le pilote lisait ici « Opération impossible : Error: duplicatePage : index 7 hors
+    // de [0, 4] ». Ce que ça lui apprend d'utile tient en une phrase ; le reste vient
+    // après, nommé pour ce qu'il est.
+    pagesMessage = {
+      orientation,
+      text: 'Cette modification n’a pas pu être faite : vos pages n’ont pas bougé. ' +
+        `Détail technique : ${formatTechnicalDetail(error)}`
+    }
     syncPagesDialog()
     return
   }
@@ -2076,10 +2105,11 @@ function modalOpen(): boolean {
  * pour un module qui n'a pas su se charger effacerait la session, c'est-à-dire punirait
  * le pilote d'une panne de réseau. Une boîte qui se ferme laisse tout en place.
  */
-function tellProblem(title: string, message: string): void {
+function tellProblem(title: string, message: string, detail?: string): void {
   const dialog = el('dialog', 'modal')
   const box = el('div', 'modal__box')
   box.append(el('h2', 'modal__title', title), el('p', 'problem__message', message))
+  if (detail !== undefined) box.append(technicalDetail(detail))
   const actions = el('div', 'modal__actions')
   const dismiss = el('button', 'btn btn--primary', 'Fermer')
   dismiss.type = 'button'
@@ -2217,9 +2247,10 @@ function buildPreferencesView(current: Session): HTMLElement {
       if (token !== preferencesToken || !host.isConnected) return
       host.textContent = ''
       host.append(problem(
-        'Réglages illisibles',
-        `Le catalogue des préférences n’a pas pu être chargé : ${String(error)}`,
-        'Le fichier, lui, n’est pas en cause : il reste ouvert et intact.'
+        'Les réglages généraux n’ont pas pu s’ouvrir',
+        'La liste des réglages que XCTrack propose n’a pas pu être chargée.',
+        'Le fichier, lui, n’est pas en cause : il reste ouvert et intact.',
+        formatTechnicalDetail(error)
       ))
       const again = el('button', 'btn', 'Revenir aux pages')
       again.type = 'button'
@@ -2317,9 +2348,11 @@ function openVersionDialog(): void {
     .catch((error: unknown) => {
       if (token !== versionToken) return
       host.textContent = ''
-      host.append(el(
-        'p', 'hint-note',
-        `La base des versions n’a pas pu être chargée : ${String(error)}`
+      host.append(problem(
+        'Le diagnostic de version n’a pas pu s’ouvrir',
+        'La liste des versions de XCTrack n’a pas pu être chargée.',
+        'Le fichier, lui, n’est pas en cause : il reste ouvert et intact.',
+        formatTechnicalDetail(error)
       ))
     })
 }
@@ -2453,9 +2486,10 @@ function openLibrary(): void {
     })
     .catch((error: unknown) => {
       tellProblem(
-        'Bibliothèque indisponible',
-        `Elle n’a pas pu être ouverte : ${String(error)}. Le fichier ouvert, lui, ` +
-        'n’a pas bougé.'
+        'La bibliothèque n’a pas pu s’ouvrir',
+        'Votre navigateur n’a pas donné accès au rangement de cet outil. Le fichier ' +
+        'ouvert, lui, n’a pas bougé.',
+        formatTechnicalDetail(error)
       )
     })
     .finally(() => {
@@ -2586,8 +2620,9 @@ function askBeforeExport(current: Session): void {
     })
     .catch((error: unknown) => {
       tellProblem(
-        'Enregistrement impossible',
-        `La boîte d’enregistrement n’a pas pu être chargée : ${String(error)}`
+        'La boîte d’enregistrement n’a pas pu s’ouvrir',
+        'Rien n’a été enregistré et votre fichier n’a pas bougé. Réessayez.',
+        formatTechnicalDetail(error)
       )
     })
     .finally(() => {
@@ -2646,14 +2681,15 @@ function render(): void {
 
   if (failure !== undefined) {
     content.append(problem(
-      'Fichier illisible',
-      failure,
+      'Ce fichier n’a pas pu être ouvert',
+      'Cet outil n’a rien su en tirer. Le fichier, lui, n’a pas été modifié.',
       // L'écran d'erreur ne montre plus la zone de dépôt, et « Ouvrir un fichier » a
       // rejoint le menu : sans cette phrase, il n'y aurait plus rien à quoi se raccrocher
       // — le dépôt continue pourtant de fonctionner sur toute la page.
       'Vérifiez qu’il s’agit bien d’un export XCTrack (.xcfg ou .xczfg). Vous pouvez ' +
       'déposer un autre fichier n’importe où sur cette page, ou le choisir dans le menu ' +
-      '« Fichier », en haut à droite.'
+      '« Fichier », en haut à droite.',
+      failure
     ))
     return
   }
@@ -2665,10 +2701,12 @@ function render(): void {
 
   if (session.container.parseError !== undefined) {
     content.append(problem(
-      'Contenu illisible',
-      `Ce fichier n’a pas pu être analysé : ${session.container.parseError}`,
+      'Ce fichier n’a pas pu être lu',
+      'Vérifiez que c’est bien le fichier .xcfg ou .xczfg produit par ' +
+      '« Réglages → Exporter la configuration » sur l’instrument, et qu’il est entier.',
       'Ses octets sont conservés intacts : « Enregistrer une copie » vous le rend tel qu’il est entré, ' +
-      'sans la moindre réécriture.'
+      'sans la moindre réécriture.',
+      session.container.parseError
     ))
     return
   }
@@ -2845,7 +2883,7 @@ async function loadBytes(bytes: Uint8Array, name: string): Promise<void> {
     }
     installDeviceSelector(device)
   } catch (error) {
-    failure = String(error)
+    failure = formatTechnicalDetail(error)
   }
   view = { kind: 'overview' }
   render()

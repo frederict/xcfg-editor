@@ -408,7 +408,8 @@ describe('assemblage — la barre de tête garde le fréquent et range le reste'
   it('l’écran d’erreur dit encore où déposer un autre fichier', () => {
     // « Ouvrir un fichier » a rejoint le menu, et cet écran n'a pas de zone de dépôt :
     // sans la phrase, il ne resterait rien à quoi se raccrocher.
-    const echec = main.slice(main.indexOf("'Fichier illisible'"), main.indexOf("'Fichier illisible'") + 700)
+    const mark = "'Ce fichier n’a pas pu être ouvert'"
+    const echec = main.slice(main.indexOf(mark), main.indexOf(mark) + 700)
     expect(echec).toContain('n’importe où sur cette page')
     expect(echec).toContain('« Fichier »')
   })

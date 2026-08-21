@@ -1,4 +1,5 @@
 import { readZip, writeZip, type ZipEntry } from '../core/zip'
+import { formatTechnicalDetail } from '../core/technicalDetail'
 import { sameDigest, sha256Hex } from './digest'
 import { LibraryError } from './errors'
 import type { Library, LibraryEntry } from './library'
@@ -233,7 +234,12 @@ export async function importLibrary(
   try {
     members = await readZip(archive)
   } catch (error) {
-    throw new LibraryError('unreadable', `Cette archive n’a pas pu être lue : ${String(error)}`, { cause: error })
+    throw new LibraryError(
+      'unreadable',
+      'Ce fichier n’est pas une archive de bibliothèque, ou il est abîmé. ' +
+      `${formatTechnicalDetail(error)}`,
+      { cause: error }
+    )
   }
 
   const byName = new Map(members.map((member) => [member.name, member]))
