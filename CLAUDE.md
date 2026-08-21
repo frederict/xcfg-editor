@@ -25,8 +25,9 @@ relecteur suivant se posera la question.
 ## Les captures d'écran
 
 Le `README.md` **doit** en porter — c'est un attendu, pas un agrément : un éditeur visuel
-qui ne montre rien demande un acte de foi. *À l'heure où ces lignes sont écrites, il n'en
-porte aucune : c'est un manque à combler, pas un état à préserver.*
+qui ne montre rien demande un acte de foi. Il en porte six, dans `captures/`, chacune
+suivie de sa recette en commentaire HTML : l'écran, la fixture, l'état exact, le cadrage,
+et ce qu'il faut vérifier avant de commiter l'image.
 
 Deux règles absolues :
 

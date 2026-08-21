@@ -19,16 +19,38 @@ en fichiers statiques, elle n'a pas de serveur à qui parler.
 
 ## À quoi ça ressemble
 
+![L'éditeur ouvert sur la première page paysage de la sauvegarde de test : la page
+dessinée à sa taille réelle, la règle graduée au-dessus, le panneau des gadgets déplié
+en bas.](captures/editeur-paysage.png)
+
+*Une page de la sauvegarde de test, dessinée à la géométrie d'un AIR³ 7.2. Rien ne
+partage la largeur avec elle : le panneau des gadgets passe en dessous.*
+
 <!--
-  CAPTURE À PRENDRE — captures/editeur-paysage.png
+  REFAIRE CETTE CAPTURE — captures/editeur-paysage.png (1500 × 1380)
   Écran ...... l'éditeur entier, mode consultation, panneau des gadgets ouvert.
   Fichier .... tests/fixtures/exports/2026-08-20_backup-00.xcfg
                (fixture anonymisée — JAMAIS une configuration réelle, voir CLAUDE.md).
-  État ....... gabarit « AIR³ 7.2 », paysage, première page, aucun gadget sélectionné.
-  Refaire .... npm run dev, puis déposer le fichier ci-dessus dans la page.
+  État ....... gabarit « AIR³ 7.2 », paysage, première page, aucun gadget sélectionné
+               ni survolé, zoom 200 %, bandeau à sa hauteur d'usine.
+  Refaire .... npm run dev -- --port 5179, déposer le fichier, ouvrir
+               « Page 1 » du bloc PAYSAGE, déplier « Liste des gadgets », pousser le
+               curseur de zoom à 200 %, éloigner la souris de la page.
+  Cadrage .... viewport de 1500 × 1380 points CSS. L'écran physique ne monte pas si
+               haut : passer par l'émulation de viewport des outils de développement
+               (Chrome DevTools, Emulation.setDeviceMetricsOverride), pas par un
+               redimensionnement de fenêtre, qui plafonne à la hauteur de l'écran.
+               À cette hauteur, le bandeau collé en bas ne recouvre pas la page.
+  Pièges ..... 1. le curseur de zoom porte un FACTEUR (0,4 à 2,5), pas des pourcents :
+                  y écrire 200 donne 250 %.
+               2. la hauteur du bandeau est mémorisée dans `localStorage` sous
+                  `xcfg-editor.dock-height` ; l'effacer puis RECHARGER avant de
+                  commencer, sinon on hérite de la hauteur d'une capture précédente.
+               3. les libellés de la liste des gadgets manquent parfois sur la première
+                  capture prise après un changement de zoom : reprendre la capture,
+                  la seconde est bonne. Toujours la relire avant de la garder.
 -->
-*Capture à venir : une page de la sauvegarde de test, dessinée à la géométrie d'un
-AIR³ 7.2.*
+
 
 ## Le problème
 
@@ -187,58 +209,135 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
   lui-même, extraits de l'application — 33 langues pour les gadgets, 34 pour leurs
   options, 35 pour les libellés des réglages généraux. Ces trois chiffres ne sont pas un
   choix de notre part : c'est ce que l'APK porte.
+- **S'expliquer sur place** : un manuel d'utilisation en treize chapitres s'ouvre depuis
+  l'écran d'accueil et depuis le menu « Fichier », sans quitter la page. Il est écrit
+  pour un pilote, pas pour un informaticien, et s'ouvre sur ce qu'il ne faut surtout pas
+  faire — envoyer sa sauvegarde telle quelle.
 
 ### En images
 
-*Quatre écrans restent à montrer. Les captures se font sur les fixtures anonymisées de
-`tests/fixtures/`, jamais sur une configuration réelle — une carte affichée peut révéler
-un domicile au bâtiment près.*
+*Toutes les captures sont prises sur les fixtures anonymisées de `tests/fixtures/`,
+jamais sur une configuration réelle — une carte affichée peut révéler un domicile au
+bâtiment près. La recette de chacune est écrite en commentaire juste en dessous, pour
+qu'on ose la refaire quand l'écran change.*
+
+![Le panneau de réglages du gadget « Espace aérien à proximité », en mode édition :
+trois lignes « Rétablir la valeur d'usine » qui montrent les deux valeurs en présence,
+et en bas le bloc du réglage que ce gadget n'écrit pas, avec son bouton « Définir cette
+valeur ».](captures/panneau-gadget.png)
+
+*Le panneau d'un gadget, et les deux gestes de valeur d'usine qu'il offre : rétablir ce
+qu'on a réglé, ou figer ce que le fichier ne dit pas.*
 
 <!--
-  CAPTURE À PRENDRE — captures/panneau-gadget.png
+  REFAIRE CETTE CAPTURE — captures/panneau-gadget.png (1400 × 1650)
   Écran ...... l'éditeur en mode édition, panneau de réglages d'un gadget déplié.
   Fichier .... tests/fixtures/exports/2026-08-20_backup-00.xcfg
-  État ....... la boussole de la première page paysage (13e gadget de la page, la seule
-               du corpus qui porte `windStyle`) : elle offre quatre lignes « Rétablir la
-               valeur d'usine », dont celle de `windStyle`, les deux valeurs en présence
-               lisibles. Faire tenir dans le même cadre le bloc des réglages que le
-               gadget n'écrit pas, avec son bouton « Définir cette valeur ».
-  Refaire .... npm run dev, déposer le fichier, passer en « Modifier », choisir la
-               boussole dans la liste des gadgets.
+  État ....... « Espace aérien à proximité », rang 12 de la 3e page PORTRAIT. Il faut
+               tenir dans le même cadre les deux gestes du panneau : trois lignes
+               « Rétablir la valeur d'usine » (les deux valeurs en présence lisibles,
+               dont « 5000 » d'usine contre « 2500 » dans le fichier) ET le bloc
+               « 1 réglage que ce gadget n'écrit pas » avec « Définir cette valeur ».
+  Refaire .... npm run dev -- --port 5179, déposer le fichier, ouvrir « Page 3 » du bloc
+               PORTRAIT, « Modifier les pages », déplier « Liste des gadgets », choisir
+               « Espace aérien à proximité », remonter la page en haut.
+  Cadrage .... viewport de 1400 × 1650 points CSS, émulation comme ci-dessus. Le bandeau
+               doit faire 590 px de haut pour que le panneau tienne sans défiler : poser
+               `localStorage['xcfg-editor.dock-height'] = '530'` puis recharger, ou
+               tirer la poignée du bandeau vers le haut.
+
+  RECETTE CORRIGÉE — la précédente demandait la boussole de la 1re page PAYSAGE, « la
+  seule du corpus qui porte windStyle », ET le bloc des réglages non écrits dans le même
+  cadre. C'est impossible : cette boussole-là écrit ses neuf réglages, elle n'a donc
+  aucun bloc « ce gadget n'écrit pas » — vérifié gadget par gadget, aucun des 75 gadgets
+  des cinq pages PAYSAGE n'en porte. Les deux gestes ne coexistent que sur les pages
+  PORTRAIT. « Espace aérien à proximité » est le meilleur compromis : trois lignes
+  « Rétablir » et un « Définir », le tout en 487 px de panneau. Si l'on tient à
+  `windStyle`, c'est la boussole de cette même page 3 portrait qui le porte — mais dans
+  son bloc des réglages non écrits, et avec une seule ligne « Rétablir ».
 -->
-*Capture à venir : le panneau d'un gadget, ses trois gestes de valeur d'usine.*
+
+
+![L'écran « Intégration Android » des réglages généraux, en mode édition : des lignes
+« Retirer » marquées VALEUR D'USINE, des lignes « Rétablir la valeur d'usine » marquées
+RÉGLÉ PAR VOUS, et deux lignes « Définir cette valeur » marquées ABSENTE DU
+FICHIER.](captures/reglages-generaux.png)
+
+*Les réglages généraux, dans l'arborescence du menu de l'instrument — et les trois
+gestes de valeur d'usine réunis sur un même écran.*
 
 <!--
-  CAPTURE À PRENDRE — captures/reglages-generaux.png
+  REFAIRE CETTE CAPTURE — captures/reglages-generaux.png (1400 × 1060)
   Écran ...... la page « Réglages généraux », mode édition.
-  Fichier .... tests/fixtures/exports/2026-08-20_backup-00.xcfg
-  État ....... entrée de menu « Affichage » ouverte ; y faire tenir dans le même cadre
-               une ligne réglée (« Rétablir la valeur d'usine »), une ligne absente du
-               fichier (« Définir cette valeur ») et une ligne qui vaut déjà la valeur
-               d'usine (« Retirer »). Sur ce fichier, 23 lignes portent le geste
-               « Rétablir » : il y a de quoi choisir.
-  Refaire .... npm run dev, déposer le fichier, « Modifier les réglages ».
+  Fichier .... tests/fixtures/exports/2025-07-07_backup-00.xcfg
+  État ....... écran « Intégration Android » : quatre lignes « Retirer » (VALEUR
+               D'USINE), trois lignes « Rétablir la valeur d'usine » (RÉGLÉ PAR VOUS,
+               les deux valeurs en présence lisibles, et l'avertissement de version
+               puisque ce fichier ne vient pas de la version du relevé) et deux lignes
+               « Définir cette valeur » (ABSENTE DU FICHIER). Les trois gestes dans le
+               même cadre.
+  Refaire .... npm run dev -- --port 5179, déposer le fichier, bouton « Réglages », puis
+               « Modifier les réglages », enfin faire défiler jusqu'à « Intégration
+               Android » et le caler à ~72 px sous l'en-tête collant.
+  Cadrage .... viewport de 1400 × 1060 points CSS, émulation comme ci-dessus.
+
+  RECETTE CORRIGÉE — deux points, mesurés sur les fixtures :
+  1. Le bouton ne s'appelle plus « Modifier les réglages » depuis la barre du haut : on
+     ouvre l'écran par « Réglages », et on bascule ensuite en édition.
+  2. Sur 2026-08-20_backup-00.xcfg, aucune ligne des réglages généraux n'offre
+     « Définir cette valeur » : les six réglages jamais réglés qu'il porte n'ont pas de
+     valeur d'usine inscriptible (les huit Unit.* sont calculés au démarrage, les autres
+     ne sont documentés nulle part), et la ligne le dit — « valeur d'usine inconnue ».
+     Les trois gestes ne se rencontrent donc sur aucun de ses quatorze écrans. Sur
+     2025-07-07_backup-00.xcfg, « Intégration Android » les réunit tous les trois : c'est
+     le seul écran de tout le corpus qui le fasse, d'où le changement de fixture.
+     L'écran « Affichage » de la recette d'origine reste un bon choix pour montrer
+     « Retirer » et « Rétablir » côte à côte (4 et 5 lignes sur le fichier de 2026).
 -->
-*Capture à venir : les réglages généraux, dans l'arborescence du menu de l'instrument.*
+
+
+![La modale « Version visée et compatibilité » : la version 1.0.3-beta présélectionnée,
+la phrase des versions indistinguables, le bloc PÉRIMÉ de neuf réglages, et la section
+« Enlever ce qu'une ancienne version a laissé » dépliée sur ses neuf cases à
+cocher.](captures/version-et-nettoyage.png)
+
+*Le choix de version, le diagnostic, et le nettoyage qu'il ouvre — neuf réglages, sur
+quatre gadgets, chacun avec la dernière version de XCTrack qui le lisait encore.*
 
 <!--
-  CAPTURE À PRENDRE — captures/version-et-nettoyage.png
+  REFAIRE CETTE CAPTURE — captures/version-et-nettoyage.png (1200 × 1650)
   Écran ...... la modale « Version visée et compatibilité », nettoyage déplié.
   Fichier .... tests/fixtures/exports/2026-08-20_backup-00.xcfg
   État ....... version présélectionnée d'après le fichier (1.0.3-beta), la phrase des
                versions indistinguables visible, et la section « Enlever ce qu'une
                ancienne version a laissé » ouverte sur ses 9 réglages / 4 gadgets.
-  Refaire .... banc d'essai dédié, qui sert exactement à cela :
+  Refaire .... npm run dev -- --port 5179, déposer le fichier, « Modifier les pages »
+               (le nettoyage ne s'offre qu'en édition), menu « Fichier » puis
+               « Version et compatibilité… », enfin déplier « Voir ces 9 réglages, et
+               décocher ce que vous préférez garder ».
+  Cadrage .... viewport de 1200 × 1650 points CSS, émulation comme ci-dessus : la boîte
+               fait alors 1 452 px de contenu et ne défile plus.
+  Variante ... le banc d'essai dédié montre le même module hors de l'éditeur :
                    npm run dev -- --port 5178
                    http://localhost:5178/src/ui/versionDiagnostic.demo.html
-               (le nettoyage n'y apparaît que parce que la page joue l'hôte ; rien
-               n'est réécrit sur le disque). Dans l'éditeur : « Modifier », puis
-               « Version et compatibilité… ».
+
+  RECETTE CORRIGÉE — la recette d'origine passait par le banc d'essai en expliquant que
+  « le nettoyage n'y apparaît que parce que la page joue l'hôte ». Ce n'est plus vrai :
+  la modale de l'éditeur porte le nettoyage dès qu'on est en mode édition, et c'est elle
+  qu'il vaut mieux montrer — le banc finit sur des phrases qui ne parlent qu'à lui
+  (« Ce qu'un hôte recevrait »), déroutantes dans un README.
 -->
-*Capture à venir : le choix de version, le diagnostic, et le nettoyage qu'il ouvre.*
+
+
+![La boîte « Enregistrer cette configuration » : les deux issues, puis l'inventaire des
+cinq textes remplacés — chacun avec sa page, son gadget, l'ancienne valeur barrée, la
+nouvelle, et la raison du remplacement.](captures/enregistrer-et-partager.png)
+
+*Au moment d'enregistrer, ce que le fichier révèle et ce qui peut être remplacé —
+montré avant le téléchargement, pas après.*
 
 <!--
-  CAPTURE À PRENDRE — captures/enregistrer-et-partager.png
+  REFAIRE CETTE CAPTURE — captures/enregistrer-et-partager.png (1100 × 1880)
   Écran ...... la boîte d'enregistrement, ses deux issues : « Votre configuration,
                telle qu'elle est » et « version partageable ».
   Fichier .... tests/fixtures/formes/formes-preservees.xcfg — c'est la fixture qui
@@ -247,14 +346,47 @@ un domicile au bâtiment près.*
                2026-08-20_backup-00.xcfg, la boîte dit à juste titre n'avoir aucun
                texte à remplacer : c'est un autre état, tout aussi vrai, mais il
                n'illustre pas l'inventaire.)
-  État ....... inventaire déplié : chaque remplacement avec son emplacement et sa
-               raison, AVANT le téléchargement.
+  État ....... deuxième issue cochée, inventaire déplié : chaque remplacement avec son
+               emplacement et sa raison, AVANT le téléchargement.
   Refaire .... banc d'essai dédié :
                    npm run dev -- --port 5176
                    http://localhost:5176/src/ui/sharingDialog.demo.html
+               bouton « formes préservées (téléphone + contact) », puis cocher
+               « Version partageable, sans données personnelles ».
+  Cadrage .... viewport de 1100 × 1880 points CSS, émulation comme ci-dessus : la boîte
+               fait alors 1 651 px de contenu et ne défile plus.
+  À vérifier . les seuls noms et numéros qui figurent sur cette capture — « Jean
+               Exemple », « +32 470 00 00 00 » — sont les valeurs anonymisées écrites
+               dans la fixture, et l'écran les montre barrées, remplacées. Aucune donnée
+               réelle ne doit apparaître ici : le vérifier à chaque reprise.
 -->
-*Capture à venir : au moment d'enregistrer, ce que le fichier révèle et ce qui peut être
-remplacé.*
+
+![Le manuel d'utilisation ouvert par-dessus l'écran d'accueil : un avertissement encadré
+« À lire avant de donner votre fichier à qui que ce soit », puis le sommaire de ses
+treize chapitres.](captures/manuel.png)
+
+*Le manuel s'ouvre par-dessus l'écran, sans rien quitter. Il commence par
+l'avertissement plutôt que par la visite guidée.*
+
+<!--
+  REFAIRE CETTE CAPTURE — captures/manuel.png (1200 × 1110)
+  Écran ...... la modale « Manuel d'utilisation », en haut de son contenu.
+  Fichier .... aucun — c'est l'écran d'accueil, avant tout dépôt de fichier. Rien à
+               anonymiser, donc, et rien à révéler.
+  État ....... l'encadré « À lire avant de donner votre fichier à qui que ce soit », le
+               sommaire des treize chapitres entier, et le début du chapitre 1 ; aucun
+               bouton au focus (le contour bleu de « Fermer » se voit sinon).
+  Refaire .... npm run dev -- --port 5179, puis « Lire le manuel d'utilisation » en bas
+               de l'accueil — ou, un fichier ouvert, menu « Fichier » puis
+               « Manuel d'utilisation… ».
+  Cadrage .... viewport de 1200 × 1110 points CSS : la boîte coupe alors juste après le
+               premier paragraphe du chapitre 1, ce qui se lit comme une page qui
+               continue et non comme une phrase tranchée.
+
+  CAPTURE AJOUTÉE — le manuel est arrivé après l'écriture des cinq recettes d'origine et
+  n'en avait aucune. C'est le premier écran qu'un lecteur du README voudra reconnaître :
+  il porte l'avertissement sur le partage, qui est l'argument central du projet.
+-->
 
 ## Ce qu'il ne sait pas faire, et ce qui reste incertain
 
