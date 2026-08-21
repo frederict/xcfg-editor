@@ -32,24 +32,26 @@
   --xc-map-climb-medium: #e8d34a;
   --xc-map-thermal-circle: #2b4bdb;
   --xc-map-label: #f44336;
-  /* Boussole (WCompass, compass.ts) : gris mesurés sur widget-WCompass-en-vol.png
-     (couronne/graduations/N `#404040`, deux facettes d'aiguille `#808080`/`#606060`) et
-     sur le coin de ecran-landscape3-17widgets.png en petit format (aiguille rouge
-     `#e04040`/`#c02020`) — voir le commentaire de tête de compass.ts. */
+  /* Boussole (WCompass, compass.ts) — toutes ces teintes sont des aplats relevés au
+     pixel, jamais interpolés. Couronne, graduations et N : `#404040`, identique sur les
+     sept captures. L'aiguille a DEUX jeux, et c'est `showBearing` qui tranche, pas la
+     taille du widget (l'ancienne lecture) : rouge quand il vaut false
+     (2026-08-21_planche-sol-8-*, ecran-landscape3-17widgets), gris quand il vaut true
+     (2026-08-21_polices-reference, widget-WCompass-*). Voir le tableau du commentaire de
+     tête de compass.ts. */
   --xc-compass-ring: #404040;
-  --xc-compass-needle-a: #808080;
-  --xc-compass-needle-b: #606060;
-  --xc-compass-needle-small-a: #e04040;
-  --xc-compass-needle-small-b: #c02020;
-  /* Correction en vol (rendu-en-vol.md § 6) : aiguille de trajectoire/vent, une
-     troisième zone noire indépendante de l'aiguille de cap — voir compass.ts. */
-  --xc-compass-bearing: #000000;
-  /* Étoile de vent multicolore (windStyle, rendu-en-vol.md § 6bis) : deux branches
-     bicolores mesurées au pixel sur vol-landscape3-en-vol.png (voir le commentaire de
-     tête de compass.ts). La branche rouge réutilise --xc-compass-needle-small-a/b —
-     mêmes valeurs mesurées, pas une coïncidence forcée. */
-  --xc-compass-wind-yellow-a: #c0c040;
-  --xc-compass-wind-yellow-b: #a0a020;
+  --xc-compass-needle-nav-dark: #c02020;
+  --xc-compass-needle-nav-light: #e04040;
+  --xc-compass-needle-track-dark: #606060;
+  --xc-compass-needle-track-light: #808080;
+  /* Indicateur de vent — élément séparé, superposé à l'aiguille, absent quand le vent
+     est nul. `ARC` peint une zone noire unie (11 971 px de #000000 mesurés sur
+     vol-numeriques-boussole-variocolumn.png, absents de la même page au sol) ; `ARROW`
+     une branche bicolore jaune-olive (559 / 689 px sur vol-landscape3-en-vol.png, mêmes
+     absences au sol). */
+  --xc-compass-wind-arc: #000000;
+  --xc-compass-wind-arrow-dark: #a0a020;
+  --xc-compass-wind-arrow-light: #c0c040;
   /* Échelle verticale — WVerticalGraph seul désormais (verticalGraph.ts) : orange
      `dot_color` mesuré (`-26624` → `#ff9800`), flèche et libellé neutres. WVarioColumn
      ne partage plus ce dessin — voir --xc-variocol-* ci-dessous. */
@@ -590,36 +592,37 @@
 
 .xc-compass__scene { width: 100%; height: 100%; display: block; }
 
-.xc-compass__ring { stroke: var(--xc-compass-ring); stroke-width: 8; }
+/* Épaisseur mesurée : 9 px de couronne sur un cadran de 426 px de diamètre, soit 4,2
+   dans le repère de 200 du `viewBox` — l'ancienne valeur (8) doublait le trait. */
+.xc-compass__ring { stroke: var(--xc-compass-ring); stroke-width: 4.2; }
 
-.xc-compass__tick { stroke: var(--xc-compass-ring); stroke-width: 2.5; }
-.xc-compass__tick--cardinal { stroke-width: 4; }
+.xc-compass__tick { stroke: var(--xc-compass-ring); stroke-width: 3; }
+.xc-compass__tick--cardinal { stroke-width: 4.5; }
 
+/* `middle` et non `hanging` : `compass.ts` pose le CENTRE optique de la lettre, la seule
+   des trois références (sommet, centre, base) qui ne dépende pas de la hauteur de casse
+   de la police du navigateur. Hauteur de casse mesurée 0,18 R, soit ≈ 17,6 dans ce
+   repère. La police qui la produit dépend du rapport casse/cadratin du navigateur
+   (0,71 pour Roboto) : 30 px la donnent à 1 px près, mesuré sur le rendu. */
 .xc-compass__n {
   fill: var(--xc-compass-ring);
-  font-size: 26px;
+  font-size: 30px;
   font-weight: 700;
-  dominant-baseline: hanging;
+  dominant-baseline: middle;
 }
 
-.xc-compass__needle-facet--a { fill: var(--xc-compass-needle-a); }
-.xc-compass__needle-facet--b { fill: var(--xc-compass-needle-b); }
-.xc-compass__needle--small .xc-compass__needle-facet--a { fill: var(--xc-compass-needle-small-a); }
-.xc-compass__needle--small .xc-compass__needle-facet--b { fill: var(--xc-compass-needle-small-b); }
+.xc-compass__needle--nav .xc-compass__needle-facet--dark { fill: var(--xc-compass-needle-nav-dark); }
+.xc-compass__needle--nav .xc-compass__needle-facet--light { fill: var(--xc-compass-needle-nav-light); }
+.xc-compass__needle--track .xc-compass__needle-facet--dark { fill: var(--xc-compass-needle-track-dark); }
+.xc-compass__needle--track .xc-compass__needle-facet--light { fill: var(--xc-compass-needle-track-light); }
 
-/* Aiguille de trajectoire/vent (showBearing) — une seule teinte, plus large que
-   l'aiguille de cap (compass.ts, buildBearingNeedle). */
-.xc-compass__bearing-shape { fill: var(--xc-compass-bearing); }
-
-/* Étoile de vent multicolore (windStyle, compass.ts). Chaque branche est bicolore,
-   comme l'aiguille de cap ; les deux branches se recouvrent partiellement en leur
-   centre — fill-opacity < 1 recrée le mélange observé sans dégradé (deux aplats
-   superposés, pas un `<linearGradient>`). */
+/* Indicateur de vent (windStyle, compass.ts) : superposé à l'aiguille, pas à sa place.
+   `fill-opacity` sur la branche ARROW recrée le mélange alpha observé là où elle
+   recouvre l'aiguille — deux aplats superposés, pas un `<linearGradient>`. */
+.xc-compass__wind-shape { fill: var(--xc-compass-wind-arc); }
 .xc-compass__wind-facet { fill-opacity: 0.85; }
-.xc-compass__wind-branch:nth-child(1) .xc-compass__wind-facet--a { fill: var(--xc-compass-needle-small-a); }
-.xc-compass__wind-branch:nth-child(1) .xc-compass__wind-facet--b { fill: var(--xc-compass-needle-small-b); }
-.xc-compass__wind-branch:nth-child(2) .xc-compass__wind-facet--a { fill: var(--xc-compass-wind-yellow-a); }
-.xc-compass__wind-branch:nth-child(2) .xc-compass__wind-facet--b { fill: var(--xc-compass-wind-yellow-b); }
+.xc-compass__wind-facet--dark { fill: var(--xc-compass-wind-arrow-dark); }
+.xc-compass__wind-facet--light { fill: var(--xc-compass-wind-arrow-light); }
 
 /* Échelle verticale — WVarioColumn / WVerticalGraph (verticalScale.ts). */
 .xc-vscale {
