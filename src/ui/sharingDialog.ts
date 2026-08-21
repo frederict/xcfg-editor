@@ -15,6 +15,7 @@ import {
   PERSONAL_KIND_LABELS,
   type PersonalInventory
 } from '../model/personalData'
+import { plural } from './prose'
 
 /**
  * L'interface d'**export partageable** : choisir ce qu'on donne, voir ce qui est remplacé,
@@ -389,10 +390,6 @@ export function displayedReplacement(replacement: string): string {
   return replacement === '' ? '(vide)' : replacement
 }
 
-function plural(count: number, singular: string, pluralForm: string): string {
-  return `${count} ${count > 1 ? pluralForm : singular}`
-}
-
 /* ============================================================================ la boîte */
 
 function el<K extends keyof HTMLElementTagNameMap>(
@@ -466,8 +463,10 @@ function preferencesReminder(personal: PersonalInventory): HTMLElement | undefin
   if (personal.counts.preferences === 0) return undefined
   return el(
     'p', 'sharing__caveat',
-    `Ce fichier porte par ailleurs ${plural(personal.counts.preferences,
-      'donnée personnelle dans ses préférences', 'données personnelles dans ses préférences')} ` +
+    `Ce fichier porte par ailleurs ${plural({
+      one: '{count} donnée personnelle dans ses préférences',
+      other: '{count} données personnelles dans ses préférences'
+    }, personal.counts.preferences)} ` +
     '— nom, matériel, capteurs appairés, tâche en cours. Elles ne sont pas remplacées : ' +
     'la version partageable ci-dessus n’emporte que les pages, et laisse en bloc toute la ' +
     'section « preferences ».'
@@ -493,8 +492,10 @@ function replacementsSection(
 
   section.append(el(
     'p', 'sharing__note',
-    `${plural(plan.replacements.length, 'texte écrit par vous est remplacé',
-      'textes écrits par vous sont remplacés')}. Voici lesquels, et où ils se trouvent. ` +
+    `${plural({
+      one: '{count} texte écrit par vous est remplacé',
+      other: '{count} textes écrits par vous sont remplacés'
+    }, plan.replacements.length)}. Voici lesquels, et où ils se trouvent. ` +
     'Ce sont les seules données personnelles qui partent avec les pages : ' +
     'elles vivent dans la disposition, pas dans les préférences.'
   ))
@@ -525,8 +526,14 @@ function personalSection(personal: PersonalInventory): HTMLElement | undefined {
     `${String(counts.layout)} dans la disposition, ${String(counts.preferences)} dans les préférences`))
 
   section.append(el('p', 'sharing__note',
-    `${plural(counts.filled, 'est renseignée', 'sont renseignées')}, ` +
-    `${plural(counts.empty, 'est un emplacement présent mais vide', 'sont des emplacements présents mais vides')}. ` +
+    `${plural({
+      one: '{count} est renseignée',
+      other: '{count} sont renseignées'
+    }, counts.filled)}, ` +
+    `${plural({
+      one: '{count} est un emplacement présent mais vide',
+      other: '{count} sont des emplacements présents mais vides'
+    }, counts.empty)}. ` +
     'Seules celles de la disposition partent avec un export « pages ».'))
 
   const list = el('ul', 'sharing__list sharing__list--plain')
@@ -561,8 +568,10 @@ function droppedSection(plan: AnonymousPlan): HTMLElement {
   section.append(el(
     'p', 'sharing__note',
     'Le fichier partagé est un export « pages » : il ne porte que vos pages. '
-    + `${plan.droppedRootKeys.length > 1 ? 'Ces sections entières restent'
-      : 'Cette section entière reste'} chez vous.`
+    + `${plural({
+      one: 'Cette section entière reste',
+      other: 'Ces sections entières restent'
+    }, plan.droppedRootKeys.length)} chez vous.`
   ))
 
   const list = el('ul', 'sharing__list sharing__list--plain')
@@ -698,9 +707,13 @@ export function renderSharingDialog(options: SharingDialogOptions): SharingDialo
   // question. Celui de la disposition est le seul qui survive à un export « pages ».
   const tally = counts.total === 0
     ? ''
-    : ` Il porte ${plural(counts.layout, 'donnée personnelle dans la disposition',
-      'données personnelles dans la disposition')} et ${plural(counts.preferences,
-      'dans les préférences', 'dans les préférences')} ; toutes partiraient en clair.`
+    : ` Il porte ${plural({
+      one: '{count} donnée personnelle dans la disposition',
+      other: '{count} données personnelles dans la disposition'
+    }, counts.layout)} et ${plural({
+      one: '{count} dans les préférences',
+      other: '{count} dans les préférences'
+    }, counts.preferences)} ; toutes partiraient en clair.`
 
   // « Fichier complet » n'était juste pour aucun des deux formats : un export « pages »
   // n'a rien de complet, il ne porte pas les préférences. Ce que le mot opposait en
