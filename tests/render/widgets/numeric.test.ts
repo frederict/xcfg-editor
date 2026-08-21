@@ -65,6 +65,32 @@ describe('widgets numériques', () => {
     expect(el.querySelector('.xc-num__title')?.textContent).toBe('GPS Alt')
   })
 
+  // Planche des 75 widgets, § 3 : les 8 clés universelles seules, XCTrack complète
+  // `_title` ET `_unit` à `true`. La capture au sol le montre — « 0 km/h », « 73 m »,
+  // « 5 FL » dans des cellules qui ne déclarent ni l'un ni l'autre.
+  describe('clés absentes : l’appareil complète _title et _unit à true (§ 3 de la planche)', () => {
+    it('un widget écrit avec ses seules clés universelles porte titre ET unité', () => {
+      const el = drawNumeric(widget('WAltitude', {}), settings, language)
+      expect(el.querySelector('.xc-num__title')?.textContent).toBe('Altitude GPS')
+      expect(el.querySelector('.xc-num__unit')?.textContent).toBe('m')
+    })
+
+    it('une unité composée s’empile même sans _unit dans le fichier', () => {
+      const el = drawNumeric(widget('WSpeed', {}), settings, language)
+      expect(el.querySelector('.xc-num__unit-num')?.textContent).toBe('km')
+      expect(el.querySelector('.xc-num__unit-den')?.textContent).toBe('h')
+    })
+
+    it('seul un false EXPLICITE supprime le titre ou l’unité', () => {
+      const sansTitre = drawNumeric(widget('WAltitude', { _title: 'false' }), settings, language)
+      const sansUnite = drawNumeric(widget('WAltitude', { _unit: 'false' }), settings, language)
+      expect(sansTitre.querySelector('.xc-num__title')).toBeNull()
+      expect(sansTitre.querySelector('.xc-num__unit')).not.toBeNull()
+      expect(sansUnite.querySelector('.xc-num__unit')).toBeNull()
+      expect(sansUnite.querySelector('.xc-num__title')).not.toBeNull()
+    })
+  })
+
   it('masque l’unité quand _unit vaut false', () => {
     // _unit est un drapeau d'affichage, pas une unité : il vaut `true` dans les 278
     // occurrences du corpus, et le lire comme une chaîne afficherait « true ».
@@ -233,9 +259,16 @@ describe('widgets numériques', () => {
   // seul signal, côté DOM, de ce partage — sans titre à loger au-dessus, la valeur
   // reçoit toute la hauteur.
   describe('la valeur domine la hauteur du widget (défaut 2)', () => {
-    it('ajoute xc-num--no-title quand _title est absent', () => {
+    // Corrigé par la planche des 75 widgets (planche-widgets-air3.md § 3) : `_title`
+    // ABSENT vaut `true` — XCTrack complète la clé à la lecture, et la capture
+    // `2026-08-21_planche-sol-1-systeme-et-vol-a.png` montre les douze cellules titrées
+    // alors qu'aucune ne déclare la clé. C'est `_title: false`, écrit explicitement, qui
+    // supprime le titre. L'ancienne lecture (`absent` ⇒ pas de titre) faisait déborder la
+    // valeur, mesurée à 64 % de la hauteur de cellule au lieu de 55 %.
+    it('n’ajoute pas xc-num--no-title quand _title est absent — l’appareil le complète à true', () => {
       const el = drawNumeric(widget('WAltitude', {}), settings, language)
-      expect(el.classList.contains('xc-num--no-title')).toBe(true)
+      expect(el.classList.contains('xc-num--no-title')).toBe(false)
+      expect(el.querySelector('.xc-num__title')?.textContent).toBe('Altitude GPS')
     })
 
     it('ajoute xc-num--no-title quand _title vaut false', () => {

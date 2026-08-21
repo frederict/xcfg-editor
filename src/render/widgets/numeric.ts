@@ -124,12 +124,23 @@ const SIGN_COLORED_TYPES = new Set(['WVerticalSpeed', 'WThermalAltGain'])
  *   `WSpeed` « 0 km/h » et `WAirTime` « 0:00 » (pleine taille). Le compromis retenu
  *   réduit un peu moins que l'appareil sur le premier, un peu plus sur le deuxième, et
  *   laisse les deux derniers intacts.
+ *
+ * **Correction (planche des 75 widgets, écart 1.1)** : 2,4 laissait encore déborder.
+ * Le budget se dérive : la largeur réelle disponible vaut `shape × aspectRatio` fois la
+ * hauteur du widget, et la police de la valeur vaut environ 0,85 fois cette même hauteur
+ * (`--xc-value-size`, style.css). Le budget exact est donc `shape × (16/9) / 0,85`, soit
+ * **2,09 × shape** sur une page paysage — pas 2,4. Mesuré sur la page 1 de la planche
+ * (cellules 320 × 224 px, `2026-08-21_planche-sol-1-systeme-et-vol-a.png`) : à 2,4,
+ * « 14:32 » et « 045 FL » sortaient de leur cellule et mordaient sur la voisine, comme
+ * l'écart 1.1 le décrivait ; à 2,1 les douze cellules tiennent, et le fichier du
+ * propriétaire (`pages-00.xcfg`, page 1) n'est pas réduit davantage qu'avant sur les
+ * quatre cas de calibrage ci-dessus.
  * - une unité simple compte pour sa largeur entière à `UNIT_TO_VALUE` près ; une unité
  *   composée (`km/h`) beaucoup moins, puisqu'elle s'empile en fraction
  *   (numérateur/dénominateur) au lieu de s'étaler horizontalement — seul le plus long
  *   des deux segments compte, à `FRACTION_TO_VALUE` près.
  */
-const WIDTH_BUDGET = 2.4
+const WIDTH_BUDGET = 2.1
 const UNIT_GAP_EM = 0.15 // le gap de `.xc-num__row` (style.css)
 const MIN_VALUE_SCALE = 0.5
 
@@ -273,14 +284,33 @@ function rowSignClass(shortName: string, example: string): string | undefined {
 }
 
 /**
+ * `_title` et `_unit` ABSENTS valent `true`, pas `false` — et c'est mesuré, pas déduit.
+ *
+ * La planche des 75 widgets (`docs/reference/planche-widgets-air3.md` § 3) a été écrite
+ * avec les 8 clés universelles SEULEMENT ; XCTrack l'a relue en complétant le reste, et
+ * le ré-export donne `{"_title": true, "_unit": true, …}` sur les 23 types dessinés ici.
+ * La capture correspondante le confirme à l'écran
+ * (`captures-air3/2026-08-21_planche-sol-1-systeme-et-vol-a.png`) : les douze cellules
+ * portent leur titre rouge ET leur unité grise, alors qu'aucune ne les déclare.
+ *
+ * Ce que corrigent ces deux défauts, mesuré sur cette page (cellules de 320 × 224 px) :
+ * l'ancien `=== true` laissait 5 des 12 cellules sans titre ni unité, et la valeur, ne
+ * trouvant plus de bandeau de titre à réserver (`.xc-num--no-title`, style.css), montait
+ * de 55 % à 64 % de la hauteur de cellule et débordait sur ses voisines. C'est
+ * exactement l'écart 1.1 du même document.
+ */
+const TITLE_BY_DEFAULT = true
+const UNIT_BY_DEFAULT = true
+
+/**
  * Dessin partagé par les 23 types « titre + valeur + unité » du corpus. `_unit` est un
- * booléen d'affichage (toujours `true` quand présent dans le corpus) et non une unité —
- * le confondre afficherait le mot « true » à côté de la valeur.
+ * booléen d'affichage (toujours `true` quand il est écrit dans le corpus) et non une
+ * unité — le confondre afficherait le mot « true » à côté de la valeur.
  */
 export function drawNumeric(widget: Widget, settings: RenderSettings, language: string): HTMLElement {
   const spec = SPECS[widget.shortName] ?? FALLBACK_SPEC
-  const hasTitle = readBoolean(widget.node, '_title') === true
-  const hasUnit = readBoolean(widget.node, '_unit') === true
+  const hasTitle = readBoolean(widget.node, '_title') ?? TITLE_BY_DEFAULT
+  const hasUnit = readBoolean(widget.node, '_unit') ?? UNIT_BY_DEFAULT
   const unitText = hasUnit ? resolveUnit(widget, settings, spec) : undefined
   const valueText = formatDecimal(spec.example, language)
 

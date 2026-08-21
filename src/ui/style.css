@@ -141,10 +141,17 @@
   border: 1px solid var(--xc-line);
 }
 
+/* Repli générique — même mise en page que `.xc-num` : titre COLLÉ EN HAUT, valeur au
+   centre de la place restante. L'ancienne règle centrait le bloc entier, ce qui posait
+   le titre à 48 % de la hauteur de cellule là où l'appareil le pose à 8 %
+   (mesuré sur `2026-08-21_planche-sol-1-systeme-et-vol-a.png`, douze cellules de
+   320 × 224 px : base du titre à 18 px du bord, soit 8,0 %). C'est l'écart 1.4 de
+   `planche-widgets-air3.md`, corrigé pour `.xc-num` mais resté entier ici — or le repli
+   est le chemin normal pour 47 des 84 types, pas un cas d'erreur. */
 .xc-generic {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   width: 100%;
 }
@@ -165,7 +172,14 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.xc-generic__value { font-weight: 600; }
+/* `flex: 1` : la valeur occupe toute la place laissée par le titre et s'y centre — le
+   titre reste en haut sans que la valeur remonte avec lui. */
+.xc-generic__value {
+  font-weight: 600;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
 
 /* Trois variables posées par `canvas.ts` — toutes des NOMBRES, pas des longueurs, d'où
    le `px` collé au multiplicateur plutôt qu'à la variable. Elles s'expriment dans le
@@ -177,10 +191,17 @@
    `calc(var(--xc-h) * 0.17px)` garde le `1em` ambiant à 17 % de la hauteur du widget :
    il ne sert plus qu'aux écarts (`gap`) et aux marges internes, la valeur et l'unité
    ayant chacune leur propre formule ci-dessous. */
+/* `flex-start` et non `center` : sur l'appareil le titre est COLLÉ EN HAUT — base à 18 px
+   du bord sur les douze cellules de 224 px de
+   `2026-08-21_planche-sol-1-systeme-et-vol-a.png`, soit 8,0 %, quelle que soit la taille
+   de la valeur en dessous. Centrer la colonne entière (l'ancienne règle) faisait
+   descendre le titre à 14–19 % dès que la valeur était courte, et le remontait quand elle
+   était haute : la position du titre suivait le contenu au lieu d'être fixe. La valeur,
+   elle, reste centrée dans la place restante — `margin: auto 0` sur `.xc-num__row`. */
 .xc-num {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   width: 100%;
   line-height: 1.1;
@@ -229,6 +250,9 @@
   display: flex;
   align-items: flex-end;
   gap: 0.15em;
+  /* Absorbe à parts égales la place laissée par le titre : la ligne valeur + unité se
+     centre dessous sans que le titre quitte le haut de la cellule (voir `.xc-num`). */
+  margin: auto 0;
 }
 
 /* Défaut 2 (rapport de tâche) — la couleur porte sur la VALEUR (`.xc-num__value`), pas
