@@ -253,3 +253,37 @@ describe('assemblage — la vue d’ensemble montre les pages avant les constats
     expect(css).toMatch(/\.remarks__titles \{[^}]*text-overflow: ellipsis/)
   })
 })
+
+describe('assemblage — l’accueil dit que l’outil modifie', () => {
+  it('le premier écran nomme le geste d’édition', () => {
+    const landing = main.slice(main.indexOf('function landing()'), main.indexOf('function problem('))
+    expect(landing).toContain('Préparez vos pages XCTrack avant de voler')
+    expect(landing).toMatch(/Déplacez un gadget/)
+    expect(landing).toContain("'Modifier'")
+  })
+
+  it('les deux garanties survivent au changement de promesse', () => {
+    const landing = main.slice(main.indexOf('function landing()'), main.indexOf('function problem('))
+    // Rien ne part de la machine, et ce qu'on n'a pas touché ressort tel quel : ce sont
+    // les deux raisons qu'a un pilote de confier sa configuration de vol à un site web.
+    expect(landing).toContain('ne quitte pas cette machine')
+    expect(landing).toContain('sans une virgule réécrite')
+  })
+
+  it('le mot « visionneuse » a disparu de ce que le pilote lit', () => {
+    // Il décrivait l'outil, pas l'état, et il décrivait un outil qui n'existe plus. Les
+    // commentaires, eux, ont le droit de raconter d'où l'on vient : on ne relit que les
+    // chaînes, et il faut donc retirer les commentaires d'abord — leurs apostrophes
+    // françaises passeraient sinon pour des délimiteurs.
+    const code = main
+      .replace(/\/\*[\s\S]*?\*\//g, ' ')
+      .replace(/^[ \t]*\/\/.*$/gm, ' ')
+    const strings = [...code.matchAll(/'([^'\\\n]*)'/g)].map((m) => m[1] ?? '')
+    expect(strings.filter((text) => /visionneuse/i.test(text))).toEqual([])
+  })
+
+  it('le badge de mode ne paraît que dans le mode qu’il nomme', () => {
+    expect(main).toContain("const brandRole = el('span', 'brand__role', 'édition')")
+    expect(main).toContain('brandRole.hidden = !editMode')
+  })
+})

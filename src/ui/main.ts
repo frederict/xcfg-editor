@@ -280,7 +280,14 @@ const fileName = el('span', 'app-bar__file')
 
 const bar = el('header', 'app-bar')
 const brand = el('div', 'brand')
-const brandRole = el('span', 'brand__role', 'visionneuse')
+/**
+ * Le badge de mode. Il ne dit qu'**une** chose, et seulement quand elle est vraie :
+ * « édition ». Un badge présent en permanence devient du décor, et celui qui annonçait
+ * « visionneuse » au repos décrivait l'outil au lieu de décrire l'état — un pilote venu
+ * préparer ses écrans y lisait que l'outil ne les modifiait pas.
+ */
+const brandRole = el('span', 'brand__role', 'édition')
+brandRole.hidden = true
 brand.append(el('span', 'brand__name', 'Configuration XCTrack'), brandRole)
 const actions = el('div', 'app-bar__actions')
 actions.append(
@@ -309,12 +316,23 @@ app.append(bar, tools, content, veil)
 function landing(): HTMLElement {
   const panel = el('section', 'landing')
   panel.append(
-    el('h1', 'landing__title', 'Voyez vos pages XCTrack sur un vrai écran'),
+    el('h1', 'landing__title', 'Préparez vos pages XCTrack avant de voler'),
     el(
       'p', 'landing__lead',
       'Ouvrez un fichier .xcfg ou .xczfg exporté depuis l’instrument : ses pages ' +
-      's’affichent telles que l’appareil les dessine, à leur taille réelle. Le fichier ' +
-      'reste intact — cette visionneuse ne le réécrit pas.'
+      's’affichent telles que l’appareil les dessine, à leur taille réelle. Déplacez un ' +
+      'gadget, redimensionnez-le, ajoutez-en, puis récupérez une copie neuve à remettre ' +
+      'sur la carte SD.'
+    ),
+    // Les deux garanties qui décident un pilote à confier sa configuration de vol à un
+    // site web. Elles étaient jusqu'ici portées par le mot « visionneuse », qui les liait
+    // à une promesse fausse : elles valent aussi quand on modifie, puisqu'on ne réécrit
+    // que ce qu'on a changé.
+    el(
+      'p', 'landing__lead',
+      'Votre fichier ne quitte pas cette machine : tout se passe dans ce navigateur, ' +
+      'sans serveur et sans compte. Et ce que vous n’avez pas touché ressort exactement ' +
+      'comme il est entré, sans une virgule réécrite — vos réglages resteront les vôtres.'
     )
   )
 
@@ -330,6 +348,7 @@ function landing(): HTMLElement {
   const items: [string, string][] = [
     ['Sur l’instrument', 'Réglages, puis « Exporter la configuration ». Le fichier atterrit sur la carte SD.'],
     ['Ici', 'Les pages apparaissent numérotées dans l’ordre où « page suivante » les fait défiler en vol.'],
+    ['Modifier', 'Déplacez un gadget au doigt ou à la souris, changez sa taille, ajoutez-en d’autres : la page se redessine à sa taille réelle sous vos yeux.'],
     ['À savoir', 'XCTrack masque certaines pages hors contexte de vol : le fichier en décrit plus que l’appareil n’en montre.']
   ]
   for (const [title, detail] of items) {
@@ -550,7 +569,7 @@ function syncEditControls(): void {
     && view.kind !== 'preferences'
   const history = session?.history
 
-  brandRole.textContent = editMode ? 'édition' : 'visionneuse'
+  brandRole.hidden = !editMode
   editToggle.hidden = !editable
   editToggle.textContent = editMode ? 'Revenir à la consultation' : 'Modifier les pages'
   editToggle.setAttribute('aria-pressed', String(editMode))
