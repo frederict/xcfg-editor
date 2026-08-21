@@ -1,0 +1,227 @@
+/*
+ * Le manuel d'utilisation : sa mise en page, et rien d'autre.
+ *
+ * Tout est porté sous `.manual`, sans exception. Le fragment est injecté dans une boîte
+ * modale qui vit au milieu de l'application ; une seule règle qui déborderait — un
+ * `h2 { … }` nu, un `a { … }` nu — repeindrait les vingt écrans de l'éditeur depuis un
+ * fichier que personne ne penserait à ouvrir en cherchant la panne.
+ *
+ * Les couleurs viennent des variables `--app-*` d'`app.css` : le manuel suit le thème
+ * clair ou sombre du reste du cadre. Aucune valeur de couleur n'est écrite ici en dur,
+ * sauf par la variable qu'elle reprend — sans quoi le manuel serait le seul écran blanc
+ * d'une application en thème sombre.
+ *
+ * Une seule teinte est admise, l'ambre `--app-flag-*`, et pour un seul usage :
+ * l'avertissement sur les données personnelles. C'est déjà la teinte des pages que
+ * XCTrack masque hors vol ; l'application n'en connaît pas d'autre, et en introduire une
+ * deuxième ferait de ce fichier l'exception qui périme la règle d'`app.css`.
+ *
+ * Largeur de ligne : `65ch`. Le manuel est le seul texte long de l'application — partout
+ * ailleurs, une phrase explique un contrôle qu'elle touche. Une prose de trois mille mots
+ * en pleine largeur d'écran ne se lit pas.
+ */
+
+.manual {
+  max-width: 65ch;
+  margin: 0 auto;
+  font-size: 15px;
+  line-height: 1.62;
+  color: var(--app-ink);
+}
+
+/* -------------------------------------------------------------------------- titres */
+
+/*
+ * Le manuel commence à `h2` : la boîte modale porte déjà son `h1` (« Manuel
+ * d'utilisation »), et un second premier niveau casserait la navigation par titres d'un
+ * lecteur d'écran, qui est ici le sommaire réel du document.
+ */
+.manual h2 {
+  margin: 2.4rem 0 0.2rem;
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.3;
+  scroll-margin-top: 1rem;
+}
+
+.manual h2:first-child { margin-top: 0; }
+
+.manual h3 {
+  margin: 1.6rem 0 0.2rem;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.35;
+  scroll-margin-top: 1rem;
+}
+
+/* Le rang du chapitre, en gris devant son titre : il donne au sommaire de quoi désigner
+   un chapitre par un numéro plutôt que par son intitulé entier. */
+.manual__rank {
+  color: var(--app-ink-soft);
+  font-variant-numeric: tabular-nums;
+  margin-right: 0.5rem;
+  font-weight: 400;
+}
+
+.manual p { margin: 0.7rem 0; }
+
+.manual ul,
+.manual ol { margin: 0.7rem 0; padding-left: 1.3rem; }
+
+.manual li { margin: 0.35rem 0; }
+
+.manual li > ul,
+.manual li > ol { margin: 0.3rem 0; }
+
+.manual strong { font-weight: 600; }
+
+/* -------------------------------------------------------------------------- sommaire */
+
+/*
+ * Des liens d'ancre, et pas un repli par chapitre : le manuel entier est dans la page,
+ * donc la recherche du navigateur (Ctrl+F) le trouve en entier. Un accordéon rendrait
+ * introuvable tout ce qui est fermé — c'est-à-dire tout, la première fois.
+ */
+.manual__toc {
+  margin: 0 0 1.6rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--app-line);
+  border-radius: 8px;
+  background: var(--app-panel);
+}
+
+.manual__toc h2 {
+  margin: 0 0 0.5rem;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--app-ink-soft);
+  text-transform: none;
+}
+
+.manual__toc ol {
+  margin: 0;
+  padding-left: 1.4rem;
+}
+
+.manual__toc li { margin: 0.2rem 0; }
+
+.manual a {
+  color: inherit;
+  text-decoration-color: var(--app-line-strong);
+  text-underline-offset: 2px;
+}
+
+.manual a:hover { text-decoration-color: currentColor; }
+
+/* ------------------------------------------------------ ce que l'écran affiche, cité */
+
+/*
+ * `.manual__ui` : un intitulé recopié de l'interface — « Enregistrer une copie »,
+ * « Rétablir la valeur d'usine ». Il ne se met pas en gras : le gras sert déjà à insister
+ * sur une idée, et un manuel où tout est gras n'insiste plus sur rien. Il se distingue
+ * par un fond discret, qui dit « cherchez ce mot-là à l'écran ».
+ *
+ * Ce n'est pas du code : ni police à chasse fixe, ni couleur. Le pilote ne lit pas du
+ * code, il lit le bouton qu'il doit trouver.
+ */
+.manual__ui {
+  padding: 0.05em 0.3em;
+  border-radius: 4px;
+  background: var(--app-line);
+  white-space: nowrap;
+}
+
+/* Un nom de fichier ou une extension : là, la chasse fixe sert, parce que le pilote va
+   comparer caractère par caractère ce qu'il lit avec ce qu'il voit sur sa carte SD. */
+.manual__file {
+  font-family: var(--font-data);
+  font-size: 0.92em;
+}
+
+/* -------------------------------------------------------------------------- encadrés */
+
+/*
+ * Trois encadrés, trois poids, et jamais plus : au-delà, aucun ne se distingue.
+ *
+ * - `.manual__note`   : une précision utile, sans conséquence si on la saute ;
+ * - `.manual__measured` : ce qui a été MESURÉ sur l'appareil. C'est la marque distinctive
+ *   de ce projet — le pilote doit pouvoir séparer d'un coup d'œil ce qui a été vérifié de
+ *   ce qui est déduit —, et elle ne sert à rien d'autre ;
+ * - `.manual__warning` : le seul encadré coloré, réservé aux données personnelles.
+ */
+.manual__note,
+.manual__measured,
+.manual__warning {
+  margin: 1.1rem 0;
+  padding: 0.75rem 0.95rem;
+  border-radius: 8px;
+  font-size: 14.5px;
+}
+
+.manual__note {
+  border: 1px solid var(--app-line);
+  background: var(--app-panel);
+}
+
+.manual__measured {
+  border: 1px solid var(--app-line);
+  border-left: 3px solid var(--app-line-strong);
+  background: var(--app-panel);
+}
+
+.manual__warning {
+  border: 1px solid var(--app-flag-line);
+  background: var(--app-flag-bg);
+  color: var(--app-flag-ink);
+}
+
+.manual__note > :first-child,
+.manual__measured > :first-child,
+.manual__warning > :first-child { margin-top: 0; }
+
+.manual__note > :last-child,
+.manual__measured > :last-child,
+.manual__warning > :last-child { margin-bottom: 0; }
+
+/* Le titre d'un encadré : une ligne, sans niveau de titre, pour ne pas polluer le
+   sommaire d'un lecteur d'écran avec des intertitres qui ne sont pas des sections. */
+.manual__boxTitle {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+/* ------------------------------------------------------------------------ marche à suivre */
+
+/*
+ * Une suite de gestes numérotés. Le rang compte : « d'abord ceci, ensuite cela » est
+ * précisément ce qu'un pilote vient chercher, et une liste à puces le perd.
+ */
+.manual__steps {
+  margin: 0.9rem 0;
+  padding-left: 1.4rem;
+}
+
+.manual__steps > li { margin: 0.5rem 0; }
+
+/* ------------------------------------------------------------------------- séparateur */
+
+.manual hr {
+  margin: 2.2rem 0;
+  border: 0;
+  border-top: 1px solid var(--app-line);
+}
+
+/* -------------------------------------------------------------------------- écrans étroits */
+
+/*
+ * Un pilote consulte le manuel sur le téléphone qu'il a en main au décollage. La boîte
+ * modale y occupe presque tout l'écran, la largeur de ligne n'a plus lieu d'être limitée,
+ * et un intitulé cité ne doit plus refuser de se couper : `nowrap` sur « Rétablir la
+ * valeur d'usine » déborderait la fenêtre plutôt que de passer à la ligne.
+ */
+@media (max-width: 30rem) {
+  .manual { font-size: 15.5px; }
+  .manual__ui { white-space: normal; }
+  .manual h2 { font-size: 18px; }
+}

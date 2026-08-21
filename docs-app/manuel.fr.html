@@ -1,0 +1,908 @@
+<!--
+  Le manuel d'utilisation, en français.
+
+  Ce fichier est un FRAGMENT : ni <html>, ni <head>, ni <body>. Il est destiné à être
+  posé dans le corps d'une boîte modale de l'application, qui porte déjà son titre de
+  premier niveau. Le manuel commence donc à <h2>.
+
+  Pourquoi du HTML nu plutôt que du Markdown : le manuel s'ouvre DEPUIS l'application,
+  qui se charge parfois en 3G au décollage. Du Markdown demanderait un analyseur —
+  quelques dizaines de kilo-octets de code embarqués dans la page pour transformer du
+  texte en balises que le navigateur sait déjà lire. Le fragment, lui, est du texte : il
+  se compresse comme du texte, ne s'active qu'au moment où le pilote ouvre le manuel, et
+  n'ajoute aucune ligne de code à l'application.
+
+  Traduction : ce fichier se recopie sous `manuel.<langue>.html`, et rien d'autre n'est à
+  faire — aucune chaîne de ce manuel ne vit dans le code. Les sections sont courtes et
+  autonomes, les renvois sont explicites (« voir le chapitre 9 »), et aucun jeu de mots
+  n'est à transposer.
+
+  ⚠ Le vocabulaire est celui de l'écran, et il a été arrêté : « gadget » (le mot de
+  XCTrack en français), « valeur d'usine » et jamais « défaut », « réglage » ou « ligne
+  du fichier » et jamais « clé », et les trois mots du diagnostic : « périmé », « angle
+  mort », « inconnu ». Un manuel qui nomme autrement ce que l'écran affiche est pire
+  qu'un manuel absent. Toute modification de l'interface se répercute ici, dans le même
+  travail — voir `CLAUDE.md`.
+-->
+
+<div class="manual">
+
+  <div class="manual__warning">
+    <span class="manual__boxTitle">À lire avant de donner votre fichier à qui que ce soit</span>
+    <p>Une sauvegarde XCTrack porte votre nom, votre voile, vos capteurs appairés, vos
+    fichiers de waypoints — jusqu’au nom de la compétition à laquelle vous participez. Ne
+    l’envoyez jamais telle quelle : ni à un autre pilote, ni sur un forum, ni dans un
+    signalement. Au moment d’enregistrer, choisissez
+    <span class="manual__ui">Version partageable, sans données personnelles</span>, et
+    relisez la liste des remplacements que l’outil vous montre avant de télécharger.
+    Le chapitre&nbsp;10 explique tout cela en détail.</p>
+  </div>
+
+  <nav class="manual__toc">
+    <h2>Ce que contient ce manuel</h2>
+    <ol>
+      <li><a href="#m-outil">Ce que fait cet outil, et ce qu’il ne fait pas</a></li>
+      <li><a href="#m-ouvrir">Sortir le fichier de l’instrument et l’ouvrir ici</a></li>
+      <li><a href="#m-voir">Voir ses pages sans rien modifier</a></li>
+      <li><a href="#m-gabarit">Le gabarit d’écran et le zoom</a></li>
+      <li><a href="#m-modifier">Modifier ses pages</a></li>
+      <li><a href="#m-gadget">Les réglages d’un gadget</a></li>
+      <li><a href="#m-usine">Les trois gestes autour d’une valeur d’usine</a></li>
+      <li><a href="#m-generaux">Les réglages généraux de XCTrack</a></li>
+      <li><a href="#m-version">La version visée, la compatibilité et le nettoyage</a></li>
+      <li><a href="#m-enregistrer">Enregistrer, et choisir ce qu’on donne</a></li>
+      <li><a href="#m-bibliotheque">La bibliothèque de configurations</a></li>
+      <li><a href="#m-mesure">Ce qui est mesuré, et ce qui ne l’est pas</a></li>
+      <li><a href="#m-avis">Donner votre avis, signaler ce qui cloche</a></li>
+    </ol>
+  </nav>
+
+  <!-- ==================================================================== 1 -->
+
+  <h2 id="m-outil"><span class="manual__rank">1.</span>Ce que fait cet outil, et ce qu’il ne fait pas</h2>
+
+  <p>Vous ouvrez ici un fichier exporté par votre instrument. Vos pages s’affichent telles
+  que l’appareil les dessine, à leur taille réelle. Vous les modifiez, puis vous
+  récupérez un fichier neuf à remettre sur l’instrument.</p>
+
+  <h3>Trois choses qu’il vaut mieux savoir tout de suite</h3>
+
+  <p><strong>Cet outil ne parle pas à votre instrument.</strong> Il n’y a ni câble, ni
+  Bluetooth, ni synchronisation. Il produit un fichier que vous transférez vous-même,
+  par carte SD ou par câble. Tant que vous n’avez pas fait ce transfert, votre appareil
+  ne sait rien de ce que vous avez changé ici.</p>
+
+  <p><strong>Rien n’est simulé.</strong> Les valeurs que vous voyez dans les gadgets —
+  une altitude, une vitesse, un taux de chute — sont des exemples fixes, écrits une fois
+  pour toutes. Elles servent à juger la taille et la place d’un gadget, jamais à prévoir
+  ce qu’il affichera en vol.</p>
+
+  <p><strong>Votre fichier ne quitte pas votre machine.</strong> Tout se passe dans votre
+  navigateur : il n’y a ni serveur, ni compte, ni envoi. La page est faite de fichiers
+  statiques, elle n’a personne à qui parler.</p>
+
+  <h3>Ce qui ne bouge pas dans votre fichier</h3>
+
+  <p>Un fichier ouvert puis réenregistré sans avoir été modifié ressort <strong>identique,
+  octet pour octet</strong>. Et quand vous modifiez quelque chose, seul ce que vous avez
+  modifié change : déplacer un gadget ne réécrit que ses quatre coordonnées, le reste du
+  fichier sort intact.</p>
+
+  <p>C’est ce qui compte le plus, et voici pourquoi. Le format de XCTrack n’est pas
+  documenté et gagne des réglages à chaque version. Un éditeur qui reconstruirait le
+  fichier à partir de ce qu’il a su lire perdrait le reste sans rien dire. Celui-ci
+  transporte tel quel <strong>tout ce qu’il ne comprend pas</strong> : vos réglages
+  particuliers survivent, y compris ceux qui ne sont montrés nulle part dans cet
+  éditeur.</p>
+
+  <h3>Ce qu’il ne fera jamais à votre place</h3>
+
+  <ul>
+    <li>Il ne réarrange pas vos pages et ne propose pas de meilleure disposition.</li>
+    <li>Il signale ce qui lui semble douteux, mais ne corrige rien tout seul.</li>
+    <li>La seule fois où il propose de retirer quelque chose de votre fichier, c’est le
+    nettoyage du chapitre&nbsp;9 — et il faut voir la liste et cliquer.</li>
+  </ul>
+
+  <!-- ==================================================================== 2 -->
+
+  <h2 id="m-ouvrir"><span class="manual__rank">2.</span>Sortir le fichier de l’instrument et l’ouvrir ici</h2>
+
+  <h3>Sur l’instrument</h3>
+
+  <p>Allez dans les réglages de XCTrack, puis
+  <span class="manual__ui">Exporter la configuration</span>. Le fichier atterrit sur la
+  carte SD. Récupérez-le sur votre ordinateur ou votre téléphone.</p>
+
+  <h3>Deux formats, deux contenus</h3>
+
+  <p>XCTrack sait écrire deux sortes d’exports, et la différence est importante :</p>
+
+  <ul>
+    <li>un export <strong>« backup »</strong> porte toute votre configuration : les pages
+    <em>et</em> les réglages de l’appareil (vario, unités, capteurs, espaces aériens,
+    votre nom, votre voile…) ;</li>
+    <li>un export <strong>« pages »</strong> ne porte que les pages de gadgets. Réimporté,
+    il remplace les écrans et ne touche à rien d’autre.</li>
+  </ul>
+
+  <p>L’extension du fichier dit autre chose : <span class="manual__file">.xcfg</span> est
+  le fichier seul, <span class="manual__file">.xczfg</span> est une archive qui emporte en
+  plus des fichiers annexes. Les deux s’ouvrent ici.</p>
+
+  <div class="manual__warning">
+    <span class="manual__boxTitle">Un export « pages » n’est pas anonyme</span>
+    <p>On lit souvent qu’un export « pages » ne contient rien de personnel. C’est faux.
+    Le titre que vous avez écrit sur un gadget, le contenu d’un gadget de texte libre, le
+    nom et le numéro de téléphone rangés dans un bouton d’appel voyagent <em>avec les
+    pages</em>. Le format « pages » est un tri de gros grain, ce n’est pas un
+    nettoyage.</p>
+  </div>
+
+  <h3>Ouvrir le fichier ici</h3>
+
+  <ol class="manual__steps">
+    <li>Déposez le fichier n’importe où sur la page — un cadre apparaît et dit
+    <span class="manual__ui">Déposez le fichier pour l’ouvrir</span> ;</li>
+    <li>ou cliquez la zone de dépôt de l’écran d’accueil ;</li>
+    <li>ou, si un fichier est déjà ouvert, prenez le menu
+    <span class="manual__ui">Fichier</span> en haut à droite, puis
+    <span class="manual__ui">Ouvrir un fichier…</span>.</li>
+  </ol>
+
+  <p>Un fichier s’ouvre toujours <strong>en consultation</strong> : on le regarde avant de
+  le modifier.</p>
+
+  <h3>Si le fichier refuse de s’ouvrir</h3>
+
+  <p>Deux écrans distincts peuvent apparaître.
+  <span class="manual__ui">Ce fichier n’a pas pu être ouvert</span> signifie que l’outil
+  n’a rien su en tirer : vérifiez que c’est bien un export XCTrack.
+  <span class="manual__ui">Ce fichier n’a pas pu être lu</span> signifie qu’il a été
+  reconnu mais qu’il est abîmé ou incomplet. Dans les deux cas votre fichier n’a pas été
+  modifié, et <span class="manual__ui">Enregistrer une copie</span> vous le rend tel qu’il
+  est entré. Le volet <span class="manual__ui">Détail technique</span> contient le texte à
+  recopier dans un signalement.</p>
+
+  <!-- ==================================================================== 3 -->
+
+  <h2 id="m-voir"><span class="manual__rank">3.</span>Voir ses pages sans rien modifier</h2>
+
+  <p>Tant que vous n’avez pas appuyé sur
+  <span class="manual__ui">Modifier les pages</span>, rien de ce que vous faites n’écrit
+  quoi que ce soit. Vous pouvez tout ouvrir, tout lire, tout parcourir.</p>
+
+  <h3>La vue d’ensemble</h3>
+
+  <p>Elle montre <strong>toutes</strong> vos pages, en deux sections :
+  <span class="manual__ui">Paysage</span> puis <span class="manual__ui">Portrait</span>.
+  Un fichier décrit toujours les deux ; votre instrument bascule de l’une à l’autre.</p>
+
+  <p>Les pages sont numérotées à partir de 1. Une page n’a pas de nom : <strong>son rang
+  est sa seule identité</strong>, et c’est lui qui décide de ce qui s’affiche quand vous
+  appuyez sur « page suivante » en vol.</p>
+
+  <p>Certaines pages portent la marque
+  <span class="manual__ui">Masquée hors vol</span> : XCTrack ne les montre qu’en contexte
+  de vol. C’est normal, et cela explique pourquoi votre fichier décrit plus de pages que
+  votre appareil n’en montre au sol. Une phrase sous le titre de la section vous dit
+  combien.</p>
+
+  <h3>Le bandeau de renseignements</h3>
+
+  <p>Au-dessus des pages, quelques faits lus dans le fichier :
+  <span class="manual__ui">Format</span> (fichier ou archive),
+  <span class="manual__ui">Appareil du fichier</span> (ou
+  <span class="manual__ui">non déclaré</span>),
+  <span class="manual__ui">Libellés</span> (la langue dans laquelle les noms de gadgets
+  sont affichés, et d’où elle vient). Si le fichier ne porte aucune préférence, une ligne
+  <span class="manual__ui">Réglages de rendu</span> le dit : le thème et les unités
+  employés pour dessiner sont alors des valeurs d’usine, pas les vôtres.</p>
+
+  <h3>Ce que l’outil signale à l’ouverture</h3>
+
+  <p>Deux blocs peuvent apparaître, et ils n’ont pas le même poids.</p>
+
+  <p><span class="manual__ui">À vérifier dans ce fichier</span> reste déplié : il décrit un
+  défaut. Par exemple un gadget de largeur ou de hauteur nulle, un gadget entièrement
+  caché sous un autre et qui n’affichera jamais rien, une partie du fichier que l’outil
+  n’a pas reconnue.</p>
+
+  <p>La ligne repliée en dessous rassemble ce qui <em>renseigne</em> sans rien réclamer :
+  le type d’export, la langue des libellés, les fichiers extérieurs que votre
+  configuration désigne (thème de carte, waypoints, espaces aériens — ils sont sur
+  l’appareil d’origine, pas dans le fichier), l’écart entre la version qui a écrit le
+  fichier et celle sur laquelle cet éditeur se règle, ou encore un thème d’affichage que
+  l’éditeur ne sait pas dessiner. Cliquez la ligne pour la déplier.</p>
+
+  <div class="manual__note">
+    <span class="manual__boxTitle">Les chevauchements ne sont pas signalés</span>
+    <p>Deux gadgets qui se recouvrent, c’est courant et souvent voulu — c’est même une
+    technique de compétition. Les signaler serait du bruit, et un avertissement de bruit
+    apprend à ignorer les autres. Seul un gadget <em>entièrement</em> recouvert est
+    signalé.</p>
+  </div>
+
+  <h3>Ouvrir une page et lire un gadget</h3>
+
+  <p>Cliquez une vignette. La page s’affiche seule, à sa taille réelle.
+  <span class="manual__ui">Page précédente</span> et
+  <span class="manual__ui">Page suivante</span> vous font passer de l’une à l’autre — les
+  flèches gauche et droite du clavier font la même chose.
+  <span class="manual__ui">← Vue d’ensemble</span> et la touche <em>Échap</em> vous
+  ramènent en arrière.</p>
+
+  <p>Survolez un gadget : son nom et ses dimensions en millimètres s’affichent sous la
+  page. Cliquez-le : le bandeau du bas montre
+  <span class="manual__ui">Gadgets de la page</span> et tous ses réglages,
+  <strong>en lecture seule</strong>. Rien n’est modifiable là : c’est la consultation.
+  <em>Échap</em> désélectionne.</p>
+
+  <p>La liste <span class="manual__ui">Gadgets de la page</span> est classée du fond vers
+  le premier plan. Elle sert aussi de rattrapage : un gadget marqué
+  <span class="manual__ui">inatteignable ici</span> est entièrement recouvert par un
+  autre, aucun clic sur la page ne l’atteint, et cette liste est le seul chemin qui y
+  mène. Sur l’instrument, il reste à sa place — un bouton ainsi recouvert continue de
+  répondre au doigt.</p>
+
+  <!-- ==================================================================== 4 -->
+
+  <h2 id="m-gabarit"><span class="manual__rank">4.</span>Le gabarit d’écran et le zoom</h2>
+
+  <h3>Choisir le gabarit</h3>
+
+  <p>Le menu <span class="manual__ui">Gabarit d’écran</span>, sous la barre du haut,
+  décide de la géométrie et de la taille en millimètres. Il propose les trois AIR³
+  connus, cinq proportions d’écran courantes, un mode
+  <span class="manual__ui">Responsive</span> où vous donnez vous-même une largeur et une
+  hauteur en pixels, et <span class="manual__ui">Ajouter un appareil…</span> pour
+  enregistrer le vôtre une fois pour toutes.</p>
+
+  <p>À l’ouverture, l’outil retient le gabarit que le fichier déclare. S’il ne reconnaît
+  rien, il prend l’AIR³&nbsp;7.2 et le dit dans le bandeau de renseignements.</p>
+
+  <div class="manual__note">
+    <p>Ce choix est un réglage d’affichage : <strong>il n’est jamais écrit dans votre
+    fichier</strong>. En changer ne modifie rien. Seules comptent les proportions de
+    l’écran, qui décident de la géométrie, et la diagonale en pouces, qui décide de la
+    taille en millimètres — les pixels n’ont aucun effet, les positions des gadgets étant
+    exprimées en fractions de l’écran.</p>
+  </div>
+
+  <h3>Régler le zoom une fois pour toutes</h3>
+
+  <p>La page est dessinée à sa taille physique réelle. Mais votre écran n’a pas forcément
+  la densité que le navigateur suppose. Le curseur
+  <span class="manual__ui">Zoom</span> corrige cela, et
+  <span class="manual__ui">Zoom 100 %</span> le remet à sa valeur de départ.</p>
+
+  <ol class="manual__steps">
+    <li>Posez une vraie règle sur votre écran, contre la règle graduée affichée au-dessus
+    de la page.</li>
+    <li>Tirez le curseur de zoom jusqu’à ce que les deux coïncident.</li>
+    <li>C’est fait : les millimètres annoncés pour chaque gadget sont désormais les vrais.</li>
+  </ol>
+
+  <p>C’est ce réglage qui rend utile la question « ce texte sera-t-il lisible à bout de
+  bras, avec des gants ? ». Elle se répond en millimètres, pas en pixels.</p>
+
+  <!-- ==================================================================== 5 -->
+
+  <h2 id="m-modifier"><span class="manual__rank">5.</span>Modifier ses pages</h2>
+
+  <p>Appuyez sur <span class="manual__ui">Modifier les pages</span>, en haut à droite. La
+  mention <span class="manual__ui">édition</span> apparaît à côté du nom de
+  l’application, et une barre d’édition s’ajoute sous la page. Pour ressortir, appuyez sur
+  <span class="manual__ui">Consulter</span> : rien n’est défait.</p>
+
+  <p>Rien ne part sur votre disque tant que vous n’avez pas appuyé sur
+  <span class="manual__ui">Enregistrer les modifications</span> — voir le
+  chapitre&nbsp;10.</p>
+
+  <h3>Déplacer et redimensionner</h3>
+
+  <p>Cliquez un gadget : il est sélectionné, et le déplacement commence aussitôt. C’est
+  plus direct que sur l’appareil, qui demande de viser une petite cible.</p>
+
+  <p>Sur le gadget sélectionné apparaissent <strong>neuf prises</strong> : quatre équerres
+  aux coins, quatre segments au milieu des côtés, et une ellipse pointillée au centre.
+  Les équerres et les segments redimensionnent ; l’ellipse déplace. L’ellipse centrale est
+  aussi la seule prise d’un gadget que d’autres recouvrent.</p>
+
+  <p>Pendant le geste, vous voyez deux rectangles : celui de votre doigt ou de votre
+  souris, et celui où le gadget se posera réellement. L’écart entre les deux, c’est
+  l’aimantation sur la grille de l’appareil — le nombre de cellules est écrit dans la
+  barre d’édition, par exemple
+  <span class="manual__ui">Grille 48 × 29</span>. Un gadget poussé contre un bord se colle
+  au bord. Un geste trop ample est ramené dans la page : il n’échoue jamais.</p>
+
+  <p>Pendant un redimensionnement, la taille s’affiche en millimètres.</p>
+
+  <h3>La barre du gadget sélectionné</h3>
+
+  <p>Elle se pose au-dessus du gadget, ou en dessous s’il n’y a pas la place, et ne le
+  masque jamais. Elle porte son rang — par exemple
+  <span class="manual__ui">Rang 4 sur 6</span> —, quatre boutons d’empilement
+  (arrière-plan, reculer, avancer, premier plan), puis
+  <span class="manual__ui">Dupliquer</span> et
+  <span class="manual__ui">Supprimer</span>.</p>
+
+  <p>La copie d’un gadget se pose juste devant l’original, décalée d’une cellule. Une
+  suppression ne demande pas confirmation : <span class="manual__ui">Annuler</span> la
+  défait entièrement.</p>
+
+  <h3>Ajouter un gadget</h3>
+
+  <p>Le bouton <span class="manual__ui">Ajouter un gadget</span> ouvre la liste complète,
+  groupée par famille, dans l’ordre de l’écran de XCTrack. Chaque ligne montre un aperçu,
+  le nom officiel du gadget et le nom qu’il porte dans le fichier. Le champ
+  <span class="manual__ui">Rechercher un gadget</span> filtre sur les deux.</p>
+
+  <p>Un clic pose le gadget au centre de la page. Le liséré de l’aperçu dit ce qui va se
+  passer :</p>
+
+  <ul>
+    <li><strong>liséré plein</strong> — ce type existe déjà dans votre fichier : le gadget
+    sera <em>copié</em> depuis cet exemplaire, avec tous ses réglages, y compris ceux que
+    cet éditeur ne sait pas présenter ;</li>
+    <li><strong>liséré pointillé</strong> — ce type est nouveau pour votre fichier : le
+    gadget sera créé avec ses seuls réglages de base, XCTrack ajoutant les autres à la
+    lecture.</li>
+  </ul>
+
+  <p>La case <span class="manual__ui">Déjà dans le fichier</span> ne garde que les types du
+  premier cas. Certaines lignes portent une pastille
+  <span class="manual__ui">Pro</span> : XCTrack réserve ces gadgets à la licence Pro.</p>
+
+  <p>Deux notes d’aperçu ne veulent pas dire la même chose.
+  <span class="manual__ui">rien au repos</span> est un fait de l’appareil : ce gadget ne
+  peint rien tant qu’aucune donnée n’est arrivée, et il occupe pourtant sa place.
+  <span class="manual__ui">aperçu non dessiné</span> est une limite de cet éditeur : il
+  n’a pas de dessin dédié pour ce type, et préfère montrer un cadre honnête plutôt qu’une
+  approximation trompeuse.</p>
+
+  <h3>Gérer les pages</h3>
+
+  <p>Le bouton <span class="manual__ui">Gérer les pages</span> ouvre les deux carrousels,
+  paysage et portrait. Vous pouvez :</p>
+
+  <ul>
+    <li><strong>insérer</strong> une page : le bouton <span class="manual__ui">+</span>
+    entre deux vignettes déplie un volet où choisir le type — Aide thermique, Aide XC,
+    Compétition, ou Vide ;</li>
+    <li><strong>dupliquer</strong> une page : la copie se pose juste après ;</li>
+    <li><strong>supprimer</strong> une page : le premier clic affiche les conséquences et
+    change le bouton en <span class="manual__ui">Confirmer la suppression</span>, le second
+    supprime ;</li>
+    <li><strong>réordonner</strong> : glissez une vignette sur une autre, ou servez-vous
+    des deux flèches.</li>
+  </ul>
+
+  <p>Avant chaque geste, l’outil dit ce qui va se décaler : « Les pages 3 à 5 deviennent 4
+  à 6 ». Il vous prévient aussi si vous vous apprêtez à créer une seconde page d’assistant
+  de thermique — XCTrack ne bascule automatiquement que vers la dernière —, ou à ne
+  laisser que des pages masquées hors vol, auquel cas votre appareil n’en montrerait
+  aucune au sol.</p>
+
+  <p><strong>Le type d’une page ne se change pas ici.</strong> XCTrack le fixe à la
+  création, et l’effet d’un changement après coup n’a pas été vérifié sur l’appareil : nous
+  préférons ne pas le proposer plutôt que de le proposer sans savoir.</p>
+
+  <h3>Annuler et rétablir</h3>
+
+  <p>Les deux flèches encadrées, en haut à droite, défont et refont. Passez la souris
+  dessus : elles disent ce qu’elles vont faire — « Annuler : Déplacer Altitude GPS ». Au
+  clavier, <em>Ctrl+Z</em> annule et <em>Ctrl+Maj+Z</em> rétablit (<em>Cmd</em> sur Mac).</p>
+
+  <p>Tout est couvert : gestes sur les gadgets, ajouts, suppressions, empilement, et
+  toutes les opérations de page. <strong>Les cent derniers pas</strong> sont conservés ;
+  au-delà, les plus anciens sont oubliés. Un geste sans effet ne produit pas de pas.</p>
+
+  <p>Une exception : la bibliothèque n’est pas concernée. Supprimer une configuration
+  rangée n’est pas annulable.</p>
+
+  <h3>Les gestes au clavier</h3>
+
+  <ul>
+    <li><strong>Flèches</strong> — déplacer d’une cellule</li>
+    <li><strong>Maj + flèches</strong> — redimensionner d’une cellule</li>
+    <li><strong>Ctrl + flèche haut / bas</strong> — avancer ou reculer d’un rang</li>
+    <li><strong>Ctrl + Maj + flèche haut / bas</strong> — premier plan, arrière-plan</li>
+    <li><strong>Ctrl + D</strong> — dupliquer</li>
+    <li><strong>Suppr</strong> — supprimer</li>
+    <li><strong>Échap</strong> — abandonner le geste en cours, sinon désélectionner</li>
+  </ul>
+
+  <!-- ==================================================================== 6 -->
+
+  <h2 id="m-gadget"><span class="manual__rank">6.</span>Les réglages d’un gadget</h2>
+
+  <p>Choisissez un gadget, sur la page ou dans la liste : ses réglages apparaissent dans
+  le bandeau du bas, <strong>dans l’ordre où le fichier les porte</strong>. La poignée en
+  haut du bandeau change sa hauteur ; le bouton de repli le referme.</p>
+
+  <p>Au-delà d’une douzaine de réglages, un champ
+  <span class="manual__ui">Filtrer les réglages</span> apparaît. Il cherche dans le libellé
+  <em>et</em> dans le nom que le réglage porte dans le fichier. Le bouton
+  <span class="manual__ui">?</span> à côté d’un réglage déplie l’explication que XCTrack en
+  donne.</p>
+
+  <h3>En consultation : ce qui a été réglé</h3>
+
+  <p>Hors mode édition, un bandeau annonce combien de réglages s’écartent de ce que
+  XCTrack pose sur un gadget neuf, et le bouton
+  <span class="manual__ui">Seulement ce qui diffère</span> ne garde que ceux-là. Chaque
+  ligne porte sa marque : <span class="manual__ui">réglé par vous</span>,
+  <span class="manual__ui">valeur d’usine</span>, ou
+  <span class="manual__ui">valeur d’usine inconnue</span> quand notre relevé ne dit rien de
+  ce réglage.</p>
+
+  <h3>Les réglages que le gadget n’écrit pas</h3>
+
+  <p>En fin de panneau, un bloc rassemble les réglages qui <em>ne sont pas</em> dans votre
+  fichier pour ce gadget. XCTrack leur applique la valeur de son propre code — celle qui
+  est écrite en regard. Ce n’est pas la même chose qu’un réglage posé à cette valeur : voir
+  le chapitre suivant.</p>
+
+  <!-- ==================================================================== 7 -->
+
+  <h2 id="m-usine"><span class="manual__rank">7.</span>Les trois gestes autour d’une valeur d’usine</h2>
+
+  <p>La valeur d’usine, c’est ce que XCTrack applique quand rien n’est écrit dans le
+  fichier. Trois gestes tournent autour d’elle. <strong>Ils ne se valent pas</strong>, et
+  c’est la chose la plus importante de ce manuel après les données personnelles.</p>
+
+  <h3>« Définir cette valeur » — écrire une valeur d’usine absente</h3>
+
+  <p>Le réglage n’est pas dans le fichier. Ce bouton l’y écrit, à sa valeur d’usine. Il est
+  offert dans le panneau d’un gadget <em>et</em> dans les réglages généraux.</p>
+
+  <p>Sur un gadget, cela ne change rien à ce que fait votre appareil aujourd’hui : il
+  appliquait déjà cette valeur. Ce que ça change est pour plus tard — la valeur est
+  désormais <strong>figée</strong>, et une mise à jour de XCTrack qui changerait cette
+  valeur d’usine ne changera plus votre réglage.</p>
+
+  <h3>« Retirer » — faire taire le fichier sur un réglage</h3>
+
+  <p>Ce bouton n’existe que dans les réglages généraux, et seulement quand la valeur écrite
+  dans le fichier vaut <strong>déjà</strong> la valeur d’usine. Il retire alors la ligne :
+  le fichier ne dit plus rien de ce réglage.</p>
+
+  <p>Il n’apparaît jamais sur une valeur que vous avez choisie. Faire taire le fichier sur
+  un réglage délibéré serait vous priver de ce réglage, et un bouton discret ne doit pas
+  faire cela d’un clic.</p>
+
+  <div class="manual__measured">
+    <span class="manual__boxTitle">« Retirer » n’est pas un retour à la valeur d’usine</span>
+    <p>Retirer un réglage général du fichier ne remet pas votre appareil à la valeur
+    d’usine. Il gardera celle qu’il a déjà. Voir l’encadré du chapitre&nbsp;8.</p>
+  </div>
+
+  <h3>« Rétablir la valeur d’usine » — le seul qui efface un choix</h3>
+
+  <p>Ce geste remplace une valeur <em>que vous avez choisie</em> par celle qu’un XCTrack
+  neuf applique. C’est le seul des trois qui efface un réglage délibéré : les deux autres ne
+  touchent qu’à des valeurs qui valaient déjà l’usine, ou qui n’étaient pas écrites du
+  tout.</p>
+
+  <p>Il ne se cache donc pas. Il prend sa propre ligne sous le réglage, et montre les deux
+  valeurs en présence <em>avant</em> le clic : « telle valeur d’usine, telle valeur dans ce
+  fichier. Rétablir change ce que fait l’appareil en vol. » Si la valeur d’usine a été
+  relevée sur une autre version de XCTrack que celle de votre fichier, la phrase le dit
+  aussi.</p>
+
+  <p>Il <strong>écrit</strong> la valeur d’usine plutôt que d’effacer la ligne. Le réglage
+  passe alors à l’état « valeur d’usine », d’où
+  <span class="manual__ui">Retirer</span> devient offert. Si vous voulez aller jusqu’au
+  bout, c’est un second clic délibéré, et vous voyez les deux effets séparément.</p>
+
+  <h3>Quand aucun bouton n’est offert</h3>
+
+  <p>Il arrive qu’aucun des trois ne soit proposé, et c’est voulu. Écrire une valeur devinée
+  serait pire que de ne rien proposer. Les cas :</p>
+
+  <ul>
+    <li>la valeur d’usine n’a pas été relevée ;</li>
+    <li>XCTrack la calcule au démarrage selon la langue et le pays de l’appareil — c’est le
+    cas des unités ;</li>
+    <li>XCTrack en publie deux qui se contredisent : son code et son écran de réglages ne
+    disent pas la même chose. L’outil montre alors les deux et ne choisit pas ;</li>
+    <li>la valeur d’usine relevée est une valeur composée, et cet éditeur n’écrit que des
+    valeurs simples.</li>
+  </ul>
+
+  <!-- ==================================================================== 8 -->
+
+  <h2 id="m-generaux"><span class="manual__rank">8.</span>Les réglages généraux de XCTrack</h2>
+
+  <p>Le bouton <span class="manual__ui">Réglages</span> de la barre du haut ouvre tout ce
+  qui se règle <strong>hors</strong> des pages de gadgets : unités, touches, capteurs, son,
+  espaces aériens, Livetracking. Ce sont les 217 réglages que XCTrack connaît, présentés
+  dans l’ordre des vingt écrans de son menu.</p>
+
+  <p>Pour les modifier, appuyez sur
+  <span class="manual__ui">Modifier les réglages</span>. En consultation,
+  <strong>aucun champ de saisie n’est construit</strong> : ce n’est pas un grisage, il n’y a
+  simplement rien à toucher.</p>
+
+  <div class="manual__note">
+    <p>Ces réglages n’existent que dans un export « backup ». Si vous avez ouvert un export
+    « pages », la page vous le dira : ce n’est pas une perte, votre fichier ne les contient
+    tout simplement pas.</p>
+  </div>
+
+  <h3>Se repérer</h3>
+
+  <p>Un bandeau en tête compte ce que vous avez réglé, ce qui reste à la valeur d’usine, ce
+  qui est absent du fichier. Trois commandes aident à trier :</p>
+
+  <ul>
+    <li><span class="manual__ui">Filtrer les réglages</span> cherche dans le libellé, dans
+    le nom du réglage et dans sa valeur ; les accents et les majuscules n’ont pas
+    d’importance ;</li>
+    <li><span class="manual__ui">Seulement ce que j’ai réglé</span> ne garde que ce qui
+    s’écarte de l’usine ;</li>
+    <li><span class="manual__ui">Masquer les valeurs personnelles</span> remplace par des
+    points les valeurs qui vous désignent — utile si quelqu’un regarde votre écran.</li>
+  </ul>
+
+  <h3>L’encadré mesuré, à ne pas manquer</h3>
+
+  <div class="manual__measured">
+    <span class="manual__boxTitle">Un réglage absent n’est pas remis à la valeur d’usine</span>
+    <p>À l’import <span class="manual__ui">Remplacer tout</span>, votre appareil garde le
+    réglage qu’il a déjà : <strong>ce que le fichier ne dit pas n’est pas touché</strong>.
+    L’import est une fusion, pas un remplacement.</p>
+    <p>C’est une mesure, pas une supposition. Le protocole : un réglage d’affichage a été
+    retiré d’une sauvegarde, la sauvegarde a été réimportée en « Remplacer tout », puis la
+    configuration réexportée. Le réglage était revenu à la valeur que l’appareil portait
+    déjà, et non à la valeur d’usine. Un second réglage, modifié dans la même manche, a
+    prouvé que l’import avait bien écrit le reste.</p>
+    <p>Deux limites, qu’il faut dire : la mesure porte sur le mode « Remplacer tout », les
+    deux autres modes d’import n’ont pas été éprouvés ; et le cas d’un appareil neuf n’a pas
+    été testé — sur un appareil qui n’a jamais touché à ce réglage, la valeur d’usine
+    s’applique nécessairement, mais c’est une déduction.</p>
+  </div>
+
+  <p>Attention : côté <em>gadget</em>, c’est l’inverse. XCTrack complète à la relecture les
+  réglages qu’un gadget ne porte pas, et la valeur d’usine s’y applique bien. Les deux
+  situations ont été mesurées séparément, et elles ne donnent pas le même résultat.</p>
+
+  <h3>Ce qui se règle, et ce qui ne se règle pas</h3>
+
+  <p>La plupart des lignes se règlent : case à cocher, liste, curseur, nombre, texte,
+  couleur. Certaines restent affichées <strong>sans contrôle</strong>, et chacune dit
+  pourquoi :</p>
+
+  <ul>
+    <li>celles qui ouvrent une boîte sur l’appareil — les touches à presser, la table du
+    vario sonore : « une touche à presser sur l’instrument, une table à bâtir » ne se
+    saisit pas ici ;</li>
+    <li>celles dont la valeur est composée : la page la montre telle quelle, sans l’ouvrir,
+    et ne la réécrit jamais ;</li>
+    <li>celles que XCTrack ne nomme nulle part de lisible : sans libellé, l’outil ne
+    propose pas de les changer ;</li>
+    <li>celles qui enregistrent l’état de l’application plutôt qu’un réglage.</li>
+  </ul>
+
+  <p>Trois blocs en fin de page rassemblent ces cas :
+  <span class="manual__ui">Réglages sans libellé</span>,
+  <span class="manual__ui">Ce que l’application a mémorisé (pas des réglages)</span>, et
+  <span class="manual__ui">Lignes que ce catalogue ne connaît pas</span> — ces dernières ont
+  été écrites par une autre version de XCTrack. Toutes ressortent intactes.</p>
+
+  <h3>Le volet des données personnelles</h3>
+
+  <p>Un volet replié, en tête de page, inventorie ce que <em>ces réglages-ci</em> révèlent de
+  vous, avec la nature de chacun et d’où l’outil le tient. Il ne compte que les réglages
+  généraux ; les textes que vous avez écrits dans les gadgets sont inventoriés ailleurs, au
+  moment d’enregistrer.</p>
+
+  <!-- ==================================================================== 9 -->
+
+  <h2 id="m-version"><span class="manual__rank">9.</span>La version visée, la compatibilité et le nettoyage</h2>
+
+  <p>Menu <span class="manual__ui">Fichier</span>, puis
+  <span class="manual__ui">Version et compatibilité…</span>.</p>
+
+  <p>Le format de XCTrack change à chaque version. Cet écran vous demande
+  <span class="manual__ui">La version de XCTrack que vous visez</span> — celle de
+  l’appareil sur lequel vous réimporterez ce fichier — et vous dit ensuite ce que votre
+  fichier porte qu’elle ne lit plus, et ce qu’elle attend qu’il n’a pas.</p>
+
+  <p>C’est un <strong>constat</strong> : rien ne bouge tant que vous ne le décidez pas.</p>
+
+  <h3>Choisir sa version</h3>
+
+  <p>Vous choisissez par le nom qu’affiche votre appareil, « 1.0.3-beta ». La version que
+  votre fichier déclare est déjà présélectionnée, et une phrase dit d’où vient cette
+  présélection — et si elle est arbitraire, elle le dit aussi.</p>
+
+  <p>Comme plusieurs versions acceptent souvent exactement les mêmes réglages, l’outil
+  <strong>nomme celles qu’il ne sait pas distinguer de la vôtre</strong> : choisir entre
+  deux voisines est alors sans effet, et il vaut mieux le dire que vous laisser deviner.</p>
+
+  <h3>Les trois mots du diagnostic</h3>
+
+  <p>Chaque remarque porte l’un de ces mots, et il commande la conduite à tenir :</p>
+
+  <ul>
+    <li><strong>périmé</strong> — XCTrack ne lit plus ce réglage, et de vrais fichiers
+    écrits par cette version-là le portent quand même. Nous l’avons vu se produire, nous ne
+    le supposons pas. <em>L’enlever se défend.</em></li>
+    <li><strong>angle mort</strong> — le manque est chez nous, pas dans votre fichier :
+    notre lecture des versions a un trou à cet endroit. <em>On n’y touche pas.</em></li>
+    <li><strong>inconnu</strong> — aucune version que nous ayons pu lire ne porte ce
+    réglage, et aucun fichier réel ne le montre. <em>On ne conclut rien.</em></li>
+  </ul>
+
+  <p>Le diagnostic range les écarts en huit familles, et chacune porte sa conduite à tenir
+  en toutes lettres. Quatre disent explicitement de ne rien supprimer. Celle qui compte le
+  plus est peut-être celle-ci :
+  <span class="manual__ui">Notre lecture a un trou : le réglage existait bien</span> —
+  « Ne jamais supprimer. Ce sont des réglages valides, et les prendre pour des réglages
+  périmés effacerait les vôtres. »</p>
+
+  <h3>Pourquoi l’outil refuse de toucher à certains réglages</h3>
+
+  <div class="manual__measured">
+    <p>Tout repose sur un déséquilibre simple : <strong>ne rien enlever ne casse rien,
+    enlever à tort casse une configuration de vol.</strong></p>
+    <p>Une base qui prendrait tout réglage observé pour un réglage valide protégerait
+    exactement les reliquats qu’un nettoyage doit ôter. Une base qui prendrait tout réglage
+    non lu pour un réglage retiré supprimerait des réglages parfaitement valides. L’outil
+    distingue donc trois choses : ce qu’il a <em>lu</em> dans les versions, ce qu’un fichier
+    réel <em>porte</em>, et pourquoi les deux diffèrent.</p>
+  </div>
+
+  <p>Le tri est volontairement étroit. Sur les huit familles d’écart, <strong>une seule</strong>
+  est proposée à la suppression : celle qu’un fichier réel atteste. Et même là, un réglage
+  périmé dont l’outil ne sait pas dire depuis quelle version il ne sert plus reste en place —
+  on ne propose pas de supprimer ce qu’on ne saurait pas expliquer.</p>
+
+  <h3>Enlever ce qu’une ancienne version a laissé</h3>
+
+  <p>XCTrack conserve les réglages qu’il ne connaît plus : une sauvegarde de cette année
+  traîne encore des interrupteurs d’il y a trois ans. La section
+  <span class="manual__ui">Enlever ce qu’une ancienne version a laissé</span>, sous le
+  diagnostic et seulement en mode édition, propose de les retirer. Si rien n’est à enlever,
+  la section n’apparaît pas du tout.</p>
+
+  <p>Elle commence par vous rassurer, et c’est vrai : « Rien ne presse et rien n’est cassé :
+  XCTrack les transporte sans les lire, et les laisser là ne change rien à vos pages. Les
+  enlever allège le fichier, c’est tout. »</p>
+
+  <ol class="manual__steps">
+    <li>Dépliez <span class="manual__ui">Voir ces réglages, et décocher ce que vous préférez
+    garder</span>. Tout est coché au départ ; chaque ligne dit jusqu’à quelle version de
+    XCTrack le réglage était encore lu, et sa valeur quand elle est simple.</li>
+    <li>Décochez ce que vous voulez garder. Le compte se met à jour, et le bouton dit
+    exactement combien de réglages il va enlever.</li>
+    <li>Cliquez le bouton. Le panneau est remplacé par un message et par
+    <span class="manual__ui">Remettre ces réglages</span>.</li>
+  </ol>
+
+  <p>Le retour en arrière est complet : remis, le fichier ressort à l’octet près. Le geste
+  est aussi enregistré dans l’historique, donc
+  <span class="manual__ui">Annuler</span> le défait comme le reste.</p>
+
+  <p>Et rien n’est parti tant que vous n’avez pas enregistré : « Votre appareil n’en sait
+  encore rien : le fichier ne change que lorsque vous l’enregistrez. »</p>
+
+  <!-- =================================================================== 10 -->
+
+  <h2 id="m-enregistrer"><span class="manual__rank">10.</span>Enregistrer, et choisir ce qu’on donne</h2>
+
+  <p>Le bouton d’enregistrement, en haut à droite, dit ce qui va se produire :
+  <span class="manual__ui">Enregistrer une copie</span> quand vous n’avez rien touché,
+  <span class="manual__ui">Enregistrer les modifications</span> quand le document a changé.
+  C’est aussi le seul signal visible qu’un travail est en cours.</p>
+
+  <p>Il ouvre la boîte
+  <span class="manual__ui">Enregistrer cette configuration</span>, qui vous demande une
+  seule chose : <strong>que faut-il enregistrer ?</strong></p>
+
+  <h3>Le nom du fichier est réglé d’avance</h3>
+
+  <p>Il est horodaté et <strong>ne reprend rien du nom d’origine</strong>, qui contient
+  souvent un prénom. Il ressemble à
+  <span class="manual__file">xctrack_2026-08-21-153207_backup.xcfg</span>. Comme la date est
+  écrite à l’envers, l’ordre alphabétique de vos fichiers est leur ordre chronologique.</p>
+
+  <h3>Issue 1 — « Votre configuration, telle qu’elle est »</h3>
+
+  <p>C’est votre fichier. Si vous n’avez rien modifié, il ressort exactement tel qu’il est
+  entré, sans une virgule réécrite — et son empreinte SHA-256 est celle du fichier
+  d’origine, vous pouvez le vérifier. Si vous avez modifié quelque chose, tout ce que vous
+  n’avez pas touché est recopié à l’identique, jusqu’aux nombres et à l’espacement
+  d’origine.</p>
+
+  <p>C’est l’issue à choisir pour remettre le fichier sur <em>votre</em> instrument. La
+  boîte vous rappelle alors ce qu’il porte de vous.</p>
+
+  <h3>Issue 2 — « Version partageable, sans données personnelles »</h3>
+
+  <p>C’est un export « pages » dont les textes que vous avez écrits sont remplacés par des
+  textes neutres. La disposition est conservée ; les préférences ne partent pas.</p>
+
+  <p><strong>C’est l’issue à choisir dès que le fichier sort de chez vous</strong> : un
+  autre pilote, un forum, une issue GitHub, une pièce jointe à un message.</p>
+
+  <p>Avant le téléchargement, l’outil vous montre trois choses :</p>
+
+  <ul>
+    <li><span class="manual__ui">Ce qui ne partira pas</span> — les sections entières qui
+    restent chez vous, et, en toutes lettres, ce que le destinataire devra régler lui-même :
+    ses unités, son thème, son vario, ses espaces aériens, son Livetracking, ses
+    capteurs ;</li>
+    <li><span class="manual__ui">Les annexes de l’archive</span>, si votre fichier est un
+    <span class="manual__file">.xczfg</span> — elles ne partent pas, et la version
+    partageable est toujours écrite en <span class="manual__file">.xcfg</span> nu ;</li>
+    <li><span class="manual__ui">Ce qui sera remplacé</span> — l’inventaire, ligne par
+    ligne : où se trouve le texte, quelle valeur il portait, par quoi elle est remplacée, et
+    pourquoi.</li>
+  </ul>
+
+  <p>Les remplacements gardent la <em>forme</em> de ce qu’ils remplacent, pour ne pas casser
+  votre mise en page : un titre devient « Titre 1 », un numéro de téléphone devient un
+  numéro au même gabarit mais non composable, une adresse web devient une adresse d’un
+  domaine réservé qui ne mène nulle part.</p>
+
+  <div class="manual__warning">
+    <span class="manual__boxTitle">L’inventaire est la vérification, pas notre promesse</span>
+    <p>La liste des champs de texte traités est fixe, et le format de XCTrack change à chaque
+    version : un champ de texte apparu depuis partirait en clair. <strong>Relisez
+    l’inventaire avant d’envoyer le fichier.</strong> Un inventaire vide ne prouve pas une
+    absence — il prouve seulement que l’outil n’a rien trouvé parmi ce qu’il sait
+    chercher.</p>
+  </div>
+
+  <h3>Remettre le fichier sur l’instrument</h3>
+
+  <ol class="manual__steps">
+    <li>Copiez le fichier téléchargé sur la carte SD de l’instrument, ou transférez-le par
+    câble.</li>
+    <li>Sur l’instrument, ouvrez l’écran de partage de configuration de XCTrack et lancez
+    l’import.</li>
+    <li>Le mode <span class="manual__ui">Remplacer tout</span> est celui sur lequel portent
+    nos mesures. Rappelez-vous ce qu’il fait exactement : ce que le fichier ne dit pas
+    n’est pas touché (chapitre&nbsp;8).</li>
+    <li>Gardez une sauvegarde de votre configuration précédente avant d’importer. Cet outil
+    ne peut rien pour vous une fois l’import fait.</li>
+  </ol>
+
+  <!-- =================================================================== 11 -->
+
+  <h2 id="m-bibliotheque"><span class="manual__rank">11.</span>La bibliothèque de configurations</h2>
+
+  <p>Menu <span class="manual__ui">Fichier</span>, puis
+  <span class="manual__ui">Bibliothèque…</span>. Vous y rangez plusieurs configurations
+  sous un nom — une pour la compétition, une pour le vol-bivouac, une pour l’école — et
+  vous revenez à l’une d’elles quand vous voulez.</p>
+
+  <p>Tout reste dans ce navigateur. Rien n’est envoyé nulle part, il n’y a ni compte ni
+  serveur, et un autre appareil ne voit pas votre bibliothèque. Les octets rangés sont ceux
+  de votre fichier, jamais une copie réécrite : ils sont vérifiés par empreinte à chaque
+  relecture.</p>
+
+  <h3>Ranger, retrouver, ressortir</h3>
+
+  <ul>
+    <li><span class="manual__ui">Ranger la configuration ouverte</span> demande un nom
+    — « celui que vous reconnaîtrez dans six mois » — et une note facultative.</li>
+    <li><span class="manual__ui">Ranger un fichier…</span> range un
+    <span class="manual__file">.xcfg</span> pris sur le disque, sans l’ouvrir.</li>
+    <li><span class="manual__ui">Charger</span> ramène une configuration dans l’éditeur. Si
+    le document ouvert porte des modifications non enregistrées, l’outil s’arrête et vous
+    propose de le ranger d’abord.</li>
+    <li><span class="manual__ui">Ressortir le fichier</span> vous rend les octets rangés,
+    tels qu’ils sont entrés.</li>
+    <li><span class="manual__ui">Vérifier l’empreinte</span> recalcule l’empreinte et la
+    compare à celle posée au rangement.</li>
+    <li><span class="manual__ui">Carte d’identité</span> montre tout ce que l’entrée porte,
+    en séparant soigneusement <em>ce que le fichier déclare</em> de <em>ce que cet éditeur
+    suppose</em>.</li>
+  </ul>
+
+  <p>Chaque entrée affiche aussi son compte de données personnelles, sous la forme
+  « 16 données personnelles · 2 partent avec les pages ». Les deux chiffres sont toujours
+  dits, zéro compris.</p>
+
+  <h3>Ce n’est pas une sauvegarde</h3>
+
+  <div class="manual__warning">
+    <span class="manual__boxTitle">Exportez votre bibliothèque</span>
+    <p>Vider les données du site efface la bibliothèque, et certains navigateurs effacent
+    d’eux-mêmes les données d’un site non visité depuis quelques jours.
+    <span class="manual__ui">Exporter la bibliothèque</span> en fait une archive ZIP dont
+    chaque configuration s’extrait avec n’importe quel décompresseur.
+    <span class="manual__ui">Importer une bibliothèque…</span> la relit, sans jamais écraser
+    une entrée existante.</p>
+    <p>Le bouton <span class="manual__ui">Empêcher le navigateur d’effacer ma
+    bibliothèque</span> demande au navigateur un rangement durable. Ce n’est jamais une
+    garantie. La seule sauvegarde qui tienne est l’archive que vous exportez.</p>
+  </div>
+
+  <p>Enfin : <strong>cette bibliothèque n’a pas de corbeille.</strong> Une suppression est
+  définitive, et « Annuler » n’y peut rien. C’est pourquoi la suppression demande une
+  confirmation dans un cadre à part.</p>
+
+  <!-- =================================================================== 12 -->
+
+  <h2 id="m-mesure"><span class="manual__rank">12.</span>Ce qui est mesuré, et ce qui ne l’est pas</h2>
+
+  <p>Cette section n’est pas une précaution juridique. C’est le renseignement le plus utile
+  que ce manuel puisse vous donner.</p>
+
+  <h3>D’où vient tout ce que l’outil sait</h3>
+
+  <p>Le format des fichiers XCTrack <strong>n’est pas documenté</strong>, et il change à
+  chaque version de l’application. Tout ce que cet outil en sait vient de deux sources : des
+  fichiers réels observés sur quatre ans et huit versions, et la lecture de l’application
+  elle-même. Rien ne vient d’une spécification, parce qu’il n’en existe pas.</p>
+
+  <p>C’est ce qui fait la valeur de l’outil — et c’est pourquoi il est bâti pour
+  <em>transporter</em> ce qu’il ne comprend pas plutôt que pour modéliser le format.</p>
+
+  <h3>Trois choses à ne pas confondre</h3>
+
+  <ul>
+    <li><strong>Ce qui a été observé sur l’appareil.</strong> Un AIR³ 7.2, une version de
+    XCTrack. Les dessins de gadgets, la grille d’aimantation, le comportement d’un import.
+    L’outil le dit quand c’est le cas.</li>
+    <li><strong>Ce qui a été lu dans l’application.</strong> Les noms et descriptions des
+    gadgets, les valeurs d’usine, la liste des réglages. C’est solide, mais ce n’est pas la
+    même chose qu’une mesure sur un appareil qui vole.</li>
+    <li><strong>Ce qui est déduit.</strong> Par exemple : la grille d’aimantation a été
+    mesurée sur un seul appareil ; sur tous les autres gabarits, elle est extrapolée, et
+    donne un ordre de grandeur plausible et rien de plus.</li>
+  </ul>
+
+  <h3>Ce que le rendu vaut</h3>
+
+  <p>Les dessins de gadgets sont reconstruits d’après ce qui a été observé sur un seul
+  appareil et une seule version. Un gadget dont le dessin n’a pas été reproduit s’affiche
+  sous une forme générique honnête plutôt que sous une approximation trompeuse. Et si
+  votre fichier demande un thème d’affichage que l’éditeur ne sait pas dessiner, il vous le
+  dit : les couleurs que vous voyez ne sont pas celles de votre appareil, mais la géométrie,
+  elle, est juste.</p>
+
+  <h3>Ce que l’interface ne fait pas encore</h3>
+
+  <ul>
+    <li>L’interface de cet éditeur est en français seulement. Les noms de gadgets et de
+    réglages, eux, suivent déjà votre langue : ils viennent de XCTrack.</li>
+    <li>La bibliothèque n’affiche pas d’aperçu d’image : la place est réservée, la vignette
+    est un cadre vide qui le dit.</li>
+    <li>Le tri des réglages généraux ne propose pas tout : ce que le catalogue n’a pas
+    relevé n’est pas offert au réglage, plutôt que d’être deviné.</li>
+  </ul>
+
+  <!-- =================================================================== 13 -->
+
+  <h2 id="m-avis"><span class="manual__rank">13.</span>Donner votre avis, signaler ce qui cloche</h2>
+
+  <p>Cet outil est écrit pour des pilotes, et il ne s’améliore que par ce qu’ils en disent.
+  Les suggestions et les corrections passent par les issues GitHub :</p>
+
+  <p><a href="https://github.com/frederict/xcfg-editor/issues">https://github.com/frederict/xcfg-editor/issues</a></p>
+
+  <p>Tout est utile : un gadget mal dessiné, un réglage que l’éditeur ne montre pas, un mot
+  obscur, une version de XCTrack absente de la liste, un fichier qui refuse de s’ouvrir, une
+  phrase de ce manuel qui vous a fait perdre du temps.</p>
+
+  <p>Dire <strong>quel appareil</strong>, <strong>quelle version de XCTrack</strong> et
+  <strong>ce que vous attendiez</strong> fait gagner beaucoup de temps.</p>
+
+  <div class="manual__warning">
+    <span class="manual__boxTitle">N’attachez jamais votre propre fichier</span>
+    <p>Une issue GitHub est publique, et pour toujours. Votre
+    <span class="manual__file">.xcfg</span> porte votre nom, votre voile, vos capteurs, vos
+    fichiers de waypoints, parfois vos coordonnées.</p>
+    <p>Si un fichier est indispensable pour comprendre le problème, produisez-en d’abord une
+    <span class="manual__ui">Version partageable, sans données personnelles</span> avec cet
+    outil, relisez l’inventaire des remplacements qu’il vous montre, et n’envoyez que
+    celle-là.</p>
+  </div>
+
+</div>
