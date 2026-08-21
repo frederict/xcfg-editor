@@ -5,6 +5,7 @@ import type { Page } from '../model/layout'
 import type { Widget } from '../model/widget'
 import { isBlankAtRest } from '../render/registry'
 import { aspectRatioOf, formatMm, widgetSizeMm, type WidgetBox } from './views'
+import { plural } from './prose'
 
 /**
  * La liste des widgets de la page, dans le bandeau.
@@ -174,10 +175,6 @@ function el<K extends keyof HTMLElementTagNameMap>(
   return node
 }
 
-function plural(count: number, singular: string, pluralForm: string): string {
-  return `${count} ${count > 1 ? pluralForm : singular}`
-}
-
 /**
  * La vignette de repérage : la page en miniature, le widget en plein.
  *
@@ -246,7 +243,10 @@ export function renderWidgetList(options: WidgetListOptions): WidgetList {
   if (blocked > 0) {
     const alert = el(
       'span', 'wlist__alert',
-      plural(blocked, 'inatteignable dans l’éditeur', 'inatteignables dans l’éditeur')
+      plural({
+        one: '{count} inatteignable dans l’éditeur',
+        other: '{count} inatteignables dans l’éditeur'
+      }, blocked)
     )
     alert.title =
       'Ces gadgets sont entièrement recouverts par des rangs supérieurs : ici, aucun clic ' +
