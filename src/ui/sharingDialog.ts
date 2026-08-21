@@ -668,6 +668,11 @@ export function renderSharingDialog(options: SharingDialogOptions): SharingDialo
     input.name = name
     input.value = value
     input.checked = checked
+    // La carte entière est l'étiquette (voir le commentaire CSS de `.sharing__choice`) :
+    // sans ce nom explicite, le « Pour les curieux » imbriqué se lirait à chaque passage
+    // sur ce bouton radio — et son détail technique une fois déplié. Un nom posé ici
+    // l'emporte sur celui que le navigateur aurait tiré du contenu de l'étiquette.
+    input.setAttribute('aria-label', `${title}. ${note}`)
     const body = el('span', 'sharing__choiceBody')
     body.append(
       el('span', 'sharing__choiceTitle', title),

@@ -313,6 +313,23 @@ describe('la boîte : ce que le pilote voit et ce qu’il décide', () => {
     handle.close()
   })
 
+  it('le nom accessible d’un choix ne traîne pas le détail replié « Pour les curieux »', () => {
+    // La carte entière est l'étiquette du bouton radio (cible large, pensée pour un
+    // pilote ganté) et porte un `<details>` imbriqué. Sans nom explicite, un lecteur
+    // d'écran annoncerait tout le contenu de la carte à chaque passage — et le détail
+    // technique une fois déplié, ce qui grandirait le nom à chaque interaction.
+    const handle = open(
+      { document: readSource(BACKUP_2026), fileName: shortName(BACKUP_2026), kind: 'xcfg' },
+      () => {}
+    )
+    const [plain, anonymous] = radios(handle)
+    expect(plain!.getAttribute('aria-label')).not.toContain('Pour les curieux')
+    expect(plain!.getAttribute('aria-label')).toContain('Votre configuration, telle qu’elle est')
+    expect(anonymous!.getAttribute('aria-label'))
+      .toContain('Version partageable, sans données personnelles')
+    handle.close()
+  })
+
   it('choisir la version partageable montre l’inventaire et change le nom annoncé', () => {
     const handle = open(
       { document: readSource(FORMES_PRESERVEES), fileName: 'formes-preservees.xcfg', kind: 'xcfg' },
