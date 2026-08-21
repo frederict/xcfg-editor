@@ -108,6 +108,16 @@ export interface CorpusCheck {
   unmatched: Record<string, string[]>
   /** Types de widgets qu'un fichier réel emploie et qu'aucun relevé ne connaît. */
   unknownWidgets: string[]
+  /**
+   * `versionCode` réellement relevé, quand celui du fichier ne figure dans aucune
+   * archive et que la base se replie sur le plus proche. `91230` (0.9.12.3) est dans
+   * ce cas : trois fichiers du corpus le déclarent, aucun APK ne le porte.
+   *
+   * **Ce n'est pas la même version, c'est la plus proche que nous ayons pu lire.**
+   * Toute interface qui s'appuie sur ce repli doit le dire au pilote plutôt que de
+   * présenter le résultat comme un constat.
+   */
+  approximatedBy?: number
   note: string | null
 }
 
