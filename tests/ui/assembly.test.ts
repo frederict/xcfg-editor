@@ -478,3 +478,28 @@ describe('assemblage — le menu s’ouvre au clavier et ne retient personne', (
     expect(css).toMatch(/\.menu__list \{[^}]*position: absolute/)
   })
 })
+
+/**
+ * Le panneau de réglages d'un gadget sait désormais **écrire** une valeur d'usine que le
+ * fichier ne portait pas. Deux conséquences dans `main.ts`, toutes deux invisibles à
+ * l'exécution mais fausses pour le pilote.
+ */
+describe('écrire une valeur d’usine depuis le panneau', () => {
+  it('le compte de la barre de tête est refait sur le formulaire rendu par l’écriture', () => {
+    // `onChange` reçoit en second paramètre le formulaire **reconstruit** après écriture.
+    // L'ignorer laissait la barre annoncer un réglage de moins que le panneau n'en montre
+    // — jusqu'à la sélection suivante, donc sans que rien ne signale l'écart.
+    expect(main).toContain('onChange: (field, fresh) => onPropertyChange(field, widget, fresh)')
+    expect(main).toContain('if (fresh) updateDockCount(fresh, true)')
+  })
+
+  it('la version du fichier est passée au panneau en édition comme en consultation', () => {
+    // Le panneau propose d'écrire des valeurs relevées sur **une** version de XCTrack, et
+    // dit lui-même quelle confiance leur accorder. Ne pas lui donner la version en édition
+    // le forçait à répondre « version inconnue ici » à l'instant précis où il demande au
+    // pilote de se fier à ce relevé.
+    const call = main.slice(main.indexOf('const panel = editMode'))
+    const editBranch = call.slice(0, call.indexOf(': module.renderProperties'))
+    expect(editBranch).toContain('...fileVersion')
+  })
+})

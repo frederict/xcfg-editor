@@ -23,7 +23,7 @@ import {
 import {
   applyPageOperation, operationAnnouncement, renderPageManager, type PageOperation
 } from './pageManager'
-import type { PropertyField } from './properties'
+import type { PropertyField, PropertyForm } from './properties'
 import {
   aspectRatioOf, buildDetail, buildOverview, clampDockHeight, dockHeightCeiling,
   DOCK_HEIGHT_DEFAULT, DOCK_HEIGHT_MIN, readDockHeight, remarksSummary, revealOffset,
@@ -991,9 +991,30 @@ function onStructureEdit(edit: WidgetStructureEdit): void {
 }
 
 /** Une option modifiée dans le panneau. `properties.ts` a déjà écrit la valeur. */
-function onPropertyChange(field: PropertyField, widget: Widget): void {
+/**
+ * Le compte affiché dans la barre de tête du bandeau.
+ *
+ * Extrait parce qu'il est calculé à deux moments : à la construction du panneau, et après
+ * une écriture qui fait apparaître une ligne. Le laisser en place aurait suffi tant que le
+ * nombre de réglages ne bougeait pas ; il bouge depuis que le panneau sait écrire une
+ * valeur d'usine jusque-là absente.
+ */
+function updateDockCount(form: PropertyForm, editMode: boolean): void {
+  if (!dockCount) return
+  const total = form.fields.length
+  dockCount.textContent = editMode || !form.defaultsKnown
+    ? `${total} réglage${total > 1 ? 's' : ''}`
+    // En consultation, le compte qui compte n'est pas le nombre de lignes : c'est ce que
+    // le pilote a effectivement changé. Il est dit dès la barre de tête, qui survit au
+    // repli du bandeau.
+    : `${total} réglage${total > 1 ? 's' : ''} · ${form.customizedCount} personnalisé` +
+      `${form.customizedCount > 1 ? 's' : ''}`
+}
+
+function onPropertyChange(field: PropertyField, widget: Widget, fresh?: PropertyForm): void {
   if (!session) return
   session.container.modified = true
+  if (fresh) updateDockCount(fresh, true)
   const label = field.label === '' ? field.path : field.label
   const description = `Régler ${label} — ${readableName(widget.shortName, session.language)}`
   if (field.control === 'slider' || field.control === 'number') {
@@ -1589,28 +1610,29 @@ function refreshPanel(): void {
   }
 
   const form = module.buildPropertyForm(widget, session.language)
-  if (dockCount) {
-    const total = form.fields.length
-    dockCount.textContent = editMode || !form.defaultsKnown
-      ? `${total} réglage${total > 1 ? 's' : ''}`
-      // En consultation, le compte qui compte n'est pas le nombre de lignes : c'est ce que
-      // le pilote a effectivement changé. Il est dit dès la barre de tête, qui survit au
-      // repli du bandeau.
-      : `${total} réglage${total > 1 ? 's' : ''} · ${form.customizedCount} personnalisé` +
-        `${form.customizedCount > 1 ? 's' : ''}`
-  }
+  updateDockCount(form, editMode)
 
   // Deux panneaux, deux contrats. En édition, `onChange` est branché et le panneau écrit.
   // En consultation, `readOnly` : le module ne construit aucun contrôle, `onChange` n'est
   // pas fourni, et rien ne peut donc atteindre le document.
+  //
+  // La version du fichier est passée dans les deux cas. En édition aussi, parce que le
+  // panneau y propose d'écrire des valeurs relevées sur **une** version de XCTrack : sans
+  // elle, il ne peut que dire « version inconnue ici » au moment précis où il demande au
+  // pilote de faire confiance à ce relevé.
+  const fileVersion = {
+    ...(session.versionCode === undefined ? {} : { fileVersionCode: session.versionCode }),
+    ...(session.versionName === undefined ? {} : { fileVersionName: session.versionName })
+  }
   const panel = editMode
-    ? module.renderProperties({ form, onChange: (field) => onPropertyChange(field, widget) })
-    : module.renderProperties({
+    ? module.renderProperties({
       form,
-      readOnly: true,
-      ...(session.versionCode === undefined ? {} : { fileVersionCode: session.versionCode }),
-      ...(session.versionName === undefined ? {} : { fileVersionName: session.versionName })
+      ...fileVersion,
+      // Le second paramètre est le formulaire **refait** : écrire une valeur jusqu'ici
+      // absente ajoute une ligne, et le compte de la barre de tête mentirait sans lui.
+      onChange: (field, fresh) => onPropertyChange(field, widget, fresh)
     })
+    : module.renderProperties({ form, readOnly: true, ...fileVersion })
   panelHost.append(panel.element)
 }
 
