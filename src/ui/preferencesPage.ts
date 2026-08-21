@@ -1226,7 +1226,9 @@ export function renderPreferencesPage(options: PreferencesPageOptions): Preferen
 
   const head = el('header', 'prefs__head')
   const titles = el('div', 'prefs__titles')
-  titles.append(el('h2', 'prefs__title', 'Préférences générales'))
+  // Le menu « Fichier » nomme cette page « Réglages généraux » : un écran et la commande
+  // qui l'ouvre doivent porter le même nom, sans quoi le pilote doute d'être au bon endroit.
+  titles.append(el('h2', 'prefs__title', 'Réglages généraux'))
   const subtitle = options.fileName === undefined
     ? 'Ce que XCTrack règle hors des pages de gadgets'
     : `${options.fileName} — ce que XCTrack règle hors des pages de gadgets`
