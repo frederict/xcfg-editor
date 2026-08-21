@@ -424,7 +424,14 @@
   height: 100%;
   display: flex;
   align-items: center;
-  justify-content: center;
+  /* La barre n'est PAS un groupe centré : l'appareil colle les indicateurs à gauche et
+     la batterie à droite (`.xc-status__battery`, plus bas). Mesuré sur la page 9 de la
+     planche, barre de 1280 × 100 : l'encre de l'appareil va de x = 5 à x = 1271, avec un
+     vide de 240 px au milieu, là où la nôtre tenait dans 492 px centrés (394 à 885).
+     La lecture précédente venait de la capture de référence `2026-08-21_barre-etat-
+     reelle.png` où la barre ne fait que 507 px de large : les éléments y remplissent
+     toute la largeur, ce qui se confond avec un groupe centré. */
+  justify-content: flex-start;
   gap: 0.15em;
   padding: 0 0.1em;
   background: var(--xc-status-bg);
@@ -472,10 +479,14 @@
 
 .xc-status__live-text { letter-spacing: 0.02em; }
 
+/* `margin-left: auto` pousse la batterie contre le bord droit — c'est là que l'appareil
+   la met, et le reste des indicateurs reste collé à gauche. Si la batterie est masquée,
+   rien ne pousse et le reste reste à gauche, comme sur l'appareil. */
 .xc-status__battery {
   display: inline-flex;
   align-items: center;
   gap: 0.16em;
+  margin-left: auto;
 }
 
 .xc-status__percent,
@@ -841,11 +852,15 @@
 /* Direction du vent — WWindDirection (windDirection.ts). Correction en vol
    (rendu-en-vol.md § 3) : une lettre cardinale géante, pas une rose ni une flèche —
    voir le commentaire de tête du module. */
+/* `flex-start` et non `center`, exactement comme `.xc-num` : sur l'appareil le titre est
+   COLLÉ EN HAUT et la lettre se centre dans ce qui reste. Centrer la colonne entière
+   faisait descendre le titre avec la lettre — base mesurée à 13,0 % de la hauteur de
+   cellule contre 8,5 % sur l'appareil (page 2 de la planche, cellule 320 × 223). */
 .xc-wind-dir {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   width: 100%;
   height: 100%;
   gap: 0.1em;
@@ -872,10 +887,14 @@
   text-overflow: ellipsis;
 }
 
+/* `margin: auto 0` : la lettre absorbe à parts égales la place laissée par le titre et
+   se centre dessous, sans que le titre quitte le haut de la cellule (même mécanique que
+   `.xc-num__row`). */
 .xc-wind-dir__value {
   color: var(--xc-ink);
   font-weight: 700;
   line-height: 1;
+  margin: auto 0;
 }
 
 /* Même formule que `.xc-num__value` — voir `--xc-value-size` dans `.xc-num`. La forme

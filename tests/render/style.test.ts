@@ -55,11 +55,27 @@ describe('style.css — corrections sans trace dans le DOM', () => {
     }
   })
 
-  it('la barre d’état groupe ses éléments au centre et tire sa police du petit côté de la page', () => {
-    const rule = css.slice(css.indexOf('.xc-status {'), css.indexOf('.xc-status {') + 700)
-    expect(rule).toContain('justify-content: center;')
-    expect(rule).not.toContain('justify-content: flex-end;')
+  it('la barre d’état colle ses indicateurs à gauche, la batterie à droite', () => {
+    // Écart 4 de la revue des 75 widgets. Mesuré page 9 de la planche, barre de
+    // 1280 × 100 : l'encre de l'appareil va de x = 5 à x = 1271, la nôtre tenait dans
+    // 492 px centrés. Le `center` d'avant venait d'une capture où la barre ne fait que
+    // 507 px de large — les éléments y remplissent la largeur, ce qui s'y confond avec
+    // un groupe centré.
+    const rule = css.slice(css.indexOf('.xc-status {'), css.indexOf('.xc-status {') + 1400)
+    expect(rule).toContain('justify-content: flex-start;')
+    expect(rule).not.toContain('justify-content: center;')
     expect(rule).toContain('var(--xc-page-min, 720)')
+    const batterie = css.slice(css.indexOf('.xc-status__battery {'), css.indexOf('.xc-status__battery {') + 200)
+    expect(batterie).toContain('margin-left: auto;')
+  })
+
+  it('le titre de la direction du vent est collé en haut, comme celui des widgets numériques', () => {
+    // Base mesurée à 13,0 % de la hauteur de cellule contre 8,5 % sur l'appareil : la
+    // colonne entière était centrée, donc le titre descendait avec la lettre.
+    const rule = css.slice(css.indexOf('.xc-wind-dir {'), css.indexOf('.xc-wind-dir {') + 260)
+    expect(rule).toContain('justify-content: flex-start;')
+    const valeur = css.slice(css.indexOf('.xc-wind-dir__value {'), css.indexOf('.xc-wind-dir__value {') + 200)
+    expect(valeur).toContain('margin: auto 0;')
   })
   // Écart 1.1 de la revue des 75 widgets — la valeur numérique tranchée. Le calcul est
   // en CSS et n'a donc aucune trace dans le DOM : ces garde-fous sont le seul moyen de
