@@ -537,6 +537,19 @@ const versionItem = menu.add(
   () => openVersionDialog()
 )
 
+/*
+ * Le manuel. Volontairement **jamais désactivé** — comme la bibliothèque, c'est une
+ * commande qui garde son sens sans fichier ouvert, et c'est même là qu'elle sert le
+ * plus : un pilote qui découvre l'outil n'a rien à ouvrir, il a besoin qu'on lui dise
+ * quoi faire. Il ne figure donc pas dans `syncEditControls`.
+ */
+menu.add(
+  'Manuel d’utilisation…',
+  'Comment sortir le fichier de l’instrument, préparer ses pages, et ce qu’il ne faut ' +
+  'jamais partager.',
+  () => openManual()
+)
+
 const bar = el('header', 'app-bar')
 const brand = el('div', 'brand')
 /**
@@ -625,6 +638,13 @@ function landing(): HTMLElement {
     'en haut à droite, sous « Bibliothèque » : elles ne sont jamais parties de ce ' +
     'navigateur.'
   ))
+  // Un second chemin vers le manuel, ici et pas seulement dans le menu : celui qui
+  // découvre l'outil n'a rien à ouvrir, et il ne pense pas à chercher de l'aide dans un
+  // menu appelé « Fichier ».
+  const help = el('button', 'btn btn--ghost', 'Lire le manuel d’utilisation')
+  help.type = 'button'
+  help.addEventListener('click', () => openManual())
+  panel.append(help)
   return panel
 }
 
@@ -2302,6 +2322,26 @@ let versionToken = 0
  * bandeau du fichier, elle la ferait charger à chaque ouverture de fichier, pour un
  * renseignement que la plupart des pilotes ne demandent jamais.
  */
+/**
+ * Le manuel, chargé à la demande.
+ *
+ * Même forme que les cinq autres morceaux paresseux : le fragment et sa feuille pèsent
+ * 16 ko compressés, qu'un pilote qui n'ouvre jamais l'aide n'a aucune raison de
+ * télécharger. Le verrou `manualPending` évite qu'un double clic n'ouvre deux boîtes.
+ */
+let manualPending = false
+function openManual(): void {
+  if (manualPending) return
+  manualPending = true
+  void import('./manualDialog')
+    .then((module) => { module.openManualDialog() })
+    .catch((error: unknown) => {
+      tellProblem('Le manuel n’a pas pu s’ouvrir',
+        'Votre fichier n’a pas bougé. Réessayez.', formatTechnicalDetail(error))
+    })
+    .finally(() => { manualPending = false })
+}
+
 function openVersionDialog(): void {
   if (!session || versionDialog !== undefined) return
   flushRecord()

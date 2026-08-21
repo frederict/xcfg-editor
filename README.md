@@ -287,9 +287,12 @@ Autant le dire tout de suite.
   XCTrack remplit la liste en code, n'ont qu'un champ texte plutôt qu'une liste inventée.
 - **Aucun aperçu d'image dans la bibliothèque.** La place est réservée dans les données,
   la vignette est un cadre vide qui le dit.
-- **L'interface est en français, et en français seulement.** Un socle de traduction en
-  cinq langues (français, anglais, néerlandais, allemand, espagnol) existe dans le code —
-  `src/i18n/` —, mais **aucun écran ne s'en sert à ce jour**. Les libellés de XCTrack,
+- **Les textes de l'interface sont en français, et en français seulement.** Un socle de
+  traduction en cinq langues (français, anglais, néerlandais, allemand, espagnol) existe
+  dans le code — `src/i18n/` — et **tous les écrans en emploient déjà le pluriel et les
+  formateurs** : nombres, dates et tailles suivent donc votre langue. Les phrases, elles,
+  restent écrites en français dans le code, et c'est ce qui reste à faire. Les libellés
+  de XCTrack,
   eux, suivent déjà votre langue : ce sont deux choses distinctes, et les confondre
   ferait lire à un pilote tchèque des noms de gadgets en anglais alors que son instrument
   les lui montre en tchèque.

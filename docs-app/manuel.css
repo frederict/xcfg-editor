@@ -225,3 +225,13 @@
   .manual__ui { white-space: normal; }
   .manual h2 { font-size: 18px; }
 }
+
+/*
+ * La modale qui porte le manuel.
+ *
+ * Écrite ici plutôt que dans `app.css` : elle n'a de sens qu'avec ce fragment, et cette
+ * feuille voyage déjà avec lui dans le même morceau chargé à la demande. La largeur est
+ * celle de la bibliothèque — un texte suivi se lit mal au-delà.
+ */
+.modal--manual { max-width: min(52rem, 94vw); width: min(52rem, 94vw); }
+.modal--manual .modal__box { max-height: 82vh; overflow-y: auto; }

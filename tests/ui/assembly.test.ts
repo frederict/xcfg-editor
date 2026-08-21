@@ -36,7 +36,8 @@ const LAZY_MODULES: Array<{ specifier: string; carries: string }> = [
   { specifier: './versionDiagnostic', carries: 'la base des versions de XCTrack' },
   { specifier: './sharingDialog', carries: 'l’anonymisation et sa feuille de style' },
   { specifier: './libraryPanel', carries: 'la bibliothèque et sa feuille de style' },
-  { specifier: '../library', carries: 'le magasin IndexedDB et l’import/export d’archive' }
+  { specifier: '../library', carries: 'le magasin IndexedDB et l’import/export d’archive' },
+  { specifier: './manualDialog', carries: 'le manuel et sa feuille de style, 16 ko compressés' }
 ]
 
 /**
