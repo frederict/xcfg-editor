@@ -93,7 +93,17 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
   devinée serait pire que ne rien proposer.
 - **Diagnostiquer l'écart de version** : choisir la version de XCTrack visée, et voir ce
   que le fichier porte qu'elle ne lit plus, ou ce qu'elle attend et qu'il n'a pas. Le
-  diagnostic **constate, il ne supprime rien** — l'outil de nettoyage n'existe pas encore.
+  diagnostic **constate**, et distingue soigneusement ce qui est mesuré de ce qui ne
+  l'est pas : un réglage retiré par XCTrack, un trou de notre propre relevé, et un
+  réglage sur lequel nous sommes aveugles n'appellent pas la même conduite.
+- **Enlever les réglages qu'une ancienne version a laissés** — et rien d'autre. XCTrack
+  conserve les réglages qu'il ne connaît plus : une sauvegarde de 2026 traîne encore des
+  interrupteurs de 2023. L'outil propose de les retirer **uniquement** lorsqu'un fichier
+  réel du corpus atteste le reliquat ; un doute, un trou de relevé ou une clé que notre
+  extraction n'a jamais vue ne sont **jamais** proposés à la suppression. Ne rien enlever
+  ne casse rien, enlever à tort casse une configuration de vol : tout le tri est bâti sur
+  ce déséquilibre. Vous voyez la liste, vous décochez ce que vous gardez, vous agissez
+  d'un geste explicite, et vous pouvez revenir en arrière juste après.
 - **Dire ce que votre fichier révèle de vous** avant que vous ne le partagiez. Un export
   `backup` porte votre nom, votre voile, vos capteurs appairés, vos fichiers de waypoints
   — jusqu'au nom de la compétition à laquelle vous participez. Au moment d'enregistrer,
@@ -126,7 +136,8 @@ Autant le dire tout de suite.
 - **Aucune synchronisation avec l'instrument.** L'aller-retour se fait par carte SD ou par
   câble, à la main.
 - **Ni suggestion, ni correction automatique.** L'outil ne réarrange pas vos pages et ne
-  décide pas à votre place.
+  décide pas à votre place. Le nettoyage des réglages périmés ne fait pas exception :
+  rien ne part sans que vous ayez vu la liste et cliqué.
 - **Pas de bibliothèque communautaire, pas de compte, pas de serveur.** C'est un choix :
   ce qui n'existe pas ne fuite pas. La bibliothèque de configurations vit **dans votre
   navigateur** (IndexedDB) et n'en sort que si vous l'exportez vous-même ; vider les
@@ -215,8 +226,8 @@ téléphone rangés dans un bouton d'appel. Le format d'export ne garantit rien 
 `src/catalog/widgetVersions/` répond à une question : *pour un couple (widget, clé
 d'option), dans quelles versions de XCTrack existe-t-il ?* C'est elle qui alimente le
 diagnostic « Version et compatibilité », lequel distingue un réglage devenu caduc d'un
-réglage parfaitement valide. Le **nettoyage**, lui, n'est pas écrit : le diagnostic dit
-ce qu'il sait et ce qu'il ignore, et rien ne supprime encore quoi que ce soit.
+réglage parfaitement valide — et, de là, le **nettoyage** (`src/model/cleanup.ts`), qui
+ne retire que ce que la base atteste par un fichier réel.
 
 Elle est reproductible, une version à la fois, à partir d'un APK **que l'on possède**.
 Deux outils, sans réseau ni dépendance :
@@ -249,6 +260,13 @@ exactement les reliquats qu'un nettoyage doit ôter ; une base qui prendrait tou
 non extraite pour une clé retirée supprimerait des réglages valides. D'où des tables
 distinctes — ce qui a été *lu*, ce qu'un fichier réel *porte*, et **pourquoi** les deux
 diffèrent. Voir l'en-tête de `src/catalog/widgetVersions.ts`.
+
+C'est cette distinction que le nettoyage exploite, et il n'en exploite qu'une part : sur
+les huit familles d'écart que le diagnostic sait nommer, **une seule** est proposée à la
+suppression — celle qu'un fichier réel atteste. Les sept autres, y compris celles qui
+« se défendraient » sur la foi du relevé seul, restent en place. Un test balaie tout le
+corpus et tous les paliers pour vérifier qu'aucun trou de relevé ni aucune clé aveugle
+n'entre dans un plan de nettoyage, fussent-ils majoritaires.
 
 Ce dépôt ne fournit pas d'outil pour rassembler les APK : chacun apporte les siens.
 

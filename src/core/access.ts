@@ -162,8 +162,66 @@ export function insertString(node: JsonNode, key: string, raw: string, at?: numb
  * qu'on ne l'affiche pas.
  */
 export function removeMember(node: JsonNode, key: string): number {
+  return extractMember(node, key).length
+}
+
+/**
+ * Une occurrence de clé retirée d'un objet : le rang qu'elle occupait, et l'entrée
+ * elle-même.
+ *
+ * L'entrée est conservée **telle quelle**, texte source de la clé compris. Une clé
+ * écrite `"a"` par Gson (2022, voir `tests/fixtures/formes/gson-2022.xcfg`) doit se
+ * reposer sous cette forme-là : la réencoder rendrait `"a"`, ce qui est le même nom et un
+ * autre fichier.
+ */
+export interface MemberOccurrence {
+  /** Rang qu'occupait la clé dans `entries`, avant le retrait. */
+  rank: number
+  /** L'entrée d'origine — ni recopiée, ni réécrite. */
+  entry: [key: string, value: JsonNode]
+}
+
+/**
+ * Retire **toutes** les occurrences d'une clé et rend de quoi les remettre exactement où
+ * elles étaient. Même postcondition que `removeMember`, qui n'est plus que le comptage
+ * de ce qu'elle rend.
+ *
+ * Elle existe pour une raison précise : un geste de suppression que le pilote peut
+ * **défaire après coup** ne peut pas se contenter de « la clé n'est plus là ». Il faut
+ * savoir reposer la valeur, à son rang, sous son texte source — sans quoi l'annulation
+ * rendrait un fichier différent de celui d'avant, et la fidélité à l'octet près
+ * s'arrêterait au premier repentir.
+ */
+export function extractMember(node: JsonNode, key: string): MemberOccurrence[] {
   if (node.kind !== 'object') throw new Error('objet attendu')
-  const before = node.entries.length
-  node.entries = node.entries.filter((entry) => decode(entry[0]) !== key)
-  return before - node.entries.length
+  const taken: MemberOccurrence[] = []
+  const kept: Array<[string, JsonNode]> = []
+  node.entries.forEach((entry, rank) => {
+    if (decode(entry[0]) === key) taken.push({ rank, entry })
+    else kept.push(entry)
+  })
+  node.entries = kept
+  return taken
+}
+
+/**
+ * Repose des occurrences rendues par `extractMember`, chacune à son rang d'origine.
+ *
+ * Les rangs sont repris dans l'ordre croissant : celui d'une clé doublée reste alors
+ * exact, parce que chaque insertion précédente a déjà décalé ce qui la suit. Un rang
+ * au-delà de la fin de l'objet — l'objet a été modifié entre-temps — met l'entrée en
+ * queue plutôt que de lever : reposer un réglage au mauvais rang est sans effet pour
+ * XCTrack, qui relit ses réglages par nom (voir la note d'insertion plus haut) ; le
+ * perdre, non.
+ *
+ * ⚠️ **À n'appeler qu'une fois par extraction.** Les entrées ne sont pas recopiées : les
+ * reposer deux fois poserait deux fois le même objet, c'est-à-dire une clé doublée.
+ */
+export function restoreMember(
+  node: JsonNode, occurrences: readonly MemberOccurrence[]
+): void {
+  if (node.kind !== 'object') throw new Error('objet attendu')
+  for (const { rank, entry } of [...occurrences].sort((a, b) => a.rank - b.rank)) {
+    node.entries.splice(Math.min(Math.max(rank, 0), node.entries.length), 0, entry)
+  }
 }

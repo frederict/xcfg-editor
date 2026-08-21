@@ -5,16 +5,24 @@ import {
   type KeyStatus,
   type VersionDatabase
 } from '../catalog/widgetVersions'
-import { decode, getMember, readNumber, readString } from '../core/access'
+import { getMember, readNumber, readString } from '../core/access'
 import type { JsonNode } from '../core/jsonDocument'
 import { readLayout, type Layout } from '../model/layout'
+import { widgetOptionKeys } from '../model/widget'
+import { buildCleanupSection, type CleanupEvent, type CleanupSection } from './cleanupPanel'
+import type { CleanupPlan } from '../model/cleanup'
 import './versionDiagnostic.css'
 
 /**
  * Choix de la version de XCTrack visée, et **diagnostic** du document ouvert contre ce
- * choix. Ce module ne supprime rien et ne modifie rien : il dit ce que la base des
- * versions sait, et surtout ce qu'elle ne sait pas. L'outil de nettoyage viendra plus
- * tard, et il ne se défendra que sur ce que ce diagnostic sait affirmer.
+ * choix. Le diagnostic lui-même ne supprime rien et ne modifie rien : il dit ce que la
+ * base des versions sait, et surtout ce qu'elle ne sait pas.
+ *
+ * Le **nettoyage** se pose sous lui, et seulement si l'hôte l'ouvre en fournissant
+ * `onCleanup` (voir `VersionPanelOptions`). Il ne se défend que sur ce que ce diagnostic
+ * sait affirmer — la seule famille `legacy`, celle qu'un fichier réel atteste — et il est
+ * écrit ailleurs : `src/ui/cleanupPanel.ts` pour l'écran, `src/model/cleanup.ts` pour le
+ * plan et le retrait.
  *
  * ## Cinq décisions, et leurs raisons
  *
@@ -363,46 +371,6 @@ export interface Diagnosis {
 
 /* ---------------------------------------------------------------- lecture du schéma */
 
-/** Les cinq clés de structure : ni des réglages, ni dans aucun relevé. */
-const STRUCTURAL_KEYS = new Set(['CLASS', 'X1', 'Y1', 'X2', 'Y2'])
-
-/** Bornes d'un intervalle `"0-2,5"`. `null` pour l'intervalle vide. */
-function spanBounds(spec: string): { min: number; max: number } | null {
-  if (spec === '') return null
-  let min = Number.POSITIVE_INFINITY
-  let max = Number.NEGATIVE_INFINITY
-  for (const part of spec.split(',')) {
-    const dash = part.indexOf('-')
-    const low = dash < 0 ? Number(part) : Number(part.slice(0, dash))
-    const high = dash < 0 ? Number(part) : Number(part.slice(dash + 1))
-    if (Number.isNaN(low) || Number.isNaN(high)) continue
-    min = Math.min(min, low)
-    max = Math.max(max, high)
-  }
-  return min <= max ? { min, max } : null
-}
-
-/**
- * À quels paliers le relevé lit cette clé sur ce gadget — bornes seulement, ce qui
- * suffit à savoir si la lecture est antérieure, postérieure, ou des deux côtés.
- */
-function readBounds(
-  db: VersionDatabase, widget: string, key: string
-): { min: number; max: number } | null {
-  const spans = db.schema.widgets[widget]
-  if (spans === undefined) return null
-  let min = Number.POSITIVE_INFINITY
-  let max = Number.NEGATIVE_INFINITY
-  for (const [span, keys] of Object.entries(spans)) {
-    if (!keys.includes(key)) continue
-    const bounds = spanBounds(span)
-    if (bounds === null) continue
-    min = Math.min(min, bounds.min)
-    max = Math.max(max, bounds.max)
-  }
-  return min <= max ? { min, max } : null
-}
-
 /**
  * Le raffinement de `KeyStatus` en `FindingCategory`. `absent` est le seul cas qui
  * demande un examen supplémentaire : il recouvre quatre situations dont deux interdisent
@@ -419,7 +387,7 @@ export function categoryOf(
     case 'unknown': return 'unknown-widget'
     case 'absent': break
   }
-  const bounds = readBounds(db, widget, key)
+  const bounds = db.keyReadBounds(widget, key)
   if (bounds === null) return 'never-read'
   if (bounds.max < tier) return 'past-only'
   if (bounds.min > tier) return 'future-only'
@@ -733,19 +701,6 @@ export interface DiagnoseOptions {
   language?: string
 }
 
-function widgetKeys(node: JsonNode): string[] {
-  if (node.kind !== 'object') return []
-  const seen = new Set<string>()
-  const keys: string[] = []
-  for (const [rawKey] of node.entries) {
-    const key = decode(rawKey)
-    if (STRUCTURAL_KEYS.has(key) || seen.has(key)) continue
-    seen.add(key)
-    keys.push(key)
-  }
-  return keys
-}
-
 /**
  * Le diagnostic du document contre un palier. Rien n'est modifié, rien n'est proposé à
  * la suppression : on décrit, on situe, on dit ce qu'on ignore.
@@ -781,7 +736,7 @@ export function diagnose(
         const widgetStatus = db.widgetStatus(widget.shortName, tier)
         if (widgetStatus !== 'present') widgetFindings.push({ place, status: widgetStatus })
 
-        for (const key of widgetKeys(widget.node)) {
+        for (const key of widgetOptionKeys(widget.node)) {
           keyCount += 1
           const status = db.keyStatus(widget.shortName, key, tier)
           statusCounts[status] += 1
@@ -863,6 +818,18 @@ export interface VersionPanelOptions {
   database?: VersionDatabase
   /** Notifié à chaque changement de palier retenu, et au premier diagnostic. */
   onChange?: (tier: number | null, diagnosis: Diagnosis | null) => void
+  /**
+   * **Ce qui ouvre le nettoyage.** Tant qu'il est absent, le panneau constate et ne
+   * propose rien — c'est son comportement d'origine, et le seul qui convienne à un hôte
+   * incapable de suivre une modification.
+   *
+   * Le fournir, c'est déclarer deux choses : que `document` est le document **vivant** de
+   * l'éditeur, et que l'hôte sait, à réception de l'événement, enregistrer un pas
+   * d'annulation sous `description` et redessiner les pages. Un hôte qui ne le ferait pas
+   * laisserait le pilote devant un dessin périmé et un « annuler » qui saute par-dessus
+   * le nettoyage : ne rien proposer vaut mieux.
+   */
+  onCleanup?: (event: CleanupEvent) => void
 }
 
 export interface VersionPanel {
@@ -871,6 +838,11 @@ export interface VersionPanel {
   /** Palier retenu, ou `null` tant que rien n'est choisi. */
   tier: () => number | null
   diagnosis: () => Diagnosis | null
+  /**
+   * Ce que le nettoyage retirerait, ou `null` s'il n'est pas ouvert. Toujours vide tant
+   * qu'aucun palier n'est retenu.
+   */
+  cleanupPlan: () => CleanupPlan | null
   /** Rebranche le panneau sur un autre document — nouvelle présélection comprise. */
   setDocument: (document: JsonNode) => void
 }
@@ -896,6 +868,7 @@ export async function buildVersionPanel(
   let menu = tierOptions(db, suggestion.candidateTiers, language)
   let current: number | null = suggestion.selected
   let report: Diagnosis | null = null
+  let cleanup: CleanupSection | undefined
 
   const root = el('section', 'vdiag')
   root.setAttribute('aria-label', 'Version visée et compatibilité')
@@ -1109,7 +1082,22 @@ export async function buildVersionPanel(
     return section
   }
 
-  function recompute(): void {
+  /**
+   * Le nettoyage, s'il est ouvert. `forget` distingue les deux façons de refaire le plan :
+   * après un geste de nettoyage, le retour en arrière doit survivre au recalcul ; après un
+   * changement de version ou de fichier, il n'a plus d'objet.
+   *
+   * Le palier `-1` sert de « pas de palier retenu » : aucun réglage n'y est reconnu comme
+   * reliquat, donc la section est vide, et elle le reste sans cas particulier à écrire.
+   */
+  function syncCleanup(forget: boolean): void {
+    if (cleanup === undefined) return
+    const at = current ?? -1
+    if (forget) cleanup.reset(layout, at)
+    else cleanup.refresh(layout, at)
+  }
+
+  function recompute(forget = true): void {
     // La stabilité ne s'éprouve que contre les paliers que le FICHIER désigne, et
     // seulement si le pilote est resté sur l'un d'eux. Dès qu'il vise délibérément une
     // autre version, comparer au palier d'origine ferait de chaque différence attendue
@@ -1124,6 +1112,7 @@ export async function buildVersionPanel(
     renderBasis()
     renderDelta()
     renderReport()
+    syncCleanup(forget)
     options.onChange?.(current, report)
   }
 
@@ -1153,14 +1142,35 @@ export async function buildVersionPanel(
     recompute()
   }
 
+  // Bâtie avant le premier `reload()` : c'est lui qui la remplit, comme il remplit le
+  // rapport. Elle vient APRÈS le diagnostic, jamais avant — on ne propose pas d'agir à
+  // qui n'a pas encore lu ce qu'on a constaté.
+  if (options.onCleanup !== undefined) {
+    const notify = options.onCleanup
+    cleanup = buildCleanupSection({
+      db,
+      layout,
+      tier: current ?? -1,
+      language,
+      onChange: (event) => {
+        // Le document a changé sous le diagnostic : le refaire, sans effacer le retour en
+        // arrière que le pilote a sous les yeux.
+        recompute(false)
+        notify(event)
+      }
+    })
+  }
+
   reload()
   root.append(choice, reportEl)
+  if (cleanup !== undefined) root.append(cleanup.element)
 
   return {
     element: root,
     select,
     tier: () => current,
     diagnosis: () => report,
+    cleanupPlan: () => cleanup?.plan() ?? null,
     setDocument: (next: JsonNode) => {
       source = next
       reload()

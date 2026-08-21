@@ -1,5 +1,38 @@
 import type { JsonNode } from '../core/jsonDocument'
-import { readBoolean, readNumber, readString } from '../core/access'
+import { decode, readBoolean, readNumber, readString } from '../core/access'
+
+/**
+ * Les cinq clés qui disent **où** est le gadget et **ce qu'il est** — jamais comment il
+ * est réglé. Elles ne figurent dans aucun relevé d'APK, et pour cause : elles
+ * appartiennent au format du fichier, pas au catalogue d'options d'un gadget.
+ *
+ * Les confondre avec des réglages coûterait cinq constats faux par gadget à qui
+ * confronte un fichier à une version de XCTrack, et cinq propositions de suppression
+ * catastrophiques à qui le nettoie.
+ */
+export const STRUCTURAL_KEYS: ReadonlySet<string> =
+  new Set(['CLASS', 'X1', 'Y1', 'X2', 'Y2'])
+
+/**
+ * Les clés de **réglage** que porte ce nœud de gadget, dans l'ordre du fichier, sans les
+ * cinq clés de structure.
+ *
+ * Une clé doublée n'est rendue qu'une fois : c'est un défaut du fichier, signalé
+ * ailleurs, et le rendre deux fois ferait compter deux réglages là où le gadget n'en
+ * porte qu'un aux yeux de XCTrack, qui ne retient que la dernière occurrence.
+ */
+export function widgetOptionKeys(node: JsonNode): string[] {
+  if (node.kind !== 'object') return []
+  const seen = new Set<string>()
+  const keys: string[] = []
+  for (const [rawKey] of node.entries) {
+    const key = decode(rawKey)
+    if (STRUCTURAL_KEYS.has(key) || seen.has(key)) continue
+    seen.add(key)
+    keys.push(key)
+  }
+  return keys
+}
 
 /**
  * Vue sur un widget limitée aux huit clés universelles — les seules présentes sur tous

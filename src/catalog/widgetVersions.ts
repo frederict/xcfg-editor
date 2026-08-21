@@ -219,6 +219,29 @@ export function tierInRange(spec: string, tier: number): boolean {
   return false
 }
 
+/**
+ * Les bornes d'un intervalle `"0-2,5"` — ici 0 et 5. `null` pour l'intervalle vide.
+ *
+ * Les bornes, et non les paliers un à un : un intervalle troué (`"0-2,5"` ne contient pas
+ * 3) reste un intervalle troué, et `tierInRange` est là pour cela. Ce qui se lit ici,
+ * c'est « d'où à où », la seule question que pose le classement d'un palier par rapport à
+ * une plage de lecture.
+ */
+export function spanBounds(spec: string): { min: number; max: number } | null {
+  if (spec === '') return null
+  let min = Number.POSITIVE_INFINITY
+  let max = Number.NEGATIVE_INFINITY
+  for (const part of spec.split(',')) {
+    const dash = part.indexOf('-')
+    const low = dash < 0 ? Number(part) : Number(part.slice(0, dash))
+    const high = dash < 0 ? Number(part) : Number(part.slice(dash + 1))
+    if (Number.isNaN(low) || Number.isNaN(high)) continue
+    min = Math.min(min, low)
+    max = Math.max(max, high)
+  }
+  return min <= max ? { min, max } : null
+}
+
 /** La base chargée, avec ce qu'il faut pour l'interroger sans la reparcourir. */
 export class VersionDatabase {
   private readonly tiersByCode = new Map<number, number[]>()
@@ -265,6 +288,30 @@ export class VersionDatabase {
       if (tierInRange(span, tier)) keys.push(...names)
     }
     return keys.sort()
+  }
+
+  /**
+   * Entre quels paliers l'extraction **lit** cette clé sur ce gadget — les bornes
+   * seulement, ce qui suffit à situer un palier avant, après, ou entre les deux.
+   * `null` quand aucun relevé ne la lit : l'extraction est alors muette, et son silence
+   * ne conclut rien.
+   *
+   * C'est la question dont dépend le nettoyage : « depuis quelle version ce réglage
+   * n'est-il plus lu ? » se répond par `max + 1`, et par rien d'autre.
+   */
+  keyReadBounds(widget: string, key: string): { min: number; max: number } | null {
+    const spans = this.schema.widgets[widget]
+    if (spans === undefined) return null
+    let min = Number.POSITIVE_INFINITY
+    let max = Number.NEGATIVE_INFINITY
+    for (const [span, keys] of Object.entries(spans)) {
+      if (!keys.includes(key)) continue
+      const bounds = spanBounds(span)
+      if (bounds === null) continue
+      min = Math.min(min, bounds.min)
+      max = Math.max(max, bounds.max)
+    }
+    return min <= max ? { min, max } : null
   }
 
   /**

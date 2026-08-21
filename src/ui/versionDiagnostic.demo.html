@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Essai — sélecteur de version et diagnostic</title>
+    <title>Essai — version, diagnostic et nettoyage</title>
     <style>
       /*
        * Page d'essai du module `versionDiagnostic.ts`, servie par `npm run dev` à
@@ -35,17 +35,32 @@
       }
       .files button[aria-pressed="true"] { font-weight: 700; }
       main { max-width: 52rem; }
+      h2 { font-size: 0.95rem; margin: 1.6rem 0 0.3rem; }
+      .journal {
+        max-width: 52rem; margin: 0; padding-left: 1.1rem;
+        font-size: 0.82rem; line-height: 1.6;
+      }
+      .journal:empty::after { content: "— rien pour l’instant"; margin-left: -1.1rem; opacity: 0.7; }
     </style>
   </head>
   <body>
-    <h1>Essai — sélecteur de version et diagnostic de compatibilité</h1>
+    <h1>Essai — version, diagnostic de compatibilité et nettoyage</h1>
     <p class="lead">
       Le module est appelé directement, sans l’éditeur. Les trois fichiers sont les
       fixtures anonymisées du dépôt, lues en lecture seule ; aucune donnée personnelle
-      n’y figure. Le thème suit celui du système.
+      n’y figure. Le thème suit celui du système. Le nettoyage agit sur l’arbre chargé
+      en mémoire : <strong>rien n’est réécrit sur le disque</strong>, et changer de
+      fichier le rejette.
     </p>
     <div class="files" id="files"></div>
     <main id="host"></main>
+    <h2>Ce qu’un hôte recevrait</h2>
+    <p class="lead">
+      Chaque geste de nettoyage annonce un libellé de pas d’annulation. L’éditeur
+      l’enregistrerait dans son historique et redessinerait les pages ; cette page se
+      contente de l’inscrire.
+    </p>
+    <ul id="journal" class="journal"></ul>
     <script type="module" src="/src/ui/versionDiagnostic.demo.ts"></script>
   </body>
 </html>

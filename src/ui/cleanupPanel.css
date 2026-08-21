@@ -1,0 +1,203 @@
+/*
+ * Habillage de la section de nettoyage.
+ *
+ * Feuille séparée, importée par `cleanupPanel.ts` : le module est autonome et n'écrit
+ * rien dans `app.css`, qui appartient à l'assemblage.
+ *
+ * Trois règles reprises du cadre, et une propre à cet écran :
+ *
+ * 1. **achromatique**, sauf l'ambre — la seule teinte que le cadre s'autorise. Elle marque
+ *    ici la section tant qu'un geste reste à faire, comme elle marque dans le diagnostic
+ *    les constats sur lesquels une suppression se défend ;
+ * 2. **jamais la couleur seule** : le titre, le compte et le libellé du bouton disent tout
+ *    ce que l'ambre redit ;
+ * 3. **le fait accompli n'est pas ambre.** Une fois le nettoyage fait, il n'y a plus rien
+ *    à décider : la section revient au gris du cadre, et seul le retour en arrière reste
+ *    offert. Garder l'ambre laisserait croire qu'il reste quelque chose à faire.
+ * 4. **la case à cocher garde sa taille native.** C'est une cible de doigt sur un écran
+ *    tactile, et la rétrécir pour l'esthétique la rendrait manquable.
+ *
+ * Les variables `--app-*` viennent d'`app.css` quand le module est assemblé dans
+ * l'éditeur. Le repli qui suit chaque `var()` rend la feuille utilisable seule, sur la
+ * page d'essai comme dans un test.
+ */
+
+.vclean {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  font-family: var(--font-ui, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif);
+  color: var(--app-flag-ink, #7a5410);
+  background: var(--app-flag-bg, #f7eacd);
+  border: 1px solid var(--app-line, #d3d7dc);
+  border-left: 3px solid var(--app-flag-line, #cf9c2c);
+  border-radius: 6px;
+  padding: 0.9rem 1rem 1rem;
+}
+
+/* Vide : rien à enlever, donc rien à montrer — pas même une bordure. */
+.vclean:empty {
+  display: none;
+}
+
+/* Le fait accompli : plus de décision, donc plus d'ambre. */
+.vclean--done {
+  color: var(--app-ink, #15181c);
+  background: var(--app-panel, #f6f7f8);
+  border-left-color: var(--app-line-strong, #b1b8bf);
+}
+
+.vclean__title {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.vclean__lead {
+  margin: 0;
+  font-size: 0.87rem;
+  line-height: 1.55;
+  font-weight: 600;
+}
+
+/* La phrase qui désamorce : rien n'est cassé, rien ne presse. */
+.vclean__calm,
+.vclean__caveat {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.vclean__details {
+  font-size: 0.85rem;
+}
+
+.vclean__details > summary {
+  cursor: pointer;
+}
+
+.vclean__details-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem 0 0.2rem;
+}
+
+.vclean__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  max-height: 20rem;
+  overflow-y: auto;
+}
+
+.vclean__place {
+  margin: 0 0 0.15rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.vclean__keys {
+  margin: 0;
+  padding: 0 0 0 0.2rem;
+  list-style: none;
+}
+
+.vclean__choice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem;
+  padding: 0.12rem 0;
+  cursor: pointer;
+}
+
+.vclean__box {
+  flex: none;
+  /* Taille native : c'est une cible de doigt, pas un ornement. */
+  align-self: center;
+  accent-color: var(--app-flag-line, #cf9c2c);
+}
+
+.vclean__key {
+  font-family: var(--font-data, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+}
+
+.vclean__note {
+  font-size: 0.76rem;
+  font-style: italic;
+  opacity: 0.85;
+}
+
+.vclean__act {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.vclean__tally {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.vclean__go,
+.vclean__undo {
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  color: inherit;
+  background: transparent;
+  border: 1px solid currentcolor;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.vclean__undo {
+  align-self: flex-start;
+}
+
+.vclean__go:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.vclean__go:focus-visible,
+.vclean__undo:focus-visible,
+.vclean__details > summary:focus-visible,
+.vclean__choice:focus-within {
+  outline: 2px solid var(--app-focus, #1a5fbe);
+  outline-offset: 1px;
+}
+
+.vclean__done {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+@media (prefers-color-scheme: dark) {
+  /* Les `--app-*` d'`app.css` basculent seuls ; ces replis servent la page d'essai et
+     tout emploi de ce module sans la feuille du cadre. */
+  .vclean {
+    color: var(--app-flag-ink, #e6bd6b);
+    background: var(--app-flag-bg, #35290f);
+    border-color: var(--app-line, #282e33);
+    border-left-color: var(--app-flag-line, #8a6a20);
+  }
+
+  .vclean--done {
+    color: var(--app-ink, #e6eaed);
+    background: var(--app-panel, #191d20);
+    border-left-color: var(--app-line-strong, #3b434a);
+  }
+
+  .vclean__box {
+    accent-color: var(--app-flag-line, #8a6a20);
+  }
+}

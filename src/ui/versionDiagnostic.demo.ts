@@ -2,8 +2,14 @@ import { parseJson } from '../core/parseJson'
 import { buildVersionPanel, type VersionPanel } from './versionDiagnostic'
 
 /**
- * Page d'essai du sélecteur de version — le module n'étant branché nulle part, c'est
- * ici qu'on l'éprouve sur des fichiers réels.
+ * Page d'essai du sélecteur de version, du diagnostic **et du nettoyage** — c'est ici
+ * qu'on les éprouve sur des fichiers réels, hors de l'éditeur.
+ *
+ * Le nettoyage n'apparaît que si l'hôte le demande (`onCleanup`) : cette page joue donc
+ * l'hôte minimal — elle reçoit l'événement et l'inscrit dans un journal, là où l'éditeur
+ * enregistrerait un pas d'annulation et redessinerait les pages. Le document nettoyé est
+ * l'arbre chargé en mémoire ; **rien n'est réécrit sur le disque**, et changer de fichier
+ * le rejette.
  *
  * Servie par `npm run dev` à /src/ui/versionDiagnostic.demo.html, sur un port libre :
  * `npx vite --port 5178`. Elle n'entre pas dans `dist/` — `vite build` ne construit que
@@ -21,16 +27,33 @@ const FILES = [
 
 const host = document.getElementById('host')
 const files = document.getElementById('files')
-if (host === null || files === null) throw new Error('page d’essai incomplète')
+const journal = document.getElementById('journal')
+if (host === null || files === null || journal === null) {
+  throw new Error('page d’essai incomplète')
+}
 
 let panel: VersionPanel | undefined
+
+/** Ce qu'un hôte réel ferait ici : enregistrer un pas d'annulation, et redessiner. */
+function log(text: string): void {
+  const line = document.createElement('li')
+  line.textContent = text
+  journal?.append(line)
+}
 
 async function show(path: string): Promise<void> {
   const response = await fetch(path)
   const source = await response.text()
   const parsed = parseJson(source)
+  if (journal !== null) journal.textContent = ''
   if (panel === undefined) {
-    panel = await buildVersionPanel({ document: parsed })
+    panel = await buildVersionPanel({
+      document: parsed,
+      onCleanup: (event) => {
+        log(`${event.description} — ${String(event.keyCount)} sur ` +
+          `${String(event.widgetCount)} gadgets`)
+      }
+    })
     host?.append(panel.element)
   } else {
     panel.setDocument(parsed)
