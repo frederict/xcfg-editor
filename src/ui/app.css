@@ -393,6 +393,69 @@ body {
 
 .warning__more[open] .warning__summary { margin-bottom: 0.2rem; }
 
+/*
+ * Les constats qui ne réclament rien : une ligne, au-dessus des pages.
+ *
+ * Ce que le pilote vient voir, ce sont ses pages. Dépliés, les quatre encadrés de cette
+ * famille repoussaient la première vignette à 1 064 px du haut (1 500 × 950) et à
+ * 1 153 px sur une tablette — plus d'un écran de prose. Repliés, ils tiennent en 40 px
+ * et se rouvrent d'un clic, sans que rien de ce qu'ils disent soit perdu.
+ */
+.warnings--remarks { margin-bottom: 1.6rem; }
+
+.remarks {
+  background: var(--app-panel);
+  border: 1px solid var(--app-line);
+  border-radius: 6px;
+}
+
+.remarks__summary {
+  /* La cible tactile fait 41 px de haut — au-dessus des 24 px du critère 2.5.8. */
+  padding: 0.6rem 1.1rem;
+  cursor: pointer;
+  list-style-position: inside;
+}
+
+.remarks__summary:focus-visible { outline: 2px solid var(--app-focus); outline-offset: -2px; }
+
+/* `inline-flex` et non `flex` : le triangle de dépliage reste sur la même ligne que le
+   titre, alors qu'un bloc le renverrait à la ligne suivante. */
+.remarks__head {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  max-width: calc(100% - 2rem);
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  vertical-align: baseline;
+}
+
+.remarks__count { flex: none; }
+
+/* Les intitulés donnent de quoi décider d'ouvrir ; la ligne ne s'allonge jamais. */
+.remarks__titles {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--app-ink-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.remarks[open] .remarks__summary { border-bottom: 1px solid var(--app-line); }
+.remarks[open] .remarks__titles { visibility: hidden; }
+
+.remarks .warning {
+  border: 0;
+  border-left: 3px solid var(--app-line-strong);
+  border-radius: 0;
+  background: none;
+  margin: 0.6rem 1.1rem;
+}
+
 /* ------------------------------------------------------- confirmation avant export */
 
 .modal {

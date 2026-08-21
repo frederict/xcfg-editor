@@ -229,3 +229,27 @@ describe('assemblage — sélectionner un gadget l’amène sous les yeux du pil
     expect(main).toContain("'(prefers-reduced-motion: reduce)'")
   })
 })
+
+describe('assemblage — la vue d’ensemble montre les pages avant les constats', () => {
+  it('les constats sont triés en deux poids', () => {
+    expect(main).toContain('splitWarnings(warningsAt(session.warnings, ')
+    expect(main).toContain('function attentionPanel')
+    expect(main).toContain('function remarksPanel')
+    // L'ancien panneau unique, qui alignait quatre encadrés d'égal poids visuel avant la
+    // première vignette, n'existe plus.
+    expect(main).not.toContain('function warningPanel')
+  })
+
+  it('rien n’est supprimé : la ligne repliée porte tous les constats', () => {
+    // Ils disent des choses vraies que rien d'autre ne dit ; ils passent seulement après
+    // les pages, qui sont ce que le pilote vient voir.
+    expect(main).toMatch(/for \(const warning of warnings\) box\.append\(warningCard\(warning\)\)/)
+    expect(main).toContain("el('details', 'remarks')")
+  })
+
+  it('la ligne repliée tient sur une ligne, quel que soit le nombre d’intitulés', () => {
+    const css = read('src/ui/app.css')
+    expect(css).toMatch(/\.remarks__titles \{[^}]*white-space: nowrap/)
+    expect(css).toMatch(/\.remarks__titles \{[^}]*text-overflow: ellipsis/)
+  })
+})

@@ -25,7 +25,8 @@ import {
 import type { PropertyField } from './properties'
 import {
   aspectRatioOf, buildDetail, buildOverview, clampDockHeight, dockHeightCeiling,
-  DOCK_HEIGHT_DEFAULT, DOCK_HEIGHT_MIN, readDockHeight, revealOffset, writeDockHeight,
+  DOCK_HEIGHT_DEFAULT, DOCK_HEIGHT_MIN, readDockHeight, remarksSummary, revealOffset,
+  splitWarnings, writeDockHeight,
   type DetailEditing, type DetailInspecting, type Orientation, type ViewContext,
   type VisibleBand
 } from './views'
@@ -440,11 +441,50 @@ function warningCard(warning: Warning, level: 'h3' | 'h4' = 'h3'): HTMLElement {
   return card
 }
 
-function warningPanel(warnings: Warning[]): HTMLElement | undefined {
+/**
+ * Ce qui décrit un **défaut**, déplié au-dessus des pages : un widget dégénéré, une clé
+ * dupliquée, une géométrie hors bornes. Ces familles-là méritent le premier écran, et
+ * elles sont rares — aucun des fichiers du corpus n'en porte.
+ */
+function attentionPanel(warnings: Warning[]): HTMLElement | undefined {
   if (warnings.length === 0) return undefined
   const panel = el('section', 'warnings')
-  panel.append(el('h2', 'warnings__title', 'Ce que dit ce fichier'))
+  panel.append(el('h2', 'warnings__title', 'À vérifier dans ce fichier'))
   for (const warning of warnings) panel.append(warningCard(warning))
+  return panel
+}
+
+/**
+ * Ce qui **renseigne** sans rien réclamer — type d'export, valeurs de rendu supposées,
+ * langue des libellés, boutons recouverts volontairement —, replié en une ligne.
+ *
+ * Pourquoi replier plutôt que supprimer : chacune de ces phrases est vraie et rien
+ * d'autre ne la dit. Pourquoi replier plutôt que laisser ouvert : dépliés, ces quatre
+ * encadrés d'égal poids visuel repoussaient la première vignette à 1 064 px du haut sur
+ * un écran de 1 500 × 950, et à 1 153 px sur une tablette — un écran et demi de prose
+ * avant la moindre page. Le pilote a ouvert son fichier pour voir ses pages.
+ *
+ * Les intitulés restent lisibles sur la ligne repliée, tronqués par la feuille de style :
+ * on sait de quoi il retourne sans ouvrir, et la ligne se souvient d'être ouverte tant
+ * que la vue n'est pas reconstruite.
+ */
+function remarksPanel(warnings: Warning[]): HTMLElement | undefined {
+  if (warnings.length === 0) return undefined
+  const panel = el('section', 'warnings warnings--remarks')
+  const box = el('details', 'remarks')
+  const summary = el('summary', 'remarks__summary')
+  // Un `<summary>` n'admet qu'un seul élément de titre, ou du contenu de phrasé : le
+  // titre porte donc les deux fragments, et non le résumé lui-même. Le titre est ce qui
+  // rend la ligne atteignable par la navigation par titres d'un lecteur d'écran.
+  const head = el('h2', 'remarks__head')
+  head.append(
+    el('span', 'remarks__count', remarksSummary(warnings.length)),
+    el('span', 'remarks__titles', warnings.map((warning) => warning.title).join(' · '))
+  )
+  summary.append(head)
+  box.append(summary)
+  for (const warning of warnings) box.append(warningCard(warning))
+  panel.append(box)
   return panel
 }
 
@@ -2284,8 +2324,15 @@ function render(): void {
 
   // Les données personnelles n'ont pas leur place ici : elles ne concernent le pilote
   // qu'au moment où il s'apprête à donner son fichier — voir l'export.
-  const panel = warningPanel(warningsAt(session.warnings, 'import'))
-  if (panel) content.append(panel)
+  //
+  // Deux poids, deux places : ce qui décrit un défaut reste déplié, ce qui renseigne se
+  // replie en une ligne. Les deux passent avant les pages, mais la ligne repliée ne coûte
+  // qu'elle-même — c'est ce qui ramène la première vignette dans le premier écran.
+  const { attention, remarks } = splitWarnings(warningsAt(session.warnings, 'import'))
+  const alert = attentionPanel(attention)
+  if (alert) content.append(alert)
+  const folded = remarksPanel(remarks)
+  if (folded) content.append(folded)
 
   content.append(
     buildOverview(session.layout, ctx, (orientation, index) => {

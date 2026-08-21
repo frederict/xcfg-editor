@@ -215,6 +215,44 @@ export function buildOverview(
   return root
 }
 
+/* ------------------------------------------- ce que le fichier appelle des remarques */
+
+/**
+ * Les familles d'avertissement qui décrivent un **défaut** — quelque chose que le pilote
+ * peut vouloir corriger — et non un simple constat sur le fichier.
+ *
+ * La distinction commande la vue d'ensemble : ce qui demande une action reste déplié
+ * au-dessus des pages, le reste se replie derrière une ligne. Un pilote ouvre son
+ * fichier pour **voir ses pages** ; quatre encadrés d'égal poids visuel avant la
+ * première vignette lui font faire défiler un écran et demi de prose pour rien.
+ */
+export const ATTENTION_WARNING_KINDS = ['structure', 'geometry', 'personal-data']
+
+/**
+ * Sépare ce qui alerte de ce qui renseigne. Le type est volontairement minimal — la
+ * seule chose lue est `kind` — pour que cette couche n'ait pas à connaître `warnings.ts`.
+ */
+export function splitWarnings<T extends { kind: string }>(
+  warnings: readonly T[]
+): { attention: T[]; remarks: T[] } {
+  const attention: T[] = []
+  const remarks: T[] = []
+  for (const warning of warnings) {
+    if (ATTENTION_WARNING_KINDS.includes(warning.kind)) attention.push(warning)
+    else remarks.push(warning)
+  }
+  return { attention, remarks }
+}
+
+/**
+ * L'intitulé de la ligne repliée. Le mot « remarque » plutôt qu'« avertissement » : rien
+ * de ce qui s'y range n'appelle de correction, et un pilote qui lit « avertissement »
+ * ouvre en s'attendant à un problème.
+ */
+export function remarksSummary(count: number): string {
+  return `${plural(count, 'remarque', 'remarques')} sur ce fichier`
+}
+
 /* --------------------------------------- amener la sélection sous les yeux du pilote */
 
 /**

@@ -14,7 +14,9 @@ import {
   clampDockHeight,
   dockHeightCeiling,
   readDockHeight,
+  remarksSummary,
   revealOffset,
+  splitWarnings,
   widgetSizeMm,
   writeDockHeight,
   type DetailInspecting,
@@ -283,5 +285,43 @@ describe('amener la sélection sous les yeux du pilote', () => {
     // ne rien faire que sauter au hasard.
     expect(revealOffset({ top: 100, bottom: 200 }, { top: 400, bottom: 300 })).toBe(0)
     expect(revealOffset({ top: 100, bottom: 200 }, { top: 0, bottom: Number.NaN })).toBe(0)
+  })
+})
+
+describe('les constats du fichier, triés par ce qu’ils réclament', () => {
+  const remark = (kind: string, title: string): { kind: string; title: string } =>
+    ({ kind, title })
+
+  it('sépare les défauts des simples constats', () => {
+    const { attention, remarks } = splitWarnings([
+      remark('export-type', 'Export « pages » : seuls les écrans'),
+      remark('geometry', 'Défauts de géométrie'),
+      remark('assumed-values', 'Thème, unités et typographie supposés'),
+      remark('structure', 'Clés dupliquées'),
+      remark('personal-data', 'Ce fichier vous nomme')
+    ])
+    expect(attention.map((w) => w.kind)).toEqual(['geometry', 'structure', 'personal-data'])
+    expect(remarks.map((w) => w.kind)).toEqual(['export-type', 'assumed-values'])
+  })
+
+  it('garde l’ordre d’origine dans chaque moitié', () => {
+    const { remarks } = splitWarnings([
+      remark('export-type', 'un'),
+      remark('assumed-language', 'deux'),
+      remark('covered-buttons', 'trois')
+    ])
+    expect(remarks.map((w) => w.title)).toEqual(['un', 'deux', 'trois'])
+  })
+
+  it('ne perd aucun avertissement', () => {
+    const all = ['export-type', 'geometry', 'covered-buttons', 'version-gap']
+      .map((kind) => remark(kind, kind))
+    const { attention, remarks } = splitWarnings(all)
+    expect(attention.length + remarks.length).toBe(all.length)
+  })
+
+  it('accorde l’intitulé de la ligne repliée', () => {
+    expect(remarksSummary(1)).toBe('1 remarque sur ce fichier')
+    expect(remarksSummary(4)).toBe('4 remarques sur ce fichier')
   })
 })
