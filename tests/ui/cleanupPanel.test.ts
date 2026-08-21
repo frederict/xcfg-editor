@@ -259,10 +259,10 @@ describe('dans le panneau de diagnostic', () => {
     expect(panel.cleanupPlan()?.entries).toHaveLength(9)
 
     const text = panel.element.textContent ?? ''
-    expect(text).toContain('Reliquats')
+    expect(text).toContain('Réglages périmés')
     expect(text).toContain('Enlever ce qu’une ancienne version a laissé')
     // Le constat vient AVANT la proposition d'agir, jamais l'inverse.
-    expect(text.indexOf('Reliquats')).toBeLessThan(text.indexOf('Enlever ce qu’une'))
+    expect(text.indexOf('Réglages périmés')).toBeLessThan(text.indexOf('Enlever ce qu’une'))
   })
 
   it('refait le diagnostic après un nettoyage, sans escamoter le retour en arrière', async () => {

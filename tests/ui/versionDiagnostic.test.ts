@@ -222,7 +222,7 @@ describe('présélection d’après le versionCode du fichier', () => {
     const suggestion = suggestTier(db, parseJson('{"info":{"versionCode":100400}}'))
     expect(suggestion.basis).toBe('unrecognized')
     expect(suggestion.selected).toBeNull()
-    expect(suggestion.message).toContain('postérieur')
+    expect(suggestion.message).toContain('les dépasse tous')
     expect(suggestion.message).toContain('inventer')
   })
 
@@ -301,7 +301,7 @@ describe('les trois natures d’écart ne se confondent pas', () => {
     expect(fake.keyStatus('WFake', 'gapKey', 0)).toBe('attested')
     expect(category('gapKey', 0)).toBe('gap')
     expect(CATEGORIES.gap.removal).toBe('never')
-    expect(CATEGORIES.gap.badge).toBe('trou de relevé')
+    expect(CATEGORIES.gap.badge).toBe('angle mort')
     expect(CATEGORIES.gap.verdict).toContain('Ne jamais supprimer')
   })
 
@@ -309,7 +309,7 @@ describe('les trois natures d’écart ne se confondent pas', () => {
     expect(fake.keyStatus('WFake', 'legacyKey', 2)).toBe('legacy')
     expect(category('legacyKey', 2)).toBe('legacy')
     expect(CATEGORIES.legacy.removal).toBe('defensible')
-    expect(CATEGORIES.legacy.badge).toBe('reliquat')
+    expect(CATEGORIES.legacy.badge).toBe('périmé')
   })
 
   it('« blind » ne conclut rien : notre relevé est aveugle de bout en bout', () => {
@@ -318,7 +318,9 @@ describe('les trois natures d’écart ne se confondent pas', () => {
       expect(category('blindKey', tier)).toBe('blind')
     }
     expect(CATEGORIES.blind.removal).toBe('undecided')
-    expect(CATEGORIES.blind.badge).toBe('aveugle')
+    // « angle mort » aussi : ce que le pilote doit lire est identique — nous ne voyons
+    // rien ici, donc on ne touche à rien. Le titre, lui, distingue les deux cas.
+    expect(CATEGORIES.blind.badge).toBe('angle mort')
     expect(CATEGORIES.blind.verdict).toContain('Rien à conclure')
   })
 
@@ -469,7 +471,7 @@ describe('diagnostic des fichiers réels', () => {
     expect(report.unstableCount).toBeGreaterThan(0)
     const unstable = report.keyFindings.find((finding) => !finding.stable)
     expect(unstable).toBeDefined()
-    expect(divergenceSentence(db, unstable!)).toContain('Constat instable')
+    expect(divergenceSentence(db, unstable!)).toContain('Remarque instable')
   })
 })
 
@@ -491,7 +493,7 @@ describe('le panneau', () => {
     expect(panel.diagnosis()?.counts.legacy).toBe(9)
 
     const text = panel.element.textContent ?? ''
-    expect(text).toContain('Reliquats')
+    expect(text).toContain('Réglages périmés')
     expect(text).toContain('mapWidget_showTerrain')
     expect(text).toContain('Une suppression se défend')
     // Le mot du pilote est « gadget », jamais « widget ».
@@ -524,13 +526,22 @@ describe('le panneau', () => {
     expect(text).toContain('vaut pour 4 versions')
   })
 
-  it('ne dit jamais « palier », « schéma » ni « clé » au pilote', async () => {
+  it('ne parle au pilote ni en programmeur ni en archiviste', async () => {
+    // Deux familles de mots, un seul écran. « palier » et « clé » sont nos concepts de
+    // programme ; « reliquat », « attesté », « caduc », « corpus » sont ceux d'un
+    // archiviste. Le pilote décide ici du sort de sa configuration de vol : il lit
+    // « périmé », « angle mort », « inconnu », et ce que l'outil s'autorise à en faire.
+    const jargon = [
+      'palier', 'schéma', 'Schéma', 'clé', 'clés',
+      'reliquat', 'Reliquat', 'attest', 'Attest', 'caduc', 'corpus',
+      'antérieur', 'postérieur', 'aveugle', 'extraction', 'constat', 'Constat'
+    ]
     for (const path of [BACKUP_2026, BACKUP_2025, GSON_2022]) {
       const panel = await buildVersionPanel({
         document: documentOf(path), database: db, onCleanup: () => undefined
       })
       const text = panel.element.textContent ?? ''
-      for (const word of ['palier', 'schéma', 'Schéma', 'clé', 'clés']) {
+      for (const word of jargon) {
         expect(text, `${path} — ${word}`).not.toContain(word)
       }
     }
@@ -543,7 +554,7 @@ describe('le panneau', () => {
     expect(panel.tier()).toBe(5)
     expect(panel.diagnosis()?.counts.gap).toBe(9)
     const text = panel.element.textContent ?? ''
-    expect(text).toContain('trou de relevé')
+    expect(text).toContain('angle mort')
     expect(text).toContain('Ne jamais supprimer')
     // Le pilote a délibérément visé autre chose que la version du fichier : on le lui
     // rappelle, et on ne confronte plus le constat à la version d'origine — chaque
@@ -551,7 +562,7 @@ describe('le panneau', () => {
     expect(text).toContain('Vous visez une autre version que celle-là')
     expect(text).toContain('confronte ce fichier à 0.9.8.7')
     expect(panel.diagnosis()?.unstableCount).toBe(0)
-    expect(text).not.toContain('Constat instable')
+    expect(text).not.toContain('Remarque instable')
   })
 
   it('ne rappelle rien quand la version choisie accepte les mêmes réglages', async () => {
@@ -611,7 +622,7 @@ describe('le panneau', () => {
   it('avertit qu’il ne diagnostique que les gadgets des pages', async () => {
     const panel = await buildVersionPanel({ document: documentOf(BACKUP_2026), database: db })
     const text = panel.element.textContent ?? ''
-    expect(text).toContain('la base des versions ne décrit qu’eux')
+    expect(text).toContain('Seuls les gadgets des pages y sont examinés')
     expect(text).toContain('vario, unités, capteurs, espaces aériens')
   })
 })

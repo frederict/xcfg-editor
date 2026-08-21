@@ -38,6 +38,28 @@ import './versionDiagnostic.css'
  * Le mot « palier » ne paraît donc plus à l'écran — ni ici, ni dans les messages ; il
  * reste dans les identifiants et dans ces commentaires, où il est à sa place.
  *
+ * ## Trois natures d'écart, trois mots — et pas ceux d'un archiviste
+ *
+ * Le pilote n'a pas à savoir ce qu'est une attestation, une extraction ou un reliquat. Il
+ * a besoin de savoir **pourquoi l'outil refuse d'enlever deux cas sur trois** :
+ *
+ * | Ce que c'est | Le badge | Ce qu'il en fait |
+ * |---|---|---|
+ * | XCTrack ne lit plus ce réglage, et de vrais fichiers le portent quand même | « périmé » | l'enlever se défend |
+ * | notre lecture des versions a un trou à cet endroit | « angle mort » | on n'y touche pas |
+ * | aucune version que nous ayons lue ne lit ce réglage | « inconnu » | on ne conclut rien |
+ *
+ * Les mots d'archiviste ont tous été rendus : *reliquat* → « périmé », *trou de relevé* et
+ * *aveugle* → « angle mort », *attesté* → « de vrais fichiers le portent », *antérieur* /
+ * *postérieur* → « lu avant seulement » / « apparu après », *caduc* → « périmé »,
+ * *constat* → « remarque ». Le badge est en capitales par la CSS, jamais dans le texte.
+ *
+ * Une seule chose est dite une fois puis reprise par un pronom : **ce que nous avons pu
+ * lire des versions de XCTrack**. Le paragraphe de cadrage l'annonce, et « nous » le
+ * désigne ensuite partout. Trois mots pour cette même chose — « notre relevé », « la
+ * base », « le corpus » — obligeaient le pilote à recommencer l'identification à chaque
+ * paragraphe.
+ *
  * ## Sept décisions, et leurs raisons
  *
  * 1. **Le menu propose des versions, une entrée par version relevée.** Le palier se
@@ -70,7 +92,7 @@ import './versionDiagnostic.css'
  * 6. **Quand ni le numéro ni le nom ne tranchent**, on présélectionne **la plus
  *    récente**, on le dit, on laisse les autres dans le menu — et chaque constat du
  *    diagnostic est recalculé sous *toutes* les candidates : celui qui change de l'une à
- *    l'autre est marqué « constat instable ». Le choix arbitraire devient sans
+ *    l'autre est marqué « remarque instable ». Le choix arbitraire devient sans
  *    conséquence, parce qu'il est mesuré.
  *
  * 7. **Le diagnostic se raisonne par instance de gadget, jamais par type.** Un même
@@ -248,85 +270,87 @@ export interface CategoryDescription {
 export const CATEGORIES: Record<FindingCategory, CategoryDescription> = {
   legacy: {
     category: 'legacy',
-    badge: 'reliquat',
-    title: 'Reliquats : la version visée ne lit plus ces réglages',
+    badge: 'périmé',
+    title: 'Réglages périmés : la version visée ne les lit plus',
     evidence:
-      'Notre relevé lit ces réglages dans des versions antérieures, plus dans celle-ci — ' +
-      'et des fichiers réels écrits par cette version-là les portent quand même. XCTrack ' +
-      'conserve les réglages qu’il ne connaît plus : c’est un reliquat, mesuré, pas déduit.',
+      'Nous lisons ces réglages dans des versions plus anciennes, plus dans celle-ci — et ' +
+      'de vrais fichiers écrits par cette version-là les portent quand même. XCTrack garde ' +
+      'sans les lire les réglages qu’il ne connaît plus : ici, nous l’avons vu se produire, ' +
+      'nous ne le supposons pas.',
     verdict:
-      'Une suppression se défend ici. C’est le seul cas que la base atteste par un ' +
-      'fichier réel.',
+      'Une suppression se défend ici. C’est le seul cas qu’un vrai fichier vient confirmer.',
     removal: 'defensible'
   },
   'past-only': {
     category: 'past-only',
-    badge: 'antérieur',
-    title: 'Lus par des versions antérieures seulement',
+    badge: 'lu avant seulement',
+    title: 'Lus par des versions plus anciennes seulement',
     evidence:
-      'Notre relevé lit ces réglages dans des versions antérieures, plus dans celle qui ' +
-      'est visée. Aucun fichier réel du corpus ne vient l’attester : la preuve est celle ' +
-      'du relevé seul, plus faible que pour un reliquat attesté.',
+      'Nous lisons ces réglages dans des versions plus anciennes, plus dans celle qui est ' +
+      'visée. Mais aucun vrai fichier ne vient le confirmer : nous n’avons ici que notre ' +
+      'lecture des versions, sans l’exemple qui la vérifie.',
     verdict:
-      'Une suppression se défend, sur la foi du relevé. Rien ne dit que XCTrack les ait ' +
-      'retirés : il dit seulement que nous ne les y lisons plus.',
+      'Une suppression se défend, sur notre seule lecture. Rien ne dit que XCTrack les ait ' +
+      'retirés : nous ne les y lisons plus, c’est tout.',
     removal: 'defensible'
   },
   'future-only': {
     category: 'future-only',
-    badge: 'postérieur',
+    badge: 'apparu après',
     title: 'Apparus après la version visée',
     evidence:
-      'Notre relevé ne lit ces réglages que dans des versions postérieures à celle qui ' +
-      'est visée. Ce fichier vient donc d’une version plus récente que celle choisie ici.',
+      'Nous ne lisons ces réglages que dans des versions plus récentes que celle qui est ' +
+      'visée. Ce fichier vient donc d’une version plus récente que celle choisie ici.',
     verdict:
-      'Ne pas supprimer. La version visée les ignore ; une version ultérieure les ' +
+      'Ne pas supprimer. La version visée les ignore ; une version plus récente les ' +
       'retrouvera intacts.',
     removal: 'never'
   },
   straddled: {
     category: 'straddled',
-    badge: 'trou de relevé',
+    badge: 'angle mort',
     title: 'Lus avant et après la version visée, mais pas par elle',
     evidence:
-      'Notre relevé lit ces réglages de part et d’autre de la version visée et les manque ' +
-      'ici. Une option qui disparaîtrait pour reparaître à l’identique serait une ' +
-      'singularité ; un trou de notre extraction est l’explication ordinaire.',
-    verdict: 'Ne pas supprimer. L’anomalie est de notre côté, pas dans le fichier.',
+      'Nous lisons ces réglages dans les versions d’avant et dans celles d’après, et nous ' +
+      'les manquons juste ici. Un réglage qui disparaîtrait pour revenir à l’identique ' +
+      'serait une bizarrerie ; le plus simple est que notre lecture ait un trou à cet ' +
+      'endroit.',
+    verdict: 'Ne pas supprimer. Le trou est chez nous, pas dans votre fichier.',
     removal: 'never'
   },
   'never-read': {
     category: 'never-read',
     badge: 'inconnu',
-    title: 'Inconnus de toute la base',
+    title: 'Inconnus : aucune version que nous ayons lue ne les lit',
     evidence:
-      'Aucun relevé, d’aucune des 47 versions, ne porte ce réglage sur ce gadget, et aucun ' +
-      'fichier du corpus ne l’atteste. Nous ne savons pas d’où il vient.',
+      'Aucune des versions de XCTrack que nous avons pu lire ne porte ce réglage sur ce ' +
+      'gadget, et aucun vrai fichier ne l’y montre non plus. Nous ne savons pas d’où il ' +
+      'vient.',
     verdict:
-      'Nous ne savons pas. Ce n’est pas la preuve que le réglage soit caduc — seulement ' +
-      'que notre relevé ne le connaît pas.',
+      'Nous ne savons pas. Ce n’est pas la preuve que le réglage soit périmé — seulement ' +
+      'que nous ne le connaissons pas.',
     removal: 'undecided'
   },
   gap: {
     category: 'gap',
-    badge: 'trou de relevé',
-    title: 'Trous de notre relevé : le réglage existait',
+    badge: 'angle mort',
+    title: 'Notre lecture a un trou : le réglage existait bien',
     evidence:
-      'Notre relevé n’a pas vu ces réglages dans cette version, mais il les lit dans des ' +
-      'versions postérieures, et un fichier réel écrit par elle les porte. Le réglage ' +
-      'existait bien : c’est notre extraction qui l’a manqué.',
+      'Nous n’avons pas vu ces réglages dans cette version-là, mais nous les lisons dans ' +
+      'des versions plus récentes, et un vrai fichier écrit par elle les porte. Le réglage ' +
+      'existait : c’est nous qui l’avons manqué.',
     verdict:
-      'Ne jamais supprimer. Ce sont des réglages valides, et les confondre avec des ' +
-      'reliquats effacerait des réglages du pilote.',
+      'Ne jamais supprimer. Ce sont des réglages valides, et les prendre pour des réglages ' +
+      'périmés effacerait les vôtres.',
     removal: 'never'
   },
   blind: {
     category: 'blind',
-    badge: 'aveugle',
-    title: 'Réglages sur lesquels notre relevé est aveugle',
+    badge: 'angle mort',
+    title: 'Réglages que nous ne voyons nulle part',
     evidence:
-      'Attestés par des fichiers réels, retrouvés dans aucun relevé, d’aucune version. ' +
-      'Notre extraction ne les lit nulle part : son silence ne dit rien.',
+      'De vrais fichiers les portent, et aucune version que nous avons pu lire ne les ' +
+      'déclare. Nous ne les voyons nulle part, et notre silence ne dit rien d’eux.',
     verdict: 'Rien à conclure. Ne pas supprimer sur cette base.',
     removal: 'undecided'
   },
@@ -335,9 +359,9 @@ export const CATEGORIES: Record<FindingCategory, CategoryDescription> = {
     badge: 'gadget inconnu',
     title: 'Gadgets que la version visée ne connaît pas',
     evidence:
-      'Le type de gadget lui-même est absent du relevé de cette version. Nous ne savons ' +
-      'donc rien de ses réglages : un gadget qu’aucun relevé n’a vu n’est pas un gadget ' +
-      'retiré.',
+      'Ce type de gadget ne figure pas dans ce que nous avons lu de cette version. Nous ne ' +
+      'savons donc rien de ses réglages : un gadget que nous n’avons jamais vu n’est pas ' +
+      'un gadget retiré.',
     verdict: 'Rien à conclure sur ses réglages.',
     removal: 'undecided'
   }
@@ -492,8 +516,8 @@ export function tierDelta(
       keysAddedCount: 0,
       keysRemovedCount: 0,
       summary:
-        'Aucune version publiée ne précède celle-ci dans notre relevé : rien à ' +
-        `comparer. ${plural(target?.widgetCount ?? 0, 'gadget connu', 'gadgets connus')}.`
+        'Aucune version publiée ne précède celle-ci parmi celles que nous avons pu lire : ' +
+        `rien à comparer. ${plural(target?.widgetCount ?? 0, 'gadget connu', 'gadgets connus')}.`
     }
   }
 
@@ -543,7 +567,7 @@ export function tierDelta(
 
   const fromName = versionLabel(db, fromTier)
   const summary = parts.length === 0
-    ? `Rien ne distingue cette version de ${fromName} dans notre relevé.`
+    ? `Rien ne distingue cette version de ${fromName} : nous y lisons les mêmes réglages.`
     : `Depuis ${fromName} : ${parts.join(', ')}.`
 
   return {
@@ -746,9 +770,9 @@ export function suggestTier(db: VersionDatabase, document: JsonNode): VersionSug
       selectedCode: null,
       approximatedFrom: null,
       message:
-        'Ce fichier ne dit pas de quelle version de XCTrack il vient : son bloc `info` ne ' +
-        'porte pas de `versionCode`. Rien ne permet d’en proposer une — choisissez celle ' +
-        'de l’appareil sur lequel vous réimporterez ce fichier.'
+        'Ce fichier ne dit pas de quelle version de XCTrack il vient : il ne porte pas son ' +
+        'numéro de version. Rien ne permet d’en proposer une — choisissez celle de ' +
+        'l’appareil sur lequel vous réimporterez ce fichier.'
     }
   }
 
@@ -788,8 +812,8 @@ export function suggestTier(db: VersionDatabase, document: JsonNode): VersionSug
         `${plural(direct.length, 'version porte', 'versions portent')} ce numéro sans ` +
         'accepter les mêmes réglages, et le fichier ne dit pas laquelle l’a écrit. Nous ' +
         `visons la plus récente, ${versionLabel(db, selected, version.code)} — un choix ` +
-        'arbitraire, assumé comme tel : chaque constat qui changerait sous une des autres ' +
-        'est signalé ci-dessous.'
+        'arbitraire, assumé comme tel : chaque remarque qui changerait sous une des autres ' +
+        'est signalée ci-dessous.'
     }
   }
 
@@ -801,7 +825,7 @@ export function suggestTier(db: VersionDatabase, document: JsonNode): VersionSug
       const several = tiers.length > 1
         ? ` Ce numéro-là couvre lui-même ${plural(tiers.length, 'version', 'versions')} ; ` +
           `nous visons la plus récente, ${versionLabel(db, selected, fallbackCode)}, et ` +
-          'signalons ci-dessous tout constat qui changerait sous une autre.'
+          'signalons ci-dessous toute remarque qui changerait sous une autre.'
         : ` Nous visons ${versionLabel(db, selected, fallbackCode)}.`
       return {
         version,
@@ -811,10 +835,9 @@ export function suggestTier(db: VersionDatabase, document: JsonNode): VersionSug
         selectedCode: fallbackCode,
         approximatedFrom: fallbackCode,
         message:
-          `Ce fichier a été écrit par ${declared}, qu’aucune des archives relevées ne ` +
-          `porte. La base se replie sur le numéro le plus proche, ${String(fallbackCode)} — ` +
-          `ce n’est pas la même version, c’est la plus proche que nous ayons pu ` +
-          `lire.${several}`
+          `Ce fichier a été écrit par ${declared}, qu’aucune version relevée ne porte. Nous ` +
+          `nous replions sur le numéro le plus proche, ${String(fallbackCode)} — ce n’est ` +
+          `pas la même version, c’est la plus proche que nous ayons pu lire.${several}`
       }
     }
   }
@@ -822,8 +845,10 @@ export function suggestTier(db: VersionDatabase, document: JsonNode): VersionSug
   const range = knownCodeRange(db)
   const situate = range === null
     ? ''
-    : ` Les numéros relevés vont de ${String(range.min)} à ${String(range.max)} ; celui-ci ` +
-      `leur est ${version.code > range.max ? 'postérieur' : version.code < range.min ? 'antérieur' : 'intercalé'}.`
+    : ` Les numéros que nous connaissons vont de ${String(range.min)} à ` +
+      `${String(range.max)} ; celui-ci ${version.code > range.max
+        ? 'les dépasse tous'
+        : version.code < range.min ? 'est en deçà de tous' : 'tombe entre deux d’entre eux'}.`
   return {
     version,
     basis: 'unrecognized',
@@ -832,8 +857,9 @@ export function suggestTier(db: VersionDatabase, document: JsonNode): VersionSug
     selectedCode: null,
     approximatedFrom: null,
     message:
-      `Ce fichier a été écrit par ${declared}, que notre base ne connaît pas : elle a été ` +
-      'extraite de 47 relevés d’APK, et celui-ci n’en fait pas partie.' +
+      `Ce fichier a été écrit par ${declared}, que nous ne connaissons pas : nous avons pu ` +
+      `lire ${plural(db.index.versions.length, 'version de XCTrack', 'versions de XCTrack')}, ` +
+      'et celle-ci n’en fait pas partie.' +
       `${situate} Nous n’en proposons aucune — en désigner une au jugé reviendrait à ` +
       'inventer. Choisissez celle de votre appareil.'
   }
@@ -937,7 +963,7 @@ export function divergenceSentence(db: VersionDatabase, finding: KeyFinding): st
     const word = divergence.category === null ? 'reconnu' : CATEGORIES[divergence.category].badge
     return `${versionLabel(db, divergence.tier)} : ${word}`
   })
-  return `Constat instable — sous ${parts.join(' ; ')}.`
+  return `Remarque instable — sous ${parts.join(' ; ')}.`
 }
 
 /** « Portrait · page 2 · rang 1 · Carte de compétition » */
@@ -1132,14 +1158,14 @@ export async function buildVersionPanel(
     if (others.length === 0) {
       same.textContent =
         `Aucune autre version relevée n’accepte exactement les mêmes réglages que ` +
-        `${chosen.label} : le constat ci-dessous ne vaut que pour elle.`
+        `${chosen.label} : ce qui est dit ci-dessous ne vaut que pour elle.`
       same.hidden = false
       return
     }
     same.textContent =
       `${frenchList(others.map((option) => option.label))} ${others.length > 1 ? 'acceptent' : 'accepte'} ` +
-      `exactement les mêmes réglages que ${chosen.label} : notre relevé ne les distingue ` +
-      `pas, et le constat ci-dessous vaut pour ${plural(others.length + 1, 'version', 'versions')}.`
+      `exactement les mêmes réglages que ${chosen.label} : nous ne les distinguons pas, et ` +
+      `ce qui est dit ci-dessous vaut pour ${plural(others.length + 1, 'version', 'versions')}.`
     same.hidden = false
   }
 
@@ -1197,20 +1223,24 @@ export async function buildVersionPanel(
       `${plural(report.widgetCount, 'gadget', 'gadgets')}. `
     reportEl.append(tally)
 
+    // Le mot dit UNE fois, en tête : plus bas, « nous », c'est ce relevé-là. Trois mots
+    // pour la même chose — « notre relevé », « la base », « le corpus » — obligeaient le
+    // pilote à deviner qu'il s'agissait du même « quelqu'un » à chaque paragraphe.
     const scope = el('p', 'vdiag__scope')
     scope.textContent =
-      'Seuls les gadgets des pages sont examinés : la base des versions ne décrit qu’eux. ' +
-      'Les autres réglages d’une sauvegarde — vario, unités, capteurs, espaces aériens — ' +
-      'ne sont pas diagnostiqués. La position d’un gadget et son type ne sont pas des ' +
-      'réglages et ne sont pas comptés.'
+      `Ce diagnostic repose sur notre relevé de ${french(db.index.versions.length)} ` +
+      'versions de XCTrack et sur de vrais fichiers écrits par elles : c’est ce que ' +
+      '« nous » désigne plus bas. Seuls les gadgets des pages y sont examinés — le reste ' +
+      'd’une sauvegarde (vario, unités, capteurs, espaces aériens) n’est pas diagnostiqué. ' +
+      'La position d’un gadget et son type ne sont pas des réglages et ne sont pas comptés.'
     reportEl.append(scope)
 
     if (report.unstableCount > 0) {
       const unstable = el('p', 'vdiag__unstable')
       unstable.textContent =
-        `${plural(report.unstableCount, 'constat change', 'constats changent')} selon la ` +
-        'version retenue parmi celles que ce fichier peut désigner. Ils sont signalés un ' +
-        'à un.'
+        `${plural(report.unstableCount, 'remarque change', 'remarques changent')} selon la ` +
+        'version retenue parmi celles que ce fichier peut désigner. Elles sont signalées ' +
+        'une à une.'
       reportEl.append(unstable)
     }
 
@@ -1239,7 +1269,7 @@ export async function buildVersionPanel(
       reportEl.append(el('p', 'vdiag__clean',
         'Aucun écart : tous les réglages de ce fichier sont lus par la version visée, et ' +
         'tous ses gadgets y existent. Rien à signaler — ce qui ne veut pas dire que le ' +
-        'fichier soit conforme, seulement que notre relevé n’y trouve rien à redire.'))
+        'fichier soit conforme, seulement que nous n’y trouvons rien à redire.'))
     }
   }
 
@@ -1296,8 +1326,8 @@ export async function buildVersionPanel(
       const item = el('li')
       item.append(el('span', 'vdiag__place', placeLabel(finding.place)))
       item.append(el('span', 'vdiag__keys', finding.status === 'absent'
-        ? 'type connu de notre relevé, mais pas dans cette version'
-        : 'type inconnu de tout notre relevé'))
+        ? 'type que nous connaissons, mais pas dans cette version'
+        : 'type que nous n’avons vu dans aucune version'))
       list.append(item)
     }
     section.append(list)
@@ -1323,7 +1353,7 @@ export async function buildVersionPanel(
     // La stabilité ne s'éprouve que contre les versions que le FICHIER peut désigner, et
     // seulement si le pilote est resté sur l'une d'elles. Dès qu'il vise délibérément
     // autre chose, comparer à la version d'origine ferait de chaque différence attendue
-    // un « constat instable » : du bruit, et du bruit qui apprend à ignorer le signal.
+    // une « remarque instable » : du bruit, et du bruit qui apprend à ignorer le signal.
     const tier = chosen?.tier ?? null
     const candidates = tier !== null && suggestion.candidateTiers.includes(tier)
       ? suggestion.candidateTiers
