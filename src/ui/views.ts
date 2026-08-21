@@ -5,7 +5,7 @@ import type { RenderSettings } from '../model/preferences'
 import type { Widget } from '../model/widget'
 import { renderPage } from '../render/canvas'
 import type { PluralForms } from '../i18n'
-import { plural } from './prose'
+import { plural, proseFormat } from './prose'
 
 export type Orientation = 'portrait' | 'landscape'
 
@@ -101,9 +101,25 @@ const ORIENTATION_LABELS: Record<Orientation, string> = {
   portrait: 'Portrait'
 }
 
-/** Un nombre de millimètres, à la virgule française et au dixième près. */
+/**
+ * Un nombre de millimètres, au dixième près, dans la langue de la prose — virgule
+ * décimale en français, point en anglais. Sans l'unité : `formatSizeMm` l'écrit une fois
+ * pour un couple, et l'assistance vocale l'épelle en toutes lettres.
+ */
 export function formatMm(value: number): string {
-  return value.toFixed(1).replace('.', ',')
+  return proseFormat.decimal(value, 1)
+}
+
+/**
+ * « 48,3 × 27,2 mm » — la taille d'une dalle ou d'un gadget.
+ *
+ * L'unité n'est écrite qu'une fois, sur le **dernier** nombre : c'est le formateur du
+ * socle qui l'accole, avec l'espace fine insécable que le français demande et que
+ * l'anglais ne met pas. Le premier nombre reste nu — répéter « mm » deux fois allongerait
+ * une cote que le pilote lit d'un coup d'œil.
+ */
+export function formatSizeMm(size: WidgetSizeMm): string {
+  return `${proseFormat.decimal(size.widthMm, 1)} × ${proseFormat.millimeters(size.heightMm)}`
 }
 
 /**
@@ -566,7 +582,7 @@ export function buildDetail(options: DetailOptions): HTMLElement {
     // ajouter ou supprimer un widget en édition ne redessine que la page. `main.ts` le
     // retrouve par cette classe et le remet à jour, plutôt que d'afficher un compte périmé.
     el('span', 'chip chip--count', plural(GADGET_COUNT, page.widgets.length)),
-    el('span', 'chip', `${formatMm(screenSize.widthMm)} × ${formatMm(screenSize.heightMm)} mm`),
+    el('span', 'chip', formatSizeMm(screenSize)),
     el('span', 'chip chip--quiet', ctx.device.label)
   )
   if (kind.hiddenOutOfFlight) facts.append(el('span', 'flag', 'Masquée hors vol'))
@@ -607,7 +623,7 @@ export function buildDetail(options: DetailOptions): HTMLElement {
     const size = widgetSizeMm(shown, ctx.device, orientation)
     readout.append(
       el('span', 'readout__name', readableName(shown.shortName, ctx.language)),
-      el('span', 'readout__size', `${formatMm(size.widthMm)} × ${formatMm(size.heightMm)} mm`),
+      el('span', 'readout__size', formatSizeMm(size)),
       el('span', 'readout__class', shown.shortName)
     )
     if (!hovered && widget === undefined) {
