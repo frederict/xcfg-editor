@@ -40,7 +40,7 @@ const SPECS: Record<string, NumericSpec> = {
   WFL: { quantity: 'none', unit: 'FL', example: '045' },
   WSpeed: { quantity: 'speed', unit: 'km/h', example: '38' },
   WVerticalSpeed: { quantity: 'verticalSpeed', unit: 'm/s', example: '+2.1' },
-  WGlide: { quantity: 'glide', unit: ':1', example: '8.3' },
+  WGlide: { quantity: 'glide', unit: '', example: '8.3' },
   WAirTime: { quantity: 'duration', unit: '', example: '2:47' },
   WTime: { quantity: 'time', unit: '', example: '14:32' },
   WWindSpeed: { quantity: 'windSpeed', unit: 'km/h', example: '18' },
@@ -48,11 +48,11 @@ const SPECS: Record<string, NumericSpec> = {
   WNextTurnpoint: { quantity: 'none', unit: '', example: 'P3' },
   WNextTurnpointAlt: { quantity: 'altitude', unit: 'm', example: '1800' },
   WNextTurnpointDistance: { quantity: 'distance', unit: 'km', example: '12.4' },
-  WNextTurnpointGlideTo: { quantity: 'glide', unit: ':1', example: '6.2' },
+  WNextTurnpointGlideTo: { quantity: 'glide', unit: '', example: '6.2' },
   WNextTurnpointTimeOfArrival: { quantity: 'time', unit: '', example: '15:47' },
   WCompDistanceToGoal: { quantity: 'distance', unit: 'km', example: '24.8' },
   WCompAltitudeOverGoal: { quantity: 'altitude', unit: 'm', example: '450' },
-  WCompGlideToGoal: { quantity: 'glide', unit: ':1', example: '5.1' },
+  WCompGlideToGoal: { quantity: 'glide', unit: '', example: '5.1' },
   WCompTimeToStart: { quantity: 'duration', unit: '', example: '0:32' },
   WCompTimeAtStart: { quantity: 'time', unit: '', example: '13:00' },
   WCompSpeedToStart: { quantity: 'speed', unit: 'km/h', example: '42' },
@@ -289,6 +289,40 @@ function bracketed(widget: Widget, valueText: string): string {
 }
 
 /**
+ * **La finesse s'écrit en RAPPORT, et dans ce sens-là** : l'appareil écrit « `1:6,0` », et
+ * « `1:` » tout court quand elle est infinie. Nous écrivions « `8,3` » avec « `:1` » en
+ * unité grise à droite — le rapport à l'envers, c'est-à-dire une information **fausse**
+ * et non un dessin approximatif : `1:8,3` et `8,3:1` ne désignent pas la même chose.
+ *
+ * Établi sur trois relevés indépendants, tous en lecture directe des captures :
+ *
+ * - `captures-air3/2026-08-21_planche-competition-4-widgets-de-manche.png` — les deux
+ *   cellules « finesse au but » et « Finesse pour l'ESS » portent un « **1:** » en gros
+ *   chiffres noirs, **sans unité à droite** ;
+ * - `captures-air3/vol-thermalassistant-boutonsnavig.png` — « Finesse Pt suivant »,
+ *   même « `1:` » ;
+ * - `docs/reference/planche-widgets-air3.md` § 4 et § 6, qui relèvent « `1:6,0` » sur
+ *   `WGlide` en vol.
+ *
+ * **Ce qui n'est PAS repris, et pourquoi.** Une quatrième mesure
+ * (`2026-08-21-validation-bout-en-bout.md` § 4.4) note que l'appareil écrit « `1:1,5` »
+ * quand la finesse est faible mais « **65** » tout court quand elle est forte, sur des
+ * gadgets aux réglages identiques — le seuil de bascule n'a pas été établi. Le reproduire
+ * demanderait de deviner ce seuil, donc de choisir une valeur d'exemple qui affirmerait
+ * un comportement non mesuré. Nos exemples restent dans le domaine où le rapport est
+ * écrit, le seul dont on connaisse la forme.
+ *
+ * L'unité disparaît avec l'inversion : le « `:1` » n'était que la moitié droite du
+ * rapport, et le rapport est maintenant entier dans la valeur. Les quatre types
+ * concernés — `WGlide`, `WNextTurnpointGlideTo`, `WCompGlideToGoal`,
+ * `WCompGlideToESS` — portent pourtant `_unit: true` dans le relevé des défauts : sur
+ * l'appareil comme ici, ce booléen n'invente pas une unité à un widget qui n'en a pas.
+ */
+function glideRatio(example: string, language: string): string {
+  return `1:${formatDecimal(example, language)}`
+}
+
+/**
  * Débordement du cerne noir de la valeur colorée, en cadratins de sa police —
  * `-webkit-text-stroke: 0.07em` déborde de 0,035 em de chaque côté du glyphe, et le
  * `text-shadow` de repli de 0,05 em (`.xc-num__row--positive`, style.css). Il n'entre pas
@@ -346,7 +380,10 @@ export function drawNumeric(widget: Widget, settings: RenderSettings, language: 
   const hasTitle = widgetBoolean(widget, '_title') ?? TITLE_BY_DEFAULT
   const hasUnit = widgetBoolean(widget, '_unit') ?? UNIT_BY_DEFAULT
   const unitText = hasUnit ? resolveUnit(widget, settings, spec) : undefined
-  const valueText = bracketed(widget, formatDecimal(spec.example, language))
+  const valueText = bracketed(
+    widget,
+    spec.quantity === 'glide' ? glideRatio(spec.example, language) : formatDecimal(spec.example, language)
+  )
 
   const element = document.createElement('div')
   element.className = 'xc-num'

@@ -418,6 +418,37 @@ describe('widgets numériques', () => {
     })
   })
 
+  /**
+   * La finesse s'écrit en rapport, et l'appareil met le **1 devant** : « 1:6,0 », et
+   * « 1: » seul quand elle est infinie. Nous écrivions « 8,3 » avec « :1 » en unité — le
+   * rapport à l'envers, donc une information fausse : `1:8,3` et `8,3:1` ne désignent pas
+   * la même chose.
+   *
+   * Relevé sur `captures-air3/2026-08-21_planche-competition-4-widgets-de-manche.png`
+   * (« finesse au but » et « Finesse pour l'ESS » : un « 1: » en gros chiffres noirs,
+   * aucune unité à droite) et sur `captures-air3/vol-thermalassistant-boutonsnavig.png`
+   * (« Finesse Pt suivant »). Voir le commentaire de `glideRatio` dans numeric.ts.
+   */
+  describe('la finesse s’écrit en rapport, le 1 devant (écart 2.8)', () => {
+    for (const [type, attendu] of [
+      ['WGlide', '1:8,3'],
+      ['WNextTurnpointGlideTo', '[1:6,2]'],
+      ['WCompGlideToGoal', '1:5,1']
+    ] as const) {
+      it(`${type} affiche ${attendu}`, () => {
+        const el = drawNumeric(widget(type, {}), settings, 'fr')
+        expect(el.querySelector('.xc-num__value')?.textContent).toBe(attendu)
+      })
+    }
+
+    it('ne pose plus d’unité « :1 » à droite de la valeur', () => {
+      for (const type of ['WGlide', 'WNextTurnpointGlideTo', 'WCompGlideToGoal']) {
+        const el = drawNumeric(widget(type, {}), settings, 'fr')
+        expect(el.querySelector('.xc-num__unit')).toBeNull()
+      }
+    })
+  })
+
   // Défaut 3 (rapport de tâche) — XCTrack affiche « +3,5 » et « -0,1 » en français
   // (virgule), pas « +3.5 » (point) : constaté sur vol-numeriques-boussole-
   // variocolumn.png et vol-carte-kk7-sideview.png. Nos exemples (SPECS) sont écrits
@@ -425,12 +456,12 @@ describe('widgets numériques', () => {
   describe('séparateur décimal selon la langue (défaut 3)', () => {
     it('affiche une virgule en français', () => {
       const el = drawNumeric(widget('WGlide', {}), settings, 'fr')
-      expect(el.querySelector('.xc-num__value')?.textContent).toBe('8,3')
+      expect(el.querySelector('.xc-num__value')?.textContent).toBe('1:8,3')
     })
 
     it('garde le point en anglais', () => {
       const el = drawNumeric(widget('WGlide', {}), settings, 'en')
-      expect(el.querySelector('.xc-num__value')?.textContent).toBe('8.3')
+      expect(el.querySelector('.xc-num__value')?.textContent).toBe('1:8.3')
     })
 
     it('reconnaît un code de langue système complet (ex. fr-FR), pas seulement le code court', () => {
