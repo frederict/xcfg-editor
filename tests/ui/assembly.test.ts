@@ -230,6 +230,48 @@ describe('assemblage — sélectionner un gadget l’amène sous les yeux du pil
   })
 })
 
+describe('assemblage — un gadget déplacé à la flèche reste sous les yeux du pilote', () => {
+  const reveal = main.slice(
+    main.indexOf('function revealWidget(index: number): void'),
+    main.indexOf('/** Le gadget sélectionné, amené dans la bande visible. */')
+  )
+
+  it('le déplacement au clavier rappelle le défilement, le glissé non', () => {
+    // Une flèche déplace d'une cellule sans changer la sélection : rien d'autre ne
+    // ramènerait le gadget dans la bande visible. Un glissé, lui, a le doigt dessus.
+    const edit = main.slice(
+      main.indexOf('function onWidgetEdit(edit: WidgetEdit): void'),
+      main.indexOf('function onStructureEdit')
+    )
+    expect(edit).toMatch(/if \(keyboardGesture\) \{[\s\S]*revealWidget\(edit\.widgetIndex\)[\s\S]*\} else \{/)
+    expect(edit.slice(edit.indexOf('} else {'))).not.toContain('revealWidget')
+  })
+
+  it('le gadget est cherché où il est, pas où il était', () => {
+    // `Page.widgets` est une photographie prise au dernier `render()` : après cinq
+    // flèches elle désigne l'endroit que le gadget a quitté. `currentBounds` relit le
+    // document.
+    expect(reveal).toContain('currentBounds(page, index)')
+    expect(reveal).toContain('bounds.y1 / WIDGET_SCALE')
+    expect(reveal).toContain('bounds.y2 / WIDGET_SCALE')
+    expect(reveal).not.toMatch(/widget\.y1/)
+  })
+
+  it('rien ne bouge tant que le gadget tient dans la bande', () => {
+    // `revealOffset` rend zéro dans ce cas : la page ne doit pas frémir sous les doigts
+    // du pilote à chaque appui de flèche.
+    expect(reveal).toMatch(/if \(offset === 0\) return\s*\n\s*window\.scrollBy/)
+  })
+
+  it('la bande est remesurée à chaque appel, et c’est la fenêtre qui défile', () => {
+    // Jamais `scrollIntoView` sur la plaque, jamais un `transform` : le zoom calé à la
+    // règle graduée reste intact.
+    expect(reveal).toContain('visibleBand()')
+    expect(reveal).toContain('window.scrollBy({ top: offset')
+    expect(main).not.toContain('plate.scrollIntoView')
+  })
+})
+
 describe('assemblage — la vue d’ensemble montre les pages avant les constats', () => {
   it('les constats sont triés en deux poids', () => {
     expect(main).toContain('splitWarnings(warningsAt(session.warnings, ')

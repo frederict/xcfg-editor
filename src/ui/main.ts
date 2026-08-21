@@ -17,7 +17,8 @@ import { readWidget, type Widget } from '../model/widget'
 import { renderPage } from '../render/canvas'
 import { buildDeviceSelector } from './deviceSelector'
 import {
-  createEditor, type Editor, type Viewport, type WidgetEdit, type WidgetStructureEdit
+  createEditor, currentBounds,
+  type Editor, type Viewport, type WidgetEdit, type WidgetStructureEdit
 } from './editor'
 import {
   applyPageOperation, operationAnnouncement, renderPageManager, type PageOperation
@@ -681,12 +682,21 @@ let keyboardGesture = false
  * curseur, sans quoi deux secondes d'appui rempliraient à elles seules les cent pas de
  * l'historique. Un glissé, lui, ne produit qu'une modification à son terme : elle est
  * enregistrée aussitôt, et « Annuler » s'allume dans l'instant.
+ *
+ * **Au clavier seulement, le gadget est ramené sous les yeux du pilote.** Une flèche
+ * déplace d'une cellule sans changer la sélection : après quelques appuis vers le bas, le
+ * gadget passe sous le bandeau de réglages et le pilote ne voit plus ce qu'il fait — ce
+ * qui est pourtant tout l'objet du geste. Un glissé n'a pas ce défaut : le doigt est
+ * posé sur le gadget, donc dans la bande visible par construction, et faire bouger la
+ * page sous un pointeur qui vient de lâcher serait une agression. `revealWidget` ne
+ * défile d'ailleurs que si le gadget est réellement sorti de la bande.
  */
 function onWidgetEdit(edit: WidgetEdit): void {
   if (!session) return
   session.container.modified = true
   if (keyboardGesture) {
     recordSoon(`geste:${edit.widgetIndex}:${edit.description}`, edit.description)
+    revealWidget(edit.widgetIndex)
   } else {
     flushRecord()
     session.history.record(edit.description)
@@ -1206,33 +1216,50 @@ function revealBehavior(): ScrollBehavior {
 }
 
 /**
- * Amène le gadget sélectionné dans la bande visible.
+ * Amène un gadget dans la bande visible, désigné par son rang.
  *
- * C'est la boucle d'édition elle-même : *je choisis → je vois*. Sans ce défilement, un
+ * C'est la boucle d'édition elle-même : *j'agis → je vois*. Sans ce défilement, un
  * gadget de la moitié basse de la page est sous le bandeau de réglages au moment précis
  * où l'on ouvre ses réglages — et comme il est aussi hors d'atteinte du clic pour la
  * même raison, la liste du bandeau est son unique voie d'accès, laquelle ne montrait
  * rien.
  *
  * On défile **la fenêtre**, jamais la plaque : le zoom que le pilote a calé à la règle
- * graduée n'est pas touché, et la page reste dessinée à sa taille physique. La position
- * du gadget se calcule depuis ses coordonnées normalisées et le rectangle de la plaque,
- * plutôt que depuis les marques du calque — la consultation n'en a pas, et le calcul
- * vaut alors pour les deux modes.
+ * graduée n'est pas touché, et la page reste dessinée à sa taille physique. La bande
+ * visible, elle, est mesurée à chaque appel — le bandeau vient peut-être de changer de
+ * hauteur.
+ *
+ * Les coordonnées viennent de `currentBounds`, qui les **relit dans le document**.
+ * `Page.widgets` est une photographie prise au dernier `render()` : la lire ferait
+ * défiler vers l'endroit où le gadget se trouvait avant les flèches, ce qui est
+ * exactement l'endroit où il n'est plus.
+ *
+ * Le calcul part du rectangle de la plaque plutôt que des marques du calque : la
+ * consultation n'en a pas, et le même code vaut alors pour les deux modes.
  */
-function revealSelection(): void {
-  if (view.kind !== 'detail' || selection === undefined) return
-  const widget = currentPage()?.widgets[selection]
+function revealWidget(index: number): void {
+  if (view.kind !== 'detail') return
+  const page = currentPage()
   const plate = content.querySelector('.plate')
-  if (widget === undefined || !(plate instanceof HTMLElement)) return
+  if (page === undefined || page.widgets[index] === undefined) return
+  if (!(plate instanceof HTMLElement)) return
   const box = plate.getBoundingClientRect()
   if (box.height <= 0) return
+  const bounds = currentBounds(page, index)
   const offset = revealOffset({
-    top: box.top + (widget.y1 / WIDGET_SCALE) * box.height,
-    bottom: box.top + (widget.y2 / WIDGET_SCALE) * box.height
+    top: box.top + (bounds.y1 / WIDGET_SCALE) * box.height,
+    bottom: box.top + (bounds.y2 / WIDGET_SCALE) * box.height
   }, visibleBand())
+  // `revealOffset` rend zéro quand le gadget tient déjà dans la bande : la page ne bouge
+  // donc pas sous les doigts du pilote tant qu'il n'y a rien à montrer.
   if (offset === 0) return
   window.scrollBy({ top: offset, behavior: revealBehavior() })
+}
+
+/** Le gadget sélectionné, amené dans la bande visible. */
+function revealSelection(): void {
+  if (selection === undefined) return
+  revealWidget(selection)
 }
 
 /**
