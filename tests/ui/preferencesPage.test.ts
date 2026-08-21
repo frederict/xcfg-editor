@@ -235,14 +235,15 @@ describe('les clés que la page ne sait pas présenter restent visibles', () => 
   })
 })
 
-/* ------------------------------------------ l'état sérialisé : la taille, pas le contenu */
+/* -------------------------- ce que l'application a mémorisé : la taille, pas le contenu */
 
-describe('l’état sérialisé se dit sans se déplier', () => {
-  it('classe comme état ce que le fichier écrit en objet ou en tableau', () => {
+describe('ce que l’application a mémorisé se dit sans se déplier', () => {
+  it('classe comme mémorisé ce que le fichier écrit en objet ou en tableau', () => {
     const row = rowFor(BACKUP_2026, 'Sounds')
     expect(row.reason).toBe('state')
     expect(row.structured).toBe(true)
-    expect(row.value).toMatch(/^objet JSON, [\d\u202f\u00a0 ]+ caractères$/)
+    // « objet JSON » est le mot du format, pas celui du pilote.
+    expect(row.value).toMatch(/^valeur structurée, [\d\u202f\u00a0 ]+ caractères$/)
   })
 
   it('ne montre jamais le contenu de Navigation.State, seulement son poids', () => {
@@ -386,6 +387,30 @@ describe('le vocabulaire de la page est celui du pilote', () => {
         expect(said, `${path} — ${word}`).not.toContain(word)
       }
     }
+  })
+
+  it('ne dit ni « objet JSON » ni « état sérialisé » : ce sont les mots du format', () => {
+    // Le pilote n'a jamais vu de JSON. Ce qu'il voit, c'est une valeur qui en contient
+    // d'autres, et des lignes que l'application a mémorisées sans qu'elles règlent rien.
+    for (const path of [BACKUP_2026, BACKUP_2025, FORMES_PRESERVEES]) {
+      const { page } = editable(path)
+      const said = [
+        page.element.textContent ?? '',
+        ...[...page.element.querySelectorAll<HTMLElement>('[title]')].map((one) => one.title)
+      ].join('\n')
+      for (const word of ['JSON', 'sérialisé', 'sérialisée', 'déballer', 'imbriquée']) {
+        expect(said, `${path} — ${word}`).not.toContain(word)
+      }
+    }
+  })
+
+  it('emploie le même mot dans le bandeau et dans le bloc de fin de page', () => {
+    // Le bandeau disait « 14 d'état sérialisé » et le bloc « État sérialisé » : les deux
+    // devaient bouger ensemble, sinon l'écran se contredit d'un bloc à l'autre.
+    const { page } = editable(BACKUP_2026)
+    const said = page.element.textContent ?? ''
+    expect(said).toContain('mémorisées par l’application')
+    expect(said).toContain('Ce que l’application a mémorisé (pas des réglages)')
   })
 
   it('dit « vous » de ce que le pilote a réglé, et non « le pilote »', () => {
@@ -734,7 +759,7 @@ describe('ce qui se règle, et ce qui ne se règle pas', () => {
       expect(select.options.length, key).toBeGreaterThan(1)
       // La provenance voyage avec la liste : ce n'est pas une propriété de XCTrack,
       // c'est un relevé, sur un appareil et une version.
-      expect(select.title, key).toContain('relevée sur AIR³ 7.2')
+      expect(select.title, key).toContain('mesurée sur AIR³ 7.2')
     }
   })
 
@@ -899,7 +924,10 @@ describe('ce que la page dit du matériel, et ce qu’elle ne dira jamais', () =
     const scope = bloc?.querySelector(':scope > .prefs__hardware')?.textContent ?? ''
     expect(scope).toContain('que sur AIR³ 7.2')
     expect(scope).toContain('AIR3 AIR3-7.3 11')
-    expect(scope).toContain('nous ne savons pas quelle touche de ce boîtier-là l’émet')
+    // Le mot du diagnostic de version, employé ici pour la même chose : un trou dans ce
+    // que nous savons, jamais un défaut du fichier.
+    expect(scope).toContain('angle mort')
+    expect(scope).toContain('nous ne savons pas quelle touche l’émet')
     // Les touches restent lues et nommées : ne pas savoir d'où vient le boîtier
     // n'empêche pas de lire le code.
     expect(rowElement(page, 'Keys.ZoomIn').querySelector('.prefs__binding-key')?.textContent)

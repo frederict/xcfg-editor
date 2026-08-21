@@ -50,13 +50,14 @@ import {
  * Trois filtres, du plus large au plus étroit :
  *
  * 1. **Ce qui n'est pas présentable n'est pas modifiable.** Une clé sans libellé, une
- *    clé d'une autre version, de l'état sérialisé : la page les montre en fin de page,
+ *    clé d'une autre version, une ligne que l'application a mémorisée : la page les montre
+ *    en fin de page,
  *    en texte, exactement comme avant. On ne propose pas de régler ce qu'on ne sait pas
  *    nommer.
  * 2. **Une valeur structurée ne se réécrit jamais.** `Sounds`, `Navigation.State`,
  *    `Sensors.Configuration`, `Maverick.Layout`, `Sensors.AcousticVario.CustomProfile`
- *    (une table de 16 entrées) sont du JSON imbriqué que la page montre sans le déballer.
- *    Elle ne le déballera pas davantage pour l'écrire.
+ *    (une table de 16 entrées) sont des valeurs composées que la page montre telles
+ *    quelles, sans les ouvrir. Elle ne les ouvrira pas davantage pour les écrire.
  * 3. **Seuls six types de contrôle sont offerts** — voir `EDITABLE_CONTROLS`. Les
  *    dix-huit lignes de contrôle `action` ouvrent, sur l'appareil, une boîte que rien ne
  *    remplace ici : `Keys.*` attend une **touche pressée sur l'instrument**, qu'un
@@ -99,8 +100,8 @@ import {
  * - *sans libellé* — de vrais réglages, mais XCTrack les configure dans des écrans
  *   construits en code (espaces aériens, cartes, thermiques). La valeur et la comparaison
  *   au défaut restent affichées : le catalogue les connaît, c'est le nom qui manque ;
- * - *état sérialisé* — ce ne sont pas des réglages du tout, mais l'état de
- *   l'application (`Navigation.State`, `Sounds`, `Sensors.Configuration`…). On n'en
+ * - *ce que l'application a mémorisé* — ce ne sont pas des réglages du tout, mais l'état
+ *   de l'application (`Navigation.State`, `Sounds`, `Sensors.Configuration`…). On n'en
  *   montre que la taille, jamais le contenu ;
  * - *inconnue de ce catalogue* — une clé d'une autre version de XCTrack. Le fichier de
  *   2025 en porte 27. La page dit « je ne sais pas » : jamais « supprimable », jamais
@@ -261,7 +262,7 @@ export type PreferenceState =
 export type LeftoverReason =
   /** De vrais réglages, mais aucun libellé dans l'APK. */
   | 'unlabelled'
-  /** De l'état sérialisé, pas un réglage. */
+  /** Ce que l'application a mémorisé, pas un réglage. */
   | 'state'
   /** Le catalogue ne connaît pas cette clé — une autre version de XCTrack l'a écrite. */
   | 'unknown'
@@ -471,7 +472,7 @@ const MENU_NOTES: Record<string, string> = {
     'XCTrack construit cet écran en code : le réglage y est posé loin de son libellé, et ' +
     'l’application ne le nomme donc nulle part qu’on puisse lire. Les réglages qu’elle ' +
     'écrit sont bien dans le fichier — ils sont rassemblés plus bas, sous « Réglages sans ' +
-    'libellé » et « État sérialisé ».',
+    'libellé » et « Ce que l’application a mémorisé ».',
   _maps:
     'Écran construit en code, lui aussi sans libellé exploitable. Les lignes « Mapsforge » ' +
     'du fichier sont rassemblées plus bas.',
@@ -480,12 +481,13 @@ const MENU_NOTES: Record<string, string> = {
     'qui les montre, pas cette page.',
   _eventMapping:
     'Les actions automatiques sont enregistrées en bloc dans « EventMappingJs » : un ' +
-    'programme sérialisé, et non une liste de réglages.',
+    'petit programme écrit d’une traite, et non une liste de réglages.',
   _pro:
     'L’abonnement se gère sur le compte XContest, pas dans le fichier de configuration.',
   _sensors:
     'Cet écran sert à apparier les capteurs. Ce qu’il enregistre tient en une seule ligne, ' +
-    '« Sensors.Configuration », rassemblée plus bas avec le reste de l’état sérialisé.',
+    '« Sensors.Configuration », rassemblée plus bas avec le reste de ce que ' +
+    'l’application a mémorisé.',
   _shareconfig:
     'Cet écran ne porte que deux commandes — exporter, importer une configuration. Il n’a ' +
     'aucun réglage à retenir.',
@@ -666,9 +668,9 @@ export function hardwareNote(
     const origin = device === undefined
       ? 'ce fichier ne dit pas de quel appareil il vient'
       : `ce fichier vient d’un autre appareil (${device})`
-    return `Nous n’avons relevé les touches physiques que sur ${models}, et ${origin}. ` +
-      `Le code de chaque liaison est lu et nommé ci-dessus, mais nous ne savons pas ` +
-      `quelle touche de ce boîtier-là l’émet.`
+    return `Nous n’avons mesuré les touches physiques que sur ${models}, et ${origin} : ` +
+      `ce boîtier-ci est un angle mort. Le code de chaque liaison est lu et nommé ` +
+      `ci-dessus, mais nous ne savons pas quelle touche l’émet.`
   }
 
   const strangers = [...new Set(assigned
@@ -680,16 +682,16 @@ export function hardwareNote(
   const missing = strangers.length === 1
     ? `Le code ${strangers[0]} n’est aucune d’elles`
     : `Les codes ${strangers.join(', ')} n’en sont aucune`
-  return `Sur ${hardware.label} — le modèle que ce fichier déclare — nous n’avons relevé ` +
+  return `Sur ${hardware.label} — le modèle que ce fichier déclare — nous n’avons mesuré ` +
     `que ${plural(hardware.keys.length, 'touche physique', 'touches physiques')} : ` +
-    `${listed}. ${missing}. Le relevé a été fait sur un seul boîtier, et les modèles ` +
+    `${listed}. ${missing}. La mesure a été faite sur un seul boîtier, et les modèles ` +
     `plus récents en portent davantage.`
 }
 
 /** L'infobulle d'une liaison dont le code n'est aucune des touches relevées. */
 function unmatchedTitle(binding: KeyBinding, hardware: HardwareKeySurvey): string {
-  return `Aucune des touches que nous avons relevées sur ${hardware.label} n’émet le ` +
-    `code ${binding.code}. La note sous ce bloc dit ce que ce relevé vaut.`
+  return `Aucune des touches mesurées sur ${hardware.label} n’émet le code ` +
+    `${binding.code}. La note sous ce bloc dit ce que cette mesure vaut.`
 }
 
 /** Au-delà, une valeur scalaire est abrégée à l'affichage. */
@@ -707,7 +709,9 @@ export function readableValue(
   key: string, keys?: BindingContext
 ): string {
   if (node.kind === 'object') {
-    return `objet JSON, ${formatCount(structuredSize(node))} caractères`
+    // « objet JSON » est le mot du format, pas celui du pilote : ce qu'il voit, c'est une
+    // valeur qui en contient d'autres, et dont on lui dit la taille faute de la déplier.
+    return `valeur structurée, ${formatCount(structuredSize(node))} caractères`
   }
   if (node.kind === 'array') {
     const count = node.items.length
@@ -883,7 +887,7 @@ function buildRow(key: string, ctx: RowContext): PreferenceRow {
   if (text === undefined) {
     // Une valeur structurée face à un défaut scalaire : on ne compare pas des formes
     // différentes, on le dit.
-    row.undecidableReason = 'La valeur du fichier est une structure ; la valeur d’usine relevée est une valeur simple.'
+    row.undecidableReason = 'La valeur du fichier est une structure ; celle du catalogue des valeurs d’usine est une valeur simple.'
     return row
   }
   row.state = sameAsDefault(text, entry.default) ? 'default' : 'custom'
@@ -962,7 +966,7 @@ export function editRefusal(row: PreferenceRow): string | undefined {
       'cet éditeur ne propose pas de le changer.'
   }
   if (row.structured) {
-    return 'Valeur JSON imbriquée : cette page la montre sans la déballer, et ne la ' +
+    return 'Valeur composée : cette page la montre telle quelle, sans l’ouvrir, et ne la ' +
       'réécrit jamais.'
   }
   if (row.control === null || !EDITABLE_CONTROLS.has(row.control)) {
@@ -1314,7 +1318,7 @@ function buildLeftovers(
  * fait le plus important — c'est un fichier d'une autre version — et il passe avant la
  * forme de la valeur. Ensuite c'est **le type JSON du fichier qui tranche**, et non le
  * catalogue : `Mapsforge.Terrain` est déclarée `json` mais porte la chaîne `"None"` dans
- * les deux fichiers du corpus, et l'afficher comme de l'état sérialisé serait faux.
+ * les deux fichiers du corpus, et l'afficher comme une ligne mémorisée serait faux.
  */
 function leftoverReason(
   catalog: PreferenceCatalog, key: string, node: JsonNode
@@ -1602,7 +1606,7 @@ function buildRowElement(row: PreferenceRow, ctx: PageContext): HTMLElement {
   const cell = el('span', 'prefs__cell')
   element.append(cell)
 
-  // Sur une clé d'une autre version ou sur de l'état sérialisé, « rien à comparer » se
+  // Sur une clé d'une autre version ou sur une ligne mémorisée, « rien à comparer » se
   // répéterait à chaque ligne pour redire ce que le titre du bloc dit déjà une fois. La
   // colonne reste, vide : l'alignement des lignes voisines ne bouge pas.
   const mute = row.reason === 'unknown' || row.reason === 'state'
@@ -1984,11 +1988,11 @@ function restoreCaveat(ctx: EditContext): string {
   if (ctx.trust === 'exact') return ''
   const version = catalogVersionText(ctx.catalog)
   if (ctx.trust === 'indicative') {
-    return ` Cette valeur d’usine a été relevée sur XCTrack ${version}, qui n’est pas la ` +
-      'version d’où vient ce fichier : vérifiez que c’est bien celle à rétablir.'
+    return ` Cette valeur d’usine vient du catalogue de XCTrack ${version}, qui n’est pas ` +
+      'la version d’où vient ce fichier : vérifiez que c’est bien celle à rétablir.'
   }
-  return ` Cette valeur d’usine a été relevée sur XCTrack ${version} et la version de ce ` +
-    'fichier n’est pas connue ici : vérifiez que c’est bien celle à rétablir.'
+  return ` Cette valeur d’usine vient du catalogue de XCTrack ${version} et la version de ` +
+    'ce fichier n’est pas connue ici : vérifiez que c’est bien celle à rétablir.'
 }
 
 /** Le contrôle d'une ligne qui se règle, choisi sur le type que XCTrack affiche. */
@@ -2041,7 +2045,7 @@ function unitListNote(ctx: EditContext): string | undefined {
   // Les réserves sont des fragments de phrase dans la donnée : elles s'enchaînent après
   // deux points plutôt que collées bout à bout, où la première commencerait en minuscule
   // juste après un point.
-  return `Cette liste a été relevée sur ${source.deviceLabel}, XCTrack ` +
+  return `Cette liste a été mesurée sur ${source.deviceLabel}, XCTrack ` +
     `${source.versionName} : ${source.method}. À savoir : ${source.caveats.join(' ; ')}.`
 }
 
@@ -2132,8 +2136,9 @@ function buildTextField(
   input.spellcheck = false
   if (freeList) {
     input.title =
-      'XCTrack remplit cette liste en code : son domaine n’est pas relevé, et cet éditeur ' +
-      'ne propose donc pas de choix. La valeur est écrite telle que vous la saisissez.'
+      'XCTrack remplit cette liste en code : notre relevé des versions n’en donne pas les ' +
+      'valeurs et elles n’ont pas été mesurées sur l’appareil. Cet éditeur ne propose donc ' +
+      'pas de choix, et la valeur est écrite telle que vous la saisissez.'
   }
   input.addEventListener('change', () => { commit(input.value, false) })
   if (row.personal !== undefined) {
@@ -2258,7 +2263,13 @@ function fillSummaryBox(
   if (summary.unlabelledCount > 0) {
     rest.push(`${formatCount(summary.unlabelledCount)} sans libellé dans l’application`)
   }
-  if (summary.stateCount > 0) rest.push(`${formatCount(summary.stateCount)} d’état sérialisé`)
+  // Le même mot que le bloc de fin de page, faute de quoi l'écran se contredirait d'un
+  // bloc à l'autre : ici « mémorisées par l'application », là « Ce que l'application a
+  // mémorisé ».
+  if (summary.stateCount > 0) {
+    rest.push(`${formatCount(summary.stateCount)} mémorisée${summary.stateCount > 1 ? 's' : ''} ` +
+      `par l’application`)
+  }
   if (summary.unknownCount > 0) {
     rest.push(`${formatCount(summary.unknownCount)} inconnue${summary.unknownCount > 1 ? 's' : ''} de ce catalogue`)
   }
@@ -2447,7 +2458,7 @@ function buildPrivacyBox(inventory: PreferenceInventory, catalog: PreferenceCata
 
 const LEFTOVER_TITLES: Record<LeftoverReason, string> = {
   unlabelled: 'Réglages sans libellé',
-  state: 'État sérialisé, pas des réglages',
+  state: 'Ce que l’application a mémorisé (pas des réglages)',
   unknown: 'Lignes que ce catalogue ne connaît pas'
 }
 
@@ -2909,7 +2920,7 @@ export async function openPreferencesPage(
  *
  * | morceau                   |  émis   |  gzip   |
  * |---------------------------|---------|---------|
- * | `preferencesPage-*.js`    | 44,4 Ko | 14,7 Ko |
+ * | `preferencesPage-*.js`    | 45,0 Ko | 14,9 Ko |
  * | `preferencesPage-*.css`   |  9,7 Ko |  2,3 Ko |
  * | `preferenceDomains-*.js`  | 12,7 Ko |  4,3 Ko |
  * | `preferenceCatalog/base`  | 98,9 Ko | 14,8 Ko |
@@ -2930,7 +2941,7 @@ export async function openPreferencesPage(
  */
 export const PREFERENCES_PAGE_WEIGHT = {
   /** Le module de page, une fois construit. */
-  moduleKb: 44.4,
+  moduleKb: 45,
   /** Sa feuille de style, émise à part par Vite. */
   styleKb: 9.7,
   /**
