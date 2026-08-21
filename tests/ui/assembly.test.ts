@@ -230,6 +230,39 @@ describe('assemblage — le bandeau de réglages s’ouvre quand il a quelque ch
   })
 })
 
+describe('assemblage — la liste des gadgets ne reste pas sur l’ancienne taille', () => {
+  it('le redessin d’un geste remet la liste à jour, et depuis le document relu', () => {
+    // `Page.widgets` est une photographie prise au dernier `render()` : c'est justement ce
+    // que le redimensionnement vient de périmer. `repaint()` relit déjà la mise en page
+    // pour redessiner la page — la liste part de la même relecture.
+    const repaint = main.slice(
+      main.indexOf('function repaint(): void'),
+      main.indexOf('function onWidgetEdit')
+    )
+    expect(repaint).toContain('const page = readLayout(session.container.document)[orientation][view.index]')
+    expect(repaint).toContain('widgetList?.refresh(page)')
+    // Avant la plaque : un rendu de page absent ne doit pas empêcher la liste de suivre.
+    expect(repaint.indexOf('widgetList?.refresh(page)'))
+      .toBeLessThan(repaint.indexOf("content.querySelector('.plate')"))
+  })
+
+  it('c’est une remise à jour, jamais une reconstruction', () => {
+    // `refreshWidgetList()` refait les lignes : il reprendrait au pilote le focus de sa
+    // ligne et la position de défilement de la liste, à chaque cran d'un glissé. Il reste
+    // réservé aux actions de structure, qui changent le nombre de rangs.
+    const repaint = main.slice(
+      main.indexOf('function repaint(): void'),
+      main.indexOf('function onWidgetEdit')
+    )
+    expect(repaint).not.toContain('refreshWidgetList()')
+    const structure = main.slice(
+      main.indexOf('function onStructureEdit'),
+      main.indexOf('/** Une option modifiée dans le panneau.')
+    )
+    expect(structure).toContain('refreshWidgetList()')
+  })
+})
+
 describe('assemblage — sélectionner un gadget l’amène sous les yeux du pilote', () => {
   it('les trois chemins de sélection défilent vers le gadget', () => {
     // Liste du bandeau, clic sur la page en consultation, calque d'édition : trois

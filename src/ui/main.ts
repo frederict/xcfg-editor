@@ -990,9 +990,18 @@ function repaint(): void {
   // Relecture locale : `session.layout` et la page que le calque tient restent le même
   // objet d'un bout à l'autre d'une vue. C'est `render()` qui les renouvelle.
   const page = readLayout(session.container.document)[orientation][view.index]
+  if (!page) return
+
+  // La liste dit la taille de chaque gadget en millimètres, et sa place dans la vignette :
+  // un redimensionnement les périme toutes deux à l'instant même. Elle annonçait jusqu'ici
+  // l'ancienne taille jusqu'au prochain `render()` complet — c'est-à-dire, le plus
+  // souvent, jusqu'au changement de page. Remise à jour ici, elle suit le geste sans que
+  // le pilote perde le focus de sa ligne : voir `WidgetList.refresh`.
+  widgetList?.refresh(page)
+
   const plate = content.querySelector('.plate')
   const drawing = plate?.firstElementChild
-  if (!page || !plate || !drawing) return
+  if (!plate || !drawing) return
   plate.replaceChild(
     renderPage(page, aspectRatioOf(session.device, orientation), session.settings, session.language),
     drawing

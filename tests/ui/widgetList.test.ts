@@ -9,7 +9,7 @@ import type { JsonNode } from '../../src/core/jsonDocument'
 import { parseJson } from '../../src/core/parseJson'
 import { createHistory } from '../../src/model/history'
 import { readLayout, type Page } from '../../src/model/layout'
-import { removeWidget, reorderWidget } from '../../src/model/mutations'
+import { removeWidget, reorderWidget, setWidgetBounds } from '../../src/model/mutations'
 import { widgetAtPoint } from '../../src/ui/editor'
 import {
   coversEntirely, renderWidgetList, unreachableWidgets, widgetListEntries
@@ -427,6 +427,143 @@ describe('après une annulation', () => {
       .toEqual(['WAltitude', 'WAltitude', 'WLiveMessage', 'WButtonNavig'])
     expect(rowsOf(build(apres)).map((r) => r.dataset.unreachable))
       .toEqual(['non', 'non', 'non', 'non'])
+  })
+})
+
+/* ============================================ le geste qui vient de finir sur la page */
+
+/**
+ * Un redimensionnement laissait la liste sur l'ancienne taille jusqu'au prochain rendu
+ * complet — soit, le plus souvent, jusqu'au changement de page. Le pilote d'essai l'a
+ * relevé : « elle affiche encore l'ancienne taille ».
+ *
+ * `refresh` remet à jour ce que le geste périme **sans refaire les lignes** : le focus, la
+ * tabulation mobile et la position de défilement de la liste sont ce que le pilote perdrait
+ * autrement à chaque cran d'un glissé.
+ */
+describe('refresh — la liste suit le geste', () => {
+  /** Le geste lui-même : le document est muté, la mise en page relue, comme dans `repaint`. */
+  function resize(
+    document: JsonNode, index: number, bounds: { x1?: number; y1?: number; x2?: number; y2?: number }
+  ): Page {
+    const page = readLayout(document).landscape[0]!
+    setWidgetBounds(page.widgets[index]!.node, bounds)
+    return readLayout(document).landscape[0]!
+  }
+
+  it('la taille en millimètres et la vignette suivent le rectangle', () => {
+    const document = buildDocument(SAMPLE)
+    const list = build(readLayout(document).landscape[0]!)
+    const rows = rowsOf(list)
+    const sizeOf = (row: HTMLElement): string =>
+      row.querySelector('.wlist__size')?.textContent ?? ''
+    const markOf = (row: HTMLElement): string[] => {
+      const mark = row.querySelector('.wlist__mark') as HTMLElement
+      return [mark.style.left, mark.style.top, mark.style.width, mark.style.height]
+    }
+    const before = sizeOf(rows[1]!)
+    expect(markOf(rows[1]!)).toEqual(['0%', '0%', '20%', '20%'])
+
+    list.refresh(resize(document, 1, { x2: 5000, y2: 4000 }))
+
+    expect(sizeOf(rows[1]!)).not.toBe(before)
+    expect(markOf(rows[1]!)).toEqual(['0%', '0%', '50%', '40%'])
+    // L'intitulé lu par l'assistance vocale porte la taille : il se périme avec elle.
+    expect(rows[1]?.getAttribute('aria-label')).toContain(sizeOf(rows[1]!).split(' × ')[0])
+    // Et le tableau rendu à l'appelant n'est pas resté sur la photographie d'avant.
+    expect(list.entries[1]?.widthMm).toBeGreaterThan(list.entries[2]!.widthMm)
+  })
+
+  it('les lignes ne sont pas refaites : le focus du pilote reste où il était', () => {
+    const document = buildDocument(SAMPLE)
+    const list = build(readLayout(document).landscape[0]!, 2)
+    globalThis.document.body.append(list.element)
+    const rows = rowsOf(list)
+    rows[2]!.focus()
+    expect(globalThis.document.activeElement).toBe(rows[2])
+
+    list.refresh(resize(document, 2, { x2: 6000 }))
+
+    // Le même objet, toujours dans le document, toujours sous le focus. Une
+    // reconstruction aurait rendu trois lignes neuves et renvoyé le focus au corps.
+    expect(rowsOf(list)[2]).toBe(rows[2])
+    expect(globalThis.document.activeElement).toBe(rows[2])
+    // La sélection n'est pas du ressort de `refresh` : elle n'y est ni reposée ni perdue.
+    expect(rows[2]?.getAttribute('aria-selected')).toBe('true')
+    expect(rows[2]?.tabIndex).toBe(0)
+    list.element.remove()
+  })
+
+  it('un gadget qui se dégage perd sa marque, et le compte de tête suit', () => {
+    const document = buildDocument(SAMPLE)
+    const list = build(readLayout(document).landscape[0]!)
+    const rows = rowsOf(list)
+    expect(rows[0]?.dataset.unreachable).toBe('oui')
+    expect(list.element.querySelector('.wlist__alert')?.textContent)
+      .toBe('1 inatteignable dans l’éditeur')
+
+    // Le `WLiveMessage` du premier plan se rétracte : le `WButtonNavig` du fond, qu'il
+    // recouvrait entièrement, redevient atteignable au clic.
+    list.refresh(resize(document, 3, { y1: 9500, x2: 5000 }))
+
+    expect(rows[0]?.dataset.unreachable).toBe('non')
+    expect(rows[0]?.classList.contains('wlist__row--blocked')).toBe(false)
+    expect(rows[0]?.querySelector('.wlist__flag--blocked')).toBeNull()
+    expect(rows[0]?.getAttribute('aria-label'))
+      .not.toContain('inatteignable au clic dans cet éditeur')
+    expect(list.element.querySelector('.wlist__alert')).toBeNull()
+  })
+
+  it('et réciproquement : un gadget muré gagne sa marque et le compte reparaît', () => {
+    const document = buildDocument([
+      ['WButtonNavig', 0, 0, 2000, 2000],
+      ['WAltitude', 5000, 5000, 6000, 6000]
+    ])
+    const list = build(readLayout(document).landscape[0]!)
+    const rows = rowsOf(list)
+    expect(rows[0]?.dataset.unreachable).toBe('non')
+    expect(list.element.querySelector('.wlist__alert')).toBeNull()
+
+    // Le rang supérieur s'étale sur toute la page : plus aucun point du rang 1 n'échappe.
+    list.refresh(resize(document, 1, { x1: 0, y1: 0, x2: 10000, y2: 10000 }))
+
+    expect(rows[0]?.dataset.unreachable).toBe('oui')
+    expect(rows[0]?.querySelector('.wlist__flag--blocked')).not.toBeNull()
+    expect(list.element.querySelector('.wlist__alert')?.textContent)
+      .toBe('1 inatteignable dans l’éditeur')
+    // La marque « rien au repos » tient au type, pas à la géométrie : elle ne bouge pas.
+    expect(rows[0]?.dataset.blank).toBe('non')
+  })
+
+  it('la marque du fond ne se dédouble pas à force de rafraîchir', () => {
+    const document = buildDocument(SAMPLE)
+    const list = build(readLayout(document).landscape[0]!)
+    const rows = rowsOf(list)
+    for (let step = 0; step < 5; step += 1) {
+      list.refresh(resize(document, 1, { x2: 2100 + step * 100 }))
+    }
+    expect(rows[0]?.querySelectorAll('.wlist__flag--blocked').length).toBe(1)
+    expect(rows[0]?.querySelectorAll('.wlist__flags').length).toBe(1)
+    expect(rows[3]?.querySelectorAll('.wlist__flag--blank').length).toBe(1)
+    expect(list.element.querySelectorAll('.wlist__alert').length).toBe(1)
+  })
+
+  it('ne touche à rien si la page n’a plus le même nombre de rangs', () => {
+    // Ajout, retrait, réordonnancement : `main.ts` reconstruit la liste entière. Un
+    // rafraîchissement appliqué là ferait correspondre des rangs à d'autres gadgets.
+    const document = buildDocument(SAMPLE)
+    const list = build(readLayout(document).landscape[0]!)
+    const before = rowsOf(list).map((row) => row.querySelector('.wlist__size')?.textContent)
+    const page = readLayout(document).landscape[0]!
+    removeWidget(page.node, 3)
+    list.refresh(readLayout(document).landscape[0]!)
+    expect(rowsOf(list).map((row) => row.querySelector('.wlist__size')?.textContent))
+      .toEqual(before)
+  })
+
+  it('reste appelable sur une page sans gadget', () => {
+    const list = build(buildPage([]))
+    expect(() => list.refresh(buildPage([]))).not.toThrow()
   })
 })
 

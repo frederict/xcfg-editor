@@ -162,6 +162,18 @@ export interface WidgetList {
   element: HTMLElement
   /** Met en évidence le rang donné, sans rien reconstruire ni rappeler `onSelect`. */
   select: (index: number | undefined) => void
+  /**
+   * Remet à jour ce qu'un geste sur la page vient de périmer : taille, vignette, marques
+   * d'inatteignabilité. **Les lignes ne sont pas refaites** — elles gardent leur focus,
+   * leur tabulation mobile et la position de défilement de la liste, qu'une
+   * reconstruction leur prendrait au premier cran d'un glissé.
+   *
+   * `page` doit être une **relecture** du document : `Page.widgets` est une photographie
+   * prise au dernier `render()`, et c'est précisément ce que le redimensionnement a
+   * périmé. Le nombre de rangs, lui, est supposé inchangé — une action de structure
+   * (ajout, retrait, réordonnancement) demande une reconstruction complète.
+   */
+  refresh: (page: Page) => void
   /** Ce que la liste a calculé — de quoi le vérifier sans lire le DOM. */
   entries: WidgetListEntry[]
 }
@@ -190,19 +202,86 @@ function el<K extends keyof HTMLElementTagNameMap>(
  * Elle est purement décorative pour l'assistance vocale (`aria-hidden`) : ce qu'elle
  * montre, l'intitulé accessible de la ligne le dit en toutes lettres, taille comprise.
  */
-function thumbnail(widget: Widget, aspectRatio: number): HTMLElement {
+function thumbnail(aspectRatio: number): { map: HTMLElement; mark: HTMLElement } {
   const map = el('span', 'wlist__map')
   map.setAttribute('aria-hidden', 'true')
   map.style.aspectRatio = String(aspectRatio)
   const mark = el('span', 'wlist__mark')
+  map.append(mark)
+  return { map, mark }
+}
+
+/** Où en est le rectangle du widget dans la vignette. Se redit à chaque geste sur la page. */
+function placeMark(mark: HTMLElement, widget: Widget): void {
   mark.style.left = `${widget.x1 / 100}%`
   mark.style.top = `${widget.y1 / 100}%`
   // Un widget de largeur nulle disparaîtrait : la vignette lui laisse un trait, qui dit
   // « il est là, et il est plat » — le rectangle dégénéré est justement un cas à voir.
   mark.style.width = `${Math.max(2, (widget.x2 - widget.x1) / 100)}%`
   mark.style.height = `${Math.max(2, (widget.y2 - widget.y1) / 100)}%`
-  map.append(mark)
-  return map
+}
+
+/**
+ * Les deux marques d'une ligne, refaites d'un bloc.
+ *
+ * « Inatteignable » n'est pas un fait figé : recouvrir ou dégager un gadget en déplaçant
+ * son voisin le fait apparaître et disparaître. « Rien au repos » l'est, lui — il tient
+ * au type — mais les deux se posent au même endroit et dans le même ordre, et les séparer
+ * ferait deux chemins pour une seule question.
+ */
+function flagsFor(entry: WidgetListEntry): HTMLElement {
+  const flags = el('span', 'wlist__flags')
+  if (entry.unreachable) {
+    const flag = el('span', 'wlist__flag wlist__flag--blocked', 'inatteignable ici')
+    flag.title =
+      'Dans cet éditeur, aucun clic sur la page ne peut atteindre ce gadget : les rangs ' +
+      'supérieurs le recouvrent entièrement, et cette liste est le seul chemin qui y ' +
+      'mène. Sur l’instrument, il reste à sa place — un bouton d’action ainsi recouvert ' +
+      'continue de répondre au doigt.'
+    flags.append(flag)
+  }
+  if (entry.blank) {
+    // « sans dessin » se lisait comme une limite de cet éditeur, alors que c'est un
+    // fait de l'appareil : le gadget est bien là, il ne peint rien tant qu'il n'a rien
+    // à montrer. La palette dit déjà cela avec ces mots-là ; deux écrans, un mot.
+    const flag = el('span', 'wlist__flag wlist__flag--blank', 'rien au repos')
+    flag.title =
+      'Sur l’appareil, ce type ne peint rien au repos. Il occupe pourtant sa place et ' +
+      'intercepte les clics comme n’importe quel autre gadget.'
+    flags.append(flag)
+  }
+  return flags
+}
+
+/** Ce qu'un geste sur la page périme dans une ligne — et rien d'autre. */
+interface MutableRow {
+  row: HTMLLIElement
+  mark: HTMLElement
+  size: HTMLElement
+  /** `undefined` tant que la ligne ne porte aucune marque : un conteneur vide prendrait
+   *  l'écart de la ligne à lui seul, et décalerait tout le reste. */
+  flags: HTMLElement | undefined
+}
+
+function paintRow(
+  parts: MutableRow, entry: WidgetListEntry, widget: Widget, total: number
+): void {
+  placeMark(parts.mark, widget)
+  parts.size.textContent = formatSizeMm(entry)
+  // Les deux faits, lisibles depuis un test ou un harnais sans dépendre du style.
+  parts.row.dataset.unreachable = entry.unreachable ? 'oui' : 'non'
+  parts.row.dataset.blank = entry.blank ? 'oui' : 'non'
+  parts.row.classList.toggle('wlist__row--blocked', entry.unreachable)
+  parts.row.classList.toggle('wlist__row--blank', entry.blank)
+  parts.row.setAttribute('aria-label', spokenLabel(entry, total))
+
+  parts.flags?.remove()
+  parts.flags = undefined
+  const flags = flagsFor(entry)
+  if (flags.childElementCount > 0) {
+    parts.row.append(flags)
+    parts.flags = flags
+  }
 }
 
 /** L'intitulé lu par l'assistance vocale : tout ce que la ligne montre, en toutes lettres. */
@@ -228,9 +307,11 @@ function spokenLabel(entry: WidgetListEntry, total: number): string {
 export function renderWidgetList(options: WidgetListOptions): WidgetList {
   const { page, device, orientation, language } = options
   const widgets = page.widgets
+  // Le tableau est **le même objet** d'un bout à l'autre de la vie de la liste : `refresh`
+  // en remplace le contenu sur place, de sorte que `WidgetList.entries` ne devienne jamais
+  // une photographie périmée entre les mains de l'appelant.
   const entries = widgetListEntries(widgets, device, orientation, language)
   const aspectRatio = aspectRatioOf(device, orientation)
-  const blocked = entries.filter((entry) => entry.unreachable).length
 
   const root = el('section', 'wlist')
 
@@ -239,15 +320,30 @@ export function renderWidgetList(options: WidgetListOptions): WidgetList {
   // gagnée tient l'en-tête sur une seule ligne, soit un rang de plus à l'écran dans un
   // bandeau dont la hauteur est bornée.
   const head = el('div', 'wlist__head')
-  head.append(el('h3', 'wlist__title', 'Gadgets de la page'))
-  if (blocked > 0) {
-    const alert = el(
-      'span', 'wlist__alert',
-      plural({
-        one: '{count} inatteignable dans l’éditeur',
-        other: '{count} inatteignables dans l’éditeur'
-      }, blocked)
-    )
+  const title = el('h3', 'wlist__title', 'Gadgets de la page')
+  head.append(title)
+  let alert: HTMLElement | undefined
+
+  /**
+   * Le compte des inatteignables, en tête. Il se refait avec les lignes : déplacer un
+   * gadget peut à lui seul en murer un autre, ou en dégager un.
+   */
+  function paintAlert(): void {
+    const blocked = entries.filter((entry) => entry.unreachable).length
+    if (blocked === 0) {
+      alert?.remove()
+      alert = undefined
+      return
+    }
+    const text = plural({
+      one: '{count} inatteignable dans l’éditeur',
+      other: '{count} inatteignables dans l’éditeur'
+    }, blocked)
+    if (alert) {
+      alert.textContent = text
+      return
+    }
+    alert = el('span', 'wlist__alert', text)
     alert.title =
       'Ces gadgets sont entièrement recouverts par des rangs supérieurs : ici, aucun clic ' +
       'sur la page ne les atteint, et cette liste est le seul chemin qui y mène. Sur ' +
@@ -255,11 +351,13 @@ export function renderWidgetList(options: WidgetListOptions): WidgetList {
       'continue de répondre au doigt.'
     head.append(alert)
   }
+
+  paintAlert()
   root.append(head)
 
   if (widgets.length === 0) {
     root.append(el('p', 'wlist__empty', 'Cette page ne porte aucun gadget.'))
-    return { element: root, select: () => {}, entries }
+    return { element: root, select: () => {}, refresh: () => {}, entries }
   }
 
   // Les deux extrémités portent leur sens : le fichier va du fond vers l'avant, et rien
@@ -280,52 +378,29 @@ export function renderWidgetList(options: WidgetListOptions): WidgetList {
     options.onSelect(index)
   }
 
+  const parts: MutableRow[] = []
+
   entries.forEach((entry) => {
     const widget = widgets[entry.index]!
     const row = el('li', 'wlist__row')
     row.setAttribute('role', 'option')
     row.dataset.index = String(entry.index)
     row.dataset.shortName = entry.shortName
-    // Les deux faits, lisibles depuis un test ou un harnais sans dépendre du style.
-    row.dataset.unreachable = entry.unreachable ? 'oui' : 'non'
-    row.dataset.blank = entry.blank ? 'oui' : 'non'
-    if (entry.unreachable) row.classList.add('wlist__row--blocked')
-    if (entry.blank) row.classList.add('wlist__row--blank')
-    row.setAttribute('aria-label', spokenLabel(entry, widgets.length))
 
-    row.append(
-      el('span', 'wlist__rank', String(entry.index + 1)),
-      thumbnail(widget, aspectRatio)
-    )
+    const { map, mark } = thumbnail(aspectRatio)
+    row.append(el('span', 'wlist__rank', String(entry.index + 1)), map)
 
+    const size = el('span', 'wlist__size')
     const text = el('span', 'wlist__text')
-    text.append(
-      el('span', 'wlist__name', entry.name),
-      el('span', 'wlist__size', formatSizeMm(entry))
-    )
+    text.append(el('span', 'wlist__name', entry.name), size)
     row.append(text)
 
-    const flags = el('span', 'wlist__flags')
-    if (entry.unreachable) {
-      const flag = el('span', 'wlist__flag wlist__flag--blocked', 'inatteignable ici')
-      flag.title =
-        'Dans cet éditeur, aucun clic sur la page ne peut atteindre ce gadget : les rangs ' +
-        'supérieurs le recouvrent entièrement, et cette liste est le seul chemin qui y ' +
-        'mène. Sur l’instrument, il reste à sa place — un bouton d’action ainsi recouvert ' +
-        'continue de répondre au doigt.'
-      flags.append(flag)
-    }
-    if (entry.blank) {
-      // « sans dessin » se lisait comme une limite de cet éditeur, alors que c'est un
-      // fait de l'appareil : le gadget est bien là, il ne peint rien tant qu'il n'a rien
-      // à montrer. La palette dit déjà cela avec ces mots-là ; deux écrans, un mot.
-      const flag = el('span', 'wlist__flag wlist__flag--blank', 'rien au repos')
-      flag.title =
-        'Sur l’appareil, ce type ne peint rien au repos. Il occupe pourtant sa place et ' +
-        'intercepte les clics comme n’importe quel autre gadget.'
-      flags.append(flag)
-    }
-    if (flags.childElementCount > 0) row.append(flags)
+    // Tout ce qui bouge sous un geste — vignette, taille, marques — est posé par le même
+    // chemin à la construction et au rafraîchissement : deux chemins finiraient par
+    // diverger, et l'écart ne se verrait qu'en cours de glissé.
+    const mutable: MutableRow = { row, mark, size, flags: undefined }
+    paintRow(mutable, entry, widget, widgets.length)
+    parts.push(mutable)
 
     row.addEventListener('click', () => choose(entry.index, false))
     rows.push(row)
@@ -366,9 +441,32 @@ export function renderWidgetList(options: WidgetListOptions): WidgetList {
     event.stopPropagation()
   })
 
+  /**
+   * Le geste vient de finir sur la page : la liste disait encore l'ancienne taille.
+   *
+   * Elle est **remise à jour**, pas refaite. Une reconstruction reprendrait au pilote le
+   * focus de la ligne qu'il vient de choisir, sa tabulation mobile et la position de
+   * défilement de la liste — et elle le ferait à chaque cran d'un glissé.
+   */
+  function refresh(fresh: Page): void {
+    // Le nombre de rangs ne change qu'à une action de structure, laquelle reconstruit.
+    // Un écart ici signifierait qu'on rafraîchit une liste qui ne décrit plus cette page.
+    if (fresh.widgets.length !== entries.length) return
+    entries.splice(
+      0, entries.length,
+      ...widgetListEntries(fresh.widgets, device, orientation, language)
+    )
+    entries.forEach((entry, position) => {
+      paintRow(parts[position]!, entry, fresh.widgets[entry.index]!, entries.length)
+    })
+    paintAlert()
+    // Rien à reposer : `paintRow` ne touche ni à `aria-selected`, ni à la classe de
+    // sélection, ni à la tabulation mobile — c'est le domaine d'`apply`, et lui seul.
+  }
+
   apply(current)
   root.append(list)
   root.append(el('p', 'wlist__edge', `Rang ${widgets.length} · au premier plan`))
 
-  return { element: root, select: apply, entries }
+  return { element: root, select: apply, refresh, entries }
 }
