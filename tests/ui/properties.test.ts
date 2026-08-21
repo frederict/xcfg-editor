@@ -16,7 +16,8 @@ import {
   type PropertyField,
   type PropertyForm
 } from '../../src/ui/properties'
-import { BACKUP_2026 } from '../fixtures/paths'
+import { BACKUP_2025, BACKUP_2026 } from '../fixtures/paths'
+import { DEFAULTS_VERSION_CODE, DEFAULTS_VERSION_NAME } from '../../src/catalog/widgetDefaults'
 
 /**
  * Tout se joue sur des widgets réels. Un panneau de réglages engendré ne se juge pas sur
@@ -554,5 +555,299 @@ describe('un widget cartographique reste exploitable', () => {
 
     panel.filter('')
     expect(visible()).toHaveLength(49)
+  })
+})
+
+/* ================================================================================== */
+/*                     consultation : lire des réglages sans les toucher              */
+/* ================================================================================== */
+
+/**
+ * Le fichier de référence vient de la version même du relevé des défauts (versionCode
+ * 100030) : sa comparaison est exacte. `BACKUP_2025`, lui, vient de 0.9.12.3 — c'est le
+ * cas où l'interface doit dire que la comparaison n'est qu'indicative.
+ */
+const OLD_SOURCE = readFileSync(BACKUP_2025, 'utf8')
+
+function oldDocument(): JsonNode {
+  return parseJson(OLD_SOURCE)
+}
+
+function readOnlyPanel(widget: Widget, options: Record<string, unknown> = {}) {
+  return renderProperties({ form: buildPropertyForm(widget), readOnly: true, ...options })
+}
+
+function rowsOf(panel: { element: HTMLElement }): HTMLElement[] {
+  return [...panel.element.querySelectorAll<HTMLElement>('.props__row')]
+}
+
+function visibleKeys(panel: { element: HTMLElement }): string[] {
+  return rowsOf(panel).filter((row) => !row.hidden).map((row) => row.dataset.key!)
+}
+
+describe('le panneau de consultation ne peut pas modifier le document', () => {
+  it('ne construit aucun contrôle de formulaire — rien à désactiver, rien à réactiver', () => {
+    const panel = readOnlyPanel(map(document()))
+    expect(panel.readOnly).toBe(true)
+    expect(panel.element.dataset.mode).toBe('lecture')
+
+    // Le champ de filtrage est le seul `input` admis : il ne touche pas au document, il
+    // masque des lignes. Tout le reste — cases, listes, curseurs, champs texte — est
+    // absent, et non désactivé : un contrôle grisé se réactive, une absence non.
+    const inputs = [...panel.element.querySelectorAll<HTMLInputElement>('input')]
+    expect(inputs.map((input) => input.type)).toEqual(['search'])
+    expect(inputs[0]!.className).toBe('props__filter')
+
+    expect(panel.element.querySelectorAll('select')).toHaveLength(0)
+    expect(panel.element.querySelectorAll('textarea')).toHaveLength(0)
+    expect(panel.element.querySelectorAll('[contenteditable]')).toHaveLength(0)
+    expect(panel.element.querySelectorAll('form')).toHaveLength(0)
+  })
+
+  it('ne comporte que des boutons inoffensifs : l’aide, et le filtre des différences', () => {
+    const panel = readOnlyPanel(map(document()))
+    const classes = new Set(
+      [...panel.element.querySelectorAll<HTMLButtonElement>('button')]
+        .flatMap((button) => [...button.classList])
+    )
+    // Aucun bouton qui écrirait : `props__help` déplie une aide, `props__defaults-only`
+    // masque des lignes.
+    expect([...classes].every((name) => /^(btn|props__help|props__defaults-only)$/.test(name)))
+      .toBe(true)
+  })
+
+  it('résiste à une tentative de modification par tous les moyens du DOM', () => {
+    const doc = oldDocument()
+    const widget = readLayout(doc).landscape.flatMap((page) => page.widgets)
+      .find((one) => one.shortName === 'WCompMap')!
+    const before = serializeJson(doc)
+
+    let called = 0
+    // `onChange` est fourni **exprès** : le contrat n'est pas « l'appelant s'abstient »,
+    // c'est « le panneau ne le rappelle jamais ».
+    const panel = readOnlyPanel(widget, { onChange: () => { called += 1 } })
+
+    const events = ['input', 'change', 'click', 'keydown', 'keyup', 'blur', 'focus', 'pointerdown']
+    for (const node of panel.element.querySelectorAll<HTMLElement>('*')) {
+      // On force une valeur là où il pourrait y en avoir une — la seule cible réelle est
+      // le champ de filtre, et il ne mène nulle part.
+      if ('value' in node) (node as unknown as { value: string }).value = 'XXX'
+      if ('checked' in node) (node as unknown as { checked: boolean }).checked = true
+      node.setAttribute('contenteditable', 'true')
+      node.textContent = node.textContent === '' ? node.textContent : node.textContent
+      for (const type of events) node.dispatchEvent(new Event(type, { bubbles: true }))
+    }
+
+    expect(called).toBe(0)
+    // La preuve : le document sérialisé, octet pour octet.
+    expect(serializeJson(doc)).toBe(before)
+  })
+
+  it('le panneau d’édition, lui, garde ses contrôles : la lecture seule est un mode, pas une régression', () => {
+    const panel = renderProperties({ form: buildPropertyForm(compass(document())) })
+    expect(panel.readOnly).toBe(false)
+    expect(panel.element.dataset.mode).toBe('edition')
+    expect(panel.element.querySelectorAll('input').length).toBeGreaterThan(0)
+    expect(panel.element.querySelectorAll('.props__value')).toHaveLength(0)
+  })
+})
+
+describe('la consultation sépare ce que le pilote a réglé de ce que XCTrack a posé', () => {
+  it('marque chaque ligne d’un des trois états, et de rien d’autre', () => {
+    const panel = readOnlyPanel(compass(document()))
+    const states = rowsOf(panel).map((row) => row.dataset.default)
+    expect(states).toHaveLength(9)
+    expect(states.every((state) => ['custom', 'default', 'unknown'].includes(state!))).toBe(true)
+  })
+
+  it('les trois clés universelles sont « hors relevé » : le relevé les a écrites lui-même', () => {
+    const panel = readOnlyPanel(compass(document()))
+    for (const key of ['_border', '_bg', '_theme']) {
+      const row = panel.element.querySelector<HTMLElement>(`[data-key="${key}"]`)!
+      expect(row.dataset.default).toBe('unknown')
+      expect(row.querySelector('.props__origin')?.textContent).toBe('hors relevé')
+    }
+  })
+
+  it('la boussole du corpus : quatre réglages du pilote sur six comparables', () => {
+    const form = buildPropertyForm(compass(document()))
+    expect(form.defaultsKnown).toBe(true)
+    // Neuf contrôles ; les trois clés universelles ne se comparent pas.
+    expect(form.fields).toHaveLength(9)
+    expect(form.comparableCount).toBe(6)
+    expect(form.customizedCount).toBe(4)
+
+    expect(form.fields.map((field) => `${field.path}:${field.defaultState}`)).toEqual([
+      '_border:unknown', '_bg:unknown', '_theme:unknown',
+      'rotation:custom', 'navigation_target:custom', 'windStyle:custom',
+      'showHeading:default', 'showBearing:custom', 'showBackground:default'
+    ])
+  })
+
+  it('affiche la valeur du relevé sur la ligne qui s’en écarte', () => {
+    // La boussole du corpus dessine le vent en arc ; XCTrack n'en dessine aucun par défaut.
+    const panel = readOnlyPanel(compass(document()))
+    const row = panel.element.querySelector<HTMLElement>('[data-key="windStyle"]')!
+    expect(row.dataset.default).toBe('custom')
+    const mark = row.querySelector<HTMLElement>('.props__origin')!
+    // Le défaut se dit dans la langue du panneau, comme la valeur juste à côté : la
+    // constante du fichier reste dans l'infobulle, pour qui compare deux sauvegardes.
+    const none = fieldAt(panel.form, 'windStyle').choices.find((one) => one.value === 'NONE')!
+    expect(mark.textContent).toBe(`≠ défaut ${none.label}`)
+    expect(mark.title).toContain('XCTrack écrit « NONE »')
+
+    const bool = panel.element.querySelector<HTMLElement>('[data-key="showBearing"] .props__origin')!
+    expect(bool.textContent).toBe('≠ défaut Non')
+
+    const same = panel.element.querySelector<HTMLElement>('[data-key="showBackground"]')!
+    expect(same.dataset.default).toBe('default')
+    expect(same.querySelector('.props__origin')?.textContent).toBe('= défaut')
+  })
+
+  it('c’est sur un widget chargé que la distinction paie : 63 réglages, 17 du pilote', () => {
+    const doc = document()
+    const widget = readLayout(doc).landscape.flatMap((page) => page.widgets)
+      .find((one) => one.shortName === 'WXCAssistant')!
+    const form = buildPropertyForm(widget)
+
+    // Le cas que la fonction doit servir : aligner 63 lignes sans hiérarchie ne dit rien,
+    // en désigner 17 répond à la question qu'on se pose devant la page d'un autre pilote.
+    expect(form.fields).toHaveLength(63)
+    expect(form.comparableCount).toBe(60)
+    expect(form.customizedCount).toBe(17)
+
+    const panel = renderProperties({ form, readOnly: true })
+    expect(panel.element.querySelector('.props__defaults-count')?.textContent)
+      .toBe('17 réglages personnalisés sur 60 comparés.')
+  })
+
+  it('compte les personnalisés sur les contrôles comparables, jamais sur le total', () => {
+    const form = buildPropertyForm(map(document()))
+    expect(form.fields).toHaveLength(49)
+    expect(form.comparableCount).toBe(46)
+    expect(form.customizedCount).toBe(4)
+
+    const comparable = form.fields.filter((field) => field.defaultState !== 'unknown')
+    expect(comparable).toHaveLength(form.comparableCount)
+    expect(comparable.filter((field) => field.defaultState === 'custom'))
+      .toHaveLength(form.customizedCount)
+  })
+
+  it('un type que le relevé ignore ne devient pas « tout personnalisé »', () => {
+    const doc = document()
+    const widget = readLayout(doc).landscape.flatMap((page) => page.widgets)
+      .find((one) => one.shortName === 'WCompass')!
+    // On force un type inconnu du relevé en interrogeant le formulaire sous un autre nom.
+    const form = buildPropertyForm({ node: widget.node, shortName: 'WPasDansLeReleve' })
+    expect(form.defaultsKnown).toBe(false)
+    expect(form.comparableCount).toBe(0)
+    expect(form.customizedCount).toBe(0)
+    expect(form.fields.every((field) => field.defaultState === 'unknown')).toBe(true)
+
+    const panel = renderProperties({ form, readOnly: true })
+    expect(panel.element.querySelector('.props__defaults-count')?.textContent)
+      .toContain('ne décrit pas ce type de widget')
+    // Pas de filtre « seulement ce qui diffère » : il ne laisserait rien à l'écran.
+    expect(panel.element.querySelector('.props__defaults-only')).toBeNull()
+  })
+
+  it('le filtre des différences ne laisse que les personnalisés, et se compose avec la recherche', () => {
+    const form = buildPropertyForm(map(document()))
+    const panel = renderProperties({ form, readOnly: true })
+    const custom = form.fields.filter((field) => field.defaultState === 'custom').map((f) => f.path)
+    expect(custom.length).toBeGreaterThan(0)
+
+    expect(visibleKeys(panel)).toHaveLength(form.fields.length)
+
+    const only = panel.element.querySelector<HTMLButtonElement>('.props__defaults-only')!
+    only.click()
+    expect(only.getAttribute('aria-pressed')).toBe('true')
+    expect(only.textContent).toBe('Tout afficher')
+    expect(visibleKeys(panel)).toEqual(custom)
+
+    // Les deux filtres se composent : chercher DANS ce qui diffère, et non à la place.
+    panel.filter('KK7')
+    expect(visibleKeys(panel).every((key) => custom.includes(key))).toBe(true)
+    expect(visibleKeys(panel).every((key) => /KK7/i.test(key))).toBe(true)
+
+    panel.filter('')
+    only.click()
+    expect(only.getAttribute('aria-pressed')).toBe('false')
+    expect(visibleKeys(panel)).toHaveLength(form.fields.length)
+  })
+
+  it('rend les valeurs en toutes lettres plutôt qu’en texte source', () => {
+    const panel = readOnlyPanel(compass(document()))
+    const value = (key: string): string =>
+      panel.element.querySelector<HTMLElement>(`[data-key="${key}"] .props__value`)!.textContent!
+
+    // Un booléen se lit, il ne se coche pas.
+    expect(['Oui', 'Non']).toContain(value('showHeading'))
+    // Une énumération montre son libellé traduit, pas la constante du fichier.
+    expect(value('windStyle')).not.toBe('')
+    expect(fieldAt(panel.form, 'windStyle').choices.map((c) => c.label))
+      .toContain(value('windStyle'))
+  })
+
+  it('montre la pastille d’une couleur sans champ de saisie', () => {
+    const panel = readOnlyPanel(map(document()))
+    const row = panel.element.querySelector<HTMLElement>('[data-key="tracklog_color"]')!
+    expect(row.querySelector('input')).toBeNull()
+    expect(row.querySelector('.props__hexText')?.textContent).toBe('#FFFF962D')
+    expect(row.querySelector<HTMLElement>('.props__swatch')!.style.backgroundColor).toBe('#FF962D')
+  })
+})
+
+describe('ce que la consultation dit quand le fichier vient d’une autre version', () => {
+  it('annonce une comparaison exacte pour un fichier de la version du relevé', () => {
+    const panel = readOnlyPanel(compass(document()), { fileVersionCode: DEFAULTS_VERSION_CODE })
+    const box = panel.element.querySelector<HTMLElement>('.props__defaults')!
+    expect(box.dataset.trust).toBe('exact')
+    const note = box.querySelector('.props__defaults-note')!.textContent!
+    expect(note).toContain(DEFAULTS_VERSION_NAME)
+    expect(note).toContain('la version même de ce fichier')
+    expect(note).not.toContain('indicative')
+  })
+
+  it('avertit que la comparaison n’est qu’indicative pour une autre version', () => {
+    const doc = oldDocument()
+    const widget = readLayout(doc).landscape.flatMap((page) => page.widgets)
+      .find((one) => one.shortName === 'WCompass')!
+    const panel = readOnlyPanel(widget, { fileVersionCode: 91230, fileVersionName: '0.9.12.3' })
+
+    const box = panel.element.querySelector<HTMLElement>('.props__defaults')!
+    expect(box.dataset.trust).toBe('indicative')
+    const note = box.querySelector('.props__defaults-note')!.textContent!
+    expect(note).toContain('0.9.12.3')
+    expect(note).toContain('91230')
+    expect(note).toContain('indicative')
+    // La comparaison n'est pas supprimée pour autant : elle reste faite, et dite.
+    expect(box.dataset.comparable).not.toBe('0')
+  })
+
+  it('avertit aussi quand le fichier ne dit pas d’où il vient', () => {
+    const panel = readOnlyPanel(compass(document()))
+    const box = panel.element.querySelector<HTMLElement>('.props__defaults')!
+    expect(box.dataset.trust).toBe('unstated')
+    expect(box.querySelector('.props__defaults-note')!.textContent)
+      .toContain('ne dit pas de quelle version il vient')
+  })
+
+  it('signale les réglages du relevé que le widget ne porte pas — la trace d’une autre version', () => {
+    const doc = oldDocument()
+    const widget = readLayout(doc).landscape.flatMap((page) => page.widgets)
+      .find((one) => one.shortName === 'WCompass')!
+    const form = buildPropertyForm(widget)
+
+    // `windStyle` n'existait pas en 0.9.12.3 ; en regard, `showWind` et `newWindArrow` y
+    // vivent encore et sont deux vestiges que le relevé de 1.0.3-beta ne connaît plus.
+    expect(form.missingDefaults).toEqual(['windStyle'])
+    expect(form.fields.map((field) => field.path)).toContain('showWind')
+    expect(fieldAt(form, 'showWind').defaultState).toBe('unknown')
+
+    const panel = renderProperties({ form, readOnly: true, fileVersionCode: 91230 })
+    const note = panel.element.querySelector('.props__defaults-note')!.textContent!
+    expect(note).toContain('1 réglage du relevé ne figure pas dans ce widget (windStyle)')
+    expect(note).toContain('indicative')
   })
 })

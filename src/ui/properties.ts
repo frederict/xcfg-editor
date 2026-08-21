@@ -4,6 +4,11 @@ import { serializeJson } from '../core/serializeJson'
 import { readableName } from '../catalog/widgetNames'
 import { loadWidgetOptions, optionsFor, optionsLanguage } from '../catalog/widgetOptions'
 import type { WidgetOption, WidgetOptionTexts } from '../catalog/widgetOptions'
+import {
+  compareToDefault, defaultsFor, defaultsTrust, defaultValueAt, DEFAULTS_VERSION_CODE,
+  DEFAULTS_VERSION_NAME, formatDefault, missingDefaultKeys,
+  type DefaultState, type DefaultsTrust
+} from '../catalog/widgetDefaults'
 
 /**
  * Le panneau de propriétés d'un widget : la description du formulaire, puis son rendu.
@@ -177,6 +182,15 @@ export interface PropertyField {
   depth: number
   /** L'objet JSON qui porte la clé : le widget, ou l'objet d'une clé composite. */
   owner: JsonNode
+  /**
+   * Ce que la valeur du fichier vaut face au relevé des défauts de XCTrack
+   * (`catalog/widgetDefaults.ts`). C'est ce qui sépare « le pilote a réglé ceci » de
+   * « l'application a écrit cela toute seule », et c'est toute la valeur du panneau de
+   * consultation. `unknown` est un état à part entière : voir `DefaultState`.
+   */
+  defaultState: DefaultState
+  /** La valeur du relevé, lisible, quand il en décrit une pour cette clé. */
+  defaultText?: string
 }
 
 export interface PropertyForm {
@@ -203,6 +217,22 @@ export interface PropertyForm {
   headCount: number
   /** Les clés du fichier que le catalogue ne connaît pas, dans l'ordre du fichier. */
   unknownKeys: string[]
+  /* -------------------------------------------- comparaison au relevé des défauts */
+  /**
+   * Vrai si le relevé (`catalog/widgetDefaults.ts`) décrit ce type de widget. Faux : la
+   * comparaison n'a rien à dire, et l'interface le dit plutôt que de tout donner pour
+   * personnalisé.
+   */
+  defaultsKnown: boolean
+  /** Nombre de contrôles que le relevé permet de juger — `custom` plus `default`. */
+  comparableCount: number
+  /** Parmi eux, ceux dont la valeur du fichier diffère du défaut de XCTrack. */
+  customizedCount: number
+  /**
+   * Les clés que le relevé décrit et que ce widget ne porte pas. Ce n'est pas un défaut
+   * du fichier : c'est la trace la plus nette d'une autre version de XCTrack.
+   */
+  missingDefaults: string[]
 }
 
 /** Les cinq clés de structure. Elles ne sont pas des réglages : le panneau natif ne les montre pas. */
@@ -337,6 +367,8 @@ function orderedKeys(node: JsonNode): string[] {
 }
 
 interface FieldSeed {
+  /** Le type du widget : le relevé des défauts est indexé par lui. */
+  shortName: string
   key: string
   field?: string
   label: string
@@ -358,6 +390,14 @@ function buildField(seed: FieldSeed): PropertyField {
     ? seed.labelPattern
     : undefined
 
+  const state = compareToDefault(
+    seed.shortName, seed.key, seed.field,
+    // `object` et `array` ne se comparent pas : `compareToDefault` les refuse elle-même,
+    // on lui passe la nature du nœud telle quelle.
+    { kind: node.kind === 'string' ? 'string' : node.kind === 'literal' ? 'literal' : 'object', text }
+  )
+  const expected = defaultValueAt(seed.shortName, seed.key, seed.field)
+
   const field: PropertyField = {
     key: seed.key,
     path: seed.field === undefined ? seed.key : `${seed.key}.${seed.field}`,
@@ -369,7 +409,11 @@ function buildField(seed: FieldSeed): PropertyField {
     choices: seed.choices,
     known: option !== undefined,
     depth: seed.depth,
-    owner: seed.owner
+    owner: seed.owner,
+    defaultState: state
+  }
+  if (expected !== undefined && typeof expected !== 'object') {
+    field.defaultText = formatDefault(expected)
   }
   if (seed.field !== undefined) field.field = seed.field
   if (seed.help !== undefined) field.help = seed.help
@@ -403,7 +447,7 @@ function buildField(seed: FieldSeed): PropertyField {
  * infobulle : rien de ce que le catalogue sait n'est perdu.
  */
 function expandComposite(
-  node: JsonNode, key: string, option: WidgetOption | undefined,
+  shortName: string, node: JsonNode, key: string, option: WidgetOption | undefined,
   parentLabel: string, help: string | undefined, texts: WidgetOptionTexts
 ): PropertyField[] {
   const subKeys = orderedKeys(node)
@@ -415,6 +459,7 @@ function expandComposite(
     if (value === undefined) continue
     const main = hasMain && subKey === MAIN_FIELD
     fields.push(buildField({
+      shortName,
       key,
       field: subKey,
       label: main ? parentLabel : `${key} · ${subKey}`,
@@ -469,10 +514,11 @@ export function buildPropertyForm(source: FormSource, language = 'fr'): Property
 
     const before = fields.length
     if (value.kind === 'object') {
-      fields.push(...expandComposite(value, key, option, label, help, texts))
+      fields.push(...expandComposite(shortName, value, key, option, label, help, texts))
     } else {
       const pattern = option === undefined ? undefined : texts.resourceText(option.label)
       fields.push(buildField({
+        shortName,
         key,
         label,
         // `buildField` ne retient le gabarit que s'il porte vraiment une valeur.
@@ -491,6 +537,9 @@ export function buildPropertyForm(source: FormSource, language = 'fr'): Property
   }
 
   const className = source.className ?? ''
+  // Les comptes se font sur les CONTRÔLES et non sur les clés : une clé composite en
+  // produit plusieurs, dont chacun se compare séparément au relevé.
+  const comparable = fields.filter((one) => one.defaultState !== 'unknown')
   const form: PropertyForm = {
     className,
     shortName,
@@ -499,7 +548,11 @@ export function buildPropertyForm(source: FormSource, language = 'fr'): Property
     textLanguage: texts.language,
     fields,
     headCount,
-    unknownKeys
+    unknownKeys,
+    defaultsKnown: defaultsFor(shortName) !== undefined,
+    comparableCount: comparable.length,
+    customizedCount: comparable.filter((one) => one.defaultState === 'custom').length,
+    missingDefaults: missingDefaultKeys(shortName, orderedKeys(node))
   }
   // Le nœud d'origine, retenu pour pouvoir refaire le formulaire dans la bonne langue
   // sans que l'appelant ait à le redonner. Une `WeakMap` plutôt qu'un champ : le
@@ -565,6 +618,28 @@ export interface PropertiesPanelOptions {
   form: PropertyForm
   /** Appelé après chaque écriture effective, avec le champ modifié. */
   onChange?: (field: PropertyField, form: PropertyForm) => void
+  /**
+   * Panneau de **consultation** : il montre les réglages, il n'en offre aucun.
+   *
+   * Ce n'est pas un grisage. Le panneau de consultation ne construit **aucun contrôle de
+   * formulaire** — pas de `<input>`, pas de `<select>`, pas de case à cocher désactivée :
+   * les valeurs sont du texte. Un contrôle désactivé se réactive depuis la console, se
+   * contourne au clavier sur certains navigateurs, et surtout il continue de dire
+   * « ceci se règle ». Ce qui n'existe pas ne se réactive pas. `onChange` n'est jamais
+   * branché, `setFieldValue` n'est jamais appelée, et le document ne peut donc pas
+   * bouger d'un octet — c'est la propriété centrale du projet, et elle a ses tests.
+   *
+   * Deux exceptions, toutes deux étrangères au document : le champ de filtrage et le
+   * `?` de l'aide, qui ne font que masquer et montrer ce qui est déjà à l'écran.
+   */
+  readOnly?: boolean
+  /**
+   * Le `info.versionCode` du fichier ouvert. Il ne sert qu'à dire **ce que vaut** la
+   * comparaison au relevé des défauts, jamais à la supprimer : voir `defaultsTrust`.
+   */
+  fileVersionCode?: number
+  /** Le `info.versionName` du fichier, pour le nommer dans la note plutôt qu'un nombre. */
+  fileVersionName?: string
 }
 
 export interface PropertiesPanel {
@@ -572,6 +647,8 @@ export interface PropertiesPanel {
   form: PropertyForm
   /** Filtre les contrôles affichés. Chaîne vide : tout est visible. */
   filter: (query: string) => void
+  /** Vrai si le panneau est celui de la consultation — voir `readOnly`. */
+  readOnly: boolean
 }
 
 function el<K extends keyof HTMLElementTagNameMap>(
@@ -627,10 +704,15 @@ function repairLanguage(panel: PropertiesPanel, options: PropertiesPanelOptions)
 
 function buildPanel(options: PropertiesPanelOptions): PropertiesPanel {
   const { form } = options
+  const readOnly = options.readOnly === true
   const prefix = `props-${++panelCount}`
 
   const root = el('section', 'props')
   root.dataset.widget = form.shortName
+  // Lisible depuis un test ou un harnais sans dépendre du style : le mode du panneau est
+  // une promesse, elle doit être vérifiable de l'extérieur.
+  root.dataset.mode = readOnly ? 'lecture' : 'edition'
+  if (readOnly) root.classList.add('props--readonly')
 
   const head = el('header', 'props__head')
   head.append(
@@ -641,12 +723,20 @@ function buildPanel(options: PropertiesPanelOptions): PropertiesPanel {
   root.append(head)
 
   const list = el('div', 'props__list')
-  const rows: Array<{ element: HTMLElement; haystack: string }> = []
+  const rows: Array<{ element: HTMLElement; haystack: string; state: DefaultState }> = []
   const rules: HTMLElement[] = []
 
   form.fields.forEach((field, index) => {
-    const row = buildRow(field, `${prefix}-${index}`, () => options.onChange?.(field, form))
-    rows.push({ element: row, haystack: normalize(`${field.label} ${field.path}`) })
+    // En consultation, `changed` n'est même pas fabriqué : `buildRow` ne construit aucun
+    // contrôle qui pourrait l'appeler, et il ne reçoit donc rien à appeler.
+    const row = readOnly
+      ? buildReadOnlyRow(field, `${prefix}-${index}`)
+      : buildRow(field, `${prefix}-${index}`, () => options.onChange?.(field, form))
+    rows.push({
+      element: row,
+      haystack: normalize(`${field.label} ${field.path}`),
+      state: field.defaultState
+    })
     list.append(row)
     // Le bloc universel de tête, fermé par un trait — le seul séparatif attesté.
     if (index + 1 === form.headCount && index + 1 < form.fields.length) {
@@ -656,10 +746,37 @@ function buildPanel(options: PropertiesPanelOptions): PropertiesPanel {
     }
   })
 
-  function filter(query: string): void {
+  /*
+   * Deux filtres qui se composent, et non deux filtres qui se remplacent : chercher
+   * « couleur » **parmi** ce qui diffère du défaut est exactement la question qu'on se
+   * pose devant un `WXCAssistant` de 63 réglages.
+   */
+  let query = ''
+  let onlyCustom = false
+
+  function apply(): void {
     const needle = normalize(query.trim())
-    for (const row of rows) row.element.hidden = needle !== '' && !row.haystack.includes(needle)
-    for (const rule of rules) rule.hidden = needle !== ''
+    for (const row of rows) {
+      const missed = needle !== '' && !row.haystack.includes(needle)
+      row.element.hidden = missed || (onlyCustom && row.state !== 'custom')
+    }
+    // Le trait sépare le bloc universel du reste : dès qu'on filtre, il ne sépare plus rien.
+    for (const rule of rules) rule.hidden = needle !== '' || onlyCustom
+  }
+
+  function filter(next: string): void {
+    query = next
+    apply()
+  }
+
+  // La comparaison au relevé ne s'affiche qu'en consultation : en édition, le pilote est
+  // en train de changer ces valeurs, et un compte qui se périme à chaque cran de curseur
+  // ne vaut rien. Elle reste calculée dans le formulaire, disponible pour qui la veut.
+  if (readOnly) {
+    root.append(buildDefaultsSummary(form, options, (value) => {
+      onlyCustom = value
+      apply()
+    }))
   }
 
   if (form.fields.length > FILTER_THRESHOLD) {
@@ -672,7 +789,208 @@ function buildPanel(options: PropertiesPanelOptions): PropertiesPanel {
   }
 
   root.append(list)
-  return { element: root, form, filter }
+  return { element: root, form, filter, readOnly }
+}
+
+/* --------------------------------------------- comparaison au relevé des défauts */
+
+/**
+ * Le bandeau qui donne le sens de la lecture : combien de réglages le pilote a
+ * réellement changés, et ce que vaut ce compte.
+ *
+ * **Pourquoi un compte et un filtre plutôt qu'un tri.** L'ordre du panneau est celui du
+ * fichier, c'est-à-dire celui du panneau natif (voir l'en-tête de ce module) : le
+ * remettre en « personnalisés d'abord » romprait la correspondance avec ce que le pilote
+ * a sous les yeux sur son instrument, qui est justement ce qu'il cherche à retrouver. La
+ * hiérarchie se fait donc par le **poids** — les personnalisés en avant, les défauts en
+ * retrait, chacun à sa place — et le filtre répond d'un clic à la question directe :
+ * « qu'est-ce qu'il a changé ? ».
+ */
+function buildDefaultsSummary(
+  form: PropertyForm, options: PropertiesPanelOptions, onOnly: (value: boolean) => void
+): HTMLElement {
+  const box = el('div', 'props__defaults')
+  const trust = defaultsTrust(options.fileVersionCode)
+  box.dataset.trust = trust
+  box.dataset.customized = String(form.customizedCount)
+  box.dataset.comparable = String(form.comparableCount)
+
+  if (!form.defaultsKnown) {
+    box.append(el(
+      'p', 'props__defaults-count',
+      'Le relevé des valeurs par défaut ne décrit pas ce type de widget : rien à comparer.'
+    ))
+    box.append(el('p', 'props__defaults-note', defaultsNote(trust, options, form)))
+    return box
+  }
+
+  const count = el(
+    'p', 'props__defaults-count',
+    form.customizedCount === 0
+      ? `Aucun réglage ne s’écarte de ce que XCTrack pose sur un widget neuf (${form.comparableCount} comparés).`
+      : `${form.customizedCount} réglage${form.customizedCount > 1 ? 's' : ''} ` +
+        `personnalisé${form.customizedCount > 1 ? 's' : ''} sur ${form.comparableCount} comparé` +
+        `${form.comparableCount > 1 ? 's' : ''}.`
+  )
+  box.append(count)
+
+  // Un filtre qui ne laisserait rien à l'écran n'est pas une commande, c'est un piège :
+  // il n'apparaît que s'il y a quelque chose à isoler.
+  if (form.customizedCount > 0) {
+    // Un vrai bouton bordé, pas un lien discret : c'est la commande qui répond à la
+    // question principale du panneau, elle doit se voir comme telle.
+    const only = el('button', 'btn props__defaults-only', 'Seulement ce qui diffère')
+    only.type = 'button'
+    only.setAttribute('aria-pressed', 'false')
+    only.addEventListener('click', () => {
+      const next = only.getAttribute('aria-pressed') !== 'true'
+      only.setAttribute('aria-pressed', String(next))
+      only.textContent = next ? 'Tout afficher' : 'Seulement ce qui diffère'
+      onOnly(next)
+    })
+    box.append(only)
+  }
+
+  box.append(el('p', 'props__defaults-note', defaultsNote(trust, options, form)))
+  return box
+}
+
+/**
+ * Ce qu'on est en droit de dire de la comparaison, selon d'où vient le fichier.
+ *
+ * On ne cache jamais la comparaison quand les versions divergent — la plupart des clés
+ * ne bougent pas d'une version à l'autre, et le pilote y gagne. On ne la donne pas non
+ * plus pour une preuve : c'est ce que cette phrase-là arbitre, et c'est le seul endroit
+ * où elle se dit.
+ */
+function defaultsNote(
+  trust: DefaultsTrust, options: PropertiesPanelOptions, form: PropertyForm
+): string {
+  const reference = `Défauts relevés sur XCTrack ${DEFAULTS_VERSION_NAME} (versionCode ${DEFAULTS_VERSION_CODE})`
+  const missing = form.missingDefaults.length === 0
+    ? ''
+    : ` ${form.missingDefaults.length} réglage${form.missingDefaults.length > 1 ? 's' : ''} ` +
+      `du relevé ne figure${form.missingDefaults.length > 1 ? 'nt' : ''} pas dans ce widget ` +
+      `(${form.missingDefaults.slice(0, 4).join(', ')}${form.missingDefaults.length > 4 ? '…' : ''}) : ` +
+      'signe supplémentaire d’une autre version.'
+
+  if (trust === 'exact') {
+    return `${reference} — la version même de ce fichier.${missing}`
+  }
+  if (trust === 'unstated') {
+    return `${reference}. Ce fichier ne dit pas de quelle version il vient : les valeurs ` +
+      `par défaut changent d’une version à l’autre, la comparaison est donc indicative.${missing}`
+  }
+  const name = options.fileVersionName
+  const which = name === undefined
+    ? `la version ${String(options.fileVersionCode)}`
+    : `la version ${name} (versionCode ${String(options.fileVersionCode)})`
+  return `${reference}. Ce fichier vient de ${which} : les valeurs par défaut changent ` +
+    `d’une version à l’autre, la comparaison est donc indicative.${missing}`
+}
+
+/**
+ * Une ligne du panneau de **consultation** : intitulé, valeur en toutes lettres, et ce
+ * que le relevé en dit. Aucun contrôle de formulaire n'est construit ici — c'est la
+ * garantie, et elle tient parce qu'il n'y a rien à désactiver.
+ */
+function buildReadOnlyRow(field: PropertyField, id: string): HTMLElement {
+  const row = el('div', 'props__row')
+  row.dataset.key = field.path
+  row.dataset.control = field.control
+  row.dataset.default = field.defaultState
+  if (field.depth > 0) row.dataset.depth = String(field.depth)
+  if (!field.known) row.dataset.unknown = 'true'
+  row.title = field.hint === undefined ? field.path : `${field.path} — ${field.hint}`
+
+  const label = el('span', 'props__label', field.label)
+  label.id = `${id}-label`
+
+  const value = el('span', 'props__value')
+  value.id = id
+  value.setAttribute('aria-labelledby', label.id)
+  if (field.control === 'color') {
+    const hex = colorToHex(field.text)
+    const swatch = el('span', 'props__swatch')
+    swatch.setAttribute('aria-hidden', 'true')
+    if (hex !== undefined) {
+      swatch.style.backgroundColor = colorSwatch(hex)
+      swatch.style.opacity = String(parseInt(hex.slice(1, 3), 16) / 255)
+    }
+    value.classList.add('props__value--color')
+    value.append(swatch, el('span', 'props__hexText', hex ?? field.text))
+  } else {
+    value.textContent = readableValue(field)
+  }
+
+  row.append(label, value, originMark(field))
+  if (field.help !== undefined) row.append(...helpParts(field.help, id))
+  return row
+}
+
+/** La valeur telle qu'on la lit, et non telle qu'elle s'écrit dans le fichier. */
+export function readableValue(field: PropertyField): string {
+  if (field.control === 'checkbox') return field.text === 'true' ? 'Oui' : 'Non'
+  if (field.control === 'enum') {
+    const choice = field.choices.find((one) => one.value === field.text)
+    // Une valeur que le catalogue ne connaît pas se montre telle quelle, dite comme telle :
+    // c'est un vestige ou une version plus récente, jamais rien à masquer.
+    return choice === undefined ? `${field.text} (hors catalogue)` : choice.label
+  }
+  if (field.valueKind === 'object' || field.valueKind === 'array') return field.raw
+  if (field.valueKind === 'string' && field.text === '') return '(vide)'
+  return field.text
+}
+
+/**
+ * La valeur du relevé, dite comme la valeur du fichier l'est juste à côté.
+ *
+ * Sans cela le panneau se contredirait à chaque ligne : « Arc » d'un côté, « ≠ défaut
+ * NONE » de l'autre — deux vocabulaires pour une même énumération, et le lecteur doit
+ * faire la traduction lui-même. La constante du fichier reste dans l'infobulle.
+ */
+export function readableDefault(field: PropertyField): string | undefined {
+  const raw = field.defaultText
+  if (raw === undefined) return undefined
+  if (field.control === 'checkbox') return raw === 'true' ? 'Oui' : raw === 'false' ? 'Non' : raw
+  if (field.control === 'enum') {
+    return field.choices.find((one) => one.value === raw)?.label ?? raw
+  }
+  if (field.control === 'color') return colorToHex(raw) ?? raw
+  return raw
+}
+
+/**
+ * La marque qui hiérarchise la lecture : personnalisé, resté au défaut, ou hors relevé.
+ *
+ * Les trois sont marqués, y compris le troisième. Sans lui, une ligne sans marque se
+ * lirait « au défaut » — or `_border`, `_bg` et `_theme` sont sur **tous** les widgets et
+ * le relevé n'en dit rien : trois mensonges par widget, chaque fois.
+ */
+function originMark(field: PropertyField): HTMLElement {
+  if (field.defaultState === 'custom') {
+    const readable = readableDefault(field)
+    const mark = el('span', 'props__origin props__origin--custom')
+    mark.textContent = readable === undefined ? 'personnalisé' : `≠ défaut ${readable}`
+    // L'infobulle garde la valeur **telle qu'elle s'écrit dans le fichier** : c'est celle
+    // qu'on cherche quand on compare deux sauvegardes ou qu'on lit un rapport de bogue,
+    // et la ligne visible, elle, doit parler la langue du pilote.
+    mark.title = field.defaultText === undefined
+      ? 'Cette valeur diffère de ce que XCTrack écrit sur un widget neuf de ce type.'
+      : `Sur un widget neuf de ce type, XCTrack écrit « ${field.defaultText} ».`
+    return mark
+  }
+  if (field.defaultState === 'default') {
+    const mark = el('span', 'props__origin props__origin--same', '= défaut')
+    mark.title = 'Valeur inchangée : c’est ce que XCTrack écrit sur un widget neuf de ce type.'
+    return mark
+  }
+  const mark = el('span', 'props__origin props__origin--unknown', 'hors relevé')
+  mark.title =
+    'Le relevé des valeurs par défaut ne décrit pas ce réglage — clé universelle écrite ' +
+    'à la main lors du relevé, clé apparue depuis, ou valeur non comparable. Rien n’est ' +
+    'affirmé de cette ligne.'
+  return mark
 }
 
 /** Une ligne du panneau : intitulé, contrôle, et le `?` de l'aide quand il y en a une. */
@@ -680,6 +998,10 @@ function buildRow(field: PropertyField, id: string, changed: () => void): HTMLEl
   const row = el('div', 'props__row')
   row.dataset.key = field.path
   row.dataset.control = field.control
+  // La comparaison au relevé est posée ici aussi, sans conséquence visible : le style ne
+  // la lit que sous `.props--readonly`. Un harnais ou un test peut donc l'interroger dans
+  // les deux modes sans que l'édition change d'aspect.
+  row.dataset.default = field.defaultState
   if (field.depth > 0) row.dataset.depth = String(field.depth)
   if (!field.known) row.dataset.unknown = 'true'
   // La clé du fichier au survol : c'est elle qu'on cherche quand on compare deux

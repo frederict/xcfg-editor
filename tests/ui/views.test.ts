@@ -1,16 +1,26 @@
+import { readFileSync } from 'node:fs'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { DEVICES } from '../../src/catalog/devices'
+import { parseJson } from '../../src/core/parseJson'
+import { serializeJson } from '../../src/core/serializeJson'
+import { readLayout, type Page } from '../../src/model/layout'
+import { readRenderSettings } from '../../src/model/preferences'
 import {
   DOCK_HEIGHT_DEFAULT,
   DOCK_HEIGHT_KEY,
   DOCK_HEIGHT_MAX,
   DOCK_HEIGHT_MIN,
+  buildDetail,
   clampDockHeight,
   dockHeightCeiling,
   readDockHeight,
   widgetSizeMm,
-  writeDockHeight
+  writeDockHeight,
+  type DetailInspecting,
+  type ViewContext
 } from '../../src/ui/views'
+import { PAGES_2026 } from '../fixtures/paths'
+import '../../src/render/widgets'
 
 describe('taille physique d’un widget', () => {
   const air3 = DEVICES.find((d) => d.id === 'air3-7.2')!
@@ -114,5 +124,123 @@ describe('hauteur du bandeau de réglages', () => {
     } as unknown as Storage
     expect(readDockHeight(mur)).toBeUndefined()
     expect(() => writeDockHeight(mur, 300)).not.toThrow()
+  })
+})
+
+/* ------------------------------------------------- la consultation, vue de la page */
+
+/**
+ * Le geste de la consultation : cliquer un widget pour lire ses réglages, sans que rien
+ * n'entre en édition. Ce qui se vérifie ici est la moitié « page » du geste — la moitié
+ * « panneau » vit dans `properties.test.ts`, et la garantie de non-écriture aussi.
+ */
+const AIR3 = DEVICES.find((device) => device.id === 'air3-7.2')!
+const SOURCE = readFileSync(PAGES_2026, 'utf8')
+
+function scene(selection: number | undefined): {
+  page: Page
+  root: HTMLElement
+  chosen: Array<number | undefined>
+  document: string
+} {
+  const doc = parseJson(SOURCE)
+  const page = readLayout(doc).landscape[0]!
+  const ctx: ViewContext = { device: AIR3, settings: readRenderSettings(doc), language: 'fr' }
+  const chosen: Array<number | undefined> = []
+  const dock = window.document.createElement('section')
+  dock.className = 'dock'
+  const inspecting: DetailInspecting = {
+    dock,
+    selection,
+    onSelect: (index) => chosen.push(index)
+  }
+  const root = buildDetail({
+    page,
+    index: 0,
+    pageCount: 3,
+    orientation: 'landscape',
+    ctx,
+    zoom: 1,
+    onBack: () => {},
+    onGo: () => {},
+    onZoom: () => {},
+    inspecting
+  })
+  return { page, root, chosen, document: serializeJson(doc) }
+}
+
+describe('consulter les réglages d’un widget sans entrer en édition', () => {
+  it('le bandeau se pose en dernier, sous la page : rien ne partage sa largeur', () => {
+    const { root } = scene(undefined)
+    // Le principe non négociable du projet : la page est le seul objet dessiné à sa taille
+    // réelle, et rien ne vient à côté d'elle. Le bandeau est le dernier enfant, collé en
+    // bas par la feuille de style — jamais une colonne latérale.
+    expect(root.lastElementChild?.className).toBe('dock')
+    expect(root.querySelector('.stage')?.nextElementSibling?.classList.contains('dock'))
+      .toBe(false)
+    // Et surtout : pas de calque d'édition, pas de barre d'édition.
+    expect(root.querySelector('.editor')).toBeNull()
+    expect(root.querySelector('.editbar')).toBeNull()
+    expect(root.classList.contains('detail--editing')).toBe(false)
+  })
+
+  it('chaque widget de la page est une cible de sélection, dans l’ordre du dessin', () => {
+    const { page, root } = scene(undefined)
+    const zones = [...root.querySelectorAll<HTMLElement>('.hotspot')]
+    expect(zones).toHaveLength(page.widgets.length)
+    expect(zones.map((zone) => zone.dataset.position))
+      .toEqual(page.widgets.map((_, index) => String(index)))
+    expect(zones.every((zone) => zone.getAttribute('aria-pressed') === 'false')).toBe(true)
+  })
+
+  it('un clic choisit le widget ; le recliquer le relâche', () => {
+    const { root, chosen } = scene(undefined)
+    root.querySelectorAll<HTMLElement>('.hotspot')[3]!.click()
+    expect(chosen).toEqual([3])
+
+    // Même page, mais construite avec le rang déjà choisi : le clic doit alors relâcher.
+    const again = scene(3)
+    again.root.querySelectorAll<HTMLElement>('.hotspot')[3]!.click()
+    expect(again.chosen).toEqual([undefined])
+  })
+
+  it('marque sur la page le widget dont on lit les réglages', () => {
+    const { root } = scene(2)
+    const zones = [...root.querySelectorAll<HTMLElement>('.hotspot')]
+    expect(zones[2]!.classList.contains('hotspot--selected')).toBe(true)
+    expect(zones[2]!.getAttribute('aria-pressed')).toBe('true')
+    expect(zones.filter((zone) => zone.classList.contains('hotspot--selected'))).toHaveLength(1)
+  })
+
+  it('un clic dans un interstice de la page relâche la sélection', () => {
+    const { root, chosen } = scene(1)
+    const zone = root.querySelector<HTMLElement>('.hotspots')!
+    zone.dispatchEvent(new window.Event('click', { bubbles: true }))
+    expect(chosen).toEqual([undefined])
+  })
+
+  it('le relevé sous la page retombe sur le widget choisi quand le curseur est parti', () => {
+    const { page, root } = scene(1)
+    const readout = root.querySelector<HTMLElement>('.readout')!
+    // Ni un intitulé vide ni le nom du dernier survolé : celui qu'on lit.
+    expect(readout.querySelector('.readout__class')?.textContent)
+      .toBe(page.widgets[1]!.shortName)
+    expect(readout.querySelector('.readout__pin')?.textContent).toBe('sélectionné')
+  })
+
+  it('sans sélection, il invite au geste et ne nomme rien', () => {
+    const { root } = scene(undefined)
+    const readout = root.querySelector<HTMLElement>('.readout')!
+    expect(readout.querySelector('.readout__class')).toBeNull()
+    expect(readout.querySelector('.readout__hint')?.textContent).toContain('ses réglages')
+  })
+
+  it('construire la vue n’écrit pas un octet dans le document', () => {
+    const doc = parseJson(SOURCE)
+    const before = serializeJson(doc)
+    const { root, document: after } = scene(4)
+    // Le clic non plus : `onSelect` remonte un entier, il ne touche à aucun nœud.
+    root.querySelectorAll<HTMLElement>('.hotspot')[0]!.click()
+    expect(after).toBe(before)
   })
 })

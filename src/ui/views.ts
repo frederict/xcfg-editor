@@ -239,6 +239,40 @@ export interface DetailEditing {
   bar: HTMLElement
 }
 
+/**
+ * Ce que la **consultation** ajoute à la vue détaillée : le même bandeau que l'édition,
+ * mais en lecture seule, et la sélection d'un widget par simple clic sur la page.
+ *
+ * Pourquoi le même meuble que l'édition, et pas un autre : la consultation a besoin
+ * exactement des deux mêmes choses — la liste des widgets de la page, qui est le seul
+ * chemin vers les six widgets qu'aucun clic n'atteint, et un panneau qui montre les
+ * réglages. Le bandeau est déjà collant, repliable et redimensionné par le pilote, et sa
+ * hauteur est mémorisée : refaire un troisième meuble reviendrait à lui redemander ses
+ * préférences.
+ *
+ * Et surtout, le principe tient : **rien ne partage la largeur avec la page**. Le
+ * bandeau passe dessous, comme en édition.
+ */
+export interface DetailInspecting {
+  /** Le bandeau de consultation, construit par `main.ts` — liste et réglages en lecture. */
+  dock: HTMLElement
+  /** Le rang du widget sélectionné dans `page.widgets`, ou `undefined`. */
+  selection: number | undefined
+  /**
+   * Le pilote a choisi un widget sur la page, ou a cliqué à côté (`undefined`). La vue ne
+   * décide de rien : `main.ts` tient la sélection, comme en édition.
+   */
+  onSelect: (index: number | undefined) => void
+  /**
+   * Reçoit, à la construction, de quoi remettre le relevé d'accord avec la sélection sans
+   * reconstruire la vue. `main.ts` le garde et l'appelle quand la sélection change
+   * ailleurs — dans la liste du bandeau, qui est le seul chemin vers les widgets
+   * qu'aucun clic n'atteint. La vue reste ainsi la seule à savoir ce qu'elle affiche,
+   * et l'appelant n'a pas à refaire son texte à sa place.
+   */
+  bindRefresh?: (refresh: () => void) => void
+}
+
 /* ------------------------------------------- hauteur du bandeau de réglages */
 
 /*
@@ -359,6 +393,8 @@ export interface DetailOptions {
   onZoom: (zoom: number) => void
   /** Défini uniquement en mode édition. */
   editing?: DetailEditing
+  /** Défini uniquement en consultation, et seulement quand la page porte des widgets. */
+  inspecting?: DetailInspecting
 }
 
 const ZOOM_MIN = 0.4
@@ -390,7 +426,7 @@ function scaleRuler(widthMm: number): HTMLElement {
  * de l'utilisateur, d'où le facteur de zoom — et la règle graduée pour le régler.
  */
 export function buildDetail(options: DetailOptions): HTMLElement {
-  const { page, index, pageCount, orientation, ctx, zoom, editing } = options
+  const { page, index, pageCount, orientation, ctx, zoom, editing, inspecting } = options
   const kind = pageKind(page.className)
   const screenSize = physicalSize(ctx.device, orientation)
 
@@ -454,20 +490,39 @@ export function buildDetail(options: DetailOptions): HTMLElement {
   const hotspots = el('div', 'hotspots')
   const readout = el('div', 'readout')
 
-  const describe = (widget: Widget | undefined): void => {
+  /**
+   * Le relevé sous la page. Il décrit ce qui est **sous le curseur** ; le curseur parti,
+   * il retombe sur le widget sélectionné plutôt que sur rien — les deux ne se
+   * contredisent pas, ils se relaient, et le bandeau dit la même chose plus bas.
+   */
+  const describe = (widget: Widget | undefined, hovered: boolean): void => {
     readout.textContent = ''
-    if (!widget) {
-      readout.append(el('span', 'readout__hint', 'Survolez un widget pour son nom et ses dimensions.'))
+    const selected = inspecting?.selection === undefined
+      ? undefined
+      : page.widgets[inspecting.selection]
+    const shown = widget ?? selected
+    if (!shown) {
+      readout.append(el(
+        'span', 'readout__hint',
+        inspecting === undefined
+          ? 'Survolez un widget pour son nom et ses dimensions.'
+          : 'Survolez un widget pour son nom et ses dimensions ; cliquez-le pour voir ses réglages.'
+      ))
       return
     }
-    const size = widgetSizeMm(widget, ctx.device, orientation)
+    const size = widgetSizeMm(shown, ctx.device, orientation)
     readout.append(
-      el('span', 'readout__name', readableName(widget.shortName, ctx.language)),
+      el('span', 'readout__name', readableName(shown.shortName, ctx.language)),
       el('span', 'readout__size', `${formatMm(size.widthMm)} × ${formatMm(size.heightMm)} mm`),
-      el('span', 'readout__class', widget.shortName)
+      el('span', 'readout__class', shown.shortName)
     )
+    if (!hovered && widget === undefined) {
+      readout.append(el('span', 'readout__pin', 'sélectionné'))
+    }
   }
-  describe(undefined)
+  describe(undefined, false)
+  // `selection` est relue à chaque appel : `main.ts` la met à jour sur cet objet-ci.
+  inspecting?.bindRefresh?.(() => describe(undefined, false))
 
   // Même ordre que le dessin : le dernier widget est au-dessus, et sa zone de survol
   // aussi — l'empilement naturel du DOM suffit, comme dans `renderPage`.
@@ -487,13 +542,33 @@ export function buildDetail(options: DetailOptions): HTMLElement {
         `${readableName(widget.shortName, ctx.language)}, ` +
         `${formatMm(size.widthMm)} sur ${formatMm(size.heightMm)} millimètres`
       )
-      hotspot.addEventListener('pointerenter', () => describe(widget))
-      hotspot.addEventListener('focus', () => describe(widget))
-      hotspot.addEventListener('blur', () => describe(undefined))
+      hotspot.addEventListener('pointerenter', () => describe(widget, true))
+      hotspot.addEventListener('focus', () => describe(widget, true))
+      hotspot.addEventListener('blur', () => describe(undefined, false))
       hotspot.dataset.position = String(position)
+      if (inspecting !== undefined) {
+        // La zone de survol devient la cible de sélection : le geste de la consultation est
+        // le clic, celui qu'on fait déjà pour lire une étiquette. Rien n'est déplacé, rien
+        // n'est écrit — cliquer ouvre les réglages en lecture, et c'est tout.
+        const selected = inspecting.selection === position
+        hotspot.setAttribute('aria-pressed', String(selected))
+        if (selected) hotspot.classList.add('hotspot--selected')
+        hotspot.addEventListener('click', () => {
+          // Recliquer le widget déjà choisi le désélectionne : la sortie est là où l'on est.
+          inspecting.onSelect(inspecting.selection === position ? undefined : position)
+        })
+      }
       hotspots.append(hotspot)
     })
-    hotspots.addEventListener('pointerleave', () => describe(undefined))
+    hotspots.addEventListener('pointerleave', () => describe(undefined, false))
+    if (inspecting !== undefined) {
+      // Un clic dans un interstice — la page en compte, les widgets ne la pavent pas —
+      // désélectionne. `currentTarget` et non `target` : les clics des zones ne remontent
+      // pas ici par accident, ils y remontent tous.
+      hotspots.addEventListener('click', (event) => {
+        if (event.target === hotspots) inspecting.onSelect(undefined)
+      })
+    }
   }
 
   plate.append(editing ? editing.layer : hotspots)
@@ -541,6 +616,9 @@ export function buildDetail(options: DetailOptions): HTMLElement {
   // le bandeau qui disent la sélection, et deux relevés concurrents se contrediraient.
   if (!editing) root.append(readout)
   root.append(advice)
+  // Le bandeau de consultation vient exactement là où celui d'édition se pose : dernier
+  // enfant, collant en bas, sous la page et jamais à côté d'elle.
+  if (inspecting) root.append(inspecting.dock)
   // Le bandeau vient en dernier : dernier enfant d'un conteneur plus haut que la fenêtre,
   // `position: sticky; bottom: 0` le maintient au bas de l'écran tant que la page défile,
   // puis le laisse se poser à sa place à la fin du défilement.

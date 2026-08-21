@@ -1,0 +1,589 @@
+{
+  "_source": "XCTrack 1.0.3-beta (versionCode 100030), AIR3 7.2, releve 2026-08-21",
+  "_methode": "75 widgets ecrits avec leurs 8 clefs universelles seules, importes, puis re-exportes : XCTrack a complete le reste.",
+  "_clesUniverselles": [
+    "CLASS",
+    "X1",
+    "Y1",
+    "X2",
+    "Y2",
+    "_border",
+    "_bg",
+    "_theme"
+  ],
+  "_note": "titletext retire (force par la planche). Les couleurs sont des entiers Android signes ARGB.",
+  "_widgetCount": 75,
+  "widgets": {
+    "WTime": {
+      "_title": true,
+      "showSec": true
+    },
+    "WBrightnessInfo": {
+      "_title": true
+    },
+    "WLastEvent": {
+      "_title": true
+    },
+    "WSpeed": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false,
+      "_units": "SYS_UNIT",
+      "backwardDetection": false
+    },
+    "WAirSpeed": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false,
+      "speed_type": "TAS",
+      "speed_avg": 0
+    },
+    "WBearing": {
+      "_title": true,
+      "degrees": false
+    },
+    "WAltitude": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false,
+      "_units": "SYS_UNIT"
+    },
+    "WBaroAltitude": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false,
+      "_units": "SYS_UNIT",
+      "_altType": "QNH"
+    },
+    "WAMSL": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false
+    },
+    "WFL": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false,
+      "_decimals": "0"
+    },
+    "WAltitudeAboveGround": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false
+    },
+    "WTakeoffHeightAbove": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false
+    },
+    "WVerticalSpeed": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false,
+      "avg": 2000
+    },
+    "WGlide": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false,
+      "showVario": false,
+      "avg": 2000,
+      "headless": false
+    },
+    "WLocation": {
+      "_title": true,
+      "_format": "DEG"
+    },
+    "WAirTime": {
+      "_title": true
+    },
+    "WSunset": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false,
+      "relative": "ABSOLUTE_TIME",
+      "showBefore": 0
+    },
+    "WSunsetCivil": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false,
+      "relative": "ABSOLUTE_TIME",
+      "showBefore": 0
+    },
+    "WAltitudeMaximum": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false
+    },
+    "WNettoVario": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false,
+      "netto_avg": 0
+    },
+    "WWindSpeed": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false
+    },
+    "WWindDirection": {
+      "_title": true,
+      "degrees": false
+    },
+    "WThermalAltGain": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false
+    },
+    "WQNH": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false
+    },
+    "WAirTemperature": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false,
+      "_units": "CELSIUS"
+    },
+    "WAirHumidity": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false
+    },
+    "WOptiResult": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false
+    },
+    "WOptiUnfinishedTriangle": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false
+    },
+    "WOptiUnfinishedFAIPotential": {
+      "_title": true,
+      "_unit": true,
+      "_icons": true,
+      "_hide_labels": false,
+      "max": true,
+      "real": true,
+      "min": true
+    },
+    "WXCSpeed": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false
+    },
+    "WCompassDigital": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false,
+      "target": "N_NAVIGATION",
+      "relative": true
+    },
+    "WNextTurnpoint": {
+      "_title": true,
+      "_hide_labels": false
+    },
+    "WNextTurnpointDistance": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false,
+      "navigation_target": "OPTIMIZED",
+      "use_brackets": true
+    },
+    "WNextTurnpointTimeOfArrival": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false,
+      "navigation_target": "OPTIMIZED",
+      "use_brackets": true,
+      "speed_type": "GROUND",
+      "speed_avg": 0,
+      "time_format": "COMPACT"
+    },
+    "WNextTurnpointAlt": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false,
+      "navigation_target": "OPTIMIZED",
+      "use_brackets": true,
+      "speed_avg": 0,
+      "altitude": "AGL",
+      "glide": "COMPUTED"
+    },
+    "WNextTurnpointGlideTo": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false,
+      "navigation_target": "OPTIMIZED",
+      "use_brackets": true,
+      "alt_above": 500,
+      "headless": false
+    },
+    "WTakeoffDistance": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false
+    },
+    "WTakeoffCourse": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false,
+      "degrees": false
+    },
+    "WCompDistanceToGoal": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false
+    },
+    "WCompDistanceToESS": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false
+    },
+    "WCompAltitudeOverGoal": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false
+    },
+    "WCompAltitudeOverESS": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false
+    },
+    "WCompGlideToGoal": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false,
+      "headless": false
+    },
+    "WCompGlideToESS": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false,
+      "headless": false
+    },
+    "WCompTimeToStart": {
+      "_title": true,
+      "_hide_labels": false
+    },
+    "WCompTimeAtStart": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false,
+      "navigation_target": "OPTIMIZED",
+      "use_brackets": true,
+      "speed_type": "GROUND",
+      "speed_avg": 0,
+      "time_format": "COMPACT"
+    },
+    "WCompSpeedToStart": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false,
+      "navigation_target": "OPTIMIZED",
+      "use_brackets": true
+    },
+    "WCompPercentage": {
+      "_title": true,
+      "_unit": true,
+      "_hide_labels": false
+    },
+    "WButtonNavig": {
+      "longClick": true,
+      "type": "ACTION_NEXT_WAYPOINT"
+    },
+    "WButtonPhone": {
+      "contact": {
+        "fullName": "",
+        "phoneNumber": ""
+      },
+      "showContactName": true,
+      "callType": "C_DIAL",
+      "backgroundCall": false
+    },
+    "WButtonCamera": {
+      "longClick": true
+    },
+    "WButtonZoom": {
+      "type": "ACTION_ZOOM_IN"
+    },
+    "WButtonVario": {
+      "showTitle": true,
+      "longClick": false
+    },
+    "WButtonBrightness": {
+      "longClick": true,
+      "type": "ACTION_PLUS"
+    },
+    "WButtonVolume": {
+      "longClick": true,
+      "type": "ACTION_PLUS"
+    },
+    "WButtonVolumeReminder": {
+      "longClick": false
+    },
+    "WButtonIntentLauncher": {
+      "longClick": true,
+      "title": "🚀",
+      "name": "test",
+      "action": "org.xcontest.XCTrack.Event.TEST"
+    },
+    "WFreeText": {
+      "text": "Modifie moi dans les paramètres du gadget",
+      "color_text": -16777216,
+      "color_bg": 16777215,
+      "text_size": 25,
+      "text_bold": false,
+      "text_italic": false,
+      "text_padding": 10
+    },
+    "WExternalData": {
+      "_title": true,
+      "_hide_labels": false,
+      "index": "1",
+      "suffix": ""
+    },
+    "WLastKey": {
+      "_title": true
+    },
+    "WEmitTestEvent": {
+      "event": "Battery50"
+    },
+    "WThermalAssistant": {
+      "rotation": {
+        "value": "NORTH_AT_TOP",
+        "showCompass": false
+      },
+      "mapScale": {
+        "value": 34,
+        "auto": false,
+        "resetZoomPanExit": false
+      },
+      "drawScale": true,
+      "fontSize": "SMALL",
+      "mapWidget_heading_arrow_sizecoef": 100,
+      "mapWidget_showAirspaces": true,
+      "postponedFloorLimit": 5000,
+      "postponedDisplayDistance": 300,
+      "interval": 300,
+      "drawCircle": false,
+      "includeWindAlgorithm": "ALGO_CLASSIC",
+      "drawCompetition": false,
+      "nav_target": "NONE",
+      "nav_label": "DISTANCE_BRACKETS",
+      "nav_line": false,
+      "thermals": 0,
+      "thermals_labels": true,
+      "nav_showWind": true,
+      "nav_showSun": false,
+      "line_thickness": 10,
+      "mapWidget_drawBearing": true
+    },
+    "WXCAssistant": {
+      "mapWidget_mapAppearance": {
+        "theme": "None",
+        "terrain": "None"
+      },
+      "rotation": {
+        "value": "NORTH_AT_TOP",
+        "showCompass": false
+      },
+      "mapWidget_scale": {
+        "value": 26,
+        "auto": false,
+        "resetZoomPanExit": false
+      },
+      "mapWidget_pilotPosCenter": true,
+      "mapWidget_pilotEdgeDistance": 20,
+      "mapWidget_drawScale": true,
+      "mapWidget_showRelativePositionWhilePanning": false,
+      "mapWidget_osmLanguage": "",
+      "mapWidget_showAirspaces": true,
+      "mapWidget_emergencyObstacles": true,
+      "mapWidget_emergencyZoom": {
+        "value": 35,
+        "auto": true,
+        "resetZoomPanExit": false
+      },
+      "mapWidget_panningTimeout": 60,
+      "mapWidget_panningAirspaceList": "TOP_LIST_ONLY",
+      "mapWidget_panningAirspaceListCycleSpeed": 2000,
+      "live_ShowNearby": true,
+      "live_ShowTracklogs": true,
+      "wpt_showWaypoints": false,
+      "wpt_showCities": false,
+      "wpt_showTakeoffs": false,
+      "nav_target": "NONE",
+      "nav_label": "DISTANCE_BRACKETS",
+      "nav_line": false,
+      "thermals": 0,
+      "thermals_labels": false,
+      "nav_showWind": true,
+      "nav_showSun": false,
+      "mapWidget_drawBearing": true,
+      "live_ShowFinalGlide": true,
+      "live_ShowFinalGlideAvg": 10000,
+      "line_thickness": 10,
+      "tracklog_color": -27091,
+      "mapWidget_heading_arrow_sizecoef": 100,
+      "fontSize": "SMALL",
+      "postponedFloorLimit": 5000,
+      "postponedDisplayDistance": 300,
+      "mapWidget_showRainRadar": false,
+      "mapWidget_showKK7": false,
+      "mapWidget_KK7opacity": 40,
+      "mapWidget_KK7timed": false,
+      "mapWidget_KK7timedOpacity": 80,
+      "xcMinDistance": 0,
+      "routes": true,
+      "routeThickness": 10,
+      "faiAreas": true,
+      "faiSectorOutsideStrokeThickness": 10,
+      "faiSectorInsideStrokeThickness": 10,
+      "faiAreasMinMax": false,
+      "faiAreasDistanceFontSize": "100",
+      "legDistance": false,
+      "legDistanceFontSize": "100",
+      "legPercentage": false,
+      "legPercentageFontSize": "100",
+      "closingCircle": false,
+      "closingCircleThickness": 10
+    },
+    "WCompMap": {
+      "mapWidget_mapAppearance": {
+        "theme": "None",
+        "terrain": "None"
+      },
+      "rotation": {
+        "value": "NORTH_AT_TOP",
+        "showCompass": false
+      },
+      "mapWidget_scale": {
+        "value": 26,
+        "auto": true,
+        "resetZoomPanExit": false
+      },
+      "mapWidget_pilotPosCenter": true,
+      "mapWidget_pilotEdgeDistance": 20,
+      "mapWidget_drawScale": true,
+      "mapWidget_showRelativePositionWhilePanning": false,
+      "mapWidget_osmLanguage": "",
+      "mapWidget_showAirspaces": true,
+      "mapWidget_emergencyObstacles": true,
+      "mapWidget_emergencyZoom": {
+        "value": 35,
+        "auto": true,
+        "resetZoomPanExit": false
+      },
+      "mapWidget_panningTimeout": 60,
+      "mapWidget_panningAirspaceList": "TOP_LIST_ONLY",
+      "mapWidget_panningAirspaceListCycleSpeed": 2000,
+      "live_ShowNearby": true,
+      "live_ShowTracklogs": true,
+      "wpt_showWaypoints": false,
+      "wpt_showCities": false,
+      "wpt_showTakeoffs": false,
+      "nav_target": "NONE",
+      "nav_label": "DISTANCE_BRACKETS",
+      "nav_line": false,
+      "thermals": 0,
+      "thermals_labels": false,
+      "nav_showWind": true,
+      "nav_showSun": false,
+      "mapWidget_drawBearing": true,
+      "live_ShowFinalGlide": true,
+      "live_ShowFinalGlideAvg": 10000,
+      "line_thickness": 10,
+      "tracklog_color": -27091,
+      "mapWidget_heading_arrow_sizecoef": 100,
+      "fontSize": "SMALL",
+      "postponedFloorLimit": 5000,
+      "postponedDisplayDistance": 300,
+      "mapWidget_showRainRadar": false,
+      "mapWidget_showKK7": false,
+      "mapWidget_KK7opacity": 40,
+      "mapWidget_KK7timed": false,
+      "mapWidget_KK7timedOpacity": 80
+    },
+    "WSideView": {
+      "type": "SIDE_BEARING",
+      "distance": 15000,
+      "finalGlideAvg": 10000
+    },
+    "WCompTaskSummary": {},
+    "WVarioColumn": {
+      "avg": 2000
+    },
+    "WCompass": {
+      "rotation": "HEADING",
+      "navigation_target": "OPTIMIZED",
+      "windStyle": "NONE",
+      "showHeading": false,
+      "showBearing": false,
+      "showBackground": true
+    },
+    "WAirspaceProximity": {
+      "maxDistance": 3000,
+      "_shownearinside": true,
+      "_showoriginalheightline": true,
+      "_showrecomputedheightline": false,
+      "_splitdirection": "AUTO",
+      "_rotation": "BEARING",
+      "postponedFloorLimit": 5000,
+      "postponedDisplayDistance": 300
+    },
+    "WVerticalGraph": {
+      "interval": 60000,
+      "vertical_step": 50,
+      "dot_size": 15,
+      "dot_color": -8355585
+    },
+    "WAltitudeDataGraph": {
+      "type": "GRAPH_THERMAL",
+      "text_size": 20,
+      "line_thickness": 10,
+      "color_thermal": -2147483393,
+      "color_wind": -2136956896
+    },
+    "WStatusLine": {
+      "showGps": true,
+      "soundMode": "WARN_MUTED",
+      "showSensors": true,
+      "showLive": true,
+      "showLiveLabel": true,
+      "showBatteryIcon": true,
+      "showBatteryPercent": true,
+      "showTime": false
+    },
+    "WLiveMessage": {
+      "line_count": 2,
+      "show_time": 300
+    },
+    "WLogPeek": {
+      "lines_count": 25,
+      "reverse": false,
+      "filter": "",
+      "color_text": -16777216,
+      "color_bg": 16777215,
+      "text_size": 15
+    },
+    "WWebView": {
+      "url": "https://www.google.com/",
+      "initialScale": 0,
+      "scrollSettings": [
+        0,
+        0
+      ],
+      "refreshInterval": 0,
+      "allowGsp": true,
+      "allowXCTrackJS": true,
+      "allowClickPassing": false,
+      "allowInteraction": false,
+      "saveButtonPos": "BOT_RIGHT"
+    }
+  }
+}

@@ -4,7 +4,7 @@ import './app.css'
 import '../render/widgets'
 import { deviceFor, type Device } from '../catalog/devices'
 import { readableName } from '../catalog/widgetNames'
-import { getMember, readString } from '../core/access'
+import { getMember, readNumber, readString } from '../core/access'
 import { exportContainer, openContainer, type Container } from '../core/container'
 import type { JsonNode } from '../core/jsonDocument'
 import { gridFor } from '../model/grid'
@@ -26,7 +26,7 @@ import type { PropertyField } from './properties'
 import {
   aspectRatioOf, buildDetail, buildOverview, clampDockHeight, dockHeightCeiling,
   DOCK_HEIGHT_DEFAULT, DOCK_HEIGHT_MIN, readDockHeight, writeDockHeight,
-  type DetailEditing, type Orientation, type ViewContext
+  type DetailEditing, type DetailInspecting, type Orientation, type ViewContext
 } from './views'
 import { computeWarnings, warningsAt, type Warning } from './warnings'
 import { renderWidgetList, type WidgetList } from './widgetList'
@@ -42,6 +42,14 @@ interface Session {
   language: string
   /** Vrai si la langue vient du navigateur, faute d'indication dans le fichier. */
   languageFromBrowser: boolean
+  /**
+   * `info.versionCode` et `info.versionName`, tels que le fichier les déclare. Ils ne
+   * servent qu'à **dater** ce qu'on lui compare : le relevé des valeurs par défaut
+   * (`catalog/widgetDefaults.ts`) a été fait sur une version donnée, et une divergence
+   * doit se dire au lieu de se taire. Absents pour un fichier qui n'en porte pas.
+   */
+  versionCode: number | undefined
+  versionName: string | undefined
   /** Calculés une fois à l'ouverture : ils ne dépendent pas du gabarit d'affichage. */
   warnings: Warning[]
   /**
@@ -81,6 +89,14 @@ let selection: number | undefined
 let editor: Editor | undefined
 let panelHost: HTMLElement | undefined
 let selectionLabel: HTMLElement | undefined
+
+/**
+ * Ce que la consultation tient de la vue courante : l'objet que `views.ts` relit pour
+ * savoir quel widget est choisi, et de quoi remettre le relevé sous la page d'accord avec
+ * lui. Les deux sont renouvelés à chaque `render()`, comme le calque en édition.
+ */
+let inspecting: DetailInspecting | undefined
+let refreshReadout: (() => void) | undefined
 
 /**
  * La palette d'ajout s'ouvre en boîte modale, comme la gestion des pages : on l'ouvre, on
@@ -937,6 +953,25 @@ function syncDock(): void {
   }
 }
 
+/**
+ * Remet la page d'accord avec la sélection, **en consultation**.
+ *
+ * En édition, c'est le calque qui pose ses marques et qui sait le faire sans redessiner.
+ * En consultation il n'y a pas de calque : les zones de survol sont les cibles, et c'est
+ * leur classe qu'on retourne. On ne reconstruit rien — un `render()` complet reprendrait
+ * au bandeau son défilement et son filtre, à chaque clic.
+ */
+function syncSelectionMarks(): void {
+  if (inspecting !== undefined) inspecting.selection = selection
+  for (const zone of content.querySelectorAll('.hotspot')) {
+    if (!(zone instanceof HTMLElement)) continue
+    const chosen = zone.dataset.position !== undefined && Number(zone.dataset.position) === selection
+    zone.classList.toggle('hotspot--selected', chosen)
+    zone.setAttribute('aria-pressed', String(chosen))
+  }
+  refreshReadout?.()
+}
+
 /** Reconstruit le bandeau depuis le rang sélectionné — jamais depuis un nœud retenu. */
 function refreshPanel(): void {
   if (!panelHost || !session) return
@@ -965,8 +1000,11 @@ function refreshPanel(): void {
   if (widget === undefined) {
     panelHost.append(el(
       'p', 'hint-note',
-      'Cliquez un widget sur la page : ses réglages apparaissent ici, dans l’ordre où ' +
-      'l’instrument les présente.'
+      editMode
+        ? 'Cliquez un widget sur la page : ses réglages apparaissent ici, dans l’ordre où ' +
+          'l’instrument les présente.'
+        : 'Cliquez un widget sur la page — ou choisissez-le dans la liste — pour lire ses ' +
+          'réglages. Rien n’est modifiable ici : c’est la consultation.'
     ))
     return
   }
@@ -984,12 +1022,27 @@ function refreshPanel(): void {
   const form = module.buildPropertyForm(widget, session.language)
   if (dockCount) {
     const total = form.fields.length
-    dockCount.textContent = `${total} réglage${total > 1 ? 's' : ''}`
+    dockCount.textContent = editMode || !form.defaultsKnown
+      ? `${total} réglage${total > 1 ? 's' : ''}`
+      // En consultation, le compte qui compte n'est pas le nombre de lignes : c'est ce que
+      // le pilote a effectivement changé. Il est dit dès la barre de tête, qui survit au
+      // repli du bandeau.
+      : `${total} réglage${total > 1 ? 's' : ''} · ${form.customizedCount} personnalisé` +
+        `${form.customizedCount > 1 ? 's' : ''}`
   }
-  panelHost.append(module.renderProperties({
-    form,
-    onChange: (field) => onPropertyChange(field, widget)
-  }).element)
+
+  // Deux panneaux, deux contrats. En édition, `onChange` est branché et le panneau écrit.
+  // En consultation, `readOnly` : le module ne construit aucun contrôle, `onChange` n'est
+  // pas fourni, et rien ne peut donc atteindre le document.
+  const panel = editMode
+    ? module.renderProperties({ form, onChange: (field) => onPropertyChange(field, widget) })
+    : module.renderProperties({
+      form,
+      readOnly: true,
+      ...(session.versionCode === undefined ? {} : { fileVersionCode: session.versionCode }),
+      ...(session.versionName === undefined ? {} : { fileVersionName: session.versionName })
+    })
+  panelHost.append(panel.element)
 }
 
 /**
@@ -1027,10 +1080,10 @@ function refreshWidgetList(): void {
       }
       selection = index
       // Le calque est la référence de la sélection : il pose ses marques sur la page et
-      // rappelle `onSelectionChange`, qui met le panneau à jour. Sans calque — cas
-      // théorique, la liste n'existant qu'en édition —, on rafraîchit nous-mêmes.
+      // rappelle `onSelectionChange`, qui met le panneau à jour. En consultation il n'y a
+      // pas de calque : on met à jour le panneau et les marques nous-mêmes.
       if (editor) editor.select(index)
-      else refreshPanel()
+      else { refreshPanel(); syncSelectionMarks() }
     }
   })
   widgetList = list
@@ -1051,10 +1104,17 @@ function refreshWidgetList(): void {
  */
 function buildDock(): HTMLElement {
   const dock = el('section', 'dock')
-  dock.setAttribute('aria-label', 'Widgets de la page et réglages du widget sélectionné')
+  dock.dataset.mode = editMode ? 'edition' : 'consultation'
+  dock.setAttribute(
+    'aria-label',
+    editMode
+      ? 'Widgets de la page et réglages du widget sélectionné'
+      : 'Widgets de la page et réglages du widget sélectionné, en lecture seule'
+  )
   // Fin de glissé d'un curseur, sortie d'un champ : le pas en attente est clos ici
-  // plutôt qu'au bout du délai.
-  dock.addEventListener('change', () => flushRecord())
+  // plutôt qu'au bout du délai. En consultation rien n'écrit, donc rien n'est en attente ;
+  // l'écoute ne se pose pas, pour qu'aucun chemin du bandeau ne touche à l'historique.
+  if (editMode) dock.addEventListener('change', () => flushRecord())
 
   dockGrip = buildDockGrip()
 
@@ -1095,6 +1155,59 @@ function buildDock(): HTMLElement {
   // Le bandeau est neuf à chaque `render()` : la hauteur réglée se repose dessus ici.
   applyDockHeight()
   return dock
+}
+
+/**
+ * Le bandeau de **consultation** : la même liste de widgets qu'en édition, et le panneau
+ * de réglages en lecture seule.
+ *
+ * Ce que cela ajoute au jalon 1 tient en une phrase : comprendre une configuration — la
+ * sienne après six mois, celle qu'un pilote a partagée — sans jamais risquer de la
+ * modifier. Jusqu'ici, tous les réglages étaient derrière le mode édition, c'est-à-dire
+ * derrière le risque.
+ *
+ * Trois choix, et ils se tiennent :
+ *
+ * 1. **Le même meuble qu'en édition.** Bandeau collant, repliable, redimensionné par le
+ *    pilote, hauteur mémorisée — tout cela existe et vaut pour les deux modes. La page,
+ *    elle, garde toute la largeur : c'est le principe qu'on ne touche pas.
+ * 2. **La liste des widgets, en consultation aussi.** Six widgets sur les 105 de la
+ *    configuration de référence sont entièrement recouverts : aucun clic ne les atteint,
+ *    et la liste est le seul chemin qui y mène. S'en passer ici les rendrait
+ *    inconsultables, ce qui viderait la fonction d'une partie de son sens.
+ * 3. **Aucun contrôle de formulaire.** Voir `readOnly`, dans `properties.ts` : ce n'est
+ *    pas un grisage, c'est une absence.
+ */
+function buildInspecting(page: Page): DetailInspecting {
+  const dock = buildDock()
+
+  // Comme en édition : un rang hors bornes vaut « rien de sélectionné » plutôt qu'un
+  // widget au hasard. Le cas se produit en revenant de l'édition après une suppression.
+  if (selection !== undefined && selection >= page.widgets.length) selection = undefined
+
+  const state: DetailInspecting = {
+    dock,
+    selection,
+    onSelect: (index) => {
+      // Choisir un widget, c'est vouloir lire ses réglages : replié, le bandeau se déplie.
+      if (index !== undefined && dockCollapsed) {
+        dockCollapsed = false
+        syncDock()
+      }
+      selection = index
+      refreshPanel()
+      syncSelectionMarks()
+    },
+    bindRefresh: (refresh) => { refreshReadout = refresh }
+  }
+  inspecting = state
+
+  // La liste avant le panneau : `refreshPanel` met la ligne courante en évidence, encore
+  // faut-il que la liste existe.
+  refreshWidgetList()
+  refreshPanel()
+  syncDock()
+  return state
 }
 
 function buildEditing(current: Session, page: Page, orientation: Orientation): DetailEditing {
@@ -1345,6 +1458,8 @@ function render(): void {
   // ses écoutes de fenêtre (`pointermove`, `pointerup`) partent avec lui.
   editor?.destroy()
   editor = undefined
+  inspecting = undefined
+  refreshReadout = undefined
   panelHost = undefined
   selectionLabel = undefined
   dockElement = undefined
@@ -1416,10 +1531,15 @@ function render(): void {
     const page = pages[view.index]
     if (page) {
       const orientation = view.orientation
-      // Le calque et le panneau ne sont construits qu'en édition : en consultation, la
-      // vue détaillée reste celle du jalon 1, zones de survol comprises.
+      // Le calque n'est construit qu'en édition. En consultation, la page reste celle du
+      // jalon 1 — zones de survol comprises —, et le bandeau vient DESSOUS : la sélection
+      // n'y ouvre que la lecture des réglages.
       const editing = editMode ? buildEditing(session, page, orientation) : undefined
-      if (editing) content.classList.add('content--wide')
+      // Une page sans widget n'a rien à consulter : le bandeau serait un meuble vide.
+      const inspection = editMode || page.widgets.length === 0
+        ? undefined
+        : buildInspecting(page)
+      if (editing || inspection) content.classList.add('content--wide')
       content.append(buildDetail({
         page,
         index: view.index,
@@ -1438,7 +1558,8 @@ function render(): void {
         // ici qu'on le lui dit. Le placement de la barre d'outils se juge en pixels — sa
         // hauteur à l'écran contre la place restante —, et ces pixels viennent de changer.
         onZoom: (factor) => { zoom = factor; editor?.refresh() },
-        ...(editing === undefined ? {} : { editing })
+        ...(editing === undefined ? {} : { editing }),
+        ...(inspection === undefined ? {} : { inspecting: inspection })
       }))
       syncEditControls()
       return
@@ -1538,6 +1659,8 @@ async function load(file: File): Promise<void> {
       declaredDevice: deviceIsDeclared(declaredDevice, device) ? device.label : undefined,
       language,
       languageFromBrowser: settings.language.kind === 'system',
+      versionCode: info ? readNumber(info, 'versionCode') : undefined,
+      versionName: info ? readString(info, 'versionName') : undefined,
       warnings: computeWarnings({ document: container.document, layout, settings, language })
     }
     installDeviceSelector(device)
@@ -1690,10 +1813,10 @@ editToggle.addEventListener('click', () => {
     void loadProperties()
     void loadPalette()
   }
-  if (!editMode) {
-    flushRecord()
-    selection = undefined
-  }
+  // La sélection traverse le passage d'un mode à l'autre : le widget qu'on vient de lire
+  // est celui qu'on veut régler, et l'inverse est tout aussi vrai. `buildEditing` et
+  // `buildInspecting` la ramènent l'une comme l'autre dans les bornes de la page.
+  if (!editMode) flushRecord()
   render()
 })
 
@@ -1734,14 +1857,28 @@ window.addEventListener('keydown', (event) => {
   // Les flèches appartiennent au curseur de zoom quand il a le focus.
   if (event.target instanceof HTMLInputElement) return
   // En édition, flèches et Échap appartiennent au calque et au panneau : déplacer un
-  // widget d'une cellule ne doit pas changer de page par la même occasion.
-  if (insideEditor(event.target)) return
+  // widget d'une cellule ne doit pas changer de page par la même occasion. En
+  // consultation, rien du bandeau ne consomme Échap : elle doit pouvoir désélectionner
+  // depuis la liste, où le pilote a justement le focus quand il vient d'y choisir un rang.
+  const escapeFromDock = !editMode && event.key === 'Escape'
+  if (insideEditor(event.target) && !escapeFromDock) return
   const pages = session?.layout[current.orientation] ?? []
   const go = (index: number): void => {
     view = { kind: 'detail', orientation: current.orientation, index }
     render()
   }
-  if (event.key === 'Escape') { view = { kind: 'overview' }; render() }
+  if (event.key === 'Escape') {
+    // Un cran à la fois : Échap lâche d'abord le widget, et seulement ensuite la page.
+    // Quitter la page d'un seul coup ferait perdre le zoom réglé à la règle.
+    if (!editMode && selection !== undefined) {
+      selection = undefined
+      refreshPanel()
+      syncSelectionMarks()
+      return
+    }
+    view = { kind: 'overview' }
+    render()
+  }
   if (event.key === 'ArrowRight' && current.index < pages.length - 1) go(current.index + 1)
   if (event.key === 'ArrowLeft' && current.index > 0) go(current.index - 1)
 })

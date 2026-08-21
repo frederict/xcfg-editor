@@ -678,6 +678,21 @@ body {
   outline-offset: -1px;
 }
 
+/*
+ * Le widget dont on lit les réglages, marqué sur la page. Un trait franc plutôt qu'un
+ * fond : le rendu de la page reste ce qu'il est — c'est lui qu'on est venu voir, et une
+ * teinte posée dessus mentirait sur ce que l'appareil dessine.
+ *
+ * `outline` et non `border` : la bordure déplacerait la zone d'un pixel et le trait ne
+ * suivrait plus le rectangle du widget.
+ */
+.hotspot--selected,
+.hotspot--selected:hover {
+  background: transparent;
+  outline: 2px solid var(--app-focus);
+  outline-offset: -2px;
+}
+
 .readout {
   display: flex;
   align-items: baseline;
@@ -698,6 +713,16 @@ body {
 }
 
 .readout__class { font-family: var(--font-data); font-size: 11px; color: var(--app-ink-soft); }
+
+/* Le relevé décrit le survol ; le curseur parti, il retombe sur le widget choisi et le
+   dit — sans quoi on lirait le nom du dernier survolé en croyant lire la sélection. */
+.readout__pin {
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--app-line-strong);
+  border-radius: 999px;
+  font-size: 11px;
+  color: var(--app-ink-soft);
+}
 
 /* ------------------------------------------------------------------- glisser-déposer */
 
@@ -1076,6 +1101,121 @@ body.is-dragging .veil {
   white-space: pre-wrap;
   color: var(--app-ink-soft);
 }
+
+/* ------------------------------------- consultation : lire sans pouvoir toucher */
+
+/*
+ * Le panneau de consultation n'a pas de contrôles à styler : il n'en a pas du tout (voir
+ * `readOnly` dans `properties.ts`). Ce qu'il faut ici, c'est une **hiérarchie de lecture**.
+ *
+ * Le problème est concret : un `WXCAssistant` aligne 63 réglages, dont le pilote n'en a
+ * peut-être touché que trois. Les 63 se valent visuellement, et l'information utile se
+ * noie. La solution retenue **ne réordonne rien** — l'ordre du fichier est celui du
+ * panneau natif, c'est-à-dire celui que le pilote a sous les yeux sur son instrument, et
+ * le casser lui ferait perdre son repère. Elle joue sur le poids :
+ *
+ * - personnalisé — un filet plein à gauche, l'intitulé en gras, la valeur en encre pleine ;
+ * - resté au défaut — pas de filet, intitulé et valeur en encre douce ;
+ * - hors relevé — filet pointillé : on ne sait pas, et cela se voit sans se confondre
+ *   avec les deux autres.
+ *
+ * Rien n'est masqué pour autant, conformément à la règle d'or du projet : le filtre
+ * « seulement ce qui diffère » est un geste du pilote, jamais un état par défaut.
+ */
+
+.props--readonly .props__row {
+  border-left: 3px solid transparent;
+  padding-left: 0.5rem;
+}
+
+/* Le retrait d'une sous-option d'une clé composite passe avant, et s'ajoute au filet. */
+.props--readonly .props__row[data-depth="1"] { padding-left: 1.7rem; }
+
+.props--readonly .props__label { cursor: default; }
+
+.props--readonly .props__row[data-default="custom"] {
+  border-left-color: var(--app-ink);
+}
+
+.props--readonly .props__row[data-default="custom"] .props__label { font-weight: 600; }
+
+.props--readonly .props__row[data-default="default"] .props__label,
+.props--readonly .props__row[data-default="default"] .props__value {
+  color: var(--app-ink-soft);
+}
+
+.props--readonly .props__row[data-default="unknown"] {
+  border-left: 3px dotted var(--app-line-strong);
+}
+
+/* La valeur en toutes lettres, à la place qu'occupait le contrôle. Police de données :
+   c'est le contenu du fichier qu'on lit, pas une phrase. */
+.props__value {
+  flex: 0 1 auto;
+  font-family: var(--font-data);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.props__value--color { display: inline-flex; align-items: center; gap: 0.45rem; }
+.props__hexText { text-transform: uppercase; }
+
+/* La marque d'origine : elle porte la valeur de référence, jamais un jugement. Le poids du
+   « personnalisé » est déjà dit par le filet et par l'intitulé — ici, une pastille sobre
+   suffit, et la valeur du relevé est ce qu'on vient y chercher. */
+.props__origin {
+  flex: none;
+  margin-left: auto;
+  font-family: var(--font-data);
+  font-size: 11px;
+  color: var(--app-ink-soft);
+  white-space: nowrap;
+}
+
+.props__origin--custom {
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--app-line-strong);
+  border-radius: 999px;
+  color: var(--app-ink);
+}
+
+/*
+ * Le bandeau de tête du panneau de consultation : le compte qui donne le sens de la
+ * lecture, le filtre qui répond à la question directe, et la note qui date le relevé.
+ *
+ * La note n'est pas décorative. Les valeurs par défaut de XCTrack changent d'une version
+ * à l'autre : comparer un fichier venu d'ailleurs reste utile, mais ce n'est plus une
+ * preuve, et c'est ici que ça se dit. Le filet de gauche passe alors à la couleur
+ * d'attention du reste de l'application.
+ */
+.props__defaults {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--app-line);
+  border-left: 3px solid var(--app-ink-soft);
+  border-radius: 4px;
+  background: var(--app-bg);
+}
+
+.props__defaults-count { margin: 0; font-size: 13px; font-weight: 600; }
+.props__defaults-only { flex: none; margin-left: auto; }
+
+.props__defaults-note {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--app-ink-soft);
+}
+
+.props__defaults[data-trust="indicative"],
+.props__defaults[data-trust="unstated"] { border-left-color: var(--app-flag-line); }
+
+.props__defaults[data-trust="indicative"] .props__defaults-note,
+.props__defaults[data-trust="unstated"] .props__defaults-note { color: var(--app-flag-ink); }
 
 /* --------------------------------------------------------------- mode édition */
 
@@ -1556,6 +1696,14 @@ body.is-dragging .veil {
 /* Le trait qui ferme le bloc universel de tête traverse toutes les colonnes : c'est une
    frontière dans l'ordre des réglages, pas une décoration de colonne. */
 .dock .props__rule { column-span: all; }
+
+/* Le bandeau de tête de la consultation précède les colonnes et les traverse toutes : il
+   parle du widget entier, pas d'une colonne de réglages. */
+.dock .props__defaults { align-self: stretch; }
+
+/* En colonnes, la marque d'origine collée à droite d'une ligne courte laisserait un vide
+   entre elle et la valeur. Elle reste à droite, mais sans pousser. */
+.dock .props__origin { margin-left: 0.35rem; }
 
 /* Une phrase encadrée à la place d'un contenu absent : rien de sélectionné, module encore
    en vol. Partagée par le bandeau et la boîte de la palette. */
