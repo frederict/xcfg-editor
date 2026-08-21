@@ -12,6 +12,7 @@ import {
 } from '../model/personalData'
 import type { RenderSettings } from '../model/preferences'
 import type { Widget } from '../model/widget'
+import { plural } from './prose'
 
 /**
  * Ce que l'interface doit dire au pilote, et rien de plus. Neuf familles, calculées ici
@@ -86,11 +87,6 @@ const ORIENTATION_LABELS = { landscape: 'Paysage', portrait: 'Portrait' } as con
 const UNIVERSAL_KEYS = ['CLASS', 'X1', 'Y1', 'X2', 'Y2', '_border', '_bg', '_theme']
 
 const SCALE = 10000
-
-/** Le compte suivi de son mot, accordé. Même forme que dans les autres modules d'interface. */
-function plural(count: number, singular: string, pluralForm: string): string {
-  return `${count} ${count > 1 ? pluralForm : singular}`
-}
 
 /* ------------------------------------------------------------------ lecture du JSON */
 
@@ -233,13 +229,18 @@ function personalDataWarning(inventory: PersonalInventory): Warning | undefined 
   // téléphone y vivent (`WButtonPhone`), et la dérivation ne les retire pas.
   const travels = inLayout === 0
     ? ''
-    : ` ${plural(inLayout, 'texte écrit dans un gadget part', 'textes écrits dans les gadgets partent')} ` +
+    : ` ${plural({
+      one: '{count} texte écrit dans un gadget part',
+      other: '{count} textes écrits dans les gadgets partent'
+    }, inLayout)} ` +
       'même avec un export « pages » : ce format est un tri de gros grain, pas un nettoyage.'
 
   const empty = inventory.counts.empty === 0
     ? ''
-    : ` ${plural(inventory.counts.empty, 'emplacement personnel est présent mais vide',
-      'emplacements personnels sont présents mais vides')} — ils ne sont pas listés ici.`
+    : ` ${plural({
+      one: '{count} emplacement personnel est présent mais vide',
+      other: '{count} emplacements personnels sont présents mais vides'
+    }, inventory.counts.empty)} — ils ne sont pas listés ici.`
 
   return {
     kind: 'personal-data',
@@ -248,9 +249,14 @@ function personalDataWarning(inventory: PersonalInventory): Warning | undefined 
       ? 'Vos pages portent des textes de vous'
       : 'Ce fichier vous nomme',
     detail:
-      `Ce fichier porte ${plural(inPreferences, 'réglage personnel renseigné',
-        'réglages personnels renseignés')} et ` +
-      `${plural(inLayout, 'texte écrit dans un gadget', 'textes écrits dans les gadgets')} ` +
+      `Ce fichier porte ${plural({
+        one: '{count} réglage personnel renseigné',
+        other: '{count} réglages personnels renseignés'
+      }, inPreferences)} et ` +
+      `${plural({
+        one: '{count} texte écrit dans un gadget',
+        other: '{count} textes écrits dans les gadgets'
+      }, inLayout)} ` +
       'qui vous désignent : votre nom, votre matériel, vos choix de diffusion, votre tâche ' +
       'en cours avec ses coordonnées, et jusqu’à la compétition à laquelle vous participez ' +
       `— les noms des fichiers de waypoints la désignent.${travels}${empty} Cet outil ne ` +
@@ -613,7 +619,7 @@ function themeWarning(input: WarningInput): Warning | undefined {
     items.push(`Thème du fichier : ${declared}${known}`)
   }
   for (const [theme, count] of perWidget) {
-    items.push(`${count} gadget${count > 1 ? 's' : ''} en ${theme}`)
+    items.push(`${plural({ one: '{count} gadget', other: '{count} gadgets' }, count)} en ${theme}`)
   }
 
   return {
