@@ -38,7 +38,7 @@ describe('WSideView', () => {
     const blocks = el.querySelectorAll('.xc-sideview__airspace')
     expect(blocks.length).toBe(2)
     expect(el.textContent).toContain('NAMUR AREA')
-    expect(el.textContent).toContain('TSA36 FLAWIN')
+    expect(el.textContent).toContain('CHARLEROI')
     expect(el.querySelectorAll('.xc-sideview__airspace--restricted').length).toBe(1)
   })
 
@@ -56,5 +56,36 @@ describe('WSideView', () => {
     const terrainIndex = children.findIndex((c) => c.classList.contains('xc-sideview__terrain'))
     const lastAirspaceIndex = children.reduce((acc, c, i) => c.classList.contains('xc-sideview__airspace') ? i : acc, -1)
     expect(terrainIndex).toBeGreaterThan(lastAirspaceIndex)
+  })
+})
+
+/**
+ * Écart 2.7 de la revue des 75 visuels — « le décor est juste, les instruments manquent ».
+ * Relevé sur
+ * `docs/reference/captures-air3/2026-08-21_planche-sol-7-carte-manche-vue-de-cote-resume.png`.
+ */
+describe('WSideView — les instruments manquants (écart 2.7)', () => {
+  it('fait monter les colonnes d’espace aérien jusqu’au haut de la cellule', () => {
+    const el = drawSideView(widget(), settings, language)
+    for (const rect of el.querySelectorAll('.xc-sideview__airspace rect')) {
+      expect(rect.getAttribute('y')).toBe('0')
+    }
+  })
+
+  it('centre l’étiquette de chaque colonne en haut, et non dedans à gauche', () => {
+    const el = drawSideView(widget(), settings, language)
+    for (const label of el.querySelectorAll('.xc-sideview__airspace-label')) {
+      expect(label.getAttribute('text-anchor')).toBe('middle')
+      // La colonne la plus à droite passe en seconde ligne, sous le repère « 500m » qui
+      // occupe la première ligne de ce coin sur la capture.
+      expect(Number(label.getAttribute('y'))).toBeLessThan(30)
+    }
+  })
+
+  it('dessine le repère « 500m » et le pictogramme en forme d’œil', () => {
+    const el = drawSideView(widget(), settings, language)
+    expect(el.querySelector('.xc-sideview__altitude-mark')?.textContent).toBe('500m')
+    expect(el.querySelector('.xc-sideview__eye')).not.toBeNull()
+    expect(el.querySelector('.xc-sideview__eye-pupil')).not.toBeNull()
   })
 })

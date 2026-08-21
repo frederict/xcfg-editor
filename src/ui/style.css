@@ -1176,6 +1176,18 @@
 .xc-sideview__scale-tick { stroke: var(--xc-sideview-label); stroke-width: 1.5; }
 .xc-sideview__scale-label { fill: var(--xc-sideview-label); font-size: 10px; }
 
+/* Repère d'altitude en haut à droite et pictogramme en forme d'œil en bas à droite —
+   écart 2.7. Les deux sont sur la capture, dans les deux états relevés ; leur FONCTION
+   n'est pas établie, et c'est écrit dans sideView.ts plutôt que deviné ici. */
+.xc-sideview__altitude-mark { fill: var(--xc-sideview-label); font-size: 10px; }
+.xc-sideview__eye path,
+.xc-sideview__eye circle {
+  stroke: var(--xc-sideview-label);
+  stroke-width: 1.6;
+  vector-effect: non-scaling-stroke;
+}
+.xc-sideview__eye-pupil { fill: var(--xc-sideview-label); stroke: none; }
+
 /* Direction du vent — WWindDirection (windDirection.ts). Correction en vol
    (rendu-en-vol.md § 3) : une lettre cardinale géante, pas une rose ni une flèche —
    voir le commentaire de tête du module. */

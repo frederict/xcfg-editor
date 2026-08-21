@@ -14,7 +14,8 @@ import type { RenderSettings } from '../../model/preferences'
  *
  * Relevé : profil du terrain en aplat beige (`#e2cfaa` mesuré), un volume d'espace aérien
  * « normal » en beige plus clair (`#f9f0d7`, étiquette « NAMUR AREA »), un volume plus
- * étroit en rose très clair (`#f6d7d7`, étiquette « TSA36 FLAWIN ») — deux teintes
+ * étroit en rose très clair (`#f6d7d7`, étiquette « Charleroi » sur la planche du
+ * 2026-08-21, « TSA36 FLAWIN » sur la capture d'origine) — deux teintes
  * différentes pour deux volumes différents, cohérent avec la distinction « zone
  * réglementée » observée ailleurs sur les cartes (bordures rouge/orange, rendu-observe.md
  * « Cartes »), mais aucune clé du corpus (`distance`, `finalGlideAvg`, `type`, valeur
@@ -25,10 +26,32 @@ import type { RenderSettings } from '../../model/preferences'
  * `SCALE_LABEL` dans map.ts : aucune formule de conversion `distance` → distance
  * affichée n'est sourcée).
  *
- * **Vu sur la capture, non repris ici, faute de certitude sur sa fonction** : un petit
- * repère « 500m » en haut à droite, et un pictogramme en forme d'œil en bas à droite.
- * Ni l'un ni l'autre n'a de contrepartie documentée ailleurs dans le projet — les
- * inventer serait deviner leur rôle plutôt que le relever.
+ * ## Écart 2.7 de la revue des 75 visuels — « le décor est juste, les instruments manquent »
+ *
+ * Trois corrections, toutes mesurées sur
+ * `captures-air3/2026-08-21_planche-sol-7-carte-manche-vue-de-cote-resume.png`, cellule
+ * de 627 × 323 px :
+ *
+ * - **les colonnes d'espace aérien montent jusqu'au HAUT de la cellule**, du bord
+ *   supérieur jusqu'au terrain qui les recouvre — nous en faisions de petits rectangles
+ *   flottants à mi-hauteur ;
+ * - **leur étiquette est posée en haut, centrée sur la colonne**, et non à l'intérieur
+ *   contre son bord gauche ;
+ * - le repère **« 500m »** en haut à droite et le **pictogramme en forme d'œil** en bas à
+ *   droite sont dessinés. Ils l'étaient déjà sur la capture, et le commentaire disait les
+ *   laisser « faute de certitude sur leur fonction » — mais reproduire un dessin ne
+ *   demande pas d'en connaître la fonction, et le pilote qui compose sa page a besoin de
+ *   savoir que ces deux marques occuperont ces deux coins. Leur RÔLE, lui, reste inconnu
+ *   et c'est écrit ici plutôt que deviné.
+ *
+ * ## Ce qui n'est PAS dessiné, et pourquoi
+ *
+ * `captures-air3/2026-08-21_planche-competition-7-carte-manche-et-resume.png` — donc une
+ * manche chargée et le mode compétition actif — montre le même gadget avec, en plus : des
+ * **lignes d'altitude en pointillés** graduées 500 à 2500 m et étiquetées à droite, un
+ * **trait vertical gris** pour la balise avec son nom en haut, et une **ligne de plané en
+ * pointillés**. Les trois viennent de la manche et du vol en cours, que le fichier de
+ * pages ne porte pas. Ce moteur dessine l'état au repos, comme partout ailleurs.
  */
 
 const SVG_NS = 'http://www.w3.org/2000/svg'
@@ -56,13 +79,25 @@ function buildTerrain(): SVGPolygonElement {
   return svgEl('polygon', { class: 'xc-sideview__terrain', points })
 }
 
-interface AirspaceBlock { x: number; width: number; top: number; bottom: number; name: string; restricted: boolean }
+interface AirspaceBlock {
+  x: number; width: number; top: number; bottom: number; name: string; restricted: boolean
+  /** Ordonnée de l'étiquette — voir `AIRSPACE_BLOCKS` pour la seconde ligne. */
+  labelY: number
+}
 
-/** Deux volumes d'exemple fixes — voir le commentaire de tête : aucune clé du corpus ne
- * fournit leur position, seule leur existence et leurs deux couleurs sont observées. */
+/**
+ * Deux volumes d'exemple fixes — voir le commentaire de tête : aucune clé du corpus ne
+ * fournit leur position, seules leur existence et leurs deux couleurs sont observées.
+ *
+ * Ils partent du HAUT de la cellule : sur la capture, les deux colonnes touchent le bord
+ * supérieur et descendent jusqu'au terrain, qui les recouvre puisqu'il est dessiné après.
+ * C'est pourquoi `bottom` vaut la hauteur entière plutôt qu'une altitude d'exemple.
+ */
 const AIRSPACE_BLOCKS: AirspaceBlock[] = [
-  { x: 170, width: 130, top: 15, bottom: 126, name: 'NAMUR AREA', restricted: false },
-  { x: 110, width: 18, top: 95, bottom: 126, name: 'TSA36 FLAWIN', restricted: true }
+  { x: 152, width: 84, top: 0, bottom: VIEW_H, name: 'NAMUR AREA', restricted: false, labelY: 13 },
+  // Deuxième ligne : sur la capture, l'étiquette de la colonne la plus à droite se pose
+  // SOUS le repère « 500m », qui occupe la première ligne de ce coin.
+  { x: 262, width: 38, top: 0, bottom: VIEW_H, name: 'CHARLEROI', restricted: true, labelY: 27 }
 ]
 
 function buildAirspace(block: AirspaceBlock): SVGGElement {
@@ -72,10 +107,34 @@ function buildAirspace(block: AirspaceBlock): SVGGElement {
   g.append(svgEl('rect', {
     x: String(block.x), y: String(block.top), width: String(block.width), height: String(block.bottom - block.top)
   }))
+  // Étiquette en haut, CENTRÉE sur la colonne — c'est la place qu'elle occupe sur la
+  // capture, et elle déborde volontiers de la colonne quand celle-ci est étroite.
   const label = Object.assign(svgEl('text', {
-    class: 'xc-sideview__airspace-label', x: String(block.x + 4), y: String(block.top + 14)
+    class: 'xc-sideview__airspace-label',
+    x: String(block.x + block.width / 2), y: String(block.labelY), 'text-anchor': 'middle'
   }), { textContent: block.name })
   g.append(label)
+  return g
+}
+
+/**
+ * Repère d'altitude en haut à droite (« 500m ») et pictogramme en forme d'œil en bas à
+ * droite. Tous deux relevés sur la capture, dans les deux états ; leur fonction n'est pas
+ * établie et rien ici ne prétend le contraire.
+ */
+const ALTITUDE_MARK = '500m'
+
+function buildMarks(): SVGGElement {
+  const g = svgEl('g', { class: 'xc-sideview__marks' })
+  g.append(Object.assign(svgEl('text', {
+    class: 'xc-sideview__altitude-mark', x: String(VIEW_W - 4), y: '13', 'text-anchor': 'end'
+  }), { textContent: ALTITUDE_MARK }))
+
+  const eye = svgEl('g', { class: 'xc-sideview__eye', transform: `translate(${VIEW_W - 28} ${VIEW_H - 42})` })
+  eye.append(svgEl('path', { d: 'M -13 0 Q 0 -9 13 0 Q 0 9 -13 0 Z', fill: 'none' }))
+  eye.append(svgEl('circle', { cx: '0', cy: '0', r: '4.5', fill: 'none' }))
+  eye.append(svgEl('circle', { class: 'xc-sideview__eye-pupil', cx: '-1.5', cy: '-1.5', r: '1.8' }))
+  g.append(eye)
   return g
 }
 
@@ -110,6 +169,7 @@ export function drawSideView(_widget: Widget, _settings: RenderSettings, _langua
   for (const block of AIRSPACE_BLOCKS) svg.append(buildAirspace(block))
   svg.append(buildTerrain())
   svg.append(buildScale())
+  svg.append(buildMarks())
 
   element.append(svg)
   return element
