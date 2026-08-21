@@ -92,4 +92,23 @@ describe('style.css — corrections sans trace dans le DOM', () => {
       expect(ligne).not.toContain('gap: 0.15em;')
     })
   })
+  // Écarts 2.1 et 2.2 de la revue des 75 widgets — l'opacité délavait la couleur.
+  describe('couleurs de titre et d’unité : des aplats, pas une opacité', () => {
+    it('aucun titre de widget, ni l’unité, ne porte plus d’opacité', () => {
+      // `0,8 × #f44336 + 0,2 × blanc = #f6685e` au pixel près, et `0,8 × #101010`
+      // donne #3f3f3f là où l'appareil dessine #505050. Relevé sur
+      // `2026-08-21_planche-sol-1-systeme-et-vol-a.png` : 7 107 px de #f44336 et
+      // 8 662 px de #505050.
+      for (const selecteur of ['.xc-num__title', '.xc-generic__title', '.xc-wind-dir__title', '.xc-num__unit']) {
+        const rule = css.slice(css.indexOf(`${selecteur} {`), css.indexOf(`${selecteur} {`) + 500)
+        expect(rule).not.toContain('opacity: 0.8')
+      }
+    })
+
+    it('l’unité a sa propre encre mesurée, indépendante de celle des chiffres', () => {
+      expect(css).toContain('--xc-unit-ink: #505050;')
+      const rule = css.slice(css.indexOf('.xc-num__unit {'), css.indexOf('.xc-num__unit {') + 300)
+      expect(rule).toContain('color: var(--xc-unit-ink);')
+    })
+  })
 })

@@ -1,6 +1,15 @@
 :root {
   --xc-surface: #ffffff;
   --xc-ink: #101010;
+  /* Encre de l'unité grise à côté d'une valeur (`.xc-num__unit`). C'est un APLAT MESURÉ,
+     pas une atténuation de `--xc-ink` : 8 662 px de #505050 relevés sur
+     `2026-08-21_planche-sol-1-systeme-et-vol-a.png`, contre 7 107 px de #f44336 pour les
+     titres. L'ancienne règle posait `opacity: 0.8` sur l'encre du texte, ce qui donnait
+     #3f3f3f — et délavait du même coup la couleur de titre choisie par le pilote en
+     #f6685e au lieu du #f44336 qu'il avait demandé (écarts 2.1 et 2.2 de la revue des
+     75 widgets). Une opacité ne peut pas produire ces deux teintes-là : ce sont deux
+     couleurs, pas une couleur et sa transparence. */
+  --xc-unit-ink: #505050;
   --xc-line: #808080;
   /* Défaut 2 (rapport de tâche) — corrige le premier relevé (fond pâle derrière une
      valeur noire, `rendu-observe.md`) : en vol, XCTrack colore la VALEUR elle-même,
@@ -185,7 +194,6 @@
       calc(var(--xc-w, 200) / var(--xc-title-em, 6) * 1px)
     )
   );
-  opacity: 0.8;
   max-width: 100%;
   text-align: center;
   white-space: nowrap;
@@ -300,7 +308,6 @@
       calc(var(--xc-w, 200) / var(--xc-title-em, 6) * 1px)
     )
   );
-  opacity: 0.8;
   width: 100%;
   max-width: 100%;
   text-align: center;
@@ -374,9 +381,11 @@
   font-weight: 600;
 }
 
+/* `color` et non une opacité — voir `--xc-unit-ink` en tête de fichier. La couleur porte
+   aussi le filet de la fraction (`currentColor` sur `.xc-num__unit-num`). */
 .xc-num__unit {
   font-size: calc(var(--xc-h, 100) * 0.41 * var(--xc-value-fit, 1) * 1px);
-  opacity: 0.8;
+  color: var(--xc-unit-ink);
 }
 
 /* Unité composée (km/h, m/s) empilée en fraction : numérateur, filet, dénominateur.
@@ -856,7 +865,6 @@
       calc(var(--xc-w, 200) / var(--xc-title-em, 6) * 1px)
     )
   );
-  opacity: 0.8;
   max-width: 100%;
   text-align: center;
   white-space: nowrap;
