@@ -50,6 +50,8 @@ import type { VersionPanel } from './versionDiagnostic'
 import type { CleanupEvent } from './cleanupPanel'
 import type { Library } from '../library/library'
 import { initialUiLanguage, loadTranslator, type Translator } from '../i18n'
+import { plural } from './prose'
+import type { PluralForms } from '../i18n'
 
 interface Session {
   container: Container
@@ -111,6 +113,9 @@ type View =
  * `render()` qu'une fois qu'il est arrivé. Les rendus suivants viennent tous d'un geste
  * du pilote, donc bien après.
  */
+/** « 12 réglages » — la barre de tête le dit, et le bandeau le redit. */
+const SETTING_COUNT: PluralForms = { one: '{count} réglage', other: '{count} réglages' }
+
 let tr: Translator | undefined
 
 let session: Session | undefined
@@ -954,7 +959,7 @@ function repaint(): void {
   const count = content.querySelector('.chip--count')
   if (count) {
     const total = page.widgets.length
-    count.textContent = `${total} gadget${total > 1 ? 's' : ''}`
+    count.textContent = plural({ one: '{count} gadget', other: '{count} gadgets' }, total)
   }
 }
 
@@ -1042,12 +1047,15 @@ function updateDockCount(form: PropertyForm, editMode: boolean): void {
   if (!dockCount) return
   const total = form.fields.length
   dockCount.textContent = editMode || !form.defaultsKnown
-    ? `${total} réglage${total > 1 ? 's' : ''}`
+    ? plural(SETTING_COUNT, total)
     // En consultation, le compte qui compte n'est pas le nombre de lignes : c'est ce que
     // le pilote a effectivement changé. Il est dit dès la barre de tête, qui survit au
     // repli du bandeau.
-    : `${total} réglage${total > 1 ? 's' : ''} · ${form.customizedCount} personnalisé` +
-      `${form.customizedCount > 1 ? 's' : ''}`
+    : `${plural(SETTING_COUNT, total)} · ` +
+      `${plural({
+        one: '{count} personnalisé',
+        other: '{count} personnalisés'
+      }, form.customizedCount)}`
 }
 
 function onPropertyChange(field: PropertyField, widget: Widget, fresh?: PropertyForm): void {

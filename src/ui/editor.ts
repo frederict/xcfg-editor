@@ -10,6 +10,7 @@ import {
 } from '../model/mutations'
 import { readWidget } from '../model/widget'
 import { formatSizeMm, widgetSizeMm } from './views'
+import { plural } from './prose'
 
 /**
  * L'interaction d'édition : choisir un widget, le déplacer, le redimensionner.
@@ -1085,13 +1086,15 @@ export function createEditor(options: EditorOptions): Editor {
     return edit
   }
 
-  const plural = (count: number): string =>
-    count === 0 ? 'Page vide' : `${count} gadget${count > 1 ? 's' : ''} sur la page`
+  const pageTally = (count: number): string =>
+    count === 0
+      ? 'Page vide'
+      : plural({ one: '{count} gadget sur la page', other: '{count} gadgets sur la page' }, count)
 
   const runRemove = (): WidgetStructureEdit | undefined => {
     if (!alive || selected === undefined || gesture !== undefined) return undefined
     const edit = removeWidgetAt(options.page, selected, options.language, selected)
-    return finishStructure(edit, `${edit.description}. ${plural(options.page.widgets.length)}.`)
+    return finishStructure(edit, `${edit.description}. ${pageTally(options.page.widgets.length)}.`)
   }
 
   const runDuplicate = (): WidgetStructureEdit | undefined => {

@@ -11,6 +11,8 @@ import {
   DEFAULTS_VERSION_NAME, formatDefault, missingDefaultKeys,
   type DefaultState, type DefaultsTrust
 } from '../catalog/widgetDefaults'
+import type { PluralForms } from '../i18n'
+import { plural } from './prose'
 
 /**
  * Le panneau de propriétés d'un widget : la description du formulaire, puis son rendu.
@@ -869,6 +871,9 @@ export interface PropertiesPanel {
   readOnly: boolean
 }
 
+/** « 12 réglages » — l'en-tête du panneau le dit, le niveau des absents le redit. */
+const SETTING_COUNT: PluralForms = { one: '{count} réglage', other: '{count} réglages' }
+
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K, className?: string, text?: string
 ): HTMLElementTagNameMap[K] {
@@ -976,7 +981,7 @@ function buildPanel(options: PropertiesPanelOptions, live: LivePanel): Propertie
   const head = el('header', 'props__head')
   head.append(
     el('h2', 'props__title', form.title),
-    el('p', 'props__count', `${form.fields.length} réglage${form.fields.length > 1 ? 's' : ''}`)
+    el('p', 'props__count', plural(SETTING_COUNT, form.fields.length))
   )
   if (form.className !== '') head.append(el('p', 'props__class', form.className))
   root.append(head)
@@ -1109,9 +1114,11 @@ function buildDefaultsSummary(
     'p', 'props__defaults-count',
     form.customizedCount === 0
       ? `Aucun réglage ne s’écarte de ce que XCTrack pose sur un gadget neuf (${form.comparableCount} comparés).`
-      : `${form.customizedCount} réglage${form.customizedCount > 1 ? 's' : ''} ` +
-        `personnalisé${form.customizedCount > 1 ? 's' : ''} sur ${form.comparableCount} comparé` +
-        `${form.comparableCount > 1 ? 's' : ''}.`
+      : `${plural({
+        one: '{count} réglage personnalisé',
+        other: '{count} réglages personnalisés'
+      }, form.customizedCount)} sur ` +
+        `${plural({ one: '{count} comparé', other: '{count} comparés' }, form.comparableCount)}.`
   )
   box.append(count)
 
@@ -1160,8 +1167,10 @@ function defaultsNote(
   const keys = form.missingDefaults.map((one) => one.key)
   const missing = keys.length === 0
     ? ''
-    : ` ${keys.length} réglage${keys.length > 1 ? 's' : ''} ` +
-      `du relevé ne figure${keys.length > 1 ? 'nt' : ''} pas dans ce gadget ` +
+    : ` ${plural({
+      one: '{count} réglage du relevé ne figure pas dans ce gadget',
+      other: '{count} réglages du relevé ne figurent pas dans ce gadget'
+    }, keys.length)} ` +
       `(${keys.slice(0, 4).join(', ')}${keys.length > 4 ? '…' : ''}) : ` +
       'XCTrack leur applique sa propre valeur, dite en fin de panneau.'
 
@@ -1214,7 +1223,7 @@ function buildMissingBlock(
   box.dataset.count = String(count)
   box.append(el(
     'h3', 'props__absent-title',
-    `${count} réglage${count > 1 ? 's' : ''} que ce gadget n’écrit pas`
+    `${plural(SETTING_COUNT, count)} que ce gadget n’écrit pas`
   ))
   // La note vient **avant** les boutons : ce qu'on ne peut pas garantir se dit avant
   // d'offrir le geste, jamais après.
