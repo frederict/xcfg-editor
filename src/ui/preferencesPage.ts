@@ -2,6 +2,7 @@ import './preferences.css'
 import {
   decode, encode, getMember, insertLiteral, insertString, removeMember, setLiteral, setString
 } from '../core/access'
+import { releaseName } from '../catalog/versionName'
 import type { JsonNode } from '../core/jsonDocument'
 import { serializeJson } from '../core/serializeJson'
 import { androidColorToHex } from '../model/preferences'
@@ -1689,7 +1690,7 @@ function buildRestoreParts(
  */
 function restoreCaveat(ctx: EditContext): string {
   if (ctx.trust === 'exact') return ''
-  const version = ctx.catalog.meta.versionName ?? String(ctx.catalog.meta.versionCode ?? 0)
+  const version = catalogVersionText(ctx.catalog)
   if (ctx.trust === 'indicative') {
     return ` Cette valeur d’usine a été relevée sur XCTrack ${version}, qui n’est pas la ` +
       'version d’où vient ce fichier : vérifiez que c’est bien celle à rétablir.'
@@ -1965,7 +1966,7 @@ function fillSummaryBox(
 function catalogNote(options: PreferencesPageOptions): string {
   const { catalog } = options
   const reference = `Libellés et valeurs d’usine extraits de XCTrack ` +
-    `${catalog.meta.versionName ?? '?'} (versionCode ${String(catalog.meta.versionCode ?? 0)})`
+    `${catalogVersionText(catalog)} (versionCode ${String(catalog.meta.versionCode ?? 0)})`
   const fallback = catalog.fallbackStringCount === 0
     ? ''
     : ` ${formatCount(catalog.fallbackStringCount)} textes manquent dans cette langue et sont ` +
@@ -2012,7 +2013,24 @@ function fileVersionText(options: PreferencesPageOptions): string {
   const name = options.fileVersionName
   return name === undefined
     ? `la version ${String(options.fileVersionCode)}`
-    : `la version ${name} (versionCode ${String(options.fileVersionCode)})`
+    : `la version ${releaseName(name)} (versionCode ${String(options.fileVersionCode)})`
+}
+
+/**
+ * Le nom de la version dont ce catalogue est extrait, **sans son suffixe de
+ * construction**.
+ *
+ * Le fichier de préférences porte `1.0.3-beta-5-gc036d8f2c`, le relevé des gadgets
+ * `1.0.3-beta` : deux écrans du même outil nommaient donc la même version de deux
+ * façons, et l'appareil, lui, n'en affiche qu'une — la seconde. Un pilote qui lit deux
+ * noms en conclut qu'il y a deux versions, et cherche laquelle est la sienne.
+ * `catalog/versionName.ts` tranche pour toute l'application.
+ */
+function catalogVersionText(catalog: PreferenceCatalog): string {
+  const name = catalog.meta.versionName
+  return name === undefined || name === null
+    ? String(catalog.meta.versionCode ?? 0)
+    : releaseName(name)
 }
 
 /**

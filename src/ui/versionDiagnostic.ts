@@ -11,6 +11,7 @@ import { readLayout, type Layout } from '../model/layout'
 import { widgetOptionKeys } from '../model/widget'
 import { buildCleanupSection, type CleanupEvent, type CleanupSection } from './cleanupPanel'
 import type { CleanupPlan } from '../model/cleanup'
+import { splitVersionName } from '../catalog/versionName'
 import './versionDiagnostic.css'
 
 /**
@@ -559,19 +560,11 @@ export function tierDelta(
 }
 
 /**
- * Le suffixe qu'un `git describe` colle au nom d'une version : `-<nombre de commits>-g<empreinte>`.
- *
- * C'est lui qui rend `1.0.0-RC1-31-g598cd4ebb` illisible, et c'est lui qui a rendu la
- * version de l'AIR³ introuvable : l'appareil affiche `1.0.3-beta`, notre relevé
- * enregistre `1.0.3-beta-5-gc036d8f2c`. L'ôter rend au pilote un nom qu'il reconnaît, et
- * `splitVersionName` garde le suffixe à part plutôt que de le perdre — deux
- * constructions du même nom se distinguent par lui, et par rien d'autre.
+ * Le suffixe de construction est traité **au même endroit pour toute l'application**
+ * (`catalog/versionName.ts`) : deux écrans qui ne l'ôtaient pas pareil donnaient deux
+ * noms à la même version, et le pilote en concluait qu'il y en avait deux.
  */
-export function splitVersionName(name: string): { release: string; build: string | null } {
-  const match = /^(.+)-(\d+-g[0-9a-f]{6,})$/.exec(name)
-  if (match === null) return { release: name, build: null }
-  return { release: match[1] as string, build: match[2] as string }
-}
+export { splitVersionName } from '../catalog/versionName'
 
 /**
  * Comment nommer une version au pilote. Jamais « palier N » : ce numéro-là ne veut rien

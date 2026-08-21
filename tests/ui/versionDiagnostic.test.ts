@@ -6,6 +6,8 @@ import {
   type VersionIndex,
   type VersionSchema
 } from '../../src/catalog/widgetVersions'
+import { releaseName } from '../../src/catalog/versionName'
+import { DEFAULTS_VERSION_NAME } from '../../src/catalog/widgetDefaults'
 import type { JsonNode } from '../../src/core/jsonDocument'
 import { parseJson } from '../../src/core/parseJson'
 import { serializeJson } from '../../src/core/serializeJson'
@@ -81,6 +83,10 @@ describe('le menu de versions', () => {
     expect(splitVersionName('1.0.3-beta-5-gc036d8f2c'))
       .toEqual({ release: '1.0.3-beta', build: '5-gc036d8f2c' })
     expect(splitVersionName('1.0.0-RC2')).toEqual({ release: '1.0.0-RC2', build: null })
+
+    // Le même arbitrage sert au catalogue des préférences, qui enregistre le nom long :
+    // deux écrans du même outil ne doivent pas nommer la même version de deux façons.
+    expect(releaseName('1.0.3-beta-5-gc036d8f2c')).toBe(DEFAULTS_VERSION_NAME)
 
     // Trois constructions de 0.9.12.3 : sans le suffixe, trois lignes identiques.
     const builds = options.filter((option) => option.release === '0.9.12.3')

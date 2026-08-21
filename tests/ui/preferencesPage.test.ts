@@ -12,6 +12,7 @@ import {
   loadPreferenceCatalog,
   type PreferenceCatalog
 } from '../../src/catalog/preferenceCatalog'
+import { DEFAULTS_VERSION_NAME } from '../../src/catalog/widgetDefaults'
 import {
   applyPattern,
   buildPreferenceInventory,
@@ -1479,7 +1480,12 @@ describe('rétablir la valeur d’usine d’un réglage que le pilote a changé'
     // « avant le clic » exclut le survol, et exclut le clavier.
     const other = trustOf({ fileVersionCode: 91230, fileVersionName: '0.9.12.3' })
     expect(other.trust).toBe('indicative')
-    expect(other.note).toContain(catalog.meta.versionName!)
+    // Le nom que l'appareil affiche, sans le suffixe de construction : le catalogue des
+    // préférences enregistre « 1.0.3-beta-5-gc036d8f2c », le relevé des gadgets
+    // « 1.0.3-beta », et deux écrans du même outil ne doivent pas nommer la même version
+    // de deux façons.
+    expect(other.note).toContain(DEFAULTS_VERSION_NAME)
+    expect(other.note).not.toContain(catalog.meta.versionName!)
     expect(other.note).toContain('vérifiez que c’est bien celle à rétablir')
 
     // Version inconnue : on ne prétend pas savoir, et on le dit pareillement.
