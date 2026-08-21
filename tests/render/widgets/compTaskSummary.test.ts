@@ -21,17 +21,46 @@ function widget(): Widget {
   }
 }
 
-// Non observé par une capture, et sans aucune clé propre dans le corpus — voir le
-// commentaire de tête de compTaskSummary.ts. Ce test verrouille un comportement voulu,
-// pas un relevé visuel.
-describe('WCompTaskSummary (non confirmé par une capture)', () => {
-  it('dessine quelques lignes de balises avec des distances d’exemple', () => {
+/**
+ * Écart 2.6 de la revue des 75 visuels. Le gadget est désormais OBSERVÉ : il fallait une
+ * manche chargée et le mode « Manche de compétition » actif pour le voir, et la seule
+ * capture qui le montre est
+ * `docs/reference/captures-air3/2026-08-21_planche-competition-7-carte-manche-et-resume.png`.
+ * Le CONTENU d'une manche, lui, ne vit pas dans le fichier de pages : les noms de balises
+ * de l'exemple sont neutres, seule la forme est reprise.
+ */
+describe('WCompTaskSummary', () => {
+  it('dessine dix lignes, dont une vide, sans titre', () => {
     const el = drawCompTaskSummary(widget(), settings, language)
-    const legs = el.querySelectorAll('.xc-tasksum__leg')
-    expect(legs.length).toBeGreaterThanOrEqual(3)
-    for (const leg of Array.from(legs)) {
-      expect(leg.querySelector('.xc-tasksum__label')?.textContent).not.toBe('')
-      expect(leg.querySelector('.xc-tasksum__distance')?.textContent).toMatch(/km$/)
+    const lignes = [...el.querySelectorAll('.xc-tasksum__line')]
+    expect(lignes).toHaveLength(10)
+    expect(lignes[0]?.textContent).toBe('COURSE')
+    // La ligne vide sépare l'en-tête des balises et garde sa hauteur.
+    expect(lignes[3]?.textContent?.trim()).toBe('')
+    expect(el.querySelector('.xc-num__title')).toBeNull()
+  })
+
+  /**
+   * Toutes les lignes se centrent sur le milieu de la PLUS LONGUE, elle-même collée à
+   * gauche : la moitié droite de la cellule reste vide sur l'appareil. Un centrage dans
+   * la cellule décalerait tout le bloc.
+   */
+  it('centre les lignes entre elles, dans un bloc collé à gauche', () => {
+    const el = drawCompTaskSummary(widget(), settings, language)
+    expect(el.querySelector('.xc-tasksum__block')).not.toBeNull()
+    expect(el.querySelectorAll('.xc-tasksum__block > .xc-tasksum__line')).toHaveLength(10)
+  })
+
+  it('marque la balise courante entre chevrons, comme la capture', () => {
+    const el = drawCompTaskSummary(widget(), settings, language)
+    const textes = [...el.querySelectorAll('.xc-tasksum__line')].map(n => n.textContent)
+    expect(textes.filter(t => t?.startsWith('> ') && t.endsWith(' <'))).toHaveLength(1)
+  })
+
+  it('ne reprend AUCUN nom de balise de la manche du propriétaire', () => {
+    const texte = drawCompTaskSummary(widget(), settings, language).textContent ?? ''
+    for (const balise of ['D01125', 'B19051', 'B41123', 'A47075']) {
+      expect(texte).not.toContain(balise)
     }
   })
 })

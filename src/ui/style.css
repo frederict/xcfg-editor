@@ -1372,23 +1372,37 @@
 /* Résumé de la manche — WCompTaskSummary (compTaskSummary.ts). Non confirmé par une
    capture, et sans aucune clé propre dans le corpus : rendu fixe, voir le commentaire
    de tête du module. */
+/* Résumé de manche (`WCompTaskSummary`, compTaskSummary.ts) — écart 2.6 de la revue des
+   75 visuels. Mesuré sur `2026-08-21_planche-competition-7-carte-manche-et-resume.png`,
+   cellule de 627 × 323 px : encre `#505050` en demi-gras, casse de 19 à 24 px (police
+   ≈ 0,087 × la hauteur), bloc à 13 px du bord gauche et 18 du haut.
+
+   **La mise en page n'est ni centrée dans la cellule ni alignée à gauche** : toutes les
+   lignes se centrent sur le milieu de la PLUS LONGUE, elle-même collée à gauche — d'où
+   `align-items: flex-start` sur le conteneur et `text-align: center` sur le bloc, dont la
+   largeur suit son contenu. Un centrage dans la cellule décalerait tout le bloc de la
+   moitié de la largeur restante. */
 .xc-tasksum {
   width: 100%;
   height: 100%;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 0.2em;
-  padding: 0.3em 0.5em;
-  font-size: 0.8em;
+  align-items: flex-start;
+  /* 0,037 et non 0,056 : les 18 px relevés vont du bord de la cellule à l'ENCRE, et la
+     police réserve 6 px de blanc au-dessus de sa casse. */
+  padding: calc(var(--xc-h, 100) * 0.037px) calc(var(--xc-h, 100) * 0.04px);
+  box-sizing: border-box;
   overflow: hidden;
 }
 
-.xc-tasksum__leg {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.5em;
-  white-space: nowrap;
+.xc-tasksum__block {
+  text-align: center;
+  color: var(--xc-unit-ink);
+  font-weight: 600;
+  font-size: min(
+    calc(var(--xc-h, 100) * 0.087px),
+    calc(var(--xc-w, 200) / 12 * 1px)
+  );
+  line-height: 1.17;
 }
 
-.xc-tasksum__distance { font-variant-numeric: tabular-nums; opacity: 0.85; }
+.xc-tasksum__line { white-space: pre; }
