@@ -39,14 +39,14 @@
    "zh-TW"
   ],
   "widgetCount": 84,
-  "optionCount": 774,
-  "distinctKeyCount": 171,
-  "pooledOptionCount": 225,
-  "stringCount": 248,
+  "optionCount": 790,
+  "distinctKeyCount": 177,
+  "pooledOptionCount": 235,
+  "stringCount": 257,
   "corpusPairs": 393,
-  "corpusMatched": 375,
-  "corpusMissing": 18,
-  "unresolvedCount": 8
+  "corpusMatched": 384,
+  "corpusMissing": 9,
+  "unresolvedCount": 3
  },
  "options": {
   "_bg": {
@@ -135,7 +135,7 @@
   },
   "_units@WAirTemperature": {
    "key": "_units",
-   "impl": "ys9",
+   "impl": "qs9",
    "label": "prefUnits",
    "labelFrom": "args",
    "values": [
@@ -332,6 +332,14 @@
    "labelFrom": "args",
    "definedIn": "WAltitudeDataGraph",
    "control": "color"
+  },
+  "text_size@WAltitudeDataGraph": {
+   "key": "text_size",
+   "impl": "rs9",
+   "label": "widgetSettingsFontSize",
+   "labelFrom": "switch",
+   "definedIn": "WAltitudeDataGraph",
+   "control": "slider"
   },
   "_units@WBaroAltitude": {
    "key": "_units",
@@ -644,13 +652,13 @@
    "impl": "mt9",
    "label": "widgetSettingsRotation",
    "labelFrom": "ctor",
-   "otherLabels": [
-    "widgetSettingsRotationShowCompass"
-   ],
    "fields": [
     "value",
     "showCompass"
    ],
+   "fieldLabels": {
+    "showCompass": "widgetSettingsRotationShowCompass"
+   },
    "definedIn": "MapWidget",
    "control": "composite"
   },
@@ -673,25 +681,25 @@
   "mapWidget_emergencyZoom": {
    "key": "mapWidget_emergencyZoom",
    "impl": "it9",
-   "label": "widgetSettingsEmergencyObstaclesAutoZoom",
-   "labelFrom": "args",
-   "otherLabels": [
-    "widgetSettingsMapResetScaleAfterExitPanMode",
-    "widgetSettingsMapScale"
-   ],
+   "label": "widgetSettingsMapScale",
+   "labelFrom": "class",
    "fields": [
     "value",
     "auto",
     "resetZoomPanExit"
    ],
+   "fieldLabels": {
+    "auto": "widgetSettingsEmergencyObstaclesAutoZoom",
+    "resetZoomPanExit": "widgetSettingsMapResetScaleAfterExitPanMode"
+   },
    "definedIn": "MapWidget",
    "control": "composite"
   },
-  "mapWidget_panningAirspaceListCycleSpeed": {
-   "key": "mapWidget_panningAirspaceListCycleSpeed",
+  "mapWidget_panningTimeout": {
+   "key": "mapWidget_panningTimeout",
    "impl": "zb5",
    "label": "widgetSettingsPanningTimeout",
-   "labelFrom": "switch",
+   "labelFrom": "branch+switch",
    "definedIn": "MapWidget",
    "control": "slider"
   },
@@ -719,6 +727,14 @@
    "definedIn": "MapWidget",
    "control": "enum"
   },
+  "mapWidget_panningAirspaceListCycleSpeed": {
+   "key": "mapWidget_panningAirspaceListCycleSpeed",
+   "impl": "zb5",
+   "label": "widgetSettingsShowAirspacesWhilePanningHighlightedFor",
+   "labelFrom": "branch+switch",
+   "definedIn": "MapWidget",
+   "control": "slider"
+  },
   "mapWidget_pilotPosCenter": {
    "key": "mapWidget_pilotPosCenter",
    "impl": "gs9",
@@ -726,6 +742,14 @@
    "labelFrom": "args",
    "definedIn": "MapWidget",
    "control": "checkbox"
+  },
+  "mapWidget_pilotEdgeDistance": {
+   "key": "mapWidget_pilotEdgeDistance",
+   "impl": "zb5",
+   "label": "widgetSettingsMapPilotEdgeDistance",
+   "labelFrom": "branch+switch",
+   "definedIn": "MapWidget",
+   "control": "slider"
   },
   "line_thickness@MapWidget": {
    "key": "line_thickness",
@@ -750,6 +774,14 @@
    "labelFrom": "args",
    "definedIn": "MapWidget",
    "control": "color"
+  },
+  "mapWidget_heading_arrow_sizecoef@MapWidget": {
+   "key": "mapWidget_heading_arrow_sizecoef",
+   "impl": "zb5",
+   "label": "widgetSettingsMapPilotArrowSizeCoef",
+   "labelFrom": "switch",
+   "definedIn": "MapWidget",
+   "control": "slider"
   },
   "postponedFloorLimit@MapWidget": {
    "key": "postponedFloorLimit",
@@ -802,35 +834,39 @@
   "mapWidget_scale": {
    "key": "mapWidget_scale",
    "impl": "it9",
-   "label": "widgetSettingsMapScaleTracklog",
-   "labelFrom": "args",
-   "otherLabels": [
-    "widgetSettingsMapResetScaleAfterExitPanMode",
-    "widgetSettingsMapScale"
-   ],
+   "label": "widgetSettingsMapScale",
+   "labelFrom": "class",
    "fields": [
     "value",
     "auto",
     "resetZoomPanExit"
    ],
+   "fieldLabels": {
+    "auto": "widgetSettingsMapScaleTracklog",
+    "resetZoomPanExit": "widgetSettingsMapResetScaleAfterExitPanMode"
+   },
    "definedIn": "MapWidget",
    "control": "composite"
   },
   "mapWidget_mapAppearance": {
    "key": "mapWidget_mapAppearance",
-   "impl": "sy9",
-   "label": "widgetSettingsShowOpenStreetNotice",
-   "labelFrom": "args",
+   "impl": "gt9",
+   "label": "widgetSettingsMapRoadTerrain",
+   "labelFrom": "composite",
+   "help": "widgetSettingsShowOpenStreetNotice",
    "fields": [
     "theme",
     "terrain"
+   ],
+   "otherLabels": [
+    "widgetSettingsShowOpenStreetWarning"
    ],
    "definedIn": "bb5",
    "control": "composite"
   },
   "mapWidget_showRainRadar": {
    "key": "mapWidget_showRainRadar",
-   "impl": "gs9",
+   "impl": "hs9",
    "label": "widgetSettingsShowRainRadar",
    "labelFrom": "args",
    "definedIn": "bb5",
@@ -863,7 +899,7 @@
   },
   "mapWidget_KK7timed": {
    "key": "mapWidget_KK7timed",
-   "impl": "gs9",
+   "impl": "hs9",
    "label": "widgetSettingsKK7Timed",
    "labelFrom": "args",
    "help": "widgetSettingsKK7TimedHelp",
@@ -880,7 +916,7 @@
   },
   "mapWidget_showSkySightSatellite": {
    "key": "mapWidget_showSkySightSatellite",
-   "impl": "gs9",
+   "impl": "hs9",
    "label": "widgetSettingsShowSkySightSatellite",
    "labelFrom": "args",
    "definedIn": "bb5",
@@ -896,7 +932,7 @@
   },
   "mapWidget_showSkySightRain": {
    "key": "mapWidget_showSkySightRain",
-   "impl": "gs9",
+   "impl": "hs9",
    "label": "widgetSettingsShowSkySightRain",
    "labelFrom": "args",
    "definedIn": "bb5",
@@ -959,7 +995,7 @@
   },
   "mapWidget_showSkySightForecast": {
    "key": "mapWidget_showSkySightForecast",
-   "impl": "gs9",
+   "impl": "hs9",
    "label": "widgetSettingsShowSkySightForecast",
    "labelFrom": "args",
    "definedIn": "bb5",
@@ -1033,7 +1069,7 @@
   },
   "mapWidget_showSkySightWindBarbs": {
    "key": "mapWidget_showSkySightWindBarbs",
-   "impl": "gs9",
+   "impl": "hs9",
    "label": "widgetSettingsShowSkySightWindBarbs",
    "labelFrom": "args",
    "definedIn": "bb5",
@@ -1101,7 +1137,7 @@
   },
   "nav_label": {
    "key": "nav_label",
-   "impl": "ys9",
+   "impl": "qs9",
    "label": "widgetSettingsNavigationLabel",
    "labelFrom": "args",
    "values": [
@@ -1533,11 +1569,19 @@
    "definedIn": "WFreeText",
    "control": "color"
   },
-  "text_padding": {
-   "key": "text_padding",
+  "text_size@WFreeText": {
+   "key": "text_size",
    "impl": "ur9",
    "label": "widgetSettingsFontSize",
-   "labelFrom": "switch",
+   "labelFrom": "branch+switch",
+   "definedIn": "WFreeText",
+   "control": "unknown"
+  },
+  "text_padding@WFreeText": {
+   "key": "text_padding",
+   "impl": "ur9",
+   "label": "widgetSettingsTextPadding",
+   "labelFrom": "branch+switch",
    "definedIn": "WFreeText",
    "control": "unknown"
   },
@@ -1589,6 +1633,14 @@
    "definedIn": "WLiveMessage",
    "control": "slider"
   },
+  "show_time": {
+   "key": "show_time",
+   "impl": "ct9",
+   "label": "widgetSettingsLiveMessageShowDuration",
+   "labelFrom": "class",
+   "definedIn": "WLiveMessage",
+   "control": "slider"
+  },
   "_format": {
    "key": "_format",
    "impl": "ys9",
@@ -1616,7 +1668,7 @@
    "key": "lines_count",
    "impl": "wr9",
    "label": "widgetSettingsNumberOfLines",
-   "labelFrom": "switch",
+   "labelFrom": "branch+switch",
    "definedIn": "WLogPeek",
    "control": "unknown"
   },
@@ -1652,6 +1704,22 @@
    "labelFrom": "args",
    "definedIn": "WLogPeek",
    "control": "color"
+  },
+  "text_size@WLogPeek": {
+   "key": "text_size",
+   "impl": "wr9",
+   "label": "widgetSettingsFontSize",
+   "labelFrom": "branch+switch",
+   "definedIn": "WLogPeek",
+   "control": "unknown"
+  },
+  "text_padding@WLogPeek": {
+   "key": "text_padding",
+   "impl": "wr9",
+   "label": "widgetSettingsTextPadding",
+   "labelFrom": "branch+switch",
+   "definedIn": "WLogPeek",
+   "control": "unknown"
   },
   "netto_avg": {
    "key": "netto_avg",
@@ -2008,15 +2076,15 @@
    "key": "mapScale",
    "impl": "it9",
    "label": "widgetSettingsMapScale",
-   "labelFrom": "composite",
-   "otherLabels": [
-    "widgetSettingsMapResetScaleAfterExitPanMode"
-   ],
+   "labelFrom": "class",
    "fields": [
     "value",
     "auto",
     "resetZoomPanExit"
    ],
+   "fieldLabels": {
+    "resetZoomPanExit": "widgetSettingsMapResetScaleAfterExitPanMode"
+   },
    "definedIn": "WThermalAssistant",
    "control": "composite"
   },
@@ -2046,7 +2114,7 @@
   },
   "drawCompetition": {
    "key": "drawCompetition",
-   "impl": "gs9",
+   "impl": "hs9",
    "label": "widgetSettingsTAShowCompetition",
    "labelFrom": "args",
    "definedIn": "WThermalAssistant",
@@ -2057,13 +2125,13 @@
    "impl": "mt9",
    "label": "widgetSettingsRotation",
    "labelFrom": "ctor",
-   "otherLabels": [
-    "widgetSettingsRotationShowCompass"
-   ],
    "fields": [
     "value",
     "showCompass"
    ],
+   "fieldLabels": {
+    "showCompass": "widgetSettingsRotationShowCompass"
+   },
    "definedIn": "WThermalAssistant",
    "control": "composite"
   },
@@ -2153,6 +2221,14 @@
    "definedIn": "WThermalAssistant",
    "control": "enum"
   },
+  "mapWidget_heading_arrow_sizecoef@WThermalAssistant": {
+   "key": "mapWidget_heading_arrow_sizecoef",
+   "impl": "zb5",
+   "label": "widgetSettingsMapPilotArrowSizeCoef",
+   "labelFrom": "switch",
+   "definedIn": "WThermalAssistant",
+   "control": "slider"
+  },
   "showSec": {
    "key": "showSec",
    "impl": "gs9",
@@ -2166,13 +2242,13 @@
    "impl": "mt9",
    "label": "widgetSettingsRotation",
    "labelFrom": "ctor",
-   "otherLabels": [
-    "widgetSettingsRotationShowCompass"
-   ],
    "fields": [
     "value",
     "showCompass"
    ],
+   "fieldLabels": {
+    "showCompass": "widgetSettingsRotationShowCompass"
+   },
    "definedIn": "WVTM",
    "control": "composite"
   },
@@ -2237,6 +2313,14 @@
    "key": "vertical_step",
    "impl": "at9",
    "label": "widgetSettingsVerticalStep",
+   "labelFrom": "switch",
+   "definedIn": "WVerticalGraph",
+   "control": "slider"
+  },
+  "dot_size": {
+   "key": "dot_size",
+   "impl": "rs9",
+   "label": "widgetSettingsDotSize",
    "labelFrom": "switch",
    "definedIn": "WVerticalGraph",
    "control": "slider"
@@ -2499,11 +2583,11 @@
   },
   "legDistanceFontSize": {
    "key": "legDistanceFontSize",
-   "impl": "qt9",
+   "impl": "bt9",
    "label": "widgetSettingsMapFont",
    "labelFrom": "args",
    "definedIn": "WXCAssistant",
-   "control": "text"
+   "control": "slider"
   },
   "legPercentageColor": {
    "key": "legPercentageColor",
@@ -2625,7 +2709,8 @@
    "line_thickness@WAltitudeDataGraph",
    "color_thermal",
    "color_wind",
-   "color_speed"
+   "color_speed",
+   "text_size@WAltitudeDataGraph"
   ],
   "WAltitudeMaximum": [
    "_bg",
@@ -2793,12 +2878,15 @@
    "mapWidget_showAirspaces@MapWidget",
    "mapWidget_emergencyObstacles",
    "mapWidget_emergencyZoom",
-   "mapWidget_panningAirspaceListCycleSpeed",
+   "mapWidget_panningTimeout",
    "mapWidget_panningAirspaceList",
+   "mapWidget_panningAirspaceListCycleSpeed",
    "mapWidget_pilotPosCenter",
+   "mapWidget_pilotEdgeDistance",
    "line_thickness@MapWidget",
    "mapWidget_drawBearing@MapWidget",
    "tracklog_color",
+   "mapWidget_heading_arrow_sizecoef@MapWidget",
    "postponedFloorLimit@MapWidget",
    "postponedDisplayDistance@MapWidget",
    "fontSize@MapWidget",
@@ -2950,12 +3038,15 @@
    "mapWidget_showAirspaces@MapWidget",
    "mapWidget_emergencyObstacles",
    "mapWidget_emergencyZoom",
-   "mapWidget_panningAirspaceListCycleSpeed",
+   "mapWidget_panningTimeout",
    "mapWidget_panningAirspaceList",
+   "mapWidget_panningAirspaceListCycleSpeed",
    "mapWidget_pilotPosCenter",
+   "mapWidget_pilotEdgeDistance",
    "line_thickness@MapWidget",
    "mapWidget_drawBearing@MapWidget",
    "tracklog_color",
+   "mapWidget_heading_arrow_sizecoef@MapWidget",
    "postponedFloorLimit@MapWidget",
    "postponedDisplayDistance@MapWidget",
    "fontSize@MapWidget",
@@ -3035,7 +3126,8 @@
    "text",
    "color_text@WFreeText",
    "color_bg@WFreeText",
-   "text_padding",
+   "text_size@WFreeText",
+   "text_padding@WFreeText",
    "text_bold",
    "text_italic"
   ],
@@ -3069,7 +3161,8 @@
    "_bg",
    "_border",
    "_theme@Widget",
-   "line_count"
+   "line_count",
+   "show_time"
   ],
   "WLocation": [
    "_bg",
@@ -3087,7 +3180,9 @@
    "reverse",
    "filter",
    "color_text@WLogPeek",
-   "color_bg@WLogPeek"
+   "color_bg@WLogPeek",
+   "text_size@WLogPeek",
+   "text_padding@WLogPeek"
   ],
   "WNettoVario": [
    "_bg",
@@ -3314,6 +3409,7 @@
    "postponedFloorLimit@WThermalAssistant",
    "postponedDisplayDistance@WThermalAssistant",
    "fontSize@WThermalAssistant",
+   "mapWidget_heading_arrow_sizecoef@WThermalAssistant",
    "live_ShowTracklogs",
    "nav_showWind",
    "nav_showSun",
@@ -3350,6 +3446,7 @@
    "_theme@Widget",
    "interval@WVerticalGraph",
    "vertical_step",
+   "dot_size",
    "dot_color"
   ],
   "WVerticalSpeed": [
@@ -3402,12 +3499,15 @@
    "mapWidget_showAirspaces@MapWidget",
    "mapWidget_emergencyObstacles",
    "mapWidget_emergencyZoom",
-   "mapWidget_panningAirspaceListCycleSpeed",
+   "mapWidget_panningTimeout",
    "mapWidget_panningAirspaceList",
+   "mapWidget_panningAirspaceListCycleSpeed",
    "mapWidget_pilotPosCenter",
+   "mapWidget_pilotEdgeDistance",
    "line_thickness@MapWidget",
    "mapWidget_drawBearing@MapWidget",
    "tracklog_color",
+   "mapWidget_heading_arrow_sizecoef@MapWidget",
    "postponedFloorLimit@MapWidget",
    "postponedDisplayDistance@MapWidget",
    "fontSize@MapWidget",
@@ -3484,59 +3584,26 @@
  },
  "unresolved": [
   {
-   "key": "mapWidget_heading_arrow_sizecoef",
-   "definedIn": "MapWidget",
-   "impl": "zb5",
-   "reason": "aucune ressource de libellé identifiable (ni argument, ni constructeur, ni switch de zb5)"
-  },
-  {
-   "key": "text_size",
-   "definedIn": "WAltitudeDataGraph",
-   "impl": "rs9",
-   "reason": "aucune ressource de libellé identifiable (ni argument, ni constructeur, ni switch de rs9)"
-  },
-  {
-   "key": "show_time",
-   "definedIn": "WLiveMessage",
-   "impl": "pt9",
-   "reason": "aucune ressource de libellé identifiable (ni argument, ni constructeur, ni switch de pt9)"
-  },
-  {
-   "key": "mapWidget_heading_arrow_sizecoef",
-   "definedIn": "WThermalAssistant",
-   "impl": "zb5",
-   "reason": "aucune ressource de libellé identifiable (ni argument, ni constructeur, ni switch de zb5)"
-  },
-  {
-   "key": "dot_size",
-   "definedIn": "WVerticalGraph",
-   "impl": "rs9",
-   "reason": "aucune ressource de libellé identifiable (ni argument, ni constructeur, ni switch de rs9)"
-  },
-  {
    "key": "allowGsp",
    "definedIn": "WWebView",
-   "impl": "sy9",
-   "reason": "aucune ressource de libellé identifiable (ni argument, ni constructeur, ni switch de sy9)"
+   "impl": "gs9",
+   "reason": "aucune ressource de libellé identifiable (ni argument, ni constructeur, ni switch de gs9)"
   },
   {
    "key": "initialScale",
    "definedIn": "WWebView",
-   "impl": "sy9",
-   "reason": "aucune ressource de libellé identifiable (ni argument, ni constructeur, ni switch de sy9)"
+   "impl": "nt9",
+   "reason": "aucune ressource de libellé identifiable (ni argument, ni constructeur, ni switch de nt9)"
   },
   {
    "key": "scrollSettings",
    "definedIn": "WWebView",
-   "impl": "sy9",
-   "reason": "aucune ressource de libellé identifiable (ni argument, ni constructeur, ni switch de sy9)"
+   "impl": "ot9",
+   "reason": "aucune ressource de libellé identifiable (ni argument, ni constructeur, ni switch de ot9)"
   }
  ],
  "unmatchedCorpusKeys": {
   "WCompMap": [
-   "mapWidget_heading_arrow_sizecoef",
-   "mapWidget_panningTimeout",
-   "mapWidget_pilotEdgeDistance",
    "mapWidget_showOpenStreet",
    "mapWidget_showTerrain",
    "nav_use_brackets"
@@ -3545,20 +3612,10 @@
    "newWindArrow",
    "showWind"
   ],
-  "WLiveMessage": [
-   "show_time"
-  ],
   "WThermalAssistant": [
-   "mapWidget_heading_arrow_sizecoef",
    "nav_use_brackets"
   ],
-  "WVerticalGraph": [
-   "dot_size"
-  ],
   "WXCAssistant": [
-   "mapWidget_heading_arrow_sizecoef",
-   "mapWidget_panningTimeout",
-   "mapWidget_pilotEdgeDistance",
    "mapWidget_showOpenStreet",
    "mapWidget_showTerrain",
    "nav_use_brackets"

@@ -434,14 +434,17 @@ function buildField(seed: FieldSeed): PropertyField {
  * un sous-champ apparu depuis l'extraction doit rester éditable, un sous-champ absent
  * ne doit pas produire de contrôle vide.
  *
- * **Seul le sous-champ `value` reçoit le libellé de l'option** ; les autres portent leur
- * chemin (`mapWidget_scale · auto`) et s'affichent en retrait sous lui — l'indentation
- * est le mécanisme observé pour une sous-option (§ 4.4). Le catalogue joint pourtant à
- * chaque composite les libellés de ses sous-contrôles (`otherLabels`), mais il annonce
- * lui-même ne pas savoir lequel va à quel sous-champ, et les leur distribuer serait sans
- * profit : sur les six `otherLabels` du catalogue, cinq n'ont aucune traduction dans le
- * pool de chaînes, et le sixième — « Echelle Carte » — désigne justement un `value`,
- * pas un subordonné. Il n'y a donc rien à gagner, et un appariement faux à risquer.
+ * Le sous-champ `value` reçoit le libellé de l'option ; les autres prennent leur libellé
+ * propre — `fieldLabels`, que l'extraction lit sur la case à cocher que XCTrack dessine
+ * pour eux — et s'affichent en retrait sous lui : l'indentation est le mécanisme observé
+ * pour une sous-option (§ 4.4).
+ *
+ * **Un sous-champ que XCTrack n'intitule pas** n'en reçoit pas d'inventé : il porte le
+ * libellé de son composite suivi de son nom (« Carte routière et style de terrain ·
+ * theme »). C'est le cas de `mapWidget_mapAppearance`, dont `theme` et `terrain` ne font
+ * qu'une seule liste déroulante dans l'application — les deux moitiés d'un même réglage,
+ * qui n'ont donc chacune aucun titre à elles. Le composite inconnu du catalogue, lui,
+ * garde sa clé brute : c'est tout ce qu'on sait de lui.
  *
  * Le libellé traduit de l'option reste attaché au champ par `hint`, que le rendu pose en
  * infobulle : rien de ce que le catalogue sait n'est perdu.
@@ -458,11 +461,18 @@ function expandComposite(
     const value = getMember(node, subKey)
     if (value === undefined) continue
     const main = hasMain && subKey === MAIN_FIELD
+    // Le `?` de XCTrack porte sur l'option entière. Il se pose sur le sous-champ
+    // principal ; à défaut de `value` — `mapWidget_mapAppearance` n'en a pas — sur le
+    // premier, qui tient la tête du groupe. Sans quoi l'aide serait dans le catalogue
+    // et nulle part à l'écran.
+    const head = hasMain ? main : subKey === subKeys[0]
+    const fieldResource = option?.fieldLabels?.[subKey]
+    const fieldLabel = fieldResource === undefined ? undefined : texts.resourceText(fieldResource)
     fields.push(buildField({
       shortName,
       key,
       field: subKey,
-      label: main ? parentLabel : `${key} · ${subKey}`,
+      label: main ? parentLabel : fieldLabel ?? `${parentLabel} · ${subKey}`,
       // Le gabarit de libellé (« Echelle Carte: %d m ») appartient au sous-champ principal.
       ...(main && option !== undefined ? { labelPattern: texts.resourceText(option.label) } : {}),
       ...(option === undefined ? {} : { option }),
@@ -470,7 +480,7 @@ function expandComposite(
       node: value,
       owner: node,
       choices: main && option !== undefined ? texts.optionValues(option) : [],
-      ...(main && help !== undefined ? { help } : {}),
+      ...(head && help !== undefined ? { help } : {}),
       depth: hasMain && !main ? 1 : 0
     }))
   }

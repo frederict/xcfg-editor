@@ -20,7 +20,7 @@ import { CATALOG_LANGUAGES } from '../../src/catalog/widgetCatalog'
  *
  * Depuis la partition par langue, ils vérifient en plus que **chaque** fichier de
  * langue est chargeable et qu'il porte bien le repli anglais : sans lui, `hi`
- * n'afficherait que 4 libellés sur 248.
+ * n'afficherait que 4 libellés sur 257.
  */
 const BOUSSOLE_RELEVEE: readonly string[] = [
   '_border',
@@ -278,12 +278,12 @@ describe('partition du catalogue d’options par langue', () => {
   })
 
   it('complète en anglais une langue partiellement traduite', async () => {
-    // `hr` ne traduit que 40 des 248 ressources d'options. Sans le repli anglais
+    // `hr` ne traduit que 43 des 257 ressources d'options. Sans le repli anglais
     // fusionné dans son fichier, le panneau croate serait vide aux quatre cinquièmes.
     const croate = await loadWidgetOptions('hr')
     expect(croate.language).toBe('hr')
-    expect(croate.nativeStringCount).toBe(40)
-    expect(croate.fallbackStringCount).toBe(208)
+    expect(croate.nativeStringCount).toBe(43)
+    expect(croate.fallbackStringCount).toBe(214)
     // Ce qu'elle traduit vraiment reste croate…
     expect(croate.resourceText('widgetSettingsDrawBorder')).toBe('Nacrtaj granicu')
     // …et tout le reste tombe sur l'anglais, texte pour texte.
@@ -301,7 +301,7 @@ describe('partition du catalogue d’options par langue', () => {
     // part invariante déclare : elles sortent du même script, elles doivent coïncider.
     expect(WIDGET_OPTIONS.meta.languages).toEqual([...OPTION_LANGUAGES])
     for (const texts of sets) {
-      // Aucune langue ne perd de texte : traduits + empruntés couvrent les 248 clés.
+      // Aucune langue ne perd de texte : traduits + empruntés couvrent les 257 clés.
       expect(texts.nativeStringCount + texts.fallbackStringCount, texts.language)
         .toBe(WIDGET_OPTIONS.meta.stringCount)
       // Et aucune ne laisse une option sans libellé, quelle que soit sa couverture.
@@ -339,7 +339,7 @@ describe('partition du catalogue d’options par langue', () => {
   })
 
   it('garde hors des fichiers de langue tout ce qui n’est pas traduit', async () => {
-    // La part invariante — 225 options, 84 widgets, les non-résolues — ne doit être
+    // La part invariante — 235 options, 84 widgets, les non-résolues — ne doit être
     // recopiée dans aucun fichier de langue : c'est elle qui pesait, et la dupliquer
     // 34 fois annulerait le partage.
     const raw = (await import('../../src/catalog/widgetOptions/fr.json')).default

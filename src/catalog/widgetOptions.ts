@@ -112,8 +112,19 @@ export interface WidgetOption {
    */
   fields?: string[]
   /**
-   * Autres libellés attachés à une clé composite : ceux de ses sous-contrôles.
-   * Quel libellé va à quel sous-champ n'est pas établi — le bytecode ne le dit pas.
+   * Libellé propre de chaque sous-champ d'une clé composite, quand le bytecode
+   * l'établit : `{showCompass: "widgetSettingsRotationShowCompass"}`. Il ne l'établit
+   * que pour les sous-champs booléens — l'application les dessine en cases à cocher
+   * et pose le texte sur la case, ce qui se suit registre par registre. Un sous-champ
+   * absent d'ici n'a **pas** de libellé propre dans XCTrack ; c'est le cas de
+   * `mapWidget_mapAppearance`, dont `theme` et `terrain` partagent une seule liste
+   * déroulante intitulée « Carte routière et style de terrain ».
+   */
+  fieldLabels?: Record<string, string>
+  /**
+   * Autres libellés attachés à une clé composite sans avoir pu être rattachés à un
+   * sous-champ précis. Inventaire d'audit : ces ressources ne sont pas traduites dans
+   * les fichiers de langue, l'affichage ne s'en sert pas.
    */
   otherLabels?: string[]
   /** Classe qui déclare l'option (`Widget`, `ValueWidget`, `WCompass`…). */

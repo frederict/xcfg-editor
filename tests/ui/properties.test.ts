@@ -289,13 +289,66 @@ describe('les clés composites', () => {
     expect(value.depth).toBe(0)
     expect(value.text).toBe('NORTH_AT_TOP')
 
-    // …le subordonné porte son chemin, et s'affiche en retrait sous lui. Le catalogue
-    // n'a pas de libellé à lui donner : `widgetSettingsRotationShowCompass` n'a aucune
-    // traduction dans le pool de chaînes. On ne fabrique donc rien.
-    expect(showCompass.label).toBe('rotation · showCompass')
+    // …le subordonné porte SON libellé, et s'affiche en retrait sous lui. Le catalogue
+    // sait maintenant lequel : `widgetSettingsRotationShowCompass` est le texte que
+    // `mt9` pose sur la case à cocher qu'il dessine pour `showCompass`. Même texte que
+    // sur l'AIR³, sous la liste « Rotation ».
+    expect(showCompass.label).toBe('Affiche la direction du nord')
     expect(showCompass.hint).toBe('Rotation')
     expect(showCompass.control).toBe('checkbox')
     expect(showCompass.depth).toBe(1)
+  })
+
+  it('donne à chaque sous-champ de l’échelle le texte de sa case, relevé sur l’AIR³', () => {
+    // Les trois contrôles de « Echelle Carte » tels que l'écran de réglages de la carte
+    // les montre : un curseur intitulé « Echelle Carte: … » et deux cases sous lui.
+    // C'est `it9` qui les dessine, et le bytecode dit quel texte va sur quelle case —
+    // le libellé du constructeur habille « auto », jamais le titre.
+    const form = buildPropertyForm(map(document()))
+    expect(fieldAt(form, 'mapWidget_scale.value').label).toBe('Echelle Carte')
+    expect(fieldAt(form, 'mapWidget_scale.auto').label)
+      .toBe("Mise à l'échelle automatique pour s'adapter à l'ensemble de la trace.")
+    expect(fieldAt(form, 'mapWidget_scale.resetZoomPanExit').label)
+      .toBe("Réinitialise l'échelle de la carte à sa valeur par défaut "
+        + 'après avoir quitté le mode panoramique')
+
+    // Le même contrôle pour le zoom d'urgence : seule la case « auto » change de texte.
+    expect(fieldAt(form, 'mapWidget_emergencyZoom.value').label).toBe('Echelle Carte')
+    expect(fieldAt(form, 'mapWidget_emergencyZoom.auto').label)
+      .toBe("Zoom automatique en mode d'urgence-obstacles")
+  })
+
+  it('titre l’apparence de la carte de son intitulé, et range l’avertissement dans le ?', () => {
+    // `mapWidget_mapAppearance` portait `widgetSettingsShowOpenStreetNotice` comme
+    // libellé — une phrase d'avertissement, pas un titre. Sur l'appareil, ce texte est
+    // l'infobulle « ? » ; l'intitulé du champ est « Carte routière et style de terrain ».
+    const form = buildPropertyForm(map(document()))
+    const theme = fieldAt(form, 'mapWidget_mapAppearance.theme')
+    const terrain = fieldAt(form, 'mapWidget_mapAppearance.terrain')
+
+    // XCTrack n'en fait qu'UNE liste déroulante : aucun des deux sous-champs n'a de
+    // titre à lui, donc aucun ne s'en voit inventer un.
+    expect(theme.label).toBe('Carte routière et style de terrain · theme')
+    expect(terrain.label).toBe('Carte routière et style de terrain · terrain')
+    expect(theme.help).toMatch(/^Il est possible de n'avoir qu'un widjet/)
+    expect(terrain.help).toBeUndefined()
+  })
+
+  it('appareille les curseurs que zb5 déclare par un switch', () => {
+    // Quatre curseurs, une seule classe : `zb5` choisit lequel par un entier passé au
+    // constructeur. L'extraction lisait la bonne ressource mais la collait à la mauvaise
+    // clé — d'où trois clés brutes et un libellé faux. Valeurs et textes confrontés à
+    // l'écran de réglages de la carte de l'AIR³.
+    const form = buildPropertyForm(map(document()))
+    expect(fieldAt(form, 'mapWidget_panningTimeout').label)
+      .toBe('Quitte automatiquement le mode panoramique après 60 secondes.')
+    expect(fieldAt(form, 'mapWidget_pilotEdgeDistance').label).toBe('Distance du bord: 20%')
+    expect(fieldAt(form, 'mapWidget_heading_arrow_sizecoef').label)
+      .toBe('Coefficient de taille de la flèche pilote: 100%')
+    // Celui-ci portait le libellé de `mapWidget_panningTimeout` : un texte juste, sur la
+    // mauvaise ligne.
+    expect(fieldAt(form, 'mapWidget_panningAirspaceListCycleSpeed').label)
+      .toMatch(/^Met en surbrillance l'espace aérien pendant le panoramique/)
   })
 
   it('ne devine pas un contrôle qu’il ne sait pas régler', () => {
@@ -500,13 +553,13 @@ describe('un widget cartographique reste exploitable', () => {
     expect(form.fields.filter((f) => f.field !== undefined)).toHaveLength(10)
     expect(new Set(form.fields.map((f) => f.path)).size).toBe(form.fields.length)
 
-    // Trois clés que l'extraction n'a pas su rattacher : elles sont là quand même.
-    expect(form.unknownKeys).toEqual([
-      'mapWidget_pilotEdgeDistance', 'mapWidget_panningTimeout', 'mapWidget_heading_arrow_sizecoef'
-    ])
-    // Et tout le reste porte un libellé, pas un nom de clé nu.
+    // Plus une seule clé sans option : les trois réglages de curseur que `zb5` déclare
+    // par un `switch` — distance du bord, délai du panoramique, taille de la flèche —
+    // sont désormais appariés.
+    expect(form.unknownKeys).toEqual([])
+    // Et tout porte un libellé, pas un nom de clé nu.
     const plain = form.fields.filter((f) => f.field === undefined)
-    expect(plain.filter((f) => f.label === f.key).map((f) => f.key)).toEqual(form.unknownKeys)
+    expect(plain.filter((f) => f.label === f.key)).toEqual([])
   })
 
   it('tient sur le panneau le plus fourni du corpus', () => {
@@ -525,8 +578,9 @@ describe('un widget cartographique reste exploitable', () => {
     const widest = forms.reduce((a, b) => (b.fields.length > a.fields.length ? b : a))
     expect(widest.shortName).toBe('WXCAssistant')
     expect(widest.fields).toHaveLength(63)
-    // Rien n'est perdu en route : autant de contrôles que de sous-valeurs réglables.
-    expect(widest.unknownKeys.length).toBe(3)
+    // Rien n'est perdu en route : autant de contrôles que de sous-valeurs réglables,
+    // et plus aucune clé hors catalogue.
+    expect(widest.unknownKeys.length).toBe(0)
   })
 
   it('offre un filtre au-delà d’une douzaine de contrôles, et pas en deçà', () => {

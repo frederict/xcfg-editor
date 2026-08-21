@@ -369,7 +369,16 @@ def simulate(dex: Dex, code_off: int, on_new_instance, start_pc: int = 0,
             method_idx = struct.unpack_from("<H", data, o + 2)[0]
             cls, name = dex.method_ref(method_idx)
             if name == "<init>" and op in (0x70, 0x76):
-                on_new_instance(cls, method_idx, [regs.get(r) for r in rs[1:]])
+                # Le type construit est celui du `new-instance`, pas celui qui déclare
+                # le constructeur invoqué : une sous-classe sans constructeur propre
+                # appelle directement celui de son ancêtre (`new gt9` appelle
+                # `sy9.<init>`). Rendre l'ancêtre ferait perdre la classe qui porte
+                # les libellés. Le receveur n'est un `new-instance` qu'à un site de
+                # construction ; dans un constructeur, c'est `this` (un paramètre,
+                # non suivi), et le type déclaré reste alors le seul disponible.
+                receiver = regs.get(rs[0])
+                built = receiver[1] if receiver and receiver[0] == "new" else cls
+                on_new_instance(built, method_idx, [regs.get(r) for r in rs[1:]])
             pending = None
 
 
@@ -428,6 +437,9 @@ HELP_RE = re.compile(r"Help\d*$")
 # Un sélecteur de couleur se reconnaît à son libellé : « Color of the tracklog »,
 # « Border color »… (cf. edition-native-exploration.md § 4.6).
 COLOR_RE = re.compile(r"(?i)\bcolou?r\b")
+# Les cases à cocher d'un panneau de réglages : c'est sur elles que le constructeur
+# de vue pose directement un `setText`, ce qui rend le sous-champ identifiable.
+CHECKBOX_RE = re.compile(r"CheckBox|CompoundButton|SwitchCompat")
 CONFIG_KEY_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]{1,49}$")
 ENUM_NAME_RE = re.compile(r"^[A-Z][A-Z0-9_]*$")
 XCTRACK_PKG = "Lorg/xcontest/XCTrack/"
@@ -469,6 +481,9 @@ class Extractor:
         self.constructions = self._collect_constructions()
         self.method_resources = self._method_resources()
         self.setting_classes = self._setting_classes()
+        self.root_constructors = self._root_constructors()
+        self.switch_fields: dict[str, tuple[str, str]] = {}
+        self._checkbox_cache: dict[str, list] = {}
         self.switch_tables = self._switch_tables()
 
     # -- ressources --------------------------------------------------------
@@ -635,6 +650,31 @@ class Extractor:
         self.setting_root = root
         return {name for name in self.parent if root in ancestors(name)}
 
+    # -- constructeurs de la classe racine ---------------------------------
+    def _root_constructors(self) -> set[tuple[int, int]]:
+        """Index des constructeurs de la classe racine des réglages (`sy9`).
+
+        Le créneau de ressource de ce constructeur-là est celui de **l'aide**, pas
+        celui du libellé : la racine ne dessine aucun contrôle, elle ne garde de la
+        ressource qu'une bulle « ? ». On le lit dans le bytecode plutôt que de le
+        supposer — `gs9`, la case à cocher, garde son libellé dans un champ à elle et
+        ne transmet à `super(…)` que son texte d'aide — et les quatre constructions
+        directes de la racine le confirment toutes :
+        `widgetSettingsEditTitleHelp`, `widgetSettingsWebViewAllowGpsHelp`,
+        `widgetSettingsWebViewUrlHelp2` et `widgetSettingsShowOpenStreetNotice`.
+
+        La dernière est la seule dont le *nom* ne finit pas par `Help` — d'où le
+        libellé faux qu'elle a longtemps donné à `mapWidget_mapAppearance`. Vérifié
+        sur l'appareil : XCTrack affiche ce texte dans l'infobulle « ? », et titre la
+        ligne « Carte routière et style de terrain » (`widgetSettingsMapRoadTerrain`).
+        """
+        root = getattr(self, "setting_root", None)
+        if root is None or root not in self.owner:
+            return set()
+        dex, _cdata = self.owner[root]
+        return {(id(dex), idx) for idx, name, _code in self.class_methods.get(root, [])
+                if name == "<init>"}
+
     # -- tables de switch --------------------------------------------------
     def _switch_tables(self) -> dict[str, dict[int | None, str]]:
         """{classe: {discriminant: clé_de_ressource}}.
@@ -652,9 +692,55 @@ class Extractor:
                 if code_off == 0:
                     continue
                 mapping.update(self._decode_switch(dex, code_off))
+                field = self._switch_field(dex, code_off)
+                if field is not None:
+                    self.switch_fields.setdefault(cls, field)
             if mapping:
                 tables[cls] = mapping
         return tables
+
+    def _switch_field(self, dex: Dex, code_off: int) -> tuple[str, str] | None:
+        """Le champ sur lequel la méthode aiguille, quand le discriminant en vient.
+
+        `rs9` n'aiguille pas sur un argument de constructeur mais sur un champ que
+        chacun de ses deux constructeurs remplit d'une constante (0 pour `dot_size`,
+        1 pour `text_size`). Repérer ce champ-là permet de retrouver le discriminant
+        là où il est vraiment écrit — c'est encore de la lecture, pas de la déduction.
+        """
+        data = dex.data
+        holder: dict[int, tuple[str, str]] = {}
+        for _pc, op, o in walk(dex, code_off):
+            if 0x52 <= op <= 0x58:  # iget*
+                holder[data[o + 1] & 0xF] = dex.field_ref(
+                    struct.unpack_from("<H", data, o + 2)[0])
+            elif op in (0x01, 0x04, 0x07):
+                holder.pop(data[o + 1] & 0xF, None)
+            elif op in (0x2B, 0x2C):
+                return holder.get(data[o + 1])
+            elif 0x12 <= op <= 0x1C:
+                holder.pop(data[o + 1] if op != 0x12 else data[o + 1] & 0xF, None)
+        return None
+
+    def field_constant(self, method: tuple, field: tuple[str, str]) -> int | None:
+        """La constante que ce constructeur précis range dans `field`, s'il en range une."""
+        entry = self.method_code.get(method)
+        if entry is None:
+            return None
+        dex, code_off = entry
+        data = dex.data
+        values: dict[int, int] = {}
+        for _pc, op, o in walk(dex, code_off):
+            if op == 0x12:
+                raw = data[o + 1] >> 4
+                values[data[o + 1] & 0xF] = raw if raw < 8 else raw - 16
+            elif op == 0x13:
+                values[data[o + 1]] = struct.unpack_from("<h", data, o + 2)[0]
+            elif op == 0x14:
+                values[data[o + 1]] = struct.unpack_from("<i", data, o + 2)[0]
+            elif 0x59 <= op <= 0x5F:  # iput*
+                if dex.field_ref(struct.unpack_from("<H", data, o + 2)[0]) == field:
+                    return values.get(data[o + 1] & 0xF)
+        return None
 
     def _decode_switch(self, dex: Dex, code_off: int) -> dict[int | None, str]:
         data = dex.data
@@ -674,19 +760,29 @@ class Extractor:
                 switches.append((pc, pc + struct.unpack_from("<i", data, o + 2)[0],
                                  pc + INSN_SIZE[op]))
 
-        def first_resource_after(start: int) -> str | None:
+        def first_resource_after(start: int, fallback: str | None = None) -> str | None:
             """Première ressource rencontrée à partir de `start`, sans franchir la
-            fin de la branche (un `return` ou un `goto` la termine)."""
+            fin de la branche (un `return` ou un `goto` la termine).
+
+            `fallback` est la ressource chargée **avant** l'aiguillage : le registre du
+            libellé reçoit une valeur par défaut que seules certaines branches
+            écrasent. `zb5.j` charge ainsi `widgetSettingsMapPilotArrowSizeCoef` avant
+            son `switch`, et les branches 1, 2 et 3 la remplacent ; la branche 0 et le
+            cas par défaut la gardent — c'est bien ce que l'AIR³ affiche pour
+            `mapWidget_heading_arrow_sizecoef` (« Coefficient de taille de la flèche
+            pilote: 100% »)."""
             for pc in sorted(set(consts) | stops):
                 if pc < start:
                     continue
                 if pc in consts:
                     return consts[pc]
-                return None
-            return None
+                return fallback
+            return fallback
 
         out: dict[int | None, str] = {}
         for pc, payload_pc, next_pc in switches:
+            # La valeur dont la branche hérite si elle ne la réécrit pas.
+            preload = next((consts[c] for c in sorted(consts, reverse=True) if c < pc), None)
             if not (0 <= payload_pc < insns_size):
                 continue
             o = base + payload_pc * 2
@@ -703,11 +799,11 @@ class Extractor:
                 continue
             for i, switch_key in enumerate(keys):
                 target = pc + struct.unpack_from("<i", data, targets_off + i * 4)[0]
-                found = first_resource_after(target)
+                found = first_resource_after(target, preload)
                 if found:
                     out[switch_key] = found
             # La branche par défaut tombe juste après l'instruction de switch.
-            default = first_resource_after(next_pc)
+            default = first_resource_after(next_pc, preload)
             if default and None not in out:
                 out[None] = default
         return out
@@ -758,7 +854,22 @@ class Extractor:
         # constructeur (bornes, valeur par défaut) sont petits : pas de collision.
         help_keys = [r for r in res_keys if HELP_RE.search(r)]
         label_keys = [r for r in res_keys if not HELP_RE.search(r)]
+        if method in self.root_constructors:
+            # Constructeur de la classe racine : le créneau de ressource est celui de
+            # l'aide (cf. `_root_constructors`). Un libellé faux serait pire qu'une
+            # clé brute — la clé brute avoue son ignorance.
+            help_keys = help_keys + label_keys
+            label_keys = []
         origin = "args"
+
+        # Les sous-champs booléens d'un composite sont des cases à cocher, et le
+        # bytecode dit quel texte va sur quelle case. Cela se lit AVANT le titre :
+        # une ressource consommée par une case n'est pas le titre de l'option.
+        field_labels: dict[str, str] = {}
+        if self.is_composite(key):
+            field_labels, consumed_own = self.composite_field_labels(cls, key, label_keys)
+            if consumed_own:
+                label_keys = []
 
         if not label_keys:
             # 1. la ressource référencée par ce constructeur précis
@@ -771,17 +882,25 @@ class Extractor:
                 #    s'il ne figure pas dans la table, la branche par défaut s'applique.
                 table = self.switch_tables.get(cls, {})
                 hit = None
-                if table and ints:
-                    discriminant = ints[-1]
+                discriminant = ints[-1] if ints else None
+                if table and discriminant is None:
+                    # Le discriminant n'est pas toujours un argument : `rs9` le range
+                    # dans un champ (0 pour `dot_size`, 1 pour `text_size`), et c'est
+                    # ce champ que sa méthode de libellé aiguille.
+                    field = self.switch_fields.get(cls)
+                    if field is not None:
+                        discriminant = self.field_constant(method, field)
+                if table and discriminant is not None:
                     hit = table.get(discriminant)
                     if hit is None and None in table and abs(discriminant) < 64:
                         hit = table[None]
                 if hit and not HELP_RE.search(hit):
                     label_keys, origin = [hit], "switch"
                 else:
-                    # 3. à défaut, une ressource unique dans le reste de la classe
+                    # 3. à défaut, une ressource unique dans le reste de la classe —
+                    #    déduction faite de celles déjà posées sur un sous-contrôle.
                     rest = [r for r in self.class_resources(cls, exclude=("<clinit>",))
-                            if not HELP_RE.search(r)]
+                            if not HELP_RE.search(r) and r not in field_labels.values()]
                     if len(rest) == 1:
                         label_keys, origin = rest, "class"
                     elif rest and self.is_composite(key):
@@ -804,16 +923,20 @@ class Extractor:
             option["help"] = help_keys[0]
 
         if self.is_composite(key):
-            # Les autres libellés attachés à la même clé : ce sont les sous-contrôles.
-            # Quel libellé va à quel sous-champ n'est PAS établi — le bytecode ne le
-            # dit pas de façon exploitable ; on les livre en vrac plutôt que d'inventer.
-            others = [r for r in (label_keys[1:] + self.class_resources(cls, ("<clinit>",)))
-                      if r != label_keys[0] and not HELP_RE.search(r)]
-            if others:
-                option["otherLabels"] = list(dict.fromkeys(others))
             fields = self.composite_fields(key)
             if fields:
                 option["fields"] = fields
+            # Le libellé propre de chaque sous-champ, quand le bytecode l'établit
+            # (cf. `checkbox_labels`). Ce qui reste attaché à la classe sans avoir pu
+            # être rattaché à un sous-champ précis est livré en vrac, comme avant.
+            if field_labels:
+                option["fieldLabels"] = {name: field_labels[name]
+                                         for name in fields if name in field_labels}
+            others = [r for r in (label_keys[1:] + self.class_resources(cls, ("<clinit>",)))
+                      if r != label_keys[0] and not HELP_RE.search(r)
+                      and r not in field_labels.values()]
+            if others:
+                option["otherLabels"] = list(dict.fromkeys(others))
 
         # Valeurs permises : tableau de ressources passé au constructeur, sinon
         # tableau bâti dans le `<clinit>` de la classe (cas de la rotation des
@@ -860,6 +983,101 @@ class Extractor:
                     if name not in fields:
                         fields.append(name)
         return fields
+
+    def composite_flag_fields(self, key: str) -> list[str]:
+        """Les sous-champs d'une clé composite que le corpus montre **booléens**.
+
+        Ce sont eux, et eux seuls, que l'application dessine en cases à cocher ; c'est
+        ce qui permet de les apparier aux textes posés sur les cases.
+        """
+        kinds: dict[str, bool] = {}
+        for values in self.corpus.values():
+            value = values.get(key)
+            if not isinstance(value, dict):
+                continue
+            for name, member in value.items():
+                kinds[name] = kinds.get(name, True) and isinstance(member, bool)
+        return [name for name in self.composite_fields(key) if kinds.get(name)]
+
+    def checkbox_labels(self, cls: str) -> list[tuple | None]:
+        """Les textes que la classe de réglage pose sur ses cases à cocher, dans
+        l'ordre où elle les crée.
+
+        Un composite donne plusieurs contrôles et le bytecode ne dit pas, en général,
+        quel libellé va à quel sous-champ — c'est ce que le catalogue avouait en
+        livrant `otherLabels` en vrac. Il le dit pourtant pour les cases à cocher :
+        le constructeur de vue fait `new AppCompatCheckBox(…)` puis `setText(…)` sur
+        **ce** registre-là. On suit les registres, on relève les textes dans l'ordre,
+        et on ne les apparie que si leur nombre égale exactement celui des sous-champs
+        booléens. Sinon on ne rend rien : un appariement faux est pire qu'aucun.
+
+        Chaque élément vaut `("res", clé)` pour un identifiant de ressource littéral,
+        ou `("own",)` pour un texte lu dans un champ de l'objet — c'est-à-dire la
+        ressource reçue au site de construction (`it9.f0` ← dernier argument).
+        """
+        cached = self._checkbox_cache.get(cls)
+        if cached is not None:
+            return cached
+        dex, _cdata = self.owner[cls]
+        data = dex.data
+        best: list[tuple | None] = []
+        for method_idx, name, code_off in self.class_methods.get(cls, []):
+            if name in ("<init>", "<clinit>") or code_off == 0:
+                continue
+            regs: dict[int, tuple | None] = {}
+            boxes: set[int] = set()
+            found: list[tuple | None] = []
+            for _pc, op, o in walk(dex, code_off):
+                if op == 0x14:  # const : un identifiant de ressource tient sur 32 bits
+                    key = self.res_by_id.get(struct.unpack_from("<I", data, o + 2)[0])
+                    regs[data[o + 1]] = ("res", key) if key else None
+                elif op in (0x13, 0x15, 0x22):
+                    regs[data[o + 1]] = None
+                elif op == 0x12:
+                    regs[data[o + 1] & 0xF] = None
+                elif 0x52 <= op <= 0x58:  # iget* : un texte gardé par l'objet
+                    regs[data[o + 1] & 0xF] = ("own",)
+                elif 0x6E <= op <= 0x72:
+                    rs = _regs_35c(data, o)
+                    mcls, mname = dex.method_ref(struct.unpack_from("<H", data, o + 2)[0])
+                    if mname == "<init>" and CHECKBOX_RE.search(mcls):
+                        boxes.add(rs[0])
+                    elif mname == "setText" and len(rs) > 1 and rs[0] in boxes:
+                        found.append(regs.get(rs[1]))
+            if len(found) > len(best):
+                best = found
+        self._checkbox_cache[cls] = best
+        return best
+
+    def composite_field_labels(self, cls: str, key: str,
+                               own_resources: list[str]) -> tuple[dict[str, str], bool]:
+        """{sous-champ: clé de ressource} pour les cases à cocher d'un composite.
+
+        Rend aussi si la ressource reçue au site de construction a été **consommée**
+        par une case : dans ce cas elle n'est pas le titre de l'option. `it9` en est
+        l'exemple : `widgetSettingsMapScaleTracklog` habille la case « auto », et le
+        titre du curseur reste `widgetSettingsMapScale`, que la classe charge
+        elle-même (`it9.j`, gabarit « %s: %s »). Vérifié sur l'AIR³.
+        """
+        sources = self.checkbox_labels(cls)
+        flags = self.composite_flag_fields(key)
+        if not sources or len(sources) != len(flags):
+            return {}, False
+        resolved: dict[str, str] = {}
+        consumed_own = False
+        for field, source in zip(flags, sources):
+            # L'alignement tient au COMPTE, vérifié plus haut : un texte qu'on ne sait
+            # pas résoudre laisse son sous-champ sans libellé, mais ne décale pas les
+            # autres. `mapScale` de l'assistant thermique est ce cas — sa case « auto »
+            # reçoit la ressource 0, donc aucun texte, et l'AIR³ ne l'affiche pas.
+            if source is None:
+                continue
+            if source[0] == "res" and not HELP_RE.search(source[1]):
+                resolved[field] = source[1]
+            elif source[0] == "own" and len(own_resources) == 1:
+                resolved[field] = own_resources[0]
+                consumed_own = True
+        return resolved, consumed_own
 
     def _values_by_suffix(self, cls: str, enum_cls: str) -> list[str] | None:
         """Apparie les constantes d'une énumération aux ressources d'une classe de
@@ -912,12 +1130,20 @@ class Extractor:
         if entry is None or not ints:
             return None, []
         dex, code_off = entry
-        head = next(iter(walk(dex, code_off)), None)
+        # Le `switch` n'est pas forcément la toute première instruction : `zb5` range
+        # d'abord ses champs (`iput`) avant d'aiguiller. On le cherche donc dans le
+        # préambule — tout ce qui précède la première construction, puisqu'au-delà la
+        # branche est déjà prise et le `switch` ne choisirait plus l'option.
+        head = None
+        for pc, op, o in walk(dex, code_off):
+            if op in (0x2B, 0x2C):
+                head = (pc, op, o)
+                break
+            if op in (0x70, 0x76):  # invoke-direct : une construction, trop tard
+                break
         if head is None:
             return None, []
         pc, op, o = head
-        if op not in (0x2B, 0x2C):
-            return None, []
         data = dex.data
         payload_pc = pc + struct.unpack_from("<i", data, o + 2)[0]
         base = code_off + 16
@@ -1140,6 +1366,7 @@ def main():
         for option in options:
             if option["key"] in observed and not isinstance(observed[option["key"]], dict):
                 option.pop("fields", None)
+                option.pop("fieldLabels", None)
                 option.pop("otherLabels", None)
 
     kinds = infer_controls(extractor, per_widget)
@@ -1154,6 +1381,9 @@ def main():
             used.add(option["label"])
             if "help" in option:
                 used.add(option["help"])
+            # Les libellés de sous-champs sont affichés : ils entrent dans le pool.
+            # (`otherLabels`, lui, n'est qu'un inventaire d'audit — il n'y entre pas.)
+            used.update(option.get("fieldLabels", {}).values())
             for value in option.get("values", []):
                 if "label" in value:
                     used.add(value["label"])
