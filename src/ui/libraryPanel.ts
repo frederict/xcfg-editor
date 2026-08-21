@@ -214,6 +214,15 @@ function plural(count: number, singular: string, pluralForm: string): string {
 }
 
 /**
+ * « enregistrée 3 fois ». `revision` vaut 1 au rangement et grandit d'une écriture à
+ * l'autre : c'est un compte, et le pilote le lit comme tel — « révision 3 » lui demandait
+ * de deviner à la fois le mot et son point de départ.
+ */
+function timesStored(revision: number): string {
+  return revision <= 1 ? 'enregistrée une seule fois' : `enregistrée ${revision} fois`
+}
+
+/**
  * Le format d'export, dit en toutes lettres. `undefined` n'est pas « inconnu » par
  * paresse : les fichiers de 2022 n'ont pas d'`exportType` du tout, et c'est un
  * renseignement.
@@ -233,11 +242,16 @@ export function exportTypeChip(exportType: string | undefined): string {
   return exportType
 }
 
+/**
+ * Quatre états nommés **par rapport à un repère que la phrase dit** : « la version de
+ * référence de cet éditeur » ne désignait rien pour un pilote, et « impossible à situer »
+ * lui faisait croire à une défaillance de l'outil là où c'est le fichier qui se tait.
+ */
 const VERSION_GAP_LABELS: Record<string, string> = {
-  older: 'Antérieure à la version de référence de cet éditeur',
-  same: 'La version de référence de cet éditeur',
-  newer: 'Postérieure à la version de référence de cet éditeur',
-  unknown: 'Impossible à situer'
+  older: 'Plus ancienne que celle sur laquelle cet éditeur dessine',
+  same: 'Celle sur laquelle cet éditeur dessine',
+  newer: 'Plus récente que celle sur laquelle cet éditeur dessine',
+  unknown: 'Le fichier ne dit pas de quelle version il vient'
 }
 
 /**
@@ -365,24 +379,26 @@ export function identityCard(identity: EntryIdentity, language = 'fr'): Identity
       label: 'Gabarit d’écran retenu',
       value: assumed.deviceRecognised
         ? `${assumed.device.label} — ${assumed.device.widthPx} × ${assumed.device.heightPx} px`
-        : `${assumed.device.label} — gabarit par défaut, aucun appareil reconnu`,
+        : `${assumed.device.label} — gabarit de repli, aucun appareil reconnu`,
       note: 'La résolution vient de la table d’appareils de cet éditeur, pas du fichier.'
     },
     {
       label: 'Gadgets « Pro »',
       value: assumed.proKnowledge === 'absent'
-        ? 'Inconnu — aucun catalogue de widgets n’a été fourni'
+        ? 'Inconnu — aucun catalogue de gadgets n’a été fourni'
         : assumed.proWidgets.length === 0
           ? 'Aucun'
           : assumed.proWidgets.map((shortName) => readableName(shortName, language)).join(', '),
       note: assumed.proKnowledge === 'absent'
-        ? 'On ne devine pas un drapeau de licence : sans catalogue, on ne dit rien.'
+        ? 'On ne devine pas si un gadget est réservé à la version Pro : sans catalogue, ' +
+          'on ne dit rien.'
         : 'D’après le catalogue extrait de l’APK 1.0.3-beta5, pas d’après le fichier.'
     },
     {
       label: 'Situation de la version',
       value: VERSION_GAP_LABELS[assumed.versionGap] ?? assumed.versionGap,
-      note: 'Comparaison au versionCode de référence de cet éditeur.'
+      note: 'Cet éditeur règle son dessin sur une version précise de XCTrack ; c’est à ' +
+        'celle-là que ce fichier est comparé, pas à celle de votre appareil.'
     },
     {
       label: 'Données personnelles voyageant avec les pages',
@@ -972,7 +988,8 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
     own.append(el('dt', 'library__factLabel', 'Rangée le'),
       el('dd', 'library__factValue', formatStamp(entry.addedAt)))
     own.append(el('dt', 'library__factLabel', 'Dernière écriture'),
-      el('dd', 'library__factValue', `${formatStamp(entry.updatedAt)} — révision ${entry.revision}`))
+      el('dd', 'library__factValue',
+        `${formatStamp(entry.updatedAt)} — ${timesStored(entry.revision)}`))
     const digest = el('dd', 'library__factValue')
     digest.append(el('code', 'library__digest', entry.sha256))
     own.append(el('dt', 'library__factLabel', 'Empreinte SHA-256'), digest)
@@ -1114,7 +1131,7 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
     body.append(el(
       'p', 'library__note',
       'L’empreinte a été posée au moment du rangement, sur les octets rangés. Celle-ci ' +
-      'vient d’être recalculée sur ce que le magasin rend maintenant.'
+      'vient d’être recalculée sur ce que la bibliothèque rend maintenant.'
     ))
     const facts = el('dl', 'library__facts')
     facts.append(el('dt', 'library__factLabel', 'Enregistrée'))
@@ -1263,8 +1280,11 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
   function previewSlot(entry: LibraryEntry): HTMLElement {
     const slot = el('div', 'library__preview')
     slot.setAttribute('aria-hidden', 'true')
-    slot.append(el('span', 'library__previewText',
-      entry.preview === undefined ? 'Aperçu à venir' : 'Aperçu rangé'))
+    // Rien quand il n'y a rien : « Aperçu à venir » était une promesse affichée en
+    // permanence, et une promesse non tenue vaut moins qu'un cadre vide.
+    if (entry.preview !== undefined) {
+      slot.append(el('span', 'library__previewText', 'Aperçu rangé'))
+    }
     return slot
   }
 
@@ -1337,7 +1357,7 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
           if (note !== entry.note) {
             latest = await library.annotate(entry.id, note, latest.revision)
           }
-          say(`« ${latest.name} » est à jour — révision ${latest.revision}.`)
+          say(`« ${latest.name} » est à jour — ${timesStored(latest.revision)}.`)
         })
       })
     })
@@ -1400,17 +1420,18 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
         'entrée illisible', 'entrées illisibles')}`}.`))
 
     if (options.requestPersistence !== undefined && snapshot.durable) {
-      const ask = button('Demander à ne pas être purgé', 'btn btn--ghost')
+      const ask = button('Empêcher le navigateur d’effacer ma bibliothèque',
+        'btn btn--ghost')
       ask.addEventListener('click', () => {
         void (async () => {
           const verdict = await options.requestPersistence?.()
           say(verdict === 'granted'
-            ? 'Le navigateur a accordé la persistance. Elle n’est jamais une garantie : ' +
-              'certains navigateurs purgent un site non visité depuis sept jours. La seule ' +
+            ? 'Le navigateur a accepté. Ce n’est jamais une garantie : certains effacent ' +
+              'tout de même les données d’un site non visité depuis sept jours. La seule ' +
               'sauvegarde qui tienne est l’archive que vous exportez.'
             : verdict === 'denied'
-              ? 'Le navigateur a refusé. Le rangement fonctionne toujours, mais il peut ' +
-                'être purgé : exportez votre bibliothèque régulièrement.'
+              ? 'Le navigateur a refusé. La bibliothèque fonctionne toujours, mais il peut ' +
+                'l’effacer : exportez-la régulièrement.'
               : 'Ce navigateur ne propose pas ce réglage. Exportez votre bibliothèque ' +
                 'régulièrement.')
         })()
@@ -1422,8 +1443,9 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
       const estimate = await options.estimateStorage()
       foot.append(el('span', 'library__footText', estimate === undefined
         ? 'Ce navigateur ne dit rien de l’espace disponible.'
-        : `Espace employé par ce site : ${formatByteSize(estimate.usage)} sur ` +
-          `${formatByteSize(estimate.quota)} accordés (estimation floutée par le navigateur).`))
+        : `Place employée par ce site : ${formatByteSize(estimate.usage)} sur ` +
+          `${formatByteSize(estimate.quota)} accordés — le navigateur n’en donne qu’un ` +
+          `ordre de grandeur.`))
     }
   }
 

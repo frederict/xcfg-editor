@@ -187,10 +187,10 @@ function readManifest(text: string): Manifest {
   try {
     parsed = JSON.parse(text)
   } catch (error) {
-    throw new LibraryError('unreadable', 'Le manifeste de l’archive n’est pas du JSON.', { cause: error })
+    throw new LibraryError('unreadable', 'La fiche de l’archive est illisible.', { cause: error })
   }
   if (typeof parsed !== 'object' || parsed === null) {
-    throw new LibraryError('unreadable', 'Le manifeste de l’archive est vide.')
+    throw new LibraryError('unreadable', 'La fiche de l’archive est vide.')
   }
   const manifest = parsed as Partial<Manifest>
   if (manifest.format !== LIBRARY_FORMAT) {
@@ -207,7 +207,7 @@ function readManifest(text: string): Manifest {
     )
   }
   if (!Array.isArray(manifest.items)) {
-    throw new LibraryError('unreadable', 'Le manifeste ne liste aucune entrée.')
+    throw new LibraryError('unreadable', 'La fiche de l’archive ne liste aucune configuration.')
   }
   return manifest as Manifest
 }
@@ -259,7 +259,7 @@ export async function importLibrary(
   for (const item of manifest.items) {
     const entry = item.entry
     if (typeof entry?.id !== 'string' || typeof item.file !== 'string') {
-      results.push({ sourceId: '(inconnu)', name: '', outcome: 'rejected', reason: 'fiche illisible dans le manifeste' })
+      results.push({ sourceId: '(inconnu)', name: '', outcome: 'rejected', reason: 'fiche illisible dans l’archive' })
       continue
     }
 

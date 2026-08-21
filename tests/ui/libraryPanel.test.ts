@@ -268,8 +268,10 @@ describe('libraryPanel — la carte d’identité ne mélange pas le lu et le su
     expect(version?.value).toContain(String(identity.read.versionCode))
 
     const gap = card.assumed.find((fact) => fact.label === 'Situation de la version')
-    expect(gap?.value).toBe('La version de référence de cet éditeur')
-    expect(gap?.note).toContain('référence')
+    // Le repère est nommé dans la phrase : « la version de référence de cet éditeur »
+    // ne désignait rien pour un pilote.
+    expect(gap?.value).toBe('Celle sur laquelle cet éditeur dessine')
+    expect(gap?.note).toContain('règle son dessin')
   })
 
   it('sans catalogue, le drapeau Pro est dit inconnu — jamais « aucun »', async () => {
@@ -397,8 +399,10 @@ describe('libraryPanel — le geste du pilote', () => {
     const titres = [...dialog.querySelectorAll('.library__heading')].map((n) => n.textContent)
     expect(titres).toContain('Ce que le fichier déclare')
     expect(titres).toContain('Ce que cet éditeur suppose')
-    // La place de l'aperçu est réservée et le dit : aucun pixel n'est produit ici.
-    expect(text(dialog.querySelector('.library__preview'))).toBe('Aperçu à venir')
+    // La place de l'aperçu est réservée, et elle reste muette : « Aperçu à venir » était
+    // une promesse affichée en permanence sur chaque entrée.
+    expect(dialog.querySelector('.library__preview')).not.toBeNull()
+    expect(text(dialog.querySelector('.library__preview'))).toBe('')
     expect(text(dialog)).toContain('aucune image n’est produite par ce panneau')
   })
 
