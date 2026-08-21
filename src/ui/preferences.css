@@ -268,6 +268,15 @@
 
 .prefs__row:last-child { border-bottom: 0; }
 
+/*
+ * En édition, la deuxième colonne porte un contrôle **et** l'emplacement du bouton de
+ * retrait : elle gagne les 4,3 rem correspondants, sans quoi les listes se
+ * rétréciraient de soixante pixels au seul motif qu'un bouton peut apparaître à côté.
+ */
+.prefs[data-mode='edition'] .prefs__row {
+  grid-template-columns: minmax(9rem, 1fr) minmax(6rem, 22rem) 12rem 5.5rem;
+}
+
 .prefs__label { font-size: 14px; min-width: 0; overflow-wrap: anywhere; }
 
 .prefs__row[data-unlabelled='true'] .prefs__label {
@@ -377,11 +386,55 @@
   border: 1px solid var(--app-line-strong, #b1b8bf);
 }
 
-/* Le bouton d'une clé que le fichier ne porte pas : discret, jamais un appel à cliquer. */
-.prefs__adopt {
+/*
+ * La valeur qu'un défaut implicite vaut : montrée à la place de la valeur, mais en
+ * retrait et en italique — le pilote doit voir d'un coup d'œil que rien n'est écrit là.
+ * L'infobulle et la marque d'état (« absente du fichier ») disent le reste.
+ */
+.prefs__implicit {
+  font-size: 13px;
+  font-style: italic;
+  color: var(--prefs-soft);
+  text-align: right;
+  min-width: 0;
+  cursor: help;
+}
+
+/*
+ * Les deux boutons du couple implicite / explicite : discrets, jamais un appel à cliquer.
+ *
+ * La hauteur est **mesurée** : 24 px exactement au premier essai, soit le minimum strict
+ * de la cible tactile recommandée, sans un pixel de marge. Portés à 27 px, ils la passent
+ * franchement — un seuil qu'on effleure est un seuil qu'un changement de police fait
+ * repasser du mauvais côté sans que personne le voie.
+ */
+.prefs__adopt,
+.prefs__drop {
+  flex: none;
   font-size: 11.5px;
-  padding: 0.15rem 0.5rem;
+  padding: 0.3rem 0.55rem;
   white-space: nowrap;
+}
+
+/*
+ * Le retrait est le geste le moins fréquent des deux et le seul qui enlève quelque
+ * chose : sans cadre, il ne se dispute pas la lecture avec le contrôle qu'il accompagne,
+ * et il se révèle au survol comme au clavier.
+ */
+.prefs__drop { opacity: 0.5; }
+.prefs__row:hover .prefs__drop,
+.prefs__drop:focus-visible { opacity: 1; }
+
+/*
+ * L'emplacement du bouton de retrait, réservé sur **toutes** les lignes réglables, qu'il
+ * soit occupé ou non. Une colonne de contrôles qui se décale d'une ligne à l'autre coûte
+ * à chaque lecture ce que la grille fait gagner ; un vide de 4,3 rem ne coûte rien.
+ */
+.prefs__aside {
+  flex: none;
+  width: 4.6rem;
+  display: flex;
+  justify-content: flex-start;
 }
 
 /*

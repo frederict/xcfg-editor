@@ -1,6 +1,6 @@
 import './preferences.css'
 import {
-  decode, encode, getMember, insertLiteral, insertString, setLiteral, setString
+  decode, encode, getMember, insertLiteral, insertString, removeMember, setLiteral, setString
 } from '../core/access'
 import type { JsonNode } from '../core/jsonDocument'
 import { serializeJson } from '../core/serializeJson'
@@ -108,13 +108,26 @@ import {
  * explicitement le contraire.** Elle ne reçoit aucun contrôle — un champ prérempli au
  * défaut inviterait à « confirmer » une valeur, et le premier geste maladroit écrirait
  * une ligne de plus dans le fichier sans rien changer au comportement de l'appareil.
- * À la place, la ligne porte un bouton « Écrire cette clé », dont l'infobulle dit
- * exactement ce qu'il fait et ce qu'il ne fait pas. Une fois la clé écrite — au défaut
- * relevé, tel qu'il s'écrit — la ligne devient une ligne comme les autres.
+ * À la place, la ligne montre **la valeur que XCTrack appliquera** et un bouton
+ * « Définir cette valeur » qui l'écrit telle quelle. Une fois la clé écrite, la ligne
+ * devient une ligne comme les autres.
  *
  * Ce bouton n'apparaît que si le catalogue relève un défaut **écrivable** : les huit
  * `Unit.*` et les autres défauts calculés au démarrage (`defaultSource: 'runtime'`) n'en
  * ont pas, et la ligne le dit plutôt que d'inventer une valeur de départ.
+ *
+ * ## Implicite, explicite, et ce que ça change vraiment
+ *
+ * Rendre un défaut explicite ne change **rien** au comportement d'aujourd'hui. Son
+ * intérêt est entièrement dans l'avenir, et le pilote ne peut pas le deviner : tant que
+ * la clé est absente, l'appareil suit le défaut de **la version de XCTrack installée**,
+ * et une mise à jour qui change ce défaut change le réglage sans prévenir. Écrite, la
+ * valeur est figée. Les infobulles des deux boutons disent cela, et rien d'autre.
+ *
+ * Le geste inverse existe : une valeur écrite **égale au défaut relevé** (état `default`)
+ * porte un bouton « Retirer », qui la rend au défaut de XCTrack. Il n'est offert que sur
+ * cet état-là — sur une valeur réglée, retirer la clé changerait le comportement de
+ * l'appareil, et ce n'est pas ce qu'un bouton discret doit faire d'un clic.
  */
 
 /* ------------------------------------------------------------------ le modèle de page */
@@ -766,14 +779,36 @@ export function writePreference(
   return 'set'
 }
 
+/**
+ * Retire une préférence du fichier, et rend combien d'occurrences ont disparu.
+ *
+ * C'est l'exact inverse de l'insertion : la clé cesse d'être écrite, XCTrack appliquera
+ * de nouveau son défaut. **Toutes** les occurrences partent — `removeMember` le fait, et
+ * c'est la seule postcondition prévisible après un geste de suppression ; n'en retirer
+ * qu'une laisserait le réglage en place avec la valeur du doublon, sans signal.
+ *
+ * Rend `0` sur une clé absente, sans lever : le résultat demandé est déjà là.
+ */
+export function removePreference(document: JsonNode, key: string): number {
+  const section = getMember(document, 'preferences')
+  if (section === undefined || section.kind !== 'object') {
+    throw new Error('removePreference : ce document n’a pas de section « preferences »')
+  }
+  return removeMember(section, key)
+}
+
 /** Ce qu'une écriture vient de faire, tel que l'assembleur a besoin de le savoir. */
 export interface PreferenceEdit {
   key: string
   /** Le libellé du réglage, celui que la ligne affiche. */
   label: string
-  /** `set` : une valeur remplacée. `inserted` : une clé que le fichier ne portait pas. */
-  outcome: Exclude<WriteOutcome, 'unchanged'>
-  /** La valeur désormais écrite, telle qu'on la lit. */
+  /**
+   * `set` : une valeur remplacée. `inserted` : une clé que le fichier ne portait pas —
+   * un défaut implicite rendu explicite. `removed` : l'inverse, une clé retirée du
+   * fichier, qui rend le réglage au défaut de XCTrack.
+   */
+  outcome: 'set' | 'inserted' | 'removed'
+  /** La valeur désormais écrite, telle qu'on la lit. Vide pour un retrait. */
   text: string
   /** Une phrase pour l'historique : « Régler Thème ». */
   description: string
@@ -1270,6 +1305,38 @@ function buildRowElement(row: PreferenceRow, ctx: PageContext): HTMLElement {
     return true
   }
 
+  /**
+   * Le retrait d'une valeur explicite égale au défaut : l'exact inverse de l'adoption.
+   * La clé quitte le fichier, et XCTrack appliquera de nouveau son défaut — la même
+   * valeur qu'aujourd'hui, mais qui suivra désormais les mises à jour de l'application.
+   */
+  function drop(): boolean {
+    const context = ctx.edit
+    if (context === undefined || entry === undefined) return false
+    if (removePreference(context.document, row.key) === 0) return false
+
+    const previous = row.state
+    // Exactement l'état que `buildRow` donnerait à cette clé maintenant qu'elle n'est
+    // plus dans le fichier : « absente » si la classe de configuration la déclare,
+    // « jamais écrite » sinon. On ne code pas un second chemin qui pourrait diverger.
+    row.state = entry.declared ? 'absent' : 'unwritten'
+    delete row.value
+    delete row.raw
+    refreshState()
+
+    const edit: PreferenceEdit = {
+      key: row.key,
+      label: row.label,
+      outcome: 'removed',
+      text: '',
+      description: `Retirer ${row.label} du fichier`,
+      continuous: false
+    }
+    context.onEdit(edit)
+    context.wrote(row, previous, edit)
+    return true
+  }
+
   function fillCell(): void {
     cell.textContent = ''
     const context = ctx.edit
@@ -1278,16 +1345,30 @@ function buildRowElement(row: PreferenceRow, ctx: PageContext): HTMLElement {
       return
     }
     if (row.state === 'absent' || row.state === 'unwritten') {
-      cell.append(buildAdoptButton(row, entry, () => {
+      cell.append(...buildImplicitCell(row, entry, () => {
         // La clé vient d'entrer dans le fichier : la ligne devient une ligne comme les
         // autres, contrôle compris.
         fillCell()
-        const first = cell.querySelector<HTMLElement>('input, select')
-        first?.focus()
+        cell.querySelector<HTMLElement>('input, select')?.focus()
       }, commit))
       return
     }
     cell.append(buildField(row, entry, id, context, commit))
+    // Un emplacement de largeur fixe, **présent sur toutes les lignes réglables** même
+    // quand il reste vide : sans lui, les lignes qui portent « Retirer » décaleraient
+    // leur contrôle de soixante pixels vers la gauche, et la colonne cesserait de
+    // s'aligner — ce que la grille de cette page existe précisément pour garantir.
+    const aside = el('span', 'prefs__aside')
+    // Une valeur écrite qui vaut le défaut peut repartir : c'est le geste inverse, et il
+    // n'a de sens que là — sur une valeur réglée, retirer la clé changerait le
+    // comportement de l'appareil, ce que ce bouton ne doit jamais faire en un clic.
+    if (row.state === 'default') {
+      aside.append(buildDropButton(row, () => {
+        fillCell()
+        cell.querySelector<HTMLElement>('button')?.focus()
+      }, drop))
+    }
+    cell.append(aside)
   }
 
   fillCell()
@@ -1310,32 +1391,87 @@ function buildRowElement(row: PreferenceRow, ctx: PageContext): HTMLElement {
 }
 
 /**
- * Le bouton d'une clé absente. Il ne préremplit rien : il **écrit**, à la valeur du
- * relevé, et son infobulle dit ce que ça change et ce que ça ne change pas.
+ * Ce qu'une clé absente montre : **la valeur que XCTrack appliquera**, et le bouton qui
+ * la fige.
+ *
+ * ## Pourquoi montrer le défaut ici
+ *
+ * Une clé absente vaut son défaut de façon **implicite**. La page l'a toujours su — le
+ * défaut était dans l'infobulle de la marque d'état — mais caché derrière un survol il
+ * ne servait à personne. Il est maintenant écrit à la place de la valeur, en retrait et
+ * accompagné de « XCTrack appliquera », pour qu'on ne le lise jamais comme une valeur
+ * réglée : c'est la distinction que toute cette page défend.
+ *
+ * ## Pourquoi le bouton sert à quelque chose
+ *
+ * Figer la valeur ne change **rien** au comportement d'aujourd'hui, et c'est ce qui rend
+ * le geste difficile à comprendre. Son intérêt est entièrement dans l'avenir : tant que
+ * la clé est absente, l'appareil suit le défaut de **la version de XCTrack installée**,
+ * et une mise à jour qui change ce défaut change le réglage sans prévenir. Écrite, la
+ * valeur est à l'abri. L'infobulle le dit en toutes lettres — c'est la seule chose que
+ * le pilote ne peut pas deviner de lui-même.
+ *
+ * Sans défaut relevé, **pas de bouton** : écrire une valeur devinée serait pire que ne
+ * rien proposer. Les huit `Unit.*` (défaut calculé selon la langue de l'appareil) et les
+ * clés qu'aucune source ne documente sont dans ce cas, et la ligne le dit.
  */
-function buildAdoptButton(
+function buildImplicitCell(
   row: PreferenceRow, entry: PreferenceEntry,
   done: () => void, commit: (text: string, continuous: boolean) => boolean
-): HTMLElement {
+): HTMLElement[] {
   const seed = entry.defaultSource === 'runtime' ? undefined : entry.default
-  if (seed === undefined) {
+  if (seed === undefined || row.defaultText === undefined) {
     const note = el('span', 'prefs__value prefs__value--none', 'pas de valeur de départ')
     note.title = row.undecidableReason ??
       'Le catalogue ne relève aucune valeur par défaut écrivable pour cette clé : ' +
-      'cet éditeur n’a rien avec quoi la créer.'
-    return note
+      'cet éditeur n’a rien avec quoi la créer, et il n’en invente pas.'
+    return [note]
   }
 
-  const button = el('button', 'btn prefs__adopt', 'Écrire cette clé')
+  const implicit = el('span', 'prefs__implicit', row.defaultText)
+  implicit.title =
+    `Cette clé n’est pas dans le fichier : XCTrack appliquera « ${row.defaultText} », ` +
+    'son défaut. Ce n’est pas la même chose qu’une valeur réglée à cette valeur.'
+
+  const button = el('button', 'btn prefs__adopt', 'Définir cette valeur')
   button.type = 'button'
   button.title =
-    `Ajoute « ${row.key} » au fichier, à la valeur ${row.defaultText ?? String(seed)}. ` +
-    'Attention : XCTrack applique déjà ce défaut aujourd’hui — écrire la clé change donc ' +
-    'le fichier sans changer le comportement de l’appareil. Ce n’est utile que si vous ' +
-    'voulez ensuite lui donner une autre valeur.'
+    `Écrit « ${row.key} » : ${row.defaultText} dans le fichier.\n\n` +
+    'Votre appareil se comporte déjà ainsi aujourd’hui — écrire la valeur ne change donc ' +
+    'rien à ce qu’il fait maintenant. Ce que ça change est pour plus tard : tant que la ' +
+    'clé est absente, l’appareil suit le défaut de la version de XCTrack installée, et une ' +
+    'mise à jour qui change ce défaut changera votre réglage sans rien vous demander. ' +
+    'Une fois écrite, la valeur est figée : elle restera celle-là.'
   button.addEventListener('click', () => {
     if (commit(typeof seed === 'string' ? seed : String(seed), false)) done()
   })
+  return [implicit, button]
+}
+
+/**
+ * Le geste inverse : retirer du fichier une valeur qui vaut déjà le défaut.
+ *
+ * Il n'est offert que sur l'état `default` — une valeur écrite, égale au défaut relevé.
+ * Sur une valeur réglée, retirer la clé **changerait** le comportement de l'appareil, et
+ * ce n'est pas ce qu'un bouton discret doit pouvoir faire d'un clic ; le pilote passe
+ * alors par le contrôle, qui dit ce qu'il écrit.
+ *
+ * Le sens est le symétrique exact de « Définir cette valeur », et l'infobulle le dit du
+ * même point de vue : la valeur d'aujourd'hui ne bouge pas, c'est son avenir qui change.
+ */
+function buildDropButton(
+  row: PreferenceRow, done: () => void, drop: () => boolean
+): HTMLElement {
+  const button = el('button', 'btn btn--ghost prefs__drop', 'Retirer')
+  button.type = 'button'
+  button.setAttribute('aria-label', `Retirer ${row.label} du fichier`)
+  button.title =
+    `Retire « ${row.key} » du fichier. XCTrack appliquera alors son défaut, ` +
+    `${row.defaultText ?? 'celui qu’il porte'} — la même valeur qu’aujourd’hui, puisque ` +
+    'c’est déjà celle qui est écrite.\n\n' +
+    'Ce que ça change : la valeur cesse d’être figée et suivra les mises à jour de ' +
+    'XCTrack. C’est l’inverse exact de « Définir cette valeur ».'
+  button.addEventListener('click', () => { if (drop()) done() })
   return button
 }
 
@@ -1846,11 +1982,13 @@ export function renderPreferencesPage(options: PreferencesPageOptions): Preferen
       secrets: [],
       wrote: (row, previous, edit) => {
         recount(inventory.summary, previous, row.state)
-        if (edit.outcome === 'inserted') {
+        // Le fichier a gagné ou perdu une clé : on le relit plutôt que de tenir un
+        // compte à la main, qui dériverait au premier cas oublié.
+        if (edit.outcome !== 'set') {
           inventory.summary.fileKeyCount = readFilePreferences(options.document).size
         }
         fillSummaryBox(summaryBox, inventory, options)
-        if (edit.personal !== undefined || edit.outcome === 'inserted') {
+        if (edit.personal !== undefined || edit.outcome !== 'set') {
           const open = privacyBox instanceof HTMLDetailsElement && privacyBox.open
           refreshPersonal(inventory, options.document, options.catalog)
           const fresh = buildPrivacyBox(inventory, options.catalog)
@@ -2127,16 +2265,17 @@ export async function openPreferencesPage(
  *
  * | morceau                  |  émis   |  gzip   |
  * |--------------------------|---------|---------|
- * | `preferencesPage-*.js`   | 36,1 Ko | 12,1 Ko |
- * | `preferencesPage-*.css`  |  8,0 Ko |  2,0 Ko |
+ * | `preferencesPage-*.js`   | 38,0 Ko | 12,7 Ko |
+ * | `preferencesPage-*.css`  |  8,5 Ko |  2,1 Ko |
  * | `preferenceCatalog/base` | 98,8 Ko | 14,8 Ko |
  * | `preferenceCatalog/<lg>` | 24,4 Ko |  6,0 Ko |
  *
- * Soit **167 Ko émis, environ 35 Ko transférés** à la première ouverture, puis 24 Ko de
+ * Soit **170 Ko émis, environ 36 Ko transférés** à la première ouverture, puis 24 Ko de
  * plus par langue supplémentaire — la part invariante ne se retélécharge pas.
  *
- * Le module a pris 9,3 Ko en devenant modifiable : les contrôles, l'écriture et le
- * recalcul des comptes. Ils partent avec le reste, à la demande.
+ * Le module a pris 11,2 Ko en devenant modifiable : les contrôles, l'écriture, le couple
+ * implicite / explicite et le recalcul des comptes. Ils partent avec le reste, à la
+ * demande — un pilote qui n'ouvre jamais cette page ne les télécharge pas.
  *
  * ⚠️ Le chiffre du module est un **majorant** : il a été relevé sur un point d'entrée qui
  * n'importe rien d'autre, donc il emporte `core/access`, `core/serializeJson` et
@@ -2144,13 +2283,13 @@ export async function openPreferencesPage(
  */
 export const PREFERENCES_PAGE_WEIGHT = {
   /** Le module de page, une fois construit. */
-  moduleKb: 36.1,
+  moduleKb: 38,
   /** Sa feuille de style, émise à part par Vite. */
-  styleKb: 8,
+  styleKb: 8.5,
   /** La part invariante du catalogue : préférences, écrans, valeurs, défauts, portées. */
   catalogBaseKb: 98.8,
   /** Le fichier de textes d'une langue, repli anglais déjà fusionné. */
   catalogLanguageKb: 24.4,
   /** Ce que le réseau transporte réellement à la première ouverture, en gzip. */
-  transferredKb: 35
+  transferredKb: 36
 } as const

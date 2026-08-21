@@ -21,6 +21,7 @@ import {
   sameAsDefault,
   stateLabel,
   tallyText,
+  removePreference,
   writePreference,
   writesString,
   type PreferenceEdit,
@@ -850,9 +851,18 @@ describe('une clé absente reste absente tant qu’on ne l’a pas demandée', (
     expect(row.dataset.state).toBe('absent')
     expect(row.querySelector('input, select')).toBeNull()
 
+    // La valeur que XCTrack appliquera est écrite à la place de la valeur, en retrait —
+    // et la marque d'état continue de dire que la clé n'est pas dans le fichier.
+    const implicite = row.querySelector<HTMLElement>('.prefs__implicit')
+    expect(implicite?.textContent).toBe('Oui')
+    expect(row.querySelector('.prefs__state')?.textContent).toBe('absente du fichier')
+
     const button = controlOf<HTMLButtonElement>(page, 'Tweak.VolumeUp', 'button.prefs__adopt')
-    expect(button.textContent).toBe('Écrire cette clé')
-    expect(button.title).toContain('sans changer le comportement de l’appareil')
+    expect(button.textContent).toBe('Définir cette valeur')
+    // L'infobulle dit les deux moitiés : ce que ça ne change pas, et à quoi ça sert.
+    expect(button.title).toContain('ne change donc rien à ce qu’il fait maintenant')
+    expect(button.title).toContain('une mise à jour qui change ce défaut changera votre réglage')
+    expect(button.title).toContain('figée')
   })
 
   it('l’écrit au défaut relevé, puis la ligne devient une ligne comme les autres', () => {
@@ -1004,11 +1014,180 @@ describe('preferences.css habille les contrôles sans sortir du cadre', () => {
 
   it('pose les contrôles sur les jetons du cadre, jamais sur une couleur en dur', () => {
     for (const rule of ['.prefs__select', '.prefs__text', '.prefs__number', '.prefs__slider',
-      '.prefs__checkbox', '.prefs__adopt', '.prefs__refusal', '.prefs__filled']) {
+      '.prefs__checkbox', '.prefs__adopt', '.prefs__drop', '.prefs__aside',
+      '.prefs__implicit', '.prefs__refusal', '.prefs__filled']) {
       expect(css, rule).toContain(rule)
     }
     const rules = css.replace(/\/\*[\s\S]*?\*\//g, '')
     expect(rules).not.toMatch(/^\s*--app-[a-z-]+:/m)
     expect(rules).not.toContain('prefers-color-scheme')
+  })
+})
+
+/* ================================================ implicite ↔ explicite, dans les deux sens */
+
+/**
+ * Une clé absente vaut son défaut de façon **implicite** ; l'écrire la rend explicite, et
+ * la fige. Le geste inverse rend une valeur explicite égale au défaut à l'implicite.
+ *
+ * Ce qui compte ici — et qui n'a rien d'évident — c'est que les deux gestes ne changent
+ * **rien** au comportement de l'appareil aujourd'hui : ils ne décident que de ce qui
+ * arrivera si une mise à jour de XCTrack change le défaut. C'est la seule justification
+ * du couple, et les deux infobulles doivent la porter.
+ */
+describe('rendre un défaut explicite, et le rendre à l’implicite', () => {
+  it('n’offre « Définir » que là où un défaut est réellement relevé', () => {
+    const { page } = editable(FORMES_PRESERVEES)
+    const rows = screenRows(FORMES_PRESERVEES)
+      .filter((row) => row.state === 'absent' || row.state === 'unwritten')
+
+    for (const row of rows) {
+      const entry = catalog.preference(row.key)
+      const relevé = entry?.default !== undefined && entry.defaultSource !== 'runtime'
+      const bouton = rowElement(page, row.key).querySelector('button.prefs__adopt')
+      // Un bouton qui écrirait une valeur devinée serait pire que pas de bouton.
+      expect(bouton !== null, row.key).toBe(relevé && editRefusal(row) === undefined)
+    }
+
+    expect(page.element.querySelectorAll('button.prefs__adopt')).toHaveLength(52)
+  })
+
+  it('écrit exactement le défaut relevé, sans le transformer au passage', () => {
+    const { document, page } = editable(FORMES_PRESERVEES)
+    // Un flottant, une chaîne d'énumération et un booléen : trois formes différentes,
+    // toutes trois écrites telles que le catalogue les relève.
+    for (const [key, attendu] of [
+      ['Keys.MapPanStepSize', '"Keys.MapPanStepSize": 33.3'],
+      ['Tweak.HWAccel', '"Tweak.HWAccel": "ENABLED"'],
+      ['Tweak.VolumeUp', '"Tweak.VolumeUp": true']
+    ] as const) {
+      controlOf<HTMLButtonElement>(page, key, 'button.prefs__adopt').click()
+      expect(serializeJson(document), key).toContain(attendu)
+      expect(rowElement(page, key).dataset.state, key).toBe('default')
+    }
+  })
+
+  it('propose « Retirer » sur une valeur écrite qui vaut le défaut, et pas ailleurs', () => {
+    const { page } = editable(BACKUP_2026)
+    // Écrite, égale au défaut relevé : le retrait a un sens et ne change rien.
+    expect(rowElement(page, 'Display.Fullscreen').dataset.state).toBe('default')
+    expect(rowElement(page, 'Display.Fullscreen').querySelector('.prefs__drop')).not.toBeNull()
+
+    // Réglée par le pilote : retirer la clé changerait le comportement de l'appareil.
+    // Ce n'est pas ce qu'un bouton discret doit faire d'un clic.
+    expect(rowElement(page, 'Display.Theme').dataset.state).toBe('custom')
+    expect(rowElement(page, 'Display.Theme').querySelector('.prefs__drop')).toBeNull()
+
+    // Défauts contradictoires : on ne peut pas dire que la valeur vaut « le » défaut.
+    expect(rowElement(page, 'Sensors.ManualQnh').dataset.state).toBe('conflict')
+    expect(rowElement(page, 'Sensors.ManualQnh').querySelector('.prefs__drop')).toBeNull()
+
+    // Aucun défaut connu : rien à quoi rendre la clé.
+    expect(rowElement(page, 'Unit.Altitude').dataset.state).toBe('undecidable')
+    expect(rowElement(page, 'Unit.Altitude').querySelector('.prefs__drop')).toBeNull()
+  })
+
+  it('retire la clé du fichier, et rien d’autre', () => {
+    const { source, document, page, edits } = editable(BACKUP_2026)
+    controlOf<HTMLButtonElement>(page, 'Display.Fullscreen', '.prefs__drop').click()
+
+    const after = serializeJson(document)
+    // La ligne entière disparaît, et rien d'autre : la plage qui diverge pèse exactement
+    // ce que pesait la ligne, virgule et retour compris. (`singleDifference` la cadre sur
+    // le préfixe commun, d'où une plage décalée mais de même longueur.)
+    const difference = singleDifference(source, after)
+    expect(difference.after).toBe('')
+    expect(difference.before).toHaveLength(32)
+    expect(source.length - after.length).toBe(32)
+    expect(after).not.toContain('"Display.Fullscreen"')
+    expect(after.split('\n')).toHaveLength(source.split('\n').length - 1)
+    expect(edits[0]?.outcome).toBe('removed')
+    expect(edits[0]?.description).toBe('Retirer Plein écran du fichier')
+
+    const row = rowElement(page, 'Display.Fullscreen')
+    expect(row.dataset.state).toBe('absent')
+    expect(row.querySelector('input')).toBeNull()
+    expect(row.querySelector('.prefs__implicit')?.textContent).toBe('Oui')
+  })
+
+  it('les deux gestes se défont l’un l’autre, à l’octet près', () => {
+    // Le contrôle croisé du couple : retirer puis redéfinir doit rendre le fichier
+    // d'origine. Ce n'est vrai que parce que l'insertion se fait en fin de section et
+    // que `Display.Fullscreen` en est la dernière clé une fois retirée… ce qui n'est PAS
+    // le cas : on vérifie donc l'égalité des empreintes après l'aller-retour inverse,
+    // celui qui commence par écrire.
+    const source = readFileSync(FORMES_PRESERVEES, 'utf8')
+    const document = parseJson(source)
+    const page = renderPreferencesPage({ document, catalog, onEdit: () => {} })
+
+    controlOf<HTMLButtonElement>(page, 'Tweak.VolumeUp', 'button.prefs__adopt').click()
+    expect(serializeJson(document)).not.toBe(source)
+
+    controlOf<HTMLButtonElement>(page, 'Tweak.VolumeUp', '.prefs__drop').click()
+    expect(serializeJson(document)).toBe(source)
+    expect(sha256(serializeJson(document))).toBe(sha256(source))
+  })
+
+  it('dit à l’écran ce que l’un et l’autre changent, et ce qu’ils ne changent pas', () => {
+    const { page } = editable(BACKUP_2026)
+    const retirer = controlOf<HTMLButtonElement>(page, 'Display.Fullscreen', '.prefs__drop')
+    expect(retirer.getAttribute('aria-label')).toBe('Retirer Plein écran du fichier')
+    expect(retirer.title).toContain('la même valeur qu’aujourd’hui')
+    expect(retirer.title).toContain('suivra les mises à jour de XCTrack')
+
+    const { page: neuve } = editable(FORMES_PRESERVEES)
+    const definir = controlOf<HTMLButtonElement>(neuve, 'Tweak.VolumeUp', '.prefs__adopt')
+    expect(definir.title).toContain('figée')
+  })
+
+  it('remet les comptes d’accord après un retrait', () => {
+    const { page } = editable(BACKUP_2026)
+    const avant = { ...page.summary }
+    controlOf<HTMLButtonElement>(page, 'Display.Fullscreen', '.prefs__drop').click()
+
+    expect(page.summary.defaultCount).toBe(avant.defaultCount - 1)
+    expect(page.summary.absentCount).toBe(avant.absentCount + 1)
+    expect(page.summary.fileKeyCount).toBe(avant.fileKeyCount - 1)
+    expect(page.element.querySelector('.prefs__summary-count')?.textContent)
+      .toContain('le fichier porte 135 clés')
+  })
+
+  it('réserve l’emplacement du bouton même là où il n’y en a pas', () => {
+    // Sans emplacement réservé, les lignes qui portent « Retirer » décalent leur contrôle
+    // de soixante pixels et la colonne cesse de s'aligner — mesuré au navigateur : les
+    // dix listes de l'écran « Affichage » partagent le même bord droit avec, pas sans.
+    const { page } = editable(BACKUP_2026)
+    const avecControle = [...page.element.querySelectorAll('.prefs__row')]
+      .filter((row) => row.querySelector('input:not([type="search"]), select') !== null)
+    expect(avecControle.length).toBeGreaterThan(60)
+    for (const row of avecControle) {
+      expect(row.querySelectorAll('.prefs__aside'), row.getAttribute('data-key') ?? '')
+        .toHaveLength(1)
+    }
+  })
+
+  it('ne retire jamais une clé dans une page en lecture seule', () => {
+    const page = renderPreferencesPage({ document: documentOf(BACKUP_2026), catalog })
+    expect(page.element.querySelectorAll('.prefs__drop')).toHaveLength(0)
+    expect(page.element.querySelectorAll('.prefs__implicit')).toHaveLength(0)
+  })
+
+  it('retire toutes les occurrences d’une clé dupliquée, jamais une seule', () => {
+    // `removeMember` le garantit, et c'est la seule postcondition prévisible après un
+    // geste de suppression : n'en retirer qu'une laisserait le réglage en place.
+    const document = parseJson(
+      '{\n  "preferences": {\n    "Display.Fullscreen": true,\n    "Display.Fullscreen": false\n  }\n}'
+    )
+    expect(removePreference(document, 'Display.Fullscreen')).toBe(2)
+    expect(serializeJson(document)).toBe('{\n  "preferences": {}\n}')
+  })
+
+  it('rend 0 sans lever sur une clé qui n’est pas là', () => {
+    const source = readFileSync(BACKUP_2026, 'utf8')
+    const document = parseJson(source)
+    // `_ttsSpeed` n'est dans aucun fichier du corpus : Android ne l'écrit qu'une fois
+    // le réglage touché sur l'appareil.
+    expect(removePreference(document, '_ttsSpeed')).toBe(0)
+    expect(serializeJson(document)).toBe(source)
   })
 })
