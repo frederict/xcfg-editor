@@ -166,24 +166,28 @@ export interface LibraryPanelHandle {
 
 /* ==================================================================== mise en français */
 
-const MONTHS = [
-  'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
-  'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'
-] as const
-
-const pad = (value: number): string => String(value).padStart(2, '0')
-
 /**
- * Une date ISO en français, à la minute. Une date absente ou illisible — un enregistrement
- * ancien, dont `addedAt` est vide — se dit, elle ne se devine pas.
+ * Une date ISO à la minute, dans la langue de la prose. Une date absente ou illisible —
+ * un enregistrement ancien, dont `addedAt` est vide — se dit, elle ne se devine pas : le
+ * formateur du socle rend `undefined`, et le mot à écrire alors est de la prose.
+ *
+ * Les douze noms de mois écrits en dur ont disparu avec les quatre lignes qui les
+ * assemblaient. C'était la partie du dépôt qui cassait le plus franchement hors du
+ * français : « 3 August 2026 » n'est ni anglais ni allemand.
  */
 export function formatStamp(iso: string): string {
-  if (iso === '') return 'date inconnue'
-  const date = new Date(iso)
-  if (Number.isNaN(date.getTime())) return 'date inconnue'
-  return `${date.getDate()} ${MONTHS[date.getMonth()] ?? '?'} ${date.getFullYear()}` +
-    ` à ${pad(date.getHours())} h ${pad(date.getMinutes())}`
+  return proseFormat.dateTime(iso) ?? 'date inconnue'
 }
+
+/**
+ * Deux chiffres, pour `fileStamp` et pour lui seul.
+ *
+ * **Ne passe pas par `Intl`, et ne doit pas y passer** : ce qu'il compose est un nom de
+ * fichier, pas une phrase. L'ISO y est la seule forme qui se trie toute seule dans un
+ * dossier et qui ne dépende d'aucune langue — le pilote allemand et le pilote espagnol
+ * doivent retrouver la même archive au même endroit.
+ */
+const pad = (value: number): string => String(value).padStart(2, '0')
 
 /** Horodatage compact pour un nom de fichier : `2026-08-21-1532`. */
 function fileStamp(when: Date): string {

@@ -200,7 +200,10 @@ describe('libraryPanel — la mise en français', () => {
     const iso = '2026-08-20T10:00:00.000Z'
     // L'heure est locale : on ne compare que ce qui ne dépend pas du fuseau.
     expect(formatStamp(iso)).toContain(String(new Date(iso).getFullYear()))
-    expect(formatStamp(iso)).toMatch(/\d{1,2} \p{L}+ \d{4} à \d{2} h \d{2}/u)
+    // « 3 août 2026 à 14:32 ». L'heure s'écrit à la mode de CLDR, celle que le système
+    // d'exploitation du pilote emploie partout ailleurs ; le « 14 h 32 » typographique
+    // était un choix maison, et il ne se transpose dans aucune des quatre autres langues.
+    expect(formatStamp(iso)).toMatch(/\d{1,2} \p{L}+ \d{4} à \d{2}:\d{2}/u)
   })
 
   it('un format d’export absent est dit non déclaré, jamais deviné', () => {
