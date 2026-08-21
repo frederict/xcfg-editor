@@ -188,7 +188,7 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
 
 ### En images
 
-*Trois écrans restent à montrer. Les captures se font sur les fixtures anonymisées de
+*Quatre écrans restent à montrer. Les captures se font sur les fixtures anonymisées de
 `tests/fixtures/`, jamais sur une configuration réelle — une carte affichée peut révéler
 un domicile au bâtiment près.*
 
@@ -234,6 +234,25 @@ un domicile au bâtiment près.*
                « Version et compatibilité… ».
 -->
 *Capture à venir : le choix de version, le diagnostic, et le nettoyage qu'il ouvre.*
+
+<!--
+  CAPTURE À PRENDRE — captures/enregistrer-et-partager.png
+  Écran ...... la boîte d'enregistrement, ses deux issues : « fichier complet » et
+               « version partageable ».
+  Fichier .... tests/fixtures/formes/formes-preservees.xcfg — c'est la fixture qui
+               porte un téléphone et une fiche de contact, donc la seule où
+               l'inventaire des remplacements a quelque chose à montrer. (Sur
+               2026-08-20_backup-00.xcfg, la boîte dit à juste titre n'avoir aucun
+               texte à remplacer : c'est un autre état, tout aussi vrai, mais il
+               n'illustre pas l'inventaire.)
+  État ....... inventaire déplié : chaque remplacement avec son emplacement et sa
+               raison, AVANT le téléchargement.
+  Refaire .... banc d'essai dédié :
+                   npm run dev -- --port 5176
+                   http://localhost:5176/src/ui/sharingDialog.demo.html
+-->
+*Capture à venir : au moment d'enregistrer, ce que le fichier révèle et ce qui peut être
+remplacé.*
 
 ## Ce qu'il ne sait pas faire, et ce qui reste incertain
 
