@@ -595,7 +595,11 @@
 
 .prefs__state {
   font-family: var(--font-data, monospace);
-  font-size: 10.5px;
+  /* 12 px, et non 10,5 : cette marque est ce qui distingue « valeur d'usine » de « réglé
+     par vous » — la distinction que le manuel désigne comme la plus importante de la page.
+     La rendre plus petite que le reste revenait à hiérarchiser à l'envers. Même taille que
+     `.props__origin`, qui dit la même chose dans le panneau d'un gadget. */
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--prefs-soft);
@@ -616,7 +620,9 @@
 
 .prefs__personal {
   justify-self: start;
-  font-size: 10px;
+  /* Le marqueur d'une donnée personnelle : lui aussi porte une information qu'on ne
+     peut pas se permettre de manquer avant de partager un fichier. */
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   padding: 0.05rem 0.35rem;

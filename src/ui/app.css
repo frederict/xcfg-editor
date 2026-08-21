@@ -1367,7 +1367,9 @@ body.is-dragging .veil {
   flex: none;
   margin-left: auto;
   font-family: var(--font-data);
-  font-size: 11px;
+  /* Alignée sur `.prefs__state` : les deux écrans disent la même chose, ils ne doivent
+     pas la dire dans deux tailles différentes. */
+  font-size: 12px;
   color: var(--app-ink-soft);
   white-space: nowrap;
 }
