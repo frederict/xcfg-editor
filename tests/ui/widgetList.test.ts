@@ -286,7 +286,8 @@ describe('les deux marques', () => {
     expect(rows[3]?.querySelector('.wlist__flag--blocked')).toBeNull()
     expect(rows[3]?.querySelector('.wlist__flag--blank')).not.toBeNull()
     // Le compte annoncé en tête est celui des murés, pas celui des sans-dessin.
-    expect(list.element.querySelector('.wlist__alert')?.textContent).toBe('1 inatteignable au clic')
+    expect(list.element.querySelector('.wlist__alert')?.textContent)
+      .toBe('1 inatteignable dans l’éditeur')
   })
 
   it('n’annonce rien quand aucun widget n’est muré', () => {
@@ -297,7 +298,7 @@ describe('les deux marques', () => {
   it('dit ce qu’il en est dans l’intitulé lu par l’assistance vocale', () => {
     const rows = rowsOf(build(buildPage(SAMPLE)))
     expect(rows[0]?.getAttribute('aria-label')).toContain('Rang 1 sur 4')
-    expect(rows[0]?.getAttribute('aria-label')).toContain('inatteignable au clic sur la page')
+    expect(rows[0]?.getAttribute('aria-label')).toContain('inatteignable au clic dans cet éditeur')
     expect(rows[3]?.getAttribute('aria-label')).toContain('ne dessine rien sur l’appareil')
   })
 })

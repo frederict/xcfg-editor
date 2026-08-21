@@ -1,3 +1,4 @@
+import { families as CATALOG_FAMILIES } from '../catalog/widgetCatalog/en.json'
 import { readableName } from '../catalog/widgetNames'
 import { decode, getMember, readNumber, readString } from '../core/access'
 import type { JsonNode } from '../core/jsonDocument'
@@ -7,11 +8,11 @@ import type { RenderSettings } from '../model/preferences'
 import type { Widget } from '../model/widget'
 
 /**
- * Ce que l'interface doit dire au pilote, et rien de plus. Huit familles, calculées ici
+ * Ce que l'interface doit dire au pilote, et rien de plus. Neuf familles, calculées ici
  * plutôt que dans `main.ts` : c'est la seule logique non triviale de la couche
  * d'interface, elle a donc ses propres tests.
  *
- * Deux principes tenus d'un bout à l'autre :
+ * Trois principes tenus d'un bout à l'autre :
  *
  * 1. **On signale, on ne corrige jamais.** Une ressource externe manquante, une clé
  *    dupliquée, un widget dégénéré : le document sort à l'octet près tel qu'il est
@@ -21,7 +22,12 @@ import type { Widget } from '../model/widget'
  *    fonctionnement normal de XCTrack. Ce serait 100 % de bruit, et un avertissement de
  *    bruit apprend au pilote à ignorer les autres. Seuls les vrais défauts sont dits :
  *    `X2 ≤ X1`, la sortie des bornes 0–10000, et le recouvrement TOTAL par un widget
- *    opaque dessiné APRÈS — voir `geometryWarning`.
+ *    qui peint un fond plein — voir `scanGeometry`.
+ * 3. **Un montage volontaire n'est pas un défaut.** Glisser un bouton d'action sous une
+ *    carte est une manière connue de se donner une commande là où l'écran est occupé :
+ *    le bouton ne se voit plus, mais il répond toujours au doigt. Le même recouvrement
+ *    se dit donc de deux façons selon ce qui est dessous — voir `coveredButtonWarning`
+ *    et `isActionButton`.
  */
 
 /**
@@ -42,6 +48,7 @@ export type WarningKind =
   | 'version-gap'
   | 'structure'
   | 'geometry'
+  | 'covered-buttons'
 
 /**
  * Quand l'avertissement se montre. Les données personnelles ne concernent le pilote
@@ -335,7 +342,7 @@ function structureWarning(input: WarningInput): Warning | undefined {
   }
 }
 
-/* --------------------------------------------------------------- 7. défauts géométriques */
+/* ------------------------------------ 7. géométrie : défauts, et montages volontaires */
 
 function box(widget: Widget): string {
   return `X1 ${widget.x1}, Y1 ${widget.y1}, X2 ${widget.x2}, Y2 ${widget.y2}`
@@ -350,20 +357,59 @@ function covers(cover: Widget, widget: Widget): boolean {
     cover.x2 >= widget.x2 && cover.y2 >= widget.y2
 }
 
-function pageGeometryItems(page: Page, where: string, language: string): string[] {
-  const items: string[] = []
+/** La famille « Boutons d'actions » de l'écran d'ajout de XCTrack. */
+const ACTION_BUTTON_FAMILY = 'wgButtons'
 
+/**
+ * Les types de la famille « Boutons d'actions », lus dans le catalogue extrait de l'APK
+ * plutôt qu'énumérés ici.
+ *
+ * **Pourquoi le catalogue et non une liste écrite à la main.** La famille en compte neuf
+ * dans la 1.0.3-beta5 ; une version suivante peut en ajouter un dixième, et une liste
+ * recopiée l'oublierait en silence — le nouveau bouton redeviendrait un « défaut ».
+ * `families` est la seule partie du catalogue dont on ait besoin ici, et elle est
+ * identique dans les 33 fichiers de langue : on lit donc l'anglais, qui sert déjà de
+ * repli au reste du module (`catalog/widgetCatalog.ts`). L'assembleur ne retient que
+ * cette clé — environ deux kilo-octets — et non le fichier entier, que la palette
+ * continue de charger à la demande.
+ *
+ * L'import est **statique** parce que `computeWarnings` l'est : les avertissements sont
+ * calculés à l'instant de l'import du fichier, bien avant que le pilote n'ouvre la
+ * palette et ne déclenche le chargement du catalogue dans sa langue.
+ */
+const ACTION_BUTTONS: ReadonlySet<string> = new Set(
+  CATALOG_FAMILIES.find((family) => family.id === ACTION_BUTTON_FAMILY)?.widgets ?? []
+)
+
+/**
+ * Vrai si ce type de widget **agit** au lieu d'afficher : régler la luminosité, couper le
+ * son, lancer une application. Ce qu'il peint n'est qu'une étiquette de sa commande, et
+ * le perdre de vue ne fait rien perdre au pilote — la zone tactile, elle, reste.
+ */
+export function isActionButton(shortName: string): boolean {
+  return ACTION_BUTTONS.has(shortName)
+}
+
+/** Ce que la lecture des rectangles a trouvé, rangé selon ce que le pilote doit en faire. */
+interface GeometryFindings {
+  /** De vrais défauts : le widget ne rendra pas le service attendu. */
+  defects: string[]
+  /** Des boutons d'action glissés sous un autre widget — un montage, pas un défaut. */
+  coveredButtons: string[]
+}
+
+function scanPage(page: Page, where: string, language: string, found: GeometryFindings): void {
   page.widgets.forEach((widget, position) => {
     const name = readableName(widget.shortName, language)
     const who = `${where}, widget ${position + 1} (${name})`
 
-    if (widget.x2 <= widget.x1) items.push(`${who} : X2 n’est pas au-delà de X1 — ${box(widget)}`)
-    if (widget.y2 <= widget.y1) items.push(`${who} : Y2 n’est pas au-delà de Y1 — ${box(widget)}`)
+    if (widget.x2 <= widget.x1) found.defects.push(`${who} : X2 n’est pas au-delà de X1 — ${box(widget)}`)
+    if (widget.y2 <= widget.y1) found.defects.push(`${who} : Y2 n’est pas au-delà de Y1 — ${box(widget)}`)
 
     const outside = ([['X1', widget.x1], ['Y1', widget.y1], ['X2', widget.x2], ['Y2', widget.y2]] as const)
       .filter(([, value]) => value < 0 || value > SCALE)
     for (const [key, value] of outside) {
-      items.push(`${who} : ${key} = ${value}, hors des bornes 0–10000`)
+      found.defects.push(`${who} : ${key} = ${value}, hors des bornes 0–10000`)
     }
 
     // Plus haut dans la pile = plus loin dans le tableau : c'est l'ordre de dessin, et
@@ -383,28 +429,32 @@ function pageGeometryItems(page: Page, where: string, language: string): string[
     const hider = page.widgets.findIndex(
       (other, index) => index > position && other.background <= 0 && covers(other, widget)
     )
-    if (hider !== -1) {
-      const cover = page.widgets[hider]!
-      items.push(
-        `${who} : entièrement recouvert par le widget ${hider + 1} ` +
-        `(${readableName(cover.shortName, language)}), opaque et dessiné après lui`
-      )
+    if (hider === -1) return
+
+    const cover = `widget ${hider + 1} (${readableName(page.widgets[hider]!.shortName, language)})`
+
+    // Le même fait géométrique, deux conséquences opposées pour le pilote. Un bouton
+    // caché garde son utilité — c'est même la raison d'être du montage ; une altitude
+    // cachée est une valeur que personne ne lira jamais.
+    if (isActionButton(widget.shortName)) {
+      found.coveredButtons.push(`${who} : caché par le ${cover}, mais toujours actif au doigt`)
+    } else {
+      found.defects.push(`${who} : caché par le ${cover}, et n’affichera donc rien`)
     }
   })
-
-  return items
 }
 
-function geometryWarning(input: WarningInput): Warning | undefined {
-  const items: string[] = []
+function scanGeometry(input: WarningInput): GeometryFindings {
+  const found: GeometryFindings = { defects: [], coveredButtons: [] }
   for (const orientation of ['landscape', 'portrait'] as const) {
     input.layout[orientation].forEach((page, index) => {
-      items.push(...pageGeometryItems(
-        page, `${ORIENTATION_LABELS[orientation]}, page ${index + 1}`, input.language
-      ))
+      scanPage(page, `${ORIENTATION_LABELS[orientation]}, page ${index + 1}`, input.language, found)
     })
   }
+  return found
+}
 
+function geometryWarning(items: string[]): Warning | undefined {
   if (items.length === 0) return undefined
 
   return {
@@ -413,9 +463,40 @@ function geometryWarning(input: WarningInput): Warning | undefined {
     title: 'Défauts de géométrie',
     detail:
       'Ces widgets ne peuvent pas s’afficher comme leur auteur l’espérait : boîte de ' +
-      'largeur ou de hauteur nulle, coordonnées hors des bornes, ou recouvrement complet ' +
-      'par un widget opaque dessiné après. Les simples chevauchements ne sont pas ' +
-      'signalés : ils sont normaux sur une carte ou un assistant de thermique.',
+      'largeur ou de hauteur nulle, coordonnées hors des bornes, ou widget entièrement ' +
+      'caché sous un autre, dont il ne montrera jamais la valeur. Les simples ' +
+      'chevauchements ne sont pas signalés : ils sont normaux sur une carte ou un ' +
+      'assistant de thermique.',
+    items
+  }
+}
+
+/**
+ * **Ce n'est pas un défaut, et l'avertissement doit le dire.** Le propriétaire de
+ * l'AIR³ a deux « Luminosité de l'écran » rangés sous l'assistant de thermique de
+ * `landscape[3]`, exactement à ses bornes : il règle la luminosité en touchant la
+ * carte. Le bouton n'est pas dessiné, il reçoit pourtant le toucher — l'usage
+ * quotidien le confirme, et c'est la meilleure source dont nous disposions.
+ *
+ * L'avertissement reste : le pilote qui découvre un fichier reçu doit savoir qu'un
+ * bouton se cache là, faute de quoi il l'écraserait sans le voir. Mais il est classé à
+ * part de `geometry` — il n'est pas dans les `ATTENTION_KINDS` de `main.ts`, donc pas
+ * de liséré d'alerte — et rédigé pour rassurer plutôt que pour alerter.
+ */
+function coveredButtonWarning(items: string[]): Warning | undefined {
+  if (items.length === 0) return undefined
+
+  return {
+    kind: 'covered-buttons',
+    moment: 'import',
+    title: 'Boutons d’action cachés, et c’est sans doute voulu',
+    detail:
+      'Un autre widget est posé par-dessus ces boutons et les recouvre entièrement : sur ' +
+      'l’instrument, vous ne les verrez pas. Ils répondent pourtant toujours au doigt — ' +
+      'appuyer à cet endroit déclenche leur action, même si c’est la carte ou l’assistant ' +
+      'de thermique que vous y voyez. C’est un montage courant et non un défaut : il ' +
+      'donne une commande là où l’écran est déjà occupé. Rien à corriger, sauf si la ' +
+      'superposition vous surprend.',
     items
   }
 }
@@ -505,12 +586,17 @@ export function computeWarnings(input: WarningInput): Warning[] {
   const warnings: Warning[] = [exportTypeWarning(info)]
   warnings.push(...assumedValueWarnings(input.settings, input.language))
 
+  // Un seul balayage des rectangles : les deux avertissements qui en sortent disent le
+  // même fait géométrique, et rien ne justifierait de le calculer deux fois.
+  const geometry = scanGeometry(input)
+
   const optional = [
     personalDataWarning(preferences),
     externalResourceWarning(preferences),
     versionWarning(info),
     structureWarning(input),
-    geometryWarning(input),
+    geometryWarning(geometry.defects),
+    coveredButtonWarning(geometry.coveredButtons),
     themeWarning(input)
   ]
   for (const warning of optional) {

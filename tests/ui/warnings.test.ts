@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
+import CATALOG from '../../src/catalog/widgetCatalog/en.json'
 import { parseJson } from '../../src/core/parseJson'
 import type { JsonNode } from '../../src/core/jsonDocument'
 import { readLayout } from '../../src/model/layout'
@@ -7,6 +8,7 @@ import { readRenderSettings } from '../../src/model/preferences'
 import {
   REFERENCE_VERSION_CODE,
   computeWarnings,
+  isActionButton,
   warningsAt,
   type Warning,
   type WarningKind
@@ -65,12 +67,28 @@ function documentWith(widgets: string[], pageExtras = '"navigations": "all"'): J
   }`)
 }
 
-/** Widget complet : les huit clés universelles, pour n'éveiller que le défaut visé. */
+/**
+ * Widget complet : les huit clés universelles, pour n'éveiller que le défaut visé.
+ *
+ * `WAltitude` est un widget d'**affichage** : recouvert, il constitue un vrai défaut.
+ * Pour l'autre versant de la distinction, voir `button` juste en dessous.
+ */
 function widget(x1: number, y1: number, x2: number, y2: number, background = 100): string {
   return `{
     "CLASS": "org.xcontest.XCTrack.widget.w.WAltitude",
     "X1": ${x1}, "Y1": ${y1}, "X2": ${x2}, "Y2": ${y2},
     "_border": true, "_bg": ${background}, "_theme": ""
+  }`
+}
+
+/** Un widget de la famille « Boutons d'actions » — celui du montage du propriétaire. */
+function button(
+  x1: number, y1: number, x2: number, y2: number, shortName = 'WButtonBrightness'
+): string {
+  return `{
+    "CLASS": "org.xcontest.XCTrack.widget.w.${shortName}",
+    "X1": ${x1}, "Y1": ${y1}, "X2": ${x2}, "Y2": ${y2},
+    "_border": true, "_bg": 100, "_theme": ""
   }`
 }
 
@@ -243,11 +261,11 @@ describe('avertissements — défauts géométriques', () => {
    * `docs/reference/captures-air3/vol-thermalassistant-boutonsnavig.png` — `_bg: 0`
    * donne des cases blanches opaques, `_bg: 100` ne peint aucun fond.
    */
-  it('signale un widget entièrement recouvert par un opaque (_bg 0) placé après lui', () => {
+  it('signale un widget d’affichage entièrement recouvert par un opaque (_bg 0) placé après lui', () => {
     const masked = widget(1000, 1000, 2000, 2000)
     const opaque = widget(0, 0, 10000, 10000, 0)
     const text = textOf(pick(warningsOf(documentWith([masked, opaque])), 'geometry'))
-    expect(text).toMatch(/entièrement recouvert/)
+    expect(text).toMatch(/caché par le widget 2/)
   })
 
   it('ne signale rien quand le même opaque est placé avant', () => {
@@ -300,8 +318,87 @@ describe('avertissements — défauts géométriques', () => {
   it('signale en revanche un WLiveMessage à _bg 0 : le type n’est plus un passe-droit', () => {
     const masked = widget(1000, 1000, 2000, 2000)
     const text = textOf(pick(warningsOf(documentWith([masked, liveMessage(0)])), 'geometry'))
-    expect(text).toMatch(/entièrement recouvert/)
+    expect(text).toMatch(/caché par le widget 2/)
     expect(text).toContain('Réception de messages')
+  })
+})
+
+describe('avertissements — bouton d’action recouvert : un montage, pas un défaut', () => {
+  /** L'assistant de thermique du propriétaire : opaque, aux bornes exactes du dessous. */
+  const carte = (): string => widget(0, 0, 10000, 10000, 0)
+
+  it('range un bouton d’action recouvert hors des défauts de géométrie', () => {
+    const warnings = warningsOf(documentWith([button(1000, 1000, 2000, 2000), carte()]))
+    expect(kinds(warnings)).not.toContain('geometry')
+    expect(kinds(warnings)).toContain('covered-buttons')
+  })
+
+  it('range un widget d’affichage recouvert dans les défauts, et nulle part ailleurs', () => {
+    const warnings = warningsOf(documentWith([widget(1000, 1000, 2000, 2000), carte()]))
+    expect(kinds(warnings)).toContain('geometry')
+    expect(kinds(warnings)).not.toContain('covered-buttons')
+  })
+
+  it('sépare les deux sur une même page, sans en perdre un', () => {
+    const warnings = warningsOf(documentWith([
+      button(1000, 1000, 2000, 2000), widget(3000, 3000, 4000, 4000), carte()
+    ]))
+    expect(pick(warnings, 'covered-buttons')?.items).toHaveLength(1)
+    expect(pick(warnings, 'geometry')?.items).toHaveLength(1)
+    expect(textOf(pick(warnings, 'covered-buttons'))).toContain('widget 1')
+    expect(textOf(pick(warnings, 'geometry'))).toContain('widget 2')
+  })
+
+  /**
+   * Le classement doit valoir pour toute la famille, pas pour le seul type que le
+   * propriétaire emploie : `isActionButton` lit le catalogue, et le catalogue en donne
+   * neuf dans la 1.0.3-beta5.
+   */
+  it('vaut pour les neuf types de la famille « Boutons d’actions »', () => {
+    const family = [
+      'WButtonBrightness', 'WButtonCamera', 'WButtonIntentLauncher', 'WButtonNavig',
+      'WButtonPhone', 'WButtonVario', 'WButtonVolume', 'WButtonVolumeReminder', 'WButtonZoom'
+    ]
+    for (const shortName of family) {
+      expect(isActionButton(shortName), shortName).toBe(true)
+      const warnings = warningsOf(documentWith([button(1000, 1000, 2000, 2000, shortName), carte()]))
+      expect(kinds(warnings), shortName).not.toContain('geometry')
+      expect(kinds(warnings), shortName).toContain('covered-buttons')
+    }
+  })
+
+  it('ne prend pas un widget d’affichage pour un bouton', () => {
+    for (const shortName of ['WAltitude', 'WSpeed', 'WThermalAssistant', 'WLiveMessage']) {
+      expect(isActionButton(shortName), shortName).toBe(false)
+    }
+    // Un type inconnu du catalogue n'est pas un bouton : mieux vaut signaler à tort que
+    // rassurer à tort.
+    expect(isActionButton('WPMissing')).toBe(false)
+  })
+
+  /**
+   * La liste vient du catalogue extrait de l'APK, pas d'une énumération recopiée ici :
+   * une version de XCTrack qui ajoute un bouton l'ajoute donc toute seule. Ce test le
+   * démontre en relisant la source.
+   */
+  it('tire la famille du catalogue, et non d’une liste écrite à la main', () => {
+    const catalog = CATALOG as { widgets: Record<string, { family: string }> }
+    const fromCatalog = Object.entries(catalog.widgets)
+      .filter(([, entry]) => entry.family === 'wgButtons')
+      .map(([shortName]) => shortName)
+
+    expect(fromCatalog.length).toBeGreaterThan(0)
+    for (const shortName of fromCatalog) expect(isActionButton(shortName), shortName).toBe(true)
+    // Et rien d'autre : le reste du registre reste du côté des défauts.
+    for (const shortName of Object.keys(catalog.widgets)) {
+      expect(isActionButton(shortName), shortName).toBe(catalog.widgets[shortName]!.family === 'wgButtons')
+    }
+  })
+
+  it('un bouton d’action reste un défaut quand sa boîte est dégénérée', () => {
+    // La famille n'exempte que du recouvrement : un rectangle inversé reste une erreur.
+    const warnings = warningsOf(documentWith([button(3000, 0, 3000, 5000)]))
+    expect(textOf(pick(warnings, 'geometry'))).toContain('X2')
   })
 })
 
@@ -338,15 +435,40 @@ describe('avertissements — corpus réel (comparaison au sol)', () => {
    * Cet avertissement n'apparaissait pas avant la correction de `_bg` : le critère
    * cherchait `_bg >= 100`, c'est-à-dire précisément les widgets qui ne peignent rien.
    */
-  it('signale les deux WButtonBrightness que la carte de landscape[3] recouvre', () => {
+  it('ne compte plus les deux WButtonBrightness de landscape[3] parmi les défauts', () => {
     for (const name of ['2026-08-20_backup-00.xcfg', '2026-08-20_pages-00.xcfg', 'backup.xcfg']) {
-      const items = geometryItems(name)
+      expect(kinds(warningsOfFile(name)), name).not.toContain('geometry')
+    }
+  })
+
+  it('les dit à part, comme un montage volontaire qui fonctionne', () => {
+    for (const name of ['2026-08-20_backup-00.xcfg', '2026-08-20_pages-00.xcfg', 'backup.xcfg']) {
+      const items = pick(warningsOfFile(name), 'covered-buttons')?.items ?? []
       expect(items, name).toHaveLength(2)
       expect(items[0], name).toBe(
-        "Paysage, page 4, widget 1 (Luminosité de l'écran) : entièrement recouvert par " +
-        'le widget 3 (Assistant thermique), opaque et dessiné après lui'
+        "Paysage, page 4, widget 1 (Luminosité de l'écran) : caché par le widget 3 " +
+        '(Assistant thermique), mais toujours actif au doigt'
       )
       expect(items[1], name).toContain("widget 2 (Luminosité de l'écran)")
+    }
+  })
+
+  /**
+   * Le texte est lu par un pilote, pas par un développeur : ni `_bg`, ni « opaque », ni
+   * « dessiné après » ne lui diraient quoi que ce soit de son écran.
+   */
+  it('dit ce que le pilote verra, sans le vocabulaire du fichier', () => {
+    const warning = pick(warningsOfFile('2026-08-20_backup-00.xcfg'), 'covered-buttons')
+    const text = textOf(warning)
+    for (const jargon of ['_bg', 'opaque', 'dessiné après', 'X1', 'Y1', 'CLASS']) {
+      expect(text, jargon).not.toContain(jargon)
+    }
+    expect(text).toMatch(/doigt/)
+  })
+
+  it('ne produit aucun bouton caché sur les deux fichiers 2025', () => {
+    for (const name of ['2025-07-07_backup-00.xcfg', '2025-07-07_pages-00.xcfg']) {
+      expect(kinds(warningsOfFile(name)), name).not.toContain('covered-buttons')
     }
   })
 

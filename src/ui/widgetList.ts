@@ -29,6 +29,13 @@ import { aspectRatioOf, formatMm, widgetSizeMm, type WidgetBox } from './views'
  *   à l'appareil. Un `WLiveMessage` ne dessine rien au repos et reste pourtant au premier
  *   plan — c'est lui qui vole les clics des quatre autres, pas l'inverse.
  *
+ * **« Inatteignable » ne veut pas dire « inutilisable ».** `ui/warnings.ts` dit du même
+ * `WButtonBrightness` qu'il « reste actif au doigt » sur l'instrument, et c'est vrai :
+ * l'appareil route le toucher vers le bouton du dessous, là où `widgetAtPoint` s'arrête
+ * au rang supérieur. Les deux énoncés parlent de deux machines différentes, et les textes
+ * de cette liste le disent explicitement — « dans l'éditeur », « ici » — pour qu'un pilote
+ * ne lise pas une contradiction là où il n'y en a pas. Ne pas retirer ces précisions.
+ *
  * **L'ordre est celui du fichier, rang 1 en haut.** Le fichier va du fond vers l'avant
  * (`Page.widgets` : « le premier est au fond, le dernier au-dessus »). Le rang affiché est
  * donc l'index du fichier, et non la convention inverse des logiciels de dessin — d'où les
@@ -208,7 +215,7 @@ function spokenLabel(entry: WidgetListEntry, total: number): string {
     entry.name,
     `${formatMm(entry.widthMm)} sur ${formatMm(entry.heightMm)} millimètres`
   ]
-  if (entry.unreachable) parts.push('inatteignable au clic sur la page')
+  if (entry.unreachable) parts.push('inatteignable au clic dans cet éditeur')
   if (entry.blank) parts.push('ne dessine rien sur l’appareil')
   return parts.join(', ')
 }
@@ -239,11 +246,13 @@ export function renderWidgetList(options: WidgetListOptions): WidgetList {
   if (blocked > 0) {
     const alert = el(
       'span', 'wlist__alert',
-      plural(blocked, 'inatteignable au clic', 'inatteignables au clic')
+      plural(blocked, 'inatteignable dans l’éditeur', 'inatteignables dans l’éditeur')
     )
     alert.title =
-      'Ces widgets sont entièrement recouverts par des rangs supérieurs : aucun clic sur ' +
-      'la page ne les atteint. Cette liste est le seul chemin qui y mène.'
+      'Ces widgets sont entièrement recouverts par des rangs supérieurs : ici, aucun clic ' +
+      'sur la page ne les atteint, et cette liste est le seul chemin qui y mène. Sur ' +
+      'l’instrument, ils restent à leur place — un bouton d’action ainsi recouvert ' +
+      'continue de répondre au doigt.'
     head.append(alert)
   }
   root.append(head)
@@ -298,10 +307,12 @@ export function renderWidgetList(options: WidgetListOptions): WidgetList {
 
     const flags = el('span', 'wlist__flags')
     if (entry.unreachable) {
-      const flag = el('span', 'wlist__flag wlist__flag--blocked', 'inatteignable')
+      const flag = el('span', 'wlist__flag wlist__flag--blocked', 'inatteignable ici')
       flag.title =
-        'Aucun clic sur la page ne peut atteindre ce widget : les rangs supérieurs le ' +
-        'recouvrent entièrement. Cette liste est le seul chemin qui y mène.'
+        'Dans cet éditeur, aucun clic sur la page ne peut atteindre ce widget : les rangs ' +
+        'supérieurs le recouvrent entièrement, et cette liste est le seul chemin qui y ' +
+        'mène. Sur l’instrument, il reste à sa place — un bouton d’action ainsi recouvert ' +
+        'continue de répondre au doigt.'
       flags.append(flag)
     }
     if (entry.blank) {
