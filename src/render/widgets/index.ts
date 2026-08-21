@@ -23,9 +23,10 @@ import { drawLiveMessage } from './liveMessage'
 import { drawCompTaskSummary } from './compTaskSummary'
 
 /**
- * Les 23 types « titre + valeur + unité » du corpus (voir `numeric.ts`). Une boucle
- * suffit : le contrôle de couverture de la tâche 18 interroge l'annuaire à l'exécution,
- * pas le texte de ce fichier.
+ * Les types « titre + valeur + unité » : les 23 du corpus, puis les 19 que la revue des
+ * 75 visuels a trouvés dessinés par l'appareil et génériques chez nous (écart 2.12). Une
+ * boucle suffit : le contrôle de couverture de la tâche 18 interroge l'annuaire à
+ * l'exécution, pas le texte de ce fichier.
  */
 const NUMERIC_TYPES = [
   'WAltitude',
@@ -50,7 +51,31 @@ const NUMERIC_TYPES = [
   'WCompTimeAtStart',
   'WCompSpeedToStart',
   'WOptiResult',
-  'WOptiUnfinishedTriangle'
+  'WOptiUnfinishedTriangle',
+
+  // Écart 2.12 de la revue des 75 visuels : dix-neuf types de plus, tous « titre +
+  // valeur + unité » sur l'appareil, que nous rendions « titre + `--` » faute d'exemple.
+  // Leurs valeurs d'exemple, toutes lues sur une capture, sont dans `SPECS`
+  // (numeric.ts) avec le fichier et l'état où chacune a été relevée.
+  'WBrightnessInfo',
+  'WLastEvent',
+  'WAirSpeed',
+  'WBearing',
+  'WBaroAltitude',
+  'WAMSL',
+  'WTakeoffHeightAbove',
+  'WSunset',
+  'WSunsetCivil',
+  'WAltitudeMaximum',
+  'WNettoVario',
+  'WQNH',
+  'WXCSpeed',
+  'WTakeoffDistance',
+  'WTakeoffCourse',
+  'WCompDistanceToESS',
+  'WCompGlideToESS',
+  'WExternalData',
+  'WLastKey'
 ]
 
 for (const shortName of NUMERIC_TYPES) {

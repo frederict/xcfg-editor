@@ -450,6 +450,63 @@ describe('widgets numériques', () => {
   })
 
   /**
+   * Écart 2.12 de la revue des 75 visuels — dix-neuf types que l'appareil remplit et que
+   * nous rendions « titre + `--` ». Chaque exemple est lu sur une capture nommée dans
+   * `SPECS` (numeric.ts) ; ce test vérifie qu'ils sont bien dessinés par le drawer
+   * numérique et non par le repli générique.
+   */
+  describe('les dix-neuf types repris au repli générique (écart 2.12)', () => {
+    for (const [type, valeur, unite] of [
+      ['WBrightnessInfo', '87%', null],
+      ['WAirSpeed', '32', 'kmh'],
+      ['WBearing', 'ESE', null],
+      ['WBaroAltitude', '1492', 'm'],
+      ['WAMSL', '1492', 'm'],
+      ['WTakeoffHeightAbove', '1494', 'm'],
+      ['WSunset', '21:08', null],
+      ['WSunsetCivil', '21:37', null],
+      ['WAltitudeMaximum', '1527', 'm'],
+      ['WQNH', '1010,20', 'hPa'],
+      ['WXCSpeed', '5,8', 'kmh'],
+      ['WTakeoffDistance', '1362', 'DISTANCE'],
+      ['WTakeoffCourse', 'NNE', null],
+      ['WCompDistanceToESS', '115,9', 'DISTANCE'],
+      ['WCompGlideToESS', '1:5,1', null],
+      ['WExternalData', '-', null],
+      ['WLastEvent', 'DÉCOLLAGE', null],
+      ['WLastKey', 'Rien', null]
+    ] as const) {
+      it(`${type} affiche « ${valeur} »`, () => {
+        const el = drawNumeric(widget(type, {}), settings, 'fr')
+        expect(el.querySelector('.xc-num__value')?.textContent).toBe(valeur)
+        // « DISTANCE » : l'unité de distance vient de la préférence du fichier d'essai,
+        // pas du type — la vérifier en dur figerait le jeu d'essai plutôt que le rendu.
+        const attendu = unite === 'DISTANCE' ? settings.distanceUnit : unite
+        expect(el.querySelector('.xc-num__unit')?.textContent ?? null).toBe(attendu)
+      })
+    }
+
+    /**
+     * Le cas particulier du § 2.12 : l'appareil dessine **l'unité seule**, sans valeur
+     * (`planche-vol-2-vol-b-et-air-a.png`, « Vario netto / 0,1s »). Chez nous, l'absence
+     * de valeur faisait disparaître l'unité avec elle — alors qu'elle occupe jusqu'à
+     * 25 % de la largeur d'une cellule.
+     */
+    it('WNettoVario dessine son unité m/s sans valeur, calée à droite', () => {
+      const el = drawNumeric(widget('WNettoVario', {}), settings, 'fr')
+      expect(el.querySelector('.xc-num__value')).toBeNull()
+      expect(el.querySelector('.xc-num__unit')?.textContent).toBe('ms')
+      expect(el.querySelector('.xc-num__row')?.classList.contains('xc-num__row--unit-only')).toBe(true)
+      expect(el.style.getPropertyValue('--xc-value-em')).toBe('0')
+    })
+
+    it('le titre reste celui du catalogue, suffixes compris', () => {
+      const el = drawNumeric(widget('WNettoVario', {}), settings, 'fr')
+      expect(el.querySelector('.xc-num__title')?.textContent).toBe('Vario netto / 0,1s')
+    })
+  })
+
+  /**
    * `_units` porte un jeton d'énumération, pas une unité affichable. Une page fabriquée
    * par notre éditeur avec `_units: "FOOT"` et portée sur l'appareil y affiche « ft » ;
    * nous écrivions « FOOT », c'est-à-dire une unité qui n'existe pas

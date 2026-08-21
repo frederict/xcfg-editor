@@ -332,6 +332,17 @@
   margin: auto 0;
 }
 
+/* Une ligne SANS valeur — l'appareil dessine l'unité seule sur `WNettoVario`
+   (`captures-air3/2026-08-21_planche-vol-2-vol-b-et-air-a.png`, « Vario netto / 0,1s » :
+   un `m/s` et rien d'autre). Elle reste calée à droite, à la place qu'elle occuperait si
+   la valeur y était : le `m/s` y finit à 22 px du bord droit de sa cellule de 326 px, pas
+   au centre. La ligne s'étire donc sur toute la largeur et pousse son unique enfant à
+   droite, au lieu de se réduire à son contenu et de se centrer avec lui. */
+.xc-num__row--unit-only {
+  align-self: stretch;
+  justify-content: flex-end;
+}
+
 /* Défaut 2 (rapport de tâche) — la couleur porte sur la VALEUR (`.xc-num__value`), pas
    sur le fond de la ligne : un fond pâle derrière un chiffre noir (premier relevé,
    `rendu-observe.md`) n'est pas ce que fait l'instrument, et ne produit pas le même

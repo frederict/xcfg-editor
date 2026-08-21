@@ -57,7 +57,65 @@ const SPECS: Record<string, NumericSpec> = {
   WCompTimeAtStart: { quantity: 'time', unit: '', example: '13:00' },
   WCompSpeedToStart: { quantity: 'speed', unit: 'km/h', example: '42' },
   WOptiResult: { quantity: 'distance', unit: 'km', example: '87.3' },
-  WOptiUnfinishedTriangle: { quantity: 'distance', unit: 'km', example: '45.2' }
+  WOptiUnfinishedTriangle: { quantity: 'distance', unit: 'km', example: '45.2' },
+
+  /* ------------------------------------------------------------------------------
+   * Écart 2.12 de la revue des 75 visuels — dix-neuf types que nous rendions « titre
+   * + `--` » alors que l'appareil y affiche une valeur. Ce n'était pas un bug mais
+   * l'absence d'exemple ; l'effet, pour qui compose une page, était le même : la
+   * cellule paraissait vide et sa lisibilité n'était pas jugeable.
+   *
+   * **Chaque exemple ci-dessous est LU sur une capture de la planche des 75 gadgets**,
+   * état et fichier nommés en regard — aucun n'est inventé, aucun n'est calculé.
+   * ------------------------------------------------------------------------------ */
+
+  // `planche-vol-1-systeme-et-vol-a` : « 87% » tout en noir, à la taille des chiffres —
+  // ce n'est PAS une unité grise, d'où le pourcent dans l'exemple et non dans `unit`.
+  WBrightnessInfo: { quantity: 'none', unit: '', example: '87%' },
+  // `planche-vol-1` : « 32 km/h », titre « Vitesse Air TAS ».
+  WAirSpeed: { quantity: 'speed', unit: 'km/h', example: '32' },
+  // `planche-vol-1` : « ESE ». Les trois lettres se lisent pareil en français et en
+  // anglais — le choix n'est pas neutre, « OSO » (planche-vol-2) s'écrirait « WSW ».
+  WBearing: { quantity: 'none', unit: '', example: 'ESE' },
+  WBaroAltitude: { quantity: 'altitude', unit: 'm', example: '1492' },
+  WAMSL: { quantity: 'altitude', unit: 'm', example: '1492' },
+  WTakeoffHeightAbove: { quantity: 'altitude', unit: 'm', example: '1494' },
+  // `planche-vol-2-vol-b-et-air-a` : 21:08 et 21:37 (20:48 / 21:23 au sol).
+  WSunset: { quantity: 'time', unit: '', example: '21:08' },
+  WSunsetCivil: { quantity: 'time', unit: '', example: '21:37' },
+  WAltitudeMaximum: { quantity: 'altitude', unit: 'm', example: '1527' },
+  // `planche-vol-2` : « 1010,20 hPa », l'unité en gris. `hPa` est fixe : XCTrack n'a pas
+  // de préférence d'unité de pression.
+  WQNH: { quantity: 'none', unit: 'hPa', example: '1010.20' },
+  // `planche-vol-2` : l'appareil dessine **l'unité `m/s` SEULE**, sans valeur, calée à
+  // droite comme si la valeur y était. Voir `drawNumeric` : un exemple vide se dessine
+  // ainsi, et non par la disparition de l'unité — celle-ci occupe jusqu'à 25 % de la
+  // largeur d'une cellule, et c'est de la place que le pilote doit voir occupée.
+  WNettoVario: { quantity: 'verticalSpeed', unit: 'm/s', example: '' },
+  // `planche-sol-3-air-b-xcontest-navigation-a` : « 5,8 km/h ». Vide en vol et en
+  // compétition sur les deux autres captures — l'exemple est celui de l'état où il
+  // s'affiche.
+  WXCSpeed: { quantity: 'speed', unit: 'km/h', example: '5.8' },
+  // `planche-sol-4-navigation-b-et-competition` et `vol-thermalassistant-boutonsnavig`.
+  WTakeoffDistance: { quantity: 'distance', unit: 'km', example: '1362' },
+  // `planche-sol-4` : « NNE » — trois lettres identiques en français et en anglais.
+  WTakeoffCourse: { quantity: 'none', unit: '', example: 'NNE' },
+  // `planche-competition-4-widgets-de-manche` : 115,9 km, et « 1: » pour la finesse.
+  WCompDistanceToESS: { quantity: 'distance', unit: 'km', example: '115.9' },
+  WCompGlideToESS: { quantity: 'glide', unit: '', example: '5.1' },
+  // `planche-sol-5-boutons-autres-test` : titre rouge « Affichage des données externes »
+  // et un tiret SIMPLE en gros noir — pas le « -- » de remplissage du repli générique.
+  WExternalData: { quantity: 'none', unit: '', example: '-' },
+
+  /* Les deux exemples ci-dessous sont des MOTS, et l'appareil les traduit. Ils sont
+   * relevés sur un AIR³ en français, le seul état capturé ; sur un appareil en anglais
+   * XCTrack écrirait autre chose, et nous ne l'avons pas mesuré. C'est une réserve, pas
+   * une raison de laisser la cellule vide : la forme — un mot, en très gros, sans unité —
+   * est ce que le pilote doit pouvoir juger. */
+  // `planche-vol-1` : « DÉCOLLAGE » (« Signal GPS OK » au sol).
+  WLastEvent: { quantity: 'none', unit: '', example: 'DÉCOLLAGE' },
+  // `planche-sol-5` : « Rien », en très gros.
+  WLastKey: { quantity: 'none', unit: '', example: 'Rien' }
 }
 
 const FALLBACK_SPEC: NumericSpec = { quantity: 'none', unit: '', example: '--' }
@@ -422,10 +480,15 @@ export function drawNumeric(widget: Widget, settings: RenderSettings, language: 
   const hasTitle = widgetBoolean(widget, '_title') ?? TITLE_BY_DEFAULT
   const hasUnit = widgetBoolean(widget, '_unit') ?? UNIT_BY_DEFAULT
   const unitText = hasUnit ? resolveUnit(widget, settings, spec) : undefined
-  const valueText = bracketed(
-    widget,
-    spec.quantity === 'glide' ? glideRatio(spec.example, language) : formatDecimal(spec.example, language)
-  )
+  // Un exemple vide veut dire « l'appareil n'affiche aucune valeur ici » — le cas de
+  // `WNettoVario`, dont seule l'unité se dessine. Les crochets et le rapport de finesse
+  // n'ont alors rien à encadrer.
+  const valueText = spec.example.length === 0
+    ? ''
+    : bracketed(
+      widget,
+      spec.quantity === 'glide' ? glideRatio(spec.example, language) : formatDecimal(spec.example, language)
+    )
 
   const element = document.createElement('div')
   element.className = 'xc-num'
@@ -467,10 +530,19 @@ export function drawNumeric(widget: Widget, settings: RenderSettings, language: 
   element.style.setProperty('--xc-value-em', String(valueEm(valueText) + strokeEm))
   element.style.setProperty('--xc-unit-h', String(unitWidthH(unitText)))
 
-  const value = document.createElement('span')
-  value.className = 'xc-num__value'
-  value.textContent = valueText
-  row.append(value)
+  if (valueText.length > 0) {
+    const value = document.createElement('span')
+    value.className = 'xc-num__value'
+    value.textContent = valueText
+    row.append(value)
+  } else {
+    // Sans valeur, l'unité reste calée à DROITE, à la place qu'elle occuperait si la
+    // valeur y était — mesuré sur `planche-vol-2-vol-b-et-air-a` : le `m/s` de
+    // « Vario netto / 0,1s » finit à 22 px du bord droit de sa cellule, pas au centre.
+    // Centrer l'unité seule la ferait sauter d'un bout à l'autre de la cellule dès que
+    // la valeur apparaît, ce que l'appareil ne fait pas.
+    row.classList.add('xc-num__row--unit-only')
+  }
 
   // `length > 0` et non `!== undefined` : une heure, une durée ou un nom de balise
   // n'ont PAS d'unité (`unit: ''` dans SPECS). Poser quand même un `<span>` vide y
