@@ -599,7 +599,10 @@ export function renderWidgetPalette(options: WidgetPaletteOptions): WidgetPalett
   search.type = 'search'
   search.id = `${id}-search`
   search.placeholder = 'Rechercher un gadget'
-  search.setAttribute('aria-label', 'Rechercher un gadget par nom ou par classe')
+  // La recherche porte sur le nom lisible ET sur le nom technique (`WCompMap`,
+  // `org.xcontest…`) : le dire ainsi, parce que « classe » est notre mot.
+  search.setAttribute('aria-label',
+    'Rechercher un gadget par son nom, ou par le nom qu’il porte dans le fichier')
   tools.append(search)
 
   // La case rend en un clic la liste courte que l'ancien groupement par présence donnait

@@ -976,7 +976,8 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
       'Ce que cet éditeur suppose'))
     assumedSection.append(el('p', 'library__note',
       'Rien de ceci n’est dans le fichier. L’appareil et sa résolution viennent de notre ' +
-      'table, le drapeau « Pro » d’un catalogue extrait de l’APK.'))
+      'table ; savoir qu’un gadget est réservé à la version Pro vient d’un catalogue ' +
+      'extrait de l’APK.'))
     assumedSection.append(factList(card.assumed))
 
     const identitySection = el('section', 'library__section')
