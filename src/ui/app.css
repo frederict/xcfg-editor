@@ -407,7 +407,14 @@ body {
 
 .modal::backdrop { background: rgb(0 0 0 / 0.45); }
 
-.modal__box { padding: 1.3rem 1.4rem; display: grid; gap: 0.9rem; }
+/* Le rayon est repris du cadre : la boîte défile, et son coin carré laisserait le fond de
+   la tête collante déborder du coin arrondi de la boîte de dialogue. */
+.modal__box {
+  padding: 1.3rem 1.4rem;
+  display: grid;
+  gap: 0.9rem;
+  border-radius: inherit;
+}
 .modal__title { margin: 0; font-size: 16px; font-weight: 600; }
 
 .modal__name {
@@ -2366,12 +2373,52 @@ body.is-dragging .veil {
 
 .modal--pages .pages:first-of-type { margin-top: 0.5rem; }
 
+/*
+ * La tête de boîte — titre à gauche, « Fermer » à droite — **ne défile pas avec le
+ * contenu**. Les deux boîtes qui la portent débordent : 75 lignes dans la palette, autant
+ * de vignettes que le fichier a de pages dans le carrousel. Sans cela, on descend d'un
+ * écran et l'on se retrouve enfermé dans une liste sans sortie visible ; il reste `Échap`,
+ * mais rien à l'écran ne le dit.
+ *
+ * `sticky` plutôt qu'un bouton flottant, pour trois raisons :
+ *
+ * 1. La barre garde sa place dans le flux, donc dans l'ordre de tabulation : `Fermer` reste
+ *    la deuxième chose qu'atteint le clavier, pas la dernière.
+ * 2. Elle ne recouvre **jamais** une ligne à sa hauteur : le contenu passe DESSOUS et ce
+ *    qui reste visible est cliquable en entier. Un bouton flottant posé sur la liste, lui,
+ *    aurait rendu incliquable la ligne qui se trouve sous lui.
+ * 3. Elle vaut pour la palette comme pour la gestion des pages, qui partagent ce meuble.
+ *
+ * Deux ajustements du rembourrage vont avec, l'un et l'autre mesurés au pilote :
+ *
+ * - **En haut**, le rembourrage passe de la boîte à la tête. Sans cela, la tête se colle
+ *   au bord du CONTENU et non au bord de la fenêtre de défilement, et une bande de 21 px
+ *   de liste défilante reste visible au-dessus d'elle.
+ * - **Sur les côtés**, des marges négatives annulent le rembourrage de la boîte pour que
+ *   la barre la couvre d'un bord à l'autre : sans elles, le texte défilant réapparaîtrait
+ *   dans les gouttières, à gauche et à droite du fond opaque.
+ */
+.modal--palette .modal__box,
+.modal--pages .modal__box { padding-top: 0; }
+
 .modal__head {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 1rem;
+  position: sticky;
+  top: 0;
+  /* Au-dessus des vignettes de la palette et du « + » déployé du carrousel (z-index: 10). */
+  z-index: 11;
+  /* Les marges annulent le rembourrage latéral de la boîte, le rembourrage le rétablit. */
+  margin: 0 -1.4rem;
+  padding: 1.3rem 1.4rem 0.7rem;
+  background: var(--app-bg);
+  border-bottom: 1px solid var(--app-line);
 }
+
+/* Le bouton ne se laisse pas écraser par un titre long dans une fenêtre étroite. */
+.modal__head .btn { flex: none; }
 
 .modal__lead {
   margin: 0;
