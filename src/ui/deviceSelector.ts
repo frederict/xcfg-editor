@@ -1,4 +1,5 @@
 import { DEVICES, type Device } from '../catalog/devices'
+import { proseFormat } from './prose'
 
 /**
  * Choix du gabarit d'écran — un réglage d'affichage, **jamais** une donnée du fichier.
@@ -153,11 +154,6 @@ export function responsiveDevice(widthPx: number, heightPx: number, diagonalInch
   }
 }
 
-/** Diagonale formatée à la française, sans décimale inutile : 7″, 6,5″. */
-function formatInches(value: number): string {
-  return `${String(Number(value.toFixed(2))).replace('.', ',')}″`
-}
-
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K, className?: string, text?: string
 ): HTMLElementTagNameMap[K] {
@@ -294,7 +290,7 @@ export function buildDeviceSelector(options: DeviceSelectorOptions): DeviceSelec
   function refreshNote(): void {
     const ratio = `${current.widthPx} × ${current.heightPx} px`
     note.textContent =
-      `${formatInches(current.diagonalInches)} · ${ratio} — la géométrie ne dépend que du ratio, ` +
+      `${proseFormat.inches(current.diagonalInches)} · ${ratio} — la géométrie ne dépend que du ratio, ` +
       'la taille perçue que de la diagonale. Ce choix n’est jamais écrit dans le fichier.'
   }
 
