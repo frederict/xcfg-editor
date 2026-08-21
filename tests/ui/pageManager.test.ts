@@ -26,17 +26,16 @@ import {
   type PageOperation
 } from '../../src/ui/pageManager'
 import type { ViewContext } from '../../src/ui/views'
+import { BACKUP_2026, PAGES_2026 } from '../fixtures/paths'
 
 /**
  * Deux fichiers réels, pas un cas fabriqué : `backup-00` porte cinq pages en paysage
  * (dont une seule d'assistant de thermique) et trois en portrait, ces dernières avec des
  * `navigations` en liste explicite — la forme que la chaîne « all » ne couvre pas.
  */
-const BACKUP = '/Users/fred/DEV/XCTrack/Exemples/2026-08-20_backup-00.xcfg'
-const PAGES = '/Users/fred/DEV/XCTrack/Exemples/2026-08-20_pages-00.xcfg'
 
-const backupSource = readFileSync(BACKUP, 'utf8')
-const pagesSource = readFileSync(PAGES, 'utf8')
+const backupSource = readFileSync(BACKUP_2026, 'utf8')
+const pagesSource = readFileSync(PAGES_2026, 'utf8')
 
 function load(source = backupSource): JsonNode {
   return parseJson(source)

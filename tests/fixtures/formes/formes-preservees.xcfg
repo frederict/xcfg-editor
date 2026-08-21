@@ -1,0 +1,117 @@
+{
+  "airspaceSelectedChannels": [
+    9,
+    12
+  ],
+  "info": {
+    "device": "AIR3 AIR3-7.2 8.1.0",
+    "exportType": "backup",
+    "proUpTo": 0,
+    "timeCreated": "2026-08-20 08:16:35+0100",
+    "versionCode": 100030,
+    "versionName": "1.0.3-beta"
+  },
+  "layout": {
+    "landscape": [
+      {
+        "CLASS": "org.xcontest.XCTrack.widget.wp.WPEmpty",
+        "navigations": "all",
+        "widgets": [
+          {
+            "CLASS": "org.xcontest.XCTrack.widget.w.WFreeText",
+            "X1": 0,
+            "Y1": 0,
+            "X2": 5000,
+            "Y2": 5000,
+            "_border": true,
+            "_bg": 100,
+            "_theme": "",
+            "_decimale_nulle": 3.0,
+            "_exposant_kotlin": 1.0E7,
+            "_zero_negatif": -0.0,
+            "_entier_au_dela_de_2_53": 9007199254740993,
+            "color_text": -27091,
+            "_clef_doublee": 1,
+            "_clef_doublee": 2,
+            "text": "Visualise le thermique 🤘",
+            "titletext": "Élévation à l’œil",
+            "_units": "SYS_UNIT"
+          },
+          {
+            "CLASS": "org.xcontest.XCTrack.widget.w.WButtonPhone",
+            "X1": 5000,
+            "Y1": 0,
+            "X2": 10000,
+            "Y2": 5000,
+            "_border": true,
+            "_bg": 100,
+            "_theme": "",
+            "contact": {
+              "fullName": "Jean Exemple",
+              "phoneNumber": "+32 470 00 00 00"
+            },
+            "callType": "C_CALL_LOUD"
+          },
+          {
+            "CLASS": "org.xcontest.XCTrack.widget.w.WAltitude",
+            "X1": 0,
+            "Y1": 5000,
+            "X2": 10000,
+            "Y2": 10000,
+            "_border": true,
+            "_bg": 100,
+            "_theme": "",
+            "_conteneur_objet_vide": {},
+            "_conteneur_tableau_vide": [],
+            "titletext": ""
+          }
+        ]
+      }
+    ],
+    "portrait": [
+      {
+        "CLASS": "org.xcontest.XCTrack.widget.wp.WPEmpty",
+        "navigations": "none",
+        "widgets": [
+          {
+            "CLASS": "org.xcontest.XCTrack.widget.w.WSpeed",
+            "X1": 0,
+            "Y1": 0,
+            "X2": 10000,
+            "Y2": 2000,
+            "_border": true,
+            "_bg": 100,
+            "_theme": "",
+            "titletext": "Sol"
+          }
+        ]
+      }
+    ]
+  },
+  "preferences": {
+    "Pilot.Name": "Amélie Exemple",
+    "Glider.Name": "EXEMPLE Aile Légère 2",
+    "Display.Theme": "WhiteHCTheme",
+    "Display.Language": "fr",
+    "Display.WidgetTitleSize": "140",
+    "Display.WidgetTitleFont": "normal",
+    "Display.WidgetTitleColor": -769226,
+    "Display.WidgetTitleOutlineColor": -533,
+    "Unit.Distance": "m,km",
+    "Unit.RelativeDistance": "km",
+    "Unit.Altitude": "m",
+    "Unit.AirspaceAltitude": "m",
+    "Unit.Speed": "km/h",
+    "Unit.WindSpeed": "km/h",
+    "Unit.VerticalSpeed": "m/s",
+    "Sensors.AcousticVario.BueeLimit": 3.0,
+    "Sensors.ManualQnh": 1018.8,
+    "Airspace.State": {
+      "8496360": 20250612,
+      "8492352": 20250612
+    },
+    "Airspace.ClassColors": {},
+    "Airspace.Files": [],
+    "Comp.AlertBeforeSSS": []
+  }
+}

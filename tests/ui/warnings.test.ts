@@ -16,19 +16,18 @@ import {
   type Warning,
   type WarningKind
 } from '../../src/ui/warnings'
-
-const DIR = '/Users/fred/DEV/XCTrack/Exemples/'
+import { EXPORTS } from '../fixtures/paths'
 
 const CORPUS = [
   '2026-08-20_backup-00.xcfg',
   '2026-08-20_pages-00.xcfg',
   'backup.xcfg',
-  'complète.xcfg',
-  'pages.xcfg'
+  '2025-07-07_backup-00.xcfg',
+  '2025-07-07_pages-00.xcfg'
 ]
 
 function warningsOfFile(name: string): Warning[] {
-  return warningsOf(parseJson(readFileSync(DIR + name, 'utf8')))
+  return warningsOf(parseJson(readFileSync(EXPORTS + name, 'utf8')))
 }
 
 function warningsOf(document: JsonNode, language = 'fr'): Warning[] {
@@ -117,12 +116,12 @@ describe('avertissements — valeurs supposées', () => {
   })
 
   it('signale une langue indéterminée quand la section preferences est absente', () => {
-    expect(kinds(warningsOfFile('pages.xcfg'))).toContain('assumed-language')
+    expect(kinds(warningsOfFile('2025-07-07_pages-00.xcfg'))).toContain('assumed-language')
   })
 
   it('ne la signale pas quand le fichier déclare sa langue', () => {
     // complète.xcfg porte `Display.Language: "fr"`.
-    expect(kinds(warningsOfFile('complète.xcfg'))).not.toContain('assumed-language')
+    expect(kinds(warningsOfFile('2025-07-07_backup-00.xcfg'))).not.toContain('assumed-language')
   })
 })
 
@@ -133,7 +132,7 @@ describe('avertissements — données personnelles', () => {
     expect(text).toContain('Pilot.Name')
     expect(text).toContain('Glider.Name')
     expect(text).toContain('Livetrack')
-    expect(text).toContain('belgian-paragliding-open-2026.CompeGPS.wpt')
+    expect(text).toContain('coupe-exemple-2026.CompeGPS.wpt')
   })
 
   it('ne dit rien d’un export « pages », qui ne porte aucune préférence', () => {
@@ -152,13 +151,13 @@ describe('avertissements — ressources externes', () => {
     const warning = pick(warningsOfFile('2026-08-20_backup-00.xcfg'), 'external-resources')
     const text = textOf(warning)
     expect(text).toContain('hyperpilot/hyperpilot.xml')
-    expect(text).toContain('cities5000-Belgium.wpt')
+    expect(text).toContain('cities5000-Exemple.wpt')
   })
 
   it('liste aussi les fichiers d’espace aérien quand il y en a', () => {
-    // `Airspace.Files` est vide dans les backups récents, peuplé dans complète.xcfg.
-    const text = textOf(pick(warningsOfFile('complète.xcfg'), 'external-resources'))
-    expect(text).toContain('Colombia-Airspaces-2025_0.txt')
+    // `Airspace.Files` est vide dans les backups récents, peuplé dans celui de 2025.
+    const text = textOf(pick(warningsOfFile('2025-07-07_backup-00.xcfg'), 'external-resources'))
+    expect(text).toContain('Exemple-Airspaces-2025_0.txt')
   })
 
   it('ne produit pas d’avertissement creux quand rien n’est référencé', () => {
@@ -176,7 +175,7 @@ describe('avertissements — ressources externes', () => {
 
 describe('avertissements — écart de version', () => {
   it('signale complète.xcfg, exporté par la version 91230', () => {
-    const warning = pick(warningsOfFile('complète.xcfg'), 'version-gap')
+    const warning = pick(warningsOfFile('2025-07-07_backup-00.xcfg'), 'version-gap')
     expect(warning).toBeDefined()
     expect(textOf(warning)).toContain('91230')
     expect(textOf(warning)).toContain(String(REFERENCE_VERSION_CODE))

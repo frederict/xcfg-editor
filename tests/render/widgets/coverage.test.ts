@@ -5,15 +5,14 @@ import { readLayout } from '../../../src/model/layout'
 import { isRegistered } from '../../../src/render/registry'
 // Effet de bord : enregistre les dessins connus auprès de l'annuaire (registry.ts).
 import '../../../src/render/widgets'
-
-const EXAMPLES = '/Users/fred/DEV/XCTrack/Exemples/'
+import { EXPORTS } from '../../fixtures/paths'
 
 /**
  * Contrôle de couverture prévu par le plan à la tâche 18 (`docs/plans/
  * 2026-08-20-jalon-1-visionneuse.md`) : plutôt que de grep-er le texte de
  * `widgets/index.ts` — qui ne prouve rien sur ce qui est réellement enregistré une fois
  * les imports exécutés, et se désynchronise silencieusement d'un corpus qui change —
- * ce test relève lui-même les types présents dans `/Users/fred/DEV/XCTrack/Exemples/`
+ * ce test relève lui-même les types présents dans `tests/fixtures/exports/`
  * et interroge `isRegistered` à l'exécution pour chacun.
  *
  * Écrit ici, à la tâche 17, sur consigne explicite reçue pour cette tâche — avant que la
@@ -24,9 +23,9 @@ const EXAMPLES = '/Users/fred/DEV/XCTrack/Exemples/'
  */
 function corpusShortNames(): Set<string> {
   const names = new Set<string>()
-  const files = readdirSync(EXAMPLES).filter((f) => f.endsWith('.xcfg'))
+  const files = readdirSync(EXPORTS).filter((f) => f.endsWith('.xcfg'))
   for (const file of files) {
-    const document = parseJson(readFileSync(EXAMPLES + file, 'utf8'))
+    const document = parseJson(readFileSync(EXPORTS + file, 'utf8'))
     const layout = readLayout(document)
     for (const page of [...layout.portrait, ...layout.landscape]) {
       for (const widget of page.widgets) names.add(widget.shortName)

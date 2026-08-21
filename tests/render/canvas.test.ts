@@ -11,6 +11,7 @@ import { registerTransparent } from '../../src/render/registry'
 // corpus, pas seulement sur un type de test synthétique. WButtonNavig n'est plus
 // transparent depuis la correction en vol (rendu-en-vol.md § 4, registry.ts).
 import '../../src/render/widgets'
+import { BACKUP_2026 } from '../fixtures/paths'
 
 describe('positionnement', () => {
   it('convertit les coordonnées 0-10000 en pourcentages', () => {
@@ -36,7 +37,7 @@ describe('positionnement', () => {
 // conteneur réel — `container-type`/`cqh` a été essayé et abandonné, cassé dans ce
 // Chrome dès qu'il y a plusieurs conteneurs de ce type sur une même page.
 describe('repère de référence (défaut 1 — lisibilité à toute taille)', () => {
-  const doc = parseJson(readFileSync('/Users/fred/DEV/XCTrack/Exemples/2026-08-20_backup-00.xcfg', 'utf8'))
+  const doc = parseJson(readFileSync(BACKUP_2026, 'utf8'))
   const settings = readRenderSettings(doc)
   const page = readLayout(doc).landscape[3]!
 
@@ -98,7 +99,7 @@ describe('widgetHeightPx (défaut 2 — la valeur numérique suit la hauteur de 
 })
 
 describe('empilement', () => {
-  const doc = parseJson(readFileSync('/Users/fred/DEV/XCTrack/Exemples/2026-08-20_backup-00.xcfg', 'utf8'))
+  const doc = parseJson(readFileSync(BACKUP_2026, 'utf8'))
   const settings = readRenderSettings(doc)
   const page = readLayout(doc).landscape[4]!
 
@@ -124,7 +125,7 @@ describe('empilement', () => {
 })
 
 describe('widgets transparents (mécanisme)', () => {
-  const settings = readRenderSettings(parseJson(readFileSync('/Users/fred/DEV/XCTrack/Exemples/2026-08-20_backup-00.xcfg', 'utf8')))
+  const settings = readRenderSettings(parseJson(readFileSync(BACKUP_2026, 'utf8')))
 
   it('force l’opacité de fond à 0 pour un type enregistré transparent, quelle que soit _bg', () => {
     registerTransparent('WEssaiTactileCanvas')
@@ -148,7 +149,7 @@ describe('widgets tactiles réels du corpus (intégration)', () => {
   // moitié centrale de l'écran — le cas cité par rendu-observe.md, « Widgets sans
   // rendu visible ». _bg: 100 est le piège explicite de la tâche : sans neutralisation,
   // l'opacité de fond resterait à 1 et masquerait la carte.
-  const doc = parseJson(readFileSync('/Users/fred/DEV/XCTrack/Exemples/2026-08-20_backup-00.xcfg', 'utf8'))
+  const doc = parseJson(readFileSync(BACKUP_2026, 'utf8'))
   const settings = readRenderSettings(doc)
   const brightnessPage = readLayout(doc).landscape[3]!
   // landscape[4] : deux WButtonNavig avec _border: true dans le fichier — correction en

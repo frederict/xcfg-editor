@@ -11,12 +11,12 @@ import {
   FREE_TEXT_KEYS,
   PAGES_ROOT_KEYS
 } from '../../src/model/scope'
+import { EXPORTS } from '../fixtures/paths'
 
-const EXAMPLES = '/Users/fred/DEV/XCTrack/Exemples/'
-const BACKUP = EXAMPLES + '2026-08-20_backup-00.xcfg'
-const PAGES = EXAMPLES + '2026-08-20_pages-00.xcfg'
+const BACKUP = EXPORTS + '2026-08-20_backup-00.xcfg'
+const PAGES = EXPORTS + '2026-08-20_pages-00.xcfg'
 
-const exampleFiles = readdirSync(EXAMPLES).filter((f) => f.endsWith('.xcfg'))
+const exampleFiles = readdirSync(EXPORTS).filter((f) => f.endsWith('.xcfg'))
 
 const read = (path: string): string => readFileSync(path, 'utf8')
 const rootKeys = (node: JsonNode): string[] =>
@@ -106,7 +106,7 @@ const TRAP_SOURCE = [
   '    ]',
   '  },',
   '  "preferences": {',
-  '    "Pilot.Name": "Frédéric Tétart"',
+  '    "Pilot.Name": "Amélie Exemple"',
   '  }',
   '}'
 ].join('\n')
@@ -174,7 +174,7 @@ describe('derivePagesDocument — propriété 1 : le layout sort identique à l�
 
   for (const file of exampleFiles) {
     it(`${file} : le layout dérivé est le même texte`, () => {
-      const source = parseJson(read(EXAMPLES + file))
+      const source = parseJson(read(EXPORTS + file))
       const before = layoutText(source)
       const after = layoutText(derivePagesDocument(source).document)
       // Garde-fou : comparer deux textes vides serait vert et ne prouverait rien.
@@ -200,7 +200,7 @@ describe('derivePagesDocument — propriété 1 : le layout sort identique à l�
 describe('derivePagesDocument — propriété 2 : la source n’est pas modifiée', () => {
   for (const file of exampleFiles) {
     it(`${file} : le document d’origine ressort inchangé`, () => {
-      const text = read(EXAMPLES + file)
+      const text = read(EXPORTS + file)
       const source = parseJson(text)
       expect(serializeJson(source)).toBe(text)
       derivePagesDocument(source)
@@ -226,11 +226,11 @@ describe('derivePagesDocument — propriété 2 : la source n’est pas modifié
 describe('derivePagesDocument — propriété 3 : la sortie est un `pages` relisible', () => {
   for (const file of exampleFiles) {
     it(`${file} : la sortie se reparse à l’identique`, () => {
-      const derived = derivePagesDocument(parseJson(read(EXAMPLES + file))).document
+      const derived = derivePagesDocument(parseJson(read(EXPORTS + file))).document
       const text = serializeJson(derived)
       expect(serializeJson(parseJson(text))).toBe(text)
       const layout = readLayout(parseJson(text))
-      const original = readLayout(parseJson(read(EXAMPLES + file)))
+      const original = readLayout(parseJson(read(EXPORTS + file)))
       expect(layout.landscape).toHaveLength(original.landscape.length)
       expect(layout.portrait).toHaveLength(original.portrait.length)
     })
@@ -276,7 +276,10 @@ describe('derivePagesDocument — propriété 5 : rien de sensible ne survit', (
     'Livetrack.',
     'Sensors.Configuration',
     'Navigation.WaypointFiles',
-    'Frédéric'
+    // Le nom du pilote, cherché comme valeur et non comme clé. C'est une identité
+    // d'exemple : un test qui dépendrait du nom réel du propriétaire ne pourrait plus
+    // s'exécuter ailleurs que sur son poste.
+    'Amélie Exemple'
   ]
 
   const sourceText = read(BACKUP)
@@ -322,7 +325,7 @@ describe('findFreeTexts', () => {
     // Relevé, pas supposé : aucun `WFreeText` dans ces fichiers, et les 1 401 `titletext`
     // du corpus sont vides. Un inventaire vide est le cas courant.
     for (const file of exampleFiles) {
-      expect(findFreeTexts(readLayout(parseJson(read(EXAMPLES + file))))).toEqual([])
+      expect(findFreeTexts(readLayout(parseJson(read(EXPORTS + file))))).toEqual([])
     }
   })
 

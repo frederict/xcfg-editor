@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { findDuplicateKeys, parseJson } from '../../src/core/parseJson'
+import { BACKUP_2026 } from '../fixtures/paths'
 
 describe('parseJson', () => {
   it('conserve le texte source des littéraux numériques', () => {
@@ -33,7 +34,7 @@ describe('parseJson', () => {
   })
 
   it('ne signale rien sur un fichier sain', () => {
-    const doc = parseJson(readFileSync('/Users/fred/DEV/XCTrack/Exemples/2026-08-20_backup-00.xcfg', 'utf8'))
+    const doc = parseJson(readFileSync(BACKUP_2026, 'utf8'))
     expect(findDuplicateKeys(doc)).toEqual([])
   })
 })

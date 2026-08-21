@@ -6,22 +6,21 @@ import {
   getMember, getIndex, readString, readNumber, setLiteral, setString, decode, encode,
   hasMember, insertLiteral, insertString, removeMember
 } from '../../src/core/access'
-
-const FILE = '/Users/fred/DEV/XCTrack/Exemples/2026-08-20_pages-00.xcfg'
+import { PAGES_2026 } from '../fixtures/paths'
 
 describe('accesseurs', () => {
   it('lit une chaîne en décodant ses guillemets', () => {
-    const doc = parseJson(readFileSync(FILE, 'utf8'))
+    const doc = parseJson(readFileSync(PAGES_2026, 'utf8'))
     expect(readString(getMember(doc, 'info')!, 'exportType')).toBe('pages')
   })
 
   it('lit un nombre', () => {
-    const doc = parseJson(readFileSync(FILE, 'utf8'))
+    const doc = parseJson(readFileSync(PAGES_2026, 'utf8'))
     expect(readNumber(getMember(doc, 'info')!, 'versionCode')).toBe(100030)
   })
 
   it("déplacer un widget ne change QUE ses quatre coordonnées", () => {
-    const source = readFileSync(FILE, 'utf8')
+    const source = readFileSync(PAGES_2026, 'utf8')
     const doc = parseJson(source)
     const page = getIndex(getMember(getMember(doc, 'layout')!, 'portrait')!, 0)!
     const widget = getIndex(getMember(page, 'widgets')!, 0)!

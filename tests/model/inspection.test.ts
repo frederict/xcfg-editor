@@ -25,8 +25,7 @@ import {
   type InspectionRuleId,
   type Rectangle
 } from '../../src/model/inspection'
-
-const REAL_FILE = '/Users/fred/DEV/XCTrack/Exemples/2026-08-20_backup-00.xcfg'
+import { BACKUP_2026 } from '../fixtures/paths'
 
 const AIR3 = DEVICES[0]!
 
@@ -628,7 +627,7 @@ describe('ce que ce module refuse de signaler', () => {
   })
 
   it('ne touche jamais au document', () => {
-    const source = readFileSync(REAL_FILE, 'utf8')
+    const source = readFileSync(BACKUP_2026, 'utf8')
     const document = parseJson(source)
     inspect(document)
     expect(readString(getMember(document, 'info')!, 'exportType')).toBe('backup')
@@ -643,7 +642,7 @@ describe('ce que ce module refuse de signaler', () => {
   })
 
   it('un constat « hypothesis » dit toujours ce qui le lèverait, et lui seul', () => {
-    const document = parseJson(readFileSync(REAL_FILE, 'utf8'))
+    const document = parseJson(readFileSync(BACKUP_2026, 'utf8'))
     const findings = inspectLayout({
       document,
       layout: readLayout(document),
@@ -665,7 +664,7 @@ describe('la configuration réelle — 2026-08-20_backup-00.xcfg', () => {
   let findings: Finding[]
 
   beforeAll(async () => {
-    document = parseJson(readFileSync(REAL_FILE, 'utf8'))
+    document = parseJson(readFileSync(BACKUP_2026, 'utf8'))
     layout = readLayout(document)
     const catalog = await loadWidgetCatalog('fr')
     findings = inspectLayout({

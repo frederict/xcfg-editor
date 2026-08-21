@@ -2,12 +2,11 @@ import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { parseJson } from '../../src/core/parseJson'
 import { readRenderSettings, longDistanceUnit, resolveLanguage } from '../../src/model/preferences'
-
-const DIR = '/Users/fred/DEV/XCTrack/Exemples/'
+import { EXPORTS } from '../fixtures/paths'
 
 describe('paramètres de rendu', () => {
   it('lit les préférences d’un backup', () => {
-    const settings = readRenderSettings(parseJson(readFileSync(DIR + '2026-08-20_backup-00.xcfg', 'utf8')))
+    const settings = readRenderSettings(parseJson(readFileSync(EXPORTS + '2026-08-20_backup-00.xcfg', 'utf8')))
     expect(settings.fromDefaults).toBe(false)
     expect(settings.theme).toBe('WhiteHCTheme')
     expect(settings.altitudeUnit).toBe('m')
@@ -17,7 +16,7 @@ describe('paramètres de rendu', () => {
   })
 
   it('retombe sur les valeurs par défaut pour un export pages', () => {
-    const settings = readRenderSettings(parseJson(readFileSync(DIR + '2026-08-20_pages-00.xcfg', 'utf8')))
+    const settings = readRenderSettings(parseJson(readFileSync(EXPORTS + '2026-08-20_pages-00.xcfg', 'utf8')))
     expect(settings.fromDefaults).toBe(true)
     expect(settings.theme).toBe('WhiteHCTheme')
     expect(settings.windSpeedUnit).toBe('km/h')
@@ -27,12 +26,12 @@ describe('paramètres de rendu', () => {
   })
 
   it('décode une couleur Android signée', () => {
-    const settings = readRenderSettings(parseJson(readFileSync(DIR + '2026-08-20_backup-00.xcfg', 'utf8')))
+    const settings = readRenderSettings(parseJson(readFileSync(EXPORTS + '2026-08-20_backup-00.xcfg', 'utf8')))
     expect(settings.titleColor).toBe('#f44336')
   })
 
   it('lit les unités de vent, de distance et d’espace aérien d’un backup', () => {
-    const settings = readRenderSettings(parseJson(readFileSync(DIR + '2026-08-20_backup-00.xcfg', 'utf8')))
+    const settings = readRenderSettings(parseJson(readFileSync(EXPORTS + '2026-08-20_backup-00.xcfg', 'utf8')))
     // Unit.WindSpeed est une préférence distincte de Unit.Speed — elles coïncident chez
     // cet utilisateur (km/h des deux côtés) mais rien ne garantit qu'un autre pilote ne
     // règle pas sa vitesse sol en km/h et son vent en m/s.
@@ -45,7 +44,7 @@ describe('paramètres de rendu', () => {
   })
 
   it('lit une langue explicite depuis Display.Language', () => {
-    const withLanguage = readRenderSettings(parseJson(readFileSync(DIR + 'complète.xcfg', 'utf8')))
+    const withLanguage = readRenderSettings(parseJson(readFileSync(EXPORTS + '2025-07-07_backup-00.xcfg', 'utf8')))
     expect(withLanguage.language).toEqual({ kind: 'explicit', code: 'fr' })
   })
 
@@ -55,10 +54,10 @@ describe('paramètres de rendu', () => {
     // XCTrack y affiche du français. Le vide et l'absence de section `preferences`
     // signifient tous deux « langue système, inconnue de ce fichier » : ce n'est
     // décidable qu'à l'affichage (src/ui/), jamais ici.
-    const emptyLanguage = readRenderSettings(parseJson(readFileSync(DIR + '2026-08-20_backup-00.xcfg', 'utf8')))
+    const emptyLanguage = readRenderSettings(parseJson(readFileSync(EXPORTS + '2026-08-20_backup-00.xcfg', 'utf8')))
     expect(emptyLanguage.language).toEqual({ kind: 'system' })
 
-    const noPreferencesAtAll = readRenderSettings(parseJson(readFileSync(DIR + '2026-08-20_pages-00.xcfg', 'utf8')))
+    const noPreferencesAtAll = readRenderSettings(parseJson(readFileSync(EXPORTS + '2026-08-20_pages-00.xcfg', 'utf8')))
     expect(noPreferencesAtAll.language).toEqual({ kind: 'system' })
   })
 })

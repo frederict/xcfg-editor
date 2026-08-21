@@ -2,8 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { parseJson } from '../../src/core/parseJson'
 import { readLayout } from '../../src/model/layout'
+import { BACKUP_2026 } from '../fixtures/paths'
 
-const doc = parseJson(readFileSync('/Users/fred/DEV/XCTrack/Exemples/2026-08-20_backup-00.xcfg', 'utf8'))
+const doc = parseJson(readFileSync(BACKUP_2026, 'utf8'))
 
 describe('readLayout', () => {
   const layout = readLayout(doc)

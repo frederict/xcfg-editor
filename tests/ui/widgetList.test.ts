@@ -14,6 +14,7 @@ import { widgetAtPoint } from '../../src/ui/editor'
 import {
   coversEntirely, renderWidgetList, unreachableWidgets, widgetListEntries
 } from '../../src/ui/widgetList'
+import { PAGES_2026 } from '../fixtures/paths'
 
 const DEVICE = deviceFor('AIR3 AIR3-7.2')
 
@@ -170,11 +171,9 @@ describe('unreachableWidgets — ce qu’aucun clic ne peut atteindre', () => {
 
 /* ============================================ le corpus réel : exactement six, mesurés */
 
-const PAGES = '/Users/fred/DEV/XCTrack/Exemples/2026-08-20_pages-00.xcfg'
-
 describe('la configuration de référence', () => {
   it('compte exactement six widgets inatteignables, et ce sont ceux-là', () => {
-    const layout = readLayout(parseJson(readFileSync(PAGES, 'utf8')))
+    const layout = readLayout(parseJson(readFileSync(PAGES_2026, 'utf8')))
     const murés: string[] = []
     let total = 0
     for (const orientation of ['landscape', 'portrait'] as const) {
@@ -204,7 +203,7 @@ describe('la configuration de référence', () => {
    * est le seul chemin qui y mène.
    */
   it('ne mure aucun WLiveMessage — c’est lui qui mure les autres', () => {
-    const layout = readLayout(parseJson(readFileSync(PAGES, 'utf8')))
+    const layout = readLayout(parseJson(readFileSync(PAGES_2026, 'utf8')))
     for (const page of layout.landscape) {
       const murés = unreachableWidgets(boxesOf(page))
       page.widgets.forEach((widget, index) => {

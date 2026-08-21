@@ -9,8 +9,7 @@ import { drawWidget } from '../../../src/render/registry'
 // Effet de bord : enregistre les dessins connus auprès de l'annuaire (registry.ts) —
 // nécessaire au bloc « défaut 4 » plus bas, qui interroge `drawWidget` sur le corpus.
 import '../../../src/render/widgets'
-
-const EXAMPLES = '/Users/fred/DEV/XCTrack/Exemples/'
+import { EXPORTS } from '../../fixtures/paths'
 
 const settings: RenderSettings = {
   fromDefaults: false, theme: 'WhiteHCTheme', titleColor: '#f44336',
@@ -310,10 +309,10 @@ describe('widgets numériques', () => {
   // l'afficherait signalerait une entrée manquante dans SPECS (numeric.ts).
   describe('« -- » réservé au rendu générique de repli (défaut 4)', () => {
     it('aucun widget numérique du corpus n’affiche « -- » comme valeur d’exemple', () => {
-      const files = readdirSync(EXAMPLES).filter((f) => f.endsWith('.xcfg'))
+      const files = readdirSync(EXPORTS).filter((f) => f.endsWith('.xcfg'))
       const offenders: string[] = []
       for (const file of files) {
-        const document = parseJson(readFileSync(EXAMPLES + file, 'utf8'))
+        const document = parseJson(readFileSync(EXPORTS + file, 'utf8'))
         const layout = readLayout(document)
         for (const page of [...layout.portrait, ...layout.landscape]) {
           for (const widgetOnPage of page.widgets) {

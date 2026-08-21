@@ -1,0 +1,48 @@
+{
+  "airspaceSelectedChannels": [
+    12,
+    9,
+    11
+  ],
+  "info": {
+    "device": "AIR3 AIR3-7.2 8.1.0",
+    "proUpTo": 0,
+    "timeCreated": "2022-02-08 16:39:18+0100",
+    "versionCode": 90615,
+    "versionName": "0.9.6.2-beta-48-gcb6ffef8"
+  },
+  "layout": {
+    "landscape": [
+      {
+        "CLASS": "org.xcontest.XCTrack.widget.wp.WPEmpty",
+        "navigations": "all",
+        "widgets": [
+          {
+            "CLASS": "org.xcontest.XCTrack.widget.w.WAltitude",
+            "X1": 0,
+            "Y1": 0,
+            "X2": 10000,
+            "Y2": 5000,
+            "_border": true,
+            "_bg": 100,
+            "_theme": "",
+            "titletext": ""
+          }
+        ]
+      }
+    ],
+    "portrait": []
+  },
+  "preferences": {
+    "Display.Theme": "WhiteTheme",
+    "Livetrack.QuickMessages": [
+      "Yes",
+      "No",
+      "Message received",
+      "where are you? I can\u0027t find you.",
+      "I\u0027m coming",
+      "Good flying conditions, won\u0027t be back for dinner"
+    ],
+    "TakeoffSpeed": 2.777778
+  }
+}

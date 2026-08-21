@@ -16,14 +16,14 @@ import {
   type PropertyField,
   type PropertyForm
 } from '../../src/ui/properties'
+import { BACKUP_2026 } from '../fixtures/paths'
 
 /**
  * Tout se joue sur des widgets réels. Un panneau de réglages engendré ne se juge pas sur
  * des données inventées : ce qu'on veut vérifier, c'est qu'il retrouve les libellés
  * relevés sur l'appareil à partir des octets que l'appareil a écrits.
  */
-const FILE = '/Users/fred/DEV/XCTrack/Exemples/2026-08-20_backup-00.xcfg'
-const source = readFileSync(FILE, 'utf8')
+const source = readFileSync(BACKUP_2026, 'utf8')
 
 /**
  * Le catalogue est désormais partitionné par langue et chargé par `import()` : le module

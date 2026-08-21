@@ -28,9 +28,9 @@ import {
   setWidgetBounds,
   type Orientation
 } from '../../src/model/mutations'
+import { BACKUP_2026 } from '../fixtures/paths'
 
-const FILE = '/Users/fred/DEV/XCTrack/Exemples/2026-08-20_backup-00.xcfg'
-const source = readFileSync(FILE, 'utf8')
+const source = readFileSync(BACKUP_2026, 'utf8')
 const load = (): JsonNode => parseJson(source)
 
 const page = (document: JsonNode, orientation: Orientation, index: number): JsonNode =>

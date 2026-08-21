@@ -21,14 +21,14 @@ import {
   WIDGET_CLASS_PREFIX,
   type PaletteEntry
 } from '../../src/ui/widgetPalette'
+import { BACKUP_2026 } from '../fixtures/paths'
 
 /**
  * La palette se juge sur un fichier réel : ce qu'on veut vérifier, c'est qu'un widget
  * dupliqué depuis les octets écrits par l'appareil en ressort intact, et qu'un widget neuf
  * tombe exactement là où l'appareil l'a posé.
  */
-const FILE = '/Users/fred/DEV/XCTrack/Exemples/2026-08-20_backup-00.xcfg'
-const source = readFileSync(FILE, 'utf8')
+const source = readFileSync(BACKUP_2026, 'utf8')
 
 const AIR3 = DEVICES[0]!
 

@@ -18,9 +18,9 @@ import {
   type Orientation
 } from '../../src/model/mutations'
 import { createHistory, HISTORY_LIMIT } from '../../src/model/history'
+import { BACKUP_2026 } from '../fixtures/paths'
 
-const FILE = '/Users/fred/DEV/XCTrack/Exemples/2026-08-20_backup-00.xcfg'
-const source = readFileSync(FILE, 'utf8')
+const source = readFileSync(BACKUP_2026, 'utf8')
 
 const page = (document: JsonNode, orientation: Orientation, index: number): JsonNode =>
   getIndex(pagesNode(document, orientation), index)!

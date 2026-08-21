@@ -49,9 +49,9 @@ import {
   type WidgetEdit,
   type WidgetStructureEdit
 } from '../../src/ui/editor'
+import { BACKUP_2026 } from '../fixtures/paths'
 
-const FILE = '/Users/fred/DEV/XCTrack/Exemples/2026-08-20_backup-00.xcfg'
-const source = readFileSync(FILE, 'utf8')
+const source = readFileSync(BACKUP_2026, 'utf8')
 
 const air3 = DEVICES.find((d) => d.id === 'air3-7.2')!
 /** 48 × 29 : la seule grille mesurée sur l'appareil réel, en paysage. */
