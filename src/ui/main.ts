@@ -1434,7 +1434,10 @@ function render(): void {
           selection = undefined
           render()
         },
-        onZoom: (factor) => { zoom = factor },
+        // Le zoom redimensionne la plaque sous le calque, qui n'en est pas averti : c'est
+        // ici qu'on le lui dit. Le placement de la barre d'outils se juge en pixels — sa
+        // hauteur à l'écran contre la place restante —, et ces pixels viennent de changer.
+        onZoom: (factor) => { zoom = factor; editor?.refresh() },
         ...(editing === undefined ? {} : { editing })
       }))
       syncEditControls()

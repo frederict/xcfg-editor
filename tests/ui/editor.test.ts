@@ -40,6 +40,8 @@ import {
   stackLabel,
   stackTarget,
   structureDescription,
+  toolbarLeftPercent,
+  toolbarPlacement,
   widgetAtPoint,
   type Editor,
   type Handle,
@@ -1118,5 +1120,78 @@ describe('barre d’outils de la sélection', () => {
 
     expect(structure).toHaveLength(0)
     expect(serializeJson(json)).toBe(before)
+  })
+})
+
+/**
+ * Placement de la barre d'outils de la sélection. Les chiffres viennent de l'écran : page
+ * 1 paysage de la configuration de référence, plaque de 1173 × 661 px (AIR³ 7.2 à 200 %),
+ * barre mesurée à 432 × 30 px. La règle tient en une phrase — la barre ne masque jamais le
+ * widget qu'elle sert — et se vérifie ici sans mise en page.
+ */
+describe('placement de la barre d’outils', () => {
+  /** La plaque à 200 % ; à 100 % elle vaut la moitié, et c'est le second cas de chaque test. */
+  const plate: Viewport = { left: 0, top: 0, width: 1173, height: 661 }
+  const halfPlate: Viewport = { left: 0, top: 0, width: 586, height: 330 }
+  const BAR_H = 30
+  const BAR_W = 432
+
+  /** `WStatusLine`, rang 1 : collée en haut à droite, 12 mm de haut — le cas signalé. */
+  const statusLine = { x1: 6042, y1: 0, x2: 10000, y2: 1379 }
+
+  it('passe SOUS la barre d’état plutôt que dedans', () => {
+    // Rien au-dessus : elle touche le haut de la plaque. Le seuil d'avant l'envoyait à
+    // l'intérieur, où ses 30 px recouvraient les 91 px du widget en entier.
+    expect(toolbarPlacement(statusLine, plate, BAR_H)).toBe('below')
+    expect(toolbarPlacement(statusLine, halfPlate, BAR_H)).toBe('below')
+  })
+
+  it('reste au-dessus d’un widget qui a la place au-dessus de lui', () => {
+    // Un widget du bas de page : 330 px de plaque au-dessus de son bord haut.
+    expect(toolbarPlacement({ x1: 0, y1: 5000, x2: 3000, y2: 7000 }, plate, BAR_H)).toBe('above')
+  })
+
+  it('ne se glisse dedans qu’en dernier recours', () => {
+    // Un widget qui prend presque toute la hauteur : 13 px au-dessus, 7 px en dessous.
+    expect(toolbarPlacement({ x1: 0, y1: 200, x2: 10000, y2: 9900 }, plate, BAR_H)).toBe('inside')
+  })
+
+  it('bascule exactement là où la barre cesse de tenir', () => {
+    // 36 px nécessaires (30 de barre, 6 d'écart) sur 661 px de plaque : 544,6 unités.
+    expect(toolbarPlacement({ x1: 0, y1: 545, x2: 100, y2: 9000 }, plate, BAR_H)).toBe('above')
+    expect(toolbarPlacement({ x1: 0, y1: 544, x2: 100, y2: 9000 }, plate, BAR_H)).toBe('below')
+  })
+
+  it('suit le zoom : le même widget change de position d’une échelle à l’autre', () => {
+    // 700 unités valent 46 px à 200 % — la barre tient —, 23 px à 100 % — elle ne tient plus.
+    const widget = { x1: 0, y1: 700, x2: 3000, y2: 4000 }
+    expect(toolbarPlacement(widget, plate, BAR_H)).toBe('above')
+    expect(toolbarPlacement(widget, halfPlate, BAR_H)).toBe('below')
+  })
+
+  it('retombe au-dessus quand la plaque n’a pas encore de hauteur', () => {
+    const nowhere: Viewport = { left: 0, top: 0, width: 0, height: 0 }
+    expect(toolbarPlacement(statusLine, nowhere, BAR_H)).toBe('above')
+  })
+
+  it('laisse la barre à l’abscisse du widget tant qu’elle rentre', () => {
+    expect(toolbarLeftPercent(statusLine, plate, BAR_W)).toBeCloseTo(60.42, 2)
+  })
+
+  it('rentre la barre dans la plaque plutôt que de la laisser déborder à droite', () => {
+    // À 100 %, la plaque ne fait plus que 586 px : la barre commencerait à 354 et
+    // finirait 200 px dehors. Elle glisse à 148 px — son bord droit à six pixels de celui
+    // de la plaque, le même écart qu'elle garde des bords du widget.
+    const left = toolbarLeftPercent(statusLine, halfPlate, BAR_W)
+    expect((left / 100) * halfPlate.width).toBeCloseTo(148, 0)
+    expect((left / 100) * halfPlate.width + BAR_W).toBeLessThanOrEqual(halfPlate.width)
+  })
+
+  it('colle la barre à gauche quand elle est plus large que la plaque entière', () => {
+    expect(toolbarLeftPercent(statusLine, { left: 0, top: 0, width: 300, height: 200 }, BAR_W)).toBe(0)
+  })
+
+  it('s’en tient à l’abscisse du widget quand la plaque n’a pas de largeur', () => {
+    expect(toolbarLeftPercent(statusLine, { left: 0, top: 0, width: 0, height: 0 }, BAR_W)).toBe(60.42)
   })
 })

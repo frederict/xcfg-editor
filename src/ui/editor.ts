@@ -771,6 +771,78 @@ function place(node: HTMLElement, rect: Rect): void {
   node.style.height = `${(rect.y2 - rect.y1) / 100}%`
 }
 
+/* ------------------------------------------- placement de la barre d'outils */
+
+/**
+ * Écart entre la barre d'outils et le bord du widget qu'elle sert. La valeur est répétée
+ * dans `app.css` (les `translateY` de `.editor__toolbar`) : les deux bougent ensemble.
+ */
+const TOOLBAR_GAP_PX = 6
+
+/**
+ * Où poser la barre d'outils. Les trois positions, dans l'ordre où on les essaie :
+ *
+ * - `above` — au-dessus du widget, **hors** de son rectangle : le cas courant ;
+ * - `below` — sous son bord inférieur, quand il n'y a pas la place au-dessus ;
+ * - `inside` — dedans, en dernier recours, quand le widget occupe presque toute la
+ *   hauteur de la plaque et qu'aucun des deux dehors ne tient.
+ *
+ * Le critère n'est pas « le widget commence-t-il haut » mais **« la barre tient-elle sans
+ * recouvrir »** — ce qui dépend de sa hauteur à l'écran, du zoom courant et de la place
+ * restante dans la plaque. Un seuil en unités de page, comme le `TOOLBAR_FLIP = 1000`
+ * d'avant, ignore ces trois choses : il envoyait « à l'intérieur » tout widget commençant
+ * dans le dixième supérieur, et une barre d'état de 12 mm de haut disparaissait
+ * intégralement dessous. C'est le défaut signalé le 2026-08-21.
+ *
+ * La hauteur de la barre est passée en pixels, mesurée par l'appelant : la fonction reste
+ * ainsi vérifiable sans mise en page, là où un `getBoundingClientRect` en test ne rendrait
+ * que des zéros.
+ */
+export type ToolbarPlacement = 'above' | 'below' | 'inside'
+
+export function toolbarPlacement(
+  rect: Rect, viewport: Viewport, barHeightPx: number, gapPx: number = TOOLBAR_GAP_PX
+): ToolbarPlacement {
+  // Plaque de hauteur inconnue — jamais mesurée, ou page démontée : le cas courant est le
+  // moins mauvais des trois par défaut.
+  if (!(viewport.height > 0)) return 'above'
+  const needed = barHeightPx + gapPx
+  const topPx = (rect.y1 / NORMALIZED_MAX) * viewport.height
+  const bottomPx = (rect.y2 / NORMALIZED_MAX) * viewport.height
+  if (topPx >= needed) return 'above'
+  if (viewport.height - bottomPx >= needed) return 'below'
+  return 'inside'
+}
+
+/**
+ * L'abscisse de la barre, en pourcentage de la plaque : celle du widget, sauf si la barre
+ * en sortait par la droite — un widget collé au bord droit la faisait déborder du rendu,
+ * et d'autant plus que le zoom est faible, la barre gardant sa taille en pixels quand la
+ * plaque rétrécit. Elle glisse alors vers la gauche juste assez pour rentrer, ce qui pose
+ * son bord droit contre celui de la plaque, donc contre celui du widget dans le cas qui
+ * pose problème.
+ *
+ * L'écart gardé à droite est celui des autres bords, et il sert deux fois : `viewport()`
+ * mesure la plaque **bordure comprise** — un pixel de chaque côté, `box-sizing:
+ * content-box` — quand le calque, lui, ne couvre que l'intérieur ; six pixels absorbent
+ * cette différence sans qu'il faille la modéliser.
+ *
+ * Le résultat est un pourcentage et non des pixels : le zoom redimensionne la plaque sous
+ * le calque, et une position relative reste cohérente jusqu'au prochain calcul.
+ */
+export function toolbarLeftPercent(
+  rect: Rect, viewport: Viewport, barWidthPx: number, gapPx: number = TOOLBAR_GAP_PX
+): number {
+  const wanted = rect.x1 / 100
+  if (!(viewport.width > 0)) return wanted
+  const rightmost = viewport.width - barWidthPx - gapPx
+  // Barre plus large que la plaque — zoom minimal sur une page étroite : elle déborde de
+  // toute façon, autant qu'elle déborde du même côté que le rendu commence.
+  if (rightmost <= 0) return 0
+  const leftPx = (rect.x1 / NORMALIZED_MAX) * viewport.width
+  return (Math.min(leftPx, rightmost) / viewport.width) * 100
+}
+
 /**
  * Le calque d'édition. Il ne dessine pas les widgets — c'est `render/canvas.ts` qui s'en
  * charge, en dessous — mais uniquement les marques : cadre, équerres, segments, ellipse,
@@ -878,16 +950,13 @@ export function createEditor(options: EditorOptions): Editor {
 
   const announce = (message: string): void => { live.textContent = message }
 
-  // Les marques s'effacent pendant le geste, comme sur l'appareil : ce qui compte alors
-  // est le couple aperçu aimanté / rectangle du doigt, et quatre équerres immobiles au
-  // point de départ ne feraient que brouiller la lecture de l'écart entre les deux.
   /**
-   * Hauteur, en unités de page, sous laquelle la barre ne tient plus au-dessus du widget.
-   * Un widget qui commence à moins d'un dixième de la hauteur du haut la reçoit à
-   * l'intérieur, sur son bord supérieur, plutôt que hors de la plaque.
+   * La barre d'outils ne doit jamais masquer le widget qu'elle sert à modifier — voir
+   * `toolbarPlacement`, qui décide de laquelle des trois positions elle prend.
+   *
+   * L'ordre compte : le rang est écrit AVANT la mesure, puisque c'est son intitulé qui
+   * fait la largeur de la barre, et la largeur décide du glissement horizontal.
    */
-  const TOOLBAR_FLIP = 1000
-
   const drawToolbar = (): void => {
     if (selected === undefined || gesture !== undefined || options.page.widgets.length === 0) {
       toolbar.hidden = true
@@ -896,15 +965,25 @@ export function createEditor(options: EditorOptions): Editor {
     const count = options.page.widgets.length
     const rect = currentBounds(options.page, selected)
     toolbar.hidden = false
-    toolbar.style.left = `${rect.x1 / 100}%`
-    toolbar.style.top = `${rect.y1 / 100}%`
-    toolbar.classList.toggle('editor__toolbar--below', rect.y1 < TOOLBAR_FLIP)
     rank.textContent = stackLabel(selected, count)
     for (const [action, button] of stackButtons) {
       button.disabled = stackTarget(action, selected, count) === selected
     }
+
+    const viewport = options.viewport()
+    const bar = toolbar.getBoundingClientRect()
+    const placement = toolbarPlacement(rect, viewport, bar.height)
+    toolbar.classList.toggle('editor__toolbar--below', placement === 'below')
+    toolbar.classList.toggle('editor__toolbar--inside', placement === 'inside')
+    // Sous le widget, la barre s'accroche à son bord INFÉRIEUR : c'est tout le défaut de
+    // l'ancien `--below`, qui gardait `y1` et descendait donc à l'intérieur.
+    toolbar.style.top = `${(placement === 'below' ? rect.y2 : rect.y1) / 100}%`
+    toolbar.style.left = `${toolbarLeftPercent(rect, viewport, bar.width)}%`
   }
 
+  // Les marques s'effacent pendant le geste, comme sur l'appareil : ce qui compte alors
+  // est le couple aperçu aimanté / rectangle du doigt, et quatre équerres immobiles au
+  // point de départ ne feraient que brouiller la lecture de l'écart entre les deux.
   const drawMarks = (): void => {
     if (selected === undefined || gesture !== undefined) {
       marks.hidden = true

@@ -826,9 +826,14 @@ body.is-dragging .veil {
  * reproduire celles de XCTrack. Un pilote reconnaît ses équerres roses ; une barre
  * d'outils, il la lit.
  *
- * Elle flotte juste au-dessus du bord haut du widget, et bascule au-dessous du même bord
- * — donc à l'intérieur du widget — quand celui-ci touche le haut de la plaque, faute de
- * quoi elle sortirait du rendu. C'est le seul élément du calque qui reçoive le pointeur.
+ * Elle ne masque jamais le widget qu'elle sert à modifier : posée au-dessus de son bord
+ * haut et hors de son rectangle quand la place existe, sous son bord bas sinon, et dedans
+ * seulement quand le widget occupe presque toute la plaque. C'est `toolbarPlacement`, dans
+ * `ui/editor.ts`, qui tranche — sur la hauteur réelle de cette barre à l'écran, pas sur un
+ * seuil en unités de page —, et qui pose `top` sur le bord qui convient. Ici ne restent
+ * que les trois décalages, tous de 6 px : la même valeur qu'y garde `TOOLBAR_GAP_PX`.
+ *
+ * C'est le seul élément du calque qui reçoive le pointeur.
  */
 .editor__toolbar {
   position: absolute;
@@ -848,7 +853,13 @@ body.is-dragging .veil {
   white-space: nowrap;
 }
 
-.editor__toolbar--below { transform: translateY(6px); }
+/*
+ * Les deux positions basses partagent le même décalage et ne diffèrent que par leur point
+ * d'ancrage, que `editor.ts` pose : `y2` pour `--below`, qui la met sous le widget, `y1`
+ * pour `--inside`, qui la met dedans faute de mieux.
+ */
+.editor__toolbar--below,
+.editor__toolbar--inside { transform: translateY(6px); }
 
 .editor__tool {
   appearance: none;
