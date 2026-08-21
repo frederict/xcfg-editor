@@ -4,6 +4,11 @@ import { findDuplicateKeys } from '../core/parseJson'
 import type { Container } from '../core/container'
 import { readLayout } from '../model/layout'
 import { findFreeTexts, type FreeText } from '../model/scope'
+import {
+  collectPersonalData,
+  type PersonalCounts,
+  type PersonalFinding
+} from '../model/personalData'
 import { deviceFor, type Device } from '../catalog/devices'
 import type { Orientation } from '../model/grid'
 
@@ -47,14 +52,15 @@ export interface ExternalResource {
   key: string
 }
 
-/** Une donnée qui nomme le pilote ou son matériel, avec l'endroit exact où elle est. */
-export interface PersonalDatum {
-  /** `preferences` : absent d'un export « pages ». `layout` : **voyage avec les pages**. */
-  where: 'preferences' | 'layout'
-  key: string
-  /** La valeur lue. Montrée, jamais retirée — le pilote décide (voir `scope.ts`). */
-  value: string
-}
+/**
+ * Une donnée qui nomme le pilote ou son matériel, avec l'endroit exact où elle est.
+ *
+ * **C'est `model/personalData.ts` qui l'établit**, pour les quatre écrans à la fois : la
+ * carte d'identité n'a plus sa liste de clés à elle. Le type est réexporté ici parce que
+ * `LibraryEntry.identity` est sérialisé dans la bibliothèque et que les appelants le
+ * nomment ; la forme, elle, est celle du modèle.
+ */
+export type PersonalDatum = PersonalFinding
 
 export interface WidgetTypeCount {
   /** Nom court de la classe, tel qu'il est dans le fichier : `WCompMap`, `WStatusLine`. */
@@ -93,6 +99,13 @@ export interface IdentityRead {
   /** Textes écrits par le pilote dans le `layout` — ils partent avec les pages. */
   freeTexts: FreeText[]
   personalData: PersonalDatum[]
+  /**
+   * Les chiffres de l'inventaire, **nommés** : ce qui vit dans la disposition et part avec
+   * les pages, ce qui vit dans les préférences et reste, ce qui est renseigné, ce qui est
+   * lu dans l'APK. Aucun n'est « le » chiffre — c'est justement pour ça qu'ils sont
+   * portés séparément, et que la carte les affiche nommés.
+   */
+  personalCounts: PersonalCounts
   externalResources: ExternalResource[]
   /** Chemins des clés dupliquées : XCTrack n'en lira qu'une (voir `findDuplicateKeys`). */
   duplicateKeys: string[]
@@ -129,11 +142,11 @@ export interface IdentityAssumed {
    */
   versionGap: 'older' | 'same' | 'newer' | 'unknown'
   /**
-   * ⚠️ **Vrai dès qu'une donnée personnelle voyage avec les pages** — c'est-à-dire dès
-   * que `read.freeTexts` porte un `fullName` ou un `phoneNumber` de `WButtonPhone`, un
-   * `url` de `WWebView`, ou un texte libre quelconque.
+   * ⚠️ **Vrai dès qu'une donnée personnelle *renseignée* voyage avec les pages** —
+   * c'est-à-dire dès que la disposition porte un `fullName` ou un `phoneNumber` de
+   * `WButtonPhone`, un `url` de `WWebView`, ou un texte libre quelconque.
    *
-   * **Un export « pages » n'est pas sûr par construction.** Le `layout` porte six clés de
+   * **Un export « pages » n'est pas sûr par construction.** Le `layout` porte onze clés de
    * texte libre, dont le nom et le numéro de téléphone d'un bouton d'appel — dans le
    * `layout`, pas dans les `preferences` (voir `FREE_TEXT_KEYS` dans `scope.ts`). Dériver
    * un `pages` est le bon tri de gros grain ; ce n'est pas un nettoyage.
@@ -146,26 +159,85 @@ export interface EntryIdentity {
   assumed: IdentityAssumed
 }
 
+/* ------------------------------------- relire une entrée rangée par une version antérieure */
+
+/**
+ * La forme que `personalData` avait **avant** l'inventaire unifié : un emplacement, une
+ * clé, une valeur. Rien d'autre. Une bibliothèque rangée par la version déployée en porte,
+ * et elle doit continuer de s'ouvrir.
+ */
+interface LegacyPersonalDatum {
+  where?: 'preferences' | 'layout'
+  key?: string
+  value?: string
+}
+
+/**
+ * L'inventaire d'une entrée, **y compris quand elle a été rangée par une version
+ * antérieure de l'éditeur**.
+ *
+ * `identity` est recopiée telle quelle depuis l'enregistrement (voir `validateRecord` :
+ * « une description, pas une donnée dont dépend l'intégrité »). Un enregistrement écrit
+ * avant l'inventaire unifié porte donc des lignes sans nature, sans base et sans
+ * `personalCounts` — et un panneau qui lirait `counts.total` sans précaution ferait
+ * échouer la bibliothèque **entière** à cause d'entrées parfaitement saines.
+ *
+ * On ne devine pas ce qu'on n'a pas : une ligne d'origine ancienne est rendue avec la
+ * base `declared` et une raison qui dit d'où elle vient. Le vrai relevé revient dès que
+ * l'entrée est rechargée, puisqu'il est recalculé depuis les octets.
+ */
+export function personalInventoryOf(identity: EntryIdentity): {
+  findings: PersonalFinding[]
+  counts: PersonalCounts
+} {
+  const raw = identity.read.personalData as Array<PersonalFinding | LegacyPersonalDatum>
+  const findings: PersonalFinding[] = raw.map((datum) => {
+    if ('home' in datum && datum.home !== undefined) return datum
+    const legacy = datum as LegacyPersonalDatum
+    const value = legacy.value ?? ''
+    return {
+      home: legacy.where ?? 'preferences',
+      key: legacy.key ?? '(clé inconnue)',
+      kind: 'freeText',
+      basis: 'declared',
+      reason: 'relevé par une version antérieure de cet éditeur, qui n’en disait pas la '
+        + 'nature. Rechargez cette entrée pour obtenir le relevé complet.',
+      filled: value.trim() !== '',
+      ...(value === '' ? {} : { value })
+    }
+  })
+
+  const counts = identity.read.personalCounts as PersonalCounts | undefined
+  if (counts !== undefined) return { findings, counts }
+
+  // Recompté sur place plutôt que réclamé à l'enregistrement : le compte est une somme,
+  // pas une donnée, et le refuser à une entrée ancienne la rendrait illisible pour rien.
+  const layout = findings.filter((finding) => finding.home === 'layout').length
+  const filled = findings.filter((finding) => finding.filled).length
+  return {
+    findings,
+    counts: {
+      total: findings.length,
+      layout,
+      preferences: findings.length - layout,
+      filled,
+      empty: findings.length - filled,
+      read: 0,
+      judged: findings.length
+    }
+  }
+}
+
 /* ============================================================================ lecture */
 
 /**
- * Les clés de préférence qui nomment le pilote ou son matériel.
- *
- * **Même liste que `src/ui/warnings.ts`, et c'est une duplication assumée** : cet
- * inventaire y est écrit dans une fonction privée d'un module d'interface, que la
- * bibliothèque ne peut pas importer sans tirer `src/render/registry` — donc tout le
- * moteur de rendu — dans son morceau. La primitive qui manque est un inventaire des
- * données personnelles **dans `src/model/`** ; elle est signalée, pas ajoutée ici.
- *
- * ⚠️ **Cette liste ne prétend pas être complète, et ne peut pas l'être.** Un `backup`
- * réel porte **136 clés de préférence** (mesuré sur `2026-08-20_backup-00.xcfg`) ; on en
- * nomme quatre familles. `read.preferenceKeyCount` est là pour que le compte reste
- * visible : un `backup` porte toute la configuration, y compris ce qu'on ne sait pas
- * nommer. La seule affirmation solide reste structurelle — un `pages` n'a pas de
- * `preferences` du tout.
+ * ⚠️ **L'inventaire ne prétend pas être complet, et ne peut pas l'être.** Un `backup`
+ * réel porte **136 clés de préférence** (mesuré sur `2026-08-20_backup-00.xcfg`) ; le
+ * relevé en surveille 44, celles que le catalogue extrait de l'APK marque comme
+ * personnelles. `read.preferenceKeyCount` est là pour que l'écart reste visible : un
+ * `backup` porte toute la configuration, y compris ce qu'on ne sait pas nommer. La seule
+ * affirmation solide reste structurelle — un `pages` n'a pas de `preferences` du tout.
  */
-const NAMED_PERSONAL_KEYS = ['Pilot.Name', 'Glider.Name'] as const
-const PERSONAL_KEY_PREFIX = 'Livetrack.'
 
 function nonEmpty(node: JsonNode | undefined, key: string): string | undefined {
   if (node === undefined) return undefined
@@ -188,38 +260,6 @@ function waypointFiles(preferences: JsonNode | undefined): string[] {
   if (preferences === undefined) return []
   const node = getMember(preferences, 'Navigation.WaypointFiles')
   return node === undefined ? [] : stringsOf(getMember(node, 'files'))
-}
-
-function readPersonalData(preferences: JsonNode | undefined, freeTexts: FreeText[]): PersonalDatum[] {
-  const found: PersonalDatum[] = []
-
-  // D'abord le `layout`, parce que c'est lui qui voyage. Un pilote qui ne lirait que la
-  // première ligne doit tomber sur ce qu'il croyait ne pas envoyer.
-  for (const text of freeTexts) {
-    found.push({ where: 'layout', key: `${text.shortName}/${text.keyPath}`, value: text.text })
-  }
-
-  if (preferences !== undefined) {
-    for (const key of NAMED_PERSONAL_KEYS) {
-      const value = nonEmpty(preferences, key)
-      if (value !== undefined) found.push({ where: 'preferences', key, value })
-    }
-    // Les réglages Livetrack sont pour l'essentiel des booléens et des listes : les
-    // énumérer un par un donnerait cinq lignes de valeurs vides, et noierait `Pilot.Name`
-    // dans le bruit. On les regroupe en un seul constat, comme le fait `warnings.ts` —
-    // ce qui se dit ici, c'est « ce fichier porte vos choix de diffusion », pas leur détail.
-    const livetrack = keysOf(preferences).filter((key) => key.startsWith(PERSONAL_KEY_PREFIX))
-    if (livetrack.length > 0) {
-      found.push({ where: 'preferences', key: `${PERSONAL_KEY_PREFIX}*`, value: livetrack.join(', ') })
-    }
-    for (const file of waypointFiles(preferences)) {
-      // Le nom d'un fichier de waypoints désigne souvent la compétition : c'est une donnée
-      // personnelle autant qu'une ressource. Il figure donc dans les deux inventaires.
-      found.push({ where: 'preferences', key: 'Navigation.WaypointFiles', value: file })
-    }
-  }
-
-  return found
 }
 
 function readExternalResources(preferences: JsonNode | undefined): ExternalResource[] {
@@ -291,6 +331,7 @@ export function describeContainer(container: Container, options: DescribeOptions
     .sort((a, b) => b.count - a.count || a.shortName.localeCompare(b.shortName))
 
   const freeTexts = findFreeTexts(layout)
+  const personal = collectPersonalData(document, layout)
   const versionCode = info === undefined ? undefined : readNumber(info, 'versionCode')
 
   const orientations: Orientation[] = (['landscape', 'portrait'] as const)
@@ -312,7 +353,8 @@ export function describeContainer(container: Container, options: DescribeOptions
     widgetTypes,
     preferenceKeyCount: keysOf(preferences).length,
     freeTexts,
-    personalData: readPersonalData(preferences, freeTexts),
+    personalData: personal.findings,
+    personalCounts: personal.counts,
     externalResources: readExternalResources(preferences),
     duplicateKeys: findDuplicateKeys(document),
     parseError: container.parseError
@@ -335,7 +377,11 @@ export function describeContainer(container: Container, options: DescribeOptions
     proWidgets,
     proKnowledge: isPro === undefined ? 'absent' : 'catalogue',
     versionGap,
-    personalDataTravelsWithPages: freeTexts.length > 0
+    // Un emplacement **vide** ne voyage pas : une fiche `contact` de `WButtonPhone`
+    // présente et sans rien dedans n'est pas un numéro de téléphone. L'inventaire la
+    // porte quand même — c'est un renseignement — mais elle ne fait pas dire « oui » ici.
+    personalDataTravelsWithPages:
+      personal.findings.some((finding) => finding.home === 'layout' && finding.filled)
   }
 
   return { read, assumed }

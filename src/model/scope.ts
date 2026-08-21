@@ -45,7 +45,7 @@ import { cloneNode, type Orientation } from './mutations'
  *
  * Les remplacer est un geste **demandé**, donc explicite, donc ailleurs : `sharing.ts`
  * s'en charge, sur une copie, et rend la liste de ce qu'il a changé. Ce fichier lui prête
- * seulement `findFreeTextNodes`.
+ * seulement `findFreeTextNodes` — et `findFreeTextSlots` à `personalData.ts`.
  */
 
 /* ------------------------------------------------------ dérivation « backup » → « pages » */
@@ -299,12 +299,14 @@ function collectFreeTexts(
       const key = decode(rawKey)
       const here = path === '' ? key : `${path}/${key}`
       if (value.kind === 'string') {
-        // Les chaînes vides ne sont pas montrées : le corpus en compte 1 401 rien que
-        // pour `titletext`. Les noyer sous le bruit reviendrait à cacher les vraies.
-        // Une chaîne vide n'a par ailleurs rien à anonymiser.
+        // Les emplacements vides sont ramassés ici et **filtrés plus haut** : le corpus
+        // compte 1 401 `titletext` vides, les montrer noierait les vrais. Mais un
+        // emplacement vide n'est pas rien pour autant — une fiche `contact` présente et
+        // vide dit qu'un bouton d'appel existe sans numéro dedans, ce que
+        // `findFreeTextSlots` sert à voir. Une chaîne vide n'a en revanche rien à
+        // anonymiser : `findFreeTextNodes` les écarte.
         if (FREE_TEXT_KEYS.includes(key)) {
-          const text = decode(value.raw)
-          if (text !== '') found.push({ keyPath: here, text, node: value })
+          found.push({ keyPath: here, text: decode(value.raw), node: value })
         }
       } else {
         collectFreeTexts(value, here, found)
@@ -315,17 +317,8 @@ function collectFreeTexts(
   }
 }
 
-/**
- * Comme `findFreeTexts`, mais chaque entrée porte en plus le nœud à réécrire.
- *
- * **Toutes les occurrences sont rendues, doublons compris.** Un widget dont `titletext`
- * est écrit deux fois (le corpus en porte des cas, cf. `findDuplicateKeys`) produit deux
- * entrées : après un remplacement, la seule postcondition prévisible est qu'aucune des
- * deux ne porte plus la valeur d'origine. N'en réécrire qu'une laisserait la donnée
- * personnelle dans le fichier, sans erreur ni signal — même raisonnement que
- * `removeMember`.
- */
-export function findFreeTextNodes(layout: Layout): FreeTextNode[] {
+/** La traversée unique : tous les emplacements, vides compris, dans l'ordre du fichier. */
+function walkFreeTexts(layout: Layout): FreeTextNode[] {
   const result: FreeTextNode[] = []
   const orientations: Orientation[] = ['landscape', 'portrait']
   for (const orientation of orientations) {
@@ -349,6 +342,39 @@ export function findFreeTextNodes(layout: Layout): FreeTextNode[] {
     })
   }
   return result
+}
+
+/**
+ * Comme `findFreeTexts`, mais chaque entrée porte en plus le nœud à réécrire.
+ *
+ * **Toutes les occurrences non vides sont rendues, doublons compris.** Un widget dont
+ * `titletext` est écrit deux fois (le corpus en porte des cas, cf. `findDuplicateKeys`)
+ * produit deux entrées : après un remplacement, la seule postcondition prévisible est
+ * qu'aucune des deux ne porte plus la valeur d'origine. N'en réécrire qu'une laisserait
+ * la donnée personnelle dans le fichier, sans erreur ni signal — même raisonnement que
+ * `removeMember`.
+ */
+export function findFreeTextNodes(layout: Layout): FreeTextNode[] {
+  return walkFreeTexts(layout).filter((slot) => slot.text !== '')
+}
+
+/**
+ * **Tous** les emplacements de texte libre du `layout`, y compris ceux qui sont vides.
+ *
+ * Sert à une seule question, celle que `findFreeTexts` ne peut pas poser : *l'emplacement
+ * existe-t-il, même sans rien dedans ?* Une fiche `contact` de `WButtonPhone` présente et
+ * vide n'est pas un numéro de téléphone — c'est un bouton d'appel sans destinataire, et
+ * les 15 `WButtonPhone` du corpus sont tous dans ce cas. Confondre les deux, c'est soit
+ * alarmer sur un fichier qui ne porte rien, soit taire un emplacement que le pilote
+ * remplira demain.
+ *
+ * **À ne pas afficher tel quel.** Le corpus compte 1 401 `titletext` vides : une liste
+ * qui les montrerait cacherait les vrais. C'est à l'appelant de choisir quels
+ * emplacements vides méritent d'être dits — `model/personalData.ts` ne retient que ceux
+ * de nature `contact`, et dit pourquoi.
+ */
+export function findFreeTextSlots(layout: Layout): FreeText[] {
+  return walkFreeTexts(layout).map(({ node: _node, ...rest }) => rest)
 }
 
 /**

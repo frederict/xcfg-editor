@@ -8,12 +8,16 @@ import { exportContainer, openContainer } from '../../src/core/container'
 import { sha256Hex } from '../../src/library/digest'
 import { PAGES_EXPORT_TYPE } from '../../src/model/scope'
 import { NEUTRAL_PHONE_NUMBER } from '../../src/model/sharing'
+import { readLayout } from '../../src/model/layout'
+import { moveWidgetBy } from '../../src/model/mutations'
 import {
   ANNEXES_NOTE,
   ANONYMOUS_COSTS,
   describeLocation,
   displayedReplacement,
   droppedRootKeyLabel,
+  FIDELITY_MODIFIED,
+  FIDELITY_UNCHANGED,
   formatByteSize,
   planSharing,
   renderSharingDialog,
@@ -464,5 +468,90 @@ describe('sharingDialog.css — la fermeture reste atteignable, les deux thèmes
     const declarations = css.replace(/\/\*[\s\S]*?\*\//g, '')
     expect(declarations).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
     expect(declarations).not.toMatch(/\brgba?\(/)
+  })
+})
+
+/* ================================== ce que la boîte a le droit de promettre sur les octets */
+
+/**
+ * ⚠️ **La phrase la plus dangereuse de toute l'interface**, parce qu'elle porte sur
+ * l'argument central du projet et qu'elle s'affiche à l'instant où le pilote décide s'il
+ * ose cliquer.
+ *
+ * Elle affirmait « le fichier part tel quel, à l'octet près » **dans les deux cas**. C'est
+ * vrai d'un document intact, faux d'un document modifié : celui-là est sérialisé, ses
+ * octets changent, son empreinte aussi. Un pilote qui aurait comparé les empreintes après
+ * coup aurait cessé de croire le reste.
+ *
+ * Les deux formulations sont donc éprouvées **par la mesure**, pas par relecture : on
+ * exporte réellement, dans les deux cas, et on compare les empreintes.
+ */
+describe('sharingDialog — les octets, dits juste dans les deux cas', () => {
+  it('document intact : la garantie forte est vraie, et l’empreinte le prouve', async () => {
+    const bytes = new Uint8Array(readFileSync(BACKUP_2026))
+    const container = await openContainer(bytes, 'b.xcfg')
+    expect(container.modified).toBe(false)
+
+    const produced = await exportContainer(container)
+    expect(await sha256Hex(produced)).toBe(await sha256Hex(bytes))
+
+    const plan = planSharing(
+      { document: container.document, fileName: 'b.xcfg', kind: 'xcfg', modified: false }, WHEN
+    )
+    expect(plan.modified).toBe(false)
+    expect(FIDELITY_UNCHANGED).toContain('à l’octet près')
+    expect(FIDELITY_UNCHANGED).toContain('celle du fichier d’origine')
+  })
+
+  it('document modifié : les octets changent, et la boîte ne prétend plus le contraire', async () => {
+    const bytes = new Uint8Array(readFileSync(BACKUP_2026))
+    const container = await openContainer(bytes, 'b.xcfg')
+
+    // Un seul geste du pilote : déplacer un gadget.
+    moveWidgetBy(readLayout(container.document).landscape[0]!.widgets[0]!.node, -100, 0)
+    container.modified = true
+
+    const produced = await exportContainer(container)
+    expect(await sha256Hex(produced)).not.toBe(await sha256Hex(bytes))
+
+    // … et pourtant, seul ce qui a changé change. Mesuré : la fenêtre qui diffère tient
+    // en 48 caractères — les deux coordonnées réécrites — sur les 78 639 du fichier.
+    const avant = Buffer.from(bytes).toString('utf-8')
+    const apres = Buffer.from(produced).toString('utf-8')
+    let debut = 0
+    while (debut < avant.length && avant[debut] === apres[debut]) debut++
+    let fin = 0
+    while (fin < avant.length - debut
+      && avant[avant.length - 1 - fin] === apres[apres.length - 1 - fin]) fin++
+    expect(avant.length - fin - debut).toBeLessThan(64)
+    expect(avant.length).toBe(78639)
+
+    const plan = planSharing(
+      { document: container.document, fileName: 'b.xcfg', kind: 'xcfg', modified: true }, WHEN
+    )
+    expect(plan.modified).toBe(true)
+    expect(FIDELITY_MODIFIED).not.toContain('à l’octet près')
+    expect(FIDELITY_MODIFIED).toContain('Seul ce que vous avez changé change')
+  })
+
+  it('sans information, on suppose modifié : la garantie forte ne s’affirme jamais à vide', () => {
+    const document = parseJson(readFileSync(BACKUP_2026, 'utf-8'))
+    expect(planSharing({ document, fileName: 'b.xcfg', kind: 'xcfg' }, WHEN).modified).toBe(true)
+  })
+
+  it('la note affichée est celle du cas — et le contenu du fichier est dit à part', () => {
+    const document = parseJson(readFileSync(BACKUP_2026, 'utf-8'))
+    for (const modified of [false, true]) {
+      const handle = renderSharingDialog({
+        source: { document, fileName: 'b.xcfg', kind: 'xcfg', modified },
+        now: () => WHEN,
+        onConfirm: () => {}
+      })
+      handle.open()
+      const texte = handle.element.textContent ?? ''
+      expect(texte).toContain(modified ? FIDELITY_MODIFIED : FIDELITY_UNCHANGED)
+      expect(texte).not.toContain(modified ? FIDELITY_UNCHANGED : FIDELITY_MODIFIED)
+      handle.close()
+    }
   })
 })

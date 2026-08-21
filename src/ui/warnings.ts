@@ -4,6 +4,12 @@ import { decode, getMember, readNumber, readString } from '../core/access'
 import type { JsonNode } from '../core/jsonDocument'
 import { findDuplicateKeys } from '../core/parseJson'
 import type { Layout, Page } from '../model/layout'
+import {
+  collectPersonalData,
+  personalValueText,
+  PERSONAL_KIND_LABELS,
+  type PersonalInventory
+} from '../model/personalData'
 import type { RenderSettings } from '../model/preferences'
 import type { Widget } from '../model/widget'
 
@@ -81,12 +87,12 @@ const UNIVERSAL_KEYS = ['CLASS', 'X1', 'Y1', 'X2', 'Y2', '_border', '_bg', '_the
 
 const SCALE = 10000
 
-/* ------------------------------------------------------------------ lecture du JSON */
-
-function keysOf(node: JsonNode | undefined): string[] {
-  if (node?.kind !== 'object') return []
-  return node.entries.map(([rawKey]) => decode(rawKey))
+/** Le compte suivi de son mot, accordé. Même forme que dans les autres modules d'interface. */
+function plural(count: number, singular: string, pluralForm: string): string {
+  return `${count} ${count > 1 ? pluralForm : singular}`
 }
+
+/* ------------------------------------------------------------------ lecture du JSON */
 
 /** Chaînes d'un tableau JSON, les autres types étant ignorés. */
 function stringsOf(node: JsonNode | undefined): string[] {
@@ -194,33 +200,61 @@ function assumedValueWarnings(settings: RenderSettings, language: string): Warni
 
 /* ------------------------------------------------------------ 3. données personnelles */
 
-function personalDataWarning(preferences: JsonNode | undefined): Warning | undefined {
-  if (!preferences) return undefined
-  const items: string[] = []
+/**
+ * ## L'inventaire n'est plus calculé ici
+ *
+ * Il l'était, dans une fonction privée qui connaissait quatre familles de clés — et la
+ * bibliothèque la recopiait, faute de pouvoir importer ce module sans tirer tout
+ * `src/render/` avec lui. C'est `model/personalData.ts` qui l'établit désormais, pour les
+ * quatre écrans à la fois. Ce qui reste ici est le seul travail propre à un
+ * avertissement : **choisir ce qui mérite d'être dit maintenant**.
+ *
+ * Deux choix, et ils sont assumés :
+ *
+ * - **on n'énumère que ce qui est renseigné.** Un `ActiveLook.Name` vide n'est pas le nom
+ *   de vos lunettes ; l'aligner avec les autres apprendrait au pilote à survoler la liste.
+ *   Le compte des emplacements vides est dit dans le détail, pas dans la liste ;
+ * - **on nomme ce qu'on compte.** « 11 clés de préférences » et « 2 textes dans les
+ *   gadgets » ne se contredisent plus dès qu'ils portent leur nom — et le second est le
+ *   seul qui parte avec un export « pages ».
+ */
+function personalDataWarning(inventory: PersonalInventory): Warning | undefined {
+  const filled = inventory.findings.filter((finding) => finding.filled)
+  if (filled.length === 0) return undefined
 
-  const pilot = nonEmptyString(preferences, 'Pilot.Name')
-  if (pilot !== undefined) items.push(`Pilot.Name : « ${pilot} »`)
+  const inLayout = filled.filter((finding) => finding.home === 'layout').length
+  const inPreferences = filled.length - inLayout
 
-  const glider = nonEmptyString(preferences, 'Glider.Name')
-  if (glider !== undefined) items.push(`Glider.Name : « ${glider} »`)
+  const items = filled.map((finding) =>
+    `${finding.key} — ${PERSONAL_KIND_LABELS[finding.kind]} : ${personalValueText(finding)}`)
 
-  const livetrack = keysOf(preferences).filter((key) => key.startsWith('Livetrack.'))
-  if (livetrack.length > 0) items.push(`Livetrack : ${livetrack.join(', ')}`)
+  // Le fait le plus contre-intuitif du format, et celui qu'il ne faut jamais réénoncer à
+  // l'envers : le `layout` voyage avec un export « pages ». Un nom et un numéro de
+  // téléphone y vivent (`WButtonPhone`), et la dérivation ne les retire pas.
+  const travels = inLayout === 0
+    ? ''
+    : ` ${plural(inLayout, 'texte écrit dans un gadget part', 'textes écrits dans les gadgets partent')} ` +
+      'même avec un export « pages » : ce format est un tri de gros grain, pas un nettoyage.'
 
-  const waypoints = waypointFiles(preferences)
-  if (waypoints.length > 0) items.push(`Navigation.WaypointFiles : ${waypoints.join(', ')}`)
-
-  if (items.length === 0) return undefined
+  const empty = inventory.counts.empty === 0
+    ? ''
+    : ` ${plural(inventory.counts.empty, 'emplacement personnel est présent mais vide',
+      'emplacements personnels sont présents mais vides')} — ils ne sont pas listés ici.`
 
   return {
     kind: 'personal-data',
     moment: 'export',
-    title: 'Ce fichier vous nomme',
+    title: inLayout > 0 && inPreferences === 0
+      ? 'Vos pages portent des textes de vous'
+      : 'Ce fichier vous nomme',
     detail:
-      'Donné à un autre pilote, il révèle votre nom, votre matériel, vos choix de ' +
-      'diffusion Livetrack, et jusqu’à la compétition à laquelle vous participez — les ' +
-      'noms des fichiers de waypoints la désignent. Cet outil ne dépouille rien en ' +
-      'silence : le fichier sort tel qu’il est entré. À vous de voir.',
+      `Ce fichier porte ${plural(inPreferences, 'clé de préférences renseignée',
+        'clés de préférences renseignées')} et ` +
+      `${plural(inLayout, 'texte écrit dans un gadget', 'textes écrits dans les gadgets')} ` +
+      'qui vous désignent : votre nom, votre matériel, vos choix de diffusion, votre tâche ' +
+      'en cours avec ses coordonnées, et jusqu’à la compétition à laquelle vous participez ' +
+      `— les noms des fichiers de waypoints la désignent.${travels}${empty} Cet outil ne ` +
+      'dépouille rien en silence : le fichier sort tel qu’il est entré. À vous de voir.',
     items
   }
 }
@@ -591,7 +625,7 @@ export function computeWarnings(input: WarningInput): Warning[] {
   const geometry = scanGeometry(input)
 
   const optional = [
-    personalDataWarning(preferences),
+    personalDataWarning(collectPersonalData(input.document, input.layout)),
     externalResourceWarning(preferences),
     versionWarning(info),
     structureWarning(input),

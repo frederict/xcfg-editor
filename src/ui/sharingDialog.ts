@@ -8,6 +8,13 @@ import {
   documentExportType,
   type FreeTextReplacement
 } from '../model/sharing'
+import {
+  collectPersonalData,
+  personalValueText,
+  PERSONAL_CAVEAT,
+  PERSONAL_KIND_LABELS,
+  type PersonalInventory
+} from '../model/personalData'
 
 /**
  * L'interface d'**export partageable** : choisir ce qu'on donne, voir ce qui est remplacé,
@@ -35,6 +42,15 @@ import {
  *
  * L'anonymisation, elle, est une **modification demandée** : elle a le droit de changer
  * les octets, et elle seule.
+ *
+ * ⚠️ **Ce que la boîte a le droit de promettre dépend de `source.modified`.** « Le fichier
+ * part tel quel, à l'octet près » est vrai d'un document intact — les octets ouverts sont
+ * réémis sans être réécrits — et **faux** d'un document que le pilote a modifié : celui-là
+ * est sérialisé, donc ses octets changent, et son empreinte avec. L'annoncer autrement
+ * serait mentir à l'instant précis où le pilote décide s'il ose cliquer, et sur la
+ * propriété qui est l'argument central du projet. Voir `FIDELITY_UNCHANGED` et
+ * `FIDELITY_MODIFIED` : la garantie n'est pas nuancée, elle est dite juste dans chacun des
+ * deux cas.
  *
  * ## Ce module ne connaît ni l'état de l'application, ni le moment
  *
@@ -66,6 +82,21 @@ export interface SharingSource {
   kind: 'xcfg' | 'xczfg'
   /** Les annexes de l'archive, hors le `.xcfg` principal. Vide ou absent pour un `.xcfg`. */
   extras?: readonly SharingExtra[]
+  /**
+   * `container.modified` : vrai si le pilote a touché au document depuis l'ouverture.
+   *
+   * **C'est ce qui décide de ce que la boîte a le droit de promettre.** Un document
+   * intact ressort à l'octet près — `exportContainer` réémet les octets d'origine, sans
+   * les réécrire, et l'empreinte du fichier produit est celle du fichier ouvert. Un
+   * document modifié est **sérialisé**, donc ses octets changent : l'annoncer « tel quel,
+   * à l'octet près » serait faux au moment précis où le pilote décide s'il ose cliquer,
+   * et sur la propriété qui est l'argument central du projet.
+   *
+   * Absent : la boîte suppose le cas prudent — un document modifié. On n'affirme jamais
+   * la garantie forte faute d'information ; c'est l'appelant qui la tient, et le noyau
+   * qui la tient vraiment (`exportContainer`, `core/container.ts`).
+   */
+  modified?: boolean
 }
 
 /** Ce que produirait l'anonymisation, calculé mais pas encore livré. */
@@ -87,9 +118,22 @@ export interface AnonymousPlan {
 export interface SharingPlan {
   /** Le nom que porterait un export ordinaire. Aucun octet n'est calculé pour celui-là. */
   plainFileName: string
+  /** Vrai si le document a bougé depuis l'ouverture — voir `SharingSource.modified`. */
+  modified: boolean
   /** Le format déclaré par la source : `backup`, `pages`, ou `undefined` s'il est muet. */
   exportType: string | undefined
   anonymous: AnonymousPlan
+  /**
+   * Ce que le fichier porte de personnel, **en entier** — préférences comprises.
+   *
+   * Cette boîte ne remplace que les textes des gadgets ; sans ce champ, « aucun texte
+   * personnalisé à remplacer » se lisait « rien de personnel dans ce fichier », ce qui
+   * est faux d'un `backup` : le nom du pilote, sa voile, ses capteurs appairés et sa
+   * tâche en cours vivent dans les préférences. L'inventaire vient de
+   * `model/personalData.ts`, le même que la bibliothèque et la page des réglages ; les
+   * chiffres se recoupent donc au lieu de se contredire.
+   */
+  personal: PersonalInventory
 }
 
 /**
@@ -106,6 +150,7 @@ export interface SharingPlan {
 export function planSharing(source: SharingSource, when: Date): SharingPlan {
   const exportType = documentExportType(source.document)
   const anonymized = anonymizeDocument(source.document)
+  const personal = collectPersonalData(source.document)
 
   return {
     plainFileName: buildExportFileName({
@@ -113,6 +158,8 @@ export function planSharing(source: SharingSource, when: Date): SharingPlan {
       when,
       exportType
     }),
+    // Prudent par défaut : sans information, on n'annonce pas la garantie forte.
+    modified: source.modified !== false,
     exportType,
     anonymous: {
       document: anonymized.document,
@@ -128,7 +175,8 @@ export function planSharing(source: SharingSource, when: Date): SharingPlan {
       droppedRootKeys: anonymized.droppedRootKeys,
       derived: anonymized.previousExportType !== 'pages',
       droppedExtras: source.kind === 'xczfg' ? (source.extras ?? []) : []
-    }
+    },
+    personal
   }
 }
 
@@ -243,6 +291,40 @@ export const ANNEXES_NOTE =
  * Ce qui reste malgré tout. Dit **à côté de l'inventaire**, jamais replié dans un volet
  * qu'on n'ouvre pas : c'est la limite exacte de ce que l'outil garantit.
  */
+/**
+ * Ce que la boîte promet quand **rien n'a bougé** — et c'est la promesse forte du projet.
+ *
+ * `exportContainer` rend alors les octets d'origine sans les réécrire (`core/container.ts`,
+ * `if (!container.modified …) return container.source`). Mesuré sur les deux fixtures :
+ * ouvrir puis réexporter `2026-08-20_backup-00.xcfg` et `2026-08-20_pages-00.xcfg` rend
+ * des octets **identiques**, donc la même empreinte SHA-256. Le pilote peut le vérifier
+ * lui-même, et c'est pour cela qu'on le lui dit.
+ */
+export const FIDELITY_UNCHANGED =
+  'Le fichier part tel quel, à l’octet près : les octets que vous avez ouverts sont '
+  + 'réémis sans être réécrits, et l’empreinte SHA-256 du fichier produit est celle du '
+  + 'fichier d’origine — vous pouvez le vérifier.'
+
+/**
+ * Ce que la boîte promet quand le pilote **a modifié** son document.
+ *
+ * ⚠️ **La phrase précédente serait fausse ici**, et fausse au pire moment : à l'instant où
+ * le pilote décide s'il ose cliquer, sur la propriété qui est l'argument central du
+ * projet. Un document modifié est sérialisé, donc ses octets changent — l'empreinte aussi.
+ *
+ * La garantie n'est pas affaiblie pour autant, elle est **dite juste** : le sérialiseur
+ * reproduit chaque littéral avec son texte source (`core/serializeJson.ts`), si bien que
+ * seule la zone touchée change. Mesuré : déplacer un gadget de 100 unités en X dans
+ * `2026-08-20_backup-00.xcfg` remplace une fenêtre de 48 caractères — les deux
+ * coordonnées écrites — sur les 78 639 du fichier ; tout le reste sort identique, `3.0` et
+ * `1.0E7` compris.
+ */
+export const FIDELITY_MODIFIED =
+  'Vous avez modifié ce document : le fichier est réécrit, ses octets changent donc, et '
+  + 'son empreinte ne sera plus celle du fichier d’origine. Seul ce que vous avez changé '
+  + 'change — tout le reste est reproduit à l’identique, jusqu’aux nombres et à '
+  + 'l’espacement d’origine.'
+
 export const RESIDUAL_NOTE =
   'La liste des onze clés de texte traitées est fixe, et le format de XCTrack change à '
   + 'chaque version : un champ de texte apparu depuis partirait en clair. Relisez '
@@ -345,28 +427,96 @@ function replacementItem(entry: FreeTextReplacement, language: string): HTMLElem
   return item
 }
 
-function replacementsSection(plan: AnonymousPlan, language: string): HTMLElement {
+/**
+ * Ce que cette boîte **ne** compte **pas**, dit à l'endroit exact où on pourrait le
+ * croire compté.
+ *
+ * « Aucun texte personnalisé à remplacer » se lisait « rien de personnel dans ce
+ * fichier ». C'est faux d'un `backup` : les 16 clés personnelles du fichier de référence
+ * sont dans les préférences, que cette boîte ne remplace pas — elle les **écarte**, en
+ * dérivant un « pages ». Les deux gestes sont bons, mais ils ne portent pas sur la même
+ * chose, et le pilote doit lire les deux chiffres pour le savoir.
+ */
+function preferencesReminder(personal: PersonalInventory): HTMLElement | undefined {
+  if (personal.counts.preferences === 0) return undefined
+  return el(
+    'p', 'sharing__caveat',
+    `Ce fichier porte par ailleurs ${plural(personal.counts.preferences,
+      'donnée personnelle dans ses préférences', 'données personnelles dans ses préférences')} ` +
+    '— nom, matériel, capteurs appairés, tâche en cours. Elles ne sont pas remplacées : ' +
+    'elles sont écartées en bloc, avec toute la section « preferences », par la dérivation ' +
+    'en export « pages » ci-dessus.'
+  )
+}
+
+function replacementsSection(
+  plan: AnonymousPlan, personal: PersonalInventory, language: string
+): HTMLElement {
   const section = el('section', 'sharing__section')
   section.append(el('h3', 'sharing__heading', 'Ce qui sera remplacé'))
 
   if (plan.replacements.length === 0) {
     section.append(el(
       'p', 'sharing__note',
-      'Aucun texte personnalisé dans les gadgets de ce fichier : rien à remplacer.'
+      'Aucun texte personnalisé dans les gadgets de ce fichier : rien à remplacer ici.'
     ))
+    const reminder = preferencesReminder(personal)
+    if (reminder) section.append(reminder)
+    section.append(el('p', 'sharing__caveat', PERSONAL_CAVEAT))
     return section
   }
 
   section.append(el(
     'p', 'sharing__note',
     `${plural(plan.replacements.length, 'texte écrit par vous est remplacé',
-      'textes écrits par vous sont remplacés')}. Voici lesquels, et où ils se trouvent.`
+      'textes écrits par vous sont remplacés')}. Voici lesquels, et où ils se trouvent. ` +
+    'Ce sont les seules données personnelles qui partent avec les pages : ' +
+    'elles vivent dans la disposition, pas dans les préférences.'
   ))
 
   const list = el('ol', 'sharing__list')
   for (const entry of plan.replacements) list.append(replacementItem(entry, language))
   section.append(list)
+  const reminder = preferencesReminder(personal)
+  if (reminder) section.append(reminder)
   section.append(el('p', 'sharing__caveat', RESIDUAL_NOTE))
+  return section
+}
+
+/**
+ * L'inventaire complet, replié : ce que le fichier porte de personnel, où que ce soit.
+ *
+ * Il est ici pour que la boîte de partage cesse d'être le seul écran à ne montrer qu'une
+ * moitié. Replié, parce que le geste de la boîte reste « choisir ce qu'on donne » : le
+ * détail est disponible, il ne s'impose pas.
+ */
+function personalSection(personal: PersonalInventory): HTMLElement | undefined {
+  if (personal.counts.total === 0) return undefined
+
+  const section = el('details', 'sharing__section sharing__personal')
+  const counts = personal.counts
+  section.append(el('summary', 'sharing__heading',
+    `Tout ce que ce fichier porte de personnel : ${String(counts.total)} — ` +
+    `${String(counts.layout)} dans la disposition, ${String(counts.preferences)} dans les préférences`))
+
+  section.append(el('p', 'sharing__note',
+    `${plural(counts.filled, 'est renseignée', 'sont renseignées')}, ` +
+    `${plural(counts.empty, 'est un emplacement présent mais vide', 'sont des emplacements présents mais vides')}. ` +
+    'Seules celles de la disposition partent avec un export « pages ».'))
+
+  const list = el('ul', 'sharing__list sharing__list--plain')
+  for (const finding of personal.findings) {
+    const item = el('li', finding.home === 'layout'
+      ? 'sharing__datum sharing__datum--travels'
+      : 'sharing__datum')
+    item.append(
+      el('code', 'sharing__key', finding.key),
+      el('span', 'sharing__from', personalValueText(finding)),
+      el('span', 'sharing__why', `${PERSONAL_KIND_LABELS[finding.kind]} — ${finding.reason}`)
+    )
+    list.append(item)
+  }
+  section.append(list)
   return section
 }
 
@@ -502,22 +652,23 @@ export function renderSharingDialog(options: SharingDialogOptions): SharingDialo
     return input
   }
 
-  const freeTextCount = plan.anonymous.replacements.length
-  const plainNote = plan.exportType === 'pages'
-    ? 'Le fichier part tel quel, à l’octet près. Un export « pages » ne porte pas de '
-      + 'préférences, mais les textes que vous avez écrits dans les gadgets, si.'
-    : 'Le fichier part tel quel, à l’octet près — préférences comprises : nom du pilote, '
-      + 'voile, capteurs appairés, fichiers de waypoints.'
+  const counts = plan.personal.counts
+  const contentNote = plan.exportType === 'pages'
+    ? ' Un export « pages » ne porte pas de préférences, mais les textes que vous avez '
+      + 'écrits dans les gadgets, si.'
+    : ' Il porte vos préférences : nom du pilote, voile, capteurs appairés, fichiers de '
+      + 'waypoints.'
+  const plainNote = (plan.modified ? FIDELITY_MODIFIED : FIDELITY_UNCHANGED) + contentNote
 
-  const plainInput = buildChoice(
-    'plain',
-    'Fichier complet',
-    freeTextCount === 0
-      ? plainNote
-      : `${plainNote} Il porte ${plural(freeTextCount, 'texte personnalisé',
-        'textes personnalisés')} dans les gadgets, qui partiront en clair.`,
-    true
-  )
+  // Les deux chiffres, nommés, et jamais additionnés : ils ne répondent pas à la même
+  // question. Celui de la disposition est le seul qui survive à un export « pages ».
+  const tally = counts.total === 0
+    ? ''
+    : ` Il porte ${plural(counts.layout, 'donnée personnelle dans la disposition',
+      'données personnelles dans la disposition')} et ${plural(counts.preferences,
+      'dans les préférences', 'dans les préférences')} ; toutes partiraient en clair.`
+
+  const plainInput = buildChoice('plain', 'Fichier complet', `${plainNote}${tally}`, true)
 
   const anonymousInput = buildChoice(
     'anonymous',
@@ -535,8 +686,11 @@ export function renderSharingDialog(options: SharingDialogOptions): SharingDialo
   detail.append(droppedSection(plan.anonymous))
   const annexes = annexesSection(plan.anonymous)
   if (annexes) detail.append(annexes)
-  detail.append(replacementsSection(plan.anonymous, language))
+  detail.append(replacementsSection(plan.anonymous, plan.personal, language))
   box.append(detail)
+
+  const inventory = personalSection(plan.personal)
+  if (inventory) box.append(inventory)
 
   /* --- le nom produit --- */
 

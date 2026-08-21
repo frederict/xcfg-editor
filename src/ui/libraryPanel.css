@@ -266,6 +266,25 @@
 .library__datumKey { font-family: var(--font-data); font-size: 11px; color: var(--app-ink-soft); overflow-wrap: anywhere; }
 .library__datumValue { font-family: var(--font-data); font-size: 12px; overflow-wrap: anywhere; }
 
+/*
+ * La nature et la base, sur une ligne discrète sous la valeur : *ce que c'est*, et *d'où
+ * on le sait*. La seconde est la valeur du relevé — « jugé par cet éditeur » n'a pas
+ * l'autorité de « lu dans l'application », et le pilote doit pouvoir les distinguer d'un
+ * coup d'œil sans que l'un crie plus fort que l'autre.
+ */
+.library__datumKind,
+.library__datumBasis {
+  font-size: 11px;
+  color: var(--app-ink-soft);
+}
+
+.library__datumKind { font-weight: 600; }
+.library__datumBasis { font-style: italic; }
+
+/* Un emplacement présent mais vide n'est pas une donnée : il s'efface sans disparaître. */
+.library__datum--empty { opacity: 0.72; }
+.library__datum--empty .library__datumValue { font-style: italic; }
+
 /* ------------------------------------------------------------------- empreinte et import */
 
 .library__verify, .library__confirm { display: grid; gap: 0.7rem; }

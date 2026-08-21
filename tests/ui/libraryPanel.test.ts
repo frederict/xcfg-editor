@@ -210,9 +210,12 @@ describe('libraryPanel — la mise en français', () => {
   })
 
   it('l’emplacement d’une donnée personnelle dit si elle voyage', () => {
-    expect(personalDatumWhere({ where: 'layout', key: 'a', value: 'b' }))
+    const datum = {
+      key: 'a', kind: 'freeText', basis: 'declared', reason: 'r', filled: true, value: 'b'
+    } as const
+    expect(personalDatumWhere({ ...datum, home: 'layout' }))
       .toContain('part avec les pages')
-    expect(personalDatumWhere({ where: 'preferences', key: 'a', value: 'b' }))
+    expect(personalDatumWhere({ ...datum, home: 'preferences' }))
       .toContain('reste chez vous')
   })
 })
@@ -680,7 +683,8 @@ describe('libraryPanel — ce qui est personnel est signalé', () => {
     await settle()
     const dialog = lastDialog()
     if (dialog.querySelector('.library__datum') === null) {
-      expect(text(dialog)).toContain('cela ne prouve pas une absence')
+      // La mise en garde est celle du modèle, la même sur les quatre écrans.
+      expect(text(dialog)).toContain('un inventaire vide ne prouve donc pas une absence')
     }
   })
 })

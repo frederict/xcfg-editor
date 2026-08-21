@@ -289,6 +289,40 @@ ce qui est lu dans l'APK (une portée `SECURE`, un champ de saisie masqué) de c
 affirmé sur le contenu d'une clé, qui ne se lit nulle part. Voir l'en-tête de
 `src/catalog/preferenceCatalog.ts`.
 
+### Une seule source pour « qu'y a-t-il de personnel dans ce fichier ? »
+
+Quatre écrans posent cette question — les réglages généraux, la bibliothèque, la boîte
+d'enregistrement, l'avertissement d'export. Ils y répondaient chacun avec sa propre liste
+de clés, donc avec quatre chiffres qu'aucun d'eux ne rapprochait. L'inventaire vit
+désormais dans **`src/model/personalData.ts`**, et les quatre écrans en sont des vues.
+
+Il distingue quatre choses, parce que ce sont de vraies différences :
+
+- **où ça vit** — dans le `layout`, la donnée **part avec un export « pages »** ; dans les
+  `preferences`, elle reste sur l'appareil. ⚠️ Un export « pages » **peut** porter des
+  données personnelles : le nom et le numéro de téléphone d'un `WButtonPhone` sont dans le
+  `layout` ;
+- **ce que c'est** — les neuf natures du catalogue (`credential`, `location`, `device`,
+  `identity`, `file`, `equipment`, `freeText`, `sharing`, `contact`) ;
+- **d'où on le sait** — lu dans l'APK, ou jugé par nous avec sa raison. Résultat mesuré :
+  tout ce qu'un fichier **réel** porte de personnel relève d'un jugement, car les seules
+  clés dont XCTrack déclare lui-même la sensibilité sont celles qu'il chiffre — et
+  celles-là ne sont jamais exportées ;
+- **ce qui est renseigné** — une fiche `contact` présente mais vide n'est pas un numéro de
+  téléphone. Les 15 `WButtonPhone` du corpus portent tous une structure vide.
+
+Aucun chiffre commun n'est inventé : chaque écran **nomme** ce qu'il compte. Sur
+`tests/fixtures/exports/2026-08-20_backup-00.xcfg`, les réglages généraux annoncent
+16 clés de préférences (11 renseignées, 5 vides) et disent qu'ils ne comptent pas les
+textes des gadgets ; la bibliothèque annonce « 16 données personnelles · 0 part avec les
+pages » ; la boîte d'enregistrement dit n'avoir aucun texte à remplacer **et** rappelle les
+16 clés de préférences qu'elle écarte en bloc.
+
+Les 44 clés surveillées sont extraites du catalogue vers `src/model/personalKeys.json`
+(7,3 Ko) par le même script, et non recopiées : `tests/model/personalData.test.ts` vérifie
+à chaque exécution que le relevé est la copie exacte du catalogue. C'est ce qui permet aux
+trois écrans qui n'ont pas le catalogue sous la main de répondre sans charger ses 96 Ko.
+
 ⚠️ **La dimension « version » n'est pas construite** : `src/catalog/widgetVersions/` ne
 couvre que les widgets. Le catalogue des préférences dit de quelle version il parle
 (`meta.versionCode`) et rien de plus. Sur un `backup` écrit par 0.9.12.3, 27 des 148 clés

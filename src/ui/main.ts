@@ -1918,6 +1918,9 @@ function sharingSource(current: Session): SharingSource {
     document: current.container.document,
     fileName: current.container.fileName,
     kind: current.container.kind,
+    // Ce qui décide de ce que la boîte a le droit de promettre : un document intact
+    // ressort à l'octet près, un document modifié est sérialisé. Voir `SharingSource`.
+    modified: current.container.modified,
     extras: current.container.extras.map((entry) => ({
       name: entry.name,
       byteLength: entry.data.byteLength

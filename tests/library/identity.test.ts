@@ -3,7 +3,11 @@ import { readFileSync } from 'node:fs'
 import { openContainer } from '../../src/core/container'
 import { serializeJson } from '../../src/core/serializeJson'
 import { derivePagesDocument } from '../../src/model/scope'
-import { describeContainer } from '../../src/library/identity'
+import {
+  describeContainer,
+  personalInventoryOf,
+  type EntryIdentity
+} from '../../src/library/identity'
 import { REFERENCE_VERSION_CODE } from '../../src/ui/warnings'
 import { ARCHIVE, EXPORTS, FORMES_PRESERVEES, GSON_2022 } from '../fixtures/paths'
 
@@ -52,10 +56,13 @@ describe('carte d’identité — ce qui est LU', () => {
     const pages = describeContainer(await ouvrir(EXPORTS + '2026-08-20_pages-00.xcfg', 'p.xcfg')).read
 
     expect(backup.preferenceKeyCount).toBe(136)
-    expect(backup.personalData).toContainEqual({
-      where: 'preferences', key: 'Pilot.Name', value: 'Amélie Exemple'
-    })
-    expect(backup.personalData.map((datum) => datum.key)).toContain('Livetrack.*')
+    expect(backup.personalData).toContainEqual(expect.objectContaining({
+      home: 'preferences', key: 'Pilot.Name', value: 'Amélie Exemple', filled: true
+    }))
+    // Les clés Livetrack sont désormais nommées une à une plutôt que regroupées : c'est
+    // l'inventaire du modèle, celui-là même que la page des réglages affiche.
+    expect(backup.personalData.map((datum) => datum.key))
+      .toContain('Livetrack.ClaimContest')
 
     // La propriété est **structurelle**, pas le résultat d'un filtrage : un `pages` n'a
     // pas de section `preferences`, donc rien à en retirer.
@@ -121,15 +128,17 @@ describe('carte d’identité — ⚠️ un export « pages » PEUT porter des d
 
     // Les préférences sont bel et bien parties…
     expect(identity.read.preferenceKeyCount).toBe(0)
-    expect(identity.read.personalData.every((datum) => datum.where === 'layout')).toBe(true)
+    expect(identity.read.personalData.every((datum) => datum.home === 'layout')).toBe(true)
 
     // … et pourtant le numéro de téléphone est toujours là.
-    expect(identity.read.personalData).toContainEqual({
-      where: 'layout', key: 'WButtonPhone/contact/fullName', value: 'Jean Exemple'
-    })
-    expect(identity.read.personalData).toContainEqual({
-      where: 'layout', key: 'WButtonPhone/contact/phoneNumber', value: '+32 470 00 00 00'
-    })
+    expect(identity.read.personalData).toContainEqual(expect.objectContaining({
+      home: 'layout', key: 'WButtonPhone/contact/fullName', value: 'Jean Exemple',
+      kind: 'contact', filled: true
+    }))
+    expect(identity.read.personalData).toContainEqual(expect.objectContaining({
+      home: 'layout', key: 'WButtonPhone/contact/phoneNumber', value: '+32 470 00 00 00',
+      kind: 'contact', filled: true
+    }))
     expect(identity.assumed.personalDataTravelsWithPages).toBe(true)
   })
 
@@ -150,6 +159,45 @@ describe('carte d’identité — ⚠️ un export « pages » PEUT porter des d
     const identity = describeContainer(await ouvrir(EXPORTS + '2026-08-20_pages-00.xcfg', 'p.xcfg'))
     expect(identity.read.freeTexts).toEqual([])
     expect(identity.assumed.personalDataTravelsWithPages).toBe(false)
+  })
+})
+
+/**
+ * ⚠️ **Une bibliothèque déjà rangée doit continuer de s'ouvrir.**
+ *
+ * `identity` est recopiée telle quelle depuis l'enregistrement : une entrée rangée par la
+ * version déployée porte des lignes `{ where, key, value }` et **aucun** `personalCounts`.
+ * Un panneau qui lirait `counts.total` sans précaution ferait échouer la bibliothèque
+ * entière — toutes les entrées, à cause d'une forme d'hier.
+ */
+describe('carte d’identité — relire une entrée rangée par une version antérieure', () => {
+  it('recompte les chiffres absents et ne perd aucune ligne', () => {
+    const legacy = {
+      read: {
+        personalData: [
+          { where: 'layout', key: 'WFreeText/text', value: 'Coucou' },
+          { where: 'preferences', key: 'Pilot.Name', value: 'Amélie Exemple' },
+          { where: 'preferences', key: 'Livetrack.*', value: '' }
+        ]
+      },
+      assumed: {}
+    } as unknown as EntryIdentity
+
+    const { findings, counts } = personalInventoryOf(legacy)
+    expect(counts).toEqual({
+      total: 3, layout: 1, preferences: 2, filled: 2, empty: 1, read: 0, judged: 3
+    })
+    // On ne devine pas la nature d'une ligne dont l'ancienne forme ne disait rien : elle
+    // porte une raison qui dit d'où elle vient.
+    expect(findings[0]).toMatchObject({ home: 'layout', basis: 'declared', filled: true })
+    expect(findings[0]?.reason).toContain('version antérieure')
+    expect(findings[2]?.filled).toBe(false)
+  })
+
+  it('laisse intacte une entrée rangée par la version courante', async () => {
+    const identity = describeContainer(await ouvrir(EXPORTS + '2026-08-20_backup-00.xcfg', 'b.xcfg'))
+    expect(personalInventoryOf(identity).counts).toEqual(identity.read.personalCounts)
+    expect(personalInventoryOf(identity).findings).toEqual(identity.read.personalData)
   })
 })
 

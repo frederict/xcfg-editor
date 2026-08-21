@@ -45,6 +45,9 @@ async function openOn(path: string, withExtras: boolean): Promise<void> {
     document: container.document,
     fileName: container.fileName,
     kind: container.kind,
+    // Le banc ouvre un fichier et n'y touche pas : la garantie forte s'applique, et la
+    // boîte doit l'annoncer. Voir `SharingSource.modified`.
+    modified: container.modified,
     extras: withExtras
       ? FAKE_EXTRAS
       : container.extras.map((e) => ({ name: e.name, byteLength: e.data.byteLength }))

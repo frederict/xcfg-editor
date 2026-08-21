@@ -136,6 +136,13 @@ second fichier à l'exécution.
 
 Les libellés des valeurs d'une liste (`android:entries`) sont des **tableaux traduits** :
 ils vivent dans les fichiers de langue, à côté des textes, sous `arrays`.
+
+Un quatrième fichier sort d'ici, et il ne vit pas dans `src/catalog/` :
+`src/model/personalKeys.json`, le sous-ensemble « personnel » du catalogue — 44 clés avec
+leur nature, leur base et leur raison, 7,3 Ko. Il alimente `src/model/personalData.ts`,
+qui répond à « qu'y a-t-il de personnel dans ce fichier ? » pour quatre écrans, dont trois
+n'ont pas le catalogue sous la main et ne doivent pas charger ses 96 Ko pour le savoir.
+Il est **extrait**, jamais recopié : un test le compare à `base.json` à chaque exécution.
 """
 from __future__ import annotations
 
@@ -1555,6 +1562,48 @@ def main() -> None:
     index_path.write_text(json.dumps(languages, ensure_ascii=False, indent=1) + "\n",
                           encoding="utf-8")
 
+    # ------------------------------------------------------- le relevé des clés personnelles
+    #
+    # `src/model/personalKeys.json` est le sous-ensemble « personnel » du catalogue,
+    # extrait ici et **jamais recopié à la main**. Il existe pour une raison de poids :
+    # `src/model/personalData.ts` répond à « qu'y a-t-il de personnel dans ce fichier ? »
+    # pour quatre écrans, dont trois n'ont pas le catalogue sous la main et ne doivent pas
+    # charger ses 96 Ko pour le savoir.
+    #
+    # Une copie que rien ne vérifie dérive au premier APK, en silence — le pire mode de
+    # défaillance pour de la confidentialité. `tests/model/personalData.test.ts` exige à
+    # chaque exécution que ce fichier soit la copie exacte de ce qui est écrit ci-dessus :
+    # régénérer le catalogue sans régénérer ce relevé fait tomber le test.
+    personal_keys = {
+        key: {
+            "kind": entry["personal"]["kind"],
+            "basis": entry["personal"]["basis"],
+            "reason": entry["personal"]["reason"],
+            "scope": entry["scope"],
+        }
+        for key, entry in sorted(catalog.preferences.items())
+        if entry.get("personal")
+    }
+    personal_path = PROJECT_ROOT / "src" / "model" / "personalKeys.json"
+    personal_path.write_text(
+        json.dumps(
+            {
+                "meta": {
+                    "source": base["meta"]["source"],
+                    "generatedBy": base["meta"]["generatedBy"],
+                    "versionCode": base["meta"]["versionCode"],
+                    "versionName": base["meta"]["versionName"],
+                    "keyCount": len(personal_keys),
+                },
+                "keys": personal_keys,
+            },
+            ensure_ascii=False,
+            indent=1,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
     print(f"APK : {apk_dir.name} (versionCode {version_code}, {version_name})")
     print(f"Classe de configuration : {short(catalog.config.config_class)}, "
           f"racine {short(catalog.config.preference_root or '?')}, "
@@ -1564,6 +1613,8 @@ def main() -> None:
     total = sum(size for _l, _n, _b, size in written)
     print(f"Textes : {out_dir}/ — {len(written)} fichiers de langue, {total:,} octets")
     print(f"Liste des langues : {index_path}")
+    print(f"Clés personnelles : {personal_path} "
+          f"({len(personal_keys)} clés, {personal_path.stat().st_size:,} octets)")
     print()
     print(f"Préférences : {len(catalog.preferences)} "
           f"({len(catalog.config.declarations)} déclarées dans le bytecode, "

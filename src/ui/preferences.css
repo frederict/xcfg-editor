@@ -369,6 +369,17 @@
   max-width: 74ch;
 }
 
+/*
+ * « Aucune préférence » n'est pas « rien de personnel » : quand la disposition porte des
+ * textes du pilote, la note se démarque du reste du paragraphe. Un filet, pas une
+ * couleur d'alerte — c'est un renseignement, pas un défaut du fichier.
+ */
+.prefs__empty-text--warn {
+  padding-left: 0.7rem;
+  border-left: 2px solid var(--app-line-strong, var(--prefs-line));
+  color: var(--app-ink, inherit);
+}
+
 /* ------------------------------------------------------------------- petites largeurs */
 
 @media (max-width: 46rem) {

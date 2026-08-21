@@ -11,6 +11,14 @@ import {
   type PreferenceEntry,
   type PreferenceScope
 } from '../catalog/preferenceCatalog'
+import {
+  collectPersonalData,
+  PERSONAL_BASIS_LABELS,
+  PERSONAL_CAVEAT,
+  PERSONAL_KIND_LABELS,
+  SECURE_PERSONAL_KEYS,
+  type PersonalCounts
+} from '../model/personalData'
 
 /**
  * La page de **consultation des préférences générales** de XCTrack : tout ce qui se
@@ -185,6 +193,22 @@ export interface PreferencesSummary {
   unknownCount: number
   /** Combien de clés du fichier portent une donnée personnelle. */
   personalCount: number
+  /**
+   * L'inventaire **entier** du fichier, préférences et disposition, tel que
+   * `model/personalData.ts` l'établit pour les quatre écrans.
+   *
+   * Cette page ne montre que les préférences — un écran de réglages n'a pas à montrer ce
+   * qu'une boîte de partage montre — mais elle doit **dire** qu'elle ne compte pas tout :
+   * les textes écrits dans les gadgets sont les seuls qui partent avec un export
+   * « pages », et un pilote qui lit « 16 » ici puis « 5 » dans la boîte de partage doit
+   * comprendre que ce ne sont pas deux mesures du même objet.
+   *
+   * `personalCounts.preferences` et `personalCount` comptent la même chose par deux
+   * chemins — le relevé embarqué et le catalogue chargé — et un test exige qu'ils soient
+   * égaux sur tous les fichiers du corpus. C'est ce qui rend les deux écrans
+   * démontrablement d'accord plutôt que vraisemblablement d'accord.
+   */
+  personalCounts: PersonalCounts
   /** Combien de réglages connus ne quittent jamais l'appareil. */
   neverExportedCount: number
 }
@@ -589,6 +613,8 @@ export function buildPreferenceInventory(
     conflicts: new Set(catalog.meta.defaultConflicts)
   }
 
+  const inventory = collectPersonalData(document)
+
   const summary: PreferencesSummary = {
     empty: !hasPreferencesSection(document) || file.size === 0,
     fileKeyCount: file.size,
@@ -603,6 +629,7 @@ export function buildPreferenceInventory(
     stateCount: 0,
     unknownCount: 0,
     personalCount: 0,
+    personalCounts: inventory.counts,
     neverExportedCount: 0
   }
 
@@ -867,28 +894,17 @@ function stateTitle(row: PreferenceRow): string {
   return row.undecidableReason ?? 'Aucune valeur par défaut connue pour cette clé.'
 }
 
-const PERSONAL_KINDS: Record<PersonalData['kind'], string> = {
-  identity: 'identité',
-  credential: 'identifiant',
-  contact: 'contact',
-  device: 'appareil',
-  location: 'position',
-  file: 'fichier',
-  freeText: 'texte libre',
-  equipment: 'matériel',
-  sharing: 'partage'
-}
-
-const PERSONAL_BASIS: Record<PersonalData['basis'], string> = {
-  scope: 'portée lue dans l’application',
-  inputType: 'champ de saisie masqué dans l’application',
-  declared: 'jugement de l’extraction'
-}
+/*
+ * Le vocabulaire — les mots de chaque nature, ceux de chaque base — vient de
+ * `model/personalData.ts`, comme pour la bibliothèque, la boîte de partage et
+ * l'avertissement d'export. Il était écrit ici ; le recopier ailleurs aurait fait dire
+ * « identité » à un écran et « pilote » à un autre pour la même clé.
+ */
 
 /** La marque discrète qui signale une donnée personnelle. Sobre : le pilote décide. */
 function personalMark(personal: PersonalData): HTMLElement {
-  const mark = el('span', 'prefs__personal', PERSONAL_KINDS[personal.kind])
-  mark.title = `Donnée personnelle — ${personal.reason} (${PERSONAL_BASIS[personal.basis]}).`
+  const mark = el('span', 'prefs__personal', PERSONAL_KIND_LABELS[personal.kind])
+  mark.title = `Donnée personnelle — ${personal.reason} (${PERSONAL_BASIS_LABELS[personal.basis]}).`
   return mark
 }
 
@@ -1033,21 +1049,39 @@ function buildPrivacyBox(inventory: PreferenceInventory, catalog: PreferenceCata
   const box = el('details', 'prefs__privacy')
   box.dataset.count = String(inventory.summary.personalCount)
 
+  const counts = inventory.summary.personalCounts
+
   const head = el('summary', 'prefs__privacy-head')
-  head.textContent = inventory.summary.personalCount === 0
-    ? 'Aucune donnée personnelle repérée dans ce fichier'
-    : `${plural(inventory.summary.personalCount, 'clé de ce fichier porte', 'clés de ce fichier portent')} une donnée personnelle`
+  head.textContent = counts.preferences === 0
+    ? 'Aucune donnée personnelle repérée dans les préférences de ce fichier'
+    : `${plural(counts.preferences, 'clé de préférences porte', 'clés de préférences portent')} ` +
+      `une donnée personnelle · ${String(counts.filled - counts.layout)} renseignées, ` +
+      `${String(counts.preferences - (counts.filled - counts.layout))} vides`
   box.append(head)
 
   const body = el('div', 'prefs__privacy-body')
 
-  if (inventory.summary.personalCount > 0) {
+  // **Ce que cette page ne compte pas, dit ici.** Un écran de réglages n'a pas à montrer
+  // ce qu'une boîte de partage montre — mais taire l'existence de l'autre moitié fait
+  // lire « 16 » comme « tout ». Les textes des gadgets sont les seuls qui survivent à un
+  // export « pages » : c'est le chiffre qui décide de ce qu'on peut envoyer.
+  body.append(el('p', 'prefs__privacy-note',
+    counts.layout === 0
+      ? 'Cette page ne compte que les préférences. La disposition de ce fichier ne porte ' +
+        'aucun texte écrit par vous — c’est la boîte « Enregistrer » qui les inventorie, ' +
+        'et ce sont les seuls qui partiraient avec un export « pages ».'
+      : `Cette page ne compte que les préférences. La disposition en porte ` +
+        `${plural(counts.layout, 'de plus', 'de plus')} — des textes écrits par vous dans ` +
+        `les gadgets — et ce sont les seuls qui partent avec un export « pages ». La boîte ` +
+        `« Enregistrer » les montre un par un.`))
+
+  if (counts.preferences > 0) {
     const list = el('ul', 'prefs__privacy-list')
     for (const row of inventory.personal) {
       const item = el('li', 'prefs__privacy-item')
       item.append(el('span', 'prefs__privacy-key', row.key))
       item.append(el('span', 'prefs__privacy-why',
-        `${PERSONAL_KINDS[row.personal?.kind ?? 'identity']} — ${row.personal?.reason ?? ''}`))
+        `${PERSONAL_KIND_LABELS[row.personal?.kind ?? 'identity']} — ${row.personal?.reason ?? ''}`))
       list.append(item)
     }
     body.append(list)
@@ -1070,14 +1104,26 @@ function buildPrivacyBox(inventory: PreferenceInventory, catalog: PreferenceCata
       `(« App.GuessLatitude », « App.GuessLongitude ») — en pratique le domicile. Elles sont ` +
       `internes à l’appareil : aucun export ne les porte, et ce fichier ne les porte pas.`))
   }
-  const secure = catalog.personalKeys()
-    .filter((key) => catalog.preference(key)?.scope === 'SECURE')
-  if (secure.length > 0) {
+  if (SECURE_PERSONAL_KEYS.length > 0) {
     body.append(el('p', 'prefs__privacy-note',
       `XCTrack chiffre les identifiants de compte (XContest, SkySight, SafeSky…) : les ` +
-      `${formatCount(secure.length)} clés concernées ne sortent jamais de l’appareil, et aucun ` +
-      `export n’en porte.`))
+      `${formatCount(SECURE_PERSONAL_KEYS.length)} clés concernées ne sortent jamais de ` +
+      `l’appareil, et aucun export n’en porte.`))
   }
+
+  // La conséquence, qui n'est pas une évidence : les seules clés dont XCTrack déclare
+  // lui-même le caractère sensible sont celles qui ne sortent jamais. Tout ce qu'un
+  // fichier réel porte de personnel relève donc d'un jugement de cet éditeur — et chaque
+  // ligne ci-dessus porte le sien.
+  if (counts.judged > 0 && counts.read === 0) {
+    body.append(el('p', 'prefs__privacy-note',
+      `Aucune des ${formatCount(counts.total)} lignes de ce fichier n’est signalée par ` +
+      `XCTrack lui-même : les seules clés dont il déclare la sensibilité sont celles qu’il ` +
+      `chiffre, et elles ne sont pas exportées. Ce relevé est donc un jugement de cet ` +
+      `éditeur, et chaque ligne dit le sien.`))
+  }
+
+  body.append(el('p', 'prefs__privacy-note', PERSONAL_CAVEAT))
 
   box.append(body)
   return box
@@ -1138,7 +1184,9 @@ function buildLeftoverSection(
  * Ce qu'il faut dire d'un fichier qui ne porte aucune préférence — la moitié du corpus,
  * et tous les exports `pages`. Un écran vide se lirait comme une panne.
  */
-function buildEmptyNote(options: PreferencesPageOptions): HTMLElement {
+function buildEmptyNote(
+  options: PreferencesPageOptions, counts: PersonalCounts
+): HTMLElement {
   const box = el('div', 'prefs__empty')
   box.append(el('p', 'prefs__empty-title', 'Ce fichier ne porte aucune préférence générale.'))
   box.append(el('p', 'prefs__empty-text',
@@ -1148,6 +1196,17 @@ function buildEmptyNote(options: PreferencesPageOptions): HTMLElement {
   box.append(el('p', 'prefs__empty-text',
     `Rien n’est perdu pour autant : ce que cette page ne montre pas, ce fichier ne le ` +
     `contient pas, et un réexport le laissera tel quel.`))
+  // ⚠️ « Pas de préférences » ne veut pas dire « rien de personnel ». Le nom et le numéro
+  // d'un bouton d'appel vivent dans la disposition, et un export « pages » les emporte.
+  // Laisser la page muette ici, c'est laisser croire le contraire.
+  if (counts.layout > 0) {
+    box.append(el('p', 'prefs__empty-text prefs__empty-text--warn',
+      `Attention : « aucune préférence » ne veut pas dire « rien de personnel ». La ` +
+      `disposition de ce fichier porte ${plural(counts.layout, 'texte écrit par vous',
+        'textes écrits par vous')} dans ses gadgets — un titre, un nom, un numéro de ` +
+      `téléphone —, et un export « pages » les emporte. La boîte « Enregistrer » les ` +
+      `montre un par un.`))
+  }
   if (options.fileVersionName !== undefined) {
     box.append(el('p', 'prefs__summary-note', catalogNote(options)))
   }
@@ -1181,7 +1240,7 @@ export function renderPreferencesPage(options: PreferencesPageOptions): Preferen
   const collected: RenderedRow[] = []
 
   if (inventory.summary.empty) {
-    root.append(buildEmptyNote(options))
+    root.append(buildEmptyNote(options, inventory.summary.personalCounts))
     return finish(root, inventory, collected, options, actions)
   }
 

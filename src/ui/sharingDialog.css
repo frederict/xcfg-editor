@@ -179,6 +179,28 @@
   max-width: 78ch;
 }
 
+/*
+ * L'inventaire complet, replié. Il ne remplace pas la liste des remplacements : il dit ce
+ * que cette boîte **ne** remplace **pas**, pour que « rien à remplacer » cesse de se lire
+ * « rien de personnel ».
+ */
+.sharing__personal { display: grid; gap: 0.4rem; }
+
+.sharing__personal > .sharing__heading { cursor: pointer; }
+
+.sharing__datum {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.35rem 0 0.35rem 0.7rem;
+  border-left: 2px solid var(--app-line);
+}
+
+/* Ce qui part avec les pages est ce qu'on croyait ne pas envoyer : c'est cela qu'on marque. */
+.sharing__datum--travels { border-left-color: var(--app-flag-line, var(--app-line-strong)); }
+
+/* Dans l'inventaire, la valeur n'est pas remplacée : elle ne se barre donc pas. */
+.sharing__datum .sharing__from { text-decoration: none; }
+
 /* Une section écartée, ou une annexe : la clé, puis ce qu'elle emporte. */
 .sharing__dropped {
   display: grid;

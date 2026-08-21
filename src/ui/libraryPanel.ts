@@ -2,9 +2,16 @@ import './libraryPanel.css'
 import { readableName } from '../catalog/widgetNames'
 import { sha256Hex } from '../library/digest'
 import { LibraryError } from '../library/errors'
-import type { EntryIdentity, PersonalDatum } from '../library/identity'
+import { personalInventoryOf, type EntryIdentity, type PersonalDatum } from '../library/identity'
 import type { BrokenEntry, Library, LibraryEntry, LibrarySnapshot } from '../library/library'
 import { exportLibrary, importLibrary, type ImportReport } from '../library/transfer'
+import {
+  isReadFromApk,
+  personalHomeLabel,
+  personalValueText,
+  PERSONAL_CAVEAT,
+  PERSONAL_KIND_LABELS
+} from '../model/personalData'
 
 /**
  * La **bibliothèque de configurations nommées**, côté pilote : ranger, retrouver, revenir
@@ -210,11 +217,15 @@ const VERSION_GAP_LABELS: Record<string, string> = {
   unknown: 'Impossible à situer'
 }
 
-/** L'emplacement d'une donnée personnelle, dans les mots du pilote. */
+/**
+ * L'emplacement d'une donnée personnelle, dans les mots du pilote.
+ *
+ * Les mots viennent de `model/personalData.ts`, comme les natures et les bases : c'est
+ * ce qui fait que la bibliothèque, la page des réglages, la boîte de partage et
+ * l'avertissement d'export disent la même chose avec les mêmes termes.
+ */
 export function personalDatumWhere(datum: PersonalDatum): string {
-  return datum.where === 'layout'
-    ? 'Disposition — part avec les pages'
-    : 'Préférences — reste chez vous dans un export « pages »'
+  return personalHomeLabel(datum.home)
 }
 
 /* =========================================================== la carte d'identité, pure */
@@ -371,9 +382,8 @@ export function identityCard(identity: EntryIdentity, language = 'fr'): Identity
  * lui, est sur la carte.
  */
 export function personalDataCount(identity: EntryIdentity): { total: number; inLayout: number } {
-  const total = identity.read.personalData.length
-  const inLayout = identity.read.personalData.filter((datum) => datum.where === 'layout').length
-  return { total, inLayout }
+  const { counts } = personalInventoryOf(identity)
+  return { total: counts.total, inLayout: counts.layout }
 }
 
 /* ============================================================================== le DOM */
@@ -694,32 +704,43 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
     const section = el('section', 'library__section')
     section.append(el('h3', 'library__heading', 'Ce que cette entrée porte de personnel'))
 
-    const data = entry.identity.read.personalData
+    const { findings: data, counts } = personalInventoryOf(entry.identity)
     if (data.length === 0) {
       section.append(el(
         'p', 'library__note',
-        'Aucune donnée personnelle repérée. La liste des clés surveillées est fixe et le ' +
-        'format de XCTrack change à chaque version : cela ne prouve pas une absence.'
+        `Aucune donnée personnelle repérée. ${PERSONAL_CAVEAT}`
       ))
       return section
     }
 
     section.append(el(
       'p', 'library__note',
-      `${plural(data.length, 'donnée personnelle est présente', 'données personnelles sont présentes')} ` +
-      'dans cette entrée. Elles sont montrées, jamais retirées : c’est vous qui décidez.'
+      `${plural(counts.total, 'donnée personnelle est présente', 'données personnelles sont présentes')} ` +
+      `dans cette entrée : ${String(counts.layout)} dans la disposition, qui part avec les ` +
+      `pages, et ${String(counts.preferences)} dans les préférences, qui restent chez vous ` +
+      `dans un export « pages ». ` +
+      `${plural(counts.filled, 'est renseignée', 'sont renseignées')}, ` +
+      `${plural(counts.empty, 'est un emplacement vide', 'sont des emplacements vides')}. ` +
+      'Elles sont montrées, jamais retirées : c’est vous qui décidez.'
     ))
 
     const list = el('ul', 'library__personal')
     for (const datum of data) {
-      const item = el('li', datum.where === 'layout'
+      const item = el('li', datum.home === 'layout'
         ? 'library__datum library__datum--travels'
         : 'library__datum')
+      if (!datum.filled) item.classList.add('library__datum--empty')
       item.append(
         el('span', 'library__datumWhere', personalDatumWhere(datum)),
         el('code', 'library__datumKey', datum.key),
-        el('span', 'library__datumValue', datum.value)
+        el('span', 'library__datumValue', personalValueText(datum)),
+        // La nature et la base, côte à côte : ce que c'est, et si on l'a lu dans
+        // l'application ou jugé nous-mêmes. La seconde est la valeur du relevé.
+        el('span', 'library__datumKind', PERSONAL_KIND_LABELS[datum.kind]),
+        el('span', 'library__datumBasis',
+          isReadFromApk(datum.basis) ? 'lu dans l’application' : 'jugé par cet éditeur')
       )
+      item.title = datum.reason
       list.append(item)
     }
     section.append(list)
@@ -1077,10 +1098,12 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
     }
     const personal = personalDataCount(entry.identity)
     if (personal.total > 0) {
-      const flag = el('span', 'flag', personal.inLayout > 0
-        ? `${plural(personal.total, 'donnée personnelle', 'données personnelles')} · ` +
-          `${personal.inLayout} part${personal.inLayout > 1 ? 'ent' : ''} avec les pages`
-        : plural(personal.total, 'donnée personnelle', 'données personnelles'))
+      // Les deux chiffres sont **toujours** dits, y compris le zéro : « 16 données
+      // personnelles » seul laisserait croire que les 16 voyagent. Ce qui décide de ce
+      // qu'on peut envoyer, c'est le second.
+      const flag = el('span', 'flag',
+        `${plural(personal.total, 'donnée personnelle', 'données personnelles')} · ` +
+        `${String(personal.inLayout)} ${personal.inLayout > 1 ? 'partent' : 'part'} avec les pages`)
       meta.append(flag)
     }
     main.append(meta)
