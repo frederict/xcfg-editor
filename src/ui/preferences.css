@@ -418,12 +418,16 @@
 
 /*
  * Le retrait est le geste le moins fréquent des deux et le seul qui enlève quelque
- * chose : sans cadre, il ne se dispute pas la lecture avec le contrôle qu'il accompagne,
- * et il se révèle au survol comme au clavier.
+ * chose : `.btn--ghost` — gris `--app-ink-soft` au repos, plein `--app-ink` au survol
+ * comme au clavier — suffit à le distinguer sans se disputer la lecture avec le
+ * contrôle qu'il accompagne.
+ *
+ * Un `opacity: 0.5` posé par-dessus assombrissait encore ce gris déjà mesuré à la
+ * limite des 4,5:1 : sous 0,5, son contraste au repos tombait autour de 2:1, illisible
+ * en dehors du survol — donc en permanence sur un écran tactile, qui ne survole
+ * jamais. `.btn--ghost` porte déjà la même intention sans ce défaut ; il n'y a rien à
+ * ajouter ici.
  */
-.prefs__drop { opacity: 0.5; }
-.prefs__row:hover .prefs__drop,
-.prefs__drop:focus-visible { opacity: 1; }
 
 /*
  * L'emplacement du bouton de retrait, réservé sur **toutes** les lignes réglables, qu'il
