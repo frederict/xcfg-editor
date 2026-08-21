@@ -1396,6 +1396,75 @@ body.is-dragging .veil {
 .props__defaults[data-trust="indicative"] .props__defaults-note,
 .props__defaults[data-trust="unstated"] .props__defaults-note { color: var(--app-flag-ink); }
 
+/*
+ * Le bloc de fin : les réglages que le gadget n'écrit pas, et que XCTrack applique quand
+ * même.
+ *
+ * Il est en retrait de la liste — filet à gauche, fond du panneau, texte plus discret :
+ * ces lignes ne sont pas des réglages du fichier, et rien ne doit laisser croire qu'on
+ * lit une valeur qu'il porte. Le bouton, lui, est un vrai bouton bordé : c'est un geste
+ * qui écrit dans le document, il ne se déguise pas en lien.
+ */
+.props__absent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-top: 0.7rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--app-line);
+  border-left: 3px solid var(--app-ink-soft);
+  border-radius: 4px;
+  background: var(--app-bg);
+}
+
+.props__absent-title { margin: 0; font-size: 13px; font-weight: 600; }
+
+.props__absent-note {
+  margin: 0 0 0.3rem;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--app-ink-soft);
+}
+
+/* Le doute sur la version se dit dans la couleur d'attention du reste de l'application,
+   comme le fait déjà le bandeau de la consultation. */
+.props__absent[data-trust="indicative"],
+.props__absent[data-trust="unstated"] { border-left-color: var(--app-flag-line); }
+
+.props__absent[data-trust="indicative"] .props__absent-note,
+.props__absent[data-trust="unstated"] .props__absent-note { color: var(--app-flag-ink); }
+
+.props__absent-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  min-height: 2.2rem;
+  padding: 0.2rem 0;
+  border-top: 1px solid var(--app-line);
+}
+
+.props__absent-label { flex: 1 1 13rem; font-size: 14px; color: var(--app-ink-soft); }
+
+/* La valeur appliquée : lisible, mais jamais de l'aplomb d'une valeur réglée. */
+.props__absent-default {
+  flex: 0 1 auto;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--app-ink-soft);
+  cursor: help;
+}
+
+.props__adopt { flex: none; font-size: 11.5px; padding: 0.15rem 0.5rem; white-space: nowrap; }
+
+/* Rien à cliquer, et la raison au survol : une valeur composée ne s'invente pas. */
+.props__absent-none {
+  flex: none;
+  font-size: 11.5px;
+  color: var(--app-ink-soft);
+  cursor: help;
+}
+
 /* --------------------------------------------------------------- mode édition */
 
 /*
@@ -1879,6 +1948,11 @@ body.is-dragging .veil {
 /* Le bandeau de tête de la consultation précède les colonnes et les traverse toutes : il
    parle du widget entier, pas d'une colonne de réglages. */
 .dock .props__defaults { align-self: stretch; }
+
+/* Même raison pour le bloc des réglages absents : il vient après les colonnes et parle du
+   gadget entier. Sans cela il se serait rangé dans la dernière colonne, à côté d'une
+   ligne de réglage, et se serait lu comme la suite de la liste. */
+.dock .props__absent { align-self: stretch; }
 
 /* En colonnes, la marque d'origine collée à droite d'une ligne courte laisserait un vide
    entre elle et la valeur. Elle reste à droite, mais sans pousser. */

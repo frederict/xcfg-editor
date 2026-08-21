@@ -1,4 +1,6 @@
-import { decode, encode, getMember, setLiteral, setString } from '../core/access'
+import {
+  decode, encode, getMember, hasMember, insertLiteral, insertString, setLiteral, setString
+} from '../core/access'
 import type { JsonNode } from '../core/jsonDocument'
 import { serializeJson } from '../core/serializeJson'
 import { readableName } from '../catalog/widgetNames'
@@ -47,9 +49,31 @@ import {
  * Tout reste modifiable : un réglage sans effet est ignoré par XCTrack, une option
  * grisée à tort ne l'est pas.
  *
- * Il n'écrit jamais le document : chaque modification passe par `setLiteral` ou
- * `setString`, qui remplacent **une** valeur dans le nœud d'origine. Une clé qu'on ne
- * touche pas ne change pas d'un octet, y compris son texte source (`3.0` reste `3.0`).
+ * Il n'écrit jamais le document en entier : chaque modification passe par `setLiteral`,
+ * `setString` ou — pour une clé que le fichier ne portait pas — `insertLiteral` /
+ * `insertString`, qui touchent **une** entrée du nœud d'origine. Une clé qu'on ne touche
+ * pas ne change pas d'un octet, y compris son texte source (`3.0` reste `3.0`).
+ *
+ * ## Ce que le fichier n'écrit pas, et que XCTrack applique quand même
+ *
+ * Un gadget ne porte pas toujours toutes les clés que le relevé lui connaît : le
+ * `WXCAssistant` du fichier de 2026 en ignore quinze. Une clé absente n'est pas un
+ * manque à réparer — elle vaut son défaut **de façon implicite**, et le relevé lui-même
+ * l'a mesuré : les gadgets qui l'ont produit ont été écrits avec leurs seules huit clés
+ * universelles, et l'appareil les a affichés sans broncher.
+ *
+ * Le panneau les rassemble en fin de liste (`missingDefaults`), avec la valeur que
+ * XCTrack applique, et — en édition seulement — le bouton qui l'écrit. Écrire ne change
+ * rien au comportement d'aujourd'hui : cela **fige** la valeur, qui cesse de suivre les
+ * mises à jour de XCTrack. C'est le seul intérêt du geste, et il est dit en toutes
+ * lettres plutôt que laissé à deviner — même parti, mêmes mots que l'écran des
+ * préférences (`ui/preferencesPage.ts`, `buildImplicitCell`).
+ *
+ * **Rien n'est proposé que le relevé ne sache écrire.** Une valeur composée
+ * (`rotation`, `mapWidget_scale`, `scrollSettings`) est montrée, jamais offerte à
+ * l'écriture : c'est la même frontière que `compareToDefault`, qui rend `unknown` dès
+ * qu'elle ne peut plus comparer terme à terme. Écrire une valeur devinée dans une
+ * configuration de vol serait le seul vrai risque de cette fonctionnalité.
  */
 
 /* ------------------------------------------------------- les textes du catalogue */
@@ -193,6 +217,47 @@ export interface PropertyField {
   defaultText?: string
 }
 
+/**
+ * Une clé que le relevé décrit et que ce gadget-ci ne porte pas.
+ *
+ * Elle n'a **pas** de contrôle dans le panneau : elle n'est pas dans le fichier, et un
+ * champ prérempli au défaut inviterait à « confirmer » une valeur — le premier geste
+ * maladroit écrirait alors une ligne de plus sans rien changer à ce que fait l'appareil.
+ * Elle porte donc la valeur que XCTrack applique, et un bouton qui l'écrit si on le lui
+ * demande. C'est la décision déjà prise pour les préférences, tenue à l'identique ici.
+ */
+export interface MissingDefault {
+  /** La clé du fichier, telle qu'elle s'écrirait (`windStyle`, `nav_label`). */
+  key: string
+  /** Libellé traduit du catalogue, ou le nom brut de la clé quand il l'ignore. */
+  label: string
+  /** Faux si la clé est absente du catalogue : le libellé est alors le nom brut. */
+  known: boolean
+  help?: string
+  /**
+   * Le contrôle qu'aurait cette clé une fois écrite. Il ne sert ici qu'à **dire** la
+   * valeur dans la langue du pilote — « Oui », « Arc », `#FFFF962D` — jamais à l'éditer.
+   */
+  control: FieldControl
+  choices: FieldChoice[]
+  /** La valeur du relevé, formatée comme `PropertyField.defaultText`. */
+  defaultText: string
+  /**
+   * Le texte source qui serait inséré dans le fichier — guillemets compris pour une
+   * chaîne. `undefined` quand la valeur relevée est composée : voir `writable`.
+   */
+  raw?: string
+  /** Nature du nœud à insérer. C'est elle qui décide entre `insertString` et `insertLiteral`. */
+  valueKind: JsonNode['kind']
+  /**
+   * Vrai quand cet éditeur sait écrire cette valeur — c'est-à-dire quand elle est simple.
+   * Une valeur composée n'est pas offerte : la reconstruire nœud par nœud reviendrait à
+   * décider de sa forme, et une forme inventée dans un fichier de vol n'est pas un
+   * service qu'on rend.
+   */
+  writable: boolean
+}
+
 export interface PropertyForm {
   className: string
   shortName: string
@@ -229,10 +294,12 @@ export interface PropertyForm {
   /** Parmi eux, ceux dont la valeur du fichier diffère du défaut de XCTrack. */
   customizedCount: number
   /**
-   * Les clés que le relevé décrit et que ce widget ne porte pas. Ce n'est pas un défaut
-   * du fichier : c'est la trace la plus nette d'une autre version de XCTrack.
+   * Les clés que le relevé décrit et que ce widget ne porte pas, dans l'ordre du relevé.
+   *
+   * Ce n'est pas un défaut du fichier : XCTrack applique alors la valeur de son code,
+   * sans l'écrire. Le panneau les montre, et l'édition permet de les figer.
    */
-  missingDefaults: string[]
+  missingDefaults: MissingDefault[]
 }
 
 /** Les cinq clés de structure. Elles ne sont pas des réglages : le panneau natif ne les montre pas. */
@@ -488,6 +555,84 @@ function expandComposite(
 }
 
 /**
+ * Ce qu'on peut dire d'une clé du relevé que le gadget ne porte pas.
+ *
+ * Le libellé, l'aide et les valeurs permises viennent du catalogue comme pour n'importe
+ * quel contrôle ; le **contrôle**, lui, se déduit du type de la valeur relevée, faute de
+ * valeur dans le fichier — c'est le même arbitrage qu'ailleurs dans ce module, à ceci
+ * près que le type vient du relevé et non du document.
+ */
+function describeMissing(
+  shortName: string, key: string, option: WidgetOption | undefined, texts: WidgetOptionTexts
+): MissingDefault {
+  const value = defaultValueAt(shortName, key)
+  const label = option === undefined ? key : texts.optionLabel(option)
+  const help = option === undefined ? undefined : texts.optionHelp(option)
+  const defaultText = value === undefined ? '' : formatDefault(value)
+
+  // Composée — objet ou tableau : elle se montre, elle ne s'écrit pas. `formatDefault`
+  // en donne la forme JSON compacte, qui suffit à la lire.
+  if (value === undefined || typeof value === 'object') {
+    return {
+      key,
+      label,
+      known: option !== undefined,
+      ...(help === undefined ? {} : { help }),
+      control: 'unknown',
+      choices: [],
+      defaultText,
+      valueKind: Array.isArray(value) ? 'array' : 'object',
+      writable: false
+    }
+  }
+
+  const node: JsonNode = typeof value === 'string'
+    ? { kind: 'string', raw: encode(value) }
+    : { kind: 'literal', raw: defaultText }
+  const choices = option === undefined ? [] : texts.optionValues(option)
+  const pattern = option === undefined ? undefined : texts.resourceText(option.label)
+
+  return {
+    key,
+    // Le libellé d'un curseur porte sa valeur (« Echelle Carte: %d m ») : il la porte
+    // aussi ici, celle que XCTrack applique, pour se lire comme il se lira une fois écrit.
+    label: pattern !== undefined && /%[dsf]/.test(pattern)
+      ? applyLabelPattern(pattern, defaultText)
+      : label,
+    known: option !== undefined,
+    ...(help === undefined ? {} : { help }),
+    control: resolveControl(option, node, choices.length > 0),
+    choices,
+    defaultText,
+    raw: node.raw,
+    valueKind: node.kind,
+    writable: true
+  }
+}
+
+/**
+ * Écrit dans le gadget une clé qu'il ne portait pas, à la valeur du relevé.
+ *
+ * L'insertion se fait **en fin d'objet** (`insertLiteral` / `insertString` de
+ * `core/access`, qui documente pourquoi ce rang-là et pas un autre) : c'est la seule
+ * position qui ne déplace, ne réécrit et ne réindente aucune clé existante. La
+ * différence textuelle se réduit aux caractères ajoutés, et retirer la clé rend le
+ * fichier d'origine à l'octet près.
+ *
+ * Rend `false` sans rien écrire dans les deux cas où l'écriture n'aurait pas de sens :
+ * une valeur composée, que ce module refuse d'inventer, et une clé déjà présente — le
+ * panneau a pu être construit avant une modification venue d'ailleurs, et insérer une
+ * seconde fois créerait le doublon que `findDuplicateKeys` reproche aux fichiers.
+ */
+export function writeMissingDefault(node: JsonNode, missing: MissingDefault): boolean {
+  if (!missing.writable || missing.raw === undefined) return false
+  if (node.kind !== 'object' || hasMember(node, missing.key)) return false
+  if (missing.valueKind === 'string') insertString(node, missing.key, missing.raw)
+  else insertLiteral(node, missing.key, missing.raw)
+  return true
+}
+
+/**
  * La description du formulaire d'un widget : la liste ordonnée de ses contrôles.
  *
  * `language` est un code du catalogue (`fr`, `en`, `de`… 34 en tout) ; le repli anglais
@@ -563,6 +708,7 @@ export function buildPropertyForm(source: FormSource, language = 'fr'): Property
     comparableCount: comparable.length,
     customizedCount: comparable.filter((one) => one.defaultState === 'custom').length,
     missingDefaults: missingDefaultKeys(shortName, orderedKeys(node))
+      .map((key) => describeMissing(shortName, key, catalog.get(key), texts))
   }
   // Le nœud d'origine, retenu pour pouvoir refaire le formulaire dans la bonne langue
   // sans que l'appelant ait à le redonner. Une `WeakMap` plutôt qu'un champ : le
@@ -677,10 +823,52 @@ function normalize(value: string): string {
   return value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 }
 
+/**
+ * Le panneau **vivant** : celui que l'appelant a inséré dans le document.
+ *
+ * Deux chemins refont le panneau après coup — la réparation de langue et l'écriture
+ * d'une clé absente — et tous deux doivent reverser leur contenu dans cet élément-là,
+ * pas dans le dernier construit. Sans ce repère, la deuxième écriture d'une session
+ * remplirait un élément détaché du document et le pilote ne verrait rien bouger.
+ */
+interface LivePanel { panel?: PropertiesPanel }
+
 export function renderProperties(options: PropertiesPanelOptions): PropertiesPanel {
-  const panel = buildPanel(options)
-  repairLanguage(panel, options)
+  const live: LivePanel = {}
+  const panel = buildPanel(options, live)
+  live.panel = panel
+  repairLanguage(panel, options, live)
   return panel
+}
+
+/**
+ * Refait le panneau depuis un formulaire neuf, **dans l'élément que l'appelant tient**.
+ *
+ * Refaire tout plutôt que rapiécer une ligne : après une écriture, le formulaire change
+ * de longueur, de comptes et de liste de clés absentes. Une reconstruction coûte une
+ * page de DOM ; un calcul incrémental coûterait la justesse — c'est déjà l'arbitrage de
+ * la liste des gadgets dans `main.ts`.
+ *
+ * Le filtre en cours est le seul état d'écran qui ne se déduise pas du document : il est
+ * repris tel quel, sans quoi une écriture rouvrirait les cinquante lignes que le pilote
+ * venait de réduire à trois.
+ */
+function rebuild(
+  live: LivePanel, options: PropertiesPanelOptions, form: PropertyForm
+): PropertiesPanel {
+  const host = live.panel
+  const query = host?.element.querySelector<HTMLInputElement>('.props__filter')?.value ?? ''
+  const fresh = buildPanel({ ...options, form }, live)
+  if (host === undefined) return fresh
+  host.element.replaceChildren(...fresh.element.childNodes)
+  host.form = fresh.form
+  host.filter = fresh.filter
+  if (query !== '') {
+    const search = host.element.querySelector<HTMLInputElement>('.props__filter')
+    if (search !== null) search.value = query
+    host.filter(query)
+  }
+  return fresh
 }
 
 /**
@@ -696,23 +884,22 @@ export function renderProperties(options: PropertiesPanelOptions): PropertiesPan
  * Le contenu est remplacé **dans** la section d'origine, celle que l'appelant a déjà
  * insérée dans le document : il n'a rien à rebrancher.
  */
-function repairLanguage(panel: PropertiesPanel, options: PropertiesPanelOptions): void {
+function repairLanguage(
+  panel: PropertiesPanel, options: PropertiesPanelOptions, live: LivePanel
+): void {
   const { form } = options
   if (form.textLanguage === optionsLanguage(form.language)) return
   const source = formSource.get(form)
   if (source === undefined) return
   void loadOptionTexts(form.language).then(() => {
-    const repaired = buildPanel({ ...options, form: buildPropertyForm(source, form.language) })
-    panel.element.replaceChildren(...repaired.element.childNodes)
-    panel.form = repaired.form
-    panel.filter = repaired.filter
+    rebuild(live, options, buildPropertyForm(source, form.language))
   }).catch(() => {
     // Le morceau de langue n'est pas arrivé : le panneau reste dans la langue qu'il a,
     // et reste utilisable. Une langue de repli vaut mieux qu'un panneau vidé.
   })
 }
 
-function buildPanel(options: PropertiesPanelOptions): PropertiesPanel {
+function buildPanel(options: PropertiesPanelOptions, live: LivePanel): PropertiesPanel {
   const { form } = options
   const readOnly = options.readOnly === true
   const prefix = `props-${++panelCount}`
@@ -764,6 +951,11 @@ function buildPanel(options: PropertiesPanelOptions): PropertiesPanel {
   let query = ''
   let onlyCustom = false
 
+  const absent: Array<{ element: HTMLElement; haystack: string }> = []
+  const absentBlock = form.missingDefaults.length === 0
+    ? undefined
+    : buildMissingBlock(options, live, readOnly, absent)
+
   function apply(): void {
     const needle = normalize(query.trim())
     for (const row of rows) {
@@ -772,6 +964,17 @@ function buildPanel(options: PropertiesPanelOptions): PropertiesPanel {
     }
     // Le trait sépare le bloc universel du reste : dès qu'on filtre, il ne sépare plus rien.
     for (const rule of rules) rule.hidden = needle !== '' || onlyCustom
+
+    // Les clés absentes suivent la recherche — on cherche un réglage sans savoir si le
+    // fichier le porte — mais jamais « seulement ce qui diffère » : une clé qui n'est pas
+    // dans le fichier ne s'en écarte pas, elle n'y est pas.
+    let shown = 0
+    for (const row of absent) {
+      const hidden = onlyCustom || (needle !== '' && !row.haystack.includes(needle))
+      row.element.hidden = hidden
+      if (!hidden) shown += 1
+    }
+    if (absentBlock !== undefined) absentBlock.hidden = shown === 0
   }
 
   function filter(next: string): void {
@@ -799,6 +1002,10 @@ function buildPanel(options: PropertiesPanelOptions): PropertiesPanel {
   }
 
   root.append(list)
+  // En fin de panneau, après les réglages que le fichier porte : ces clés-là ne sont pas
+  // dans le fichier, et c'est aussi là qu'elles s'écriront si on le demande — `insertRaw`
+  // pose une clé neuve en fin d'objet.
+  if (absentBlock !== undefined) root.append(absentBlock)
   return { element: root, form, filter, readOnly }
 }
 
@@ -881,12 +1088,18 @@ function defaultsNote(
   // *default* de *fault* ; il faut donc le désambiguïser à chaque emploi.
   const reference =
     `Valeurs d’origine relevées sur XCTrack ${DEFAULTS_VERSION_NAME} (versionCode ${DEFAULTS_VERSION_CODE})`
-  const missing = form.missingDefaults.length === 0
+  // Le nombre de clés absentes ne prouve **pas** que le fichier vient d'une autre
+  // version, comme on l'a d'abord écrit ici : le fichier de 2026 porte le versionCode du
+  // relevé lui-même et son `WXCAssistant` ignore quand même quinze de ses clés. Une clé
+  // qu'un gadget n'a jamais reçue reste absente, version pour version. Ce compte dit
+  // donc ce qu'il dit, et rien de plus — le détail est en fin de panneau.
+  const keys = form.missingDefaults.map((one) => one.key)
+  const missing = keys.length === 0
     ? ''
-    : ` ${form.missingDefaults.length} réglage${form.missingDefaults.length > 1 ? 's' : ''} ` +
-      `du relevé ne figure${form.missingDefaults.length > 1 ? 'nt' : ''} pas dans ce gadget ` +
-      `(${form.missingDefaults.slice(0, 4).join(', ')}${form.missingDefaults.length > 4 ? '…' : ''}) : ` +
-      'signe supplémentaire d’une autre version.'
+    : ` ${keys.length} réglage${keys.length > 1 ? 's' : ''} ` +
+      `du relevé ne figure${keys.length > 1 ? 'nt' : ''} pas dans ce gadget ` +
+      `(${keys.slice(0, 4).join(', ')}${keys.length > 4 ? '…' : ''}) : ` +
+      'XCTrack leur applique sa propre valeur, dite en fin de panneau.'
 
   if (trust === 'exact') {
     return `${reference} — la version même de ce fichier.${missing}`
@@ -901,6 +1114,190 @@ function defaultsNote(
     : `la version ${name} (versionCode ${String(options.fileVersionCode)})`
   return `${reference}. Ce fichier vient de ${which} : les valeurs par défaut changent ` +
     `d’une version à l’autre, la comparaison est donc indicative.${missing}`
+}
+
+/* ------------------------------------------ les clés que le fichier ne porte pas */
+
+/**
+ * Le bloc de fin : ce que le relevé décrit, que ce gadget n'écrit pas, et ce que
+ * l'appareil applique à la place.
+ *
+ * ## Pourquoi il s'affiche aussi en édition
+ *
+ * La comparaison au relevé, elle, est réservée à la consultation : un compte de
+ * « personnalisés » se périme à chaque cran de curseur. Celui-ci ne bouge pas quand on
+ * règle — une clé absente le reste tant qu'on ne l'écrit pas —, et c'est **en édition**
+ * qu'il sert : c'est là qu'on peut y répondre.
+ *
+ * ## Pourquoi un bouton et pas un contrôle prérempli
+ *
+ * Un champ prérempli au défaut inviterait à « confirmer » une valeur, et le premier
+ * geste maladroit écrirait une ligne de plus dans le fichier sans rien changer au
+ * comportement de l'appareil. La décision est la même que celle de l'écran des
+ * préférences, et jusqu'aux mots du bouton : deux formulations pour un même geste, sur
+ * deux écrans du même outil, seraient un défaut à elles seules.
+ */
+function buildMissingBlock(
+  options: PropertiesPanelOptions, live: LivePanel, readOnly: boolean,
+  collected: Array<{ element: HTMLElement; haystack: string }>
+): HTMLElement {
+  const { form } = options
+  const trust = defaultsTrust(options.fileVersionCode)
+  const count = form.missingDefaults.length
+
+  const box = el('section', 'props__absent')
+  box.dataset.trust = trust
+  box.dataset.count = String(count)
+  box.append(el(
+    'h3', 'props__absent-title',
+    `${count} réglage${count > 1 ? 's' : ''} que ce gadget n’écrit pas`
+  ))
+  // La note vient **avant** les boutons : ce qu'on ne peut pas garantir se dit avant
+  // d'offrir le geste, jamais après.
+  box.append(el('p', 'props__absent-note', missingNote(trust, options, readOnly)))
+
+  for (const missing of form.missingDefaults) {
+    const row = buildMissingRow(missing, options, live, readOnly)
+    collected.push({ element: row, haystack: normalize(`${missing.label} ${missing.key}`) })
+    box.append(row)
+  }
+  return box
+}
+
+/** Ce que la lecture de ce bloc suppose, selon d'où vient le fichier. */
+function missingNote(
+  trust: DefaultsTrust, options: PropertiesPanelOptions, readOnly: boolean
+): string {
+  const applied = 'Ces réglages ne sont pas écrits dans le fichier : XCTrack leur applique ' +
+    'la valeur de son propre code, celle qui est dite en regard. Ce n’est pas la même ' +
+    'chose qu’un réglage posé à cette valeur.'
+  const reference =
+    `Valeurs d’origine relevées sur XCTrack ${DEFAULTS_VERSION_NAME} (versionCode ${DEFAULTS_VERSION_CODE})`
+
+  let origin: string
+  if (trust === 'exact') {
+    origin = `${reference} — la version même de ce fichier.`
+  } else if (trust === 'unstated') {
+    origin = `${reference} ; la version de ce fichier n’est pas connue ici. Les valeurs par ` +
+      'défaut changent d’une version à l’autre : ce que votre appareil applique peut ' +
+      'donc différer de ce qui est écrit ici.'
+  } else {
+    const name = options.fileVersionName
+    const which = name === undefined
+      ? `la version ${String(options.fileVersionCode)}`
+      : `la version ${name} (versionCode ${String(options.fileVersionCode)})`
+    origin = `${reference}, et ce fichier vient de ${which} : un défaut a pu changer entre ` +
+      'les deux, et ce que votre appareil applique peut différer de ce qui est écrit ici.'
+  }
+
+  // En consultation, rien ne s'écrit : promettre un geste qu'on n'offre pas serait pire
+  // que de se taire.
+  const gesture = readOnly
+    ? ''
+    : ' Les définir ne change rien à ce que fait l’appareil aujourd’hui — cela fige la ' +
+      'valeur, qui ne bougera plus le jour où une mise à jour de XCTrack changera ce défaut.'
+
+  return `${applied} ${origin}${gesture}`
+}
+
+/** Une ligne du bloc : intitulé, valeur appliquée, et le geste qui la fige. */
+function buildMissingRow(
+  missing: MissingDefault, options: PropertiesPanelOptions, live: LivePanel, readOnly: boolean
+): HTMLElement {
+  const row = el('div', 'props__absent-row')
+  row.dataset.key = missing.key
+  row.dataset.control = missing.control
+  row.dataset.writable = String(missing.writable)
+  if (!missing.known) row.dataset.unknown = 'true'
+  // La clé au survol, comme sur les autres lignes — et l'aide du catalogue à la suite,
+  // faute d'un `?` : le bloc n'a pas de contrôle auquel le rattacher.
+  row.title = missing.help === undefined ? missing.key : `${missing.key} — ${missing.help}`
+
+  const label = el('span', 'props__absent-label', missing.label)
+  const value = el('span', 'props__absent-default', readableMissing(missing))
+  value.title =
+    `Cette clé n’est pas dans le fichier : XCTrack appliquera « ${readableMissing(missing)} », ` +
+    'son défaut. Ce n’est pas la même chose qu’une valeur réglée à cette valeur.'
+
+  row.append(label, value)
+  if (!readOnly) row.append(adoptControl(missing, options, live))
+  return row
+}
+
+/**
+ * La valeur du relevé, dite comme le panneau dit les valeurs — « Oui », « Arc ».
+ *
+ * La chaîne vide se dit « (vide) », comme partout ailleurs dans le panneau : une case
+ * laissée blanche se lirait « on ne sait pas », alors que c'est une valeur, et que le
+ * bouton l'écrira telle quelle (`mapWidget_osmLanguage`).
+ */
+function readableMissing(missing: MissingDefault): string {
+  if (missing.valueKind === 'string' && missing.defaultText === '') return '(vide)'
+  return readableDefault(missing) ?? missing.defaultText
+}
+
+/**
+ * Le bouton qui écrit la clé — ou la phrase qui dit pourquoi il n'y en a pas.
+ *
+ * Pas de bouton sans valeur sûre à écrire : une valeur composée n'est pas reconstruite
+ * de mémoire. C'est la même frontière que `compareToDefault`, dont le troisième état
+ * n'est pas un repli poli mais un refus de conclure.
+ */
+function adoptControl(
+  missing: MissingDefault, options: PropertiesPanelOptions, live: LivePanel
+): HTMLElement {
+  const { form } = options
+  const source = formSource.get(form)
+
+  if (!missing.writable || missing.raw === undefined || source === undefined) {
+    const note = el('span', 'props__absent-none', 'pas de valeur de départ')
+    note.title =
+      'Le relevé décrit ce réglage par une valeur composée : cet éditeur n’écrit que des ' +
+      'valeurs simples, et il n’en invente pas une pour la remplacer. Le réglage reste ' +
+      'modifiable une fois que XCTrack l’aura écrit lui-même.'
+    return note
+  }
+
+  const trust = defaultsTrust(options.fileVersionCode)
+  const button = el('button', 'btn props__adopt', 'Définir cette valeur')
+  button.type = 'button'
+  button.setAttribute('aria-label', `Définir ${missing.label} dans le fichier`)
+  button.title =
+    `Écrit « ${missing.key} » : ${readableMissing(missing)} dans le fichier.\n\n` +
+    'Votre appareil se comporte déjà ainsi aujourd’hui — écrire la valeur ne change donc ' +
+    'rien à ce qu’il fait maintenant. Ce que ça change est pour plus tard : tant que la ' +
+    'clé est absente, l’appareil suit le défaut de la version de XCTrack installée, et une ' +
+    'mise à jour qui change ce défaut changera votre réglage sans rien vous demander. ' +
+    'Une fois écrite, la valeur est figée : elle restera celle-là.' +
+    // L'avertissement dit exactement ce qu'on sait, et pas un mot de plus : « une autre
+    // version » quand on l'a lue, « on ne sait pas d'où vient ce fichier » sinon.
+    (trust === 'exact'
+      ? ''
+      : trust === 'indicative'
+        ? `\n\nCe défaut a été relevé sur XCTrack ${DEFAULTS_VERSION_NAME}, qui n’est pas ` +
+          'la version d’où vient ce fichier : vérifiez que c’est bien la valeur à figer.'
+        : `\n\nCe défaut a été relevé sur XCTrack ${DEFAULTS_VERSION_NAME} et la version ` +
+          'de ce fichier n’est pas connue ici : vérifiez que c’est bien la valeur à figer.')
+
+  button.addEventListener('click', () => {
+    if (!writeMissingDefault(source.node, missing)) return
+    // Le formulaire est refait depuis le document, jamais rapiécé : la clé écrite devient
+    // un contrôle comme les autres, à sa place, et le bloc perd sa ligne.
+    const fresh = rebuild(live, options, buildPropertyForm(source, form.language))
+    const field = fresh.form.fields.find((one) => one.path === missing.key)
+    if (field !== undefined) options.onChange?.(field, fresh.form)
+    focusRow(live.panel ?? fresh, missing.key)
+  })
+  return button
+}
+
+/** Mène le pilote au contrôle qui vient d'apparaître : sinon le bouton s'évanouit sans dire où. */
+function focusRow(panel: PropertiesPanel, key: string): void {
+  for (const row of panel.element.querySelectorAll<HTMLElement>('.props__row')) {
+    if (row.dataset.key !== key) continue
+    row.querySelector<HTMLElement>('input, select, output')?.focus()
+    return
+  }
 }
 
 /**
@@ -963,7 +1360,9 @@ export function readableValue(field: PropertyField): string {
  * NONE » de l'autre — deux vocabulaires pour une même énumération, et le lecteur doit
  * faire la traduction lui-même. La constante du fichier reste dans l'infobulle.
  */
-export function readableDefault(field: PropertyField): string | undefined {
+export function readableDefault(
+  field: Pick<PropertyField, 'defaultText' | 'control' | 'choices'>
+): string | undefined {
   const raw = field.defaultText
   if (raw === undefined) return undefined
   if (field.control === 'checkbox') return raw === 'true' ? 'Oui' : raw === 'false' ? 'Non' : raw

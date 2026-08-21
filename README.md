@@ -82,12 +82,14 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
   Les seize autres, la valeur JSON imbriquée et tout ce que la page ne sait pas nommer
   restent affichés **sans contrôle**, chacun disant pourquoi.
 - **Rendre explicite un réglage qui ne l'est pas** — et l'inverse. Une clé absente du
-  fichier vaut son défaut de façon implicite : la page montre cette valeur et propose de
-  l'écrire d'un clic. Cela ne change rien à ce que fait l'appareil aujourd'hui ; ce que ça
-  change est pour plus tard — tant que la clé est absente, une mise à jour de XCTrack qui
-  change ce défaut change votre réglage sans prévenir, alors qu'une valeur écrite est
-  figée. Le geste inverse existe : une valeur écrite qui vaut déjà le défaut peut être
-  retirée du fichier. Aucun bouton là où le défaut n'est pas relevé — écrire une valeur
+  fichier vaut son défaut de façon implicite : les réglages généraux **comme le panneau
+  d'un gadget** montrent cette valeur et proposent de l'écrire d'un clic. Cela ne change
+  rien à ce que fait l'appareil aujourd'hui ; ce que ça change est pour plus tard — tant
+  que la clé est absente, une mise à jour de XCTrack qui change ce défaut change votre
+  réglage sans prévenir, alors qu'une valeur écrite est figée. Le geste inverse existe
+  dans les réglages généraux : une valeur écrite qui vaut déjà le défaut peut être
+  retirée du fichier. Aucun bouton là où le défaut n'est pas relevé, ni là où le relevé
+  n'en donne qu'une valeur composée (`{"theme": …, "terrain": …}`) — écrire une valeur
   devinée serait pire que ne rien proposer.
 - **Diagnostiquer l'écart de version** : choisir la version de XCTrack visée, et voir ce
   que le fichier porte qu'elle ne lit plus, ou ce qu'elle attend et qu'il n'a pas. Le

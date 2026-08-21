@@ -1,10 +1,12 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 import { readFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 import { parseJson } from '../../src/core/parseJson'
 import { serializeJson } from '../../src/core/serializeJson'
-import { getMember } from '../../src/core/access'
+import { getMember, removeMember } from '../../src/core/access'
 import type { JsonNode } from '../../src/core/jsonDocument'
 import { readLayout } from '../../src/model/layout'
+import { createHistory } from '../../src/model/history'
 import type { Widget } from '../../src/model/widget'
 import {
   buildPropertyForm,
@@ -13,6 +15,7 @@ import {
   loadOptionTexts,
   renderProperties,
   setFieldValue,
+  writeMissingDefault,
   type PropertyField,
   type PropertyForm
 } from '../../src/ui/properties'
@@ -74,6 +77,23 @@ function fieldAt(form: PropertyForm, path: string): PropertyField {
   const field = form.fields.find((candidate) => candidate.path === path)
   if (field === undefined) throw new Error(`pas de champ ${path} dans ${form.shortName}`)
   return field
+}
+
+function sha256(text: string): string {
+  return createHash('sha256').update(text, 'utf8').digest('hex')
+}
+
+/**
+ * La seule plage de texte qui diverge entre deux sérialisations — même mesure que dans
+ * `preferencesPage.test.ts` : elle dit ce qui a été touché, et rien d'autre ne l'a été.
+ */
+function singleDifference(a: string, b: string): { before: string; after: string } {
+  let start = 0
+  while (start < a.length && start < b.length && a[start] === b[start]) start++
+  let end = 0
+  while (end < a.length - start && end < b.length - start
+    && a[a.length - 1 - end] === b[b.length - 1 - end]) end++
+  return { before: a.slice(start, a.length - end), after: b.slice(start, b.length - end) }
 }
 
 /** Les lignes du document sérialisé qui diffèrent entre deux états. */
@@ -887,7 +907,7 @@ describe('ce que la consultation dit quand le fichier vient d’une autre versio
       .toContain('ne dit pas de quelle version il vient')
   })
 
-  it('signale les réglages du relevé que le widget ne porte pas — la trace d’une autre version', () => {
+  it('signale les réglages du relevé que le widget ne porte pas', () => {
     const doc = oldDocument()
     const widget = readLayout(doc).landscape.flatMap((page) => page.widgets)
       .find((one) => one.shortName === 'WCompass')!
@@ -895,7 +915,7 @@ describe('ce que la consultation dit quand le fichier vient d’une autre versio
 
     // `windStyle` n'existait pas en 0.9.12.3 ; en regard, `showWind` et `newWindArrow` y
     // vivent encore et sont deux vestiges que le relevé de 1.0.3-beta ne connaît plus.
-    expect(form.missingDefaults).toEqual(['windStyle'])
+    expect(form.missingDefaults.map((one) => one.key)).toEqual(['windStyle'])
     expect(form.fields.map((field) => field.path)).toContain('showWind')
     expect(fieldAt(form, 'showWind').defaultState).toBe('unknown')
 
@@ -903,5 +923,305 @@ describe('ce que la consultation dit quand le fichier vient d’une autre versio
     const note = panel.element.querySelector('.props__defaults-note')!.textContent!
     expect(note).toContain('1 réglage du relevé ne figure pas dans ce gadget (windStyle)')
     expect(note).toContain('indicative')
+  })
+})
+
+/**
+ * Ce que le fichier n'écrit pas.
+ *
+ * Un gadget ne porte pas toujours toutes les clés que le relevé lui connaît, et ce n'est
+ * pas une anomalie : XCTrack applique alors la valeur de son code sans l'écrire. Le
+ * panneau les montre en fin de liste et, en édition seulement, offre de les figer.
+ */
+describe('les clés que le gadget n’écrit pas', () => {
+  /**
+   * La carte de la deuxième page portrait du fichier de 2026 : sept clés du relevé lui
+   * manquent, dont une composite.
+   *
+   * Elle vient pourtant de **la version même du relevé** (versionCode 100030) : une clé
+   * absente n'est donc pas la marque d'une autre version, seulement d'un réglage que ce
+   * gadget-là n'a jamais reçu. La carte paysage du même fichier, elle, les porte toutes.
+   */
+  function portraitMap(doc: JsonNode): Widget {
+    const widget = widgetAt(doc, 'portrait', 1, 0)
+    expect(widget.shortName).toBe('WCompMap')
+    return widget
+  }
+
+  function mapForm(doc: JsonNode): PropertyForm {
+    return buildPropertyForm(portraitMap(doc))
+  }
+
+  /** La boussole de 2025 : `windStyle` lui manque, et c'est une chaîne — donc écrivable. */
+  function oldCompassWidget(doc: JsonNode): Widget {
+    const widget = readLayout(doc).landscape.flatMap((page) => page.widgets)
+      .find((one) => one.shortName === 'WCompass')
+    if (widget === undefined) throw new Error('pas de WCompass dans le fichier de 2025')
+    return widget
+  }
+
+  function absentRows(panel: { element: HTMLElement }): HTMLElement[] {
+    return [...panel.element.querySelectorAll<HTMLElement>('.props__absent-row')]
+  }
+
+  it('décrit chaque clé absente : libellé, valeur appliquée, et de quoi l’écrire', () => {
+    const form = mapForm(document())
+    expect(form.missingDefaults.map((one) => one.key)).toEqual([
+      'mapWidget_mapAppearance', 'mapWidget_osmLanguage', 'mapWidget_panningTimeout',
+      'mapWidget_panningAirspaceList', 'mapWidget_panningAirspaceListCycleSpeed',
+      'nav_label', 'thermals_labels'
+    ])
+
+    const labels = new Map(form.missingDefaults.map((one) => [one.key, one]))
+    // Une chaîne : elle s'écrira entre guillemets, et le texte source est celui-là.
+    expect(labels.get('nav_label')).toMatchObject({
+      valueKind: 'string', defaultText: 'DISTANCE_BRACKETS', raw: '"DISTANCE_BRACKETS"',
+      writable: true, known: true
+    })
+    // Un booléen : un littéral, écrit tel quel.
+    expect(labels.get('thermals_labels')).toMatchObject({
+      valueKind: 'literal', defaultText: 'false', raw: 'false', control: 'checkbox'
+    })
+    // Tout porte un libellé traduit, jamais un nom de clé nu.
+    expect(form.missingDefaults.every((one) => one.label !== one.key)).toBe(true)
+  })
+
+  it('ne propose pas d’écrire une valeur composée : elle n’a pas de forme sûre', () => {
+    const form = mapForm(document())
+    const composite = form.missingDefaults.find((one) => one.key === 'mapWidget_mapAppearance')!
+    // `{"theme":"None","terrain":"None"}` : montrée, jamais reconstruite de mémoire.
+    expect(composite.writable).toBe(false)
+    expect(composite.raw).toBeUndefined()
+    expect(composite.control).toBe('unknown')
+    expect(composite.defaultText).toBe('{"theme":"None","terrain":"None"}')
+
+    // Et la primitive d'écriture le refuse elle-même, quel que soit l'appelant.
+    const doc = document()
+    const before = serializeJson(doc)
+    expect(writeMissingDefault(portraitMap(doc).node, composite)).toBe(false)
+    expect(serializeJson(doc)).toBe(before)
+  })
+
+  it('montre le bloc en édition, avec un bouton par clé écrivable et pas un de plus', () => {
+    const panel = renderProperties({ form: mapForm(document()) })
+    const rows = absentRows(panel)
+    expect(rows).toHaveLength(7)
+    expect(rows.map((row) => row.dataset.key)).toEqual(
+      panel.form.missingDefaults.map((one) => one.key)
+    )
+
+    const buttons = [...panel.element.querySelectorAll<HTMLButtonElement>('.props__adopt')]
+    expect(buttons).toHaveLength(6)
+    expect(new Set(buttons.map((button) => button.textContent))).toEqual(
+      new Set(['Définir cette valeur'])
+    )
+    // La composite porte la phrase qui dit pourquoi il n'y a rien à cliquer.
+    const composite = rows.find((row) => row.dataset.key === 'mapWidget_mapAppearance')!
+    expect(composite.dataset.writable).toBe('false')
+    expect(composite.querySelector('.props__adopt')).toBeNull()
+    expect(composite.querySelector('.props__absent-none')!.textContent)
+      .toBe('pas de valeur de départ')
+  })
+
+  it('dit la valeur dans la langue du pilote, la chaîne vide comprise', () => {
+    const panel = renderProperties({ form: mapForm(document()) })
+    const valueOf = (key: string): string => absentRows(panel)
+      .find((row) => row.dataset.key === key)!
+      .querySelector('.props__absent-default')!.textContent!
+
+    expect(valueOf('thermals_labels')).toBe('Non')
+    expect(valueOf('mapWidget_osmLanguage')).toBe('(vide)')
+    expect(valueOf('mapWidget_panningTimeout')).toBe('60')
+  })
+
+  it('écrit la clé en fin de gadget, sans déplacer ni réindenter le reste', () => {
+    const doc = oldDocument()
+    const widget = oldCompassWidget(doc)
+    const before = serializeJson(doc)
+    const panel = renderProperties({ form: buildPropertyForm(widget) })
+
+    const button = panel.element
+      .querySelector<HTMLButtonElement>('.props__absent-row[data-key="windStyle"] .props__adopt')!
+    expect(button.textContent).toBe('Définir cette valeur')
+    // Mêmes mots que l'écran des préférences, pour le même geste.
+    expect(button.title).toContain('Une fois écrite, la valeur est figée')
+    expect(button.title).toContain('rien à ce qu’il fait maintenant')
+    // Panneau d'édition : la version du fichier ne lui est pas donnée, il ne la suppose pas.
+    expect(button.title).toContain('n’est pas connue ici')
+    button.click()
+
+    const after = serializeJson(doc)
+    // Une seule plage diverge, et elle ne fait qu'ajouter : rien n'a été réécrit.
+    const difference = singleDifference(before, after)
+    expect(difference.before).toBe('')
+    expect(difference.after).toMatch(/^,\n +"windStyle": "NONE"$/)
+    expect(after.length - before.length).toBe(difference.after.length)
+  })
+
+  it('écrire puis retirer la clé rend le fichier à l’octet près', () => {
+    const doc = oldDocument()
+    const widget = oldCompassWidget(doc)
+    const before = serializeJson(doc)
+    const missing = buildPropertyForm(widget).missingDefaults[0]!
+
+    expect(writeMissingDefault(widget.node, missing)).toBe(true)
+    expect(serializeJson(doc)).not.toBe(before)
+    // Insérer deux fois créerait le doublon que l'outil reproche aux fichiers.
+    expect(writeMissingDefault(widget.node, missing)).toBe(false)
+
+    expect(removeMember(widget.node, 'windStyle')).toBe(1)
+    expect(serializeJson(doc)).toBe(before)
+    expect(sha256(serializeJson(doc))).toBe(sha256(OLD_SOURCE))
+  })
+
+  it('l’annulation défait l’écriture, empreinte comprise', () => {
+    const history = createHistory(oldDocument())
+    const doc = history.current()
+    const widget = oldCompassWidget(doc)
+    const panel = renderProperties({
+      form: buildPropertyForm(widget),
+      // Ce que `main.ts` branche : chaque écriture effective devient un pas d'historique.
+      onChange: (field) => { history.record(`Régler ${field.label}`) }
+    })
+
+    panel.element
+      .querySelector<HTMLButtonElement>('.props__absent-row[data-key="windStyle"] .props__adopt')!
+      .click()
+
+    expect(history.canUndo()).toBe(true)
+    expect(history.undoDescription()).toBe('Régler Style d’indicateur de vent'
+      .replace('’', "'"))
+    expect(serializeJson(history.current())).not.toBe(OLD_SOURCE)
+    expect(sha256(serializeJson(history.undo()))).toBe(sha256(OLD_SOURCE))
+    expect(history.isDirty()).toBe(false)
+  })
+
+  it('la clé écrite devient une ligne comme les autres, et le bloc perd la sienne', () => {
+    const doc = oldDocument()
+    const panel = renderProperties({ form: buildPropertyForm(oldCompassWidget(doc)) })
+    expect(absentRows(panel)).toHaveLength(1)
+    expect(rowsOf(panel).map((row) => row.dataset.key)).not.toContain('windStyle')
+
+    panel.element.querySelector<HTMLButtonElement>('.props__adopt')!.click()
+
+    // Le bloc a disparu avec sa dernière ligne, et le réglage est désormais éditable.
+    expect(panel.element.querySelector('.props__absent')).toBeNull()
+    expect(rowsOf(panel).map((row) => row.dataset.key)).toContain('windStyle')
+    const select = panel.element
+      .querySelector<HTMLSelectElement>('[data-key="windStyle"] select')!
+    expect(select.value).toBe('NONE')
+    expect(panel.form.missingDefaults).toEqual([])
+  })
+
+  it('la consultation montre le bloc et n’offre rien : aucun bouton, aucun champ', () => {
+    const doc = document()
+    const before = serializeJson(doc)
+    const panel = readOnlyPanel(portraitMap(doc))
+    const rows = absentRows(panel)
+    expect(rows).toHaveLength(7)
+    expect(panel.element.querySelectorAll('.props__adopt')).toHaveLength(0)
+    for (const row of rows) {
+      expect(row.querySelector('input, select, button')).toBeNull()
+    }
+
+    // Le contrat du panneau de consultation tient : rien n'atteint le document.
+    for (const node of panel.element.querySelectorAll<HTMLElement>('*')) {
+      node.dispatchEvent(new Event('click', { bubbles: true }))
+    }
+    expect(serializeJson(doc)).toBe(before)
+  })
+
+  it('dit ce que vaut le relevé avant de proposer de l’écrire, jamais après', () => {
+    const note = (options: Record<string, unknown>): string => {
+      const doc = oldDocument()
+      const panel = renderProperties({ form: buildPropertyForm(oldCompassWidget(doc)), ...options })
+      const box = panel.element.querySelector<HTMLElement>('.props__absent')!
+      const text = box.querySelector('.props__absent-note')!.textContent!
+      // La note précède les lignes : l'avertissement se lit avant le bouton.
+      expect([...box.children].indexOf(box.querySelector('.props__absent-note')!))
+        .toBeLessThan([...box.children].indexOf(box.querySelector('.props__absent-row')!))
+      return `${box.dataset.trust!}|${text}`
+    }
+
+    // Le fichier de 2025 vient d'une autre version que le relevé : c'est dit en toutes
+    // lettres, dans le bloc, avant le bouton.
+    const other = note({ fileVersionCode: 91230, fileVersionName: '0.9.12.3' })
+    expect(other).toContain('indicative|')
+    expect(other).toContain('0.9.12.3')
+    expect(other).toContain('peut différer')
+    expect(other).toContain(DEFAULTS_VERSION_NAME)
+
+    // Sans version connue — le cas du panneau d'édition — on ne prétend pas savoir.
+    const unknown = note({})
+    expect(unknown).toContain('unstated|')
+    expect(unknown).toContain('n’est pas connue ici')
+    expect(unknown).toContain('changent d’une version à l’autre')
+
+    // Et le geste est expliqué pour ce qu'il est : sans effet aujourd'hui, utile demain.
+    expect(unknown).toContain('ne change rien à ce que fait l’appareil aujourd’hui')
+    expect(unknown).toContain('fige la valeur')
+  })
+
+  it('annonce une comparaison exacte quand le fichier est de la version du relevé', () => {
+    const panel = readOnlyPanel(portraitMap(document()), { fileVersionCode: DEFAULTS_VERSION_CODE })
+    const box = panel.element.querySelector<HTMLElement>('.props__absent')!
+    expect(box.dataset.trust).toBe('exact')
+    expect(box.dataset.count).toBe('7')
+    const note = box.querySelector('.props__absent-note')!.textContent!
+    expect(note).toContain('la version même de ce fichier')
+    // En consultation, on ne promet pas un geste qu'on n'offre pas.
+    expect(note).not.toContain('fige la valeur')
+  })
+
+  it('un gadget qui porte tout ce que le relevé décrit n’a pas de bloc du tout', () => {
+    const panel = renderProperties({ form: buildPropertyForm(compass(document())) })
+    expect(panel.form.missingDefaults).toEqual([])
+    expect(panel.element.querySelector('.props__absent')).toBeNull()
+  })
+
+  it('le filtre porte sur les clés absentes, et le bloc s’efface avec sa dernière ligne', () => {
+    const panel = renderProperties({ form: mapForm(document()) })
+    const box = panel.element.querySelector<HTMLElement>('.props__absent')!
+    const shown = (): string[] => absentRows(panel)
+      .filter((row) => !row.hidden).map((row) => row.dataset.key!)
+
+    panel.filter('nav_label')
+    expect(shown()).toEqual(['nav_label'])
+    expect(box.hidden).toBe(false)
+
+    panel.filter('épaisseur')
+    expect(shown()).toEqual([])
+    expect(box.hidden).toBe(true)
+
+    panel.filter('')
+    expect(shown()).toHaveLength(7)
+  })
+
+  it('« seulement ce qui diffère » les masque : une clé absente ne s’écarte de rien', () => {
+    const panel = readOnlyPanel(portraitMap(document()))
+    const box = panel.element.querySelector<HTMLElement>('.props__absent')!
+    const only = panel.element.querySelector<HTMLButtonElement>('.props__defaults-only')!
+
+    only.click()
+    expect(box.hidden).toBe(true)
+    only.click()
+    expect(box.hidden).toBe(false)
+  })
+
+  it('garde le filtre en cours quand une écriture refait le panneau', () => {
+    const doc = document()
+    const panel = renderProperties({ form: mapForm(doc) })
+    const search = panel.element.querySelector<HTMLInputElement>('.props__filter')!
+    search.value = 'nav_label'
+    search.dispatchEvent(new Event('input'))
+
+    panel.element
+      .querySelector<HTMLButtonElement>('.props__absent-row[data-key="nav_label"] .props__adopt')!
+      .click()
+
+    // Le panneau est refait de fond en comble : le filtre, lui, ne se refait pas tout seul.
+    const again = panel.element.querySelector<HTMLInputElement>('.props__filter')!
+    expect(again.value).toBe('nav_label')
+    expect(visibleKeys(panel)).toEqual(['nav_label'])
   })
 })
