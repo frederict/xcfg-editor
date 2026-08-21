@@ -57,9 +57,14 @@ import PREFERENCE_LANGUAGE_LIST from './preferenceCatalogLanguages.json'
  *   on n'a lu ni leur portée, ni la moindre écriture de la version courante, et
  *   `isExported()` les dirait exportables sans que rien ne l'ait mesuré. Deux d'entre
  *   elles (`Airspace.State`, `EventMapping`) figurent encore dans un fichier de 0.9.12.3.
- * - **La dimension « version » n'est pas construite.** `meta.versionCode` dit de quelle
- *   version ce catalogue parle ; rien de plus. Voir `widgetVersions.ts` pour ce que
- *   serait le travail, qui suppose de réextraire les 54 APK.
+ * - **La dimension « version » n'est pas ici.** `meta.versionCode` dit de quelle version
+ *   ce catalogue parle ; rien de plus. Elle vit à côté, dans `preferenceVersions.ts` :
+ *   vingt-deux paliers de schéma bâtis sur cinquante-cinq relevés d'APK, qui disent
+ *   d'une clé si telle version la lit et, sinon, ce qu'on peut en conclure.
+ * - **Les huit `Unit.*` et les quinze `Keys.*` n'ont pas de domaine de valeurs ici**, et
+ *   ce n'est pas un oubli : leurs écrans n'en portent aucun. Ce qui a pu en être relevé
+ *   — le vocabulaire des unités, la table des codes de touche Android — vit dans
+ *   `preferenceDomains.ts`, avec ce qui reste inconnu marqué comme tel.
  */
 
 /* ------------------------------------------------------------------ formes des données */

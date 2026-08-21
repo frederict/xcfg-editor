@@ -358,10 +358,66 @@ Les 44 clés surveillées sont extraites du catalogue vers `src/model/personalKe
 à chaque exécution que le relevé est la copie exacte du catalogue. C'est ce qui permet aux
 trois écrans qui n'ont pas le catalogue sous la main de répondre sans charger ses 96 Ko.
 
-⚠️ **La dimension « version » n'est pas construite** : `src/catalog/widgetVersions/` ne
-couvre que les widgets. Le catalogue des préférences dit de quelle version il parle
-(`meta.versionCode`) et rien de plus. Sur un `backup` écrit par 0.9.12.3, 27 des 148 clés
-sont inconnues de la 1.0.3-beta5 — c'est la mesure de ce que cette absence coûte.
+### La dimension « version » des préférences
+
+`src/catalog/preferenceVersions/` est le pendant de `widgetVersions/` : *pour une clé de
+préférence, dans quelles versions de XCTrack existe-t-elle ?* Elle se régénère avec les
+mêmes relevés, par un troisième outil sans réseau :
+
+```bash
+python3 tools/build-preference-database.py --surveys relevés/ --corpus mes-exports/
+```
+
+Cinquante-cinq relevés, quarante-sept inventaires distincts, **vingt-deux paliers**, 278
+clés sur toute l'histoire pour 216 au dernier palier. Mêmes trois tables que du côté des
+widgets, et le corpus les remplit dans les deux sens : `Sensors.ExtTypes`, lue jusqu'à
+0.9.8.7 et jamais après, traîne encore dans un fichier de 0.9.9.1 — c'est un **reliquat**,
+nettoyable ; `Sound.AcousticVario.CustomProfile`, qu'aucun relevé ne voit avant 1.0.0,
+figure dans des fichiers de 2023 à 2025 — c'est un **trou du relevé**, à ne jamais
+supprimer.
+
+⚠️ **La portée ne définit pas un palier, et c'est mesuré, pas décrété.** Huit versions
+(0.9.9.1-beta à 0.9.10.3) n'ont pas su livrer leur énumération de portée et rendent alors
+*tout* en `PUBLIC` — 212 clés sur 212 pour 0.9.10-beta, contre 142 à 158 chez leurs
+voisines. En faire une signature de palier aurait fabriqué deux ruptures massives qui
+n'ont jamais eu lieu. Ces versions portent `scopeRead: false`, et rien en aval n'a le
+droit de croire leur portée.
+
+### Les domaines que les écrans ne portent pas
+
+Deux familles de réglages n'ont **aucune** liste de valeurs dans les écrans XML, et
+laissent donc l'éditeur en saisie libre. `tools/build-preference-domains.py` relève ce
+qui est lisible, et **seulement** ce qui l'est :
+
+```bash
+python3 tools/build-preference-domains.py --surveys relevés/ \
+    --android-jar ~/Library/Android/sdk/platforms/android-36/android.jar
+```
+
+- **Les huit `Unit.*`** : XCTrack remplit ces listes en code, et les 55 relevés le
+  confirment — aucune version, dans aucune langue, ne les déclare en ressources. Ce qui
+  est publié est le **vocabulaire** des dix-huit codes d'unité (`m`, `km/h`, `FL`,
+  `100ft/min`…), lu dans l'énumération d'unités du bytecode, plus les valeurs vues dans
+  des fichiers réels. Le **domaine par clé reste `null`** : `Unit.Distance` vaut `m,km`
+  — une échelle de deux codes — quand `Unit.Altitude` vaut `m`, et rien ne dit quelles
+  combinaisons l'application propose. Une liste fermée serait un mensonge ; une liste de
+  suggestions à côté d'un champ libre ne l'est pas.
+- **Les quinze `Keys.*`** portent un code de touche Android nu. La table `KEYCODE_*` est
+  lue dans l'`android.jar` du SDK installé — 338 constantes, sans JDK ni réseau, en
+  analysant le fichier de classe — et le niveau d'API est consigné : un code plus récent
+  que la table rend `null`, jamais un nom inventé. « 266 » devient donc
+  `KEYCODE_STEM_2`.
+
+⚠️ Le bit `0x01000000` que portent quatre valeurs du corpus **se lit comme un appui long,
+et ce n'est qu'une déduction** : ôté, il laisse à chaque fois le code d'une touche que le
+même fichier affecte par ailleurs sans le bit (volume haut zoome, volume haut long change
+de page), et deux textes de XCTrack disent « Long press: ». Ce n'est pas lu dans le
+bytecode, le corpus ne vient que d'un appareil, et le fichier le déclare
+`longPressBitBasis: "inferred"`. Une interface doit le dire au pilote plutôt que de
+présenter la lecture comme un constat.
+
+Ces deux bases sont **lues mais pas encore branchées** : ni le diagnostic « Version et
+compatibilité », ni l'écran des réglages ne s'en servent à ce jour.
 
 ## Licence
 
