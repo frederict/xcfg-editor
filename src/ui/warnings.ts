@@ -248,8 +248,8 @@ function personalDataWarning(inventory: PersonalInventory): Warning | undefined 
       ? 'Vos pages portent des textes de vous'
       : 'Ce fichier vous nomme',
     detail:
-      `Ce fichier porte ${plural(inPreferences, 'clé de préférences renseignée',
-        'clés de préférences renseignées')} et ` +
+      `Ce fichier porte ${plural(inPreferences, 'réglage personnel renseigné',
+        'réglages personnels renseignés')} et ` +
       `${plural(inLayout, 'texte écrit dans un gadget', 'textes écrits dans les gadgets')} ` +
       'qui vous désignent : votre nom, votre matériel, vos choix de diffusion, votre tâche ' +
       'en cours avec ses coordonnées, et jusqu’à la compétition à laquelle vous participez ' +
@@ -364,7 +364,7 @@ function structureWarning(input: WarningInput): Warning | undefined {
   // `JSON.parse` écraserait une clé dupliquée en silence ; le document les garde toutes,
   // mais le pilote doit savoir que son fichier en contient — XCTrack en lira une seule.
   for (const path of findDuplicateKeys(input.document)) {
-    items.push(`Clé dupliquée : ${path}`)
+    items.push(`Ligne en double : ${path}`)
   }
 
   if (items.length === 0) return undefined

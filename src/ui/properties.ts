@@ -1231,7 +1231,7 @@ function buildMissingRow(
   const label = el('span', 'props__absent-label', missing.label)
   const value = el('span', 'props__absent-default', readableMissing(missing))
   value.title =
-    `Cette clé n’est pas dans le fichier : XCTrack appliquera « ${readableMissing(missing)} », ` +
+    `Ce réglage n’est pas dans le fichier : XCTrack appliquera « ${readableMissing(missing)} », ` +
     'sa valeur d’usine. Ce n’est pas la même chose qu’une valeur réglée à cette valeur.'
 
   row.append(label, value)
@@ -1281,7 +1281,7 @@ function adoptControl(
     `Écrit « ${missing.key} » : ${readableMissing(missing)} dans le fichier.\n\n` +
     'Votre appareil se comporte déjà ainsi aujourd’hui — écrire la valeur ne change donc ' +
     'rien à ce qu’il fait maintenant. Ce que ça change est pour plus tard : tant que la ' +
-    'clé est absente, l’appareil suit la valeur d’usine de la version de XCTrack ' +
+    'ligne est absente, l’appareil suit la valeur d’usine de la version de XCTrack ' +
     'installée, et une mise à jour qui la change changera votre réglage sans rien vous ' +
     'demander. ' +
     'Une fois écrite, la valeur est figée : elle restera celle-là.' +
@@ -1423,8 +1423,8 @@ function originMark(field: PropertyField): HTMLElement {
   }
   const mark = el('span', 'props__origin props__origin--unknown', 'valeur d’usine inconnue')
   mark.title =
-    'Le catalogue des valeurs d’usine ne décrit pas ce réglage — clé universelle écrite ' +
-    'à la main lors du relevé, clé apparue depuis, ou valeur non comparable. Rien n’est ' +
+    'Le catalogue des valeurs d’usine ne décrit pas ce réglage — réglage universel écrit ' +
+    'à la main lors du relevé, réglage apparu depuis, ou valeur non comparable. Rien n’est ' +
     'affirmé de cette ligne.'
   return mark
 }
@@ -1596,8 +1596,11 @@ function buildRow(
   }
 
   if (!field.known) {
-    const badge = el('span', 'props__badge', 'clé hors catalogue')
-    badge.title = `« ${field.path} » n'est pas décrite par le catalogue : contrôle déduit de son type.`
+    const badge = el('span', 'props__badge', 'réglage hors catalogue')
+    // « contrôle » traduisait *control* mot à mot : un pilote y lisait qu'une vérification
+    // avait été faite. C'est la commande — case, menu, champ — qui a été devinée.
+    badge.title = `« ${field.path} » n’est pas décrit par le catalogue : cet outil devine ` +
+      `la commande d’après le type de la valeur.`
     row.append(badge)
   }
 

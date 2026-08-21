@@ -193,7 +193,7 @@ describe('les clés que la page ne sait pas présenter restent visibles', () => 
     const unknown = inventoryOf(BACKUP_2025).leftovers.filter((row) => row.reason === 'unknown')
     for (const row of unknown) {
       expect(row.labelled).toBe(false)
-      expect(row.undecidableReason).toContain('ne connaît pas cette clé')
+      expect(row.undecidableReason).toContain('ne connaît pas ce réglage')
     }
     // Le fichier de la version courante n'en porte aucune : la mesure n'est pas un biais
     // de l'analyse, c'est bien l'écart entre deux versions.
@@ -354,6 +354,36 @@ describe('un fichier sans préférence le dit', () => {
 
 /* ------------------------------------------------------------ lecture seule, vraiment */
 
+describe('le vocabulaire de la page est celui du pilote', () => {
+  it('ne dit jamais « clé » ni « palier » : ce sont nos mots, pas les siens', () => {
+    // « le fichier porte 136 clés », « 49 clés du fichier ne sont pas présentées »,
+    // « Cette clé n'est pas dans le fichier » : un pilote n'a jamais vu de clé dans
+    // XCTrack. Ce que le fichier porte, ce sont des lignes ; ce qu'il règle, des réglages.
+    for (const path of [BACKUP_2026, BACKUP_2025, FORMES_PRESERVEES]) {
+      const { page } = editable(path)
+      const said = [
+        page.element.textContent ?? '',
+        ...[...page.element.querySelectorAll<HTMLElement>('[title]')].map((one) => one.title)
+      ].join('\n')
+      for (const word of ['clé', 'clés', 'Clé', 'Clés', 'palier', 'paliers']) {
+        expect(said, `${path} — ${word}`).not.toContain(word)
+      }
+    }
+  })
+
+  it('dit « vous » de ce que le pilote a réglé, et non « le pilote »', () => {
+    const { page } = editable(BACKUP_2026)
+    const said = page.element.textContent ?? ''
+    expect(said).toContain('Vous avez réglé')
+    expect(said).toContain('Seulement ce que j’ai réglé')
+    // Le bandeau disait « 30 réglages réglés par le pilote » — la troisième personne, et
+    // le même mot deux fois. (« le nom du pilote » subsiste où il désigne la donnée
+    // elle-même, pas son propriétaire : c'est le libellé d'un champ, pas une adresse.)
+    expect(said).not.toContain('réglés par le pilote')
+    expect(said).not.toContain('ce que le pilote a réglé')
+  })
+})
+
 describe('la page est en lecture seule, et pas seulement grisée', () => {
   it('ne construit aucun contrôle de formulaire lié à une préférence', () => {
     const page = renderPreferencesPage({ document: documentOf(BACKUP_2026), catalog })
@@ -365,7 +395,7 @@ describe('la page est en lecture seule, et pas seulement grisée', () => {
     expect(inputs[0]?.type).toBe('search')
     // Les seuls boutons sont des commandes d'affichage.
     for (const button of page.element.querySelectorAll('button')) {
-      expect(['Seulement ce que le pilote a réglé', 'Masquer les valeurs personnelles'])
+      expect(['Seulement ce que j’ai réglé', 'Masquer les valeurs personnelles'])
         .toContain(button.textContent)
     }
     expect(page.element.dataset.mode).toBe('lecture')
@@ -1195,8 +1225,12 @@ describe('rendre un défaut explicite, et le rendre à l’implicite', () => {
     expect(page.summary.defaultCount).toBe(avant.defaultCount - 1)
     expect(page.summary.absentCount).toBe(avant.absentCount + 1)
     expect(page.summary.fileKeyCount).toBe(avant.fileKeyCount - 1)
-    expect(page.element.querySelector('.prefs__summary-count')?.textContent)
-      .toContain('le fichier porte 135 clés')
+    // Le compte des lignes du fichier a quitté la première phrase — qui répond
+    // maintenant à la question du pilote, « qu'ai-je réglé ? » — pour la troisième, qui
+    // décrit le fichier. Il reste juste, et il bouge toujours à l'écriture.
+    const lignes = [...page.element.querySelectorAll('.prefs__summary-detail')]
+      .map((node) => node.textContent ?? '')
+    expect(lignes.some((text) => text.includes('Ce fichier contient 135 lignes'))).toBe(true)
   })
 
   it('réserve l’emplacement du bouton même là où il n’y en a pas', () => {

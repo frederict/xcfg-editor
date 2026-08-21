@@ -1234,8 +1234,8 @@ function fillPaletteDialog(dialog: HTMLDialogElement): void {
   if (!acceptsWidgets(page)) {
     box.append(el(
       'p', 'hint-note',
-      'Cette page ne décrit aucun tableau de gadgets : rien ne peut y être ajouté sans ' +
-      'inventer une clé que le fichier n’a pas.'
+      'Cette page n’a pas d’emplacement pour des gadgets. Cet outil ne peut pas en ' +
+      'créer un : il n’invente rien que le fichier ne porte déjà.'
     ))
     dialog.append(box)
     return

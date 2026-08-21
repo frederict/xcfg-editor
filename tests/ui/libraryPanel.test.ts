@@ -288,8 +288,8 @@ describe('libraryPanel — la carte d’identité ne mélange pas le lu et le su
 
   it('un « pages » dit qu’il ne porte aucune préférence, et l’archive dit ses annexes', async () => {
     const pages = identityCard(await identityOf(PAGES, 'pages.xcfg'))
-    const cles = pages.read.find((fact) => fact.label === 'Clés de préférences')
-    expect(cles?.value).toContain('aucune')
+    const reglages = pages.read.find((fact) => fact.label === 'Réglages enregistrés')
+    expect(reglages?.value).toContain('aucune')
 
     const archive = identityCard(await identityOf(ARCHIVE_BYTES, 'media.xczfg'))
     const conteneur = archive.read.find((fact) => fact.label === 'Conteneur')

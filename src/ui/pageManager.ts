@@ -331,7 +331,8 @@ export function operationAdvice(pages: readonly Page[], operation: PageOperation
 export const CLASS_CHANGE_ADVICE: Advice = {
   kind: 'class',
   text: 'XCTrack ne permet pas de changer la classe d’une page après sa création : elle s’y ' +
-    'fixe au moment du choix. Ce n’est pourtant qu’une clé du fichier, et cet éditeur l’écrit ' +
+    'fixe au moment du choix. Ce n’est pourtant qu’une ligne du fichier, et cet éditeur ' +
+    'l’écrit ' +
     'volontiers — mais le comportement de l’appareil face à une page ainsi modifiée n’a PAS ' +
     'été vérifié, et les gadgets de la page ne sont pas remplacés par ceux de la nouvelle classe.'
 }

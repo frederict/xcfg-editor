@@ -530,7 +530,7 @@ describe('rendu du panneau', () => {
     const panel = renderProperties({ form: buildPropertyForm(oldCompass(document())) })
     const row = panel.element.querySelector<HTMLElement>('[data-key="showWind"]')!
     expect(row.dataset.unknown).toBe('true')
-    expect(row.querySelector('.props__badge')?.textContent).toBe('clé hors catalogue')
+    expect(row.querySelector('.props__badge')?.textContent).toBe('réglage hors catalogue')
     expect(row.querySelector('label')?.textContent).toBe('showWind')
   })
 

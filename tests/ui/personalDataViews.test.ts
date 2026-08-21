@@ -83,7 +83,7 @@ describe('les quatre vues d’un seul inventaire — le backup de référence', 
     const warning = warningsAt(warningsOf(BACKUP_2026), 'export')
       .find((w) => w.kind === 'personal-data')
     expect(warning?.items).toHaveLength(11)
-    expect(warning?.detail).toContain('11 clés de préférences renseignées')
+    expect(warning?.detail).toContain('11 réglages personnels renseignés')
     expect(warning?.detail).toContain('0 texte écrit dans un gadget')
     expect(warning?.detail).toContain('5 emplacements personnels sont présents mais vides')
   })

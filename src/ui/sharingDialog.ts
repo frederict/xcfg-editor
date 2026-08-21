@@ -326,7 +326,7 @@ export const FIDELITY_MODIFIED =
   + 'l’espacement d’origine.'
 
 export const RESIDUAL_NOTE =
-  'La liste des onze clés de texte traitées est fixe, et le format de XCTrack change à '
+  'La liste des onze champs de texte traités est fixe, et le format de XCTrack change à '
   + 'chaque version : un champ de texte apparu depuis partirait en clair. Relisez '
   + 'l’inventaire ci-dessus avant d’envoyer le fichier — c’est lui la vérification, pas '
   + 'la promesse de cet outil.'

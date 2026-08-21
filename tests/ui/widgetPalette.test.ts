@@ -870,7 +870,7 @@ describe('les deux chemins sont distingués', () => {
 
     const legend = view.element.querySelector('.palette__legend')?.textContent ?? ''
     expect(legend).toContain('avec tous ses réglages')
-    expect(legend).toContain('clés universelles')
+    expect(legend).toContain('réglages de base')
   })
 })
 

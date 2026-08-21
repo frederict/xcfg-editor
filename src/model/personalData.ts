@@ -525,7 +525,7 @@ export function findingsIn(
  * clés surveillées se périme, et **un inventaire vide ne prouve pas une absence**.
  */
 export const PERSONAL_CAVEAT =
-  'Le relevé porte sur les clés connues de XCTrack ' +
-  `${PERSONAL_KNOWLEDGE.versionName ?? '?'} : ${PERSONAL_KNOWLEDGE.keyCount} clés de ` +
-  'préférences et onze clés de texte libre des gadgets. Le format change à chaque version — ' +
+  'Le relevé porte sur les réglages connus de XCTrack ' +
+  `${PERSONAL_KNOWLEDGE.versionName ?? '?'} : ${PERSONAL_KNOWLEDGE.keyCount} réglages ` +
+  'et onze champs de texte libre des gadgets. Le format change à chaque version — ' +
   'un inventaire vide ne prouve donc pas une absence.'

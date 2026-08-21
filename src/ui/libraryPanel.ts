@@ -325,10 +325,10 @@ export function identityCard(identity: EntryIdentity, language = 'fr'): Identity
       value: read.rootKeys.length === 0 ? 'aucune' : read.rootKeys.join(', ')
     },
     {
-      label: 'Clés de préférences',
+      label: 'Réglages enregistrés',
       value: read.preferenceKeyCount === 0
         ? 'aucune — ce fichier ne transporte pas vos préférences'
-        : plural(read.preferenceKeyCount, 'clé', 'clés'),
+        : plural(read.preferenceKeyCount, 'ligne', 'lignes'),
       note: read.preferenceKeyCount === 0
         ? undefined
         : 'Cet éditeur ne sait en nommer que quelques familles : le compte est là pour que ' +
@@ -338,8 +338,8 @@ export function identityCard(identity: EntryIdentity, language = 'fr'): Identity
 
   if (read.duplicateKeys.length > 0) {
     readFacts.push({
-      label: 'Clés dupliquées',
-      value: plural(read.duplicateKeys.length, 'clé en double', 'clés en double'),
+      label: 'Lignes en double',
+      value: plural(read.duplicateKeys.length, 'ligne en double', 'lignes en double'),
       note: `XCTrack n’en lira qu’une : ${read.duplicateKeys.join(', ')}.`
     })
   }
@@ -392,8 +392,8 @@ export function identityCard(identity: EntryIdentity, language = 'fr'): Identity
       note: assumed.personalDataTravelsWithPages
         ? 'Un export « pages » n’est donc pas anonyme par construction : le nom et le ' +
           'numéro d’un bouton d’appel sont dans la disposition, pas dans les préférences.'
-        : 'La liste des clés de texte libre est fixe et se périmera : elle ne prouve pas ' +
-          'une absence.'
+        : 'La liste des champs de texte libre est fixe et se périmera : elle ne prouve ' +
+          'pas une absence.'
     }
   ]
 

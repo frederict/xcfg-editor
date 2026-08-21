@@ -623,8 +623,8 @@ export function renderWidgetPalette(options: WidgetPaletteOptions): WidgetPalett
     'p', 'palette__legend',
     'Liseré plein : le gadget sera copié d’un exemplaire déjà présent dans le fichier, ' +
     'avec tous ses réglages. ' +
-    'Liseré pointillé : il sera créé avec ses seules clés universelles, XCTrack complétant ' +
-    'le reste à la lecture. La vignette montre, dans les deux cas, ce que le clic posera.'
+    'Liseré pointillé : il sera créé avec ses seuls réglages de base, XCTrack ajoutant ' +
+    'les autres à la lecture. La vignette montre, dans les deux cas, ce que le clic posera.'
   ))
 
   const empty = el('p', 'palette__empty', 'Aucun gadget ne porte ce nom.')
@@ -728,7 +728,7 @@ function spokenLabel(entry: PaletteEntry, familyLabel: string): string {
     ? (entry.modelFromPage
         ? 'sera copié avec les réglages du gadget de cette page'
         : 'sera copié avec les réglages d’un gadget d’une autre page')
-    : 'sera créé avec ses seules clés universelles')
+    : 'sera créé avec ses seuls réglages de base')
   return parts.join(', ')
 }
 

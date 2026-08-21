@@ -180,8 +180,8 @@ import {
  *   elle se dit comme telle : « un appareil qui n'y a jamais touché ».
  */
 export const ABSENT_KEY_ON_IMPORT =
-  'À l’import (« Remplacer tout »), votre appareil garde le réglage qu’il a déjà : une ' +
-  'clé absente du fichier n’est pas touchée. Mesuré sur l’AIR³. Sur un appareil qui n’y ' +
+  'À l’import (« Remplacer tout »), votre appareil garde le réglage qu’il a déjà : ce ' +
+  'que le fichier ne dit pas n’est pas touché. Mesuré sur l’AIR³. Sur un appareil qui n’y ' +
   'a jamais touché, c’est la valeur d’usine de XCTrack qui s’applique.'
 
 /* ------------------------------------------------------------------ le modèle de page */
@@ -414,12 +414,12 @@ const MENU_FAMILIES: Record<string, readonly string[]> = {
 
 const MENU_NOTES: Record<string, string> = {
   _airspaces:
-    'XCTrack construit cet écran en code : la clé y est posée loin de son libellé, et ' +
-    'l’application ne la nomme donc nulle part qu’on puisse lire. Les réglages qu’elle ' +
+    'XCTrack construit cet écran en code : le réglage y est posé loin de son libellé, et ' +
+    'l’application ne le nomme donc nulle part qu’on puisse lire. Les réglages qu’elle ' +
     'écrit sont bien dans le fichier — ils sont rassemblés plus bas, sous « Réglages sans ' +
     'libellé » et « État sérialisé ».',
   _maps:
-    'Écran construit en code, lui aussi sans libellé exploitable. Les clés « Mapsforge » ' +
+    'Écran construit en code, lui aussi sans libellé exploitable. Les lignes « Mapsforge » ' +
     'du fichier sont rassemblées plus bas.',
   _editPageSet:
     'Cette ligne ouvre l’éditeur de pages et de gadgets — c’est le reste de cet éditeur ' +
@@ -430,7 +430,7 @@ const MENU_NOTES: Record<string, string> = {
   _pro:
     'L’abonnement se gère sur le compte XContest, pas dans le fichier de configuration.',
   _sensors:
-    'Cet écran sert à apparier les capteurs. Ce qu’il enregistre tient en une seule clé, ' +
+    'Cet écran sert à apparier les capteurs. Ce qu’il enregistre tient en une seule ligne, ' +
     '« Sensors.Configuration », rassemblée plus bas avec le reste de l’état sérialisé.',
   _shareconfig:
     'Cet écran ne porte que deux commandes — exporter, importer une configuration. Il n’a ' +
@@ -636,7 +636,7 @@ function buildRow(key: string, ctx: RowContext): PreferenceRow {
     : node.raw
 
   if (entry === undefined) {
-    row.undecidableReason = 'Cet éditeur ne connaît pas cette clé : il n’en sait ni le rôle ni la valeur d’usine.'
+    row.undecidableReason = 'Cet éditeur ne connaît pas ce réglage : il n’en sait ni le rôle ni la valeur d’usine.'
     return row
   }
 
@@ -652,7 +652,7 @@ function buildRow(key: string, ctx: RowContext): PreferenceRow {
     return row
   }
   if (entry.default === undefined) {
-    row.undecidableReason = 'Le catalogue ne relève aucune valeur d’usine pour cette clé.'
+    row.undecidableReason = 'Le catalogue ne relève aucune valeur d’usine pour ce réglage.'
     return row
   }
 
@@ -729,12 +729,12 @@ export const EDITABLE_CONTROLS: ReadonlySet<PreferenceControl> =
 export function editRefusal(row: PreferenceRow): string | undefined {
   if (row.reason !== undefined) {
     if (row.reason === 'unknown') {
-      return 'Cet éditeur ne sait pas ce que règle cette clé : il ne propose pas de la ' +
-        'changer. Elle est conservée telle quelle.'
+      return 'Cet éditeur ne sait pas ce que règle cette ligne du fichier : il ne propose ' +
+        'pas de la changer. Elle est conservée telle quelle.'
     }
     if (row.reason === 'state') {
-      return 'Cette clé enregistre l’état de l’application, pas un réglage : elle ressort ' +
-        'intacte, jamais réécrite.'
+      return 'Cette ligne enregistre l’état de l’application, pas un réglage : elle ' +
+        'ressort intacte, jamais réécrite.'
     }
     return 'XCTrack ne nomme ce réglage nulle part qu’on puisse lire : sans son libellé, ' +
       'cet éditeur ne propose pas de le changer.'
@@ -1182,23 +1182,23 @@ function stateTitle(row: PreferenceRow): string {
   if (row.state === 'conflict') {
     // Les deux valeurs restent dites, mais ici et non plus en capitales sur la ligne : ce
     // qui est incertain, c'est ce que XCTrack pose d'usine, jamais la valeur du pilote.
-    return `XCTrack annonce deux valeurs d’usine différentes pour cette clé : ` +
+    return `XCTrack annonce deux valeurs d’usine différentes pour ce réglage : ` +
       `« ${row.defaultText ?? '?'} » dans son code et « ${row.otherDefaultText ?? '?'} » dans ` +
       `son écran de réglages. Cet éditeur ne choisit pas à sa place. Votre valeur, elle, ` +
       `est celle du fichier.`
   }
   if (row.state === 'absent') {
     return row.defaultText === undefined
-      ? `Cette clé n’est pas dans le fichier : il ne dit rien de ce réglage. ${ABSENT_KEY_ON_IMPORT}`
-      : `Cette clé n’est pas dans le fichier : il ne dit rien de ce réglage. ` +
+      ? `Ce réglage n’est pas dans le fichier : il n’en dit rien. ${ABSENT_KEY_ON_IMPORT}`
+      : `Ce réglage n’est pas dans le fichier : il n’en dit rien. ` +
         `${ABSENT_KEY_ON_IMPORT} Elle vaut « ${row.defaultText} ».`
   }
   if (row.state === 'unwritten') {
-    return 'Cette clé n’est pas dans le fichier, et XCTrack ne l’y écrit qu’une fois réglée ' +
-      'au moins une fois sur l’appareil : son absence ne dit rien — ni ce que votre ' +
+    return 'Ce réglage n’est pas dans le fichier, et XCTrack ne l’y écrit qu’une fois ' +
+      'réglé au moins une fois sur l’appareil : son absence ne dit rien — ni ce que votre ' +
       'appareil applique, ni ce qu’il appliquerait neuf.'
   }
-  return row.undecidableReason ?? 'Aucune valeur d’usine connue pour cette clé.'
+  return row.undecidableReason ?? 'Aucune valeur d’usine connue pour ce réglage.'
 }
 
 /*
@@ -1548,7 +1548,7 @@ function buildImplicitCell(
   if (seed === undefined || row.defaultText === undefined) {
     const note = el('span', 'prefs__value prefs__value--none', 'valeur d’usine inconnue')
     note.title = row.undecidableReason ??
-      'Le catalogue ne relève aucune valeur d’usine inscriptible pour cette clé : ' +
+      'Le catalogue ne relève aucune valeur d’usine inscriptible pour ce réglage : ' +
       'cet éditeur n’a rien avec quoi la créer, et il n’en invente pas.'
     return [note]
   }
@@ -1556,7 +1556,7 @@ function buildImplicitCell(
   const implicit = el('span', 'prefs__implicit', row.defaultText)
   implicit.title =
     `« ${row.defaultText} » est la valeur d’usine de XCTrack, pas une valeur réglée : ` +
-    `cette clé n’est pas dans le fichier. ${ABSENT_KEY_ON_IMPORT}`
+    `ce réglage n’est pas dans le fichier. ${ABSENT_KEY_ON_IMPORT}`
 
   const button = el('button', 'btn prefs__adopt', 'Définir cette valeur')
   button.type = 'button'
@@ -1566,7 +1566,7 @@ function buildImplicitCell(
     'change alors rien d’immédiat, et met le réglage à l’abri d’une mise à jour de XCTrack ' +
     'qui changerait sa valeur d’usine.\n\n' +
     'Sur un appareil qui l’a déjà réglé, l’import écrira cette valeur à la place de la ' +
-    'sienne : tant que la clé reste absente, il garde la sienne (mesuré sur l’AIR³, ' +
+    'sienne : tant que le fichier n’en dit rien, il garde la sienne (mesuré sur l’AIR³, ' +
     'import « Remplacer tout »).'
   button.addEventListener('click', () => {
     if (commit(typeof seed === 'string' ? seed : String(seed), false)) done()
@@ -1905,10 +1905,14 @@ function fillSummaryBox(
   box.dataset.custom = String(summary.customCount)
   box.dataset.presented = String(summary.presentedCount)
 
+  // Trois nombres justes et différents, et c'est tout l'intérêt de cet écran. Ce qui
+  // change ici est la façon de les dire : « 30 réglages réglés par le pilote » parlait du
+  // pilote à la troisième personne — il consultait le dossier de quelqu'un d'autre — et
+  // répétait le même mot deux fois. « 136 clés » est notre mot, pas le sien : ce que le
+  // fichier porte, ce sont des lignes, dont 49 ne règlent rien.
   box.append(el('p', 'prefs__summary-count',
-    `${plural(summary.customCount, 'réglage réglé par le pilote', 'réglages réglés par le pilote')} ` +
-    `sur ${plural(summary.presentedCount, 'présenté', 'présentés')} ` +
-    `— le fichier porte ${plural(summary.fileKeyCount, 'clé', 'clés')}.`))
+    `Vous avez réglé ${formatCount(summary.customCount)} des ` +
+    `${plural(summary.presentedCount, 'réglage', 'réglages')} que XCTrack propose.`))
 
   const parts: string[] = []
   if (summary.defaultCount > 0) {
@@ -1936,10 +1940,17 @@ function fillSummaryBox(
   if (summary.unknownCount > 0) {
     rest.push(`${formatCount(summary.unknownCount)} inconnue${summary.unknownCount > 1 ? 's' : ''} de ce catalogue`)
   }
-  if (rest.length > 0) {
+  const unpresented = summary.unlabelledCount + summary.stateCount + summary.unknownCount
+  const carried = `Ce fichier contient ${plural(summary.fileKeyCount, 'ligne', 'lignes')} ` +
+    `en tout`
+  if (rest.length === 0) {
+    box.append(el('p', 'prefs__summary-detail', `${carried}.`))
+  } else {
     box.append(el('p', 'prefs__summary-detail',
-      `${plural(summary.unlabelledCount + summary.stateCount + summary.unknownCount, 'clé du fichier n’est pas présentée', 'clés du fichier ne sont pas présentées')} ` +
-      `dans un écran : ${rest.join(', ')}. Elles sont toutes listées en fin de page.`))
+      `${carried} : ${plural(unpresented, 'ne correspond', 'ne correspondent')} à aucun ` +
+      `réglage d’un écran de l’appareil — ${rest.join(', ')}. ` +
+      `${unpresented > 1 ? 'Elles sont' : 'Elle est'} listée${unpresented > 1 ? 's' : ''} ` +
+      `en fin de page.`))
   }
 
   box.append(el('p', 'prefs__summary-note', catalogNote(options)))
@@ -2020,7 +2031,7 @@ function buildPrivacyBox(inventory: PreferenceInventory, catalog: PreferenceCata
   const head = el('summary', 'prefs__privacy-head')
   head.textContent = counts.preferences === 0
     ? 'Aucune donnée personnelle repérée dans les préférences de ce fichier'
-    : `${plural(counts.preferences, 'clé de préférences porte', 'clés de préférences portent')} ` +
+    : `${plural(counts.preferences, 'réglage porte', 'réglages portent')} ` +
       `une donnée personnelle · ${String(counts.filled - counts.layout)} renseignées, ` +
       `${String(counts.preferences - (counts.filled - counts.layout))} vides`
   box.append(head)
@@ -2073,7 +2084,7 @@ function buildPrivacyBox(inventory: PreferenceInventory, catalog: PreferenceCata
   if (SECURE_PERSONAL_KEYS.length > 0) {
     body.append(el('p', 'prefs__privacy-note',
       `XCTrack chiffre les identifiants de compte (XContest, SkySight, SafeSky…) : les ` +
-      `${formatCount(SECURE_PERSONAL_KEYS.length)} clés concernées ne sortent jamais de ` +
+      `${formatCount(SECURE_PERSONAL_KEYS.length)} réglages concernés ne sortent jamais de ` +
       `l’appareil, et aucun export n’en porte.`))
   }
 
@@ -2084,7 +2095,7 @@ function buildPrivacyBox(inventory: PreferenceInventory, catalog: PreferenceCata
   if (counts.judged > 0 && counts.read === 0) {
     body.append(el('p', 'prefs__privacy-note',
       `Aucune des ${formatCount(counts.total)} lignes de ce fichier n’est signalée par ` +
-      `XCTrack lui-même : les seules clés dont il déclare la sensibilité sont celles qu’il ` +
+      `XCTrack lui-même : les seuls réglages dont il déclare la sensibilité sont ceux qu’il ` +
       `chiffre, et elles ne sont pas exportées. Ce relevé est donc un jugement de cet ` +
       `éditeur, et chaque ligne dit le sien.`))
   }
@@ -2098,20 +2109,20 @@ function buildPrivacyBox(inventory: PreferenceInventory, catalog: PreferenceCata
 const LEFTOVER_TITLES: Record<LeftoverReason, string> = {
   unlabelled: 'Réglages sans libellé',
   state: 'État sérialisé, pas des réglages',
-  unknown: 'Clés que ce catalogue ne connaît pas'
+  unknown: 'Lignes que ce catalogue ne connaît pas'
 }
 
 const LEFTOVER_LEADS: Record<LeftoverReason, string> = {
   unlabelled:
     'Ce sont bien des réglages, mais XCTrack les configure dans des écrans construits en ' +
-    'code, où la clé n’est plus rattachée à son libellé : l’application ne les nomme nulle ' +
-    'part qu’on puisse lire. La valeur et la comparaison à la valeur d’usine restent ' +
-    'justes — c’est le nom qui manque, pas le sens.',
+    'code, où la ligne du fichier n’est plus rattachée à son libellé : l’application ne ' +
+    'les nomme nulle part qu’on puisse lire. La valeur et la comparaison à la valeur ' +
+    'd’usine restent justes — c’est le nom qui manque, pas le sens.',
   state:
-    'Ces clés ne règlent rien : elles enregistrent l’état de l’application. Cette page en ' +
+    'Ces lignes ne règlent rien : elles enregistrent l’état de l’application. Cette page en ' +
     'donne la nature et la taille, jamais le contenu.',
   unknown:
-    'Cet éditeur ne sait pas ce que ces clés règlent : elles ont été écrites par une autre ' +
+    'Cet éditeur ne sait pas ce que ces lignes règlent : elles ont été écrites par une autre ' +
     'version de XCTrack que celle dont le catalogue parle. Elles ne sont ni supprimables ni ' +
     'négligeables — simplement inconnues, et conservées telles quelles.'
 }
@@ -2125,7 +2136,7 @@ function buildLeftoverSection(
   const heading = el('h3', 'prefs__screen-title')
   heading.append(
     el('span', 'prefs__screen-name', LEFTOVER_TITLES[reason]),
-    el('span', 'prefs__screen-count', plural(rows.length, 'clé', 'clés'))
+    el('span', 'prefs__screen-count', plural(rows.length, 'ligne', 'lignes'))
   )
   section.append(heading, el('p', 'prefs__lead', LEFTOVER_LEADS[reason]))
 
@@ -2389,7 +2400,7 @@ function refusalNotes(rows: readonly PreferenceRow[]): HTMLElement[] {
  * entrée, et combien d'entre elles la page sait nommer.
  */
 export function tallyText(tally: { total: number; labelled: number }): string {
-  const carried = `Ce fichier en porte ${plural(tally.total, 'clé', 'clés')}`
+  const carried = `Ce fichier en porte ${plural(tally.total, 'ligne', 'lignes')}`
   if (tally.labelled === 0) {
     return `${carried} : aucune ne porte de libellé, toutes sont listées en fin de page ` +
       `sous leur nom brut.`
@@ -2437,13 +2448,16 @@ function finish(
     tools.append(search)
 
     if (inventory.summary.customCount > 0) {
-      const only = el('button', 'btn prefs__only', 'Seulement ce que le pilote a réglé')
+      // Le pilote, c'est lui. Un bouton qui s'appelle « Seulement ce que le pilote a
+      // réglé » donne l'impression de consulter le dossier de quelqu'un d'autre — et le
+      // bandeau, juste au-dessus, lui dit déjà « Vous avez réglé… ».
+      const only = el('button', 'btn prefs__only', 'Seulement ce que j’ai réglé')
       only.type = 'button'
       only.setAttribute('aria-pressed', 'false')
       only.addEventListener('click', () => {
         onlyCustom = only.getAttribute('aria-pressed') !== 'true'
         only.setAttribute('aria-pressed', String(onlyCustom))
-        only.textContent = onlyCustom ? 'Tout afficher' : 'Seulement ce que le pilote a réglé'
+        only.textContent = onlyCustom ? 'Tout afficher' : 'Seulement ce que j’ai réglé'
         apply()
       })
       tools.append(only)
