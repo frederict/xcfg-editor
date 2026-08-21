@@ -36,11 +36,16 @@ import { cloneNode, type Orientation } from './mutations'
  *
  * ## Ce que le `layout` porte quand même, et pourquoi on le montre
  *
- * Le `layout` n'est pas vierge : quelques clés portent du texte écrit par le pilote.
- * `findFreeTexts` en rend l'inventaire exact. **On le montre, on ne le dépouille pas** —
- * même éthique que `warnings.ts` : « on signale, on ne corrige jamais ». Retirer en
- * silence le titre personnalisé d'un widget changerait le gabarit sans le dire, et un
- * pilote qui ne peut pas prévoir ce que l'outil fait de son fichier ne s'en sert pas.
+ * Le `layout` n'est pas vierge : quelques clés portent du texte écrit par le pilote, et
+ * elles survivent à la dérivation puisqu'elles voyagent avec la page. `findFreeTexts` en
+ * rend l'inventaire exact. **Ce module ne les touche pas** — même éthique que
+ * `warnings.ts` : « on signale, on ne corrige jamais ». Retirer en silence le titre
+ * personnalisé d'un widget changerait le gabarit sans le dire, et un pilote qui ne peut
+ * pas prévoir ce que l'outil fait de son fichier ne s'en sert pas.
+ *
+ * Les remplacer est un geste **demandé**, donc explicite, donc ailleurs : `sharing.ts`
+ * s'en charge, sur une copie, et rend la liste de ce qu'il a changé. Ce fichier lui prête
+ * seulement `findFreeTextNodes`.
  */
 
 /* ------------------------------------------------------ dérivation « backup » → « pages » */
@@ -164,33 +169,77 @@ export function derivePagesDocument(source: JsonNode): PagesDerivation {
 /**
  * Les clés du `layout` qui portent du texte écrit par le pilote.
  *
- * **Relevé, pas supposé.** Balayage de toutes les chaînes non vides du `layout` des
- * 21 fichiers du corpus (`Exemples/` + corpus historique 2022 → 2026), puis recoupement
- * avec les 774 couples widget × option extraits de l'APK 1.0.3-beta5. Tout le reste est
- * une énumération (`'SYS_UNIT'`, `'OPTIMIZED'`, `'ALGO_CLASSIC'`, `'SMALL'`…), un `UUID`,
- * un nom de classe, ou un nom de thème **livré avec l'application**
- * (`'ClearpilotForest'`, `'Light'`, `'XContest'` — vérifiés dans `assets/vtm_themes/`).
+ * ## Établie depuis le catalogue, pas depuis les fichiers sous la main
  *
- * | Clé | Porté par | Attesté par |
+ * La première version de cette liste comptait six clés. Elle était **exacte sur le
+ * corpus observé et fausse sur le format** : elle avait été relevée sur les chaînes
+ * réellement rencontrées dans 21 fichiers, or ces fichiers ne contiennent que 41 des
+ * 84 classes de widgets. Tout ce qu'un pilote peut écrire dans un widget qu'il ne
+ * possédait pas ce jour-là échappait au relevé.
+ *
+ * La liste est donc refaite **à partir du catalogue**, qui couvre les 84 classes :
+ * `src/catalog/widgetDefaults.json` — 75 widgets écrits sur l'appareil avec leurs seules
+ * clés universelles, réimportés, puis réexportés, de sorte que XCTrack a complété
+ * lui-même **toutes** les clés qu'il écrit — recoupé avec les 790 couples widget × option
+ * de `src/catalog/widgetOptions/base.json` pour les 9 classes restantes (widgets de débogage
+ * et `WVTM`, dont la seule clé textuelle est `titletext`, déjà couverte).
+ *
+ * Balayage de toutes les valeurs de type **chaîne** de ces 75 widgets : 42 chemins de clé
+ * distincts. Onze portent du texte libre, les 31 autres sont des énumérations ou des
+ * nombres écrits en chaîne.
+ *
+ * | Clé | Porté par | Ce qu'elle peut contenir |
  * |---|---|---|
- * | `text` | `WFreeText` | corpus : `'ESS'`, `'Goal'`, `'TASK'`, `'Wind'`, `'Visualise le thermique 🤘'` |
- * | `titletext` | 55 classes de widget | corpus : présent 1 401 fois, **vide partout** — libre par construction |
- * | `fullName` | `WButtonPhone`, dans l'objet `contact` | corpus : présent 15 fois, vide |
- * | `phoneNumber` | `WButtonPhone`, dans l'objet `contact` | corpus : présent 15 fois, vide |
- * | `url` | `WWebView` | APK seul — aucun `WWebView` dans le corpus |
- * | `name` | `WButtonIntentLauncher` | APK seul — aucun dans le corpus |
+ * | `titletext` | 55 classes (`ValueWidget`, `TextWidget`, `WeightedTextWidget`, `MultiValueWidget`) | titre personnalisé |
+ * | `text` | `WFreeText` | le contenu entier du widget |
+ * | `fullName` | `WButtonPhone`, sous `contact` | le nom d'un proche |
+ * | `phoneNumber` | `WButtonPhone`, sous `contact` | son numéro de téléphone |
+ * | `url` | `WWebView` | une URL saisie — jeton ou identifiant compris |
+ * | `title` | `WButtonIntentLauncher` | le libellé du bouton |
+ * | `name` | `WButtonIntentLauncher` | le nom de l'application visée |
+ * | `action` | `WButtonIntentLauncher` | une action Android, **qui peut être un URI complet** |
+ * | `filter` | `WLogPeek` | un filtre de journal saisi |
+ * | `suffix` | `WExternalData` | le texte placé après la valeur |
+ * | `event` | `WEmitTestEvent` | un nom d'événement saisi |
  *
- * **Les deux clés du relevé initial (`text` et `titletext`) ne suffisaient pas** : un
- * `WButtonPhone` porte un **nom de contact et un numéro de téléphone**, dans le `layout`,
- * pas dans les `preferences`. C'est la donnée la plus sensible du lot et elle survit à la
- * dérivation, puisqu'elle voyage avec la page. Elle est vide dans tout le corpus — mais
- * un pilote qui a rangé le numéro d'un ami sur un bouton d'appel la remplirait sans se
- * douter qu'elle part avec ses pages.
+ * ## Ce que la liste écarte volontairement
  *
- * ⚠️ **Cette liste se périme.** Le schéma change à chaque version de XCTrack. La refaire
- * coûte deux minutes : balayer les chaînes non vides du `layout` du corpus, regrouper par
- * clé, et ne garder que celles dont l'ensemble des valeurs n'est pas une énumération
- * fermée. C'est la routine du jalon 3 qui devrait la reprendre à chaque nouvel APK.
+ * Onze clés de plus sont des chaînes et **ne sont pas** du texte libre. Les ramasser
+ * abîmerait des réglages qui n'ont rien de personnel :
+ *
+ * - **des énumérations** : `_theme`, `type`, `_units`, `navigation_target`, `fontSize`,
+ *   `nav_label`, `nav_target`, `speed_type`, `callType`, `soundMode`, `windStyle`,
+ *   `saveButtonPos`, `theme` et `terrain` sous `mapWidget_mapAppearance`, `rotation`,
+ *   `relative`, `time_format`, `altitude`, `glide`, `target`, `_altType`, `_format`,
+ *   `_rotation`, `_splitdirection`, `includeWindAlgorithm`,
+ *   `mapWidget_panningAirspaceList` ;
+ * - **des nombres écrits en chaîne** : `_decimals` (`"0"`),
+ *   `faiAreasDistanceFontSize`, `legDistanceFontSize`, `legPercentageFontSize`
+ *   (`"100"`), et surtout `index` de `WExternalData` (`"1"`), qui désigne le canal de
+ *   données lu — le remplacer débrancherait le widget de sa source ;
+ * - **un code de langue** : `mapWidget_osmLanguage`, choisi dans une liste fermée.
+ *
+ * `text_size`, `text_padding`, `lines_count` et `nemo` ne peuvent pas être ramassés du
+ * tout : ce sont des nombres et des booléens JSON, jamais des chaînes. Le catalogue les
+ * décrit comme des contrôles « texte » — c'est le type du contrôle affiché, pas le type
+ * de la valeur écrite.
+ *
+ * ## L'appariement se fait sur le nom de clé seul, et c'est délibéré
+ *
+ * On ne restreint pas `url` à `WWebView` ni `name` à `WButtonIntentLauncher`. Mesuré sur
+ * les 75 widgets : chacune de ces onze clés n'est portée que par la classe indiquée —
+ * il n'y a donc rien à gagner à qualifier. Il y aurait à perdre : le jour où une nouvelle
+ * classe porte `phoneNumber`, un appariement par classe la laisserait passer en silence.
+ * Le nom de clé seul ratisse plus large, ce qui est le bon sens de l'erreur quand il
+ * s'agit de confidentialité.
+ *
+ * ⚠️ **Cette liste se périme.** Le schéma change à chaque version de XCTrack, et
+ * l'anonymisation est le seul endroit du projet où une **liste noire** est inévitable :
+ * dans le `layout`, il faut tout garder sauf quelques clés, l'inverse de la liste blanche
+ * de `PAGES_ROOT_KEYS`. Une clé de texte libre apparue dans une version future partirait
+ * donc en clair. La parade n'est pas dans ce fichier : c'est que l'outil **montre**
+ * l'inventaire avant de publier, et que la liste soit refaite à chaque nouvel APK par la
+ * routine qui régénère `widgetDefaults.json`.
  */
 export const FREE_TEXT_KEYS: readonly string[] = [
   'text',
@@ -198,7 +247,12 @@ export const FREE_TEXT_KEYS: readonly string[] = [
   'fullName',
   'phoneNumber',
   'url',
-  'name'
+  'name',
+  'title',
+  'action',
+  'filter',
+  'suffix',
+  'event'
 ]
 
 export interface FreeText {
@@ -221,10 +275,24 @@ export interface FreeText {
   text: string
 }
 
+/** Le nœud porteur d'une chaîne, seul type sur lequel un remplacement s'écrit. */
+export type StringNode = Extract<JsonNode, { kind: 'string' }>
+
+/**
+ * Un texte libre **avec le nœud qui le porte**, pour l'anonymisation.
+ *
+ * Séparé de `FreeText` à dessein : `findFreeTexts` est fait pour être affiché, et une
+ * vue destinée à l'affichage ne doit pas offrir de poignée pour modifier le document.
+ * Seul `sharing.ts` a besoin d'écrire, et il travaille sur une copie.
+ */
+export interface FreeTextNode extends FreeText {
+  node: StringNode
+}
+
 function collectFreeTexts(
   node: JsonNode,
   path: string,
-  found: Array<{ keyPath: string; text: string }>
+  found: Array<{ keyPath: string; text: string; node: StringNode }>
 ): void {
   if (node.kind === 'object') {
     for (const [rawKey, value] of node.entries) {
@@ -233,9 +301,10 @@ function collectFreeTexts(
       if (value.kind === 'string') {
         // Les chaînes vides ne sont pas montrées : le corpus en compte 1 401 rien que
         // pour `titletext`. Les noyer sous le bruit reviendrait à cacher les vraies.
+        // Une chaîne vide n'a par ailleurs rien à anonymiser.
         if (FREE_TEXT_KEYS.includes(key)) {
           const text = decode(value.raw)
-          if (text !== '') found.push({ keyPath: here, text })
+          if (text !== '') found.push({ keyPath: here, text, node: value })
         }
       } else {
         collectFreeTexts(value, here, found)
@@ -247,23 +316,24 @@ function collectFreeTexts(
 }
 
 /**
- * Inventaire exact des textes écrits par le pilote dans le `layout`, avec l'emplacement
- * de chacun. Rendu dans l'ordre du fichier : paysage puis portrait, page par page, widget
- * par widget, clé par clé.
+ * Comme `findFreeTexts`, mais chaque entrée porte en plus le nœud à réécrire.
  *
- * Destiné à être **montré avant publication**, pas à filtrer quoi que ce soit : rien ici
- * ne modifie le document. Un inventaire vide est le cas courant — les cinq fichiers de
- * `Exemples/` n'en portent aucun.
+ * **Toutes les occurrences sont rendues, doublons compris.** Un widget dont `titletext`
+ * est écrit deux fois (le corpus en porte des cas, cf. `findDuplicateKeys`) produit deux
+ * entrées : après un remplacement, la seule postcondition prévisible est qu'aucune des
+ * deux ne porte plus la valeur d'origine. N'en réécrire qu'une laisserait la donnée
+ * personnelle dans le fichier, sans erreur ni signal — même raisonnement que
+ * `removeMember`.
  */
-export function findFreeTexts(layout: Layout): FreeText[] {
-  const result: FreeText[] = []
+export function findFreeTextNodes(layout: Layout): FreeTextNode[] {
+  const result: FreeTextNode[] = []
   const orientations: Orientation[] = ['landscape', 'portrait']
   for (const orientation of orientations) {
     layout[orientation].forEach((page, pageIndex) => {
       page.widgets.forEach((widget, widgetIndex) => {
-        const found: Array<{ keyPath: string; text: string }> = []
+        const found: Array<{ keyPath: string; text: string; node: StringNode }> = []
         collectFreeTexts(widget.node, '', found)
-        for (const { keyPath, text } of found) {
+        for (const { keyPath, text, node } of found) {
           result.push({
             orientation,
             pageRank: pageIndex + 1,
@@ -271,13 +341,31 @@ export function findFreeTexts(layout: Layout): FreeText[] {
             className: widget.className,
             shortName: widget.shortName,
             keyPath,
-            text
+            text,
+            node
           })
         }
       })
     })
   }
   return result
+}
+
+/**
+ * Inventaire exact des textes écrits par le pilote dans le `layout`, avec l'emplacement
+ * de chacun. Rendu dans l'ordre du fichier : paysage puis portrait, page par page, widget
+ * par widget, clé par clé.
+ *
+ * Destiné à être **montré avant publication** : rien ici ne modifie le document, et le
+ * nœud d'origine n'est même pas exposé. C'est `sharing.ts` qui remplace, sur une copie et
+ * sur demande explicite du pilote. Un inventaire vide est le cas courant — les cinq
+ * fichiers d'exemple n'en portent aucun.
+ */
+export function findFreeTexts(layout: Layout): FreeText[] {
+  // Une seule traversée pour les deux vues : l'inventaire montré au pilote et celui qui
+  // sert au remplacement ne peuvent alors pas diverger. C'est la propriété qui fait
+  // qu'« annoncer avant de changer » veut dire quelque chose.
+  return findFreeTextNodes(layout).map(({ node: _node, ...rest }) => rest)
 }
 
 /* ------------------------------------------- ressources extérieures : absence de résultat */
