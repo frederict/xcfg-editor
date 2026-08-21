@@ -226,6 +226,51 @@
   width: 100%;
   line-height: 1.1;
   font-size: calc(var(--xc-h, 100) * 0.17px);
+
+  /* Réduction de LARGEUR de la valeur et de son unité — écart 1.1 de la revue des
+     75 widgets. Elle vaut 1 dans le cas courant (le contenu tient) et descend juste ce
+     qu'il faut sinon, comme l'appareil : sur une cellule 172 × 148, « Altitude GPS
+     1400 m » y remplit 165 px de large sans jamais franchir le bord.
+
+     Le calcul est ici, et non dans `numeric.ts`, parce que c'est ICI que les trois
+     mesures existent dans la même unité : `--xc-w` et `--xc-h` (la taille réelle du
+     widget dans le repère de rendu, posées par `canvas.ts`) et `--xc-value-size` (la
+     police de la valeur, définie sur `.xc-widget` plus haut, et redéfinie par
+     `.xc-num--no-title`). `numeric.ts`, lui, ne connaît que des coordonnées normalisées :
+     il en tirait un rapport largeur/hauteur qui supposait une page 16/9, et une taille de
+     police qui supposait un titre à 100 %. Les deux suppositions coupaient la valeur dès
+     que la page n'était pas 16/9 — voir le commentaire de `unitWidthH` (numeric.ts).
+
+     `--xc-value-em` (largeur de la valeur en cadratins de sa police) et `--xc-unit-h`
+     (largeur de l'unité, gap compris, en fraction de la hauteur du widget) viennent de
+     `numeric.ts` : deux unités différentes parce que la valeur suit la place laissée par
+     le titre et l'unité suit la hauteur du widget — c'est mesuré, voir `.xc-num__unit`.
+
+     Le facteur 1.02 couvre ce que la mesure de texte ne voit pas : le `gap` ne rétrécit
+     pas avec la valeur (il suit `--xc-h`) alors qu'il est compté comme s'il rétrécissait,
+     et le filet de la fraction d'unité vaut 1 px quoi qu'il arrive. Il est petit parce
+     que `--xc-value-em` et `--xc-unit-h` ne sont plus des estimations mais des MESURES
+     (`measuredWidthEm`, textMetrics.ts) : tant qu'ils étaient calibrés sur le Roboto de
+     l'appareil et que le navigateur dessinait en `system-ui`, il fallait une marge de
+     8 %, et cette marge coûtait jusqu'à 10 % de hauteur de chiffre aux widgets dont
+     l'estimation était généreuse.
+
+     Le plancher 0,15 est une soupape, pas un réglage — et il est BAS exprès : il n'y a
+     aucune raison de couper plutôt que de réduire, l'appareil ne coupe jamais. L'ancien
+     plancher (0,45, relevé du 21/08) tranchait à lui seul toute page à cinq colonnes
+     (« 1234 m » y demandait 0,42) ; à 0,30, « [1800] m » dans une cellule de 180 px
+     débordait encore de 7,9 %. Une valeur réduite à 0,15 reste plus grosse que son propre
+     titre : c'est une cellule trop étroite, et le pilote doit le voir tel quel plutôt que
+     tranché — un chiffre coupé imite un autre chiffre, une valeur petite ne trompe
+     personne. */
+  --xc-value-fit: clamp(
+    0.15,
+    calc(
+      var(--xc-w, 200) /
+      (1.02 * (var(--xc-value-em, 2) * var(--xc-value-size) + var(--xc-unit-h, 0) * var(--xc-h, 100)))
+    ),
+    1
+  );
 }
 
 /* Sans titre à loger, toute la hauteur revient à la valeur (numeric.ts). Aucune capture
@@ -269,7 +314,12 @@
 .xc-num__row {
   display: flex;
   align-items: flex-end;
-  gap: 0.15em;
+  /* L'écart entre la valeur et son unité suit la même réduction qu'elles — soit
+     0,15 em de la police de `.xc-num` (0,17 × --xc-h) une fois réduit. Il était fixe :
+     il ne représentait alors plus la même chose selon la réduction, et surtout le budget
+     de largeur le comptait comme réductible, d'où un reliquat de débordement mesuré à
+     1,6 % sur une cellule de 135 px (« [12,4] km »). */
+  gap: calc(var(--xc-h, 100) * 0.0255 * var(--xc-value-fit, 1) * 1px);
   /* Absorbe à parts égales la place laissée par le titre : la ligne valeur + unité se
      centre dessous sans que le titre quitte le haut de la cellule (voir `.xc-num`). */
   margin: auto 0;
@@ -309,8 +359,8 @@
 .xc-num__row--positive .xc-num__value { color: var(--xc-value-positive); }
 .xc-num__row--negative .xc-num__value { color: var(--xc-value-negative); }
 
-/* Valeur et unité — `--xc-value-fit` (posée par `numeric.ts`) est la réduction de
-   largeur, 1 quand le contenu tient, ce qui est le cas courant.
+/* Valeur et unité — `--xc-value-fit` (calculée sur `.xc-num` plus haut) est la
+   réduction de largeur, 1 quand le contenu tient, ce qui est le cas courant.
 
    L'unité NE suit PAS la valeur : elle suit la hauteur du widget. C'est mesuré et
    contre-intuitif — sur `2026-08-21_polices-reference.png`, la police de l'unité vaut

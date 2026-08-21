@@ -61,4 +61,35 @@ describe('style.css — corrections sans trace dans le DOM', () => {
     expect(rule).not.toContain('justify-content: flex-end;')
     expect(rule).toContain('var(--xc-page-min, 720)')
   })
+  // Écart 1.1 de la revue des 75 widgets — la valeur numérique tranchée. Le calcul est
+  // en CSS et n'a donc aucune trace dans le DOM : ces garde-fous sont le seul moyen de
+  // constater qu'il n'est pas revenu à l'ancienne règle.
+  describe('budget de largeur de la valeur numérique', () => {
+    const regle = css.slice(css.indexOf('.xc-num {'), css.indexOf('.xc-num__title {'))
+
+    it('la réduction se calcule sur la taille RÉELLE du widget, pas sur un rapport de page supposé', () => {
+      // `--xc-w` et `--xc-h` sont posées par canvas.ts dans le repère de rendu ;
+      // `--xc-value-size` est la police de la valeur. Les trois dans la même unité, donc
+      // valables sur une page portrait comme sur une page 16/9, à 100 % de titre comme à
+      // 140 %.
+      expect(regle).toContain('--xc-value-fit: clamp(')
+      expect(regle).toContain('var(--xc-w, 200)')
+      expect(regle).toContain('var(--xc-value-em, 2) * var(--xc-value-size)')
+      expect(regle).toContain('var(--xc-unit-h, 0) * var(--xc-h, 100)')
+    })
+
+    it('le plancher reste bas : réduire vaut toujours mieux que trancher', () => {
+      // 0,45 (le plancher du 21/08) tranchait à lui seul toute page à cinq colonnes.
+      expect(regle).toContain('0.15,')
+      expect(regle).not.toContain('0.45,')
+    })
+
+    it('l’écart entre la valeur et l’unité se réduit avec elles', () => {
+      // Fixe, il n'était pas réductible alors que le budget le comptait comme tel :
+      // 1,6 % de débordement résiduel mesuré sur une cellule de 135 px.
+      const ligne = css.slice(css.indexOf('.xc-num__row {'), css.indexOf('.xc-num__row {') + 900)
+      expect(ligne).toContain('gap: calc(var(--xc-h, 100) * 0.0255 * var(--xc-value-fit, 1) * 1px);')
+      expect(ligne).not.toContain('gap: 0.15em;')
+    })
+  })
 })

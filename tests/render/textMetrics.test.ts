@@ -1,6 +1,19 @@
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { TITLE_SIZE_RATIO, titleWidthEm, valueGlyphEm, valueWidthEm } from '../../src/render/textMetrics'
+import {
+  RENDER_FONT_FAMILY,
+  TITLE_SIZE_RATIO,
+  VALUE_FONT_WEIGHT,
+  measuredWidthEm,
+  titleWidthEm,
+  valueGlyphEm,
+  valueWidthEm
+} from '../../src/render/textMetrics'
 import { titleFontPx, pageShortSidePx, widgetWidthPx, widgetHeightPx } from '../../src/render/canvas'
+
+const here = path.dirname(fileURLToPath(import.meta.url))
 
 /**
  * Les chiffres vérifiés ici viennent tous d'un relevé au pixel sur
@@ -121,6 +134,26 @@ describe('métriques de texte relevées sur l’appareil', () => {
       }
       // Et le rapport croît bien avec la hauteur, ce qu'un simple pourcentage ne ferait pas.
       expect((valeur(198.6) * CAP_HEIGHT) / 198.6).toBeGreaterThan((valeur(124.1) * CAP_HEIGHT) / 124.1)
+    })
+  })
+  // La mesure réelle du texte, et surtout son repli. Elle n'a de sens que dans un
+  // navigateur : l'environnement de test n'a pas de canvas, et c'est précisément le cas
+  // que le repli doit couvrir — sans quoi le budget de largeur vaudrait `NaN` et la
+  // valeur disparaîtrait.
+  describe('mesure réelle du texte, et repli sans canvas', () => {
+    it('rend `undefined` quand aucun canvas n’est disponible, jamais NaN ni 0', () => {
+      const mesure = measuredWidthEm('1234', VALUE_FONT_WEIGHT)
+      expect(mesure === undefined || (Number.isFinite(mesure) && mesure > 0)).toBe(true)
+    })
+
+    it('un texte vide ne coûte rien, avec ou sans canvas', () => {
+      expect(measuredWidthEm('', VALUE_FONT_WEIGHT)).toBe(0)
+    })
+
+    it('la famille mesurée est celle que la feuille de style dessine', () => {
+      // Mesurer dans une autre police que celle du rendu rendrait la mesure inutile.
+      const css = readFileSync(path.join(here, '../../src/ui/style.css'), 'utf8')
+      expect(css).toContain(`font-family: ${RENDER_FONT_FAMILY};`)
     })
   })
 })

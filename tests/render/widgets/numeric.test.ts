@@ -10,7 +10,7 @@ import { drawWidget } from '../../../src/render/registry'
 // nécessaire au bloc « défaut 4 » plus bas, qui interroge `drawWidget` sur le corpus.
 import '../../../src/render/widgets'
 import { EXPORTS } from '../../fixtures/paths'
-import { titleWidthEm } from '../../../src/render/textMetrics'
+import { titleWidthEm, valueWidthEm } from '../../../src/render/textMetrics'
 
 const settings: RenderSettings = {
   fromDefaults: false, theme: 'WhiteHCTheme', titleColor: '#f44336',
@@ -235,14 +235,16 @@ describe('widgets numériques', () => {
       expect(el.querySelector('.xc-num__value')?.textContent).toBe('1234')
     })
 
-    it('répercute les deux crochets sur le budget de largeur', () => {
-      // Deux caractères de plus, donc une valeur plus petite : c'est tout l'intérêt de
-      // les dessiner — ils changent la place occupée, et le pilote doit le voir.
+    it('répercute les deux crochets sur la largeur publiée', () => {
+      // Deux caractères de plus, donc une valeur plus large à loger, donc une valeur
+      // plus petite une fois `--xc-value-fit` calculée (style.css) : c'est tout
+      // l'intérêt de les dessiner — ils changent la place occupée, et le pilote doit le
+      // voir.
       const bounds = { x1: 0, x2: 1400 }
       const avec = drawNumeric(widget('WNextTurnpointDistance', {}, bounds), settings, language)
       const sans = drawNumeric(widget('WNextTurnpointDistance', { use_brackets: 'false' }, bounds), settings, language)
-      const fit = (el: HTMLElement): number => Number(el.style.getPropertyValue('--xc-value-fit'))
-      expect(fit(avec)).toBeLessThan(fit(sans))
+      const em = (el: HTMLElement): number => Number(el.style.getPropertyValue('--xc-value-em'))
+      expect(em(avec)).toBeGreaterThan(em(sans))
     })
   })
 
@@ -328,36 +330,62 @@ describe('widgets numériques', () => {
     })
   })
 
-  // Défaut 1 (rapport de tâche) — la taille de la valeur vient désormais de style.css
-  // (`--xc-value-size` : la place restante sous le titre) ; ce module ne pose plus que
-  // le facteur de réduction de LARGEUR, `--xc-value-fit`. Que l'appareil fasse la même
-  // chose est maintenant mesuré : « 99 m » et « 0 km/h » sur deux widgets de taille
-  // identique de ecran-landscape3-17widgets.png donnent des chiffres de 66 et 73 px.
-  describe('réduction de largeur de la valeur (défaut 1)', () => {
-    const fit = (el: HTMLElement): number => Number(el.style.getPropertyValue('--xc-value-fit'))
+  // Défaut 1 (rapport de tâche) — la taille de la valeur vient de style.css
+  // (`--xc-value-size` : la place restante sous le titre) et sa réduction de LARGEUR
+  // (`--xc-value-fit`) y est calculée aussi, faute de connaître ici la taille réelle du
+  // widget. Ce module ne publie plus que l'ENCOMBREMENT du contenu, dans deux unités
+  // différentes parce que la valeur et l'unité ne se dimensionnent pas sur la même
+  // chose : `--xc-value-em` en cadratins de la police de la valeur, `--xc-unit-h` en
+  // fraction de la hauteur du widget. Que l'appareil réduise bien au contenu est
+  // mesuré : « 99 m » et « 0 km/h » sur deux widgets de taille identique de
+  // ecran-landscape3-17widgets.png donnent des chiffres de 66 et 73 px.
+  describe('encombrement publié pour la réduction de largeur (défaut 1)', () => {
+    const valueEm = (el: HTMLElement): number => Number(el.style.getPropertyValue('--xc-value-em'))
+    const unitH = (el: HTMLElement): number => Number(el.style.getPropertyValue('--xc-unit-h'))
 
-    it('une valeur longue dans un widget étroit est plus réduite qu’une valeur courte dans le même widget', () => {
-      // Même boîte étroite pour les deux : seule la longueur de l'exemple diffère
-      // (« 1234 » contre « 38 », voir SPECS).
+    it('une valeur longue publie un encombrement plus grand qu’une valeur courte', () => {
+      // Seule la longueur de l'exemple diffère (« 1234 » contre « 38 », voir SPECS) :
+      // c'est ce que `--xc-value-fit` traduira en réduction, à largeur de widget égale.
       const bounds = { x1: 0, x2: 600 }
       const long = drawNumeric(widget('WAltitude', {}, bounds), settings, language)
-      const short = drawNumeric(widget('WSpeed', {}, bounds), settings, language)
-      expect(fit(long)).toBeLessThan(fit(short))
+      const court = drawNumeric(widget('WSpeed', {}, bounds), settings, language)
+      expect(valueEm(long)).toBeGreaterThan(valueEm(court))
     })
 
-    it('un widget large ne réduit rien, quelle que soit la valeur', () => {
-      // Bornes larges par défaut (x1: 0, x2: 10000, voir `widget()`).
-      const el = drawNumeric(widget('WAltitude', { _title: 'true' }), settings, language)
-      expect(fit(el)).toBe(1)
+    it('l’encombrement ne dépend PAS de la taille du widget : c’est style.css qui l’y confronte', () => {
+      // L'ancienne règle mélangeait les deux, et supposait pour cela un rapport de page
+      // 16/9 et un titre à 100 % — les deux faux dès que la page changeait de forme.
+      const etroit = drawNumeric(widget('WAltitude', {}, { x1: 0, x2: 600 }), settings, language)
+      const large = drawNumeric(widget('WAltitude', {}, { x1: 0, x2: 10000 }), settings, language)
+      expect(valueEm(etroit)).toBe(valueEm(large))
+      expect(unitH(etroit)).toBe(unitH(large))
     })
 
-    it('la réduction ne descend jamais sous le plancher', () => {
-      // Plancher abaissé de 0,50 à 0,45 en branchant les valeurs par défaut : les
-      // crochets de `use_brackets` allongent la valeur de deux caractères et le
-      // plancher écrasait alors un budget qui, lui, avait raison — voir
-      // `MIN_VALUE_SCALE` dans numeric.ts.
-      const el = drawNumeric(widget('WAltitude', { _unit: 'true' }, { x1: 0, x2: 120 }), settings, language)
-      expect(fit(el)).toBe(0.45)
+    it('une unité composée prend moins de place qu’une unité simple : elle s’empile', () => {
+      const fraction = drawNumeric(widget('WSpeed', { _unit: 'true' }), settings, language)
+      const simple = drawNumeric(widget('WAltitude', { _unit: 'true' }), settings, language)
+      expect(unitH(fraction)).toBeGreaterThan(0)
+      expect(unitH(fraction)).toBeLessThan(valueWidthEm('km') * 0.41)
+      expect(unitH(simple)).toBeGreaterThan(0)
+    })
+
+    it('un widget sans unité ne réserve aucune place, gap compris', () => {
+      // `unit: ''` dans SPECS pour une heure ou une durée. Le `<span>` d'unité vide, qui
+      // ajoutait quand même le `gap` de `.xc-num__row`, n'est plus posé du tout.
+      const el = drawNumeric(widget('WTime', {}), settings, language)
+      expect(unitH(el)).toBe(0)
+      expect(el.querySelector('.xc-num__unit')).toBeNull()
+    })
+
+    it('le cerne de la valeur colorée compte dans l’encombrement — il déborde de sa boîte', () => {
+      // `-webkit-text-stroke` et le `text-shadow` de repli sortent de la boîte du texte,
+      // donc de toute mesure de texte : sans provision, le cerne d'un vario positif
+      // mordait le filet de la cellule (14 px d'encre mesurés sur le bord gauche).
+      const colore = drawNumeric(widget('WVerticalSpeed', { _unit: 'true' }), settings, language)
+      const neutre = drawNumeric(widget('WAltitude', { _unit: 'true' }), settings, language)
+      expect(colore.querySelector('.xc-num__row--positive')).not.toBeNull()
+      expect(valueEm(colore)).toBeCloseTo(valueWidthEm('+2,1') + 0.1, 6)
+      expect(valueEm(neutre)).toBeCloseTo(valueWidthEm('1234'), 6)
     })
 
     it('la valeur et l’unité ne portent plus de taille en ligne : elles suivent --xc-value-fit', () => {

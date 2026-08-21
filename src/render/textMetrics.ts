@@ -88,3 +88,72 @@ export function valueWidthEm(text: string): number {
   for (const character of text) total += valueGlyphEm(character)
   return total
 }
+
+/**
+ * Famille de police du rendu — **doit rester identique à `.xc-page` (style.css)**, sinon
+ * la mesure ci-dessous porterait sur une autre police que celle qui dessine.
+ */
+export const RENDER_FONT_FAMILY = 'system-ui, sans-serif'
+
+/** Graisse de la valeur (`.xc-num__value`) et de son unité (`.xc-num__unit`). */
+export const VALUE_FONT_WEIGHT = 600
+export const UNIT_FONT_WEIGHT = 400
+
+/**
+ * Taille de mesure. Arbitraire : on ne garde que le RAPPORT largeur/taille, invariant
+ * d'échelle, ce qui rend la mesure valable quelle que soit la taille de rendu — y
+ * compris à l'intérieur du `viewBox` qui met la page à l'échelle (canvas.ts).
+ */
+const MEASURE_SIZE = 100
+
+/**
+ * Contexte de mesure, créé une fois. `null` mémorise un environnement sans canvas —
+ * `happy-dom` en test, par exemple — pour ne pas retenter à chaque widget.
+ */
+let measureContext: CanvasRenderingContext2D | null | undefined
+
+function context(): CanvasRenderingContext2D | null {
+  if (measureContext === undefined) {
+    try {
+      measureContext = document.createElement('canvas').getContext('2d')
+    } catch {
+      measureContext = null
+    }
+  }
+  return measureContext
+}
+
+/**
+ * Largeur RÉELLE d'un texte dans la police qui va le dessiner, en cadratins.
+ *
+ * **Pourquoi cette mesure existe alors que les estimations ci-dessus suffisaient.** Le
+ * budget de largeur des valeurs numériques (`unitWidthH`, numeric.ts, et
+ * `--xc-value-fit`, style.css) sert à ne JAMAIS trancher un chiffre — l'appareil ne le
+ * fait pas, nous le faisions. Mais il ne peut pas être calibré sur le Roboto de
+ * l'appareil, parce que ce n'est pas Roboto qui dessine : c'est la police système du
+ * navigateur. Mesuré sur les 32 valeurs de la planche, le rapport « largeur réelle /
+ * largeur estimée » s'étale de **0,94 à 1,05** — les chiffres y sont 8 % plus larges que
+ * dans Roboto (0,63 cadratin contre 0,568) et les figures y sont proportionnelles (le
+ * « 1 » ne fait que 0,47) là où Roboto les rend toutes de même largeur. Une marge
+ * forfaitaire couvrant ces 5 % d'incertitude coûtait jusqu'à 10 % de hauteur de chiffre
+ * sur les widgets dont l'estimation était généreuse : autant réduire l'incertitude à la
+ * source.
+ *
+ * Le commentaire de tête de `numeric.ts` écartait cette mesure au motif qu'elle
+ * « supposerait une police effectivement chargée par le navigateur cible, invérifiable
+ * sans lui ». C'était vrai du raisonnement fait hors ligne ; c'est faux à l'exécution,
+ * où le navigateur cible EST celui qui mesure.
+ *
+ * Rend `undefined` quand aucun canvas n'est disponible — l'appelant retombe alors sur
+ * l'estimation, qui reste donc le comportement des tests et de tout environnement sans
+ * rendu graphique.
+ */
+export function measuredWidthEm(text: string, weight: number): number | undefined {
+  if (text.length === 0) return 0
+  const ctx = context()
+  if (ctx === null) return undefined
+  ctx.font = `${weight} ${MEASURE_SIZE}px ${RENDER_FONT_FAMILY}`
+  const width = ctx.measureText(text).width
+  if (!Number.isFinite(width) || width <= 0) return undefined
+  return width / MEASURE_SIZE
+}
