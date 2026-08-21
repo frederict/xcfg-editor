@@ -7,6 +7,14 @@ l'appareil les dessine, on les modifie, on réexporte.
 Tout se passe **dans le navigateur**. Aucun serveur, aucun compte, aucun envoi : le
 fichier ne quitte pas la machine.
 
+## 👉 [Ouvrir l'éditeur](https://frederict.github.io/xcfg-editor/)
+
+**<https://frederict.github.io/xcfg-editor/>** — rien à installer, rien à inscrire.
+Glissez-y un `.xcfg` ou un `.xczfg` exporté depuis votre instrument.
+
+Le fichier est lu par votre navigateur et n'est envoyé nulle part : la page est servie
+en fichiers statiques, elle n'a pas de serveur à qui parler.
+
 ---
 
 ## Le problème
