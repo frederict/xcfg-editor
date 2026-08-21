@@ -23,6 +23,7 @@ import { drawLiveMessage } from './liveMessage'
 import { drawCompTaskSummary } from './compTaskSummary'
 import { drawOptiPotential } from './optiPotential'
 import { drawCompassDigital } from './compassDigital'
+import { drawEmitTestEvent, drawFreeText } from './freeText'
 
 /**
  * Les types « titre + valeur + unité » : les 23 du corpus, puis les 19 que la revue des
@@ -145,3 +146,8 @@ register('WCompTaskSummary', drawCompTaskSummary)
 // le dessin numérique commun (badge.ts).
 register('WOptiUnfinishedFAIPotential', drawOptiPotential)
 register('WCompassDigital', drawCompassDigital)
+
+// Écart 2.10 — les deux gadgets « autres » dont tout le contenu vient d'une clé du
+// fichier, et qui ne portent AUCUN titre sur l'appareil (freeText.ts).
+register('WFreeText', drawFreeText)
+register('WEmitTestEvent', drawEmitTestEvent)

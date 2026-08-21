@@ -365,6 +365,59 @@
   stroke-linecap: round;
 }
 
+/* « Texte libre » (`WFreeText`, freeText.ts) : le texte de la clé `text`, en haut à
+   gauche, replié, SANS titre. Taille et marge viennent des clés `text_size` et
+   `text_padding` (voir `TEXT_SIZE_TO_PX` dans freeText.ts) et sont donc posées en ligne
+   par le dessin — d'où l'absence de `font-size` ici. Mesuré sur
+   `captures-air3/2026-08-21_planche-sol-5-boutons-autres-test.png` : casse de 13 px,
+   marges de 7 px à gauche et 12 en haut, cellule de 326 × 174. */
+.xc-freetext {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  color: var(--xc-ink);
+  line-height: 1.25;
+  overflow: hidden;
+  /* Repli à la ligne, comme sur l'appareil — et coupure des mots trop longs plutôt qu'un
+     débordement hors de la cellule. */
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+/* « Émettre un événement test » (`WEmitTestEvent`, freeText.ts) : la clé `event` au
+   centre, dans un cadre gris épais, SANS titre. Mesuré sur la même capture : cadre
+   `#808080` de 5 px sur une cellule de 326 × 149 (0,034 × la hauteur), et « Battery50 »
+   sur 275 × 57 px.
+
+   La police vaut **0,415 × la hauteur** : les 57 px relevés vont du haut du « B » au bas
+   du « y », soit 0,92 cadratin de Roboto (0,711 de casse plus 0,21 de jambage) et non
+   0,711 — l'erreur, faite une première fois, donnait 80 px de police et une étiquette
+   tranchée. Recoupé par la largeur : 62 px × 4,43 cadratins de « Battery50 » = 275 px,
+   exactement la mesure. Le `min()` en `--xc-w` reste le garde-fou habituel : une clé
+   `event` plus longue réduit au lieu d'être coupée. */
+.xc-testevent {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: calc(var(--xc-h, 100) * 0.034px) solid #808080;
+  overflow: hidden;
+}
+.xc-testevent__label {
+  color: var(--xc-ink);
+  font-weight: 600;
+  font-size: min(
+    calc(var(--xc-h, 100) * 0.415px),
+    calc(var(--xc-w, 200) / 5 * 1px)
+  );
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* « Potentiel FAI » (`WOptiUnfinishedFAIPotential`, optiPotential.ts) : trois lignes
    sous le titre, flèche collée à gauche, valeur alignée à droite, unité grise. Mesuré sur
    `captures-air3/2026-08-21_planche-vol-3-air-b-xcontest-navigation-a.png`, cellule de
