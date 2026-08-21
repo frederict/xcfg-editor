@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Essai — export partageable</title>
+    <style>
+      /* L'habillage de la page d'essai seulement : le module, lui, apporte le sien. */
+      .demo { max-width: 60rem; margin: 0 auto; padding: 2rem 1.5rem; }
+      .demo__title { font-size: 18px; margin: 0 0 0.4rem; }
+      .demo__lead { margin: 0 0 1.2rem; font-size: 13px; color: var(--app-ink-soft); }
+      .demo__buttons { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 1.2rem; }
+      .demo__out {
+        font-family: var(--font-data);
+        font-size: 12px;
+        padding: 0.8rem;
+        border: 1px solid var(--app-line);
+        border-radius: 5px;
+        background: var(--app-panel);
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <!--
+      Page d'essai du seul module `ui/sharingDialog.ts`, qui n'est encore branché nulle
+      part. Elle sert à le voir vivre et à refaire les captures.
+
+          npm run dev -- --port 5176
+          http://localhost:5176/src/ui/sharingDialog.demo.html
+
+      Le port 5175 appartient au propriétaire : ne pas s'en servir.
+    -->
+    <main class="demo">
+      <h1 class="demo__title">Export partageable — page d’essai</h1>
+      <p class="demo__lead">
+        Chaque bouton ouvre la boîte sur un fichier réel de <code>tests/fixtures/</code>.
+        Le résultat du choix s’écrit dessous, sans rien télécharger.
+      </p>
+      <div class="demo__buttons" id="buttons"></div>
+      <pre class="demo__out" id="out">— aucun choix pour l’instant —</pre>
+    </main>
+    <script type="module" src="./sharingDialog.demo.ts"></script>
+  </body>
+</html>

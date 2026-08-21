@@ -1,0 +1,209 @@
+/*
+ * L'habillage de la boîte d'export partageable. Importée par `ui/sharingDialog.ts` et par
+ * lui seul : le module se charge à la demande, sa feuille suit.
+ *
+ * Rien de neuf n'est introduit : le meuble est celui de `app.css` — `.modal`,
+ * `.modal__box`, `.modal__head` collante, `.modal__actions`. Ce fichier ne fait que
+ * donner sa largeur à la boîte et sa forme à l'inventaire.
+ *
+ * Deux règles du cadre sont tenues ici comme ailleurs :
+ *
+ * 1. **le cadre est achromatique.** Aucune couleur n'est introduite : l'ambre est réservé
+ *    aux pages masquées hors vol, le bleu au contour de focus. Ce qui distingue la valeur
+ *    d'origine de la valeur posée, c'est la graisse et la teinte d'encre, pas une couleur ;
+ * 2. **les deux thèmes sont servis par les mêmes variables.** Aucune valeur en dur : tout
+ *    passe par `--app-*`, donc le mode sombre suit sans une ligne de plus.
+ */
+
+.modal--sharing {
+  max-width: min(52rem, 94vw);
+  width: min(52rem, 94vw);
+}
+
+/*
+ * La boîte défile — un inventaire compte autant d'entrées que le fichier porte de textes,
+ * et le corpus en connaît des pages entières. Le rembourrage du haut passe donc à la tête
+ * collante, comme pour la palette et le carrousel : sans cela, la tête se colle au bord du
+ * contenu et une bande de liste défilante reste visible au-dessus d'elle.
+ */
+.modal--sharing .modal__box {
+  padding-top: 0;
+  max-height: 88vh;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+/* ------------------------------------------------------------------- les deux issues */
+
+.sharing__choices {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/*
+ * Chaque issue est une carte cliquable en entier, étiquette comprise : la cible d'un bouton
+ * radio de 13 px se rate avec des gants, et ce n'est pas le geste qu'on veut rendre
+ * difficile.
+ */
+.sharing__choice {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.7rem;
+  align-items: start;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--app-line-strong);
+  border-radius: 6px;
+  background: var(--app-panel);
+  cursor: pointer;
+}
+
+.sharing__choice:hover { border-color: var(--app-ink-soft); }
+
+/* Le contour de focus se pose sur la carte, pas sur le rond : c'est la carte qu'on vise. */
+.sharing__choice:has(.sharing__radio:focus-visible) {
+  outline: 2px solid var(--app-focus);
+  outline-offset: 2px;
+}
+
+.sharing__choice:has(.sharing__radio:checked) { border-color: var(--app-ink-soft); }
+
+.sharing__radio { margin: 0.3rem 0 0; }
+
+.sharing__choiceBody { display: grid; gap: 0.15rem; }
+
+.sharing__choiceTitle { font-weight: 600; font-size: 14px; }
+
+.sharing__choiceNote {
+  font-size: 12.5px;
+  color: var(--app-ink-soft);
+  max-width: 78ch;
+}
+
+/* ------------------------------------------------ ce qui sera fait, montré avant de faire */
+
+.sharing__detail { display: grid; gap: 1.2rem; }
+
+.sharing__section { display: grid; gap: 0.5rem; }
+
+.sharing__heading {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--app-ink-soft);
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--app-line);
+}
+
+.sharing__note { margin: 0; font-size: 13px; max-width: 78ch; }
+
+.sharing__list { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.55rem; }
+
+/*
+ * La liste des remplacements est numérotée à la main : `list-style` est retiré pour que
+ * les entrées soient des cartes, et le rang sert à se repérer — « la 3 » dans un échange,
+ * ou simplement à compter ce qui part.
+ */
+.sharing__list:not(.sharing__list--plain) { counter-reset: sharing; }
+
+.sharing__where::before {
+  counter-increment: sharing;
+  content: counter(sharing) ". ";
+  font-family: var(--font-data);
+}
+
+.sharing__item {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--app-line);
+  border-radius: 5px;
+  background: var(--app-panel);
+}
+
+.sharing__where {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--app-ink-soft);
+}
+
+/*
+ * La ligne du remplacement : clé, valeur d'origine, flèche, valeur posée. Elle se replie
+ * plutôt que de déborder — un `titletext` peut être long, et le nom d'un contact aussi.
+ */
+.sharing__swap {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.5rem;
+}
+
+.sharing__key {
+  font-family: var(--font-data);
+  font-size: 11px;
+  color: var(--app-ink-soft);
+  overflow-wrap: anywhere;
+}
+
+/*
+ * La valeur d'origine est ce que le pilote doit reconnaître : c'est elle qui porte
+ * l'encre pleine. Barrée, parce qu'elle ne partira pas.
+ */
+.sharing__from {
+  font-family: var(--font-data);
+  font-size: 12px;
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+  overflow-wrap: anywhere;
+}
+
+.sharing__arrow { color: var(--app-ink-soft); }
+
+.sharing__to {
+  font-family: var(--font-data);
+  font-size: 12px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.sharing__why {
+  margin: 0;
+  font-size: 12px;
+  color: var(--app-ink-soft);
+  max-width: 78ch;
+}
+
+/* Une section écartée, ou une annexe : la clé, puis ce qu'elle emporte. */
+.sharing__dropped {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  gap: 0.15rem 0.6rem;
+  align-items: baseline;
+}
+
+@media (max-width: 34rem) {
+  .sharing__dropped { grid-template-columns: minmax(0, 1fr); }
+}
+
+.sharing__cost { display: grid; gap: 0.35rem; margin-top: 0.4rem; }
+
+.sharing__cost .sharing__list { gap: 0.1rem; }
+
+/*
+ * Ce qui reste malgré tout. Un filet à gauche, pas une couleur : la limite de la garantie
+ * se lit, elle ne s'alarme pas — et l'ambre appartient aux pages masquées hors vol.
+ */
+.sharing__caveat {
+  margin: 0.3rem 0 0;
+  padding-left: 0.7rem;
+  border-left: 2px solid var(--app-line-strong);
+  font-size: 12px;
+  color: var(--app-ink-soft);
+  max-width: 78ch;
+}
