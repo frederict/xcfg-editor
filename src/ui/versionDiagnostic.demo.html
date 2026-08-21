@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Essai — sélecteur de version et diagnostic</title>
+    <style>
+      /*
+       * Page d'essai du module `versionDiagnostic.ts`, servie par `npm run dev` à
+       * l'adresse /src/ui/versionDiagnostic.demo.html. Elle n'est pas construite par
+       * `vite build` : rien ne la référence depuis `index.html`.
+       *
+       * Elle n'importe PAS `app.css` : le module doit tenir debout seul, replis de
+       * couleurs compris. Ce que cette page pose ici, c'est le fond de page et la
+       * bascule clair/sombre — rien de ce dont le module aurait besoin.
+       */
+      :root { color-scheme: light dark; --page-bg: #e7e9ec; --page-ink: #15181c; }
+      @media (prefers-color-scheme: dark) {
+        :root { --page-bg: #101315; --page-ink: #e6eaed; }
+      }
+      body {
+        margin: 0;
+        padding: 1.5rem;
+        background: var(--page-bg);
+        color: var(--page-ink);
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      }
+      h1 { font-size: 1.1rem; margin: 0 0 0.3rem; }
+      p.lead { margin: 0 0 1rem; font-size: 0.85rem; opacity: 0.75; max-width: 46rem; }
+      .files { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.2rem; }
+      .files button {
+        font: inherit; font-size: 0.85rem; padding: 0.3rem 0.6rem; cursor: pointer;
+        color: inherit; background: transparent;
+        border: 1px solid currentcolor; border-radius: 4px;
+      }
+      .files button[aria-pressed="true"] { font-weight: 700; }
+      main { max-width: 52rem; }
+    </style>
+  </head>
+  <body>
+    <h1>Essai — sélecteur de version et diagnostic de compatibilité</h1>
+    <p class="lead">
+      Le module est appelé directement, sans l’éditeur. Les trois fichiers sont les
+      fixtures anonymisées du dépôt, lues en lecture seule ; aucune donnée personnelle
+      n’y figure. Le thème suit celui du système.
+    </p>
+    <div class="files" id="files"></div>
+    <main id="host"></main>
+    <script type="module" src="/src/ui/versionDiagnostic.demo.ts"></script>
+  </body>
+</html>
