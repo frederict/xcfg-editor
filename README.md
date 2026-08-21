@@ -32,7 +32,7 @@ SHA-256.** Pas « équivalent », pas « fonctionnellement identique » : le mê
 octet pour octet.
 
 Et quand vous modifiez quelque chose, **seul ce que vous avez modifié change**. Déplacer
-un widget ne réécrit que ses quatre coordonnées ; le reste du fichier — les 78 000 autres
+un gadget ne réécrit que ses quatre coordonnées ; le reste du fichier — les 78 000 autres
 octets — sort intact.
 
 Ce n'est pas une élégance d'ingénieur, c'est ce qui rend l'outil utilisable :
@@ -58,19 +58,19 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
   configuration embarque des ressources).
 - **Dessiner les pages** à la géométrie de l'instrument, sur huit gabarits d'écran
   (AIR³ 7.2, 7.3, 7.35, et cinq ratios courants), en paysage et en portrait.
-- **Signaler ce qui cloche** avant que vous ne le découvriez en vol : un widget
+- **Signaler ce qui cloche** avant que vous ne le découvriez en vol : un gadget
   entièrement recouvert par un autre et donc inatteignable au clic, une page qui ne
-  s'affichera jamais, un widget trop petit pour être lu à bout de bras, un réglage écrit
+  s'affichera jamais, un gadget trop petit pour être lu à bout de bras, un réglage écrit
   par une version antérieure de XCTrack. L'outil **signale, il ne corrige jamais tout
   seul**.
-- **Éditer** : déplacer, redimensionner, ajouter, supprimer et réordonner des widgets ;
+- **Éditer** : déplacer, redimensionner, ajouter, supprimer et réordonner des gadgets ;
   régler leurs options ; gérer les pages (insérer, dupliquer, supprimer, réordonner).
   Annuler / rétablir.
 - **Dire ce que votre fichier révèle de vous** avant que vous ne le partagiez. Un export
   `backup` porte votre nom, votre voile, vos capteurs appairés, vos fichiers de waypoints
   — jusqu'au nom de la compétition à laquelle vous participez. L'outil sait en **dériver
   un export `pages`**, qui ne transporte que les écrans, et vous montre ce qu'il écarte.
-- **Parler votre langue** : les noms et descriptions des widgets sont ceux de XCTrack
+- **Parler votre langue** : les noms et descriptions des gadgets sont ceux de XCTrack
   lui-même, extraits de l'application, en 33 langues.
 
 ## Ce qu'il ne sait pas faire, et ce qui reste incertain
@@ -82,10 +82,10 @@ Autant le dire tout de suite.
   l'application. Le schéma change à chaque version de XCTrack : ce qui est vrai
   aujourd'hui peut cesser de l'être demain. C'est précisément pourquoi l'outil est bâti
   pour **transporter ce qu'il ne comprend pas** plutôt que pour modéliser le format.
-- **Le rendu est une imitation, pas l'appareil.** Les dessins de widgets sont reconstruits
+- **Le rendu est une imitation, pas l'appareil.** Les dessins de gadgets sont reconstruits
   à partir de ce qui a été observé sur un **AIR³ 7.2** — un seul appareil, une seule
   version de XCTrack. Les valeurs affichées sont des exemples fixes : rien n'est simulé.
-  Un widget dont le dessin n'a pas été reproduit s'affiche sous une forme générique
+  Un gadget dont le dessin n'a pas été reproduit s'affiche sous une forme générique
   honnête plutôt que sous une approximation trompeuse.
 - **Aucune synchronisation avec l'instrument.** L'aller-retour se fait par carte SD ou par
   câble, à la main.

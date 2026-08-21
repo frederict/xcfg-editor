@@ -614,7 +614,7 @@ describe('rang d’empilement', () => {
     expect(stackLabel(0, 8)).toBe('Rang 1 sur 8, arrière-plan')
     expect(stackLabel(7, 8)).toBe('Rang 8 sur 8, premier plan')
     expect(stackLabel(3, 8)).toBe('Rang 4 sur 8')
-    expect(stackLabel(0, 1)).toBe('Seul widget de la page')
+    expect(stackLabel(0, 1)).toBe('Seul gadget de la page')
   })
 
   it('libelle chaque action pour le menu « Annuler … »', () => {
@@ -923,7 +923,7 @@ describe('barre d’outils de la sélection', () => {
   it('se nomme en français, au clavier comme à la souris', () => {
     const { instance } = editor()
     instance.select(3)
-    expect(bar(instance).getAttribute('aria-label')).toBe('Actions sur le widget sélectionné')
+    expect(bar(instance).getAttribute('aria-label')).toBe('Actions sur le gadget sélectionné')
     expect(tool(instance, 'delete').textContent).toBe('Supprimer')
     expect(tool(instance, 'duplicate').textContent).toBe('Dupliquer')
     expect(tool(instance, 'back').getAttribute('aria-label')).toBe('Envoyer à l’arrière-plan')

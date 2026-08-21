@@ -434,7 +434,7 @@ describe('cas limites', () => {
     expect(list.entries).toEqual([])
     expect(list.element.querySelector('.wlist__rows')).toBeNull()
     expect(list.element.querySelector('.wlist__empty')?.textContent)
-      .toBe('Cette page ne porte aucun widget.')
+      .toBe('Cette page ne porte aucun gadget.')
     // `select` reste appelable : `main.ts` ne se demande pas si la page est vide.
     expect(() => list.select(0)).not.toThrow()
   })

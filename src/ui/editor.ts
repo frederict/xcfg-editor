@@ -459,7 +459,7 @@ export function stackTarget(action: StackAction, index: number, count: number): 
  * moins en toutes lettres.
  */
 export function stackLabel(index: number, count: number): string {
-  if (count <= 1) return 'Seul widget de la page'
+  if (count <= 1) return 'Seul gadget de la page'
   if (index === count - 1) return `Rang ${index + 1} sur ${count}, premier plan`
   if (index === 0) return `Rang 1 sur ${count}, arrière-plan`
   return `Rang ${index + 1} sur ${count}`
@@ -898,7 +898,7 @@ export function createEditor(options: EditorOptions): Editor {
   const toolbar = el('div', 'editor__toolbar')
   toolbar.hidden = true
   toolbar.setAttribute('role', 'toolbar')
-  toolbar.setAttribute('aria-label', 'Actions sur le widget sélectionné')
+  toolbar.setAttribute('aria-label', 'Actions sur le gadget sélectionné')
 
   const toolButton = (
     modifier: string, text: string, label: string, keys: string
@@ -926,9 +926,9 @@ export function createEditor(options: EditorOptions): Editor {
   }
 
   const rank = el('span', 'editor__rank')
-  const duplicateTool = toolButton('duplicate', 'Dupliquer', 'Dupliquer le widget', 'Ctrl + D')
+  const duplicateTool = toolButton('duplicate', 'Dupliquer', 'Dupliquer le gadget', 'Ctrl + D')
   duplicateTool.addEventListener('click', () => { runDuplicate(); root.focus() })
-  const deleteTool = toolButton('delete', 'Supprimer', 'Supprimer le widget', 'Suppr')
+  const deleteTool = toolButton('delete', 'Supprimer', 'Supprimer le gadget', 'Suppr')
   deleteTool.addEventListener('click', () => { runRemove(); root.focus() })
   toolbar.append(rank, duplicateTool, deleteTool)
 
@@ -1027,7 +1027,7 @@ export function createEditor(options: EditorOptions): Editor {
     drawMarks()
     options.onSelectionChange?.(index)
     if (index === undefined) {
-      announce('Aucun widget sélectionné.')
+      announce('Aucun gadget sélectionné.')
       return
     }
     const widget = widgetAt(options.page, index)
@@ -1060,7 +1060,7 @@ export function createEditor(options: EditorOptions): Editor {
   }
 
   const plural = (count: number): string =>
-    count === 0 ? 'Page vide' : `${count} widget${count > 1 ? 's' : ''} sur la page`
+    count === 0 ? 'Page vide' : `${count} gadget${count > 1 ? 's' : ''} sur la page`
 
   const runRemove = (): WidgetStructureEdit | undefined => {
     if (!alive || selected === undefined || gesture !== undefined) return undefined

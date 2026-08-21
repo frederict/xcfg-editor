@@ -384,13 +384,13 @@ export function buildWidget(entry: PaletteEntry, bounds: Bounds): PaletteChoice 
     const origin = entry.modelFromPage ? 'de cette page' : 'd’une autre page'
     return {
       node: duplicateWidget(entry.model, bounds),
-      description: `Ajouter « ${entry.label} » — copie d’un widget ${origin}`,
+      description: `Ajouter « ${entry.label} » — copie d’un gadget ${origin}`,
       entry
     }
   }
   return {
     node: createWidgetNode(entry.className, bounds),
-    description: `Ajouter « ${entry.label} » — widget neuf, réglages laissés à XCTrack`,
+    description: `Ajouter « ${entry.label} » — gadget neuf, réglages laissés à XCTrack`,
     entry
   }
 }
@@ -458,7 +458,7 @@ export function previewKind(shortName: string): PreviewKind {
 /** La phrase qui accompagne chaque sorte de vignette. Aucune case vide sans explication. */
 export const PREVIEW_NOTES: Record<PreviewKind, string> = {
   drawn:
-    'Aperçu dessiné par l’éditeur d’après les réglages du widget. Les valeurs affichées ' +
+    'Aperçu dessiné par l’éditeur d’après les réglages du gadget. Les valeurs affichées ' +
     'sont des exemples fixes : rien n’est calculé depuis un vol.',
   generic:
     'Cet éditeur n’a pas de dessin dédié pour ce type : la vignette montre son titre et un ' +
@@ -613,7 +613,7 @@ export function renderWidgetPalette(options: WidgetPaletteOptions): WidgetPalett
     label.htmlFor = onlyBox.id
     label.append(onlyBox, el('span', undefined, `Déjà dans le fichier (${present})`))
     label.title =
-      'Ces types-là seront copiés d’un widget que XCTrack a lui-même écrit : tous leurs ' +
+      'Ces types-là seront copiés d’un gadget que XCTrack a lui-même écrit : tous leurs ' +
       'réglages sont conservés, y compris ceux que cet éditeur ne sait pas présenter.'
     tools.append(label)
   }
@@ -621,7 +621,8 @@ export function renderWidgetPalette(options: WidgetPaletteOptions): WidgetPalett
 
   root.append(el(
     'p', 'palette__legend',
-    'Liseré plein : le gadget sera copié d’un widget du fichier, avec tous ses réglages. ' +
+    'Liseré plein : le gadget sera copié d’un exemplaire déjà présent dans le fichier, ' +
+    'avec tous ses réglages. ' +
     'Liseré pointillé : il sera créé avec ses seules clés universelles, XCTrack complétant ' +
     'le reste à la lecture. La vignette montre, dans les deux cas, ce que le clic posera.'
   ))
@@ -725,8 +726,8 @@ function spokenLabel(entry: PaletteEntry, familyLabel: string): string {
   }
   parts.push(entry.origin === 'duplicate'
     ? (entry.modelFromPage
-        ? 'sera copié avec les réglages du widget de cette page'
-        : 'sera copié avec les réglages d’un widget d’une autre page')
+        ? 'sera copié avec les réglages du gadget de cette page'
+        : 'sera copié avec les réglages d’un gadget d’une autre page')
     : 'sera créé avec ses seules clés universelles')
   return parts.join(', ')
 }
@@ -795,7 +796,7 @@ function buildRow(
     const elsewhere = el('span', 'palette__elsewhere', 'ailleurs')
     elsewhere.title =
       `Absent de cette page, mais présent ${entry.count} fois ailleurs dans le fichier : ` +
-      'la copie partira de ce widget-là, avec ses réglages.'
+      'la copie partira de ce gadget-là, avec ses réglages.'
     marks.append(elsewhere)
   }
   if (marks.childElementCount > 0) row.append(marks)

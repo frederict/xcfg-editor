@@ -828,7 +828,7 @@ function buildDefaultsSummary(
   if (!form.defaultsKnown) {
     box.append(el(
       'p', 'props__defaults-count',
-      'Le relevé des valeurs par défaut ne décrit pas ce type de widget : rien à comparer.'
+      'Le relevé des valeurs par défaut ne décrit pas ce type de gadget : rien à comparer.'
     ))
     box.append(el('p', 'props__defaults-note', defaultsNote(trust, options, form)))
     return box
@@ -837,7 +837,7 @@ function buildDefaultsSummary(
   const count = el(
     'p', 'props__defaults-count',
     form.customizedCount === 0
-      ? `Aucun réglage ne s’écarte de ce que XCTrack pose sur un widget neuf (${form.comparableCount} comparés).`
+      ? `Aucun réglage ne s’écarte de ce que XCTrack pose sur un gadget neuf (${form.comparableCount} comparés).`
       : `${form.customizedCount} réglage${form.customizedCount > 1 ? 's' : ''} ` +
         `personnalisé${form.customizedCount > 1 ? 's' : ''} sur ${form.comparableCount} comparé` +
         `${form.comparableCount > 1 ? 's' : ''}.`
@@ -880,7 +880,7 @@ function defaultsNote(
   const missing = form.missingDefaults.length === 0
     ? ''
     : ` ${form.missingDefaults.length} réglage${form.missingDefaults.length > 1 ? 's' : ''} ` +
-      `du relevé ne figure${form.missingDefaults.length > 1 ? 'nt' : ''} pas dans ce widget ` +
+      `du relevé ne figure${form.missingDefaults.length > 1 ? 'nt' : ''} pas dans ce gadget ` +
       `(${form.missingDefaults.slice(0, 4).join(', ')}${form.missingDefaults.length > 4 ? '…' : ''}) : ` +
       'signe supplémentaire d’une autre version.'
 
@@ -986,13 +986,13 @@ function originMark(field: PropertyField): HTMLElement {
     // qu'on cherche quand on compare deux sauvegardes ou qu'on lit un rapport de bogue,
     // et la ligne visible, elle, doit parler la langue du pilote.
     mark.title = field.defaultText === undefined
-      ? 'Cette valeur diffère de ce que XCTrack écrit sur un widget neuf de ce type.'
-      : `Sur un widget neuf de ce type, XCTrack écrit « ${field.defaultText} ».`
+      ? 'Cette valeur diffère de ce que XCTrack écrit sur un gadget neuf de ce type.'
+      : `Sur un gadget neuf de ce type, XCTrack écrit « ${field.defaultText} ».`
     return mark
   }
   if (field.defaultState === 'default') {
     const mark = el('span', 'props__origin props__origin--same', '= défaut')
-    mark.title = 'Valeur inchangée : c’est ce que XCTrack écrit sur un widget neuf de ce type.'
+    mark.title = 'Valeur inchangée : c’est ce que XCTrack écrit sur un gadget neuf de ce type.'
     return mark
   }
   const mark = el('span', 'props__origin props__origin--unknown', 'hors relevé')

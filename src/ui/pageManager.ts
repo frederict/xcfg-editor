@@ -333,7 +333,7 @@ export const CLASS_CHANGE_ADVICE: Advice = {
   text: 'XCTrack ne permet pas de changer la classe d’une page après sa création : elle s’y ' +
     'fixe au moment du choix. Ce n’est pourtant qu’une clé du fichier, et cet éditeur l’écrit ' +
     'volontiers — mais le comportement de l’appareil face à une page ainsi modifiée n’a PAS ' +
-    'été vérifié, et les widgets de la page ne sont pas remplacés par ceux de la nouvelle classe.'
+    'été vérifié, et les gadgets de la page ne sont pas remplacés par ceux de la nouvelle classe.'
 }
 
 /** Ce qu'il faut dire de l'état courant d'une orientation, indépendamment de tout geste. */
@@ -599,7 +599,7 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
     const screen = button(
       'pagecard__screen', '',
       `Ouvrir la page ${index + 1}, ${kind.label}, ` +
-      `${page.widgets.length} ${plural(page.widgets.length, 'widget', 'widgets')}`
+      `${page.widgets.length} ${plural(page.widgets.length, 'gadget', 'gadgets')}`
     )
     screen.append(renderPage(page, aspectRatioOf(ctx.device, orientation), ctx.settings, ctx.language))
     if (options.onOpen) screen.addEventListener('click', () => options.onOpen?.(index))
@@ -610,7 +610,7 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
     meta.append(
       el('span', 'pagecard__class', kind.shortName),
       el('span', 'pagecard__widgets',
-        `${page.widgets.length} ${plural(page.widgets.length, 'widget', 'widgets')}`)
+        `${page.widgets.length} ${plural(page.widgets.length, 'gadget', 'gadgets')}`)
     )
     card.append(meta)
     card.append(el('p', 'pagecard__nav', navigationsLabel(page)))
@@ -745,7 +745,7 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
   if (pages.length === 0) {
     root.append(el(
       'p', 'pages__empty',
-      'Cette orientation ne décrit aucune page. Une page neuve arrive vide : ses widgets ' +
+      'Cette orientation ne décrit aucune page. Une page neuve arrive vide : ses gadgets ' +
       'se posent ensuite depuis la palette, ou en dupliquant une page existante.'
     ))
   }

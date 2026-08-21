@@ -111,11 +111,11 @@ export interface Finding {
  * seule source pour la langue du produit.
  */
 export const RULE_TITLES: Record<InspectionRuleId, string> = {
-  'unreachable-widget': 'Widget impossible à toucher',
+  'unreachable-widget': 'Gadget impossible à toucher',
   'page-never-shown': 'Page qui ne s’affichera jamais',
   'thermal-page-not-auto-target': 'Page d’assistant de thermique jamais atteinte automatiquement',
-  'widget-too-small': 'Widget peut-être trop petit pour être lu',
-  'pro-widget-without-licence': 'Widget Pro sans licence déclarée',
+  'widget-too-small': 'Gadget peut-être trop petit pour être lu',
+  'pro-widget-without-licence': 'Gadget Pro sans licence déclarée',
   'road-maps-on-same-page': 'Deux cartes routières sur la même page',
   'obsolete-key': 'Réglage d’une version antérieure'
 }
@@ -147,7 +147,7 @@ const SCALE = 10000
 
 function where(location: InspectionLocation): string {
   const page = `${ORIENTATION_LABELS[location.orientation]}, page ${location.pageRank}`
-  return location.widgetRank === undefined ? page : `${page}, widget ${location.widgetRank}`
+  return location.widgetRank === undefined ? page : `${page}, gadget ${location.widgetRank}`
 }
 
 /* ==================================================== 1. widget inatteignable au clic */
@@ -518,13 +518,13 @@ function unreachableWidgetFindings(input: InspectionInput): Finding[] {
         certainty: 'hypothesis',
         location: { orientation, pageRank, widgetRank: rank },
         message:
-          `« ${name} » est entièrement recouvert par des widgets placés après lui. Aucun ` +
+          `« ${name} » est entièrement recouvert par des gadgets placés après lui. Aucun ` +
           'clic ne peut donc l’atteindre, ni ici ni dans l’écran d’édition de XCTrack, qui ' +
-          'donne lui aussi la main au widget le plus en avant. Il peut rester parfaitement ' +
-          'visible — un widget qui ne peint rien vole les appuis tout autant qu’un widget ' +
-          'opaque. Pour le régler, passez par la liste des widgets de la page.',
+          'donne lui aussi la main au gadget le plus en avant. Il peut rester parfaitement ' +
+          'visible — un gadget qui ne peint rien vole les appuis tout autant qu’un gadget ' +
+          'opaque. Pour le régler, passez par la liste des gadgets de la page.',
         toVerify:
-          'Ce qu’il advient de ce widget **en vol** n’a pas été observé : XCTrack route ' +
+          'Ce qu’il advient de ce gadget **en vol** n’a pas été observé : XCTrack route ' +
           'peut-être l’appui autrement qu’en édition. La question compte surtout pour les ' +
           'boutons d’action, qui n’existent que pour être touchés en vol.'
       })
@@ -552,7 +552,7 @@ function pageNeverShownFindings(input: InspectionInput): Finding[] {
       location: { orientation, pageRank },
       message:
         `Cette page n’est activée pour aucun type de navigation : XCTrack ne l’affichera ` +
-        `dans aucun contexte de vol, et ses ${count} widget${count > 1 ? 's' : ''} ne ` +
+        `dans aucun contexte de vol, et ses ${count} gadget${count > 1 ? 's' : ''} ne ` +
         'serviront jamais. C’est le réglage « Désactivé » de l’instrument — volontaire, ' +
         'ou oublié. À distinguer d’une page seulement restreinte à certaines ' +
         'navigations, qui est un réglage normal.'
@@ -623,9 +623,9 @@ function tooSmallFindings(input: InspectionInput): Finding[] {
           `${Math.round(distanceMm / 10)} cm. Sera-t-elle encore lisible à bout de bras, ` +
           'en plein soleil, avec des gants ? À vérifier sur l’instrument.',
         toVerify:
-          'La part de la hauteur du widget qu’occupe réellement le glyphe de la valeur ' +
+          'La part de la hauteur du gadget qu’occupe réellement le glyphe de la valeur ' +
           `(ici supposée ${ASSUMED_VALUE_HEIGHT_RATIO}) n’a été mesurée que sur un seul ` +
-          'widget, une seule capture. Les captures de la planche des 75 widgets ' +
+          'gadget, une seule capture. Les captures de la planche des 75 gadgets ' +
           'suffiraient à la mesurer type par type, sans toucher à l’appareil.'
       })
     })
@@ -663,15 +663,15 @@ function proWidgetFindings(input: InspectionInput): Finding[] {
         certainty: 'hypothesis',
         location: { orientation, pageRank, widgetRank: index + 1 },
         message:
-          `« ${name} » est un widget Pro, et ce fichier déclare « proUpTo: 0 ». Que ` +
-          'fera XCTrack de ce widget sur un appareil sans licence Pro : le remplacer par ' +
-          'un cadre « widget Pro », l’afficher normalement, ou ne rien y changer ? Nous ' +
+          `« ${name} » est un gadget Pro, et ce fichier déclare « proUpTo: 0 ». Que ` +
+          'fera XCTrack de ce gadget sur un appareil sans licence Pro : le remplacer par ' +
+          'un cadre « gadget Pro », l’afficher normalement, ou ne rien y changer ? Nous ' +
           'ne le savons pas.',
         toVerify:
           'Le sens de `info.proUpTo` n’est pas établi : 0 vaut peut-être « pas de ' +
           'licence », peut-être une date de fin en secondes. Les 21 fichiers du corpus ' +
           'portent tous 0, sur deux installations — aucune autre valeur n’a jamais été ' +
-          'observée. Un essai sur l’AIR³ avec un widget Pro trancherait.'
+          'observée. Un essai sur l’AIR³ avec un gadget Pro trancherait.'
       })
     })
   }
@@ -714,8 +714,8 @@ function roadMapFindings(input: InspectionInput): Finding[] {
         certainty: 'documented',
         location: { orientation, pageRank, widgetRank: rank },
         message:
-          `« ${name} » est le ${ranks.indexOf(rank) + 1}ᵉ widget de cette page à ` +
-          `demander une carte routière (le premier est le widget ${first}). XCTrack ` +
+          `« ${name} » est le ${ranks.indexOf(rank) + 1}ᵉ gadget de cette page à ` +
+          `demander une carte routière (le premier est le gadget ${first}). XCTrack ` +
           'prévient dans ses propres réglages qu’une seule carte routière est possible ' +
           'par page, à cause d’une limitation de sa bibliothèque de cartes. Ce qui ' +
           's’affichera à la place n’est pas prévisible.'
@@ -758,7 +758,7 @@ function obsoleteKeyFindings(input: InspectionInput): Finding[] {
           `1.0.3 ${several ? 'les convertit' : 'le convertit'} à la lecture — c’est ` +
           `vérifié sur l’instrument — et ${several ? 'les réécrira' : 'le réécrira'} sous ` +
           `${several ? 'leur nouveau nom' : 'son nouveau nom'} la première fois que ce ` +
-          'widget sera réglé.'
+          'gadget sera réglé.'
       })
     })
   }

@@ -265,7 +265,7 @@ describe('avertissements — défauts géométriques', () => {
     const masked = widget(1000, 1000, 2000, 2000)
     const opaque = widget(0, 0, 10000, 10000, 0)
     const text = textOf(pick(warningsOf(documentWith([masked, opaque])), 'geometry'))
-    expect(text).toMatch(/caché par le widget 2/)
+    expect(text).toMatch(/caché par le gadget 2/)
   })
 
   it('ne signale rien quand le même opaque est placé avant', () => {
@@ -318,7 +318,7 @@ describe('avertissements — défauts géométriques', () => {
   it('signale en revanche un WLiveMessage à _bg 0 : le type n’est plus un passe-droit', () => {
     const masked = widget(1000, 1000, 2000, 2000)
     const text = textOf(pick(warningsOf(documentWith([masked, liveMessage(0)])), 'geometry'))
-    expect(text).toMatch(/caché par le widget 2/)
+    expect(text).toMatch(/caché par le gadget 2/)
     expect(text).toContain('Réception de messages')
   })
 })
@@ -345,8 +345,8 @@ describe('avertissements — bouton d’action recouvert : un montage, pas un d�
     ]))
     expect(pick(warnings, 'covered-buttons')?.items).toHaveLength(1)
     expect(pick(warnings, 'geometry')?.items).toHaveLength(1)
-    expect(textOf(pick(warnings, 'covered-buttons'))).toContain('widget 1')
-    expect(textOf(pick(warnings, 'geometry'))).toContain('widget 2')
+    expect(textOf(pick(warnings, 'covered-buttons'))).toContain('gadget 1')
+    expect(textOf(pick(warnings, 'geometry'))).toContain('gadget 2')
   })
 
   /**
@@ -446,10 +446,10 @@ describe('avertissements — corpus réel (comparaison au sol)', () => {
       const items = pick(warningsOfFile(name), 'covered-buttons')?.items ?? []
       expect(items, name).toHaveLength(2)
       expect(items[0], name).toBe(
-        "Paysage, page 4, widget 1 (Luminosité de l'écran) : caché par le widget 3 " +
+        "Paysage, page 4, gadget 1 (Luminosité de l'écran) : caché par le gadget 3 " +
         '(Assistant thermique), mais toujours actif au doigt'
       )
-      expect(items[1], name).toContain("widget 2 (Luminosité de l'écran)")
+      expect(items[1], name).toContain("gadget 2 (Luminosité de l'écran)")
     }
   })
 
@@ -540,8 +540,8 @@ describe('avertissements — thème dessiné différent du thème déclaré', ()
     expect(warning).toBeDefined()
     // Le thème du document est celui qu'on dessine : seuls les widgets doivent parler.
     expect(textOf(warning)).not.toContain('Thème du fichier')
-    expect(warning!.items).toContain('2 widgets en WhiteEInkTheme')
-    expect(warning!.items).toContain('1 widget en BlackHCTheme')
+    expect(warning!.items).toContain('2 gadgets en WhiteEInkTheme')
+    expect(warning!.items).toContain('1 gadget en BlackHCTheme')
   })
 
   it('ignore un `_theme` vide, qui veut dire « celui du document »', () => {

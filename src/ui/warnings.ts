@@ -120,7 +120,7 @@ function exportTypeWarning(info: JsonNode | undefined): Warning {
       moment: 'import',
       title: 'Export « pages » : seuls les écrans',
       detail:
-        'Ce fichier ne porte que les pages de widgets. Réimporté dans XCTrack, il remplace ' +
+        'Ce fichier ne porte que les pages de gadgets. Réimporté dans XCTrack, il remplace ' +
         'les écrans et ne touche à rien d’autre : réglages du vario, unités, fichiers ' +
         'd’espace aérien et configuration des capteurs restent ceux de l’appareil.',
       items: []
@@ -316,7 +316,7 @@ function structureWarning(input: WarningInput): Warning | undefined {
       page.widgets.forEach((widget, position) => {
         const missing = UNIVERSAL_KEYS.filter((key) => getMember(widget.node, key) === undefined)
         if (missing.length > 0) {
-          items.push(`${where}, widget ${position + 1} : clé ${missing.join(', ')} absente`)
+          items.push(`${where}, gadget ${position + 1} : clé ${missing.join(', ')} absente`)
         }
       })
     })
@@ -401,7 +401,7 @@ interface GeometryFindings {
 function scanPage(page: Page, where: string, language: string, found: GeometryFindings): void {
   page.widgets.forEach((widget, position) => {
     const name = readableName(widget.shortName, language)
-    const who = `${where}, widget ${position + 1} (${name})`
+    const who = `${where}, gadget ${position + 1} (${name})`
 
     if (widget.x2 <= widget.x1) found.defects.push(`${who} : X2 n’est pas au-delà de X1 — ${box(widget)}`)
     if (widget.y2 <= widget.y1) found.defects.push(`${who} : Y2 n’est pas au-delà de Y1 — ${box(widget)}`)
@@ -431,7 +431,7 @@ function scanPage(page: Page, where: string, language: string, found: GeometryFi
     )
     if (hider === -1) return
 
-    const cover = `widget ${hider + 1} (${readableName(page.widgets[hider]!.shortName, language)})`
+    const cover = `gadget ${hider + 1} (${readableName(page.widgets[hider]!.shortName, language)})`
 
     // Le même fait géométrique, deux conséquences opposées pour le pilote. Un bouton
     // caché garde son utilité — c'est même la raison d'être du montage ; une altitude
@@ -462,8 +462,8 @@ function geometryWarning(items: string[]): Warning | undefined {
     moment: 'import',
     title: 'Défauts de géométrie',
     detail:
-      'Ces widgets ne peuvent pas s’afficher comme leur auteur l’espérait : boîte de ' +
-      'largeur ou de hauteur nulle, coordonnées hors des bornes, ou widget entièrement ' +
+      'Ces gadgets ne peuvent pas s’afficher comme leur auteur l’espérait : boîte de ' +
+      'largeur ou de hauteur nulle, coordonnées hors des bornes, ou gadget entièrement ' +
       'caché sous un autre, dont il ne montrera jamais la valeur. Les simples ' +
       'chevauchements ne sont pas signalés : ils sont normaux sur une carte ou un ' +
       'assistant de thermique.',
@@ -491,7 +491,7 @@ function coveredButtonWarning(items: string[]): Warning | undefined {
     moment: 'import',
     title: 'Boutons d’action cachés, et c’est sans doute voulu',
     detail:
-      'Un autre widget est posé par-dessus ces boutons et les recouvre entièrement : sur ' +
+      'Un autre gadget est posé par-dessus ces boutons et les recouvre entièrement : sur ' +
       'l’instrument, vous ne les verrez pas. Ils répondent pourtant toujours au doigt — ' +
       'appuyer à cet endroit déclenche leur action, même si c’est la carte ou l’assistant ' +
       'de thermique que vous y voyez. C’est un montage courant et non un défaut : il ' +
@@ -563,7 +563,7 @@ function themeWarning(input: WarningInput): Warning | undefined {
     items.push(`Thème du fichier : ${declared}${known}`)
   }
   for (const [theme, count] of perWidget) {
-    items.push(`${count} widget${count > 1 ? 's' : ''} en ${theme}`)
+    items.push(`${count} gadget${count > 1 ? 's' : ''} en ${theme}`)
   }
 
   return {

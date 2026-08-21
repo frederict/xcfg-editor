@@ -242,14 +242,14 @@ export function renderWidgetList(options: WidgetListOptions): WidgetList {
   // gagnée tient l'en-tête sur une seule ligne, soit un rang de plus à l'écran dans un
   // bandeau dont la hauteur est bornée.
   const head = el('div', 'wlist__head')
-  head.append(el('h3', 'wlist__title', 'Widgets de la page'))
+  head.append(el('h3', 'wlist__title', 'Gadgets de la page'))
   if (blocked > 0) {
     const alert = el(
       'span', 'wlist__alert',
       plural(blocked, 'inatteignable dans l’éditeur', 'inatteignables dans l’éditeur')
     )
     alert.title =
-      'Ces widgets sont entièrement recouverts par des rangs supérieurs : ici, aucun clic ' +
+      'Ces gadgets sont entièrement recouverts par des rangs supérieurs : ici, aucun clic ' +
       'sur la page ne les atteint, et cette liste est le seul chemin qui y mène. Sur ' +
       'l’instrument, ils restent à leur place — un bouton d’action ainsi recouvert ' +
       'continue de répondre au doigt.'
@@ -258,7 +258,7 @@ export function renderWidgetList(options: WidgetListOptions): WidgetList {
   root.append(head)
 
   if (widgets.length === 0) {
-    root.append(el('p', 'wlist__empty', 'Cette page ne porte aucun widget.'))
+    root.append(el('p', 'wlist__empty', 'Cette page ne porte aucun gadget.'))
     return { element: root, select: () => {}, entries }
   }
 
@@ -268,7 +268,7 @@ export function renderWidgetList(options: WidgetListOptions): WidgetList {
 
   const list = el('ul', 'wlist__rows')
   list.setAttribute('role', 'listbox')
-  list.setAttribute('aria-label', 'Widgets de la page, du fond vers le premier plan')
+  list.setAttribute('aria-label', 'Gadgets de la page, du fond vers le premier plan')
 
   const rows: HTMLLIElement[] = []
   let current = options.selection
@@ -309,7 +309,7 @@ export function renderWidgetList(options: WidgetListOptions): WidgetList {
     if (entry.unreachable) {
       const flag = el('span', 'wlist__flag wlist__flag--blocked', 'inatteignable ici')
       flag.title =
-        'Dans cet éditeur, aucun clic sur la page ne peut atteindre ce widget : les rangs ' +
+        'Dans cet éditeur, aucun clic sur la page ne peut atteindre ce gadget : les rangs ' +
         'supérieurs le recouvrent entièrement, et cette liste est le seul chemin qui y ' +
         'mène. Sur l’instrument, il reste à sa place — un bouton d’action ainsi recouvert ' +
         'continue de répondre au doigt.'
@@ -319,7 +319,7 @@ export function renderWidgetList(options: WidgetListOptions): WidgetList {
       const flag = el('span', 'wlist__flag wlist__flag--blank', 'sans dessin')
       flag.title =
         'Sur l’appareil, ce type ne peint rien au repos. Il occupe pourtant sa place et ' +
-        'intercepte les clics comme n’importe quel autre widget.'
+        'intercepte les clics comme n’importe quel autre gadget.'
       flags.append(flag)
     }
     if (flags.childElementCount > 0) row.append(flags)

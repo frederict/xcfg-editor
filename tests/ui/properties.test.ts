@@ -800,7 +800,7 @@ describe('la consultation sépare ce que le pilote a réglé de ce que XCTrack a
 
     const panel = renderProperties({ form, readOnly: true })
     expect(panel.element.querySelector('.props__defaults-count')?.textContent)
-      .toContain('ne décrit pas ce type de widget')
+      .toContain('ne décrit pas ce type de gadget')
     // Pas de filtre « seulement ce qui diffère » : il ne laisserait rien à l'écran.
     expect(panel.element.querySelector('.props__defaults-only')).toBeNull()
   })
@@ -901,7 +901,7 @@ describe('ce que la consultation dit quand le fichier vient d’une autre versio
 
     const panel = renderProperties({ form, readOnly: true, fileVersionCode: 91230 })
     const note = panel.element.querySelector('.props__defaults-note')!.textContent!
-    expect(note).toContain('1 réglage du relevé ne figure pas dans ce widget (windStyle)')
+    expect(note).toContain('1 réglage du relevé ne figure pas dans ce gadget (windStyle)')
     expect(note).toContain('indicative')
   })
 })

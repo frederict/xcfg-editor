@@ -133,7 +133,7 @@ function pageCard(
 
   const card = el('button', 'card')
   card.type = 'button'
-  card.setAttribute('aria-label', `Page ${rank}, ${kind.label}, ${plural(page.widgets.length, 'widget', 'widgets')}`)
+  card.setAttribute('aria-label', `Page ${rank}, ${kind.label}, ${plural(page.widgets.length, 'gadget', 'gadgets')}`)
   card.addEventListener('click', onOpen)
 
   const screen = el('span', 'card__screen')
@@ -148,7 +148,7 @@ function pageCard(
   const meta = el('span', 'card__meta')
   meta.append(
     el('span', 'card__class', kind.shortName),
-    el('span', 'card__count', plural(page.widgets.length, 'widget', 'widgets'))
+    el('span', 'card__count', plural(page.widgets.length, 'gadget', 'gadgets'))
   )
 
   card.append(head, screen, meta)
@@ -471,7 +471,7 @@ export function buildDetail(options: DetailOptions): HTMLElement {
     // `chip--count` : le seul de ces faits qui change sans que la vue soit reconstruite —
     // ajouter ou supprimer un widget en édition ne redessine que la page. `main.ts` le
     // retrouve par cette classe et le remet à jour, plutôt que d'afficher un compte périmé.
-    el('span', 'chip chip--count', plural(page.widgets.length, 'widget', 'widgets')),
+    el('span', 'chip chip--count', plural(page.widgets.length, 'gadget', 'gadgets')),
     el('span', 'chip', `${formatMm(screenSize.widthMm)} × ${formatMm(screenSize.heightMm)} mm`),
     el('span', 'chip chip--quiet', ctx.device.label)
   )
@@ -505,8 +505,8 @@ export function buildDetail(options: DetailOptions): HTMLElement {
       readout.append(el(
         'span', 'readout__hint',
         inspecting === undefined
-          ? 'Survolez un widget pour son nom et ses dimensions.'
-          : 'Survolez un widget pour son nom et ses dimensions ; cliquez-le pour voir ses réglages.'
+          ? 'Survolez un gadget pour son nom et ses dimensions.'
+          : 'Survolez un gadget pour son nom et ses dimensions ; cliquez-le pour voir ses réglages.'
       ))
       return
     }

@@ -491,7 +491,7 @@ function repaint(): void {
   const count = content.querySelector('.chip--count')
   if (count) {
     const total = page.widgets.length
-    count.textContent = `${total} widget${total > 1 ? 's' : ''}`
+    count.textContent = `${total} gadget${total > 1 ? 's' : ''}`
   }
 }
 
@@ -754,7 +754,7 @@ function fillPaletteDialog(dialog: HTMLDialogElement): void {
   if (!acceptsWidgets(page)) {
     box.append(el(
       'p', 'hint-note',
-      'Cette page ne décrit aucun tableau de widgets : rien ne peut y être ajouté sans ' +
+      'Cette page ne décrit aucun tableau de gadgets : rien ne peut y être ajouté sans ' +
       'inventer une clé que le fichier n’a pas.'
     ))
     dialog.append(box)
@@ -1011,7 +1011,7 @@ function refreshPanel(): void {
 
   if (selectionLabel) {
     selectionLabel.textContent = widget === undefined
-      ? 'Aucun widget sélectionné'
+      ? 'Aucun gadget sélectionné'
       : `${name} — rang ${(selection ?? 0) + 1} sur ${page?.widgets.length ?? 0}`
   }
 
@@ -1022,7 +1022,7 @@ function refreshPanel(): void {
 
   // La barre de tête du bandeau redit ces trois faits : elle reste visible une fois le
   // bandeau replié, où le panneau lui-même a disparu.
-  if (dockTitle) dockTitle.textContent = name ?? 'Aucun widget sélectionné'
+  if (dockTitle) dockTitle.textContent = name ?? 'Aucun gadget sélectionné'
   if (dockClass) dockClass.textContent = widget?.shortName ?? ''
   if (dockCount) dockCount.textContent = ''
 
@@ -1031,9 +1031,9 @@ function refreshPanel(): void {
     panelHost.append(el(
       'p', 'hint-note',
       editMode
-        ? 'Cliquez un widget sur la page : ses réglages apparaissent ici, dans l’ordre où ' +
+        ? 'Cliquez un gadget sur la page : ses réglages apparaissent ici, dans l’ordre où ' +
           'l’instrument les présente.'
-        : 'Cliquez un widget sur la page — ou choisissez-le dans la liste — pour lire ses ' +
+        : 'Cliquez un gadget sur la page — ou choisissez-le dans la liste — pour lire ses ' +
           'réglages. Rien n’est modifiable ici : c’est la consultation.'
     ))
     return
@@ -1138,8 +1138,8 @@ function buildDock(): HTMLElement {
   dock.setAttribute(
     'aria-label',
     editMode
-      ? 'Widgets de la page et réglages du widget sélectionné'
-      : 'Widgets de la page et réglages du widget sélectionné, en lecture seule'
+      ? 'Gadgets de la page et réglages du gadget sélectionné'
+      : 'Gadgets de la page et réglages du gadget sélectionné, en lecture seule'
   )
   // Fin de glissé d'un curseur, sortie d'un champ : le pas en attente est clos ici
   // plutôt qu'au bout du délai. En consultation rien n'écrit, donc rien n'est en attente ;
@@ -1149,7 +1149,7 @@ function buildDock(): HTMLElement {
   dockGrip = buildDockGrip()
 
   const head = el('div', 'dock__head')
-  dockTitle = el('h2', 'dock__title', 'Aucun widget sélectionné')
+  dockTitle = el('h2', 'dock__title', 'Aucun gadget sélectionné')
   dockClass = el('span', 'dock__class')
   dockCount = el('span', 'dock__count')
   listToggle = el('button', 'btn btn--ghost dock__list-toggle', 'Masquer la liste')
@@ -1603,7 +1603,7 @@ function render(): void {
     const note = el('div', 'editnote')
     note.append(el(
       'p', 'editnote__text',
-      'Mode édition : ouvrez une page pour y ajouter des gadgets, déplacer ses widgets et ' +
+      'Mode édition : ouvrez une page pour y ajouter des gadgets, les déplacer et ' +
       'régler leurs options. Les pages elles-mêmes — en insérer, en dupliquer, en ' +
       'supprimer, changer leur ordre — se gèrent ici.'
     ))

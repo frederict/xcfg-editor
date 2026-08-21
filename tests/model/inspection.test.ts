@@ -210,7 +210,7 @@ describe('règle 1 — widget inatteignable au clic', () => {
       widget('WAltitude', { x1: 1000, y1: 1000, x2: 2000, y2: 2000 }),
       widget('WCompMap', { x1: 0, y1: 0, x2: 10000, y2: 10000 })
     ]), 'unreachable-widget')
-    expect(locations(findings)).toEqual(['Paysage, page 1, widget 1'])
+    expect(locations(findings)).toEqual(['Paysage, page 1, gadget 1'])
   })
 
   it('ne signale rien quand le recouvrant est placé AVANT — le sens de la pile', () => {
@@ -231,7 +231,7 @@ describe('règle 1 — widget inatteignable au clic', () => {
       widget('WLiveMessage', { x1: 0, y1: 0, x2: 5000, y2: 10000 }),
       widget('WLiveMessage', { x1: 5000, y1: 0, x2: 10000, y2: 10000 })
     ]), 'unreachable-widget')
-    expect(locations(findings)).toEqual(['Paysage, page 1, widget 1'])
+    expect(locations(findings)).toEqual(['Paysage, page 1, gadget 1'])
     expect(findings[0]!.severity).toBe('likely-error')
     // Le recouvrement est un fait géométrique, et l'insélectionnabilité en édition est
     // solide des deux côtés (`edition-native-exploration.md` § 2.3). Mais le routage d'un
@@ -257,7 +257,7 @@ describe('règle 1 — widget inatteignable au clic', () => {
       widget('WSpeed', { x1: 0, y1: 3000, x2: 10000, y2: 6000 }),
       widget('WSpeed', { x1: 0, y1: 6000, x2: 10000, y2: 10000 })
     ]), 'unreachable-widget')
-    expect(locations(findings)).toEqual(['Paysage, page 1, widget 1'])
+    expect(locations(findings)).toEqual(['Paysage, page 1, gadget 1'])
   })
 
   it('signale un widget recouvert même s’il est transparent au repos', () => {
@@ -268,7 +268,7 @@ describe('règle 1 — widget inatteignable au clic', () => {
       widget('WAltitude', { x1: 1000, y1: 1000, x2: 2000, y2: 2000 }),
       widget('WLiveMessage', { x1: 0, y1: 0, x2: 10000, y2: 10000 }, '"_bg": 0')
     ]), 'unreachable-widget')
-    expect(locations(findings)).toEqual(['Paysage, page 1, widget 1'])
+    expect(locations(findings)).toEqual(['Paysage, page 1, gadget 1'])
   })
 
   it('ignore un widget de surface nulle, que warnings.ts signale déjà', () => {
@@ -302,7 +302,7 @@ describe('règle 2 — page qui ne s’affichera jamais', () => {
     expect(locations(findings)).toEqual(['Paysage, page 1'])
     expect(findings[0]!.severity).toBe('to-know')
     expect(findings[0]!.certainty).toBe('documented')
-    expect(findings[0]!.message).toContain('1 widget ')
+    expect(findings[0]!.message).toContain('1 gadget ')
   })
 
   it('signale une liste de navigations vide', () => {
@@ -340,7 +340,7 @@ describe('règle 2 — page qui ne s’affichera jamais', () => {
       widget('WSpeed', { x1: 200, y1: 200, x2: 300, y2: 300 })
     ]
     const findings = findingsOfRule(inspectOnePage(two, { navigations: '"none"' }), 'page-never-shown')
-    expect(findings[0]!.message).toContain('2 widgets ')
+    expect(findings[0]!.message).toContain('2 gadgets ')
   })
 })
 
@@ -418,7 +418,7 @@ describe('règle 4 — lisibilité', () => {
       widget('WThermalAltGain', { x1: 0, y1: 0, x2: 1040, y2: 344 }),
       widget('WStatusLine', { x1: 0, y1: 1000, x2: 10000, y2: 1600 })
     ]), 'widget-too-small')
-    expect(locations(findings)).toEqual(['Paysage, page 1, widget 1'])
+    expect(locations(findings)).toEqual(['Paysage, page 1, gadget 1'])
     expect(findings[0]!.certainty).toBe('hypothesis')
     expect(findings[0]!.toVerify).toBeDefined()
     expect(findings[0]!.message).toContain('3,0 mm')
@@ -430,7 +430,7 @@ describe('règle 4 — lisibilité', () => {
     expect(findingsOfRule(inspect(document), 'widget-too-small')).toEqual([])
     // À 1 m, le même widget de 5,2 mm passe sous le seuil de 9,7 mm.
     const far = inspect(document, { readingDistanceMm: 1000 })
-    expect(locations(findingsOfRule(far, 'widget-too-small'))).toEqual(['Paysage, page 1, widget 1'])
+    expect(locations(findingsOfRule(far, 'widget-too-small'))).toEqual(['Paysage, page 1, gadget 1'])
   })
 
   it('le seuil suit l’appareil : la même page sur une plus petite dalle', () => {
@@ -468,7 +468,7 @@ describe('règle 5 — widget Pro et proUpTo: 0', () => {
       inspect(withBrightness(0), { isProWidget: proOnly }),
       'pro-widget-without-licence'
     )
-    expect(locations(findings)).toEqual(['Paysage, page 1, widget 1'])
+    expect(locations(findings)).toEqual(['Paysage, page 1, gadget 1'])
     expect(findings[0]!.certainty).toBe('hypothesis')
     expect(findings[0]!.toVerify).toContain('proUpTo')
   })
@@ -520,11 +520,11 @@ describe('règle 6 — au plus une carte routière par page', () => {
       map('Hyperpilot', { x1: 6000, y1: 0, x2: 9000, y2: 5000 })
     ]), 'road-maps-on-same-page')
     expect(locations(findings)).toEqual([
-      'Paysage, page 1, widget 2', 'Paysage, page 1, widget 3'
+      'Paysage, page 1, gadget 2', 'Paysage, page 1, gadget 3'
     ])
     expect(findings[0]!.severity).toBe('likely-error')
     expect(findings[0]!.certainty).toBe('documented')
-    expect(findings[0]!.message).toContain('widget 1')
+    expect(findings[0]!.message).toContain('gadget 1')
   })
 
   it('ne signale rien quand les deux cartes sont sur des pages différentes', () => {
@@ -542,7 +542,7 @@ describe('règle 6 — au plus une carte routière par page', () => {
       widget('WXCAssistant', { x1: 0, y1: 0, x2: 5000, y2: 5000 }, '"mapWidget_showOpenStreet": true'),
       widget('WCompMap', { x1: 5000, y1: 0, x2: 10000, y2: 5000 }, '"mapWidget_showOpenStreet": true')
     ]), 'road-maps-on-same-page')
-    expect(locations(findings)).toEqual(['Paysage, page 1, widget 2'])
+    expect(locations(findings)).toEqual(['Paysage, page 1, gadget 2'])
   })
 
   it('ne compte pas mapWidget_showOpenStreet: false', () => {
@@ -713,7 +713,7 @@ describe('la configuration réelle — 2026-08-20_backup-00.xcfg', () => {
   it('règle 4 : les trois widgets de 3,0 mm, et pas les barres d’état d’usine', () => {
     const found = findingsOfRule(findings, 'widget-too-small')
     expect(locations(found)).toEqual([
-      'Paysage, page 2, widget 4', 'Paysage, page 2, widget 6', 'Paysage, page 2, widget 14'
+      'Paysage, page 2, gadget 4', 'Paysage, page 2, gadget 6', 'Paysage, page 2, gadget 14'
     ])
     // Les trois `WStatusLine` des pages portrait font 5,0 mm : au-dessus du seuil.
     // Ces pages sont celles d'usine de XCTrack — les signaler serait crier au loup.
@@ -723,7 +723,7 @@ describe('la configuration réelle — 2026-08-20_backup-00.xcfg', () => {
   it('règle 5 : les deux WButtonBrightness, posés en question', () => {
     const found = findingsOfRule(findings, 'pro-widget-without-licence')
     expect(locations(found)).toEqual([
-      'Paysage, page 4, widget 1', 'Paysage, page 4, widget 2'
+      'Paysage, page 4, gadget 1', 'Paysage, page 4, gadget 2'
     ])
     expect(found.every((f) => f.certainty === 'hypothesis')).toBe(true)
   })
@@ -735,10 +735,10 @@ describe('la configuration réelle — 2026-08-20_backup-00.xcfg', () => {
   it('règle 7 : les quatre widgets des pages portrait jamais rééditées depuis 2022', () => {
     const found = findingsOfRule(findings, 'obsolete-key')
     expect(locations(found)).toEqual([
-      'Portrait, page 1, widget 1',
-      'Portrait, page 2, widget 1',
-      'Portrait, page 3, widget 1',
-      'Portrait, page 3, widget 7'
+      'Portrait, page 1, gadget 1',
+      'Portrait, page 2, gadget 1',
+      'Portrait, page 3, gadget 1',
+      'Portrait, page 3, gadget 7'
     ])
   })
 

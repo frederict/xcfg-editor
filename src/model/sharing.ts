@@ -275,12 +275,12 @@ interface FreeTextRule {
 const FREE_TEXT_RULES: Record<string, FreeTextRule> = {
   titletext: {
     replacement: (rank) => `Titre ${rank}`,
-    reason: 'Titre personnalisé du widget : remplacé par un titre neutre, numéroté, pour '
-      + 'que la mise en page et la distinction entre widgets soient conservées.'
+    reason: 'Titre personnalisé du gadget : remplacé par un titre neutre, numéroté, pour '
+      + 'que la mise en page et la distinction entre gadgets soient conservées.'
   },
   text: {
     replacement: (rank) => `Texte ${rank}`,
-    reason: 'Contenu entier d’un widget de texte libre : remplacé par un texte court, '
+    reason: 'Contenu entier d’un gadget de texte libre : remplacé par un texte court, '
       + 'pour que le cadre reste rempli sans déborder.'
   },
   fullName: {
@@ -325,7 +325,7 @@ const FREE_TEXT_RULES: Record<string, FreeTextRule> = {
   event: {
     replacement: () => NEUTRAL_TEST_EVENT,
     reason: 'Nom d’événement saisi : remplacé par l’événement de test que XCTrack pose '
-      + 'sur un widget neuf.'
+      + 'sur un gadget neuf.'
   }
 }
 
