@@ -1,6 +1,6 @@
 import type { Widget } from '../../model/widget'
 import type { RenderSettings } from '../../model/preferences'
-import { readBoolean } from '../../core/access'
+import { widgetBoolean } from '../defaults'
 
 /**
  * Rendu de `WStatusLine` — le bandeau d'indicateurs en haut d'écran : réception GPS,
@@ -62,20 +62,43 @@ import { readBoolean } from '../../core/access'
  * noir, non barré. C'est aussi, et ce n'est pas un hasard, ce que montre la capture la
  * plus récente et la seule prise en pleine résolution du widget.
  *
- * Relevé sur les 35 occurrences du corpus (5 fichiers) : chaque indicateur n'apparaît
- * dans le fichier — et donc à l'écran — que si sa clé est présente et vaut `true` ; son
- * absence équivaut à `false`, comme `_title`/`_unit` sur les widgets numériques
- * (numeric.ts). Deux profils bien distincts :
- * - `landscape[0..4]` (20 occurrences identiques) : showGps, showSensors, showLive,
- *   showLiveLabel, showBatteryIcon, showBatteryPercent tous à `true`, showTime à `false`.
- *   C'est le jeu de la capture de référence.
- * - `portrait[0..2]` (15 occurrences) : SEULES showTime et showLiveLabel sont écrites.
- *   showLive en est absent — le groupe LIVE ne s'affiche donc pas du tout sur ces pages
- *   malgré showLiveLabel à `true`, à la lecture la plus littérale des clés. Aucune
- *   capture ne couvre ce cas portrait : signalé comme non tranché dans le rapport.
+ * **Une clé absente vaut son DÉFAUT, pas `false` — et c'est ce qui vidait la barre.**
  *
- * `soundMode` (`'WARN_MUTED'` sur 12 occurrences) n'a aucune contrepartie visuelle
- * décrite dans rendu-observe.md ni observée sur les captures : volontairement ignoré ici.
+ * Ce module a longtemps lu `readBoolean(node, key) === true`, sur la foi des 35
+ * occurrences du corpus (5 fichiers) où chaque indicateur visible portait sa clé à
+ * `true`. Le raisonnement était le même que celui, faux, qui avait été corrigé sur
+ * `_title`/`_unit` (numeric.ts) : un corpus où la clé est toujours écrite ne dit rien de
+ * ce qui se passe quand elle ne l'est pas. La planche des 75 widgets répond, elle :
+ * écrite avec ses seules huit clés universelles, relue par l'appareil puis ré-exportée,
+ * elle donne `showGps`, `showSensors`, `showLive`, `showLiveLabel`, `showBatteryIcon`,
+ * `showBatteryPercent` à **`true`** et `showTime` à `false`
+ * (`src/catalog/widgetDefaults.json`), et la capture
+ * `captures-air3/2026-08-21_planche-sol-9-barre-etat-live-journal-web.png` montre la
+ * barre complète là où notre rendu ne dessinait **rien du tout** — une bande grise vide.
+ * Le défaut frappait tout fichier écrit par notre propre éditeur, et `WStatusLine` est
+ * le premier widget que voit un pilote en haut de sa page.
+ *
+ * Les deux profils du corpus restent lisibles ainsi, et le second cesse d'être
+ * indécidable :
+ * - `landscape[0..4]` (20 occurrences identiques) : les six clés à `true`, `showTime` à
+ *   `false` — le jeu de la capture de référence, inchangé.
+ * - `portrait[0..2]` (15 occurrences) : seules `showTime` et `showLiveLabel` sont
+ *   écrites. `showLive` étant absente, elle vaut désormais son défaut (`true`) : le
+ *   groupe LIVE s'affiche, et l'heure avec, ce que `showLiveLabel: true` rendait de
+ *   toute façon incohérent autrement. Toujours **aucune capture portrait** pour le
+ *   confirmer, mais ce n'est plus une lecture arbitraire : c'est la même règle que
+ *   partout ailleurs.
+ *
+ * **`soundMode` reste délibérément non dessiné**, et la raison est maintenant précise
+ * plutôt que faute de mieux. Le catalogue d'options donne les trois valeurs de la clé et
+ * le libellé de son défaut : `WARN_MUTED` = « Afficher l'icône d'avertissement
+ * **uniquement en mode silencieux** » (`DISABLED`, `SHOW_VOLUME` étant les deux autres).
+ * Le haut-parleur barré sur fond orange de la capture est donc l'affichage d'un **état
+ * de l'appareil** — le son coupé au moment du cliché —, exactement comme l'éclair de
+ * charge ou le trait rouge sur `LIVE`, qu'on ne dessine pas davantage. Le fichier ne
+ * porte pas cet état ; le dessiner ferait dire au rendu ce que la configuration ne dit
+ * pas. C'est le seul élément à fond coloré de la barre, et c'est le prix de ne rien
+ * inventer.
  */
 
 /** Corps de la pile de batterie — mesuré au pixel sur la capture (35,31,32). */
@@ -160,8 +183,17 @@ function iconElement(className: string, svgMarkup: string): HTMLElement {
   return span
 }
 
+/**
+ * Vrai si l'indicateur doit apparaître : la clé du fichier si elle y est, **sinon la
+ * valeur par défaut de XCTrack** (`render/defaults.ts`). Une clé que ni le fichier ni le
+ * relevé ne portent ne s'affiche pas — c'est le seul cas où l'absence vaut `false`.
+ *
+ * Le `=== true` d'avant faisait de toute clé absente un `false`, et vidait donc
+ * entièrement la barre d'un fichier écrit par notre propre éditeur : c'était exactement
+ * le défaut `_title`/`_unit` de `numeric.ts`, resté entier ici.
+ */
 function shown(widget: Widget, key: string): boolean {
-  return readBoolean(widget.node, key) === true
+  return widgetBoolean(widget, key) ?? false
 }
 
 export function drawStatusLine(widget: Widget, _settings: RenderSettings, _language: string): HTMLElement {
