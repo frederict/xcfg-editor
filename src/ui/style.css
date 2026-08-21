@@ -15,15 +15,12 @@
   --xc-value-positive: #a0ffa0;
   --xc-value-negative: #ffa0c8;
   --xc-value-stroke: #000000;
-  /* Barre d'état (WStatusLine) : fond et rouge d'alerte mesurés au pixel sur
-     ecran-landscape3-17widgets.png (voir statusLine.ts). Un rouge distinct de
-     --xc-ink/du rouge des titres : deux rouges coexistent sur l'appareil. */
+  /* Barre d'état (WStatusLine) : fond gris clair mesuré au pixel, identique sur les deux
+     captures (voir statusLine.ts). Le rouge d'alerte qui barrait `LIVE` et le capteur, et
+     le vert #1c8e1e du `LIVE` en rejeu (rendu-en-vol.md § 5), ont disparu de ce rendu :
+     ce sont des états d'exécution qu'aucune clé du fichier ne porte. Les mesures restent
+     consignées dans rendu-observe.md et rendu-en-vol.md. */
   --xc-status-bg: #e8e8e8;
-  --xc-status-alert: #ff0000;
-  /* Correction en vol (rendu-en-vol.md § 5) : vert du point/texte LIVE quand le suivi
-     fonctionne, mesuré au pixel sur vol-numeriques-boussole-variocolumn.png. Le sol
-     avait montré du noir barré de rouge — l'état dégradé, pris pour l'état normal. */
-  --xc-status-live: #1c8e1e;
   /* Cartes (WCompMap/WXCAssistant/WThermalAssistant, map.ts) : fond neutre très clair —
      consigne explicite, sobriété obligatoire, ces widgets se posent souvent sous les
      autres en semi-transparence. Vert/jaune du taux de montée mesurés à l'écran sur
@@ -71,9 +68,8 @@
   --xc-sideview-airspace-restricted: #f6d7d7;
   --xc-sideview-label: #7f7f7f;
   /* Proximité d'espace aérien (WAirspaceProximity, airspaceProximity.ts) : fond bleu
-     très clair et filet rouge séparateur, observés sur ecran-non-identifie-4.png. Rouge
-     défini séparément de --xc-status-alert : même valeur mesurée, mais deux captures
-     distinctes — statusLine.ts documente déjà que deux rouges coexistent sur
+     très clair et filet rouge séparateur, observés sur ecran-non-identifie-4.png. Ce
+     rouge pur est distinct du rouge des titres (#f44336) : deux rouges coexistent sur
      l'appareil, on ne suppose donc pas qu'il s'agit du même. */
   --xc-airprox-bg: #dce6f8;
   --xc-airprox-divider: #ff0000;
@@ -251,39 +247,64 @@
 
 /* Barre d'état — WStatusLine (statusLine.ts). Fond gris clair propre au widget, plutôt
    que le calque .xc-widget__bg partagé : celui-ci reste blanc/transparent selon _bg,
-   la teinte grise est une caractéristique du widget lui-même (rendu-observe.md). */
+   la teinte grise est une caractéristique du widget lui-même (rendu-observe.md).
+
+   Toutes les tailles viennent de `2026-08-21_barre-etat-reelle.png`, découpe 1:1 du
+   widget réel (507 × 99 px) — voir le commentaire de tête de statusLine.ts.
+
+   La police est CONSTANTE, pas proportionnelle à la hauteur de la barre : deux captures
+   de barres hautes de 74 et 99 px donnent la même hauteur de capitale (36 et 37 px).
+   `--xc-page-min` (le petit côté de la page, posé par `canvas.ts`) porte donc la taille,
+   0,0736 × 720 = 53 px sur l'écran de référence ; le plafond `min()` à 0,72 fois la
+   hauteur du widget évite le débordement sur une barre très plate. Les éléments sont
+   groupés au centre : sur l'appareil ils remplissent la barre d'un bord à l'autre
+   (contenu 493 px sur 500), et non alignés à droite comme le faisait ce rendu. */
 .xc-status {
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 0.6em;
-  padding: 0 0.4em;
+  justify-content: center;
+  gap: 0.15em;
+  padding: 0 0.1em;
   background: var(--xc-status-bg);
   color: var(--xc-ink);
   font-weight: 700;
   overflow: hidden;
+  font-size: min(
+    calc(var(--xc-page-min, 720) * 0.0736px),
+    calc(var(--xc-h, 100) * 0.72px)
+  );
 }
 
-.xc-status__icon svg { display: block; height: 1.5em; width: auto; }
+/* Hauteurs relevées sur la barre de référence, rapportées à la police (53 px) : GPS
+   33 px, batterie 32 px de haut pour 82 de large. */
+.xc-status__icon svg { display: block; height: 0.62em; width: auto; }
+.xc-status__battery-icon svg { height: 0.6em; }
 
-/* Point + texte LIVE, en vert : état nominal retenu par défaut — voir le commentaire de
-   tête de statusLine.ts pour l'argumentaire (aucune capture ne montre cet état SANS le
-   trait rouge, mais les trois captures disponibles viennent toutes d'un rejeu de trace,
-   où l'upload réel est de toute façon impossible). L'état barré (indisponible) n'est
-   pas modélisé : rien dans le fichier ne le piloterait. */
+/* Le parapente est de loin le plus grand élément : 87 px de haut dans une barre de 99,
+   et 64 dans une barre de 74 sur l'autre capture — 0,87 fois la hauteur dans les deux
+   cas, seule proportion que les deux relevés s'accordent à donner. Le plafond en `em`
+   ne sert que si la barre est assez haute pour que ce soit la police qui limite. */
+.xc-status__sensors svg {
+  height: min(calc(var(--xc-h, 100) * 0.87px), 1.65em);
+}
+
+/* Point + texte LIVE, en NOIR : forme neutre de l'indicateur, celle qui n'affirme aucun
+   état d'exécution — voir le commentaire de tête de statusLine.ts pour les trois états
+   observés (noir barré au sol, vert barré en rejeu, noir non barré appareil connecté) et
+   pourquoi c'est le noir non barré qui est retenu. Point mesuré à 35 px pour une police
+   de 53, soit 0,66 em. */
 .xc-status__live {
-  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 0.2em;
-  color: var(--xc-status-live);
+  gap: 0.16em;
+  color: var(--xc-ink);
 }
 
 .xc-status__dot {
-  width: 0.6em;
-  height: 0.6em;
+  width: 0.66em;
+  height: 0.66em;
   border-radius: 50%;
   background: currentColor;
   display: inline-block;
@@ -294,7 +315,7 @@
 .xc-status__battery {
   display: inline-flex;
   align-items: center;
-  gap: 0.2em;
+  gap: 0.16em;
 }
 
 .xc-status__percent,

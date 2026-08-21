@@ -118,8 +118,9 @@ describe('barre d’état — WStatusLine', () => {
   })
 
   it('respecte l’ordre observé sur la capture : GPS, LIVE, capteurs, batterie', () => {
-    // ecran-landscape3-17widgets.png : réception GPS, LIVE barré, capteur barré,
-    // batterie+pourcentage, de gauche à droite (rendu-observe.md).
+    // 2026-08-21_barre-etat-reelle.png, confirmé par ecran-landscape3-17widgets.png :
+    // réception GPS, point + LIVE, parapente (capteurs), batterie + pourcentage, de
+    // gauche à droite.
     const el = drawStatusLine(widget(LANDSCAPE_KEYS), settings, language)
     const groups = [...el.children].map(child => child.className)
     expect(groups).toEqual([
@@ -137,5 +138,64 @@ describe('barre d’état — WStatusLine', () => {
     expect(el.querySelector('.xc-status__sensors')).not.toBeNull()
     expect(el.querySelector('.xc-status__battery')).not.toBeNull()
     expect(el.querySelector('.xc-status__time')).toBeNull()
+  })
+
+  /**
+   * Refonte sur `docs/reference/captures-air3/2026-08-21_barre-etat-reelle.png` — voir le
+   * commentaire de tête de statusLine.ts. Ces tests portent sur ce que le DOM peut
+   * montrer ; les tailles et le centrage, purement CSS, sont vérifiés dans
+   * `tests/render/style.test.ts`.
+   */
+  describe('formes relevées sur la capture du 2026-08-21', () => {
+    it('la batterie est un corps sombre à cellules vertes, pas un contour à demi rempli', () => {
+      const svg = drawStatusLine(widget(LANDSCAPE_KEYS), settings, language)
+        .querySelector('.xc-status__battery-icon svg')!
+      // Couleurs relevées au pixel sur la capture.
+      expect(svg.innerHTML).toContain('#231f20')
+      expect(svg.innerHTML).toContain('#8dc63f')
+      // Cellules distinctes, et pas toutes allumées : le pourcentage est un exemple,
+      // pas l'état de l'instant.
+      const cells = svg.querySelectorAll('rect[fill="#8dc63f"]')
+      expect(cells.length).toBeGreaterThan(1)
+      expect(cells.length).toBeLessThan(5)
+    })
+
+    it('n’ajoute pas l’éclair de charge : c’est un état de l’appareil, pas du widget', () => {
+      const svg = drawStatusLine(widget(LANDSCAPE_KEYS), settings, language)
+        .querySelector('.xc-status__battery-icon svg')!
+      // L'éclair de la capture est blanc ; aucune clé du fichier ne le commanderait.
+      expect(svg.innerHTML).not.toContain('#ffffff')
+      expect(svg.innerHTML).not.toContain('#fff')
+    })
+
+    it('le pourcentage affiché est celui qui commande les cellules', () => {
+      const el = drawStatusLine(widget(LANDSCAPE_KEYS), settings, language)
+      const texte = el.querySelector('.xc-status__percent')!.textContent!
+      expect(texte).toMatch(/^\d{1,3}%$/)
+      const cells = el.querySelectorAll('.xc-status__battery-icon rect[fill="#8dc63f"]').length
+      expect(cells).toBe(Math.round((Number(texte.replace('%', '')) / 100) * 5))
+    })
+
+    it('le pictogramme des capteurs n’est plus barré de rouge', () => {
+      // Le trait rouge de la capture du 2026-08-20 signale des capteurs indisponibles —
+      // un état d'exécution, comme le trait qui barrait LIVE.
+      const svg = drawStatusLine(widget(LANDSCAPE_KEYS), settings, language)
+        .querySelector('.xc-status__sensors svg')!
+      expect(svg.innerHTML.toLowerCase()).not.toContain('#ff0000')
+      expect(svg.querySelector('line')).toBeNull()
+    })
+
+    it('le pictogramme des capteurs est un parapente : voile en arc au-dessus du corps', () => {
+      const svg = drawStatusLine(widget(LANDSCAPE_KEYS), settings, language)
+        .querySelector('.xc-status__sensors svg')!
+      // Un seul tracé courbe (la voile) parmi des segments droits (aile et suspentes) —
+      // la structure relevée sur la capture, où la voile occupe la moitié haute.
+      const paths = [...svg.querySelectorAll('path')].map(p => p.getAttribute('d') ?? '')
+      expect(paths.filter(d => d.includes('C')).length).toBe(1)
+      expect(paths.filter(d => d.includes('L')).length).toBeGreaterThan(4)
+      // Nettement plus haut que large, contrairement aux autres pictogrammes.
+      const [, , w, h] = (svg.getAttribute('viewBox') ?? '').split(' ').map(Number)
+      expect(h).toBeGreaterThan(w!)
+    })
   })
 })

@@ -60,6 +60,21 @@ export function widgetHeightPx(box: Box, aspectRatio: number): number {
 }
 
 /**
+ * Petit côté de la page dans le repère de référence — 720 px en paysage, où il se
+ * confond avec la hauteur ; en portrait, c'est la largeur qui représente le petit côté
+ * physique de l'écran, le repère de rendu étant alors bien plus haut que large.
+ *
+ * La barre d'état y puise sa taille de texte : celle-ci ne suit PAS la hauteur du
+ * bandeau (deux captures d'AIR³, bandeaux de 74 et 99 px de haut, mêmes capitales à
+ * 36 et 37 px — voir le commentaire de tête de `widgets/statusLine.ts`), mais reste
+ * constante à l'échelle de l'écran.
+ */
+export function pageShortSidePx(aspectRatio: number): number {
+  if (aspectRatio <= 0) return 0
+  return Math.min(REFERENCE_WIDTH, REFERENCE_WIDTH / aspectRatio)
+}
+
+/**
  * Émet les widgets dans l'ordre du tableau : c'est l'ordre de dessin de XCTrack. Le
  * premier est au fond, le dernier au-dessus. L'empilement naturel du DOM suffit — aucun
  * z-index n'est nécessaire.
@@ -85,6 +100,9 @@ export function widgetHeightPx(box: Box, aspectRatio: number): number {
 export function renderPage(page: Page, aspectRatio: number, settings: RenderSettings, language: string): SVGSVGElement {
   const canvas = document.createElement('div')
   canvas.className = 'xc-page'
+  // Mesure valable pour toute la page, héritée par tous les widgets : le petit côté de
+  // la page, dont la barre d'état tire sa taille de texte (statusLine.ts).
+  canvas.style.setProperty('--xc-page-min', String(pageShortSidePx(aspectRatio)))
 
   for (const widget of page.widgets) {
     const style = widgetStyle(widget)
