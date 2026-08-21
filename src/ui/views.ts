@@ -4,6 +4,8 @@ import type { Layout, Page } from '../model/layout'
 import type { RenderSettings } from '../model/preferences'
 import type { Widget } from '../model/widget'
 import { renderPage } from '../render/canvas'
+import type { PluralForms } from '../i18n'
+import { plural } from './prose'
 
 export type Orientation = 'portrait' | 'landscape'
 
@@ -104,9 +106,11 @@ export function formatMm(value: number): string {
   return value.toFixed(1).replace('.', ',')
 }
 
-function plural(count: number, singular: string, pluralForm: string): string {
-  return `${count} ${count > 1 ? pluralForm : singular}`
-}
+/**
+ * « 3 gadgets ». Écrit une fois ici parce que trois endroits l'affichent : la vignette
+ * d'une page, son intitulé d'accessibilité et le bandeau de la vue détaillée.
+ */
+const GADGET_COUNT: PluralForms = { one: '{count} gadget', other: '{count} gadgets' }
 
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K, className?: string, text?: string
@@ -133,7 +137,7 @@ function pageCard(
 
   const card = el('button', 'card')
   card.type = 'button'
-  card.setAttribute('aria-label', `Page ${rank}, ${kind.label}, ${plural(page.widgets.length, 'gadget', 'gadgets')}`)
+  card.setAttribute('aria-label', `Page ${rank}, ${kind.label}, ${plural(GADGET_COUNT, page.widgets.length)}`)
   card.addEventListener('click', onOpen)
 
   const screen = el('span', 'card__screen')
@@ -148,7 +152,7 @@ function pageCard(
   const meta = el('span', 'card__meta')
   meta.append(
     el('span', 'card__class', kind.shortName),
-    el('span', 'card__count', plural(page.widgets.length, 'gadget', 'gadgets'))
+    el('span', 'card__count', plural(GADGET_COUNT, page.widgets.length))
   )
 
   card.append(head, screen, meta)
@@ -167,7 +171,9 @@ function orientationSection(
   const heading = el('h2', 'section__title')
   heading.append(
     el('span', 'section__name', ORIENTATION_LABELS[orientation]),
-    el('span', 'section__count', pages.length === 0 ? 'aucune page' : plural(pages.length, 'page', 'pages'))
+    el('span', 'section__count', pages.length === 0
+      ? 'aucune page'
+      : plural({ one: '{count} page', other: '{count} pages' }, pages.length))
   )
   section.append(heading)
 
@@ -180,7 +186,10 @@ function orientationSection(
   if (hidden > 0) {
     section.append(el(
       'p', 'section__note',
-      `${plural(hidden, 'page est masquée', 'pages sont masquées')} hors contexte de vol : au sol, ` +
+      `${plural({
+        one: '{count} page est masquée',
+        other: '{count} pages sont masquées'
+      }, hidden)} hors contexte de vol : au sol, ` +
       `l’appareil n’en montre que ${pages.length - hidden} sur ${pages.length}.`
     ))
   }
@@ -250,7 +259,7 @@ export function splitWarnings<T extends { kind: string }>(
  * ouvre en s'attendant à un problème.
  */
 export function remarksSummary(count: number): string {
-  return `${plural(count, 'remarque', 'remarques')} sur ce fichier`
+  return `${plural({ one: '{count} remarque', other: '{count} remarques' }, count)} sur ce fichier`
 }
 
 /* --------------------------------------- amener la sélection sous les yeux du pilote */
@@ -556,7 +565,7 @@ export function buildDetail(options: DetailOptions): HTMLElement {
     // `chip--count` : le seul de ces faits qui change sans que la vue soit reconstruite —
     // ajouter ou supprimer un widget en édition ne redessine que la page. `main.ts` le
     // retrouve par cette classe et le remet à jour, plutôt que d'afficher un compte périmé.
-    el('span', 'chip chip--count', plural(page.widgets.length, 'gadget', 'gadgets')),
+    el('span', 'chip chip--count', plural(GADGET_COUNT, page.widgets.length)),
     el('span', 'chip', `${formatMm(screenSize.widthMm)} × ${formatMm(screenSize.heightMm)} mm`),
     el('span', 'chip chip--quiet', ctx.device.label)
   )
