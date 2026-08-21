@@ -13,7 +13,7 @@ import { buildCleanupSection, type CleanupEvent, type CleanupSection } from './c
 import type { CleanupPlan } from '../model/cleanup'
 import type { PluralForms } from '../i18n'
 import { splitVersionName } from '../catalog/versionName'
-import { plural } from './prose'
+import { plural, proseFormat } from './prose'
 import './versionDiagnostic.css'
 
 /**
@@ -490,11 +490,6 @@ function pairsAt(db: VersionDatabase, tier: number): Map<string, Set<string>> {
 /** « 3 versions portent ce numéro » — la phrase revient à deux endroits du choix. */
 const VERSIONS_BEAR: PluralForms = { one: '{count} version porte', other: '{count} versions portent' }
 const VERSION_COUNT: PluralForms = { one: '{count} version', other: '{count} versions' }
-
-/** Un nombre à la française : 1 059, avec l'espace fine insécable. */
-function french(value: number): string {
-  return value.toLocaleString('fr-FR')
-}
 
 /**
  * L'écart entre deux paliers, calculé sur les ensembles et non cumulé. Les réglages
@@ -1231,7 +1226,7 @@ export async function buildVersionPanel(
         one: '{count} réglage reconnu',
         other: '{count} réglages reconnus'
       }, report.recognizedCount)} sur ` +
-      `${french(report.keyCount)} examinés, répartis sur ` +
+      `${proseFormat.number(report.keyCount)} examinés, répartis sur ` +
       `${plural({ one: '{count} gadget', other: '{count} gadgets' }, report.widgetCount)}. `
     reportEl.append(tally)
 
@@ -1240,7 +1235,7 @@ export async function buildVersionPanel(
     // pilote à deviner qu'il s'agissait du même « quelqu'un » à chaque paragraphe.
     const scope = el('p', 'vdiag__scope')
     scope.textContent =
-      `Ce diagnostic repose sur notre relevé de ${french(db.index.versions.length)} ` +
+      `Ce diagnostic repose sur notre relevé de ${proseFormat.number(db.index.versions.length)} ` +
       'versions de XCTrack et sur de vrais fichiers écrits par elles : c’est ce que ' +
       '« nous » désigne plus bas. Seuls les gadgets des pages y sont examinés — le reste ' +
       'd’une sauvegarde (vario, unités, capteurs, espaces aériens) n’est pas diagnostiqué. ' +
@@ -1294,7 +1289,7 @@ export async function buildVersionPanel(
     const heading = el('h3', 'vdiag__cat-title')
     heading.append(el('span', 'vdiag__badge', description.badge))
     heading.append(el('span', 'vdiag__cat-text', description.title))
-    heading.append(el('span', 'vdiag__count', french(findings.length)))
+    heading.append(el('span', 'vdiag__count', proseFormat.number(findings.length)))
     section.append(heading)
     section.append(el('p', 'vdiag__evidence', description.evidence))
     section.append(el('p', 'vdiag__verdict', description.verdict))
@@ -1332,7 +1327,7 @@ export async function buildVersionPanel(
     const heading = el('h3', 'vdiag__cat-title')
     heading.append(el('span', 'vdiag__badge', description.badge))
     heading.append(el('span', 'vdiag__cat-text', description.title))
-    heading.append(el('span', 'vdiag__count', french(findings.length)))
+    heading.append(el('span', 'vdiag__count', proseFormat.number(findings.length)))
     section.append(heading)
     section.append(el('p', 'vdiag__evidence', description.evidence))
     section.append(el('p', 'vdiag__verdict', description.verdict))
