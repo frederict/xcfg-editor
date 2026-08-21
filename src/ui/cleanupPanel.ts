@@ -11,7 +11,7 @@ import {
 } from '../model/cleanup'
 import type { PluralForms } from '../i18n'
 import type { Layout } from '../model/layout'
-import { plural } from './prose'
+import { plural, proseFormat } from './prose'
 import './cleanupPanel.css'
 
 /**
@@ -111,10 +111,6 @@ function el<K extends keyof HTMLElementTagNameMap>(
 const SETTING_COUNT: PluralForms = { one: '{count} réglage', other: '{count} réglages' }
 const GADGET_COUNT: PluralForms = { one: '{count} gadget', other: '{count} gadgets' }
 
-function french(value: number): string {
-  return value.toLocaleString('fr-FR')
-}
-
 /**
  * « ce réglage » / « ces 9 réglages ».
  *
@@ -191,7 +187,7 @@ function gadgetSummary(entries: CleanupEntry[], language: string): string {
     // `count > 1` est ici une condition d'affichage et non un accord : le compte n'est
     // écrit que s'il y en a plusieurs, « Boussole » se suffisant à lui-même. Rien à
     // reverser sur le pluriel du socle, qui choisit une forme et ne décide pas d'omettre.
-    .map(([name, count]) => (count > 1 ? `${name} (${french(count)})` : name))
+    .map(([name, count]) => (count > 1 ? `${name} (${proseFormat.number(count)})` : name))
     .join(', ')
 }
 
@@ -337,7 +333,7 @@ export function buildCleanupSection(options: CleanupSectionOptions): CleanupSect
     tally.textContent = count === total
       ? `${plural({ one: '{count} réglage retenu', other: '{count} réglages retenus' }, total)}.`
       : `${plural({ one: '{count} retenu', other: '{count} retenus' }, count)} ` +
-        `sur ${french(total)} — ` +
+        `sur ${proseFormat.number(total)} — ` +
         `${plural({
           one: '{count} réglage restera',
           other: '{count} réglages resteront'
