@@ -1,4 +1,27 @@
+# Dépendances et sorties de construction
 node_modules/
 dist/
-.DS_Store
+
+# Journaux et fichiers de travail
 logs/
+*.log
+
+# Outils locaux
+# `.remember/` et `mcp-*.log` sont couverts par le .gitignore global du propriétaire.
+# Ils sont répétés ici parce qu'un dépôt public se clone sur des postes qui n'ont pas
+# ce fichier global : sans ces lignes, le premier contributeur venu les verrait
+# apparaître dans `git status`.
+.remember/
+
+# Systèmes de fichiers
+.DS_Store
+Thumbs.db
+
+# Configurations de vol réelles, jamais versionnées
+# Les fixtures anonymisées vivent dans `tests/fixtures/` et sont, elles, versionnées.
+# Cette ligne protège contre le geste distrait : déposer un `.xcfg` exporté de son
+# instrument dans le dépôt pour « essayer », et le committer sans y penser. Un tel
+# fichier porte le nom du pilote, sa voile, ses coordonnées et ses points de virage.
+/*.xcfg
+/*.xczfg
+Exemples/

@@ -1,8 +1,7 @@
 {
   "name": "xcfg-editor",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Éditeur web de configurations XCTrack (.xcfg), fidèle à l'octet près",
   "type": "module",
   "directories": {
     "doc": "docs"
@@ -11,16 +10,25 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "xctrack",
+    "xcfg",
+    "parapente",
+    "paragliding",
+    "air3"
+  ],
+  "author": "Frédéric Tétart",
+  "license": "MIT",
   "devDependencies": {
     "@types/node": "^26.2.0",
     "happy-dom": "^20.11.6",
     "typescript": "^7.0.2",
     "vite": "^8.2.2",
     "vitest": "^4.1.11"
-  }
+  },
+  "private": true
 }
