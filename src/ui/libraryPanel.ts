@@ -14,7 +14,7 @@ import {
   PERSONAL_KIND_LABELS
 } from '../model/personalData'
 import type { PluralForms } from '../i18n'
-import { plural } from './prose'
+import { plural, proseFormat } from './prose'
 
 /**
  * La **bibliothèque de configurations nommées**, côté pilote : ranger, retrouver, revenir
@@ -174,26 +174,6 @@ const MONTHS = [
 const pad = (value: number): string => String(value).padStart(2, '0')
 
 /**
- * Une taille lisible, virgule française. « 78,6 ko » dit au pilote s'il range une
- * configuration ou une archive avec des photos ; un nombre d'octets ne le dit pas.
- *
- * Duplique volontairement `formatByteSize` de `ui/sharingDialog.ts` : quatre lignes,
- * contre une dépendance croisée entre deux modules d'interface qui se chargent chacun à
- * la demande et n'ont rien d'autre à partager.
- */
-export function formatByteSize(byteLength: number): string {
-  if (byteLength < 1024) return `${byteLength} o`
-  if (byteLength < 1024 * 1024) return `${(byteLength / 1024).toFixed(1).replace('.', ',')} ko`
-  if (byteLength < 1024 * 1024 * 1024) {
-    return `${(byteLength / (1024 * 1024)).toFixed(1).replace('.', ',')} Mo`
-  }
-  // Le palier des gigaoctets ne sert pas aux configurations — 79 ko la plus grosse du
-  // corpus — mais au quota que le navigateur annonce : Chrome en accorde une dizaine de
-  // gigaoctets, et « 10240,0 Mo » se lit mal (constaté sur la page d'essai).
-  return `${(byteLength / (1024 * 1024 * 1024)).toFixed(1).replace('.', ',')} Go`
-}
-
-/**
  * Une date ISO en français, à la minute. Une date absente ou illisible — un enregistrement
  * ancien, dont `addedAt` est vide — se dit, elle ne se devine pas.
  */
@@ -322,7 +302,7 @@ export function identityCard(identity: EntryIdentity, language = 'fr'): Identity
         ? undefined
         : `Annexes : ${read.extraFileNames.join(', ')}. Cet éditeur n’en inspecte pas le contenu.`
     },
-    { label: 'Taille', value: formatByteSize(read.byteLength) },
+    { label: 'Taille', value: proseFormat.byteSize(read.byteLength) },
     {
       label: 'Version de XCTrack déclarée',
       value: read.versionName === undefined && read.versionCode === undefined
@@ -1040,7 +1020,7 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
       fileName: source.fileName,
       note
     })
-    say(`« ${entry.name} » est rangée — ${formatByteSize(entry.byteLength)}, ` +
+    say(`« ${entry.name} » est rangée — ${proseFormat.byteSize(entry.byteLength)}, ` +
       `empreinte ${entry.sha256.slice(0, 12)}…`)
   }
 
@@ -1077,7 +1057,7 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
   const doLoad = async (entry: LibraryEntry): Promise<void> => {
     const bytes = await library.bytesOf(entry.id)
     await options.onLoad?.(entry, bytes)
-    say(`« ${entry.name} » est chargée — ${formatByteSize(bytes.byteLength)}, ` +
+    say(`« ${entry.name} » est chargée — ${proseFormat.byteSize(bytes.byteLength)}, ` +
       'octets vérifiés contre leur empreinte.')
   }
 
@@ -1189,7 +1169,7 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
   const askRemove = (entry: LibraryEntry): void => {
     const body = el('div', 'library__confirm')
     body.append(el('p', 'library__note',
-      `« ${entry.name} » et ses ${formatByteSize(entry.byteLength)} d’octets seront ` +
+      `« ${entry.name} » et ses ${proseFormat.byteSize(entry.byteLength)} d’octets seront ` +
       'retirés de ce navigateur. Cette bibliothèque n’a pas de corbeille.'))
     body.append(el('p', 'library__caveat',
       'Si vous n’en êtes pas sûr : ressortez d’abord le fichier, ou exportez la ' +
@@ -1330,7 +1310,7 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
     const meta = el('p', 'library__meta')
     meta.append(
       el('span', 'chip', exportTypeChip(entry.identity.read.exportType)),
-      el('span', 'chip chip--quiet', formatByteSize(entry.byteLength)),
+      el('span', 'chip chip--quiet', proseFormat.byteSize(entry.byteLength)),
       el('span', 'chip chip--quiet', plural(GADGET_COUNT, entry.identity.read.widgetCount))
     )
     if (entry.identity.read.containerKind === 'xczfg') {
@@ -1454,7 +1434,7 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
         one: '{count} configuration rangée',
         other: '{count} configurations rangées'
       }, snapshot.entries.length)}` +
-      `${snapshot.entries.length === 0 ? '' : ` — ${formatByteSize(total)} au total`}` +
+      `${snapshot.entries.length === 0 ? '' : ` — ${proseFormat.byteSize(total)} au total`}` +
       `${snapshot.broken.length === 0 ? '' : `, ${plural({
         one: '{count} entrée illisible',
         other: '{count} entrées illisibles'
@@ -1484,8 +1464,8 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
       const estimate = await options.estimateStorage()
       foot.append(el('span', 'library__footText', estimate === undefined
         ? 'Ce navigateur ne dit rien de l’espace disponible.'
-        : `Place employée par ce site : ${formatByteSize(estimate.usage)} sur ` +
-          `${formatByteSize(estimate.quota)} accordés — le navigateur n’en donne qu’un ` +
+        : `Place employée par ce site : ${proseFormat.byteSize(estimate.usage)} sur ` +
+          `${proseFormat.byteSize(estimate.quota)} accordés — le navigateur n’en donne qu’un ` +
           `ordre de grandeur.`))
     }
   }

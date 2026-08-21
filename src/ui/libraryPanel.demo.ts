@@ -47,8 +47,8 @@ import { renderLibraryPanel, type CurrentDocument, type LibraryPanelHandle } fro
  *   l'onglet A sans aucune action de sa part (`BroadcastChannel`).
  * - **Les octets altérés ne ressortent pas** : rien n'est téléchargé, le message le dit, et
  *   le niveau d'empreinte s'ouvre quand même pour montrer laquelle manque.
- * - `navigator.storage.estimate()` a rendu 10,0 Go de quota — d'où le palier « Go » de
- *   `formatByteSize`.
+ * - `navigator.storage.estimate()` a rendu 10,0 Go de quota — d'où le palier « Go » du
+ *   formateur de tailles (`src/i18n/format.ts`).
  *
  * Refaire les captures : ouvrir cette page, ranger les quatre fixtures, puis
  * « injecter une entrée illisible ». Thème clair et sombre par l'émulation du navigateur.

@@ -20,7 +20,6 @@ import {
   FIDELITY_MODIFIED_DETAIL,
   FIDELITY_UNCHANGED,
   FIDELITY_UNCHANGED_DETAIL,
-  formatByteSize,
   planSharing,
   renderSharingDialog,
   RESIDUAL_NOTE,
@@ -219,12 +218,6 @@ describe('les annexes d’une archive ne partent pas dans l’anonymisé', () =>
       WHEN
     )
     expect(real.anonymous.droppedExtras).toEqual([])
-  })
-
-  it('une taille d’annexe se lit en français', () => {
-    expect(formatByteSize(512)).toBe('512 o')
-    expect(formatByteSize(3_204)).toBe('3,1 ko')
-    expect(formatByteSize(1_482_112)).toBe('1,4 Mo')
   })
 })
 

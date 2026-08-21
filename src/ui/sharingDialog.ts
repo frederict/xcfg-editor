@@ -15,7 +15,7 @@ import {
   PERSONAL_KIND_LABELS,
   type PersonalInventory
 } from '../model/personalData'
-import { plural } from './prose'
+import { plural, proseFormat } from './prose'
 
 /**
  * L'interface d'**export partageable** : choisir ce qu'on donne, voir ce qui est remplacé,
@@ -375,16 +375,6 @@ export function describeLocation(entry: FreeTextReplacement, language: string): 
     + ` · ${readableName(entry.shortName, language)}`
 }
 
-/**
- * Une taille de fichier lisible, virgule française. Sert aux annexes d'archive : « 1,4 Mo »
- * dit au pilote s'il s'agit d'une icône ou d'une photo, ce qu'un nombre d'octets ne dit pas.
- */
-export function formatByteSize(byteLength: number): string {
-  if (byteLength < 1024) return `${byteLength} o`
-  if (byteLength < 1024 * 1024) return `${(byteLength / 1024).toFixed(1).replace('.', ',')} ko`
-  return `${(byteLength / (1024 * 1024)).toFixed(1).replace('.', ',')} Mo`
-}
-
 /** La valeur posée, telle qu'on l'écrit quand c'est la chaîne vide. */
 export function displayedReplacement(replacement: string): string {
   return replacement === '' ? '(vide)' : replacement
@@ -615,7 +605,7 @@ function annexesSection(plan: AnonymousPlan): HTMLElement | undefined {
     const item = el('li', 'sharing__dropped')
     item.append(
       el('code', 'sharing__key', extra.name),
-      el('span', 'sharing__why', formatByteSize(extra.byteLength))
+      el('span', 'sharing__why', proseFormat.byteSize(extra.byteLength))
     )
     list.append(item)
   }

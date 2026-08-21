@@ -12,7 +12,6 @@ import { describeContainer } from '../../src/library/identity'
 import {
   exportTypeChip,
   exportTypeLabel,
-  formatByteSize,
   formatStamp,
   identityCard,
   personalDataCount,
@@ -24,6 +23,7 @@ import {
   type LibraryPanelHandle,
   type LibraryPanelOptions
 } from '../../src/ui/libraryPanel'
+import { proseFormat } from '../../src/ui/prose'
 import { ARCHIVE, BACKUP_2026, FORMES_PRESERVEES, PAGES_2026 } from '../fixtures/paths'
 
 /**
@@ -182,14 +182,6 @@ afterEach(() => {
 /* ========================================================= les fonctions pures, hors DOM */
 
 describe('libraryPanel — la mise en français', () => {
-  it('les tailles se disent avec la virgule française', () => {
-    expect(formatByteSize(512)).toBe('512 o')
-    expect(formatByteSize(PAGES.byteLength)).toBe('56,6 ko')
-    expect(formatByteSize(1_482_112)).toBe('1,4 Mo')
-    // Le palier des gigaoctets sert au quota annoncé par le navigateur, pas aux fichiers.
-    expect(formatByteSize(10 * 1024 ** 3)).toBe('10,0 Go')
-  })
-
   it('les sélecteurs de fichiers cachés restent hors de l’arbre d’accessibilité', () => {
     const { library } = bibliotheque()
     const handle = renderLibraryPanel({ library })
@@ -992,7 +984,7 @@ describe('libraryPanel — supprimer nomme ce qui va être perdu', () => {
     // gagné le nom dans son titre plutôt que de le laisser au seul corps du texte.
     expect(viewTitle()).toBe('Supprimer « Essai audit » ?')
     expect(text(view)).toContain('Essai audit')
-    expect(text(view)).toContain(formatByteSize(PAGES.byteLength))
+    expect(text(view)).toContain(proseFormat.byteSize(PAGES.byteLength))
     expect(text(view)).toContain('n’a pas de corbeille')
     // L'issue pour qui doute : ressortir le fichier, ou exporter la bibliothèque.
     expect(text(view.querySelector('.library__caveat'))).toContain('ressortez d’abord le fichier')
