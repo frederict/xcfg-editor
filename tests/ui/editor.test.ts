@@ -394,7 +394,11 @@ describe('conversion des pixels', () => {
 
   it('exprime la taille en millimètres, pas en coordonnées', () => {
     // Un widget qui couvre toute la dalle mesure la dalle : 155,0 × 87,2 mm.
-    expect(sizeLabel(rect(0, 0, 10000, 10000), air3, 'landscape')).toBe('155,0 × 87,2 mm')
+    //
+    // `\u202f` : l'espace fine insécable qu'`Intl` pose devant l'unité en français, écrite
+    // en échappement pour qu'on la voie. C'est elle qui empêche le navigateur de couper la
+    // ligne entre le nombre et son unité.
+    expect(sizeLabel(rect(0, 0, 10000, 10000), air3, 'landscape')).toBe('155,0 × 87,2\u202fmm')
   })
 })
 
@@ -513,7 +517,7 @@ describe('calque d’édition', () => {
 
     const badge = instance.element.querySelector('.editor__badge') as HTMLElement
     expect(badge.hidden).toBe(false)
-    expect(badge.textContent).toMatch(/^\d+,\d × \d+,\d mm$/)
+    expect(badge.textContent).toMatch(/^\d+,\d × \d+,\d\u202fmm$/)
     const preview = instance.element.querySelector('.editor__preview') as HTMLElement
     expect(preview.hidden).toBe(false)
 

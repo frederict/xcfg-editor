@@ -9,7 +9,7 @@ import {
   type Bounds
 } from '../model/mutations'
 import { readWidget } from '../model/widget'
-import { formatMm, widgetSizeMm } from './views'
+import { formatSizeMm, widgetSizeMm } from './views'
 
 /**
  * L'interaction d'édition : choisir un widget, le déplacer, le redimensionner.
@@ -408,8 +408,7 @@ export function commitGesture(
 
 /** « 12,3 × 4,5 mm » : la taille réelle du widget sur la dalle choisie. */
 export function sizeLabel(rect: Rect, device: Device, orientation: Orientation): string {
-  const size = widgetSizeMm(rect, device, orientation)
-  return `${formatMm(size.widthMm)} × ${formatMm(size.heightMm)} mm`
+  return formatSizeMm(widgetSizeMm(rect, device, orientation))
 }
 
 /* ============================================== actions sur le widget sélectionné */
