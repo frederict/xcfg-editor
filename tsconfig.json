@@ -6,6 +6,10 @@
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "resolveJsonModule": true,
+    // Pour `tests/fixtures/deriver-archive.mts`, chargé par `node --experimental-strip-types`
+    // et non par Vite : Node exige alors l'extension `.ts` réelle dans l'import. Sans
+    // effet sur le reste du code, qui continue d'importer sans extension.
+    "allowImportingTsExtensions": true,
     "noEmit": true,
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["vitest/globals", "node", "vite/client"]
