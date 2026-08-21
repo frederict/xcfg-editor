@@ -572,7 +572,10 @@ describe('la vignette', () => {
     // Trois sortes, trois phrases — voir PREVIEW_NOTES.
     expect(previewKind('WCompass')).toBe('drawn')
     expect(previewKind('WLiveMessage')).toBe('blank')
-    expect(previewKind('WLogPeek')).toBe('generic')
+    // Cinq types seulement retombent encore sur le repli générique, et ce sont ceux que
+    // l'appareil laisse vides lui aussi (plus `WLocation`, dont la seule capture est
+    // caviardée) — voir la revue des 75 visuels, § 2.12.
+    expect(previewKind('WLocation')).toBe('generic')
 
     const view = palette(EMPTY)
     for (const row of view.element.querySelectorAll<HTMLElement>('.palette__entry')) {
