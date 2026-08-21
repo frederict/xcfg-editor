@@ -625,9 +625,8 @@ function tooSmallFindings(input: InspectionInput): Finding[] {
         toVerify:
           'La part de la hauteur du widget qu’occupe réellement le glyphe de la valeur ' +
           `(ici supposée ${ASSUMED_VALUE_HEIGHT_RATIO}) n’a été mesurée que sur un seul ` +
-          'widget, une seule capture. Les cinquante captures de ' +
-          '`docs/reference/captures-air3/` suffiraient à la mesurer type par type, sans ' +
-          'toucher à l’appareil.'
+          'widget, une seule capture. Les captures de la planche des 75 widgets ' +
+          'suffiraient à la mesurer type par type, sans toucher à l’appareil.'
       })
     })
   }

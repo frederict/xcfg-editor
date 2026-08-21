@@ -27,14 +27,29 @@ const here = `${dirname(fileURLToPath(import.meta.url))}/`
  * la copie fidèle, la version annoncée, et la comparaison, qui doit se taire quand elle
  * n'a rien à dire plutôt que d'inventer un « personnalisé ».
  */
-describe('le relevé des défauts est la copie fidèle de celui de docs/', () => {
-  it('src/catalog/widgetDefaults.json reproduit le relevé octet pour octet', () => {
-    const source = readFileSync(`${here}../../docs/reference/widget-defaults-1.0.3-beta.json`)
-    const copy = readFileSync(`${here}../../src/catalog/widgetDefaults.json`)
-    // Une copie qui dérive du relevé ferait mentir l'interface sur ce qu'elle compare, et
-    // la dérive serait invisible : la table ne s'affiche jamais en entier.
-    expect(copy.equals(source)).toBe(true)
-  })
+/**
+ * Le relevé d'origine n'est pas publié : il vit avec la matière brute des mesures, hors
+ * de ce dépôt. La copie versionnée ici, elle, est publique — c'est elle que le code lit.
+ *
+ * Ce test ne peut donc s'exécuter que là où le relevé est disponible. Le rendre
+ * inconditionnel le ferait échouer partout ailleurs, et l'ajuster jusqu'au vert reviendrait
+ * à ne plus rien vérifier du tout.
+ *
+ *     XCFG_RELEVE_DEFAUTS=<chemin du relevé> npx vitest run tests/catalog/widgetDefaults
+ */
+const releveOrigine = process.env.XCFG_RELEVE_DEFAUTS
+
+describe('le relevé des défauts est la copie fidèle de son origine', () => {
+  it.skipIf(releveOrigine === undefined)(
+    'src/catalog/widgetDefaults.json reproduit le relevé octet pour octet',
+    () => {
+      const source = readFileSync(releveOrigine as string)
+      const copy = readFileSync(`${here}../../src/catalog/widgetDefaults.json`)
+      // Une copie qui dérive du relevé ferait mentir l'interface sur ce qu'elle compare, et
+      // la dérive serait invisible : la table ne s'affiche jamais en entier.
+      expect(copy.equals(source)).toBe(true)
+    },
+  )
 
   it('la version annoncée par le module est celle que le relevé porte dans son texte', () => {
     expect(defaultsProvenance()).toContain(DEFAULTS_VERSION_NAME)

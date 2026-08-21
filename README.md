@@ -140,9 +140,12 @@ Quelques conventions, qui expliquent la forme du code :
   compare un objet à lui-même est vert quoi qu'il arrive et n'apprend rien : plusieurs
   tests posent explicitement des garde-fous contre ce piège.
 
-Le dossier `docs/` porte les relevés qui fondent ces choix : le corpus de fichiers
-observés, le rendu constaté en vol, ce que disent les pilotes en ligne, et la conception
-générale.
+Ces choix reposent sur des relevés faits sur un AIR³ 7.2 réel : corpus de fichiers
+observés sur quatre ans et huit versions de XCTrack, rendu constaté en vol, planche des
+75 widgets capturée page par page. **Ces relevés ne sont pas publiés** — ils contiennent
+des configurations de vol et des positions personnelles. Ce qu'ils ont établi est en
+revanche présent ici, dans les commentaires du code et dans les données extraites de
+l'APK, et les tests le vérifient.
 
 ### À propos du corpus de tests
 
