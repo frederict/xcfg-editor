@@ -626,3 +626,22 @@ describe('le panneau', () => {
     expect(text).toContain('vario, unités, capteurs, espaces aériens')
   })
 })
+
+describe('hors édition, le diagnostic dit où agir', () => {
+  it('sans rappel de nettoyage, une note renvoie vers le mode modification', async () => {
+    // Le constat parle de suppressions qui « se défendent » ; hors édition, aucun bouton
+    // ne les permet. Un pilote d'essai a cherché ce bouton et ne l'a pas trouvé — l'outil
+    // promettait une action qu'il n'offrait pas.
+    const panel = await buildVersionPanel({ document: documentOf(BACKUP_2026), database: db })
+    const note = panel.element.querySelector('.vdiag__readonly-note')
+    expect(note).not.toBeNull()
+    expect(note?.textContent).toContain('passez en modification')
+  })
+
+  it('avec le rappel, c’est la section de nettoyage qui paraît, jamais la note', async () => {
+    const panel = await buildVersionPanel({
+      document: documentOf(BACKUP_2026), database: db, onCleanup: () => {}
+    })
+    expect(panel.element.querySelector('.vdiag__readonly-note')).toBeNull()
+  })
+})

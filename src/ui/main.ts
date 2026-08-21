@@ -639,7 +639,7 @@ function landing(): HTMLElement {
     ['Sur l’instrument', 'Réglages, puis « Exporter la configuration ». Le fichier atterrit sur la carte SD.'],
     ['Ici', 'Les pages apparaissent numérotées dans l’ordre où « page suivante » les fait défiler en vol.'],
     ['Modifier', 'Déplacez un gadget au doigt ou à la souris, changez sa taille, ajoutez-en d’autres : la page se redessine à sa taille réelle sous vos yeux.'],
-    ['À savoir', 'XCTrack masque certaines pages hors contexte de vol : le fichier en décrit plus que l’appareil n’en montre.']
+    ['À savoir', 'C’est le réglage « navigations » d’une page, et non son type, qui décide des moments où l’appareil la montre.']
   ]
   for (const [title, detail] of items) {
     const step = el('li', 'landing__step')

@@ -1442,7 +1442,19 @@ export async function buildVersionPanel(
 
   reload()
   root.append(choice, reportEl)
-  if (cleanup !== undefined) root.append(cleanup.element)
+  if (cleanup !== undefined) {
+    root.append(cleanup.element)
+  } else {
+    // Hors édition, le constat parle de suppressions qui « se défendent » sans qu'aucun
+    // bouton ne les permette : un pilote d'essai a cherché ce bouton et ne l'a pas trouvé.
+    // Le diagnostic reste entier — c'est ce qu'on vient y lire — mais il dit où agir.
+    const elsewhere = el(
+      'p', 'vdiag__readonly-note',
+      'Vous consultez ce fichier sans le modifier : rien ne peut en être retiré d’ici. ' +
+      'Pour agir sur ce que vous lisez, fermez cette fenêtre et passez en modification.'
+    )
+    root.append(elsewhere)
+  }
 
   return {
     element: root,

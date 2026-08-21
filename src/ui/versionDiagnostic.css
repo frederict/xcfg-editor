@@ -272,3 +272,20 @@
     color: var(--app-flag-ink, #e6bd6b);
   }
 }
+
+/*
+ * La note de consultation.
+ *
+ * Le constat parle de suppressions qui « se défendent », mais hors édition aucun bouton
+ * ne les permet — un pilote d'essai a cherché ce bouton et ne l'a pas trouvé. La note dit
+ * où agir. Même filet que `.vdiag__same` : c'est une précision sur la portée de ce qu'on
+ * vient de lire, pas un avertissement.
+ */
+.vdiag__readonly-note {
+  margin: 0.9rem 0 0;
+  padding-left: 0.55rem;
+  border-left: 2px solid var(--app-line-strong, #b1b8bf);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--app-ink-soft);
+}
