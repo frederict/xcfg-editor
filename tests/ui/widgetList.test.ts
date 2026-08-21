@@ -268,7 +268,11 @@ describe('l’ordre de la liste', () => {
     expect(mark(rows[2]!)).toEqual(['20%', '0%', '20%', '20%'])
     // La taille en millimètres accompagne le nom : c'est elle que l'assistance vocale lit.
     expect(rows[1]?.getAttribute('aria-label')).toContain('millimètres')
-    expect(rows[1]?.querySelector('.wlist__size')?.textContent).toMatch(/^\d+,\d+ × \d+,\d+ mm$/)
+    // `\u202f` : l'espace fine insécable qu'`Intl` pose devant l'unité en français. Elle
+    // est écrite en échappement plutôt qu'au clavier, sans quoi personne ne verrait qu'il
+    // ne s'agit pas d'une espace ordinaire — et c'est elle qui empêche le navigateur de
+    // couper la ligne entre « 17,4 » et « mm ».
+    expect(rows[1]?.querySelector('.wlist__size')?.textContent).toMatch(/^\d+,\d+ × \d+,\d+\u202fmm$/)
   })
 })
 

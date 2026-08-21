@@ -4,7 +4,7 @@ import type { Orientation } from '../model/grid'
 import type { Page } from '../model/layout'
 import type { Widget } from '../model/widget'
 import { isBlankAtRest } from '../render/registry'
-import { aspectRatioOf, formatMm, widgetSizeMm, type WidgetBox } from './views'
+import { aspectRatioOf, formatMm, formatSizeMm, widgetSizeMm, type WidgetBox } from './views'
 import { plural } from './prose'
 
 /**
@@ -301,7 +301,7 @@ export function renderWidgetList(options: WidgetListOptions): WidgetList {
     const text = el('span', 'wlist__text')
     text.append(
       el('span', 'wlist__name', entry.name),
-      el('span', 'wlist__size', `${formatMm(entry.widthMm)} × ${formatMm(entry.heightMm)} mm`)
+      el('span', 'wlist__size', formatSizeMm(entry))
     )
     row.append(text)
 
