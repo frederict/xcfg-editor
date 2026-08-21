@@ -11,7 +11,9 @@ import { readLayout, type Layout } from '../model/layout'
 import { widgetOptionKeys } from '../model/widget'
 import { buildCleanupSection, type CleanupEvent, type CleanupSection } from './cleanupPanel'
 import type { CleanupPlan } from '../model/cleanup'
+import type { PluralForms } from '../i18n'
 import { splitVersionName } from '../catalog/versionName'
+import { plural } from './prose'
 import './versionDiagnostic.css'
 
 /**
@@ -485,13 +487,13 @@ function pairsAt(db: VersionDatabase, tier: number): Map<string, Set<string>> {
   return table
 }
 
+/** « 3 versions portent ce numéro » — la phrase revient à deux endroits du choix. */
+const VERSIONS_BEAR: PluralForms = { one: '{count} version porte', other: '{count} versions portent' }
+const VERSION_COUNT: PluralForms = { one: '{count} version', other: '{count} versions' }
+
 /** Un nombre à la française : 1 059, avec l'espace fine insécable. */
 function french(value: number): string {
   return value.toLocaleString('fr-FR')
-}
-
-function plural(count: number, one: string, many: string): string {
-  return `${french(count)} ${count > 1 ? many : one}`
 }
 
 /**
@@ -517,7 +519,10 @@ export function tierDelta(
       keysRemovedCount: 0,
       summary:
         'Aucune version publiée ne précède celle-ci parmi celles que nous avons pu lire : ' +
-        `rien à comparer. ${plural(target?.widgetCount ?? 0, 'gadget connu', 'gadgets connus')}.`
+        `rien à comparer. ${plural({
+          one: '{count} gadget connu',
+          other: '{count} gadgets connus'
+        }, target?.widgetCount ?? 0)}.`
     }
   }
 
@@ -553,16 +558,16 @@ export function tierDelta(
 
   const parts: string[] = []
   if (widgetsAdded.length > 0) {
-    parts.push(plural(widgetsAdded.length, 'gadget ajouté', 'gadgets ajoutés'))
+    parts.push(plural({ one: '{count} gadget ajouté', other: '{count} gadgets ajoutés' }, widgetsAdded.length))
   }
   if (widgetsRemoved.length > 0) {
-    parts.push(plural(widgetsRemoved.length, 'gadget retiré', 'gadgets retirés'))
+    parts.push(plural({ one: '{count} gadget retiré', other: '{count} gadgets retirés' }, widgetsRemoved.length))
   }
   if (keysAddedCount > 0) {
-    parts.push(plural(keysAddedCount, 'réglage ajouté', 'réglages ajoutés'))
+    parts.push(plural({ one: '{count} réglage ajouté', other: '{count} réglages ajoutés' }, keysAddedCount))
   }
   if (keysRemovedCount > 0) {
-    parts.push(plural(keysRemovedCount, 'réglage retiré', 'réglages retirés'))
+    parts.push(plural({ one: '{count} réglage retiré', other: '{count} réglages retirés' }, keysRemovedCount))
   }
 
   const fromName = versionLabel(db, fromTier)
@@ -783,7 +788,7 @@ export function suggestTier(db: VersionDatabase, document: JsonNode): VersionSug
     // Le nom a tranché là où le numéro ne pouvait pas : le dire, parce que c'est ce qui
     // rend la présélection sûre plutôt qu'arbitraire.
     const pinned = byCode.length > 1
-      ? ` ${plural(byCode.length, 'version porte', 'versions portent')} ce numéro ; le nom ` +
+      ? ` ${plural(VERSIONS_BEAR, byCode.length)} ce numéro ; le nom ` +
         'que le fichier déclare n’en désigne qu’une.'
       : ''
     return {
@@ -809,7 +814,7 @@ export function suggestTier(db: VersionDatabase, document: JsonNode): VersionSug
       approximatedFrom: null,
       message:
         `Ce fichier a été écrit par ${declared}. ` +
-        `${plural(direct.length, 'version porte', 'versions portent')} ce numéro sans ` +
+        `${plural(VERSIONS_BEAR, direct.length)} ce numéro sans ` +
         'accepter les mêmes réglages, et le fichier ne dit pas laquelle l’a écrit. Nous ' +
         `visons la plus récente, ${versionLabel(db, selected, version.code)} — un choix ` +
         'arbitraire, assumé comme tel : chaque remarque qui changerait sous une des autres ' +
@@ -823,7 +828,7 @@ export function suggestTier(db: VersionDatabase, document: JsonNode): VersionSug
     if (tiers.length > 0) {
       const selected = Math.max(...tiers)
       const several = tiers.length > 1
-        ? ` Ce numéro-là couvre lui-même ${plural(tiers.length, 'version', 'versions')} ; ` +
+        ? ` Ce numéro-là couvre lui-même ${plural(VERSION_COUNT, tiers.length)} ; ` +
           `nous visons la plus récente, ${versionLabel(db, selected, fallbackCode)}, et ` +
           'signalons ci-dessous toute remarque qui changerait sous une autre.'
         : ` Nous visons ${versionLabel(db, selected, fallbackCode)}.`
@@ -858,7 +863,10 @@ export function suggestTier(db: VersionDatabase, document: JsonNode): VersionSug
     approximatedFrom: null,
     message:
       `Ce fichier a été écrit par ${declared}, que nous ne connaissons pas : nous avons pu ` +
-      `lire ${plural(db.index.versions.length, 'version de XCTrack', 'versions de XCTrack')}, ` +
+      `lire ${plural({
+        one: '{count} version de XCTrack',
+        other: '{count} versions de XCTrack'
+      }, db.index.versions.length)}, ` +
       'et celle-ci n’en fait pas partie.' +
       `${situate} Nous n’en proposons aucune — en désigner une au jugé reviendrait à ` +
       'inventer. Choisissez celle de votre appareil.'
@@ -1163,9 +1171,10 @@ export async function buildVersionPanel(
       return
     }
     same.textContent =
-      `${frenchList(others.map((option) => option.label))} ${others.length > 1 ? 'acceptent' : 'accepte'} ` +
+      `${frenchList(others.map((option) => option.label))} ` +
+      `${plural({ one: 'accepte', other: 'acceptent' }, others.length)} ` +
       `exactement les mêmes réglages que ${chosen.label} : nous ne les distinguons pas, et ` +
-      `ce qui est dit ci-dessous vaut pour ${plural(others.length + 1, 'version', 'versions')}.`
+      `ce qui est dit ci-dessous vaut pour ${plural(VERSION_COUNT, others.length + 1)}.`
     same.hidden = false
   }
 
@@ -1218,9 +1227,12 @@ export async function buildVersionPanel(
 
     const tally = el('p', 'vdiag__tally')
     tally.textContent =
-      `${plural(report.recognizedCount, 'réglage reconnu', 'réglages reconnus')} sur ` +
+      `${plural({
+        one: '{count} réglage reconnu',
+        other: '{count} réglages reconnus'
+      }, report.recognizedCount)} sur ` +
       `${french(report.keyCount)} examinés, répartis sur ` +
-      `${plural(report.widgetCount, 'gadget', 'gadgets')}. `
+      `${plural({ one: '{count} gadget', other: '{count} gadgets' }, report.widgetCount)}. `
     reportEl.append(tally)
 
     // Le mot dit UNE fois, en tête : plus bas, « nous », c'est ce relevé-là. Trois mots
@@ -1238,7 +1250,10 @@ export async function buildVersionPanel(
     if (report.unstableCount > 0) {
       const unstable = el('p', 'vdiag__unstable')
       unstable.textContent =
-        `${plural(report.unstableCount, 'remarque change', 'remarques changent')} selon la ` +
+        `${plural({
+          one: '{count} remarque change',
+          other: '{count} remarques changent'
+        }, report.unstableCount)} selon la ` +
         'version retenue parmi celles que ce fichier peut désigner. Elles sont signalées ' +
         'une à une.'
       reportEl.append(unstable)
