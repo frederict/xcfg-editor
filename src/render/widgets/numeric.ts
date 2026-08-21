@@ -63,15 +63,57 @@ const SPECS: Record<string, NumericSpec> = {
 const FALLBACK_SPEC: NumericSpec = { quantity: 'none', unit: '', example: '--' }
 
 /**
- * `_units` ne vaut jamais que `"SYS_UNIT"` sur les 278 occurrences du corpus — un jeton
- * signifiant « unité du système », pas une unité concrète à afficher telle quelle.
- * L'afficher littéralement produirait « SYS_UNIT » à côté de la quasi-totalité des
- * widgets d'altitude et de vitesse du corpus. On ne l'applique donc comme forçage que
- * s'il diffère de ce jeton — ce qu'aucun fichier connu ne fait à ce jour.
+ * `_units` porte un **jeton d'énumération**, pas une unité affichable.
+ *
+ * Le défaut corrigé : une page fabriquée par notre éditeur avec `_units: "FOOT"`, portée
+ * sur l'appareil, y affiche **`ft`** — nous écrivions **`FOOT`**
+ * (`docs/reference/2026-08-21-validation-bout-en-bout.md` § 4.3). Un pilote lisait une
+ * unité qui n'existe pas.
+ *
+ * Les jetons possibles viennent du catalogue extrait de l'APK
+ * (`src/catalog/widgetOptions/base.json`, clés `_units@WAltitude`, `_units@WBaroAltitude`,
+ * `_units@WSpeed`, `_units@WAirTemperature`). Ce que vaut chacun :
+ *
+ * | jeton | affiché | d'où vient le symbole |
+ * |---|---|---|
+ * | `SYS_UNIT` | (la préférence du fichier) | jeton « unité du système », voir plus bas |
+ * | `FOOT` | `ft` | **mesuré sur l'appareil** (§ 4.3) |
+ * | `METER` | `m` | le corpus écrit `"Unit.Altitude": "m"` |
+ * | `KM_H` | `km/h` | le corpus écrit `"Unit.Speed": "km/h"` |
+ * | `M_S` | `m/s` | le corpus écrit `"Unit.VerticalSpeed": "m/s"` |
+ * | `YARD` | `yd` | **déduit** — aucun fichier ni capture ne le porte |
+ * | `MP_H` | `mph` | **déduit** |
+ * | `KT` | `kt` | **déduit** |
+ * | `CELSIUS` / `FAHRENHEIT` | `°C` / `°F` | **déduits** (`WAirTemperature`, non dessiné) |
+ *
+ * Les trois symboles métriques ne sont pas des suppositions : les préférences du corpus
+ * stockent l'unité **déjà sous forme de symbole** (`"m"`, `"km/h"`, `"m/s"`), et ce sont
+ * exactement les grandeurs que ces trois jetons nomment. Les autres sont marqués comme
+ * déduits, faute d'un fichier impérial dans le corpus.
+ *
+ * **`SYS_UNIT`** — les 278 occurrences du corpus ne valent que celui-là : « unité du
+ * système », pas une unité concrète. L'afficher littéralement produirait « SYS_UNIT » à
+ * côté de la quasi-totalité des widgets d'altitude et de vitesse.
+ *
+ * **Un jeton inconnu reste écrit tel quel.** Lui substituer la préférence du fichier
+ * affirmerait une unité que personne n'a mesurée ; le laisser visible se lit comme le
+ * manque que c'est.
  */
+const UNIT_TOKENS: Record<string, string> = {
+  METER: 'm',
+  FOOT: 'ft',
+  YARD: 'yd',
+  KM_H: 'km/h',
+  M_S: 'm/s',
+  MP_H: 'mph',
+  KT: 'kt',
+  CELSIUS: '°C',
+  FAHRENHEIT: '°F'
+}
+
 function resolveUnit(widget: Widget, settings: RenderSettings, spec: NumericSpec): string {
   const forced = widgetString(widget, '_units')
-  if (forced !== undefined && forced !== 'SYS_UNIT') return forced
+  if (forced !== undefined && forced !== 'SYS_UNIT') return UNIT_TOKENS[forced] ?? forced
 
   switch (spec.quantity) {
     case 'altitude': return settings.altitudeUnit

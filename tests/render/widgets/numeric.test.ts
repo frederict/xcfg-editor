@@ -449,6 +449,40 @@ describe('widgets numériques', () => {
     })
   })
 
+  /**
+   * `_units` porte un jeton d'énumération, pas une unité affichable. Une page fabriquée
+   * par notre éditeur avec `_units: "FOOT"` et portée sur l'appareil y affiche « ft » ;
+   * nous écrivions « FOOT », c'est-à-dire une unité qui n'existe pas
+   * (`2026-08-21-validation-bout-en-bout.md` § 4.3). Voir la table de `UNIT_TOKENS`
+   * dans numeric.ts pour ce qui est mesuré et ce qui est déduit.
+   */
+  describe('unité forcée par _units : le jeton se traduit en symbole', () => {
+    it('« FOOT » s’écrit « ft », le symbole relevé sur l’appareil', () => {
+      const el = drawNumeric(widget('WAltitude', { _units: '"FOOT"' }), settings, language)
+      expect(el.querySelector('.xc-num__unit')?.textContent).toBe('ft')
+    })
+
+    it('traduit aussi les jetons métriques, que le corpus corrobore', () => {
+      const de = (type: string, jeton: string): string | null | undefined =>
+        drawNumeric(widget(type, { _units: `"${jeton}"` }), settings, language)
+          .querySelector('.xc-num__unit')?.textContent
+      expect(de('WAltitude', 'METER')).toBe('m')
+      // Une unité composée se compose en fraction : le texte du `<span>` est « km » + « h ».
+      expect(de('WSpeed', 'KM_H')).toBe('kmh')
+      expect(de('WSpeed', 'M_S')).toBe('ms')
+    })
+
+    it('laisse SYS_UNIT rendre la main à la préférence du fichier', () => {
+      const el = drawNumeric(widget('WAltitude', { _units: '"SYS_UNIT"' }), settings, language)
+      expect(el.querySelector('.xc-num__unit')?.textContent).toBe(settings.altitudeUnit)
+    })
+
+    it('écrit un jeton inconnu tel quel plutôt que d’affirmer une unité non mesurée', () => {
+      const el = drawNumeric(widget('WAltitude', { _units: '"FURLONG"' }), settings, language)
+      expect(el.querySelector('.xc-num__unit')?.textContent).toBe('FURLONG')
+    })
+  })
+
   // Défaut 3 (rapport de tâche) — XCTrack affiche « +3,5 » et « -0,1 » en français
   // (virgule), pas « +3.5 » (point) : constaté sur vol-numeriques-boussole-
   // variocolumn.png et vol-carte-kk7-sideview.png. Nos exemples (SPECS) sont écrits
