@@ -55,3 +55,24 @@ describe('app.css — la fermeture d’une modale reste atteignable', () => {
     expect(rule('.modal--pages .modal__box')).toContain('overflow: auto;')
   })
 })
+
+/**
+ * L'entrée directe des réglages généraux. Elle a coûté 40 px à une barre qui repliait
+ * déjà : le seuil de sa forme compacte est une mesure, et un changement de valeur doit
+ * faire échouer ce test plutôt que de laisser la barre repasser sur deux lignes à
+ * 1 024 px sans que personne s'en aperçoive.
+ */
+describe('app.css — le bouton des réglages tient dans la barre', () => {
+  it('bascule en forme compacte au seuil mesuré', () => {
+    expect(css).toContain('.app-bar__prefs { flex: none; gap: 0.4rem; }')
+    expect(css).toMatch(/@media \(max-width: 1120px\) \{\s*\.app-bar__prefs \{[^}]*width: 30px/)
+  })
+
+  it('masque le mot sans le retirer du nom accessible', () => {
+    // `clip-path: inset(50%)` cache à l'œil et laisse au lecteur d'écran — `display: none`
+    // priverait le bouton de son nom.
+    const compact = css.slice(css.indexOf('.app-bar__prefs-name'))
+    expect(compact).toContain('clip-path: inset(50%)')
+    expect(compact.slice(0, 300)).not.toContain('display: none')
+  })
+})

@@ -43,6 +43,7 @@ import type { PaletteSources } from './widgetPalette'
  * ici, et un type disparaît à la compilation : le morceau principal ne grossit pas.
  */
 import type { CurrentDocument, LibraryDialogHandle } from './libraryPanel'
+import type { PreferenceEdit } from './preferencesPage'
 import type { SharingResult, SharingSource } from './sharingDialog'
 import type { VersionPanel } from './versionDiagnostic'
 import type { Library } from '../library/library'
@@ -309,6 +310,53 @@ redoButton.append(historyGlyph('redo'))
 
 const fileName = el('span', 'app-bar__file')
 
+/**
+ * Les réglages généraux, **en clair dans la barre** — et non dans le menu.
+ *
+ * Ils y ont été rangés un temps, au critère de la fréquence d'usage : un écran qu'on ne
+ * consulte qu'une fois par session. Ce critère est tombé le jour où ces réglages sont
+ * devenus **modifiables** — on n'ouvre pas une fois par session l'écran où l'on règle
+ * ses unités, son vario sonore et ses touches. Deux gestes depuis n'importe où (le
+ * bouton, puis la page), contre trois par le menu.
+ *
+ * **Un dessin et un mot.** Le mot seul (« Réglages ») coûtait 96 px à une barre qui
+ * repliait déjà à 900 px ; le dessin seul est une roue dentée de plus dans un monde qui
+ * en est plein, et rien ne dirait *quels* réglages. Le couple tient en 118 px et se lit
+ * sans infobulle. Le dessin est `aria-hidden` : c'est le mot qui nomme le bouton, doublé
+ * d'un `title` qui dit ce qu'on y trouve.
+ */
+function gearGlyph(): SVGSVGElement {
+  const ns = 'http://www.w3.org/2000/svg'
+  const svg = document.createElementNS(ns, 'svg')
+  svg.setAttribute('viewBox', '0 0 24 24')
+  svg.setAttribute('aria-hidden', 'true')
+  svg.setAttribute('focusable', 'false')
+  svg.classList.add('btn__glyph')
+  const gear = document.createElementNS(ns, 'path')
+  // Une couronne à huit dents et son moyeu : la roue dentée reste lisible à 18 px, là où
+  // un curseur à trois glissières se réduit à trois traits gris.
+  gear.setAttribute('d',
+    'M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z' +
+    'M19.4 13.9a7.6 7.6 0 0 0 0-3.8l2-1.2-2-3.4-2.2.9a7.6 7.6 0 0 0-3.3-1.9L13.5 2h-3l-.4 2.5' +
+    'a7.6 7.6 0 0 0-3.3 1.9l-2.2-.9-2 3.4 2 1.2a7.6 7.6 0 0 0 0 3.8l-2 1.2 2 3.4 2.2-.9' +
+    'a7.6 7.6 0 0 0 3.3 1.9l.4 2.5h3l.4-2.5a7.6 7.6 0 0 0 3.3-1.9l2.2.9 2-3.4-2-1.2Z')
+  gear.setAttribute('fill', 'none')
+  gear.setAttribute('stroke', 'currentColor')
+  gear.setAttribute('stroke-width', '1.7')
+  gear.setAttribute('stroke-linejoin', 'round')
+  svg.append(gear)
+  return svg
+}
+
+const preferencesButton = el('button', 'btn app-bar__prefs')
+preferencesButton.type = 'button'
+preferencesButton.hidden = true
+preferencesButton.title =
+  'Réglages généraux — tout ce qui se règle hors des pages de gadgets : unités, touches, ' +
+  'capteurs, son, espaces aériens.'
+preferencesButton.append(gearGlyph(), el('span', 'app-bar__prefs-name', 'Réglages'))
+preferencesButton.addEventListener('click', () => { openPreferences() })
+
 /* ------------------------------------------------- menu des commandes secondaires */
 
 /**
@@ -323,14 +371,15 @@ const fileName = el('span', 'app-bar__file')
  * - « Enregistrer une copie » / « Enregistrer les modifications » — l'action principale,
  *   et le **seul signal visible** qu'un travail est en cours : son intitulé change quand
  *   le document est modifié. Rien de tout cela ne peut vivre derrière un menu ;
- * - le nom du fichier, qui dit sur quoi l'on travaille.
+ * - le nom du fichier, qui dit sur quoi l'on travaille ;
+ * - « Réglages » — voir `preferencesButton` : il a été dans ce menu, il n'y est plus.
+ *   Un écran qu'on **modifie** ne se range pas parmi ce qui sert une fois par session.
  *
- * **Ce qui se range.** Quatre commandes qui servent au plus une fois par session :
- * ouvrir un fichier, la bibliothèque, les réglages généraux, le diagnostic de version.
- * Les deux dernières n'étaient jusqu'ici atteignables que depuis la vue d'ensemble — il
- * fallait quatre gestes pour aller les lire depuis une page ouverte, et le retour ne
- * ramenait pas d'où l'on venait. Dans le menu, elles sont à deux gestes depuis
- * n'importe quel écran.
+ * **Ce qui se range.** Trois commandes qui servent au plus une fois par session : ouvrir
+ * un fichier, la bibliothèque, le diagnostic de version. La dernière n'était jusqu'ici
+ * atteignable que depuis la vue d'ensemble — il fallait quatre gestes pour aller la lire
+ * depuis une page ouverte, et le retour ne ramenait pas d'où l'on venait. Dans le menu,
+ * elle est à deux gestes depuis n'importe quel écran.
  *
  * **Clavier.** Le bouton ouvre et ferme ; les flèches parcourent les entrées avec un
  * `tabindex` glissant, `Début` et `Fin` vont aux extrémités, `Échap` referme et rend le
@@ -461,13 +510,6 @@ const libraryButton = menu.add(
   () => { void openLibrary() }
 )
 
-const preferencesItem = menu.add(
-  'Réglages généraux',
-  'Tout ce qui se règle hors des pages de gadgets : unités, touches, capteurs, son, ' +
-  'espaces aériens. En lecture seule.',
-  () => openPreferences()
-)
-
 const versionItem = menu.add(
   'Version et compatibilité…',
   'Choisir la version de XCTrack visée, et voir ce que ce fichier porte qu’elle ne ' +
@@ -488,7 +530,8 @@ brandRole.hidden = true
 brand.append(el('span', 'brand__name', 'Configuration XCTrack'), brandRole)
 const actions = el('div', 'app-bar__actions')
 actions.append(
-  fileName, undoButton, redoButton, editToggle, menu.root, fileInput, exportButton
+  fileName, undoButton, redoButton, preferencesButton, editToggle, menu.root, fileInput,
+  exportButton
 )
 bar.append(brand, actions)
 
@@ -744,25 +787,25 @@ function insideEditor(target: EventTarget | null): boolean {
  * disparaître, ce qu'un bouton muet ne dit pas.
  */
 function syncEditControls(): void {
-  // La vue des préférences est une consultation, et rien d'autre : elle ne montre aucune
-  // page, donc « Modifier les pages » n'y désignerait rien. Les trois commandes s'effacent
-  // le temps de la lecture et reviennent telles quelles ensuite — le mode, lui, n'a pas
-  // été changé.
-  const editable = session !== undefined
-    && session.container.parseError === undefined
-    && view.kind !== 'preferences'
+  // Un seul mode pour deux surfaces. Les réglages généraux ont longtemps été une
+  // consultation et rien d'autre ; depuis qu'ils se modifient, ils obéissent au même
+  // interrupteur que les pages — sans quoi la consultation cesserait d'être une
+  // consultation quelque part, ce que ce projet promet le contraire. Seul l'intitulé du
+  // bouton suit l'écran : « Modifier les pages » ne désignerait rien ici.
+  const editable = session !== undefined && session.container.parseError === undefined
+  const onPreferences = view.kind === 'preferences'
   const history = session?.history
 
-  // Le badge décrit l'écran où l'on est, pas un drapeau interne : dans les réglages
-  // généraux, qui ne montrent aucune page et n'offrent ni annulation ni sortie, annoncer
-  // « édition » serait annoncer un mode dont rien n'est atteignable. Il revient tel quel
-  // au retour — `editMode`, lui, n'a pas bougé.
   brandRole.hidden = !editMode || !editable
   editToggle.hidden = !editable
-  editToggle.textContent = editMode ? 'Consulter' : 'Modifier les pages'
+  editToggle.textContent = editMode
+    ? 'Consulter'
+    : (onPreferences ? 'Modifier les réglages' : 'Modifier les pages')
   editToggle.title = editMode
     ? 'Consulter — quitter le mode édition. Rien n’est défait.'
-    : 'Modifier les pages — déplacer, redimensionner et ajouter des gadgets.'
+    : (onPreferences
+      ? 'Modifier les réglages — changer les valeurs des réglages généraux.'
+      : 'Modifier les pages — déplacer, redimensionner et ajouter des gadgets.')
   editToggle.setAttribute('aria-pressed', String(editMode))
 
   undoButton.hidden = !editMode || !editable
@@ -784,8 +827,15 @@ function syncEditControls(): void {
   // elles disent qu'elles existent sans mentir sur ce qu'elles feraient — les cacher
   // ferait croire que le menu change de contenu d'un écran à l'autre.
   const readable = session !== undefined && session.container.parseError === undefined
-  preferencesItem.disabled = !readable || view.kind === 'preferences'
   versionItem.disabled = !readable
+
+  // Les réglages généraux ont leur bouton dans la barre. Il ne se cache pas quand il n'y
+  // a rien à lire — un bouton qui apparaît et disparaît fait douter du chemin — mais il
+  // s'éteint, et il s'éteint aussi quand on y est déjà : appuyer sur le bouton de l'écran
+  // où l'on se trouve ne mène nulle part.
+  preferencesButton.hidden = session === undefined
+  preferencesButton.disabled = !readable || onPreferences
+  preferencesButton.setAttribute('aria-current', onPreferences ? 'page' : 'false')
 
   // Un document modifié se réécrit à l'export ; intact, il ressort octet pour octet.
   // Le bouton dit lequel des deux va se produire.
@@ -971,6 +1021,9 @@ function stepHistory(direction: 'undo' | 'redo'): void {
   flushRecord()
   const history = session.history
   if (!(direction === 'undo' ? history.canUndo() : history.canRedo())) return
+  // La page des réglages est reconstruite en entier — elle lit un arbre qui vient d'être
+  // remplacé. On note où le pilote regardait pour l'y ramener.
+  if (view.kind === 'preferences') preferencesScroll = window.scrollY
   // L'annonce du carrousel décrit l'opération précédente : elle vient d'être défaite, et
   // la redire ferait croire qu'elle tient toujours.
   pagesMessage = undefined
@@ -2041,10 +2094,38 @@ let preferencesToken = 0
  */
 let viewBeforePreferences: View | undefined
 
+/**
+ * Ce que la vue des réglages doit retrouver quand elle est reconstruite sous elle-même :
+ * une annulation rend un **arbre neuf** (voir `stepHistory`), la page entière est donc
+ * rebâtie. Sans ces deux repères, annuler une modification renverrait le pilote en haut
+ * d'une page de quatre-vingt-dix lignes, filtre vidé — le geste coûterait plus cher que
+ * la modification qu'il défait.
+ */
+let preferencesFilter = ''
+let preferencesScroll: number | undefined
+
+/** Une modification faite dans la page des réglages. La page a déjà écrit dans le document. */
+function onPreferenceEdit(edit: PreferenceEdit): void {
+  if (!session) return
+  session.container.modified = true
+  // Un curseur émet à chaque cran : les pas se regroupent, exactement comme ceux du
+  // panneau des gadgets. Le reste — case, liste, champ quitté — est un pas net.
+  if (edit.continuous) recordSoon(`pref:${edit.key}`, edit.description)
+  else {
+    flushRecord()
+    session.history.record(edit.description)
+  }
+  syncEditControls()
+}
+
 /** Aller lire les réglages généraux, en retenant d'où l'on vient. */
 function openPreferences(): void {
   if (!session || view.kind === 'preferences') return
   viewBeforePreferences = view
+  // On y entre à neuf : le filtre d'une visite précédente cacherait des lignes sans que
+  // rien à l'écran dise pourquoi.
+  preferencesFilter = ''
+  preferencesScroll = undefined
   view = { kind: 'preferences' }
   render()
   window.scrollTo({ top: 0 })
@@ -2073,6 +2154,11 @@ function buildPreferencesView(current: Session): HTMLElement {
     window.scrollTo({ top: 0 })
   }
 
+  // `onEdit` n'est branché qu'en mode édition : sans lui, la page ne construit aucun
+  // contrôle — c'est sa promesse, et c'est ce qui fait de la consultation une vraie
+  // consultation ici comme sur les pages.
+  const writable = editMode && current.container.parseError === undefined
+
   void import('./preferencesPage')
     .then((module) => module.openPreferencesPage({
       document: current.container.document,
@@ -2080,6 +2166,7 @@ function buildPreferencesView(current: Session): HTMLElement {
       fileName: current.container.fileName,
       ...(current.versionName === undefined ? {} : { fileVersionName: current.versionName }),
       ...(current.versionCode === undefined ? {} : { fileVersionCode: current.versionCode }),
+      ...(writable ? { onEdit: onPreferenceEdit } : {}),
       // Sans `onClose`, le module ne construit aucun bouton « Fermer » : la vue serait
       // sans issue visible. C'est l'assembleur qui décide où l'on retombe — ici la vue
       // d'ensemble, d'où l'on est venu.
@@ -2089,6 +2176,19 @@ function buildPreferencesView(current: Session): HTMLElement {
       if (token !== preferencesToken || !host.isConnected) return
       host.textContent = ''
       host.append(page.element)
+      // Le filtre et le défilement traversent une reconstruction — annulation,
+      // changement de mode : le pilote reprend là où il en était.
+      const search = page.element.querySelector<HTMLInputElement>('.prefs__filter')
+      if (search) {
+        if (preferencesFilter !== '') {
+          search.value = preferencesFilter
+          page.filter(preferencesFilter)
+        }
+        search.addEventListener('input', () => { preferencesFilter = search.value })
+      }
+      const top = preferencesScroll
+      preferencesScroll = undefined
+      if (top !== undefined) window.scrollTo({ top })
     })
     .catch((error: unknown) => {
       if (token !== preferencesToken || !host.isConnected) return
@@ -2764,6 +2864,10 @@ exportButton.addEventListener('click', () => {
 
 editToggle.addEventListener('click', () => {
   editMode = !editMode
+  // Passer d'un mode à l'autre rebâtit la page des réglages, contrôles compris : on y
+  // revient à la même hauteur, sinon le simple fait de vouloir modifier fait perdre sa
+  // place dans une page de quatre-vingt-dix lignes.
+  if (view.kind === 'preferences') preferencesScroll = window.scrollY
   // Les deux modules lourds de l'édition sont amorcés dès l'entrée : ils partagent le
   // catalogue d'options, et le premier clic ne doit pas attendre son téléchargement.
   if (editMode) {

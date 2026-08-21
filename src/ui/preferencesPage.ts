@@ -1,5 +1,7 @@
 import './preferences.css'
-import { decode, getMember } from '../core/access'
+import {
+  decode, encode, getMember, insertLiteral, insertString, setLiteral, setString
+} from '../core/access'
 import type { JsonNode } from '../core/jsonDocument'
 import { serializeJson } from '../core/serializeJson'
 import { androidColorToHex } from '../model/preferences'
@@ -21,22 +23,51 @@ import {
 } from '../model/personalData'
 
 /**
- * La page de **consultation des préférences générales** de XCTrack : tout ce qui se
- * règle hors des pages de gadgets — unités, touches, capteurs, son, espaces aériens.
+ * La page des **réglages généraux** de XCTrack : tout ce qui se règle hors des pages de
+ * gadgets — unités, touches, capteurs, son, espaces aériens.
  *
- * ## Lecture seule, et pas un grisage
+ * ## Deux modes, et le second ne se devine pas
  *
- * Ce module ne construit **aucun contrôle de formulaire** : pas d'`<input>`, pas de
- * `<select>`, pas de case à cocher désactivée. Les valeurs sont du texte. C'est la leçon
- * de `properties.ts` (`renderProperties({ readOnly: true })`), et elle vaut davantage
- * encore ici : la section `preferences` porte du JSON imbriqué (`Sounds`,
- * `Navigation.State`, `Sensors.Configuration`) qu'il ne faut surtout pas réécrire, et la
- * fidélité à l'octet près impose de ne toucher que la valeur modifiée. Un contrôle
- * désactivé se réactive depuis la console ; ce qui n'existe pas ne se réactive pas.
+ * Sans `onEdit`, la page est en **lecture seule, et pas en grisage** : elle ne construit
+ * alors aucun contrôle de formulaire — pas d'`<input>`, pas de `<select>`, pas de case
+ * désactivée. Les valeurs sont du texte, et le document ne peut pas bouger d'un octet.
+ * C'est la leçon de `properties.ts` (`renderProperties({ readOnly: true })`) : un
+ * contrôle désactivé se réactive depuis la console, ce qui n'existe pas ne se réactive
+ * pas. `data-mode="lecture"` le dit de l'extérieur.
  *
- * Le document n'est jamais muté : il n'est que lu. Les seules commandes de la page —
- * filtre, bascule « seulement ce qui diffère », masquage des valeurs personnelles — ne
- * font que montrer et cacher ce qui est déjà à l'écran.
+ * Avec `onEdit`, la page devient **modifiable** (`data-mode="edition"`), et l'assembleur
+ * reçoit chaque écriture pour l'enregistrer dans l'historique et marquer le document.
+ *
+ * ## Ce qui est modifiable, et pourquoi le reste ne l'est pas
+ *
+ * Trois filtres, du plus large au plus étroit :
+ *
+ * 1. **Ce qui n'est pas présentable n'est pas modifiable.** Une clé sans libellé, une
+ *    clé d'une autre version, de l'état sérialisé : la page les montre en fin de page,
+ *    en texte, exactement comme avant. On ne propose pas de régler ce qu'on ne sait pas
+ *    nommer.
+ * 2. **Une valeur structurée ne se réécrit jamais.** `Sounds`, `Navigation.State`,
+ *    `Sensors.Configuration`, `Maverick.Layout`, `Sensors.AcousticVario.CustomProfile`
+ *    (une table de 16 entrées) sont du JSON imbriqué que la page montre sans le déballer.
+ *    Elle ne le déballera pas davantage pour l'écrire.
+ * 3. **Seuls six types de contrôle sont offerts** — voir `EDITABLE_CONTROLS`. Les
+ *    dix-huit lignes de contrôle `action` ouvrent, sur l'appareil, une boîte que rien ne
+ *    remplace ici : `Keys.*` attend une **touche pressée** et enregistre son code Android,
+ *    dont ce catalogue ne relève aucune correspondance ; `Sensors.AcousticVario.
+ *    CustomProfileEnabled` commande la table de 16 entrées qu'on ne réécrit pas. La ligne
+ *    reste affichée, avec sa valeur, et dit pourquoi elle ne se règle pas.
+ *
+ * ## Écrire sans dégrader
+ *
+ * Une écriture passe par `writePreference`, qui ne touche **que** le nœud de la clé
+ * visée, par `setString` / `setLiteral` de `core/access` — jamais par `JSON.stringify` du
+ * document. Deux conséquences mesurées :
+ *
+ * - une valeur reposée à l'identique n'est **pas** réécrite (`'unchanged'`), et le texte
+ *   source d'origine reste en place : `3.0` ne devient pas `3` en passant ;
+ * - la comparaison des littéraux se fait d'abord sur le texte, puis sur le nombre, ce qui
+ *   fait qu'un aller-retour par un champ numérique — où le navigateur normalise ce qu'il
+ *   affiche — ne réécrit rien non plus.
  *
  * ## La structure de la page est celle de l'appareil
  *
@@ -67,11 +98,23 @@ import {
  *   2025 en porte 27. La page dit « je ne sais pas » : jamais « supprimable », jamais
  *   « inconnue donc ignorée ».
  *
- * ## Absente n'est pas « réglée au défaut »
+ * ## Absente n'est pas « réglée au défaut » — et l'écriture ne le décide pas en silence
  *
  * Une clé absente du fichier signifie « XCTrack appliquera son défaut » — ce n'est pas la
  * même chose que « réglée à cette valeur ». Les deux ont leur état, et le compte les
  * sépare. Voir `PreferenceState`.
+ *
+ * **Décision de cette page : une clé absente le reste tant que le pilote ne demande pas
+ * explicitement le contraire.** Elle ne reçoit aucun contrôle — un champ prérempli au
+ * défaut inviterait à « confirmer » une valeur, et le premier geste maladroit écrirait
+ * une ligne de plus dans le fichier sans rien changer au comportement de l'appareil.
+ * À la place, la ligne porte un bouton « Écrire cette clé », dont l'infobulle dit
+ * exactement ce qu'il fait et ce qu'il ne fait pas. Une fois la clé écrite — au défaut
+ * relevé, tel qu'il s'écrit — la ligne devient une ligne comme les autres.
+ *
+ * Ce bouton n'apparaît que si le catalogue relève un défaut **écrivable** : les huit
+ * `Unit.*` et les autres défauts calculés au démarrage (`defaultSource: 'runtime'`) n'en
+ * ont pas, et la ligne le dit plutôt que d'inventer une valeur de départ.
  */
 
 /* ------------------------------------------------------------------ le modèle de page */
@@ -594,6 +637,159 @@ export function isPresentable(catalog: PreferenceCatalog, key: string): boolean 
   return entry !== undefined && entry.control !== null && catalog.hasLabel(key)
 }
 
+/* -------------------------------------------------------------------------- l'écriture */
+
+/**
+ * Les contrôles que la page sait offrir honnêtement.
+ *
+ * `action` en est absent, et c'est la décision qui écarte le plus de lignes (18) : sur
+ * l'appareil, ces lignes ouvrent une boîte — capturer une touche, choisir une adresse,
+ * bâtir une table de sons — dont ni le domaine ni l'effet de bord ne sont relevés ici.
+ * `button` et `screen` ne portent pas de valeur du tout.
+ */
+export const EDITABLE_CONTROLS: ReadonlySet<PreferenceControl> =
+  new Set<PreferenceControl>(['checkbox', 'list', 'slider', 'number', 'text', 'color'])
+
+/**
+ * Pourquoi cette ligne-là ne se règle pas, ou `undefined` si elle se règle.
+ *
+ * Rendre la **raison** plutôt qu'un booléen : la ligne reste affichée, et une ligne qui
+ * ne se règle pas doit dire pourquoi — sans quoi le pilote croit à une panne.
+ */
+export function editRefusal(row: PreferenceRow): string | undefined {
+  if (row.reason !== undefined) {
+    if (row.reason === 'unknown') {
+      return 'Cet éditeur ne sait pas ce que règle cette clé : il ne propose pas de la ' +
+        'changer. Elle est conservée telle quelle.'
+    }
+    if (row.reason === 'state') {
+      return 'Cette clé enregistre l’état de l’application, pas un réglage : elle ressort ' +
+        'intacte, jamais réécrite.'
+    }
+    return 'XCTrack ne nomme ce réglage nulle part qu’on puisse lire : sans son libellé, ' +
+      'cet éditeur ne propose pas de le changer.'
+  }
+  if (row.structured) {
+    return 'Valeur JSON imbriquée : cette page la montre sans la déballer, et ne la ' +
+      'réécrit jamais.'
+  }
+  if (row.control === null || !EDITABLE_CONTROLS.has(row.control)) {
+    if (row.control === 'action') {
+      // Formulé sans nombre : la même phrase sert d'infobulle sur une ligne et de note
+      // sous un bloc de quinze.
+      return 'Sur l’appareil, cela s’obtient par une boîte de dialogue — une touche à ' +
+        'presser, une adresse à choisir — dont cet éditeur ne relève pas le domaine.'
+    }
+    return 'Cela ne se saisit pas : la ligne commande, elle ne porte pas de valeur.'
+  }
+  return undefined
+}
+
+/**
+ * Vrai si la valeur de cette clé s'écrit entre guillemets.
+ *
+ * Le témoin le plus sûr est **ce que le fichier porte déjà** : XCTrack écrit tantôt `100`,
+ * tantôt `"100"` pour des réglages voisins, et rien dans le catalogue ne le prédit
+ * mieux que le fichier lui-même. Pour une clé absente, c'est le type du défaut relevé qui
+ * tranche — c'est lui que XCTrack écrira le jour où il l'écrira.
+ */
+export function writesString(
+  entry: PreferenceEntry | undefined, current: JsonNode | undefined
+): boolean {
+  if (current?.kind === 'string') return true
+  if (current?.kind === 'literal') return false
+  if (typeof entry?.default === 'string') return true
+  if (entry?.default !== undefined) return false
+  return entry?.valueKind === 'string' || entry?.valueKind === 'enum'
+}
+
+/** Ce qu'une écriture a réellement fait au document. */
+export type WriteOutcome = 'set' | 'inserted' | 'unchanged'
+
+/**
+ * Écrit une valeur de préférence, et **rien d'autre**.
+ *
+ * `text` est la valeur telle qu'on la lit : le contenu d'une chaîne sans ses guillemets,
+ * le texte source exact d'un littéral. Ce n'est jamais un nombre JavaScript — c'est
+ * précisément ce qui interdit à `JSON.stringify` de réécrire `3.0` en `3`.
+ *
+ * Rend `'unchanged'` sans rien écrire quand la valeur demandée est déjà celle du fichier.
+ * Deux comparaisons, dans cet ordre :
+ *
+ * 1. **le texte source**, qui suffit dans l'immense majorité des cas et préserve la forme
+ *    exacte du fichier (`1.0E7`, `-0.0`, un entier au-delà de 2^53) ;
+ * 2. **le nombre**, pour les littéraux seulement, parce qu'un champ numérique de
+ *    navigateur normalise ce qu'il affiche : reposer `3.0` par un `<input type="number">`
+ *    revient avec `3`, et réécrire serait dégrader une valeur que le pilote n'a pas
+ *    changée. `===` et non `Object.is` : `-0.0` face à `0` est traité comme inchangé,
+ *    donc préservé, ce qui est le sens conservateur.
+ *
+ * ⚠️ Cette seconde comparaison passe par `Number`, qui perd la précision au-delà de
+ * 2^53 : deux entiers énormes distincts peuvent s'y égaler, et l'écriture serait alors
+ * refusée. Refuser une écriture est sans conséquence ; en accepter une qui dégrade ne
+ * l'est pas. Aucune préférence présentable ne porte de tel entier.
+ *
+ * Une clé absente est **insérée en fin de section** : voir `insertRaw` dans
+ * `core/access` — c'est la seule position qui ne déplace, ne réécrit et ne réindente
+ * aucune clé existante.
+ */
+export function writePreference(
+  document: JsonNode, key: string, text: string, asString: boolean
+): WriteOutcome {
+  const section = getMember(document, 'preferences')
+  if (section === undefined || section.kind !== 'object') {
+    throw new Error('writePreference : ce document n’a pas de section « preferences »')
+  }
+  const current = getMember(section, key)
+
+  if (asString) {
+    if (current === undefined) {
+      insertString(section, key, encode(text))
+      return 'inserted'
+    }
+    if (current.kind === 'string' && decode(current.raw) === text) return 'unchanged'
+    setString(section, key, encode(text))
+    return 'set'
+  }
+
+  if (current === undefined) {
+    insertLiteral(section, key, text)
+    return 'inserted'
+  }
+  if (current.kind === 'literal') {
+    if (current.raw === text) return 'unchanged'
+    const before = Number(current.raw)
+    const after = Number(text)
+    if (Number.isFinite(before) && Number.isFinite(after) && before === after) return 'unchanged'
+  }
+  setLiteral(section, key, text)
+  return 'set'
+}
+
+/** Ce qu'une écriture vient de faire, tel que l'assembleur a besoin de le savoir. */
+export interface PreferenceEdit {
+  key: string
+  /** Le libellé du réglage, celui que la ligne affiche. */
+  label: string
+  /** `set` : une valeur remplacée. `inserted` : une clé que le fichier ne portait pas. */
+  outcome: Exclude<WriteOutcome, 'unchanged'>
+  /** La valeur désormais écrite, telle qu'on la lit. */
+  text: string
+  /** Une phrase pour l'historique : « Régler Thème ». */
+  description: string
+  /**
+   * Vrai pour un contrôle qui émet en continu — curseur, champ numérique. L'assembleur
+   * regroupe alors les pas d'historique, comme il le fait pour le panneau des gadgets.
+   */
+  continuous: boolean
+  /**
+   * Défini quand l'écriture vient de **renseigner** une donnée personnelle : la clé en
+   * porte une, et la valeur écrite n'est pas vide. Une clé personnelle vidée ne le
+   * déclenche pas — c'est le contraire d'un risque.
+   */
+  personal?: PersonalData
+}
+
 /* ------------------------------------------------------------------------- l'inventaire */
 
 /**
@@ -806,7 +1002,12 @@ function leftoverReason(
 /* ------------------------------------------------------------------------------ le rendu */
 
 export interface PreferencesPageOptions {
-  /** Le document ouvert, tel que `openContainer` le rend. Il n'est que **lu**. */
+  /**
+   * Le document ouvert, tel que `openContainer` le rend.
+   *
+   * Sans `onEdit`, il n'est que **lu**. Avec, la page y écrit — par `writePreference`,
+   * donc en ne touchant que le nœud de la clé réglée.
+   */
   document: JsonNode
   /** Le catalogue déjà chargé, dans la langue voulue. Voir `openPreferencesPage`. */
   catalog: PreferenceCatalog
@@ -821,12 +1022,23 @@ export interface PreferencesPageOptions {
    * l'assembleur qui décide si la page se ferme, et comment.
    */
   onClose?: () => void
+  /**
+   * **Branché : la page devient modifiable.** Absent : elle reste ce qu'elle était, une
+   * lecture sans le moindre contrôle de formulaire.
+   *
+   * Appelé après chaque écriture effective — jamais pour une valeur reposée à
+   * l'identique. L'assembleur y enregistre le pas d'historique et marque le document ;
+   * la page, elle, a déjà écrit et remis ses comptes à jour.
+   */
+  onEdit?: (edit: PreferenceEdit) => void
 }
 
 export interface PreferencesPage {
   element: HTMLElement
   summary: PreferencesSummary
   inventory: PreferenceInventory
+  /** Vrai si la page construit des contrôles — c'est-à-dire si `onEdit` était branché. */
+  editable: boolean
   /** Filtre les lignes affichées, sur le libellé et sur la clé. Chaîne vide : tout. */
   filter: (query: string) => void
   /** Retire la page du document et appelle `onClose`. Sans effet si déjà fermée. */
@@ -911,21 +1123,35 @@ function personalMark(personal: PersonalData): HTMLElement {
 interface RenderedRow {
   element: HTMLElement
   haystack: string
-  state: PreferenceState
+  row: PreferenceRow
 }
 
-function buildRowElement(row: PreferenceRow, collected: RenderedRow[]): HTMLElement {
-  const element = el('div', 'prefs__row')
-  element.dataset.key = row.key
-  element.dataset.state = row.state
-  if (row.control !== null) element.dataset.control = row.control
-  if (!row.labelled) element.dataset.unlabelled = 'true'
-  if (row.personal !== undefined) element.dataset.personal = row.personal.kind
+/**
+ * Ce que le rendu d'une ligne a besoin de savoir. `edit` absent : la page est en lecture
+ * seule et aucun contrôle n'est construit — voir l'en-tête de ce module.
+ */
+interface PageContext {
+  collected: RenderedRow[]
+  edit?: EditContext
+}
 
-  const label = el('span', 'prefs__label', row.label)
-  label.title = row.key
-  element.append(label)
+/** Ce qu'il faut pour écrire, et pour dire à la page ce qui vient d'être écrit. */
+interface EditContext {
+  document: JsonNode
+  catalog: PreferenceCatalog
+  conflicts: Set<string>
+  onEdit: (edit: PreferenceEdit) => void
+  /** Rappelé après chaque écriture effective : bandeau, confidentialité, entrées masquées. */
+  wrote: (row: PreferenceRow, previous: PreferenceState, edit: PreferenceEdit) => void
+  /** Les champs de saisie qui portent une donnée personnelle, pour le masquage. */
+  secrets: HTMLInputElement[]
+}
 
+/** Un identifiant unique par contrôle : `label.htmlFor` doit désigner quelque chose. */
+let controlSeq = 0
+
+/** La valeur en texte, telle que la page en lecture seule la montre. */
+function readOnlyValue(row: PreferenceRow): HTMLElement {
   const value = el('span', 'prefs__value', row.value ?? '—')
   if (row.value === undefined) value.classList.add('prefs__value--none')
   if (row.structured) value.classList.add('prefs__value--structured')
@@ -935,7 +1161,61 @@ function buildRowElement(row: PreferenceRow, collected: RenderedRow[]): HTMLElem
     value.classList.add('prefs__value--secret')
     value.dataset.clear = row.value
   }
-  element.append(value)
+  return value
+}
+
+/** Le nœud que la section `preferences` porte aujourd'hui pour cette clé. */
+function currentNode(document: JsonNode, key: string): JsonNode | undefined {
+  const section = getMember(document, 'preferences')
+  if (section === undefined || section.kind !== 'object') return undefined
+  return getMember(section, key)
+}
+
+/**
+ * Remet la ligne d'accord avec ce qui vient d'être écrit : la valeur en toutes lettres,
+ * son texte source, et l'état — les six états d'origine, recalculés par le même chemin
+ * que `buildRow`, jamais par un raccourci qui divergerait.
+ */
+function restate(
+  row: PreferenceRow, text: string, asString: boolean,
+  entry: PreferenceEntry, ctx: EditContext
+): void {
+  const node: JsonNode = asString
+    ? { kind: 'string', raw: encode(text) }
+    : { kind: 'literal', raw: text }
+  row.value = readableValue(node, entry, ctx.catalog, row.key)
+  row.raw = node.raw
+  if (ctx.conflicts.has(row.key) && entry.default !== undefined && entry.xmlDefault !== undefined) {
+    row.state = 'conflict'
+    return
+  }
+  if (entry.defaultSource === 'runtime' || entry.default === undefined) {
+    row.state = 'undecidable'
+    return
+  }
+  row.state = sameAsDefault(text, entry.default) ? 'default' : 'custom'
+}
+
+function buildRowElement(row: PreferenceRow, ctx: PageContext): HTMLElement {
+  const element = el('div', 'prefs__row')
+  element.dataset.key = row.key
+  element.dataset.state = row.state
+  if (row.control !== null) element.dataset.control = row.control
+  if (!row.labelled) element.dataset.unlabelled = 'true'
+  if (row.personal !== undefined) element.dataset.personal = row.personal.kind
+
+  const entry = ctx.edit?.catalog.preference(row.key)
+  const refusal = editRefusal(row)
+  const settable = ctx.edit !== undefined && refusal === undefined && entry !== undefined
+  const id = `prefs-field-${String(++controlSeq)}`
+
+  const label = el(settable ? 'label' : 'span', 'prefs__label', row.label)
+  label.title = row.key
+  if (settable) (label as HTMLLabelElement).htmlFor = id
+  element.append(label)
+
+  const cell = el('span', 'prefs__cell')
+  element.append(cell)
 
   // Sur une clé d'une autre version ou sur de l'état sérialisé, « rien à comparer » se
   // répéterait à chaque ligne pour redire ce que le titre du bloc dit déjà une fois. La
@@ -945,15 +1225,297 @@ function buildRowElement(row: PreferenceRow, collected: RenderedRow[]): HTMLElem
   if (!mute) state.title = stateTitle(row)
   element.append(state)
 
+  const rendered: RenderedRow = {
+    element,
+    haystack: normalize(`${row.label} ${row.key} ${row.value ?? ''}`),
+    row
+  }
+
+  function refreshState(): void {
+    element.dataset.state = row.state
+    state.className = `prefs__state prefs__state--${row.state}`
+    state.textContent = stateLabel(row)
+    state.title = stateTitle(row)
+    rendered.haystack = normalize(`${row.label} ${row.key} ${row.value ?? ''}`)
+  }
+
+  /**
+   * Une écriture demandée par un contrôle. Rend `false` quand rien n'a bougé — reposer
+   * une valeur à l'identique n'est pas une modification et ne doit pas en avoir l'air.
+   */
+  function commit(text: string, continuous: boolean): boolean {
+    const context = ctx.edit
+    if (context === undefined || entry === undefined) return false
+    const asString = writesString(entry, currentNode(context.document, row.key))
+    const outcome = writePreference(context.document, row.key, text, asString)
+    if (outcome === 'unchanged') return false
+
+    const previous = row.state
+    restate(row, text, asString, entry, context)
+    refreshState()
+
+    const edit: PreferenceEdit = {
+      key: row.key,
+      label: row.label,
+      outcome,
+      text,
+      description: outcome === 'inserted'
+        ? `Écrire ${row.label} dans le fichier`
+        : `Régler ${row.label}`,
+      continuous
+    }
+    if (row.personal !== undefined && text.trim() !== '') edit.personal = row.personal
+    context.onEdit(edit)
+    context.wrote(row, previous, edit)
+    return true
+  }
+
+  function fillCell(): void {
+    cell.textContent = ''
+    const context = ctx.edit
+    if (!settable || context === undefined || entry === undefined) {
+      cell.append(readOnlyValue(row))
+      return
+    }
+    if (row.state === 'absent' || row.state === 'unwritten') {
+      cell.append(buildAdoptButton(row, entry, () => {
+        // La clé vient d'entrer dans le fichier : la ligne devient une ligne comme les
+        // autres, contrôle compris.
+        fillCell()
+        const first = cell.querySelector<HTMLElement>('input, select')
+        first?.focus()
+      }, commit))
+      return
+    }
+    cell.append(buildField(row, entry, id, context, commit))
+  }
+
+  fillCell()
+
   if (row.personal !== undefined) element.append(personalMark(row.personal))
   if (row.help !== undefined) element.append(el('p', 'prefs__help', row.help))
 
-  collected.push({
-    element,
-    haystack: normalize(`${row.label} ${row.key} ${row.value ?? ''}`),
-    state: row.state
-  })
+  // Une ligne qui ne se règle pas dans une page qui se règle doit dire pourquoi — mais
+  // **une fois par bloc**, pas quinze fois de suite : l'écran des touches en compte
+  // quinze d'affilée, et la même phrase répétée quinze fois chasse les réglages de
+  // l'écran sans rien apprendre de plus. Le bloc porte la phrase (voir `refusalNote`),
+  // la ligne porte la marque et l'infobulle.
+  if (refusal !== undefined && ctx.edit !== undefined) {
+    element.dataset.settable = 'false'
+    cell.title = refusal
+  }
+
+  ctx.collected.push(rendered)
   return element
+}
+
+/**
+ * Le bouton d'une clé absente. Il ne préremplit rien : il **écrit**, à la valeur du
+ * relevé, et son infobulle dit ce que ça change et ce que ça ne change pas.
+ */
+function buildAdoptButton(
+  row: PreferenceRow, entry: PreferenceEntry,
+  done: () => void, commit: (text: string, continuous: boolean) => boolean
+): HTMLElement {
+  const seed = entry.defaultSource === 'runtime' ? undefined : entry.default
+  if (seed === undefined) {
+    const note = el('span', 'prefs__value prefs__value--none', 'pas de valeur de départ')
+    note.title = row.undecidableReason ??
+      'Le catalogue ne relève aucune valeur par défaut écrivable pour cette clé : ' +
+      'cet éditeur n’a rien avec quoi la créer.'
+    return note
+  }
+
+  const button = el('button', 'btn prefs__adopt', 'Écrire cette clé')
+  button.type = 'button'
+  button.title =
+    `Ajoute « ${row.key} » au fichier, à la valeur ${row.defaultText ?? String(seed)}. ` +
+    'Attention : XCTrack applique déjà ce défaut aujourd’hui — écrire la clé change donc ' +
+    'le fichier sans changer le comportement de l’appareil. Ce n’est utile que si vous ' +
+    'voulez ensuite lui donner une autre valeur.'
+  button.addEventListener('click', () => {
+    if (commit(typeof seed === 'string' ? seed : String(seed), false)) done()
+  })
+  return button
+}
+
+/** Le contrôle d'une ligne qui se règle, choisi sur le type que XCTrack affiche. */
+function buildField(
+  row: PreferenceRow, entry: PreferenceEntry, id: string, ctx: EditContext,
+  commit: (text: string, continuous: boolean) => boolean
+): HTMLElement {
+  const text = row.raw === undefined
+    ? ''
+    : (row.raw.startsWith('"') ? decode(row.raw) : row.raw)
+
+  if (entry.control === 'checkbox') return buildCheckbox(id, text, commit)
+  if (entry.control === 'color') return buildColorField(id, text, commit)
+  if (entry.control === 'slider' || entry.control === 'number') {
+    return buildNumberField(id, text, entry, commit)
+  }
+  if (entry.control === 'list') {
+    const choices = ctx.catalog.values(row.key)
+    // ⚠️ Les huit `Unit.*` et les deux listes de voile n'ont **aucun domaine relevé** :
+    // XCTrack les remplit en code. Une liste vide serait un piège, une liste inventée
+    // serait pire — un champ texte est la seule chose honnête tant qu'on ne les a pas
+    // extraites du bytecode.
+    if (choices.length === 0) return buildTextField(id, text, row, ctx, commit, true)
+    return buildSelect(id, text, choices, commit)
+  }
+  return buildTextField(id, text, row, ctx, commit, false)
+}
+
+function buildCheckbox(
+  id: string, text: string, commit: (text: string, continuous: boolean) => boolean
+): HTMLElement {
+  const box = el('input', 'prefs__checkbox')
+  box.type = 'checkbox'
+  box.id = id
+  box.checked = text === 'true'
+  box.addEventListener('change', () => { commit(box.checked ? 'true' : 'false', false) })
+  return box
+}
+
+function buildSelect(
+  id: string, text: string, choices: readonly { value: string; label: string }[],
+  commit: (text: string, continuous: boolean) => boolean
+): HTMLElement {
+  const select = el('select', 'prefs__select')
+  select.id = id
+  for (const choice of choices) {
+    const option = el('option', undefined, choice.label)
+    option.value = choice.value
+    select.append(option)
+  }
+  // Une valeur que le catalogue ne propose pas — vestige, ou version plus récente que
+  // l'extraction — s'ajoute à la liste plutôt que de se faire remplacer en silence.
+  if (!choices.some((choice) => choice.value === text)) {
+    const extra = el('option', undefined, `${text} (hors catalogue)`)
+    extra.value = text
+    select.prepend(extra)
+  }
+  select.value = text
+  select.addEventListener('change', () => { commit(select.value, false) })
+  return select
+}
+
+/**
+ * Un nombre. Curseur quand les bornes sont relevées, champ numérique sinon.
+ *
+ * Le texte envoyé à l'écriture est celui du contrôle, jamais un `Number` reformaté :
+ * c'est lui qui ira dans le fichier.
+ */
+function buildNumberField(
+  id: string, text: string, entry: PreferenceEntry,
+  commit: (text: string, continuous: boolean) => boolean
+): HTMLElement {
+  const bounded = entry.control === 'slider' && entry.min !== undefined && entry.max !== undefined
+  const wrap = el('span', 'prefs__number-wrap')
+  const input = el('input', bounded ? 'prefs__slider' : 'prefs__number')
+  input.type = bounded ? 'range' : 'number'
+  input.id = id
+  if (entry.min !== undefined) input.min = String(entry.min)
+  if (entry.max !== undefined) input.max = String(entry.max)
+  // Un pas déduit du nombre de décimales relevé : `Sensors.ManualQnh` se règle au
+  // dixième d'hectopascal sur l'appareil, et un pas entier interdirait 1018,8.
+  input.step = entry.decimals === undefined || entry.decimals === 0
+    ? '1'
+    : String(1 / 10 ** entry.decimals)
+  input.value = text
+
+  const readout = el('output', 'prefs__readout')
+  readout.htmlFor = id
+  const unit = entry.unit === undefined ? '' : entry.unit.trim()
+  const show = (): void => { readout.textContent = unit === '' ? input.value : `${input.value} ${unit}` }
+  show()
+
+  input.addEventListener('input', () => {
+    const next = input.value.trim()
+    if (next === '' || !Number.isFinite(Number(next))) return
+    commit(next, true)
+    show()
+  })
+  wrap.append(input)
+  if (bounded) wrap.append(readout)
+  return wrap
+}
+
+function buildTextField(
+  id: string, text: string, row: PreferenceRow, ctx: EditContext,
+  commit: (text: string, continuous: boolean) => boolean, freeList: boolean
+): HTMLElement {
+  const input = el('input', 'prefs__text')
+  input.type = 'text'
+  input.id = id
+  input.value = text
+  input.spellcheck = false
+  if (freeList) {
+    input.title =
+      'XCTrack remplit cette liste en code : son domaine n’est pas relevé, et cet éditeur ' +
+      'ne propose donc pas de choix. La valeur est écrite telle que vous la saisissez.'
+  }
+  input.addEventListener('change', () => { commit(input.value, false) })
+  if (row.personal !== undefined) {
+    input.classList.add('prefs__text--secret')
+    ctx.secrets.push(input)
+  }
+  return input
+}
+
+/**
+ * Le champ `#AARRGGBB`, comme le panneau des gadgets. Pas d'`<input type="color">` : il
+ * ignore la composante alpha, que XCTrack utilise.
+ *
+ * ⚠️ Les deux conversions sont recopiées de `properties.ts` plutôt qu'importées : ce
+ * module-là ouvre le catalogue d'options des gadgets par un `await` de premier niveau, et
+ * l'importer ici ferait télécharger quatre cents kilo-octets à qui n'ouvre que les
+ * réglages. Elles tiennent en quatre lignes et ont leurs tests des deux côtés.
+ */
+export function colorTextToHex(raw: string): string | undefined {
+  const value = Number(raw)
+  if (!Number.isInteger(value) || value < -0x80000000 || value > 0xffffffff) return undefined
+  return `#${(value >>> 0).toString(16).padStart(8, '0').toUpperCase()}`
+}
+
+/** Inverse de `colorTextToHex`. Accepte `#AARRGGBB` et `#RRGGBB` (alpha implicite `FF`). */
+export function hexToColorText(hex: string): string | undefined {
+  const digits = hex.replace(/^#/, '').toUpperCase()
+  if (!/^[0-9A-F]{6}$|^[0-9A-F]{8}$/.test(digits)) return undefined
+  const full = digits.length === 6 ? `FF${digits}` : digits
+  return String(parseInt(full, 16) | 0)
+}
+
+function buildColorField(
+  id: string, text: string, commit: (text: string, continuous: boolean) => boolean
+): HTMLElement {
+  const wrap = el('span', 'prefs__color')
+  const input = el('input', 'prefs__hex')
+  input.type = 'text'
+  input.id = id
+  input.spellcheck = false
+  const swatch = el('span', 'prefs__swatch')
+  swatch.setAttribute('aria-hidden', 'true')
+
+  let source = text
+  function show(): void {
+    const hex = colorTextToHex(source)
+    input.value = hex ?? source
+    if (hex === undefined) return
+    swatch.style.backgroundColor = `#${hex.slice(-6)}`
+    swatch.style.opacity = String(parseInt(hex.slice(1, 3), 16) / 255)
+  }
+  show()
+
+  input.addEventListener('change', () => {
+    const literal = hexToColorText(input.value)
+    // Saisie invalide : on remet ce que le fichier contient, sans rien écrire.
+    if (literal === undefined) { show(); return }
+    if (commit(literal, false)) source = literal
+    show()
+  })
+
+  wrap.append(input, swatch)
+  return wrap
 }
 
 /**
@@ -966,8 +1528,21 @@ function buildRowElement(row: PreferenceRow, collected: RenderedRow[]): HTMLElem
 function buildSummaryBox(
   inventory: PreferenceInventory, options: PreferencesPageOptions
 ): HTMLElement {
-  const { summary } = inventory
   const box = el('div', 'prefs__summary')
+  fillSummaryBox(box, inventory, options)
+  return box
+}
+
+/**
+ * Réécrit le bandeau depuis les comptes courants. Séparé de sa construction parce qu'une
+ * écriture change les comptes : un réglage qui passe de « au défaut » à « réglé » doit
+ * bouger la première ligne de la page, sinon le bandeau ment dès la première modification.
+ */
+function fillSummaryBox(
+  box: HTMLElement, inventory: PreferenceInventory, options: PreferencesPageOptions
+): void {
+  const { summary } = inventory
+  box.textContent = ''
   box.dataset.custom = String(summary.customCount)
   box.dataset.presented = String(summary.presentedCount)
 
@@ -1005,7 +1580,6 @@ function buildSummaryBox(
   }
 
   box.append(el('p', 'prefs__summary-note', catalogNote(options)))
-  return box
 }
 
 /**
@@ -1151,7 +1725,7 @@ const LEFTOVER_LEADS: Record<LeftoverReason, string> = {
 }
 
 function buildLeftoverSection(
-  reason: LeftoverReason, rows: PreferenceRow[], collected: RenderedRow[]
+  reason: LeftoverReason, rows: PreferenceRow[], ctx: PageContext
 ): HTMLElement {
   const section = el('section', 'prefs__leftover')
   section.dataset.reason = reason
@@ -1175,7 +1749,7 @@ function buildLeftoverSection(
   }
 
   const list = el('div', 'prefs__list')
-  for (const row of rows) list.append(buildRowElement(row, collected))
+  for (const row of rows) list.append(buildRowElement(row, ctx))
   section.append(list)
   return section
 }
@@ -1220,9 +1794,13 @@ function buildEmptyNote(
 export function renderPreferencesPage(options: PreferencesPageOptions): PreferencesPage {
   const inventory = buildPreferenceInventory(options.document, options.catalog)
   const root = el('section', 'prefs')
-  // Lisible d'un test ou d'un harnais sans dépendre du style : la page est en lecture
-  // seule, et c'est une promesse qui doit se vérifier de l'extérieur.
-  root.dataset.mode = 'lecture'
+  // Un fichier sans préférence n'a rien à régler : la page y reste ce qu'elle est, une
+  // explication. `onEdit` branché n'y change rien.
+  const onEdit = inventory.summary.empty ? undefined : options.onEdit
+  const editable = onEdit !== undefined
+  // Lisible d'un test ou d'un harnais sans dépendre du style : le mode de la page est une
+  // promesse, et une promesse doit se vérifier de l'extérieur.
+  root.dataset.mode = editable ? 'edition' : 'lecture'
 
   const head = el('header', 'prefs__head')
   const titles = el('div', 'prefs__titles')
@@ -1239,33 +1817,111 @@ export function renderPreferencesPage(options: PreferencesPageOptions): Preferen
   head.append(actions)
   root.append(head)
 
-  const collected: RenderedRow[] = []
+  const ctx: PageContext = { collected: [] }
 
   if (inventory.summary.empty) {
     root.append(buildEmptyNote(options, inventory.summary.personalCounts))
-    return finish(root, inventory, collected, options, actions)
+    return finish(root, inventory, ctx, options, actions, editable)
   }
 
-  root.append(buildSummaryBox(inventory, options))
-  root.append(buildPrivacyBox(inventory, options.catalog))
+  const summaryBox = buildSummaryBox(inventory, options)
+  root.append(summaryBox)
+  let privacyBox = buildPrivacyBox(inventory, options.catalog)
+  root.append(privacyBox)
+
+  if (onEdit !== undefined) {
+    // Ce que le pilote vient de renseigner de personnel, listé au fur et à mesure : une
+    // clé qu'on remplit devient quelque chose qui voyage, et c'est le moment de le dire,
+    // pas au moment d'envoyer le fichier.
+    const filled = el('p', 'prefs__filled')
+    filled.hidden = true
+    root.insertBefore(filled, privacyBox.nextSibling)
+    const written: string[] = []
+
+    ctx.edit = {
+      document: options.document,
+      catalog: options.catalog,
+      conflicts: new Set(options.catalog.meta.defaultConflicts),
+      onEdit,
+      secrets: [],
+      wrote: (row, previous, edit) => {
+        recount(inventory.summary, previous, row.state)
+        if (edit.outcome === 'inserted') {
+          inventory.summary.fileKeyCount = readFilePreferences(options.document).size
+        }
+        fillSummaryBox(summaryBox, inventory, options)
+        if (edit.personal !== undefined || edit.outcome === 'inserted') {
+          const open = privacyBox instanceof HTMLDetailsElement && privacyBox.open
+          refreshPersonal(inventory, options.document, options.catalog)
+          const fresh = buildPrivacyBox(inventory, options.catalog)
+          if (open && fresh instanceof HTMLDetailsElement) fresh.open = true
+          privacyBox.replaceWith(fresh)
+          privacyBox = fresh
+        }
+        if (edit.personal !== undefined && !written.includes(edit.key)) {
+          written.push(edit.key)
+          filled.hidden = false
+          filled.textContent =
+            `Vous venez de renseigner ${plural(written.length, 'donnée personnelle',
+              'données personnelles')} — ${written.join(', ')}. ` +
+            'Elle voyagera avec ce fichier : la boîte « Enregistrer » vous laisse choisir ' +
+            'ce qui part.'
+        }
+      }
+    }
+  }
 
   const menuSection = el('section', 'prefs__menu')
-  menuSection.append(el('p', 'prefs__lead',
-    'Les écrans sont ceux de l’appareil, dans l’ordre de son menu de réglages.'))
-  for (const entry of inventory.menu) menuSection.append(buildMenuElement(entry, collected))
+  menuSection.append(el('p', 'prefs__lead', editable
+    ? 'Les écrans sont ceux de l’appareil, dans l’ordre de son menu de réglages. Un ' +
+      'réglage modifié est écrit dans le document aussitôt ; « Annuler » le défait, et ' +
+      'rien ne part sur le disque avant « Enregistrer ».'
+    : 'Les écrans sont ceux de l’appareil, dans l’ordre de son menu de réglages.'))
+  for (const entry of inventory.menu) menuSection.append(buildMenuElement(entry, ctx))
   root.append(menuSection)
 
   const reasons: LeftoverReason[] = ['unlabelled', 'state', 'unknown']
   for (const reason of reasons) {
     const rows = inventory.leftovers.filter((row) => row.reason === reason)
     if (rows.length === 0) continue
-    root.append(buildLeftoverSection(reason, rows, collected))
+    root.append(buildLeftoverSection(reason, rows, ctx))
   }
 
-  return finish(root, inventory, collected, options, actions)
+  return finish(root, inventory, ctx, options, actions, editable)
 }
 
-function buildMenuElement(entry: PreferenceMenuEntry, collected: RenderedRow[]): HTMLElement {
+/** Un état qui en remplace un autre : le compte suit, sinon le bandeau ment. */
+function recount(
+  summary: PreferencesSummary, previous: PreferenceState, next: PreferenceState
+): void {
+  if (previous === next) return
+  const field = {
+    custom: 'customCount', default: 'defaultCount', undecidable: 'undecidableCount',
+    conflict: 'conflictCount', absent: 'absentCount', unwritten: 'unwrittenCount'
+  } as const
+  summary[field[previous]] -= 1
+  summary[field[next]] += 1
+}
+
+/** Refait le relevé des données personnelles depuis le document tel qu'il est maintenant. */
+function refreshPersonal(
+  inventory: PreferenceInventory, document: JsonNode, catalog: PreferenceCatalog
+): void {
+  const file = readFilePreferences(document)
+  const ctx: RowContext = {
+    catalog, file, conflicts: new Set(catalog.meta.defaultConflicts)
+  }
+  inventory.personal = []
+  inventory.summary.personalCount = 0
+  for (const key of file.keys()) {
+    if (catalog.preference(key)?.personal === undefined) continue
+    inventory.summary.personalCount += 1
+    inventory.personal.push(buildRow(key, ctx))
+  }
+  inventory.summary.personalCounts = collectPersonalData(document).counts
+}
+
+function buildMenuElement(entry: PreferenceMenuEntry, ctx: PageContext): HTMLElement {
   const section = el('section', 'prefs__entry')
   section.dataset.menu = entry.menuKey
 
@@ -1296,8 +1952,11 @@ function buildMenuElement(entry: PreferenceMenuEntry, collected: RenderedRow[]):
     for (const group of screen.blocks) {
       if (group.title !== undefined) block.append(el('h4', 'prefs__category', group.title))
       const list = el('div', 'prefs__list')
-      for (const row of group.rows) list.append(buildRowElement(row, collected))
+      for (const row of group.rows) list.append(buildRowElement(row, ctx))
       block.append(list)
+      if (ctx.edit !== undefined) {
+        for (const note of refusalNotes(group.rows)) block.append(note)
+      }
     }
 
     if (screen.neverExported > 0) {
@@ -1308,6 +1967,26 @@ function buildMenuElement(entry: PreferenceMenuEntry, collected: RenderedRow[]):
     section.append(block)
   }
   return section
+}
+
+/**
+ * Ce qui, dans ce bloc, ne se règle pas — une phrase par raison, avec son compte.
+ *
+ * Sur l'écran des touches, quinze lignes de suite portent la même raison : la phrase
+ * s'écrit une fois, sous le bloc, comme le fait déjà la note « ne quittent jamais
+ * l'appareil ». Chaque ligne garde sa marque (`data-settable="false"`) et son infobulle.
+ */
+function refusalNotes(rows: readonly PreferenceRow[]): HTMLElement[] {
+  const counts = new Map<string, number>()
+  for (const row of rows) {
+    const refusal = editRefusal(row)
+    if (refusal === undefined) continue
+    counts.set(refusal, (counts.get(refusal) ?? 0) + 1)
+  }
+  return [...counts].map(([reason, count]) =>
+    el('p', 'prefs__refusal',
+      `${plural(count, 'réglage de ce bloc ne se règle', 'réglages de ce bloc ne se règlent')} ` +
+      `pas ici. ${reason}`))
 }
 
 /**
@@ -1332,9 +2011,10 @@ export function tallyText(tally: { total: number; labelled: number }): string {
 export const FILTER_THRESHOLD = 12
 
 function finish(
-  root: HTMLElement, inventory: PreferenceInventory, collected: RenderedRow[],
-  options: PreferencesPageOptions, actions: HTMLElement
+  root: HTMLElement, inventory: PreferenceInventory, ctx: PageContext,
+  options: PreferencesPageOptions, actions: HTMLElement, editable: boolean
 ): PreferencesPage {
+  const collected = ctx.collected
   let query = ''
   let onlyCustom = false
 
@@ -1342,7 +2022,7 @@ function finish(
     const needle = normalize(query.trim())
     for (const row of collected) {
       const missed = needle !== '' && !row.haystack.includes(needle)
-      row.element.hidden = missed || (onlyCustom && row.state !== 'custom')
+      row.element.hidden = missed || (onlyCustom && row.row.state !== 'custom')
     }
   }
 
@@ -1385,6 +2065,10 @@ function finish(
         mask.setAttribute('aria-pressed', String(next))
         mask.textContent = next ? 'Montrer les valeurs personnelles' : 'Masquer les valeurs personnelles'
         root.classList.toggle('prefs--masked', next)
+        // Une règle de style ne couvre pas le contenu d'un champ de saisie : on bascule
+        // le type, ce qui laisse la valeur intacte dans le DOM — comme le fait le
+        // masquage du texte, qui la garde dans `data-clear`.
+        for (const input of ctx.edit?.secrets ?? []) input.type = next ? 'password' : 'text'
       })
       tools.append(mask)
     }
@@ -1407,7 +2091,7 @@ function finish(
     actions.append(button)
   }
 
-  return { element: root, summary: inventory.summary, inventory, filter, close }
+  return { element: root, summary: inventory.summary, inventory, editable, filter, close }
 }
 
 /* ------------------------------------------------------------- ouverture à la demande */
@@ -1443,13 +2127,16 @@ export async function openPreferencesPage(
  *
  * | morceau                  |  émis   |  gzip   |
  * |--------------------------|---------|---------|
- * | `preferencesPage-*.js`   | 26,8 Ko |  9,2 Ko |
- * | `preferencesPage-*.css`  |  6,2 Ko |  1,7 Ko |
- * | `preferenceCatalog/base` | 96,8 Ko | 14,4 Ko |
- * | `preferenceCatalog/<lg>` | 17,0 Ko |  6,3 Ko |
+ * | `preferencesPage-*.js`   | 36,1 Ko | 12,1 Ko |
+ * | `preferencesPage-*.css`  |  8,0 Ko |  2,0 Ko |
+ * | `preferenceCatalog/base` | 98,8 Ko | 14,8 Ko |
+ * | `preferenceCatalog/<lg>` | 24,4 Ko |  6,0 Ko |
  *
- * Soit **147 Ko émis, environ 32 Ko transférés** à la première ouverture, puis 17 Ko de
+ * Soit **167 Ko émis, environ 35 Ko transférés** à la première ouverture, puis 24 Ko de
  * plus par langue supplémentaire — la part invariante ne se retélécharge pas.
+ *
+ * Le module a pris 9,3 Ko en devenant modifiable : les contrôles, l'écriture et le
+ * recalcul des comptes. Ils partent avec le reste, à la demande.
  *
  * ⚠️ Le chiffre du module est un **majorant** : il a été relevé sur un point d'entrée qui
  * n'importe rien d'autre, donc il emporte `core/access`, `core/serializeJson` et
@@ -1457,13 +2144,13 @@ export async function openPreferencesPage(
  */
 export const PREFERENCES_PAGE_WEIGHT = {
   /** Le module de page, une fois construit. */
-  moduleKb: 26.8,
+  moduleKb: 36.1,
   /** Sa feuille de style, émise à part par Vite. */
-  styleKb: 6.2,
+  styleKb: 8,
   /** La part invariante du catalogue : préférences, écrans, valeurs, défauts, portées. */
-  catalogBaseKb: 96.8,
+  catalogBaseKb: 98.8,
   /** Le fichier de textes d'une langue, repli anglais déjà fusionné. */
-  catalogLanguageKb: 17,
+  catalogLanguageKb: 24.4,
   /** Ce que le réseau transporte réellement à la première ouverture, en gzip. */
-  transferredKb: 32
+  transferredKb: 35
 } as const

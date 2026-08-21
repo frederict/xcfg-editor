@@ -168,6 +168,37 @@ body {
   white-space: nowrap;
 }
 
+/*
+ * L'entrée directe des réglages généraux : une roue dentée et un mot.
+ *
+ * **Le seuil est mesuré, pas choisi.** En édition sur un document modifié (fixture
+ * `2026-08-20_backup-00.xcfg`, page des réglages ouverte), la barre demande 1 055 px avec
+ * le mot et 977 px sans lui. Le mot cède donc la place sous 1 120 px — 65 px de marge sur
+ * la mesure —, et le bouton se réduit alors à un carré de 30 px, comme « Annuler » et
+ * « Rétablir ». Mesuré au repli près : la barre tient sur une ligne jusqu'à 984 px de
+ * large, contre 944 px sans ce bouton. Il coûte donc 40 px, et il en reste 40 sous les
+ * 1 024 px de l'écran le plus étroit qu'on vise.
+ *
+ * Ce n'est pas une dégradation de l'accessibilité : le nom accessible du bouton ne
+ * change pas — le mot n'est que **masqué visuellement**, il reste dans le DOM et dans ce
+ * que lit un lecteur d'écran, et le `title` dit ce qu'on trouve derrière. La cible fait
+ * 30 px de côté, au-dessus des 24 px recommandés.
+ */
+.app-bar__prefs { flex: none; gap: 0.4rem; }
+.app-bar__prefs .btn__glyph { flex: none; }
+
+@media (max-width: 1120px) {
+  .app-bar__prefs { width: 30px; height: 30px; padding: 0; justify-content: center; }
+  .app-bar__prefs-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
 /* ------------------------------------------------- menu des commandes secondaires */
 
 /*

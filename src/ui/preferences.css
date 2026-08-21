@@ -275,10 +275,24 @@
   font-size: 11.5px;
 }
 
+/*
+ * La deuxième colonne, qu'elle porte du texte (lecture) ou un contrôle (édition). Elle
+ * garde la même largeur dans les deux modes : passer de l'un à l'autre ne doit pas
+ * redessiner la page sous les yeux du pilote.
+ */
+.prefs__cell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
 .prefs__value {
   font-size: 13px;
   text-align: right;
   overflow-wrap: anywhere;
+  min-width: 0;
 }
 
 .prefs__value--none { color: var(--prefs-soft); }
@@ -294,6 +308,112 @@
   text-align: right;
   color: var(--prefs-soft);
   letter-spacing: 0.1em;
+}
+
+/* ------------------------------------------------------------------ les contrôles */
+
+/*
+ * Les contrôles n'existent que dans la page modifiable (`data-mode="edition"`). Ils
+ * reprennent la forme du panneau des gadgets — même taille, même trait, même arrondi —
+ * pour qu'un réglage se règle partout de la même manière dans cette application.
+ */
+.prefs__select,
+.prefs__number,
+.prefs__text,
+.prefs__hex {
+  font: inherit;
+  font-size: 13px;
+  padding: 0.25rem 0.4rem;
+  border: 1px solid var(--app-line-strong, #b1b8bf);
+  border-radius: 4px;
+  background: var(--app-bg, #fff);
+  color: var(--app-ink, #15181c);
+  min-width: 0;
+}
+
+.prefs__select { flex: 0 1 15rem; }
+.prefs__text { flex: 0 1 15rem; }
+.prefs__number { flex: none; width: 7rem; font-variant-numeric: tabular-nums; }
+
+.prefs__number-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.prefs__slider { flex: 1 1 6rem; min-width: 4rem; accent-color: var(--app-ink, #15181c); }
+
+/* Un curseur sans son nombre ne dit pas où il en est : la valeur se lit à côté. */
+.prefs__readout {
+  flex: none;
+  min-width: 4.5rem;
+  text-align: right;
+  font-family: var(--font-data, monospace);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--prefs-soft);
+}
+
+.prefs__checkbox {
+  flex: none;
+  width: 1.05rem;
+  height: 1.05rem;
+  margin: 0;
+  accent-color: var(--app-ink, #15181c);
+  cursor: pointer;
+}
+
+.prefs__color { display: flex; align-items: center; gap: 0.5rem; }
+.prefs__hex { width: 9rem; font-family: var(--font-data, monospace); text-transform: uppercase; }
+
+.prefs__swatch {
+  width: 1.2rem;
+  height: 1.2rem;
+  flex: none;
+  border-radius: 50%;
+  border: 1px solid var(--app-line-strong, #b1b8bf);
+}
+
+/* Le bouton d'une clé que le fichier ne porte pas : discret, jamais un appel à cliquer. */
+.prefs__adopt {
+  font-size: 11.5px;
+  padding: 0.15rem 0.5rem;
+  white-space: nowrap;
+}
+
+/*
+ * Pourquoi ces lignes-là ne se règlent pas. Une phrase par bloc et par raison, sous le
+ * bloc — comme la note « ne quittent jamais l'appareil » juste à côté, et pour la même
+ * raison : quinze fois la même phrase entre quinze lignes de réglages ne dit rien de
+ * plus et chasse l'écran hors de vue.
+ */
+.prefs__refusal {
+  margin: 0.5rem 0 0;
+  font-size: 11.5px;
+  line-height: 1.45;
+  font-style: italic;
+  color: var(--prefs-soft);
+  max-width: 78ch;
+}
+
+/* Le contrôle manque : la ligne le montre par sa valeur, en retrait comme une absence. */
+.prefs__row[data-settable='false'] .prefs__value { color: var(--prefs-soft); }
+
+/* Ce que le pilote vient de renseigner de personnel, dit au moment où il le fait. */
+.prefs__filled {
+  margin: 0.6rem 0 0;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--app-flag-line, #cf9c2c);
+  border-left-width: 3px;
+  border-radius: 4px;
+  background: var(--app-flag-bg, #f7eacd);
+  color: var(--app-flag-ink, #7a5410);
+  font-size: 12.5px;
+  line-height: 1.5;
+  max-width: 78ch;
 }
 
 /* --------------------------------------------------------------- la marque d'état */

@@ -74,10 +74,14 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
 - **Éditer** : déplacer, redimensionner, ajouter, supprimer et réordonner des gadgets ;
   régler leurs options ; gérer les pages (insérer, dupliquer, supprimer, réordonner).
   Annuler / rétablir.
-- **Consulter les réglages généraux** — les 216 préférences qui vivent hors des pages :
+- **Régler les réglages généraux** — les 216 préférences qui vivent hors des pages :
   unités, touches, capteurs, son, espaces aériens. Dans l'arborescence des 23 lignes du
-  menu de l'instrument, et **en lecture seule** : aucun contrôle de formulaire n'est
-  construit. La page dit aussi ce qu'elle ne sait pas présenter, et pourquoi.
+  menu de l'instrument. En consultation, **aucun contrôle de formulaire n'est
+  construit** ; en édition, 77 des 93 lignes présentées se règlent — case, liste,
+  curseur, nombre, texte, couleur —, avec annulation et rétablissement comme le reste.
+  Les seize autres, la valeur JSON imbriquée et tout ce que la page ne sait pas nommer
+  restent affichés **sans contrôle**, chacun disant pourquoi. Une clé absente du fichier
+  le reste tant qu'on ne demande pas explicitement de l'écrire.
 - **Diagnostiquer l'écart de version** : choisir la version de XCTrack visée, et voir ce
   que le fichier porte qu'elle ne lit plus, ou ce qu'elle attend et qu'il n'a pas. Le
   diagnostic **constate, il ne supprime rien** — l'outil de nettoyage n'existe pas encore.
@@ -118,9 +122,12 @@ Autant le dire tout de suite.
   ce qui n'existe pas ne fuite pas. La bibliothèque de configurations vit **dans votre
   navigateur** (IndexedDB) et n'en sort que si vous l'exportez vous-même ; vider les
   données du site l'efface, et un autre appareil ne la voit pas.
-- **Les préférences générales ne sont pas modifiables.** L'éditeur les montre, il ne les
-  écrit pas : la section `preferences` porte du JSON imbriqué qu'on ne réécrit pas sans
-  l'avoir vérifié sur l'appareil.
+- **Tout ne se règle pas dans les préférences générales.** Le JSON imbriqué de la section
+  `preferences` (`Sounds`, `Navigation.State`, `Sensors.Configuration`,
+  `Sound.AcousticVario.CustomProfile`) ressort intact, jamais réécrit ; les seize lignes
+  qui ouvrent une boîte sur l'appareil — les quinze touches, la table du vario sonore —
+  ne se règlent pas ici, faute d'en connaître le domaine ; et les huit `Unit.*`, dont
+  XCTrack remplit la liste en code, n'ont qu'un champ texte plutôt qu'une liste inventée.
 - **Aucun aperçu d'image dans la bibliothèque.** La place est réservée dans les données,
   la vignette est un cadre vide qui le dit.
 
@@ -240,8 +247,9 @@ Ce dépôt ne fournit pas d'outil pour rassembler les APK : chacun apporte les s
 
 `src/catalog/preferenceCatalog/` décrit les réglages qui vivent **hors des pages** : les
 unités, les touches, le son, les capteurs, les espaces aériens — la section `preferences`
-d'un export `backup`. Il alimente la page « Réglages généraux », qui les **consulte** :
-**l'éditeur ne les modifie pas**, et n'en construit donc aucun contrôle de formulaire.
+d'un export `backup`. Il alimente la page « Réglages généraux », qui les montre **et les
+règle** : c'est lui qui décide de la forme du contrôle, du domaine de valeurs offert et
+de ce qui ne s'offre pas. Ce qu'il ne relève pas ne se propose pas.
 
 ```bash
 unzip -o mon-xctrack.apk AndroidManifest.xml resources.arsc 'classes*.dex' \

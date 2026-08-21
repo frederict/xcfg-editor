@@ -172,8 +172,10 @@ describe('assemblage — les deux lectures du fichier sont atteignables partout'
     expect(main).toMatch(/const libraryButton = menu\.add\(\s*\n\s*'Bibliothèque…'/)
     expect(main).not.toMatch(/libraryButton\.hidden\s*=/)
     expect(main).not.toMatch(/libraryButton\.disabled = !readable/)
-    expect(main).toContain('preferencesItem.disabled = !readable')
     expect(main).toContain('versionItem.disabled = !readable')
+    // Les réglages ont quitté le menu pour la barre — voir plus bas. Ils s'éteignent de
+    // la même façon : rien à lire sans fichier.
+    expect(main).toContain('preferencesButton.disabled = !readable || onPreferences')
   })
 })
 
@@ -344,11 +346,30 @@ describe('assemblage — la barre de tête garde le fréquent et range le reste'
   )
 
   it('la barre ne porte que le fréquent et ce qui dit l’état du document', () => {
-    // Nom du fichier, annuler/rétablir, l'interrupteur de mode, le menu, enregistrer.
-    // Rien d'autre : six commandes passaient sur deux lignes sous 1100 px.
+    // Nom du fichier, annuler/rétablir, les réglages, l'interrupteur de mode, le menu,
+    // enregistrer. Rien d'autre : six commandes passaient sur deux lignes sous 1100 px.
     expect(barre).toContain(
-      'fileName, undoButton, redoButton, editToggle, menu.root, fileInput, exportButton'
+      'fileName, undoButton, redoButton, preferencesButton, editToggle, menu.root, fileInput,'
     )
+  })
+
+  /**
+   * Les réglages généraux sont sortis du menu le jour où ils sont devenus modifiables.
+   * Le critère du menu est la fréquence d'usage ; un écran qu'on règle n'est pas un
+   * écran qu'on consulte une fois par session.
+   *
+   * Les deux assertions comptent autant l'une que l'autre : le bouton doit exister, et
+   * l'entrée de menu doit avoir **disparu**. Deux chemins vers le même écran, dont l'un
+   * caché, est exactement le défaut qu'on vient de corriger ailleurs.
+   */
+  it('les réglages ont une entrée directe, et une seule', () => {
+    expect(barre).toContain('preferencesButton')
+    expect(main).toMatch(/const preferencesButton = el\('button', 'btn app-bar__prefs'\)/)
+    expect(main).toContain("preferencesButton.append(gearGlyph(), el('span', 'app-bar__prefs-name', 'Réglages'))")
+    expect(main).not.toContain("menu.add(\n  'Réglages")
+    expect(main).not.toContain('preferencesItem')
+    // Le dessin ne nomme rien : c'est le mot qui porte le nom accessible.
+    expect(main).toMatch(/svg\.setAttribute\('aria-hidden', 'true'\)/)
   })
 
   it('le bouton d’enregistrement reste dans la barre, avec son changement d’intitulé', () => {
@@ -359,12 +380,12 @@ describe('assemblage — la barre de tête garde le fréquent et range le reste'
     expect(barre).toContain('exportButton')
   })
 
-  it('les quatre commandes rangées sont celles qui servent une fois par session', () => {
+  it('les trois commandes rangées sont celles qui servent une fois par session', () => {
     const menu = main.slice(main.indexOf("const menu = buildMenu('Fichier')"), main.indexOf("const bar = el('header', 'app-bar')"))
     for (const entry of [
-      "'Ouvrir un fichier…'", "'Bibliothèque…'", "'Réglages généraux'",
-      "'Version et compatibilité…'"
+      "'Ouvrir un fichier…'", "'Bibliothèque…'", "'Version et compatibilité…'"
     ]) expect(menu).toContain(entry)
+    expect(menu).not.toContain("'Réglages généraux'")
   })
 
   it('les deux lectures ne sont plus prisonnières de la vue d’ensemble', () => {
