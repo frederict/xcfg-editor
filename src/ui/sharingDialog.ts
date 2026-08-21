@@ -301,9 +301,19 @@ export const ANNEXES_NOTE =
  * lui-même, et c'est pour cela qu'on le lui dit.
  */
 export const FIDELITY_UNCHANGED =
-  'Le fichier part tel quel, à l’octet près : les octets que vous avez ouverts sont '
-  + 'réémis sans être réécrits, et l’empreinte SHA-256 du fichier produit est celle du '
-  + 'fichier d’origine — vous pouvez le vérifier.'
+  'Vous n’avez rien modifié : le fichier ressort exactement tel qu’il est entré, sans une '
+  + 'virgule réécrite.'
+
+/**
+ * La même chose, dite en technicien — et **repliée**.
+ *
+ * L'empreinte SHA-256 est la preuve vérifiable de la phrase ci-dessus, et c'est à ce
+ * titre qu'elle reste dite. Mais pour qui ne sait pas ce qu'est une empreinte, elle ne
+ * prouve rien : elle inquiète. Elle est donc en second rang, derrière un triangle.
+ */
+export const FIDELITY_UNCHANGED_DETAIL =
+  'Les octets que vous avez ouverts sont réémis sans être réécrits : l’empreinte SHA-256 '
+  + 'du fichier produit est celle du fichier d’origine — vous pouvez le vérifier.'
 
 /**
  * Ce que la boîte promet quand le pilote **a modifié** son document.
@@ -320,10 +330,25 @@ export const FIDELITY_UNCHANGED =
  * `1.0E7` compris.
  */
 export const FIDELITY_MODIFIED =
-  'Vous avez modifié ce document : le fichier est réécrit, ses octets changent donc, et '
-  + 'son empreinte ne sera plus celle du fichier d’origine. Seul ce que vous avez changé '
-  + 'change — tout le reste est reproduit à l’identique, jusqu’aux nombres et à '
-  + 'l’espacement d’origine.'
+  'Tout ce que vous n’avez pas touché est recopié à l’identique — jusqu’aux nombres et à '
+  + 'l’espacement d’origine. Seul ce que vous avez changé change.'
+
+/**
+ * La conséquence technique, **repliée** — et présentée pour ce qu'elle est.
+ *
+ * La phrase précédente ouvrait sur trois affirmations négatives d'affilée : *réécrit*,
+ * *changent*, *ne sera plus*. Pour qui ne sait pas ce qu'est une empreinte SHA-256, elle
+ * annonçait un dommage, à l'instant précis où le pilote décide s'il ose enregistrer. La
+ * bonne nouvelle — ses modifications sont dedans — n'était jamais dite, et la garantie
+ * arrivait en quatrième position.
+ *
+ * L'empreinte est une **garantie**, pas un aveu : elle est le seul moyen de vérifier que
+ * rien d'autre n'a bougé. Elle passe donc derrière le triangle, avec sa contrepartie —
+ * sur un document non modifié, elle est identique.
+ */
+export const FIDELITY_MODIFIED_DETAIL =
+  'Le fichier étant réécrit, son empreinte SHA-256 diffère de celle du fichier d’origine ; '
+  + 'sur un document non modifié, elle est identique.'
 
 export const RESIDUAL_NOTE =
   'La liste des onze champs de texte traités est fixe, et le format de XCTrack change à '
@@ -634,7 +659,8 @@ export function renderSharingDialog(options: SharingDialogOptions): SharingDialo
   const name = `sharing-choice-${Math.random().toString(36).slice(2, 8)}`
 
   const buildChoice = (
-    value: 'plain' | 'anonymous', title: string, note: string, checked: boolean
+    value: 'plain' | 'anonymous', title: string, note: string, checked: boolean,
+    detail?: string
   ): HTMLInputElement => {
     const label = el('label', 'sharing__choice')
     const input = el('input', 'sharing__radio')
@@ -647,6 +673,12 @@ export function renderSharingDialog(options: SharingDialogOptions): SharingDialo
       el('span', 'sharing__choiceTitle', title),
       el('span', 'sharing__choiceNote', note)
     )
+    if (detail !== undefined) {
+      const box = el('details', 'sharing__curious')
+      box.append(el('summary', 'sharing__curiousHead', 'Pour les curieux'))
+      box.append(el('span', 'sharing__choiceNote', detail))
+      body.append(box)
+    }
     label.append(input, body)
     choices.append(label)
     return input
@@ -659,6 +691,7 @@ export function renderSharingDialog(options: SharingDialogOptions): SharingDialo
     : ' Il porte vos préférences : nom du pilote, voile, capteurs appairés, fichiers de '
       + 'waypoints.'
   const plainNote = (plan.modified ? FIDELITY_MODIFIED : FIDELITY_UNCHANGED) + contentNote
+  const plainDetail = plan.modified ? FIDELITY_MODIFIED_DETAIL : FIDELITY_UNCHANGED_DETAIL
 
   // Les deux chiffres, nommés, et jamais additionnés : ils ne répondent pas à la même
   // question. Celui de la disposition est le seul qui survive à un export « pages ».
@@ -668,7 +701,12 @@ export function renderSharingDialog(options: SharingDialogOptions): SharingDialo
       'données personnelles dans la disposition')} et ${plural(counts.preferences,
       'dans les préférences', 'dans les préférences')} ; toutes partiraient en clair.`
 
-  const plainInput = buildChoice('plain', 'Fichier complet', `${plainNote}${tally}`, true)
+  // « Fichier complet » n'était juste pour aucun des deux formats : un export « pages »
+  // n'a rien de complet, il ne porte pas les préférences. Ce que le mot opposait en
+  // réalité, c'est « tel qu'il est » à « expurgé ».
+  const plainInput = buildChoice(
+    'plain', 'Votre configuration, telle qu’elle est', `${plainNote}${tally}`, true, plainDetail
+  )
 
   const anonymousInput = buildChoice(
     'anonymous',

@@ -323,7 +323,7 @@ function versionWarning(info: JsonNode | undefined): Warning | undefined {
       `cet éditeur se règle sur la version ${REFERENCE_VERSION_CODE} pour le dessiner. Le ` +
       'format change à chaque version : des réglages peuvent être dessinés autrement ' +
       'qu’ils ne le seront sur l’appareil. Le fichier n’est pas modifié pour autant — il ' +
-      'ressort à l’octet près.',
+      'ressort tel qu’il est entré, sans une virgule réécrite.',
     items: []
   }
 }

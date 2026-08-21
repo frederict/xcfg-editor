@@ -1010,8 +1010,8 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
     openFormView(views, {
       title: 'Ranger la configuration ouverte',
       lead: 'Donnez-lui un nom que vous reconnaîtrez dans six mois — « Comp Annecy », ' +
-        '« Vol-biv Alpes », « École ». Les octets rangés sont ceux de votre fichier, ' +
-        'à l’octet près.',
+        '« Vol-biv Alpes », « École ». Ce qui est rangé, c’est votre fichier lui-même, ' +
+        'sans une virgule réécrite.',
       fields: [
         { key: 'name', label: 'Nom', value: source.suggestedName ?? stemOf(source.fileName) },
         {

@@ -82,6 +82,18 @@
   max-width: 78ch;
 }
 
+/* La propriété technique — l'empreinte SHA-256 — est une garantie, pas un aveu : elle
+   reste dite, mais derrière un triangle. Elle ne doit pas être la première chose que lise
+   un pilote au moment où il décide s'il ose enregistrer. */
+.sharing__curious { margin-top: 0.35rem; display: grid; gap: 0.3rem; }
+
+.sharing__curiousHead {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--app-ink-soft);
+  width: fit-content;
+}
+
 /* ------------------------------------------------ ce qui sera fait, montré avant de faire */
 
 .sharing__detail { display: grid; gap: 1.2rem; }

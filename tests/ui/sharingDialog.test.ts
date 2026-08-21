@@ -17,7 +17,9 @@ import {
   displayedReplacement,
   droppedRootKeyLabel,
   FIDELITY_MODIFIED,
+  FIDELITY_MODIFIED_DETAIL,
   FIDELITY_UNCHANGED,
+  FIDELITY_UNCHANGED_DETAIL,
   formatByteSize,
   planSharing,
   renderSharingDialog,
@@ -499,8 +501,11 @@ describe('sharingDialog — les octets, dits juste dans les deux cas', () => {
       { document: container.document, fileName: 'b.xcfg', kind: 'xcfg', modified: false }, WHEN
     )
     expect(plan.modified).toBe(false)
-    expect(FIDELITY_UNCHANGED).toContain('à l’octet près')
-    expect(FIDELITY_UNCHANGED).toContain('celle du fichier d’origine')
+    // « à l'octet près » a quitté l'interface : il a deux sens, tous deux vrais, et le
+    // pilote n'a pas à trancher lequel. La promesse se dit en clair, la preuve se replie.
+    expect(FIDELITY_UNCHANGED).toContain('sans une virgule réécrite')
+    expect(FIDELITY_UNCHANGED).not.toContain('SHA-256')
+    expect(FIDELITY_UNCHANGED_DETAIL).toContain('celle du fichier d’origine')
   })
 
   it('document modifié : les octets changent, et la boîte ne prétend plus le contraire', async () => {
@@ -530,13 +535,43 @@ describe('sharingDialog — les octets, dits juste dans les deux cas', () => {
       { document: container.document, fileName: 'b.xcfg', kind: 'xcfg', modified: true }, WHEN
     )
     expect(plan.modified).toBe(true)
+    // La boîte ouvrait sur trois négations d'affilée — « réécrit », « changent », « ne
+    // sera plus » — avant de rassurer. Elle ouvre maintenant sur ce que le pilote vient
+    // chercher ; l'empreinte, qui est une garantie et non un aveu, est repliée.
     expect(FIDELITY_MODIFIED).not.toContain('à l’octet près')
+    expect(FIDELITY_MODIFIED).not.toContain('SHA-256')
     expect(FIDELITY_MODIFIED).toContain('Seul ce que vous avez changé change')
+    expect(FIDELITY_MODIFIED_DETAIL).toContain('diffère de celle du fichier d’origine')
+    expect(FIDELITY_MODIFIED_DETAIL).toContain('sur un document non modifié, elle est identique')
   })
 
   it('sans information, on suppose modifié : la garantie forte ne s’affirme jamais à vide', () => {
     const document = parseJson(readFileSync(BACKUP_2026, 'utf-8'))
     expect(planSharing({ document, fileName: 'b.xcfg', kind: 'xcfg' }, WHEN).modified).toBe(true)
+  })
+
+  it('le premier choix dit ce qu’il est, non « Fichier complet »', () => {
+    // Pour un export « pages », le fichier n'a rien de complet : il ne porte pas les
+    // préférences. Ce que le mot opposait, c'est « tel qu'il est » à « expurgé ».
+    const document = parseJson(readFileSync(BACKUP_2026, 'utf-8'))
+    const handle = renderSharingDialog({
+      source: { document, fileName: 'b.xcfg', kind: 'xcfg', modified: true },
+      now: () => WHEN,
+      onConfirm: () => {}
+    })
+    handle.open()
+    const titres = [...handle.element.querySelectorAll('.sharing__choiceTitle')]
+      .map((one) => one.textContent)
+    expect(titres).toEqual([
+      'Votre configuration, telle qu’elle est',
+      'Version partageable, sans données personnelles'
+    ])
+    // La garantie technique est là, et elle est repliée.
+    const curieux = handle.element.querySelector('.sharing__curious')
+    expect(curieux?.tagName).toBe('DETAILS')
+    expect((curieux as HTMLDetailsElement | null)?.open).toBe(false)
+    expect(curieux?.textContent).toContain('SHA-256')
+    handle.close()
   })
 
   it('la note affichée est celle du cas — et le contenu du fichier est dit à part', () => {
