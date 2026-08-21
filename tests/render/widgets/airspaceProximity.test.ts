@@ -46,7 +46,9 @@ describe('WAirspaceProximity', () => {
     expect(shown.textContent).toContain('760 m - 1370 m')
     expect(shown.textContent).toContain('760 m - FL55')
     expect(hidden.querySelectorAll('.xc-airprox__range').length).toBe(0)
-    expect(absent.querySelectorAll('.xc-airprox__range').length).toBe(0)
+    // Clé absente : le relevé des 75 widgets la donne à `true`, et c'est la ligne
+    // « plancher – plafond » que la revue des visuels signale manquante au § 1.5.
+    expect(absent.textContent).toContain('760 m - 1370 m')
   })
 
   it('sépare les deux zones par un unique filet rouge', () => {

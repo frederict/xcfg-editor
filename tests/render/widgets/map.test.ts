@@ -91,10 +91,13 @@ describe('widgets cartographiques', () => {
     it('WCompMap l’affiche seulement si mapWidget_drawScale vaut true', () => {
       const shown = drawCompMap(widget('WCompMap', { mapWidget_drawScale: true }), settings, language)
       const hidden = drawCompMap(widget('WCompMap', { mapWidget_drawScale: false }), settings, language)
+      // Clé absente : `mapWidget_drawScale` vaut `true` par défaut sur ce type, et la
+      // revue des visuels constate au § 2.5 que l'appareil dessine bien sa barre
+      // d'échelle là où nous n'en dessinions aucune.
       const absent = drawCompMap(widget('WCompMap', {}), settings, language)
       expect(shown.querySelector('.xc-map__scale')).not.toBeNull()
       expect(hidden.querySelector('.xc-map__scale')).toBeNull()
-      expect(absent.querySelector('.xc-map__scale')).toBeNull()
+      expect(absent.querySelector('.xc-map__scale')).not.toBeNull()
     })
 
     it('WXCAssistant l’affiche seulement si mapWidget_drawScale vaut true', () => {
@@ -107,9 +110,11 @@ describe('widgets cartographiques', () => {
     it('WThermalAssistant l’affiche seulement si `drawScale` (sans préfixe) vaut true', () => {
       const shown = drawThermalAssistant(widget('WThermalAssistant', { drawScale: true }), settings, language)
       const hidden = drawThermalAssistant(widget('WThermalAssistant', { drawScale: false }), settings, language)
-      // `mapWidget_drawScale` n'est pas la bonne clé pour ce type : elle ne doit rien
-      // déclencher, même à true — verrouille la divergence de nom relevée sur le corpus.
-      const wrongKey = drawThermalAssistant(widget('WThermalAssistant', { mapWidget_drawScale: true }), settings, language)
+      // `mapWidget_drawScale` n'est pas la bonne clé pour ce type — verrouille la
+      // divergence de nom relevée sur le corpus. Elle ne doit rien déclencher : mettre
+      // `drawScale` à `false` doit suffire à éteindre l'échelle, même avec l'autre clé
+      // à `true`. (L'absence des deux, elle, laisse jouer le défaut `drawScale: true`.)
+      const wrongKey = drawThermalAssistant(widget('WThermalAssistant', { drawScale: false, mapWidget_drawScale: true }), settings, language)
       expect(shown.querySelector('.xc-map__scale')).not.toBeNull()
       expect(hidden.querySelector('.xc-map__scale')).toBeNull()
       expect(wrongKey.querySelector('.xc-map__scale')).toBeNull()

@@ -1,6 +1,7 @@
 import type { Widget } from '../../model/widget'
 import type { RenderSettings } from '../../model/preferences'
-import { readBoolean, readNumber, readString } from '../../core/access'
+import { readNumber, readString } from '../../core/access'
+import { widgetBoolean } from '../defaults'
 import { readRotation } from './rotation'
 
 /**
@@ -130,7 +131,7 @@ function buildScene(widget: Widget, kind: MapKind): SVGSVGElement {
     svg.append(strong, medium)
   }
 
-  if (kind === 'WThermalAssistant' && readBoolean(widget.node, 'drawCircle') === true) {
+  if (kind === 'WThermalAssistant' && (widgetBoolean(widget, 'drawCircle') ?? false)) {
     // Cercle bleu épais marquant le centre estimé du thermique, avec un point coloré au
     // milieu (rendu-observe.md) — WThermalAssistant seulement, consigne explicite.
     svg.append(svgEl('circle', {
@@ -187,7 +188,10 @@ function buildScale(): HTMLElement {
  * fonction, relevé sur le corpus (`Exemples/*.xcfg`), pas une supposition. */
 function drawScaleEnabled(widget: Widget, kind: MapKind): boolean {
   const key = kind === 'WThermalAssistant' ? 'drawScale' : 'mapWidget_drawScale'
-  return readBoolean(widget.node, key) === true
+  // Les deux clés valent `true` par défaut sur les trois types (relevé des 75 widgets) :
+  // l'ancien `=== true` supprimait la barre d'échelle de tout fichier qui ne les écrit
+  // pas, ce que la revue des visuels constate au § 2.5 (« barre d'échelle absente »).
+  return widgetBoolean(widget, key) ?? false
 }
 
 /** Étiquette de balise : texte rouge cerné de blanc, sur deux lignes — nom puis valeur
@@ -250,7 +254,9 @@ function drawMap(widget: Widget, _settings: RenderSettings, _language: string, k
   const scale = fontScale(widget)
   element.append(buildLabel(scale))
 
-  if (kind === 'WThermalAssistant' && readBoolean(widget.node, 'nav_showWind') === true) {
+  // `nav_showWind` vaut `true` par défaut : l'indicateur de vent que la revue signale
+  // absent au § 2.5 l'était pour la même raison que la barre d'échelle ci-dessus.
+  if (kind === 'WThermalAssistant' && (widgetBoolean(widget, 'nav_showWind') ?? false)) {
     element.append(buildWind(scale))
   }
 

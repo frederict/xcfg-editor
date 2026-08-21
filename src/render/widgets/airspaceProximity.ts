@@ -1,6 +1,7 @@
 import type { Widget } from '../../model/widget'
 import type { RenderSettings } from '../../model/preferences'
-import { readBoolean, readString } from '../../core/access'
+import { readString } from '../../core/access'
+import { widgetBoolean } from '../defaults'
 
 /**
  * `WAirspaceProximity` — proximité d'espace aérien (rendu-observe.md, « Proximité
@@ -110,9 +111,12 @@ function buildZone(widget: Widget, zone: ExampleZone): HTMLElement {
   name.textContent = zone.name
   el.append(name)
 
-  // Absence équivaut à false, comme les drapeaux `show*` de statusLine.ts : le corpus
-  // porte toujours cette clé (15/15), sa lecture par défaut reste donc non exercée.
-  if (readBoolean(widget.node, '_showoriginalheightline') === true) {
+  // Absente du fichier, la clé prend son défaut — `true` d'après le relevé des 75
+  // widgets. C'est la ligne « plancher – plafond » (« 760 m - 1370 m ») que la revue des
+  // visuels signale manquante au § 1.5 : le corpus porte toujours cette clé (15/15),
+  // mais un fichier écrit avec les seules clés universelles, non — et l'ancien
+  // `=== true` la faisait alors disparaître.
+  if (widgetBoolean(widget, '_showoriginalheightline') ?? false) {
     const range = document.createElement('span')
     range.className = 'xc-airprox__range'
     range.textContent = zone.range

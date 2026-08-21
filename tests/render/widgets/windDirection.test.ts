@@ -40,13 +40,16 @@ describe('WWindDirection', () => {
     expect(value?.textContent).toBe('S')
   })
 
-  it('affiche le titre seulement si `_title` vaut true, avec repli sur le libellé du catalogue', () => {
+  it('affiche le titre sauf si `_title` vaut false, avec repli sur le libellé du catalogue', () => {
     const shown = drawWindDirection(widget({ _title: 'true', titletext: '""' }), settings, language)
     const hidden = drawWindDirection(widget({ _title: 'false' }), settings, language)
+    // Clé absente : le relevé donne `_title: true` à ce type, et la planche 2 de
+    // l'appareil montre « Direction du vent » au-dessus de la lettre. L'ancien
+    // `=== true` supprimait ce titre — troisième occurrence du même défaut.
     const absent = drawWindDirection(widget({}), settings, language)
     expect(shown.querySelector('.xc-wind-dir__title')?.textContent).toBe('Direction du vent')
     expect(hidden.querySelector('.xc-wind-dir__title')).toBeNull()
-    expect(absent.querySelector('.xc-wind-dir__title')).toBeNull()
+    expect(absent.querySelector('.xc-wind-dir__title')?.textContent).toBe('Direction du vent')
   })
 
   it('un `titletext` non vide remplace le libellé du catalogue', () => {

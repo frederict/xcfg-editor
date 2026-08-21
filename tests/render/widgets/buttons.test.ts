@@ -183,8 +183,15 @@ describe('les neuf widgets « bouton »', () => {
     })
 
     it('retombe sur l’anglais pour une langue sans traduction maison', () => {
-      const el = drawButtonBrightness(widget('WButtonBrightness', { type: '"ACTION_PLUS"' }), settings, 'de')
+      const el = drawButtonBrightness(widget('WButtonBrightness', { type: '"ACTION_PLUS"', longClick: 'false' }), settings, 'de')
       expect(el.title).toBe('increase')
+    })
+
+    it('signale l’appui long même quand le fichier n’écrit pas `longClick`', () => {
+      // Le relevé donne `longClick: true` à cinq des neuf boutons : l'ancien `=== true`
+      // taisait l'appui long sur tout fichier écrit avec les seules clés universelles.
+      const el = drawButtonBrightness(widget('WButtonBrightness', { type: '"ACTION_PLUS"' }), settings, 'fr')
+      expect(el.title).toBe('augmenter (appui long)')
     })
 
     it('aucune étiquette pour un code inconnu — jamais de texte inventé', () => {

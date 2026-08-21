@@ -1,6 +1,7 @@
 import type { Widget } from '../../model/widget'
 import type { RenderSettings } from '../../model/preferences'
-import { readBoolean, readString } from '../../core/access'
+import { readString } from '../../core/access'
+import { widgetBoolean } from '../defaults'
 
 /**
  * Les neuf widgets « bouton » de XCTrack — écart 1.6 de
@@ -212,7 +213,9 @@ function hoverLabel(widget: Widget, language: string): string | undefined {
   const map = type !== undefined ? ACTION_LABELS[type] : undefined
   const action = map?.[language] ?? map?.en
   if (action === undefined) return undefined
-  const longClick = readBoolean(widget.node, 'longClick') === true
+  // `longClick` vaut `true` par défaut sur cinq des neuf boutons : l'étiquette de survol
+  // omettait donc « appui long » sur un fichier qui n'écrit pas la clé.
+  const longClick = widgetBoolean(widget, 'longClick') ?? false
   const suffix = longClick ? ` (${LONG_CLICK[language] ?? LONG_CLICK.en!})` : ''
   return `${action}${suffix}`
 }
@@ -254,7 +257,7 @@ export function drawButtonPhone(widget: Widget, _settings: RenderSettings, _lang
   // pas de nom d'exemple — ce serait inventer une donnée personnelle.
   const name = readString(widget.node, 'fullName')
   element.append(row(phoneGlyph()))
-  if (name !== undefined && name.length > 0 && readBoolean(widget.node, 'showContactName') !== false) {
+  if (name !== undefined && name.length > 0 && (widgetBoolean(widget, 'showContactName') ?? true)) {
     element.append(caption(name))
   }
   return element
@@ -278,7 +281,7 @@ export function drawButtonZoom(widget: Widget, _settings: RenderSettings, langua
  * porte la couleur de titre du fichier, comme les widgets numériques. */
 export function drawButtonVario(widget: Widget, settings: RenderSettings, language: string): HTMLElement {
   const element = shell('vario')
-  if (readBoolean(widget.node, 'showTitle') ?? true) {
+  if (widgetBoolean(widget, 'showTitle') ?? true) {
     const title = document.createElement('span')
     title.className = 'xc-button__title'
     title.style.color = settings.titleColor

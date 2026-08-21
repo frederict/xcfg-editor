@@ -1,7 +1,8 @@
 import type { Widget } from '../../model/widget'
 import type { RenderSettings } from '../../model/preferences'
-import { readBoolean, readNumber, readString } from '../../core/access'
-import { readableName } from '../../catalog/widgetNames'
+import { readNumber } from '../../core/access'
+import { widgetBoolean } from '../defaults'
+import { widgetTitle } from '../title'
 import { titleWidthEm } from '../textMetrics'
 
 /**
@@ -15,6 +16,12 @@ import { titleWidthEm } from '../textMetrics'
  * Aucune donnée de vent réelle n'est modélisée ici (comme le cap de compass.ts ou la
  * trace de map.ts) : `S` est une valeur d'exemple statique, reprise de la capture — le
  * même principe que les valeurs d'exemple de `numeric.ts` (`SPECS[...].example`).
+ *
+ * **`_title` absent vaut `true`** — le relevé des 75 widgets donne `{"_title": true,
+ * "degrees": false}` à ce type, et la planche 2 de l'appareil montre bien « Direction du
+ * vent » au-dessus du `N`. Le `=== true` d'origine, troisième occurrence du même défaut
+ * après `numeric.ts` et `statusLine.ts`, supprimait ce titre de tout fichier écrit avec
+ * les seules clés universelles.
  *
  * `degrees` (booléen sur les 10 occurrences connues du corpus, jamais un angle
  * numérique) bascule vraisemblablement vers un affichage en degrés à la place de la
@@ -30,12 +37,11 @@ export function drawWindDirection(widget: Widget, settings: RenderSettings, lang
   const element = document.createElement('div')
   element.className = 'xc-wind-dir'
 
-  if (readBoolean(widget.node, '_title') === true) {
+  if (widgetBoolean(widget, '_title') ?? true) {
     const title = document.createElement('span')
     title.className = 'xc-wind-dir__title'
     title.style.color = settings.titleColor
-    const custom = readString(widget.node, 'titletext')
-    const text = custom !== undefined && custom.length > 0 ? custom : readableName(widget.shortName, language)
+    const text = widgetTitle(widget, language)
     // Même taille que tous les autres titres de la page — voir `.xc-wind-dir__title`
     // dans style.css et `titleFontPx` dans canvas.ts.
     title.style.setProperty('--xc-title-em', String(titleWidthEm(text)))
