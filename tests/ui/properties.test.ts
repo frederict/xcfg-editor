@@ -73,6 +73,14 @@ function map(doc: JsonNode): Widget {
   return widget
 }
 
+/** Le premier gadget du corpus qui porte un menu d'unités — celui du § A.6 du relevé. */
+function withUnits(doc: JsonNode): Widget {
+  const widget = readLayout(doc).landscape.flatMap((page) => page.widgets)
+    .find((one) => getMember(one.node, '_units') !== undefined)
+  if (widget === undefined) throw new Error('aucun gadget ne porte « _units »')
+  return widget
+}
+
 function fieldAt(form: PropertyForm, path: string): PropertyField {
   const field = form.fields.find((candidate) => candidate.path === path)
   if (field === undefined) throw new Error(`pas de champ ${path} dans ${form.shortName}`)
@@ -462,6 +470,30 @@ describe('une modification ne change que ce qu’on a demandé', () => {
     // Un `40.0` saisi tel quel doit rester `40.0` : `setLiteral` ne prend qu'un texte.
     setFieldValue(field, '40.0')
     expect(serializeJson(map(doc).node)).toContain('"mapWidget_KK7opacity": 40.0')
+  })
+})
+
+describe('le menu des unités ne parle pas en constantes de programme', () => {
+  it('nomme les unités que le catalogue laisse nues', () => {
+    // Mesuré à l'écran, gadget « Altitude GPS » : le menu proposait « SYS_UNIT »,
+    // « METER », « FOOT », « YARD ». Un pilote devait choisir entre METER et FOOT pour
+    // une unité que son instrument lui montre en « m » et en « ft ».
+    const form = buildPropertyForm(withUnits(document()))
+    const units = fieldAt(form, '_units')
+    expect(units.control).toBe('enum')
+    const labels = units.choices.map((one) => one.label)
+    for (const label of labels) expect(label).not.toMatch(/^[A-Z_]+$/)
+    expect(labels).toContain('comme les réglages généraux')
+    expect(units.choices.map((one) => one.value)).toContain('SYS_UNIT')
+  })
+
+  it('ne renomme jamais ce que XCTrack a déjà traduit', () => {
+    // La parole de XCTrack passe avant la nôtre : une valeur que le catalogue nomme
+    // garde son nom, même si notre table connaît la constante.
+    const form = buildPropertyForm(compass(document()))
+    for (const choice of fieldAt(form, 'windStyle').choices) {
+      expect(choice.label).not.toBe(choice.value)
+    }
   })
 })
 

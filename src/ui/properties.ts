@@ -557,12 +557,63 @@ function expandComposite(
       ...(main || option === undefined ? {} : { hint: parentLabel }),
       node: value,
       owner: node,
-      choices: main && option !== undefined ? texts.optionValues(option) : [],
+      choices: main && option !== undefined ? namedChoices(texts.optionValues(option)) : [],
       ...(head && help !== undefined ? { help } : {}),
       depth: hasMain && !main ? 1 : 0
     }))
   }
   return fields
+}
+
+/**
+ * Les valeurs d'énumération que le catalogue ne sait pas nommer, dites en français.
+ *
+ * ## Pourquoi elles arrivent nues
+ *
+ * `optionValues` rend la **constante du fichier** quand l'extraction n'a pas retrouvé la
+ * ressource du libellé (`labelFrom: 'branch'`). Mesuré à l'écran, gadget « Altitude
+ * GPS » : le menu « Unités » proposait `SYS_UNIT`, `METER`, `FOOT`, `YARD`. On demandait
+ * à un pilote de choisir entre `METER` et `FOOT` pour une unité que son instrument lui
+ * montre en « m » et en « ft ».
+ *
+ * ## Ce que cette table est, et ce qu'elle n'est pas
+ *
+ * Ce n'est **pas** la parole de XCTrack : ce sont **nos** mots, et ils ne prétendent pas
+ * reproduire ce que l'appareil affiche — personne ne l'a mesuré pour ce menu-là. Ils
+ * nomment une unité, ce qui ne s'invente pas : un mètre est un mètre.
+ *
+ * D'où la frontière : **seulement les unités et les formats de coordonnées**, où la
+ * constante ne laisse aucun doute. Les noms de thèmes de carte (`BIKER`, `MAPZEN`…) sont
+ * des noms propres et restent tels quels ; `HORIZONTAL`, `AUTO` ou `GRAPH_THERMAL`
+ * demanderaient une interprétation, et une interprétation se mesure avant de s'écrire.
+ */
+const UNIT_VALUE_NAMES: Record<string, string> = {
+  SYS_UNIT: 'comme les réglages généraux',
+  METER: 'mètres (m)',
+  FOOT: 'pieds (ft)',
+  YARD: 'yards (yd)',
+  KM_H: 'kilomètres par heure (km/h)',
+  M_S: 'mètres par seconde (m/s)',
+  MP_H: 'miles par heure (mph)',
+  KT: 'nœuds (kt)',
+  CELSIUS: 'degrés Celsius (°C)',
+  FAHRENHEIT: 'degrés Fahrenheit (°F)',
+  DEG: 'degrés décimaux',
+  DEG_MIN: 'degrés et minutes',
+  DEG_MIN_SEC: 'degrés, minutes et secondes',
+  UTM: 'UTM'
+}
+
+/**
+ * Nomme ce que le catalogue laisse nu. Une valeur déjà traduite par XCTrack n'est jamais
+ * touchée : sa parole passe avant la nôtre.
+ */
+function namedChoices(choices: FieldChoice[]): FieldChoice[] {
+  return choices.map((choice) => (
+    choice.label === choice.value && UNIT_VALUE_NAMES[choice.value] !== undefined
+      ? { value: choice.value, label: UNIT_VALUE_NAMES[choice.value] as string }
+      : choice
+  ))
 }
 
 /**
@@ -600,7 +651,7 @@ function describeMissing(
   const node: JsonNode = typeof value === 'string'
     ? { kind: 'string', raw: encode(value) }
     : { kind: 'literal', raw: defaultText }
-  const choices = option === undefined ? [] : texts.optionValues(option)
+  const choices = option === undefined ? [] : namedChoices(texts.optionValues(option))
   const pattern = option === undefined ? undefined : texts.resourceText(option.label)
 
   return {
@@ -692,7 +743,7 @@ export function buildPropertyForm(source: FormSource, language = 'fr'): Property
         ...(option === undefined ? {} : { option }),
         node: value,
         owner: node,
-        choices: option === undefined ? [] : texts.optionValues(option),
+        choices: option === undefined ? [] : namedChoices(texts.optionValues(option)),
         ...(help === undefined ? {} : { help }),
         depth: 0
       }))
