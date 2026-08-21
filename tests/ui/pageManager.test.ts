@@ -571,7 +571,7 @@ describe('le carrousel', () => {
     const { root } = build()
     const gap = query<HTMLElement>(root, '.pages__gap')[0]!
     gap.querySelector<HTMLButtonElement>('.pages__insert')!.click()
-    expect(gap.textContent).toContain('bascule en spirale vers la DERNIÈRE')
+    expect(gap.textContent).toContain('cet éditeur suppose la DERNIÈRE')
   })
 
   it('demande confirmation avant de supprimer, et montre la conséquence à ce moment-là', () => {
@@ -668,7 +668,7 @@ describe('le carrousel', () => {
     expect(slots[3]!.querySelector('.pagecard--conditional')).toBeNull()
     expect(root.textContent).not.toContain('Masquée hors vol')
     expect(slots[3]!.querySelector('.pagecard__thermal')!.textContent)
-      .toBe('Cible du basculement automatique en spirale.')
+      .toBe('Cible supposée du basculement automatique en spirale — non vérifié sur l’appareil.')
   })
 
   it('désigne la bonne cible quand deux assistants coexistent', () => {
@@ -682,10 +682,10 @@ describe('le carrousel', () => {
     })
     const slots = query<HTMLElement>(manager.root, '.pages__slot')
     expect(slots[3]!.querySelector('.pagecard__thermal')!.textContent)
-      .toContain('XCTrack bascule vers la page 5')
+      .toContain('suppose que le basculement automatique vise la page 5')
     expect(slots[4]!.querySelector('.pagecard__thermal')!.textContent)
-      .toBe('Cible du basculement automatique en spirale.')
-    expect(manager.root.textContent).toContain('XCTrack ne bascule en spirale que vers la dernière')
+      .toBe('Cible supposée du basculement automatique en spirale — non vérifié sur l’appareil.')
+    expect(manager.root.textContent).toContain('cet éditeur suppose la dernière, la page 5')
   })
 
   it('ouvre une page quand l’appelant sait quoi en faire, et reste inerte sinon', () => {

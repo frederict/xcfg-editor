@@ -113,8 +113,12 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
     observé, et c'est justement ce qui compte pour un bouton. La règle **se tait** quand
     l'avertissement de géométrie a déjà signalé le même montage : un même problème dit
     deux fois vaut moins qu'une ;
-  - une page qui ne s'affichera jamais ; une page d'assistant de thermique que rien
-    n'atteint automatiquement ;
+  - une page qui ne s'affichera jamais — celle qu'aucun type de navigation n'active,
+    la seule dont un essai sur l'AIR³ ait confirmé qu'elle est sautée au défilement ;
+  - plusieurs pages d'assistant de thermique dans la même orientation, dont une seule
+    reçoit le basculement automatique en spirale. **Laquelle est une supposition** :
+    aucun relevé de ce dépôt ne donne le départage, et aucun fichier du corpus n'en
+    porte deux, donc rien ne l'a jamais montré ;
   - un gadget **peut-être** trop petit pour être lu à bout de bras — le seuil vient d'une
     norme et s'applique à la taille physique du **gabarit d'écran choisi**, mais le rapport
     entre hauteur du gadget et hauteur du texte reste **une hypothèse assumée**, faute
@@ -125,10 +129,18 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
     l'appareil, et la règle l'écrit ;
   - et un réglage écrit par une version antérieure de XCTrack.
 
-  **Trois de ces sept sont des suppositions**, et se présentent comme telles : jamais dans
+  **Quatre de ces sept sont des suppositions**, et se présentent comme telles : jamais dans
   le bloc d'alerte, intitulé suffixé « à confirmer sur l'instrument », explication ouverte
   par « ce n'est pas un constat mesuré mais une question ». L'outil **signale, il ne
   corrige jamais tout seul**.
+
+  Ce qui a été **retiré** le 22 août 2026, et pourquoi c'est dit ici : l'outil marquait
+  certaines pages « masquée hors vol » d'après leur **classe** (`WPCompetition`,
+  `WPThermalAssistant`) et annonçait « au sol, l'appareil n'en montre que 3 sur 5 ».
+  Un essai sur un AIR³ 7.2 a montré le contraire — la page d'assistant de thermique
+  revient bel et bien dans le défilement au sol, et la seule page sautée est celle
+  qu'aucune navigation n'active. La marque et le compte sont partis ; ce qui décide
+  vraiment, la clé `navigations`, se lit page par page dans « Gérer les pages ».
 - **Éditer** : déplacer, redimensionner, ajouter, supprimer et réordonner des gadgets ;
   régler leurs options ; gérer les pages (insérer, dupliquer, supprimer, réordonner).
   Annuler / rétablir.

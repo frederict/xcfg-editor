@@ -63,7 +63,12 @@ import { plural } from './prose'
 /** Une page neuve est activée pour toutes les navigations, comme sur l'appareil (§ 5.2). */
 const NEW_PAGE_NAVIGATIONS = { kind: 'all' } as const
 
-/** La classe dont XCTrack fait la cible de son basculement automatique en spirale. */
+/**
+ * La classe dont XCTrack fait la cible de son basculement automatique en spirale —
+ * relevé sur l'instrument (`edition-native-exploration.md` § 5.4). Ce qui est documenté
+ * s'arrête là : la classe est la cible. Le départage entre plusieurs pages de cette
+ * classe, lui, n'est qu'une supposition — voir `autoSwitchTargetRank`.
+ */
 export const THERMAL_ASSISTANT_CLASS = 'WPThermalAssistant'
 
 const ORIENTATION_LABELS: Record<Orientation, string> = {
@@ -209,13 +214,22 @@ export function thermalAssistantRanks(pages: readonly Page[]): number[] {
 }
 
 /**
- * La page vers laquelle XCTrack bascule en spirale, ou `undefined` s'il n'y en a aucune.
+ * La page vers laquelle cet éditeur **suppose** que XCTrack bascule en spirale, ou
+ * `undefined` s'il n'y a aucune page de cette classe.
  *
- * Le manuel est formel là où l'appareil ne dit rien : **s'il existe plusieurs pages
- * `WPThermalAssistant`, c'est la dernière qui sert de cible** (§ 5 du relevé). Les
- * précédentes restent atteignables par « page suivante », mais plus jamais par le
- * basculement automatique — une page que le pilote croit voir arriver en thermique et
- * qui n'arrive pas.
+ * ⚠️ **La dernière : c'est une supposition, pas un relevé.** Le commentaire d'origine
+ * disait « le manuel est formel » et renvoyait au « § 5 du relevé » ; relecture faite le
+ * 22 août 2026, le § 5.4 de `docs/reference/edition-native-exploration.md` dit seulement
+ * que la classe `WPThermalAssistant` est la cible du basculement, et rien du départage
+ * quand une orientation en porte plusieurs. Aucun autre document du dépôt ne le dit, et
+ * aucun des 21 fichiers du corpus n'en porte deux : cela n'a donc jamais pu être observé
+ * non plus.
+ *
+ * `src/model/inspection.ts` sort la même supposition en `certainty: 'hypothesis'`, avec
+ * ce qui la trancherait. Les textes d'ici disent « suppose » pour la même raison : rien
+ * n'interdit de proposer un repère au pilote, tout interdit de le lui donner pour un
+ * fait. Ce que l'on sait en revanche : les pages non visées restent atteignables par
+ * « page suivante ».
  */
 export function autoSwitchTargetRank(pages: readonly Page[]): number | undefined {
   const ranks = thermalAssistantRanks(pages)
@@ -317,8 +331,10 @@ export function operationAdvice(pages: readonly Page[], operation: PageOperation
           `d’assistant de thermique (${plural({
             one: 'page', other: 'pages'
           }, existing.length)} ${existing.join(', ')}). ` +
-          'XCTrack bascule en spirale vers la DERNIÈRE : en créer une autre après elle rend ' +
-          `la page ${last} inatteignable par ce basculement, sans rien changer à son contenu.`
+          'XCTrack n’en vise qu’une quand il bascule tout seul en spirale ; cet éditeur ' +
+          'suppose la DERNIÈRE, sans l’avoir vérifié sur l’appareil. Si c’est bien elle, ' +
+          `en créer une autre après elle prive la page ${last} de ce basculement, sans ` +
+          'rien changer à son contenu.'
       })
     }
   }
@@ -346,7 +362,9 @@ export function operationAdvice(pages: readonly Page[], operation: PageOperation
         text: others.length === 0
           ? 'C’est la seule page d’assistant de thermique : le basculement automatique en ' +
             'spirale n’aurait plus de cible.'
-          : `Le basculement automatique en spirale viserait alors la page ${others[others.length - 1]}.`
+          : 'Le basculement automatique en spirale viserait alors la page ' +
+            `${others[others.length - 1]}, si c’est bien la dernière qu’il vise — cet ` +
+            'éditeur le suppose sans l’avoir vérifié.'
       })
     }
   }
@@ -380,12 +398,12 @@ export function layoutAdvice(pages: readonly Page[]): Advice[] {
     advice.push({
       kind: 'thermal',
       text: `${thermal.length} pages d’assistant de thermique (pages ${thermal.join(', ')}). ` +
-        `XCTrack ne bascule en spirale que vers la dernière, la page ${target} : ` +
-        `${plural({ one: 'la page', other: 'les pages' }, others.length)} ${others.join(', ')} ` +
+        'XCTrack n’en vise qu’une quand il bascule tout seul en spirale ; cet éditeur ' +
+        `suppose la dernière, la page ${target}, sans l’avoir vérifié sur l’appareil. ` +
+        `${plural({ one: 'La page', other: 'Les pages' }, others.length)} ${others.join(', ')} ` +
         `${plural({
-          one: 'reste atteignable', other: 'restent atteignables'
-        }, others.length)} par « page ` +
-        'suivante », jamais par le basculement automatique.'
+          one: 'reste de toute façon atteignable', other: 'restent de toute façon atteignables'
+        }, others.length)} par « page suivante ».`
     })
   }
 
@@ -676,9 +694,9 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
       card.append(el(
         'p', 'pagecard__thermal',
         target === index + 1
-          ? 'Cible du basculement automatique en spirale.'
-          : `Pas la cible du basculement : XCTrack bascule vers la page ${target}, la dernière ` +
-            'page d’assistant de thermique.'
+          ? 'Cible supposée du basculement automatique en spirale — non vérifié sur l’appareil.'
+          : `Cet éditeur suppose que le basculement automatique vise la page ${target}, la ` +
+            'dernière page d’assistant de thermique — non vérifié sur l’appareil.'
       ))
     }
 

@@ -75,7 +75,7 @@ export type InspectionRuleId =
 export type InspectionSeverity = 'to-know' | 'likely-error'
 
 /**
- * Sur quoi le constat repose. **Trois des sept règles reposent sur une hypothèse non
+ * Sur quoi le constat repose. **Quatre des sept règles reposent sur une hypothèse non
  * vérifiée sur l'instrument** : l'interface doit les présenter en question, pas en
  * verdict, et c'est ce champ qui le lui dit.
  *
@@ -121,7 +121,10 @@ export interface Finding {
 export const RULE_TITLES: Record<InspectionRuleId, string> = {
   'unreachable-widget': 'Gadget impossible à toucher',
   'page-never-shown': 'Page qui ne s’affichera jamais',
-  'thermal-page-not-auto-target': 'Page d’assistant de thermique jamais atteinte automatiquement',
+  // L'identifiant date du temps où la règle affirmait laquelle des pages était éclipsée.
+  // Ce qu'elle sait vraiment, c'est qu'il y en a plusieurs — le titre le dit, l'identifiant
+  // reste, parce qu'il ne se lit nulle part.
+  'thermal-page-not-auto-target': 'Plusieurs pages d’assistant de thermique',
   'widget-too-small': 'Gadget peut-être trop petit pour être lu',
   'pro-widget-without-licence': 'Gadget Pro sans licence déclarée',
   'road-maps-on-same-page': 'Deux cartes routières sur la même page',
@@ -150,9 +153,10 @@ export const RULE_SUMMARIES: Record<InspectionRuleId, string> = {
     'XCTrack le dit dans sa propre boîte de réglage : une page dont aucun type de ' +
     'navigation n’est coché n’est affichée dans aucun contexte de vol.',
   'thermal-page-not-auto-target':
-    'Le manuel de XCTrack dit que, lorsqu’une orientation porte plusieurs pages ' +
-    'd’assistant de thermique, c’est la dernière qui sert de cible au basculement ' +
-    'automatique en spirale.',
+    'Le relevé de l’instrument dit que la classe « assistant de thermique » est celle que ' +
+    'vise le basculement automatique. Il ne dit pas laquelle est visée quand une ' +
+    'orientation en porte plusieurs : cet éditeur suppose la dernière, et cette ' +
+    'supposition n’a jamais été vérifiée.',
   'widget-too-small':
     'Le seuil vient de l’ISO 9241-303 et s’applique à la taille physique réelle de la ' +
     'dalle du gabarit d’écran choisi, pas à des pixels : changer de gabarit change ces ' +
@@ -620,11 +624,26 @@ function pageNeverShownFindings(input: InspectionInput): Finding[] {
 }
 
 /**
- * Règle 3 — **documentée** : le manuel dit que `WPThermalAssistant` est la cible du
- * basculement automatique en spirale et que, s'il en existe plusieurs, **c'est la
- * dernière qui sert**. 0 constat sur le corpus : aucun des 21 fichiers ne porte deux
- * pages de cette classe dans la même orientation. Aucun bruit, donc — mais le jour où
- * un pilote duplique sa page de thermique, il croira voir arriver la première.
+ * Règle 3 — **hypothèse**, et il a fallu la relecture du 22 août 2026 pour s'en rendre
+ * compte : elle sortait en `documented`, avec pour source « le manuel de XCTrack ».
+ *
+ * **Ce qui est réellement documenté** (`edition-native-exploration.md` § 5.4, relevé sur
+ * l'instrument) : la classe de page décide du jeu de gadgets à la création « et, pour
+ * `WPThermalAssistant`, la page cible du basculement automatique en thermique ». Une
+ * cible, donc — mais pas un mot sur le départage quand une orientation en porte
+ * plusieurs. **« C'est la dernière qui sert » n'est écrit nulle part dans ce dépôt**, et
+ * rien ne l'a observé : aucun des 21 fichiers du corpus ne porte deux pages de cette
+ * classe dans la même orientation, la règle n'a donc jamais rendu un seul constat.
+ *
+ * Le rapprochement avec la règle qui a été retirée le même jour est direct : là aussi une
+ * affirmation sur le comportement de l'instrument avait pris le ton d'un relevé. Celle-ci
+ * n'est pas mesurée fausse, seulement invérifiée — elle survit donc sous la forme que le
+ * projet réserve au doute : `certainty: 'hypothesis'`, un `toVerify` qui dit ce qui la
+ * trancherait, un titre qui ne promet plus rien, et jamais le bloc d'alerte.
+ *
+ * ⚠️ `src/ui/pageManager.ts` suppose la même chose, au même endroit
+ * (`autoSwitchTargetRank`) : les deux se corrigeront ensemble le jour où quelqu'un
+ * dupliquera une page d'assistant de thermique sur un AIR³ et regardera.
  */
 function thermalPageFindings(input: InspectionInput): Finding[] {
   const findings: Finding[] = []
@@ -640,13 +659,18 @@ function thermalPageFindings(input: InspectionInput): Finding[] {
       findings.push({
         ruleId: 'thermal-page-not-auto-target',
         severity: 'to-know',
-        certainty: 'documented',
+        certainty: 'hypothesis',
         location: { orientation, pageRank: rank },
         message:
-          'Cette page d’assistant de thermique n’est pas celle vers laquelle XCTrack ' +
-          `bascule en spirale : quand il en existe plusieurs, c’est la dernière — ici la ` +
-          `page ${target} — qui sert de cible. Celle-ci reste atteignable par « page ` +
-          'suivante », mais elle n’arrivera jamais toute seule.'
+          'Cette orientation porte plusieurs pages d’assistant de thermique, et XCTrack ' +
+          `n’en vise qu’une lorsqu’il bascule tout seul en spirale. Laquelle ? Cet éditeur ` +
+          `suppose la dernière, ici la page ${target} — sans l’avoir vérifié. Celle-ci ` +
+          'reste en tout cas atteignable par « page suivante ».',
+        toVerify:
+          'Rien n’a été observé de ce que fait XCTrack quand plusieurs pages d’assistant ' +
+          'de thermique coexistent : aucun fichier du corpus n’en porte deux. En ' +
+          'dupliquer une sur l’instrument, entrer en spirale et regarder quelle page ' +
+          'arrive trancherait la question en un vol.'
       })
     }
   }

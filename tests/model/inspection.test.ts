@@ -345,23 +345,30 @@ describe('règle 2 — page qui ne s’affichera jamais', () => {
   })
 })
 
-/* ============================== 3. page d'assistant de thermique jamais atteinte */
+/* ========================= 3. plusieurs pages d'assistant de thermique */
 
-describe('règle 3 — page d’assistant de thermique hors cible', () => {
+describe('règle 3 — plusieurs pages d’assistant de thermique', () => {
   const thermalPage = (): string => page({ className: 'WPThermalAssistant' })
 
   it('ne signale rien quand il n’y en a qu’une', () => {
     expect(inspect(documentOf([thermalPage()]))).toEqual([])
   })
 
-  it('signale toutes sauf la dernière, et nomme la cible', () => {
+  /**
+   * La cible supposée reste nommée — le pilote a besoin d'un repère —, mais la règle ne
+   * la donne plus pour acquise : « c'est la dernière qui sert » n'est écrit dans aucun
+   * relevé de ce dépôt, et aucun fichier du corpus n'a permis de l'observer.
+   */
+  it('nomme la cible supposée, et dit que ce n’est qu’une supposition', () => {
     const findings = findingsOfRule(
       inspect(documentOf([thermalPage(), page({}), thermalPage(), thermalPage()])),
       'thermal-page-not-auto-target'
     )
     expect(locations(findings)).toEqual(['Paysage, page 1', 'Paysage, page 3'])
     expect(findings[0]!.message).toContain('la page 4')
-    expect(findings[0]!.certainty).toBe('documented')
+    expect(findings[0]!.message).toContain('suppose')
+    expect(findings[0]!.certainty).toBe('hypothesis')
+    expect(findings[0]!.toVerify).toContain('dupliquer une sur l’instrument')
   })
 
   it('compte les orientations séparément', () => {

@@ -734,7 +734,7 @@ describe('contrôle avant vol — le raccord avec les neuf familles', () => {
   })
 })
 
-describe('contrôle avant vol — le ton des trois doutes assumés', () => {
+describe('contrôle avant vol — le ton des quatre doutes assumés', () => {
   /**
    * Un document qui déclenche les sept règles à la fois. Il n'existe pas dans le corpus
    * — et c'est heureux : aucune configuration réelle ne les réunit. Il sert à vérifier
@@ -816,7 +816,13 @@ describe('contrôle avant vol — le ton des trois doutes assumés', () => {
    * indiscernables.
    */
   it('le titre d’une hypothèse dit qu’elle reste à confirmer, celui d’une mesure non', () => {
-    const doubts = ['unreachable-widget', 'widget-too-small', 'pro-widget-without-licence']
+    const doubts = [
+      'unreachable-widget', 'widget-too-small', 'pro-widget-without-licence',
+      // Quatrième depuis le 22 août 2026 : « c'est la dernière page d'assistant de
+      // thermique qui reçoit le basculement » n'est écrit dans aucun relevé, et aucun
+      // fichier du corpus n'a permis de l'observer.
+      'thermal-page-not-auto-target'
+    ]
     for (const warning of SEVEN) {
       const expected = doubts.includes(warning.kind)
       expect(warning.title.includes('à confirmer sur l’instrument'), warning.kind).toBe(expected)
