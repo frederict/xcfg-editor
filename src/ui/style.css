@@ -33,25 +33,29 @@
   --xc-map-thermal-circle: #2b4bdb;
   --xc-map-label: #f44336;
   /* Boussole (WCompass, compass.ts) — toutes ces teintes sont des aplats relevés au
-     pixel, jamais interpolés. Couronne, graduations et N : `#404040`, identique sur les
-     sept captures. L'aiguille a DEUX jeux, et c'est `showBearing` qui tranche, pas la
-     taille du widget (l'ancienne lecture) : rouge quand il vaut false
-     (2026-08-21_planche-sol-8-*, ecran-landscape3-17widgets), gris quand il vaut true
-     (2026-08-21_polices-reference, widget-WCompass-*). Voir le tableau du commentaire de
-     tête de compass.ts. */
+     pixel, jamais interpolés. Couronne, graduations et N : `#404040`, identique sur
+     toutes les captures. Il y a TROIS flèches indépendantes, pas une aiguille à deux
+     jeux : navigation (rouge, dessinée dès que `navigation_target` ≠ NONE), trajectoire
+     et cap (gris, `showBearing` / `showHeading`). La corrélation avec `showBearing` de
+     la lecture précédente venait d'un corpus où les deux ne coexistaient jamais — voir
+     le commentaire de tête de compass.ts. */
   --xc-compass-ring: #404040;
-  --xc-compass-needle-nav-dark: #c02020;
-  --xc-compass-needle-nav-light: #e04040;
-  --xc-compass-needle-track-dark: #606060;
-  --xc-compass-needle-track-light: #808080;
-  /* Indicateur de vent — élément séparé, superposé à l'aiguille, absent quand le vent
-     est nul. `ARC` peint une zone noire unie (11 971 px de #000000 mesurés sur
-     vol-numeriques-boussole-variocolumn.png, absents de la même page au sol) ; `ARROW`
-     une branche bicolore jaune-olive (559 / 689 px sur vol-landscape3-en-vol.png, mêmes
-     absences au sol). */
+  --xc-compass-arrow-navigation-dark: #c02020;
+  --xc-compass-arrow-navigation-light: #e04040;
+  --xc-compass-arrow-course-dark: #606060;
+  --xc-compass-arrow-course-light: #808080;
+  /* Indicateur de vent (windStyle) — dessiné SOUS le cadran, absent quand le vent est
+     nul. `ARC` est un secteur plein noir du centre à la couronne, ouvert vers d'où vient
+     le vent, avec une ligne centrale blanche ; `ARROW` la même flèche que les autres, en
+     jaune-olive, pointée vers OÙ souffle le vent ; `WINDSOCK` une manche à air cernée de
+     noir à bandes olive. Teintes relevées plein écran : 42 757 px de #c0c040 et 42 819
+     de #a0a020, aplats francs. */
   --xc-compass-wind-arc: #000000;
-  --xc-compass-wind-arrow-dark: #a0a020;
-  --xc-compass-wind-arrow-light: #c0c040;
+  --xc-compass-wind-axis: #ffffff;
+  --xc-compass-arrow-wind-dark: #a0a020;
+  --xc-compass-arrow-wind-light: #c0c040;
+  --xc-compass-sock-outline: #000000;
+  --xc-compass-sock-body: #ffffff;
   /* Échelle verticale — WVerticalGraph seul désormais (verticalGraph.ts) : orange
      `dot_color` mesuré (`-26624` → `#ff9800`), flèche et libellé neutres. WVarioColumn
      ne partage plus ce dessin — voir --xc-variocol-* ci-dessous. */
@@ -667,18 +671,32 @@
   dominant-baseline: middle;
 }
 
-.xc-compass__needle--nav .xc-compass__needle-facet--dark { fill: var(--xc-compass-needle-nav-dark); }
-.xc-compass__needle--nav .xc-compass__needle-facet--light { fill: var(--xc-compass-needle-nav-light); }
-.xc-compass__needle--track .xc-compass__needle-facet--dark { fill: var(--xc-compass-needle-track-dark); }
-.xc-compass__needle--track .xc-compass__needle-facet--light { fill: var(--xc-compass-needle-track-light); }
+/* Les quatre teintes de flèche. La forme est la même pour toutes (compass.ts) ; seules
+   les facettes changent de couleur. Cap et trajectoire partagent le même gris : les deux
+   ont été relevées à #808080 / #606060 sur la planche de diagnostic. */
+.xc-compass__arrow--navigation .xc-compass__arrow-facet--dark { fill: var(--xc-compass-arrow-navigation-dark); }
+.xc-compass__arrow--navigation .xc-compass__arrow-facet--light { fill: var(--xc-compass-arrow-navigation-light); }
+.xc-compass__arrow--track .xc-compass__arrow-facet--dark,
+.xc-compass__arrow--heading .xc-compass__arrow-facet--dark { fill: var(--xc-compass-arrow-course-dark); }
+.xc-compass__arrow--track .xc-compass__arrow-facet--light,
+.xc-compass__arrow--heading .xc-compass__arrow-facet--light { fill: var(--xc-compass-arrow-course-light); }
+.xc-compass__arrow--wind .xc-compass__arrow-facet--dark { fill: var(--xc-compass-arrow-wind-dark); }
+.xc-compass__arrow--wind .xc-compass__arrow-facet--light { fill: var(--xc-compass-arrow-wind-light); }
 
-/* Indicateur de vent (windStyle, compass.ts) : superposé à l'aiguille, pas à sa place.
-   `fill-opacity` sur la branche ARROW recrée le mélange alpha observé là où elle
-   recouvre l'aiguille — deux aplats superposés, pas un `<linearGradient>`. */
-.xc-compass__wind-shape { fill: var(--xc-compass-wind-arc); }
-.xc-compass__wind-facet { fill-opacity: 0.85; }
-.xc-compass__wind-facet--dark { fill: var(--xc-compass-wind-arrow-dark); }
-.xc-compass__wind-facet--light { fill: var(--xc-compass-wind-arrow-light); }
+/* Indicateur de vent (windStyle, compass.ts). Aucun aplat n'est translucide : sur
+   l'appareil chaque forme est franche, seul le croisement de DEUX flèches se mélange, et
+   ce mélange n'est pas reproduit (voir le commentaire de tête). Le filet central de
+   l'arc mesure 2 px sur un cadran de 355 : 0,9 dans le repère de 200, comme la
+   graduation ramenée à la même échelle. */
+.xc-compass__wind-sector { fill: var(--xc-compass-wind-arc); }
+.xc-compass__wind-axis { stroke: var(--xc-compass-wind-axis); stroke-width: 0.9; }
+.xc-compass__wind-sock-body {
+  fill: var(--xc-compass-sock-body);
+  stroke: var(--xc-compass-sock-outline);
+  stroke-width: 0.9;
+}
+.xc-compass__wind-sock-band { fill: var(--xc-compass-arrow-wind-light); }
+.xc-compass__wind-sock-lip { fill: var(--xc-compass-arrow-wind-dark); }
 
 /* Échelle verticale — WVarioColumn / WVerticalGraph (verticalScale.ts). */
 .xc-vscale {

@@ -5,79 +5,146 @@ import { readRotation } from './rotation'
 
 /**
  * `WCompass` — « Boussole et vent » (libellé officiel `fr`, `docs/reference/edition-
- * native.md`). Le libellé décrit exactement le widget : un cadran, UNE aiguille, et un
- * indicateur de vent qui se superpose aux deux.
+ * native.md`). Le libellé décrit exactement le widget : un cadran, des flèches, et un
+ * indicateur de vent.
  *
- * **Correction (planche des 75 widgets, écart 1.5)** — le rendu précédent laissait le
- * disque ENTIÈREMENT VIDE avec les valeurs par défaut : 7020 pixels rouges comptés sur
- * l'appareil, 0 dans l'éditeur. La cause : l'aiguille n'était dessinée que si
- * `showHeading` ou `showBearing` valaient `true`, or ils valent `false` par défaut
- * (§ 3 de la planche, ré-export de XCTrack) — et l'appareil dessine quand même son
- * aiguille. Un cadran sans aiguille n'est pas une boussole.
+ * ## Ce que le rejeu du 2026-08-21 corrige — et pourquoi la lecture précédente trompait
  *
- * ## Ce que sept captures, recoupées avec leur configuration, établissent
+ * Le relevé précédent partait de sept captures dans lesquelles la boussole ne portait
+ * JAMAIS qu'une flèche à la fois. Il en avait déduit qu'il n'y a **qu'une aiguille**,
+ * dont `showBearing` choisirait la teinte : rouge quand il vaut `false`, gris quand il
+ * vaut `true`. **C'est faux, et le tableau des cinq états ci-dessous reste pourtant
+ * exact** — les deux affirmations sont compatibles, et c'est là que l'erreur se logeait.
  *
- * | capture | `showBearing` | `windStyle` | vent | ce que l'appareil dessine |
+ * Une page de diagnostic (huit boussoles côte à côte, `windStyle` et `showBearing`
+ * croisés, puis une seconde planche avec `navigation_target: "NONE"`) importée sur
+ * l'AIR³ 7.2 pendant le rejeu de `2026-07-09-XCT-FTE-01.igc` montre **trois flèches
+ * indépendantes**, qui peuvent coexister sur le même cadran :
+ *
+ * | flèche | dessinée quand | teintes mesurées |
+ * |---|---|---|
+ * | navigation | `navigation_target` ≠ `"NONE"` (défaut `"OPTIMIZED"`) | `#e04040` / `#c02020` |
+ * | trajectoire (« Montrer la flèche de trajectoire ») | `showBearing` | `#808080` / `#606060` |
+ * | cap (« Montrer la flèche de cap ») | `showHeading` | `#808080` / `#606060` |
+ *
+ * Les sept captures d'origine portaient toutes `navigation_target: "NONE"` **ou**
+ * `showBearing: false` : jamais les deux à la fois. D'où la corrélation trompeuse entre
+ * `showBearing` et la teinte. Le tableau des cinq états relevés reste vrai ligne à
+ * ligne, il était seulement **incomplet** :
+ *
+ * | `showBearing` | `windStyle` | vent | ce que l'appareil dessine | cause réelle |
  * |---|---|---|---|---|
- * | `2026-08-21_planche-sol-8-*` (défauts) | `false` | `NONE` | 0 | aiguille ROUGE seule |
- * | `2026-08-21_polices-reference` (`pages[0]`) | `true` | `ARC` | 0 | aiguille GRISE seule |
- * | `vol-numeriques-boussole-variocolumn` (`pages[0]`) | `true` | `ARC` | 22 km/h | aiguille GRISE **+ zone NOIRE** |
- * | `ecran-landscape3-17widgets` (`backup[3]`) | `false` | `ARROW` | 0 | aiguille ROUGE seule |
- * | `vol-landscape3-en-vol` (`backup[3]`) | `false` | `ARROW` | 22 km/h | aiguille ROUGE **+ branche JAUNE-OLIVE** |
- * | `widget-WCompass-pleinecran` / `-en-vol` | — | — | — | aiguille GRISE |
+ * | `false` | `NONE` | 0 | flèche ROUGE seule | `navigation_target: "OPTIMIZED"` |
+ * | `true` | `ARC` | 0 | flèche GRISE seule | `navigation_target: "NONE"` |
+ * | `true` | `ARC` | 22 km/h | flèche GRISE + zone NOIRE | idem + secteur de vent |
+ * | `false` | `ARROW` | 0 | flèche ROUGE seule | `navigation_target: "OPTIMIZED"` |
+ * | `false` | `ARROW` | 22 km/h | flèche ROUGE + branche JAUNE-OLIVE | idem + flèche de vent |
  *
- * Trois règles s'en déduisent, et aucune capture ne les contredit :
+ * Vérification directe (`page2-navNONE`, rangée haute) : `navigation_target: "NONE"`,
+ * `showBearing: false`, `showHeading: false` → **cadran entièrement vide**, l'indicateur
+ * de vent seul. Aucune flèche n'est inconditionnelle.
  *
- * 1. **L'aiguille est toujours là.** Sa teinte dépend de `showBearing` : gris
- *    `#808080`/`#606060` quand il vaut `true`, rouge `#e04040`/`#c02020` sinon. Ce sont
- *    les deux seules configurations mesurées ; rien n'indique une troisième teinte.
- * 2. **L'indicateur de vent est un élément SÉPARÉ**, superposé à l'aiguille, et il ne
- *    paraît qu'avec du vent : les deux captures au sol (vent 0 km/h) n'en montrent
- *    aucun malgré `windStyle: ARC` et `windStyle: ARROW` dans leur fichier. Il ne
- *    REMPLACE pas l'aiguille — c'est l'erreur de la version précédente, qui prenait le
- *    couple « aiguille rouge + branche jaune » de `vol-landscape3-en-vol` pour une
- *    « étoile de vent » à deux branches. Ce sont deux objets distincts : l'aiguille, et
- *    le vent.
- * 3. **`ARC` et `ARROW` ne se dessinent pas pareil** — ce point était marqué NON
- *    TRANCHÉ : `ARC` donne une zone NOIRE unie (11 971 px de `#000000` mesurés sur
- *    `vol-numeriques-boussole-variocolumn`, absents de la même page au sol), `ARROW`
- *    une branche bicolore jaune-olive `#c0c040`/`#a0a020` (559 / 689 px sur
- *    `vol-landscape3-en-vol`, absents de la même page au sol). `SOCK` reste **NON
- *    TRANCHÉ** : aucune capture, aucun fichier du corpus ne le porte — il est rendu
- *    comme `ARROW`, faute de mieux.
+ * ## Les trois flèches ont la MÊME forme
  *
- * `showHeading` vaut `false` sur les 15 occurrences du corpus ET sur la planche : aucune
- * capture ne montre ce qu'il ajoute. **NON TRANCHÉ** — il ne pilote plus rien ici, au
- * lieu de piloter la présence de l'aiguille, ce que les mesures démentent.
+ * Mesurée sur trois captures plein écran séparées (rayon du cadran 355 px), la flèche
+ * de navigation, celle de trajectoire et la flèche de vent `ARROW` sont le même polygone
+ * à quatre sommets, au pixel près — aires respectives 85 486, 85 776 et 85 576 px :
  *
- * ## Géométrie, mesurée au pixel sur `2026-08-21_planche-sol-8-*`
+ * | sommet | rayon mesuré | angle |
+ * |---|---|---|
+ * | pointe | 0,945 R | l'axe |
+ * | barbes | 0,852 R | ±40,0° de l'axe arrière |
+ * | creux | 0,291 R | sur l'axe arrière |
  *
- * Boîte du widget 427 × 646 px, cadran centré, couronne de diamètre extérieur 426 px —
- * le cadran occupe donc toute la largeur disponible, à 1 px près.
+ * La facette CLAIRE est celle de gauche quand la pointe est en haut (barycentre relevé
+ * à −89,5° de la pointe sur les trois captures). Les valeurs précédentes (0,92 / 0,82 /
+ * 0,24), relevées sur un cadran de 208 px, sont corrigées par ce relevé trois fois plus
+ * fin.
+ *
+ * ## L'indicateur de vent — l'aide contextuelle de l'appareil le décrit mot pour mot
+ *
+ * `reglages-aide-contextuelle-style-vent.png` (écran de réglage du widget, langue `fr`) :
+ *
+ * > **Aucun** – l'indicateur de vent est masqué.
+ * > **Flèche** – flèche triangulaire classique bicolore pointant vers où souffle le vent.
+ * > **Arc** – segment d'arc rempli indiquant le secteur au vent avec une ligne centrale.
+ * > **Manche à air** – cône effilé ressemblant à une véritable manche à air d'aéroport.
+ * > L'extrémité large fait face au vent, la pointe étroite est orientée vers où souffle
+ * > le vent. La vitesse du vent est indiquée par le nombre de bandes colorées (1 à 5).
+ *
+ * Ce texte tranche deux points que le rendu précédent avait faux :
+ *
+ * 1. **`ARC` et `ARROW` pointent en sens INVERSE.** `ARC` montre le secteur *au vent*
+ *    (d'où il vient), `ARROW` montre *où il souffle*. Vérifié : vent de 274°, secteur
+ *    noir centré sur 274,1°, flèche olive pointée sur 94,2°.
+ * 2. **`ARC` n'est pas un triangle** posé à côté de l'aiguille — c'était le défaut
+ *    signalé, deux triangles opposés qui se contredisent au lieu d'une boussole.
+ *
+ * ### `ARC` — secteur plein, sommet AU CENTRE (mesuré, plein écran, R = 355 px)
+ *
+ * | grandeur | mesure |
+ * |---|---|
+ * | sommet | 3,8 px du centre, soit 0,011 R — le centre |
+ * | rayon extérieur | 0,984 R, c'est-à-dire le bord INTÉRIEUR de la couronne |
+ * | ouverture | 239,26° → 308,92°, soit **69,7°**, centrée sur la direction du vent |
+ * | ligne centrale | filet blanc de 2 px, du sommet à la couronne, sur l'axe du secteur |
+ *
+ * Le rayon intérieur non nul lu sur les captures précédentes (0,24 R … 0,31 R selon la
+ * capture) était une **occultation par la flèche**, pas une forme : le quadrilatère de
+ * la flèche couvre toujours un voisinage du centre. Sur la planche sans flèche, le
+ * secteur descend jusqu'au centre.
+ *
+ * ### `WINDSOCK` — et non `SOCK`
+ *
+ * `SOCK` n'a jamais existé : le catalogue extrait de l'APK (`src/catalog/widgetOptions/
+ * base.json`) donne `NONE`, `ARROW`, `ARC`, **`WINDSOCK`**. Écrire `"SOCK"` dans un
+ * fichier et l'importer ne dessine RIEN sur l'appareil — vérifié, c'est ainsi que la
+ * valeur a été trouvée. Une valeur inconnue est donc traitée comme `NONE`, ici comme
+ * là-bas.
+ *
+ * Manche à air relevée (première observation du corpus, plein écran) : un trapèze dont
+ * les **quatre sommets sont sur un cercle de 0,72 R**, bouche à ±33,2° de la direction
+ * d'où vient le vent, pointe à ±11,5° de la direction opposée ; cerne noir ; cinq
+ * tranches égales le long de l'axe dont **la première et la troisième sont olive**
+ * `#c0c040`, les autres blanches ; lèvre `#a0a020` à la bouche.
+ *
+ * **NON TRANCHÉ** : l'aide annonce 1 à 5 bandes selon la vitesse (2 bandes pour
+ * 1,5–3,5 m/s, 3 bandes pour 3,5–6 m/s). Les trois observations disponibles — 21, 22 et
+ * 23 km/h, soit 5,8 à 6,4 m/s — montrent toutes **2 bandes**, pas 3. Le rendu fixe deux
+ * bandes, faute de savoir ce que compte réellement l'appareil.
+ *
+ * ## Ordre de superposition (mesuré)
+ *
+ * Vent AU-DESSOUS du cadran, flèches AU-DESSUS. Les deux sens ont été vérifiés au pixel
+ * sur un profil radial : la graduation cardinale `#404040` recouvre le secteur noir à
+ * partir de 0,70 R (`page3-arc-plein`), et la flèche de navigation recouvre la
+ * graduation ordinaire jusqu'à 0,89 R (`v3-p4-rouge`).
+ *
+ * **NON REPRODUIT** : là où deux flèches se croisent, l'appareil les mélange —
+ * `#e04040` sur `#808080` donne `#b45c5c`, soit 55 % de la flèche du dessus. Ce n'est
+ * pas de l'alpha simple : la même flèche est un aplat franc sur le blanc. Nos flèches se
+ * recouvrent en aplat.
+ *
+ * ## Géométrie du cadran, mesurée au pixel
  *
  * | grandeur | mesure | valeur retenue (repère de 200) |
  * |---|---|---|
- * | rayon médian de la couronne | 208,5 px = 0,977 demi-largeur | `RING_R` = 98 |
- * | épaisseur de la couronne | 9 px = 0,042 demi-largeur | `stroke-width: 4.2` |
- * | graduations ordinaires | de 0,80 R à 1,00 R | 78 → 98 |
- * | graduations cardinales | de 0,69 R à 1,00 R | 68 → 98 |
- * | N — centre | 0,78 R du centre | 76 |
- * | N — hauteur de casse | 0,18 R | ≈ 18 |
- * | aiguille — pointe | 0,92 R | 90 |
- * | aiguille — barbes | 0,82 R, à ±40° de l'axe arrière | 80 |
- * | aiguille — creux arrière | 0,24 R | 23 |
+ * | bord extérieur de la couronne | 0,998 demi-côté (deux tailles de widget) | 100 |
+ * | épaisseur de la couronne | 9 px, constants quelle que soit la taille | `stroke-width: 4.2` |
+ * | rayon médian | bord extérieur − épaisseur / 2 | `RING_R` = 98 |
+ * | graduations ordinaires | de 0,803 R à 1,011 R | 78 → 98 |
+ * | graduations cardinales | de 0,704 R à 1,011 R | 68 → 98 |
+ * | N — centre optique | 0,78 R (planche) / 0,81 R (plein écran) | 76 |
  *
- * L'ancien rendu posait la couronne à 0,871 demi-largeur (mesuré) et le N à 0,54 R : le
- * cadran était trop petit et la lettre trop près du centre. Le document de la planche
- * annonce 0,82 R pour le N ; la mesure refaite ici donne **0,78 R au centre optique de
- * la lettre** (0,88 R à son sommet, 0,67 R à sa base) — c'est cette valeur qui est
- * codée, et le document est corrigé en conséquence.
+ * **NON REPRODUIT** : les épaisseurs de trait de l'appareil sont constantes en pixels
+ * (couronne 9 px, graduation 7 px) quelle que soit la taille du cadran ; les nôtres
+ * suivent l'échelle du `viewBox`. Elles sont calées sur le cadran de 208 px de la
+ * planche : plus grand, notre trait épaissit là où celui de l'appareil ne bouge pas.
+ * De même la lettre N, dont la hauteur de casse passe de 0,18 R à 0,24 R entre les deux
+ * tailles sur l'appareil — sa BASE, elle, reste à 0,68 R.
  *
- * **Le N appartient à la couronne et tourne avec elle** : sous `rotation: "HEADING"`
- * (la valeur par défaut), les captures du rejeu montrent le N descendre en bas à gauche
- * pendant que l'aiguille garde son propre cap. Les deux ne bougent donc pas ensemble —
- * le cadran suit le cap, l'aiguille pointe ailleurs. Aucune donnée réelle n'étant
- * modélisée ici, les deux angles sont illustratifs, comme la trace fixe de `map.ts`.
+ * **Le N appartient à la couronne et tourne avec elle** sous `rotation: "HEADING"`.
+ * Aucune donnée réelle n'étant modélisée ici, tous les angles sont illustratifs.
  */
 
 const SVG_NS = 'http://www.w3.org/2000/svg'
@@ -90,8 +157,13 @@ function svgEl<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<strin
 
 const VIEW = 200
 const CENTER = VIEW / 2
-/** Rayon médian de la couronne — 0,977 demi-largeur mesuré, voir le commentaire de tête. */
+/** Rayon médian de la couronne — bord extérieur au demi-côté, moins la demi-épaisseur. */
 const RING_R = 98
+/**
+ * Bord INTÉRIEUR de la couronne, en fraction de `RING_R` : c'est là que s'arrête le
+ * secteur de vent (0,984 R mesuré, 0,979 ici pour une couronne de 4,2 d'épaisseur).
+ */
+const RING_INNER = (RING_R - 4.2 / 2) / RING_R
 
 /** Douze positions de 30° en 30°, la position nord (0°) exclue : sur la capture, le seul
  * trait sous le N est masqué par la lettre. Onze traits restent visibles, dont les trois
@@ -109,6 +181,17 @@ const TICK_INNER_CARDINAL = 0.69
 /** Distance du centre optique du N au centre du cadran, en fraction de `RING_R`. */
 const N_DISTANCE = 0.78
 
+/** Coordonnée polaire → cartésienne, 0° au nord et sens horaire comme sur un cadran. */
+function polar(radius: number, degrees: number): [number, number] {
+  const rad = (degrees - 90) * (Math.PI / 180)
+  return [CENTER + radius * Math.cos(rad), CENTER + radius * Math.sin(rad)]
+}
+
+function point(radius: number, degrees: number): string {
+  const [x, y] = polar(radius, degrees)
+  return `${x.toFixed(1)},${y.toFixed(1)}`
+}
+
 function buildDial(): SVGGElement {
   const dial = svgEl('g', { class: 'xc-compass__dial' })
 
@@ -116,13 +199,8 @@ function buildDial(): SVGGElement {
 
   for (const angle of TICK_ANGLES) {
     const cardinal = CARDINAL_ANGLES.has(angle)
-    const outer = RING_R * TICK_OUTER
-    const inner = RING_R * (cardinal ? TICK_INNER_CARDINAL : TICK_INNER)
-    const rad = (angle - 90) * (Math.PI / 180)
-    const x1 = CENTER + outer * Math.cos(rad)
-    const y1 = CENTER + outer * Math.sin(rad)
-    const x2 = CENTER + inner * Math.cos(rad)
-    const y2 = CENTER + inner * Math.sin(rad)
+    const [x1, y1] = polar(RING_R * TICK_OUTER, angle)
+    const [x2, y2] = polar(RING_R * (cardinal ? TICK_INNER_CARDINAL : TICK_INNER), angle)
     dial.append(svgEl('line', {
       class: cardinal ? 'xc-compass__tick xc-compass__tick--cardinal' : 'xc-compass__tick',
       x1: x1.toFixed(1), y1: y1.toFixed(1), x2: x2.toFixed(1), y2: y2.toFixed(1)
@@ -143,95 +221,133 @@ function buildDial(): SVGGElement {
   return dial
 }
 
+/** Sommets de la flèche, en fraction de `RING_R` — voir le tableau du commentaire de tête. */
+const ARROW_TIP = 0.945
+const ARROW_BARB = 0.852
+const ARROW_NOTCH = 0.291
+/** Écart des barbes à l'axe arrière, mesuré à ±40,0° sur les trois flèches. */
+const ARROW_BARB_ANGLE = 40
+
+/** Les quatre teintes de flèche, dans l'ordre où l'appareil les empile. */
+type ArrowKind = 'wind' | 'heading' | 'track' | 'navigation'
+
 /**
- * Aiguille de la boussole, à deux facettes séparées par son axe — géométrie relevée sur
- * `2026-08-21_planche-sol-8-*` (voir le tableau du commentaire de tête) : une pointe
- * longue, deux barbes à ±40° de l'axe arrière, un creux entre elles. Les deux facettes
- * ont exactement la même aire sur la capture (13 687 et 13 675 px), ce qui confirme le
- * partage par l'axe.
- *
- * `variant` porte la teinte : `'track'` (gris) quand `showBearing` vaut `true`,
- * `'nav'` (rouge) sinon — voir la règle 1 du commentaire de tête.
+ * Flèche à deux facettes séparées par son axe — une seule forme pour les quatre usages,
+ * parce que l'appareil n'en dessine qu'une (aires mesurées identiques à 0,4 % près sur
+ * trois captures plein écran). `kind` ne porte que la teinte.
  */
-function buildNeedle(variant: 'nav' | 'track', angle: number): SVGGElement {
-  const needle = svgEl('g', {
-    class: `xc-compass__needle xc-compass__needle--${variant}`,
+function buildArrow(kind: ArrowKind, angle: number): SVGGElement {
+  const arrow = svgEl('g', {
+    class: `xc-compass__arrow xc-compass__arrow--${kind}`,
     transform: `rotate(${angle} ${CENTER} ${CENTER})`
   })
 
-  const tipR = RING_R * 0.92
-  const barbR = RING_R * 0.82
-  const notchR = RING_R * 0.24
-  const barbAngle = (180 - 40) * (Math.PI / 180)
-  const barbX = barbR * Math.sin(barbAngle)
-  const barbY = -barbR * Math.cos(barbAngle)
+  const tip = point(RING_R * ARROW_TIP, 0)
+  const notch = point(RING_R * ARROW_NOTCH, 180)
+  const right = point(RING_R * ARROW_BARB, 180 - ARROW_BARB_ANGLE)
+  const left = point(RING_R * ARROW_BARB, 180 + ARROW_BARB_ANGLE)
 
-  const tip = `${CENTER},${(CENTER - tipR).toFixed(1)}`
-  const notch = `${CENTER},${(CENTER + notchR).toFixed(1)}`
-  const right = `${(CENTER + barbX).toFixed(1)},${(CENTER + barbY).toFixed(1)}`
-  const left = `${(CENTER - barbX).toFixed(1)},${(CENTER + barbY).toFixed(1)}`
-
-  // La facette SOMBRE est celle qui porte la barbe droite (dans le repère local, pointe
-  // en haut) : vérifié en échantillonnant les deux barbes de la capture — celle à 349°
-  // vaut #c02020, celle à 70° vaut #e04040, l'axe étant à 213°.
-  needle.append(svgEl('polygon', {
-    class: 'xc-compass__needle-facet xc-compass__needle-facet--dark',
+  // La facette SOMBRE porte la barbe droite (repère local, pointe en haut) : le
+  // barycentre de la facette claire tombe à −89,5° de la pointe sur les trois captures.
+  arrow.append(svgEl('polygon', {
+    class: 'xc-compass__arrow-facet xc-compass__arrow-facet--dark',
     points: `${tip} ${right} ${notch}`
   }))
-  needle.append(svgEl('polygon', {
-    class: 'xc-compass__needle-facet xc-compass__needle-facet--light',
+  arrow.append(svgEl('polygon', {
+    class: 'xc-compass__arrow-facet xc-compass__arrow-facet--light',
     points: `${tip} ${left} ${notch}`
   }))
 
-  return needle
+  return arrow
 }
 
-/**
- * Indicateur de vent — élément séparé, superposé à l'aiguille (règle 2 du commentaire de
- * tête). Deux dessins mesurés :
- *
- * - `ARROW` : une branche bicolore jaune-olive, même géométrie que l'aiguille (les
- *   teintes de blend relevées sur `vol-landscape3-en-vol` — `#b15920`, `#d17940` — sont
- *   le mélange alpha des deux aplats là où ils se recouvrent, pas un dégradé : d'où
- *   `fill-opacity` et non `<linearGradient>`).
- * - `ARC` : une zone noire unie, plus large et plus courte, sans facettes — 11 971 px de
- *   `#000000` sur `vol-numeriques-boussole-variocolumn`.
- *
- * `SOCK` n'est porté par aucun fichier ni aucune capture : rendu comme `ARROW`.
- */
-function buildWind(style: 'ARC' | 'ARROW', angle: number): SVGGElement {
-  const wind = svgEl('g', {
-    class: `xc-compass__wind xc-compass__wind--${style === 'ARC' ? 'arc' : 'arrow'}`,
-    transform: `rotate(${angle} ${CENTER} ${CENTER})`
-  })
+/** Ouverture totale du secteur `ARC`, mesurée à 69,7° sur un cadran de 355 px. */
+const ARC_SPREAD = 70
 
-  if (style === 'ARC') {
-    const tip = `${CENTER},${CENTER - 14}`
-    const baseLeft = `${CENTER - 46},${CENTER + 74}`
-    const baseRight = `${CENTER + 46},${CENTER + 74}`
-    wind.append(svgEl('polygon', { class: 'xc-compass__wind-shape', points: `${tip} ${baseRight} ${baseLeft}` }))
-    return wind
+/**
+ * `ARC` — secteur plein du centre à la couronne, centré sur la direction D'OÙ vient le
+ * vent, avec sa ligne centrale blanche. Le `path` décrit un vrai secteur circulaire :
+ * sommet au centre, deux rayons, un arc.
+ */
+function buildWindArc(windFrom: number): SVGGElement {
+  const wind = svgEl('g', { class: 'xc-compass__wind xc-compass__wind--arc' })
+  const radius = RING_R * RING_INNER
+  const [x1, y1] = polar(radius, windFrom - ARC_SPREAD / 2)
+  const [x2, y2] = polar(radius, windFrom + ARC_SPREAD / 2)
+  wind.append(svgEl('path', {
+    class: 'xc-compass__wind-sector',
+    d: `M ${CENTER} ${CENTER} L ${x1.toFixed(1)} ${y1.toFixed(1)} A ${radius.toFixed(1)} ${radius.toFixed(1)} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)} Z`
+  }))
+  const [lx, ly] = polar(radius, windFrom)
+  wind.append(svgEl('line', {
+    class: 'xc-compass__wind-axis',
+    x1: String(CENTER), y1: String(CENTER), x2: lx.toFixed(1), y2: ly.toFixed(1)
+  }))
+  return wind
+}
+
+/** Manche à air : quatre sommets sur ce cercle, bouche à ±33,2°, pointe à ±11,5°. */
+const SOCK_RADIUS = 0.72
+const SOCK_MOUTH_HALF = 33.2
+const SOCK_TIP_HALF = 11.5
+/** Cinq tranches égales le long de l'axe ; la première et la troisième sont colorées. */
+const SOCK_BANDS = [0, 2]
+const SOCK_SLICES = 5
+
+/**
+ * `WINDSOCK` — trapèze effilé dont la bouche fait face au vent. Les tranches sont
+ * découpées le long de l'axe par interpolation linéaire des deux bords, ce qui suit
+ * l'effilement sans avoir à modéliser un cône.
+ */
+function buildWindSock(windFrom: number): SVGGElement {
+  const wind = svgEl('g', { class: 'xc-compass__wind xc-compass__wind--sock' })
+  const radius = RING_R * SOCK_RADIUS
+  const mouthLeft = polar(radius, windFrom - SOCK_MOUTH_HALF)
+  const mouthRight = polar(radius, windFrom + SOCK_MOUTH_HALF)
+  const tipLeft = polar(radius, windFrom + 180 + SOCK_TIP_HALF)
+  const tipRight = polar(radius, windFrom + 180 - SOCK_TIP_HALF)
+
+  const along = (from: [number, number], to: [number, number], t: number): string =>
+    `${(from[0] + t * (to[0] - from[0])).toFixed(1)},${(from[1] + t * (to[1] - from[1])).toFixed(1)}`
+
+  wind.append(svgEl('polygon', {
+    class: 'xc-compass__wind-sock-body',
+    points: `${along(mouthLeft, tipLeft, 0)} ${along(mouthLeft, tipLeft, 1)} ${along(mouthRight, tipRight, 1)} ${along(mouthRight, tipRight, 0)}`
+  }))
+
+  for (const band of SOCK_BANDS) {
+    const a = band / SOCK_SLICES
+    const b = (band + 1) / SOCK_SLICES
+    wind.append(svgEl('polygon', {
+      class: 'xc-compass__wind-sock-band',
+      points: `${along(mouthLeft, tipLeft, a)} ${along(mouthLeft, tipLeft, b)} ${along(mouthRight, tipRight, b)} ${along(mouthRight, tipRight, a)}`
+    }))
   }
 
-  const tip = `${CENTER},${CENTER - 80}`
-  const east = `${CENTER + 24},${CENTER}`
-  const west = `${CENTER - 24},${CENTER}`
-  const tail = `${CENTER},${CENTER + 80}`
-  wind.append(svgEl('polygon', { class: 'xc-compass__wind-facet xc-compass__wind-facet--dark', points: `${tip} ${east} ${tail}` }))
-  wind.append(svgEl('polygon', { class: 'xc-compass__wind-facet xc-compass__wind-facet--light', points: `${tip} ${west} ${tail}` }))
+  // La lèvre : la bouche est vue de trois quarts sur l'appareil, un croissant sombre
+  // déborde au-delà du bord droit. Une quadratique le rend sans modéliser l'ellipse.
+  const [cx, cy] = polar(radius * Math.cos((SOCK_MOUTH_HALF * Math.PI) / 180) * 1.1, windFrom)
+  wind.append(svgEl('path', {
+    class: 'xc-compass__wind-sock-lip',
+    d: `M ${along(mouthLeft, tipLeft, 0)} Q ${cx.toFixed(1)} ${cy.toFixed(1)} ${along(mouthRight, tipRight, 0)} Z`
+  }))
+
   return wind
 }
 
 /**
  * Angles illustratifs : aucune donnée de cap, de trajectoire ou de vent réelle n'est
- * modélisée ici. `NEEDLE_ANGLE` reprend l'angle effectivement mesuré sur
+ * modélisée ici. `NAVIGATION_ANGLE` reprend l'angle effectivement mesuré sur
  * `2026-08-21_planche-sol-8-*` (213°), pour que la comparaison côte à côte avec la
- * capture porte sur la forme et non sur l'orientation. Les deux autres démontrent que
- * cadran et vent tournent chacun pour leur compte.
+ * capture porte sur la forme et non sur l'orientation. Les autres démontrent que cadran,
+ * flèches et vent tournent chacun pour leur compte.
  */
-const NEEDLE_ANGLE = 213
+const NAVIGATION_ANGLE = 213
+const TRACK_ANGLE = 168
+const HEADING_ANGLE = 190
 const DIAL_HEADING_ANGLE = -35
-const WIND_ANGLE = 145
+/** Direction D'OÙ vient le vent : `ARC` s'ouvre dessus, `ARROW` et la manche pointent à l'opposé. */
+const WIND_FROM_ANGLE = 145
 
 function shown(widget: Widget, key: string, fallback: boolean): boolean {
   return readBoolean(widget.node, key) ?? fallback
@@ -239,12 +355,21 @@ function shown(widget: Widget, key: string, fallback: boolean): boolean {
 
 /**
  * `windStyle` est une chaîne nue sur `WCompass` (voir rotation.ts pour le contraste avec
- * les trois cartes). Absent équivaut à `"NONE"`.
+ * les trois cartes). Absent équivaut à `"NONE"`, et **toute valeur hors catalogue aussi**
+ * : c'est ce que fait l'appareil, vérifié en lui soumettant `"SOCK"`, qui n'existe pas.
  */
-function windStyleOf(widget: Widget): 'ARC' | 'ARROW' | undefined {
+function windStyleOf(widget: Widget): 'ARC' | 'ARROW' | 'WINDSOCK' | undefined {
   const raw = readString(widget.node, 'windStyle')
-  if (raw === undefined || raw === 'NONE') return undefined
-  return raw === 'ARC' ? 'ARC' : 'ARROW'
+  if (raw === 'ARC' || raw === 'ARROW' || raw === 'WINDSOCK') return raw
+  return undefined
+}
+
+/**
+ * La flèche de navigation n'est dessinée que si le widget vise quelque chose. Absent
+ * équivaut à `"OPTIMIZED"` — la valeur par défaut du catalogue, celle de la planche.
+ */
+function navigates(widget: Widget): boolean {
+  return (readString(widget.node, 'navigation_target') ?? 'OPTIMIZED') !== 'NONE'
 }
 
 export function drawCompass(widget: Widget, _settings: RenderSettings, _language: string): HTMLElement {
@@ -252,6 +377,13 @@ export function drawCompass(widget: Widget, _settings: RenderSettings, _language
   element.className = 'xc-compass'
 
   const svg = svgEl('svg', { class: 'xc-compass__scene', viewBox: `0 0 ${VIEW} ${VIEW}` })
+
+  // Le vent passe SOUS le cadran : la graduation cardinale recouvre le secteur noir à
+  // partir de 0,70 R sur la capture.
+  const wind = windStyleOf(widget)
+  if (wind === 'ARC') svg.append(buildWindArc(WIND_FROM_ANGLE))
+  else if (wind === 'WINDSOCK') svg.append(buildWindSock(WIND_FROM_ANGLE))
+  else if (wind === 'ARROW') svg.append(buildArrow('wind', WIND_FROM_ANGLE + 180))
 
   // `showBackground` défaille à `true` : c'est sa valeur par défaut dans le ré-export de
   // XCTrack (§ 3 de la planche), et la majorité du corpus.
@@ -264,11 +396,10 @@ export function drawCompass(widget: Widget, _settings: RenderSettings, _language
     svg.append(dial)
   }
 
-  // L'aiguille est toujours dessinée — c'est la correction de l'écart 1.5.
-  svg.append(buildNeedle(shown(widget, 'showBearing', false) ? 'track' : 'nav', NEEDLE_ANGLE))
-
-  const wind = windStyleOf(widget)
-  if (wind !== undefined) svg.append(buildWind(wind, WIND_ANGLE))
+  // Les flèches passent AU-DESSUS du cadran, et aucune n'est inconditionnelle.
+  if (shown(widget, 'showHeading', false)) svg.append(buildArrow('heading', HEADING_ANGLE))
+  if (shown(widget, 'showBearing', false)) svg.append(buildArrow('track', TRACK_ANGLE))
+  if (navigates(widget)) svg.append(buildArrow('navigation', NAVIGATION_ANGLE))
 
   element.append(svg)
   return element
