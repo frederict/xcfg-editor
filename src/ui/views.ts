@@ -239,6 +239,113 @@ export interface DetailEditing {
   bar: HTMLElement
 }
 
+/* ------------------------------------------- hauteur du bandeau de réglages */
+
+/*
+ * La hauteur du bandeau est **réglée par le pilote**, à la poignée posée sur son bord
+ * supérieur, et retenue d'une session à l'autre. Le calcul des bornes vit ici, hors de
+ * `main.ts`, pour être mesurable en test : c'est la seule partie de la poignée qui ne
+ * dépende ni du DOM ni du pointeur.
+ *
+ * Ce que le bandeau prend, il le prend à la page. La borne haute se juge donc à ce
+ * qu'elle LAISSE : le bandeau ne dépasse jamais la moitié de la hauteur que la barre de
+ * tête laisse à la fenêtre. Mesuré en fenêtre de 913 px utiles — barre de tête 56 px,
+ * enveloppe du bandeau autour de son corps 60 px — cela donne un corps plafonné à
+ * 368 px : le bandeau entier fait alors 428 px, la moitié juste, et laisse 429 px de
+ * fenêtre sous la barre de tête, soit près des deux tiers d'une page paysage rendue à
+ * 200 % (661 px).
+ */
+
+/** Clé de `localStorage`. Un réglage d'affichage, jamais une donnée du fichier. */
+export const DOCK_HEIGHT_KEY = 'xcfg-editor.dock-height'
+
+/**
+ * Sous 112 px, le bandeau ne montre plus rien d'utile : il faut le champ de filtre
+ * (33 px), l'écart qui le suit (8 px) et une ligne de réglage entière (42 px) sous les
+ * 22 px de marges du corps — 105 px mesurés, arrondis au demi-rem supérieur. La liste
+ * des widgets y loge son intitulé et trois rangs de 28 px.
+ */
+export const DOCK_HEIGHT_MIN = 112
+
+/**
+ * Plafond absolu, indépendant de la fenêtre : au-delà, le panneau devient une colonne
+ * qu'on parcourt au lieu d'un tableau qu'on lit. Il ne mord qu'à partir de 1456 px de
+ * fenêtre utile, où la moitié laissée par la barre de tête le dépasse.
+ */
+export const DOCK_HEIGHT_MAX = 640
+
+/**
+ * Hauteur par défaut du corps, mesurée sur le contenu et non choisie : c'est la falaise.
+ * Sur les quinze widgets de la page 1 paysage de la configuration de référence, en
+ * fenêtre de 1500 px de large (panneau de 1041 px, deux à trois colonnes), les réglages
+ * demandent 123, 123, 159 ×4, 191, 194 ×2, 195, 200, 230, 257, 610 et 1306 px. Un corps
+ * de 288 px — 266 px utiles sous ses marges — en montre treize sur quinze **sans aucun
+ * défilement** ; le quatorzième en demanderait 632, ce qu'aucun défaut ne peut prendre.
+ * Les 208 px d'avant n'en montraient que six.
+ */
+export const DOCK_HEIGHT_DEFAULT = 288
+
+/** Barre de tête collante, mesurée : elle recouvre le haut de la page en permanence. */
+const HEAD_BAR_PX = 56
+
+/** Ce que le bandeau ajoute autour de son corps : poignée 10, barre de tête 48, bords 2. */
+const DOCK_CHROME_PX = 60
+
+/**
+ * Le plus haut corps admis dans une fenêtre donnée. La règle de la moitié se lit sur le
+ * bandeau entier, enveloppe comprise — c'est lui, pas son corps, qui recouvre la page.
+ */
+export function dockHeightCeiling(viewportHeight: number): number {
+  if (!Number.isFinite(viewportHeight)) return DOCK_HEIGHT_MIN
+  const half = Math.floor((viewportHeight - HEAD_BAR_PX) / 2) - DOCK_CHROME_PX
+  return Math.max(DOCK_HEIGHT_MIN, Math.min(DOCK_HEIGHT_MAX, half))
+}
+
+/**
+ * Ramène une hauteur demandée dans les bornes de la fenêtre courante. Une valeur qui
+ * n'est pas un nombre — un `NaN` sorti d'un calcul de pointeur — retombe sur le défaut
+ * plutôt que d'effacer la hauteur du bandeau.
+ */
+export function clampDockHeight(height: number, viewportHeight: number): number {
+  const ceiling = dockHeightCeiling(viewportHeight)
+  if (!Number.isFinite(height)) return Math.min(DOCK_HEIGHT_DEFAULT, ceiling)
+  return Math.max(DOCK_HEIGHT_MIN, Math.min(ceiling, Math.round(height)))
+}
+
+/**
+ * La hauteur retenue de la session précédente, ou `undefined` si le pilote n'a jamais
+ * touché la poignée. Un enregistrement de `localStorage` n'est jamais une donnée de
+ * confiance : absent, illisible, vide, écrit à la main ou venu d'une version antérieure,
+ * il est rejeté en silence et le défaut reprend la main.
+ *
+ * La validation se fait sur les bornes **absolues**, jamais sur celles de la fenêtre
+ * courante : une hauteur réglée sur un grand écran reste légitime sur un petit, où
+ * `clampDockHeight` la resserrera à l'affichage sans la perdre.
+ */
+export function readDockHeight(storage: Storage): number | undefined {
+  let raw: string | null = null
+  try {
+    raw = storage.getItem(DOCK_HEIGHT_KEY)
+  } catch {
+    return undefined
+  }
+  if (raw === null || raw.trim() === '') return undefined
+  const value = Number(raw)
+  if (!Number.isFinite(value)) return undefined
+  const height = Math.round(value)
+  if (height < DOCK_HEIGHT_MIN || height > DOCK_HEIGHT_MAX) return undefined
+  return height
+}
+
+/** Écrit la hauteur choisie. Un stockage refusé — navigation privée — ne casse rien. */
+export function writeDockHeight(storage: Storage, height: number): void {
+  try {
+    storage.setItem(DOCK_HEIGHT_KEY, String(Math.round(height)))
+  } catch {
+    /* Le réglage ne survivra pas à la session : c'est tout ce qu'on y perd. */
+  }
+}
+
 export interface DetailOptions {
   page: Page
   /** Rang de la page dans son orientation, à partir de 0. */

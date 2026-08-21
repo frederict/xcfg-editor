@@ -24,7 +24,8 @@ import {
 } from './pageManager'
 import type { PropertyField } from './properties'
 import {
-  aspectRatioOf, buildDetail, buildOverview,
+  aspectRatioOf, buildDetail, buildOverview, clampDockHeight, dockHeightCeiling,
+  DOCK_HEIGHT_DEFAULT, DOCK_HEIGHT_MIN, readDockHeight, writeDockHeight,
   type DetailEditing, type Orientation, type ViewContext
 } from './views'
 import { computeWarnings, warningsAt, type Warning } from './warnings'
@@ -110,12 +111,26 @@ let dockCollapsed = false
  */
 let listHidden = false
 
+/**
+ * La hauteur du corps du bandeau, en pixels, telle que le pilote l'a réglée à la poignée
+ * — `undefined` tant qu'il n'y a pas touché, et c'est alors le défaut qui s'applique.
+ * Relue au démarrage, réécrite à chaque geste : voir `views.ts` pour les bornes et pour
+ * la validation de ce que `localStorage` rend.
+ *
+ * Les deux états ne sont pas la même chose et ne se confondent pas : intacte, la hauteur
+ * n'est qu'un **plafond** que le corps n'atteint pas si les réglages sont courts ; réglée,
+ * elle est une hauteur ferme, que le pilote a demandée et qui profite aussi à la liste
+ * des widgets, laquelle a toujours de quoi la remplir.
+ */
+let dockHeight: number | undefined = readDockHeight(window.localStorage)
+
 let dockElement: HTMLElement | undefined
 let dockTitle: HTMLElement | undefined
 let dockClass: HTMLElement | undefined
 let dockCount: HTMLElement | undefined
 let dockToggle: HTMLButtonElement | undefined
 let dockBody: HTMLElement | undefined
+let dockGrip: HTMLElement | undefined
 let listToggle: HTMLButtonElement | undefined
 let widgetList: WidgetList | undefined
 let widgetListHost: HTMLElement | undefined
@@ -777,6 +792,128 @@ function openPaletteDialog(): void {
   if (search instanceof HTMLInputElement) search.focus()
 }
 
+/* --------------------------------------------------- hauteur du bandeau */
+
+/** Un cran de flèche, et le cran large de `Page↑`/`Page↓` — trois lignes de réglage. */
+const DOCK_STEP_PX = 16
+const DOCK_PAGE_STEP_PX = 128
+
+/**
+ * La hauteur qu'a le corps **à l'écran**, et non celle qui est demandée : les deux
+ * diffèrent tant que le pilote n'a pas touché la poignée, la hauteur n'étant alors qu'un
+ * plafond que des réglages courts n'atteignent pas. C'est de cette hauteur-là que part
+ * tout geste — sans quoi la poignée sauterait au premier pixel, d'un corps de 150 px au
+ * plafond de 288.
+ */
+function measuredDockHeight(): number {
+  const measured = dockBody?.getBoundingClientRect().height
+  if (measured === undefined || measured <= 0) return DOCK_HEIGHT_DEFAULT
+  return Math.round(measured)
+}
+
+/**
+ * Pose la hauteur sur le bandeau et remet la poignée d'accord avec elle. Le plafond se
+ * recalcule ici, à chaque application : il dépend de la fenêtre, qui change de taille
+ * sans prévenir. La valeur demandée par le pilote, elle, n'est jamais rabotée dans
+ * `dockHeight` — resserrée pour l'affichage sur une fenêtre basse, elle se retrouve
+ * entière quand la fenêtre grandit à nouveau.
+ */
+function applyDockHeight(): void {
+  if (!dockElement) return
+  const ceiling = dockHeightCeiling(window.innerHeight)
+  const height = dockHeight === undefined
+    ? Math.min(DOCK_HEIGHT_DEFAULT, ceiling)
+    : clampDockHeight(dockHeight, window.innerHeight)
+  dockElement.style.setProperty('--dock-body-height', `${height}px`)
+  dockElement.classList.toggle('dock--sized', dockHeight !== undefined)
+  if (dockGrip) {
+    dockGrip.setAttribute('aria-valuemin', String(DOCK_HEIGHT_MIN))
+    dockGrip.setAttribute('aria-valuemax', String(ceiling))
+    dockGrip.setAttribute('aria-valuenow', String(height))
+    dockGrip.setAttribute('aria-valuetext', `${height} pixels`)
+  }
+}
+
+function setDockHeight(height: number): void {
+  dockHeight = clampDockHeight(height, window.innerHeight)
+  applyDockHeight()
+}
+
+/** Écrit en fin de geste, jamais à chaque pixel : `localStorage` est un accès disque. */
+function saveDockHeight(): void {
+  if (dockHeight !== undefined) writeDockHeight(window.localStorage, dockHeight)
+}
+
+/**
+ * La poignée de redimensionnement, sur le bord supérieur du bandeau. Glisser vers le haut
+ * agrandit — le bandeau pousse vers le haut, il est collé en bas.
+ *
+ * `role="separator"` avec un `tabindex` : c'est la séparation déplaçable entre la page et
+ * les réglages, et ARIA la veut alors dans l'ordre de tabulation, munie de ses trois
+ * valeurs. Le maximum annoncé est celui de la fenêtre courante, pas la borne absolue :
+ * annoncer un maximum qu'on refuserait serait mentir au lecteur d'écran.
+ */
+function buildDockGrip(): HTMLElement {
+  const grip = el('div', 'dock__grip')
+  grip.tabIndex = 0
+  grip.setAttribute('role', 'separator')
+  grip.setAttribute('aria-orientation', 'horizontal')
+  grip.setAttribute('aria-label', 'Hauteur du bandeau de réglages')
+  grip.title =
+    'Glissez pour changer la hauteur du bandeau — au clavier, flèches haut et bas, ' +
+    'Page↑ et Page↓ par crans larges, Origine et Fin aux extrêmes.'
+
+  grip.addEventListener('pointerdown', (event) => {
+    if (event.button !== 0) return
+    const startHeight = measuredDockHeight()
+    const startY = event.clientY
+    // La capture fait suivre le pointeur hors de la poignée : un geste ample ne se perd
+    // pas dès que le curseur passe sur la page, qui est juste au-dessus.
+    grip.setPointerCapture(event.pointerId)
+    dockElement?.classList.add('dock--resizing')
+    const move = (moved: PointerEvent): void => {
+      setDockHeight(startHeight + (startY - moved.clientY))
+    }
+    const stop = (): void => {
+      grip.removeEventListener('pointermove', move)
+      grip.removeEventListener('pointerup', stop)
+      grip.removeEventListener('pointercancel', stop)
+      dockElement?.classList.remove('dock--resizing')
+      saveDockHeight()
+    }
+    grip.addEventListener('pointermove', move)
+    grip.addEventListener('pointerup', stop)
+    grip.addEventListener('pointercancel', stop)
+    // Sans quoi le glissé sélectionne le texte des réglages au passage.
+    event.preventDefault()
+  })
+
+  grip.addEventListener('keydown', (event) => {
+    if (event.altKey || event.ctrlKey || event.metaKey) return
+    const from = measuredDockHeight()
+    let target: number
+    switch (event.key) {
+      case 'ArrowUp': target = from + DOCK_STEP_PX; break
+      case 'ArrowDown': target = from - DOCK_STEP_PX; break
+      case 'PageUp': target = from + DOCK_PAGE_STEP_PX; break
+      case 'PageDown': target = from - DOCK_PAGE_STEP_PX; break
+      case 'Home': target = DOCK_HEIGHT_MIN; break
+      case 'End': target = dockHeightCeiling(window.innerHeight); break
+      default: return
+    }
+    // Les flèches feraient défiler la fenêtre par-dessus le marché.
+    event.preventDefault()
+    setDockHeight(target)
+    saveDockHeight()
+  })
+
+  return grip
+}
+
+// La fenêtre change de taille : le plafond change avec elle, et une hauteur qui tenait
+// sur un grand écran doit se resserrer plutôt que d'avaler la page.
+window.addEventListener('resize', () => applyDockHeight())
+
 /**
  * Le bandeau, replié ou déployé. Replié, il ne laisse que sa barre de tête : le nom du
  * widget sélectionné et le bouton pour la rouvrir — de quoi savoir sur quoi on agit sans
@@ -789,6 +926,9 @@ function syncDock(): void {
   dockToggle.setAttribute('aria-expanded', String(!dockCollapsed))
   // Replié, c'est le corps entier qui disparaît : ses deux zones, et la place qu'il prend.
   if (dockBody) dockBody.hidden = dockCollapsed
+  // Replié, il n'y a plus de hauteur à régler : la poignée sort aussi de la tabulation.
+  // La hauteur choisie, elle, est intacte et revient telle quelle au dépliage.
+  if (dockGrip) dockGrip.hidden = dockCollapsed
   if (widgetListHost) widgetListHost.hidden = listHidden
   if (listToggle) {
     listToggle.hidden = dockCollapsed
@@ -903,9 +1043,11 @@ function refreshWidgetList(): void {
  * page, puis le panneau de `properties.ts` tel quel, c'est le CSS de l'enveloppe qui étale
  * sa liste verticale en colonnes, le module n'en sait rien.
  *
- * Les deux partagent la **hauteur bornée** du corps (`.dock__body`), jamais la largeur de
- * la page : le bandeau reste exactement aussi haut qu'avant, et le troisième principe du
- * projet — rien ne partage la largeur avec le rendu — n'est pas entamé.
+ * Les deux partagent la **hauteur** du corps (`.dock__body`), jamais la largeur de la
+ * page : le troisième principe du projet — rien ne partage la largeur avec le rendu —
+ * n'est pas entamé. Cette hauteur n'est plus fixée par la feuille de style seule : une
+ * poignée coiffe le bandeau, et c'est le pilote qui arbitre entre voir sa page et voir
+ * ses réglages.
  */
 function buildDock(): HTMLElement {
   const dock = el('section', 'dock')
@@ -913,6 +1055,8 @@ function buildDock(): HTMLElement {
   // Fin de glissé d'un curseur, sortie d'un champ : le pas en attente est clos ici
   // plutôt qu'au bout du délai.
   dock.addEventListener('change', () => flushRecord())
+
+  dockGrip = buildDockGrip()
 
   const head = el('div', 'dock__head')
   dockTitle = el('h2', 'dock__title', 'Aucun widget sélectionné')
@@ -944,8 +1088,12 @@ function buildDock(): HTMLElement {
   panelHost = el('div', 'dock__panel')
   body.append(widgetListHost, panelHost)
 
-  dock.append(head, body)
+  dockGrip.setAttribute('aria-controls', body.id)
+
+  dock.append(dockGrip, head, body)
   dockElement = dock
+  // Le bandeau est neuf à chaque `render()` : la hauteur réglée se repose dessus ici.
+  applyDockHeight()
   return dock
 }
 
@@ -1205,6 +1353,7 @@ function render(): void {
   dockCount = undefined
   dockToggle = undefined
   dockBody = undefined
+  dockGrip = undefined
   listToggle = undefined
   widgetList = undefined
   widgetListHost = undefined

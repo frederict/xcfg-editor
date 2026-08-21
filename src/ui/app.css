@@ -1157,6 +1157,9 @@ body.is-dragging .veil {
  * rallonge le document d'autant sans déplacer d'un pixel la position qui dégage la page.
  */
 .dock {
+  /* Repli de sécurité : `main.ts` repose cette valeur en pixels à chaque construction du
+     bandeau, plafonnée à la fenêtre courante — voir `DOCK_HEIGHT_DEFAULT` dans `views.ts`. */
+  --dock-body-height: 18rem;
   position: sticky;
   bottom: 0;
   /* Au-dessus de la plaque et de ses marques d'édition, sous la barre de tête (20). */
@@ -1167,6 +1170,47 @@ body.is-dragging .veil {
   background: var(--app-panel);
   box-shadow: 0 -8px 20px rgb(0 0 0 / 0.14);
 }
+
+/*
+ * La poignée de redimensionnement, sur le bord supérieur du bandeau — le bord qui bouge.
+ * Dix pixels de haut : assez pour être saisie sans viser, trop peu pour prendre la place
+ * d'une ligne de réglage. Le trait qu'elle montre est la seule chose qui la signale au
+ * repos ; le curseur `ns-resize` dit le reste dès le survol.
+ */
+.dock__grip {
+  position: relative;
+  height: 10px;
+  cursor: ns-resize;
+  /* Sans quoi le geste tactile ferait défiler la page au lieu de tirer le bandeau. */
+  touch-action: none;
+}
+
+.dock__grip::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  width: 3rem;
+  height: 3px;
+  transform: translateX(-50%);
+  border-radius: 2px;
+  background: var(--app-line-strong);
+}
+
+.dock__grip:hover::before,
+.dock__grip:focus-visible::before,
+.dock--resizing .dock__grip::before { background: var(--app-ink-soft); }
+
+/* Le liseré se pose à l'intérieur : posé dehors, il serait tranché par le bord supérieur
+   du bandeau, qui touche le haut de sa boîte. */
+.dock__grip:focus-visible {
+  outline: 2px solid var(--app-focus);
+  outline-offset: -2px;
+}
+
+/* Pendant le geste, le pointeur passe sur les réglages et sur la page : sans cette ligne
+   il y sélectionnerait du texte au passage. */
+.dock--resizing { user-select: none; }
 
 .dock__head {
   display: flex;
@@ -1198,24 +1242,35 @@ body.is-dragging .veil {
 .dock__list-toggle { margin-left: auto; flex: none; }
 
 /*
- * Hauteur bornée, défilement interne au-delà. La borne ne se juge pas à la part de fenêtre
- * qu'elle prend, mais à ce qu'elle LAISSE : sous le bandeau collé en bas, il faut encore de
- * quoi loger la page entière, sans quoi aucune position de défilement ne la dégage et l'on
- * règle un widget qu'on ne voit pas.
+ * Hauteur réglable, défilement interne au-delà. **C'est le pilote qui arbitre** entre voir
+ * sa page et voir ses réglages : la poignée du bord supérieur déplace cette hauteur, et le
+ * choix survit à la session (`views.ts`, `DOCK_HEIGHT_KEY`). Ce qui suit ne fixe donc plus
+ * une loi, mais le **point de départ** du geste — et il reste mesuré, parce qu'un défaut mal
+ * placé se paie à chaque ouverture par ceux qui n'y toucheront jamais.
  *
- * Le pilote travaille toujours au-delà de 100 % : c'est le zoom 200 % qui commande. Mesuré
- * sur `WXCAssistant` (63 réglages) en fenêtre 1500 × 1000, page de 661 px, barre de tête de
- * 56 px : la page entière reste atteignable jusqu'à un bandeau de 274 px (corps de 14rem, 6 px
- * de marge) et cesse de l'être à 282 px (14.5rem). 13rem — bandeau de 258 px, 22 px de marge —
- * garde un rem de réserve sous ce seuil. Le terme en `vh` ne mord qu'en fenêtre très basse
- * (sous 743 px de haut), où il resserre encore.
+ * Le raisonnement d'origine tient toujours : la hauteur ne se juge pas à la part de fenêtre
+ * qu'elle prend, mais à ce qu'elle LAISSE — sous le bandeau collé en bas, il faut encore de
+ * quoi loger la page, sans quoi aucune position de défilement ne la dégage et l'on règle un
+ * widget qu'on ne voit pas. Ce que la mesure de 2026-08-20 chiffrait par un seuil (bandeau de
+ * 274 px encore bon, 282 px déjà trop) ; re-mesuré depuis, en fenêtre 1500 × 913 utiles, page
+ * paysage de 661 px à 200 %, barre de tête collante de 56 px : ce que la fenêtre laisse à la
+ * page vaut `913 − 56 − bandeau`, et la page n'y tient tout entière qu'en dessous de 196 px de
+ * bandeau. Les 13rem d'alors — bandeau de 258 px — en cachaient déjà 62. **Le compromis était
+ * donc perdu avant même d'être payé** : au zoom où le pilote travaille, la page entière et le
+ * bandeau ne coexistent plus, et c'est exactement pourquoi le choix lui revient.
+ *
+ * Le défaut, du coup, se mesure sur le contenu et non sur ce qui reste : 18rem — 288 px, 266
+ * utiles — montrent treize des quinze widgets de la page de référence **sans défilement**,
+ * contre six pour les 13rem d'avant ; le quatorzième en demanderait 632, et le prix est alors
+ * les deux tiers de la fenêtre. Le plafond du geste, lui, tient la promesse de la borne
+ * d'origine : jamais plus de la moitié de ce que la barre de tête laisse (`dockHeightCeiling`).
  *
  * La glissière est ici, sur une simple boîte — jamais sur le conteneur multi-colonnes, qui à
  * hauteur fixée fabriquerait des colonnes supplémentaires et déborderait en largeur au lieu
  * de défiler en hauteur.
  */
 .dock__body {
-  max-height: min(28vh, 13rem);
+  max-height: var(--dock-body-height);
   /*
    * Deux zones côte à côte — la liste des widgets, puis les réglages —, qui **partagent la
    * hauteur bornée** au lieu de s'ajouter. Chacune défile pour son compte ; le corps, lui,
@@ -1243,6 +1298,15 @@ body.is-dragging .veil {
   padding-right: 0.9rem;
   border-right: 1px solid var(--app-line);
 }
+
+/*
+ * Réglé à la poignée, le corps prend cette hauteur-là, sans plus se resserrer sur son
+ * contenu : le pilote a demandé une taille, pas un plafond. Ce n'est pas une subtilité
+ * gratuite — la liste des widgets occupe l'autre moitié du bandeau et a toujours de quoi
+ * remplir la place, quand bien même les réglages du widget choisi tiendraient en trois
+ * lignes.
+ */
+.dock--sized .dock__body { height: var(--dock-body-height); }
 
 /* `hidden` ne peut rien contre `display: flex` : il faut le lui redire — pour la liste
    masquée seule comme pour le corps entier, que le repli du bandeau escamote. */
