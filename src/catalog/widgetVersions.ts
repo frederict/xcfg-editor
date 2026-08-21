@@ -102,7 +102,12 @@ export interface CorpusCheck {
    * pour leur réunion.
    */
   tiers: number[]
-  files: string[]
+  /**
+   * Combien de fichiers réels ont été confrontés. Le **compte**, jamais les noms :
+   * le corpus est le dossier de sauvegardes d'un pilote, et ses noms de fichiers
+   * portent des prénoms. Cette base part dans un dépôt public.
+   */
+  fileCount: number
   pairs: number
   matched: number
   unmatched: Record<string, string[]>

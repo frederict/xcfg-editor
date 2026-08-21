@@ -364,7 +364,11 @@ def build(surveys: list[dict], failures: list[dict],
             "tiers": candidates,
             # Le versionCode réellement confronté, quand ce n'est pas celui du fichier.
             "approximatedBy": approximate,
-            "files": corpus_files.get(code, []),
+            # Le **nombre** de fichiers confrontés, jamais leurs noms : ils viennent
+            # du dossier de sauvegardes d'un pilote et en portent les habitudes de
+            # nommage — un prénom, celui d'un compagnon de vol. Cette base est
+            # publique ; le compte suffit à dire la solidité de la confrontation.
+            "fileCount": len(corpus_files.get(code, [])),
             "pairs": total,
             "matched": matched,
             "unmatched": {w: keys for w, keys in sorted(unmatched.items())},

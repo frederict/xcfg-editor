@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import {
   loadVersionDatabase,
@@ -128,5 +131,30 @@ describe('confrontation aux fichiers réels', () => {
   it('couvre les sept versions du corpus historique, plus la version courante', () => {
     const codes = db.index.corpus.map((c) => c.code)
     expect(codes).toEqual(expect.arrayContaining([90615, 90830, 90840, 90861, 90910, 91192, 91230]))
+  })
+})
+
+/**
+ * Cette base part dans un dépôt **public**. Son corpus est le dossier de sauvegardes d'un
+ * pilote, et les noms de fichiers y portent ses habitudes : une date, un « ok », un
+ * prénom, celui d'un compagnon de vol. Le compte suffit à dire la solidité de la
+ * confrontation ; les noms n'y ajoutaient rien et les publiaient.
+ */
+describe('la base ne publie rien du corpus qu’un nombre', () => {
+  const source = readFileSync(join(
+    dirname(fileURLToPath(import.meta.url)), '../../src/catalog/widgetVersions/index.json'
+  ), 'utf8')
+
+  it('aucun nom de fichier de corpus n’y figure', () => {
+    // Recherche sur le texte brut, pas sur l'objet : une clé ajoutée demain à un autre
+    // niveau de l'arbre échapperait à un parcours écrit pour la forme d'aujourd'hui.
+    expect(source).not.toMatch(/\.xcfg/)
+  })
+
+  it('chaque confrontation dit combien de fichiers, jamais lesquels', () => {
+    for (const check of db.index.corpus) {
+      expect(typeof check.fileCount).toBe('number')
+      expect(check).not.toHaveProperty('files')
+    }
   })
 })
