@@ -37,12 +37,12 @@ import type { RenderSettings } from '../../model/preferences'
  * 2. `vol-page3.png` : **−1,0 m/s** affiché et 5 barres au-dessous. 5 × 0,2 = 1,0.
  * 3. `2026-08-21_planche-vol-8-*`, horodatée 13:52:48. Le réglage de rejeu de XCTrack
  *    affiche « Position dans le tracé (UTC) » avec deux heures de moins que l'écran :
- *    l'instant est donc 11:52:48 UTC dans
- *    `/sdcard/XCTrack/Tracklogs/2026-07-09-XCT-FTE-01.igc`, où le vario sur 2 s vaut
- *    **−1,0 m/s**. La colonne y montre 5 barres au-dessous. (Le point d'ancrage a été
- *    vérifié : la position 40,2563 N / 4,9085 W lue sur `planche-vol-etat-montee-vario-
- *    positif` correspond à la seconde 11:51:39 de la trace, où le vario calculé vaut
- *    +1,0 — exactement la valeur affichée.)
+ *    l'instant est donc 11:52:48 UTC dans la trace rejouée (`.igc` non versionné, voir
+ *    `docs/reference/planche-widgets-air3.md`), où le vario sur 2 s vaut **−1,0 m/s**.
+ *    La colonne y montre 5 barres au-dessous. (Le point d'ancrage a été vérifié : la
+ *    position lue dans la cellule `WLocation` de `planche-vol-etat-montee-vario-positif`
+ *    correspond à la seconde 11:51:39 de la trace, où le vario calculé vaut +1,0 —
+ *    exactement la valeur affichée.)
  * 4. Rejeu de la même trace sur l'appareil, 40 captures de la page 8 : la corrélation
  *    entre le nombre de barres SIGNÉ (compté au pixel, 0,2 m/s la barre) et le vario
  *    calculé depuis l'IGC vaut **r = +0,44**, maximale à Δt = 4,1 s — l'écart de timing

@@ -11,7 +11,7 @@ Usage :
     python3 tools/extract-widget-labels.py [chemin_du_dossier_apk_decompile]
 
 Par défaut, cherche le dossier `XCTrack-*` à côté de `xcfg-editor/` (frère du
-projet), typiquement `/Users/fred/DEV/XCTrack/XCTrack-<version>/`.
+projet), c'est-à-dire `../XCTrack-<version>/`.
 
 ## Ce que fait ce script, dans l'ordre
 

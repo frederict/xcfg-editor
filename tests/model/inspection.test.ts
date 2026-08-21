@@ -412,8 +412,8 @@ describe('règle 4 — lisibilité', () => {
   })
 
   it('signale un widget sous le seuil et pas un widget au-dessus', () => {
-    // 344/10000 de 87,2 mm ≈ 3,0 mm — la hauteur des trois plus petits widgets de
-    // Fred ; 600/10000 ≈ 5,2 mm, au-dessus du seuil de 4,85 mm.
+    // 344/10000 de 87,2 mm ≈ 3,0 mm — la hauteur des trois plus petits widgets
+    // du propriétaire ; 600/10000 ≈ 5,2 mm, au-dessus du seuil de 4,85 mm.
     const findings = findingsOfRule(inspectOnePage([
       widget('WThermalAltGain', { x1: 0, y1: 0, x2: 1040, y2: 344 }),
       widget('WStatusLine', { x1: 0, y1: 1000, x2: 10000, y2: 1600 })
@@ -528,7 +528,7 @@ describe('règle 6 — au plus une carte routière par page', () => {
   })
 
   it('ne signale rien quand les deux cartes sont sur des pages différentes', () => {
-    // C'est exactement la configuration de Fred, et celle des 21 fichiers du corpus :
+    // C'est exactement la configuration du propriétaire, et celle des 21 fichiers du corpus :
     // lire la contrainte « par configuration » signalerait 21 fichiers sur 21.
     const findings = inspect(documentOf([
       page({ widgets: [map('ClearpilotForest', { x1: 0, y1: 0, x2: 10000, y2: 10000 })] }),
@@ -656,7 +656,7 @@ describe('ce que ce module refuse de signaler', () => {
   })
 })
 
-/* ============================================ la configuration réelle de Fred */
+/* ============================================ la configuration réelle du propriétaire */
 
 describe('la configuration réelle — 2026-08-20_backup-00.xcfg', () => {
   let document: JsonNode

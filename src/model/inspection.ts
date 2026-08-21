@@ -24,7 +24,7 @@ import type { Widget } from './widget'
  *    et pire : on découragerait une bonne pratique.
  * 3. **Une règle qui crie au loup sur une configuration saine détruit la confiance dans
  *    toutes les autres.** Chaque règle d'ici a donc été passée sur les 21 fichiers du
- *    corpus (`/Users/fred/DEV/XCTrack/Exemples/` + `/tmp/air3/corpus-historique/`)
+ *    corpus (les cinq exports réels, plus les 16 configurations tirées de l'appareil)
  *    avant d'être retenue ; le compte de déclenchements est écrit au-dessus de chacune.
  *
  * ## Ce que ce module ne fait PAS, parce que `src/ui/warnings.ts` le fait déjà
@@ -39,7 +39,7 @@ import type { Widget } from './widget'
  * pas la même chose. `warnings.ts` demande « ce widget sera-t-il **visible** ? » et ne
  * retient donc comme masquants que les fonds opaques (`_bg: 0`) ; la règle 1 demande
  * « ce widget sera-t-il **atteignable au doigt** ? », et un widget sans aucun fond vole
- * les clics tout autant qu'un opaque — c'est même exactement ce qui se passe chez Fred,
+ * les clics tout autant qu'un opaque — c'est même exactement ce qui se passe chez le propriétaire,
  * où deux `WLiveMessage` invisibles (`_bg: 100`) volent les clics de quatre widgets dont
  * deux `WButtonNavig` que l'instrument dessine visiblement.
  */
@@ -294,7 +294,7 @@ const shortClassName = (className: string): string => className.split('.').pop()
  * **Pourquoi 50 cm** : c'est la distance de référence des normes d'ergonomie visuelle
  * (ISO 9241-303 et la série 9241 en général la prennent pour base), et elle correspond
  * à un instrument posé sur le cockpit de sellette ou sanglé à la cuisse, bras au repos.
- * Elle n'a **pas** été mesurée sur Fred en vol : c'est pour cela que
+ * Elle n'a **pas** été mesurée sur le propriétaire en vol : c'est pour cela que
  * `InspectionInput.readingDistanceMm` existe. Un pilote qui porte son AIR³ plus près ou
  * plus loin doit pouvoir le dire, pas subir notre chiffre.
  */
@@ -353,7 +353,7 @@ export function characterHeightMm(arcMinutes: number, distanceMm: number): numbe
  * de l'ISO 9241-303. À 50 cm et avec `ASSUMED_VALUE_HEIGHT_RATIO` : ≈ 4,85 mm.
  *
  * **Pourquoi le minimum absolu et non la valeur recommandée.** Mesuré sur la
- * configuration de Fred (AIR³ 7.2, dalle 155,0 × 87,2 mm) :
+ * configuration du propriétaire (AIR³ 7.2, dalle 155,0 × 87,2 mm) :
  *
  * - au seuil « minimum » (4,85 mm), la règle sort **3 widgets sur 105**, tous à 3,0 mm
  *   de haut — une seule ligne de la grille de 29 —, tous sur une page de compétition
@@ -415,7 +415,7 @@ const ROAD_MAP_THEME_OFF = 'None'
  *    `ClearpilotForestDark`.
  *
  * L'ancienne forme booléenne `mapWidget_showOpenStreet` est acceptée en repli : elle est
- * encore vivante dans 82 widgets du corpus, dont les pages portrait d'usine de Fred.
+ * encore vivante dans 82 widgets du corpus, dont les pages portrait d'usine du propriétaire.
  * `mapWidget_openStreetTheme`, troisième forme trouvée dans le `.dex`, n'apparaît nulle
  * part dans le corpus et son domaine de valeurs est inconnu : elle est **volontairement
  * ignorée ici** (elle reste signalée par la règle 7) plutôt que testée au jugé.
@@ -434,7 +434,7 @@ function drawsRoadMap(widget: Widget): boolean {
 /**
  * Les clés qu'une version antérieure de XCTrack écrivait, et ce que 1.0.3 met à leur
  * place. **Rien n'est perdu** : la migration a été observée sur l'appareil — réimporter
- * la sauvegarde de Fred a laissé les cinq pages paysage identiques octet pour octet et
+ * la sauvegarde du propriétaire a laissé les cinq pages paysage identiques octet pour octet et
  * **réécrit** les trois pages portrait, qui portaient encore l'ancien schéma
  * (`docs/reference/edition-native-exploration.md` § 6).
  *
@@ -482,7 +482,7 @@ function eachPage(layout: Layout): PageContext[] {
 }
 
 /**
- * Règle 1 — 6 constats sur les 105 widgets de la configuration réelle de Fred. Sur le
+ * Règle 1 — 6 constats sur les 105 widgets de la configuration réelle du propriétaire. Sur le
  * corpus historique, 15 fichiers sur 16 en rendent exactement 4, toujours le même motif ;
  * seul `2022-02-08.xcfg` (227 widgets, 11 pages) en rend 49, dont 32 `WButtonNavig`
  * délibérément posés sous des cartes. Le taux global — 109 sur 1631 widgets — est donc
@@ -538,7 +538,7 @@ function unreachableWidgetFindings(input: InspectionInput): Finding[] {
  * Choisir les types de navigations pour lesquelles la page sera affichée »
  * (`edition-native-exploration.md` § 5.4). Aucun type coché = affichée pour aucun.
  * 1 à 3 constats par fichier dans le corpus, dont la page de compétition de 15 widgets
- * de Fred.
+ * du propriétaire.
  */
 function pageNeverShownFindings(input: InspectionInput): Finding[] {
   const findings: Finding[] = []
@@ -597,7 +597,7 @@ function thermalPageFindings(input: InspectionInput): Finding[] {
 
 /**
  * Règle 4 — **hypothèse**, la seule dont le seuil dépende d'un chiffre non vérifié
- * (`ASSUMED_VALUE_HEIGHT_RATIO`). 3 constats sur les 105 widgets de Fred.
+ * (`ASSUMED_VALUE_HEIGHT_RATIO`). 3 constats sur les 105 widgets du propriétaire.
  */
 function tooSmallFindings(input: InspectionInput): Finding[] {
   const distanceMm = input.readingDistanceMm ?? DEFAULT_READING_DISTANCE_MM
@@ -635,7 +635,7 @@ function tooSmallFindings(input: InspectionInput): Finding[] {
 }
 
 /**
- * Règle 5 — **hypothèse**, et formulée en question. 2 constats chez Fred (deux
+ * Règle 5 — **hypothèse**, et formulée en question. 2 constats chez le propriétaire (deux
  * `WButtonBrightness`), 0 dans quinze des vingt et un fichiers du corpus.
  *
  * ⚠️ **On ne sait pas ce que XCTrack fait dans ce cas.** `info.proUpTo` vaut 0 dans les
@@ -694,7 +694,7 @@ function proWidgetFindings(input: InspectionInput): Finding[] {
  * **exactement 2** widgets à carte routière chacun — jamais plus, jamais deux sur la
  * même page — sur quatre ans et demi, huit versions et deux installations. Lire la
  * contrainte « par configuration » aurait signalé 21 fichiers sur 21, dont celui avec
- * lequel Fred vole : 100 % de bruit. Lue par page, la règle ne se déclenche sur aucun
+ * lequel le propriétaire vole : 100 % de bruit. Lue par page, la règle ne se déclenche sur aucun
  * fichier connu, et reste vraie le jour où quelqu'un pose deux cartes côte à côte.
  */
 function roadMapFindings(input: InspectionInput): Finding[] {
@@ -729,12 +729,12 @@ function roadMapFindings(input: InspectionInput): Finding[] {
 /**
  * Règle 7 — **mesurée** : la migration a été observée sur l'AIR³. Elle se déclenche sur
  * les 21 fichiers du corpus, y compris le dernier, parce que les trois pages portrait
- * de Fred n'ont pas été rééditées depuis février 2022. Ce n'est pas du bruit : c'est le
+ * du propriétaire n'ont pas été rééditées depuis février 2022. Ce n'est pas du bruit : c'est le
  * message rassurant qui manquait aux « 18 options non appariées » du backlog — le
  * pilote voyait `mapWidget_showOpenStreet` en clé brute sans savoir quoi en penser.
  *
  * Un constat par widget, avec les clés dans son message : une ligne par clé ferait
- * neuf entrées pour la configuration de Fred, là où il n'y a que quatre widgets
+ * neuf entrées pour la configuration du propriétaire, là où il n'y a que quatre widgets
  * concernés.
  */
 function obsoleteKeyFindings(input: InspectionInput): Finding[] {

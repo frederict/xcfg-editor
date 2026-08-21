@@ -66,7 +66,7 @@ describe('clés dupliquées', () => {
   })
 
   it('encode est l’inverse de decode', () => {
-    for (const brut of ['"simple"', '"avec \\"guillemets\\""', '"Frédéric"', '"a\\nb"']) {
+    for (const brut of ['"simple"', '"avec \\"guillemets\\""', '"Amélie"', '"a\\nb"']) {
       expect(encode(decode(brut))).toBe(brut)
     }
   })
@@ -126,9 +126,9 @@ describe('insertion d’une clé', () => {
 
   it('échappe la clé qu’on lui donne en clair', () => {
     const doc = parseJson('{}')
-    insertString(doc, 'titre "spécial"', encode('Frédéric'))
-    expect(serializeJson(doc)).toBe('{\n  "titre \\"spécial\\"": "Frédéric"\n}')
-    expect(readString(doc, 'titre "spécial"')).toBe('Frédéric')
+    insertString(doc, 'titre "spécial"', encode('Amélie'))
+    expect(serializeJson(doc)).toBe('{\n  "titre \\"spécial\\"": "Amélie"\n}')
+    expect(readString(doc, 'titre "spécial"')).toBe('Amélie')
   })
 
   it('refuse d’insérer une clé déjà présente, y compris dupliquée', () => {

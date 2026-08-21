@@ -39,8 +39,10 @@ thèmes livrés dans l'APK, réglages numériques (volume, QNH, seuils du vario)
 c'est un relevé : les 217 chaînes distinctes du `layout` d'un export `pages` sont toutes
 alphanumériques (classes, énumérations, `UUID`) — aucun texte libre, aucun titre
 personnalisé, aucun `WButtonPhone` renseigné. Vérifié par balayage du texte intégral, et
-re-vérifié à chaque exécution par `verifier()` ci-dessous, qui refuse d'écrire si un
-marqueur personnel subsiste **où que ce soit** dans le fichier produit.
+re-vérifié à chaque exécution par `verifier()` ci-dessous, qui refuse d'écrire si une
+chaîne personnelle subsiste **où que ce soit** dans le fichier produit. Ces chaînes ne
+sont pas listées ici — elles sont relevées dans la source avant remplacement (voir
+`marqueurs()`), pour ne pas publier dans un dépôt public ce que le script fait disparaître.
 
 ⚠️ Ce relevé vaut pour *ces* fichiers-là. Un export `pages` **peut** porter des données
 personnelles : `WFreeText.text`, `titletext`, et le `contact/fullName` /
@@ -170,16 +172,88 @@ REMPLACEMENTS['backup.xcfg'] = REMPLACEMENTS['2026-08-20_backup-00.xcfg']
 
 # ------------------------------------------------------------------------------ contrôle
 
-# Cherchés dans le **texte intégral** du fichier produit, jamais dans les seules clés que
-# l'on croit sensibles : c'est le seul contrôle qu'un remplacement incomplet ne berne pas.
-# Chaque motif est d'abord cherché dans la source — vérifier l'absence d'une chaîne qui
-# n'a jamais été là est vert pour rien.
-MARQUEURS = [
-    'Frédéric', 'Tétart', 'NIVIUK', 'Artik',
-    'Hompré', 'Marche', 'Ciney', 'Courriere',
-    'DESPEGUE', 'GASOLINERA', 'GALLEGOS', 'AGUASAL',
-    'belgian-paragliding', 'Belgium', 'Colombia',
-]
+# Les marqueurs ne sont **pas écrits ici**. Une liste en dur aurait deux défauts : elle
+# publierait dans un dépôt public le nom, la voile et les points de virage qu'elle prétend
+# faire disparaître — c'est la faute que `anonymat.test.ts` explique éviter — et elle ne
+# protégerait que contre les fuites qu'on avait déjà en tête.
+#
+# On les **dérive de la source**, à chaque exécution : toute chaîne portée comme *valeur*
+# par une des clés remplacées, et que l'on n'a pas nous-même réécrite, ne doit plus
+# apparaître nulle part dans le fichier produit. Le contrôle est donc automatiquement
+# complet — il attrape un nom que personne n'avait anticipé — et il reste auditable :
+# on lit ici la règle, à défaut de la liste.
+
+
+def _valeurs(noeud):
+    """Toutes les chaînes portées comme **valeur** par un nœud JSON, à toute profondeur.
+
+    Les clés d'objet sont exclues à dessein : dans `Navigation.State` ce sont des noms de
+    classes Java, dans `Navigation.WaypointFiles` des noms de réglages. Elles appartiennent
+    au vocabulaire de XCTrack, jamais au pilote — et les retenir ferait échouer le contrôle
+    sur des chaînes que le remplacement réécrit à l'identique.
+    """
+    if isinstance(noeud, str):
+        yield noeud
+    elif isinstance(noeud, dict):
+        for sous in noeud.values():
+            yield from _valeurs(sous)
+    elif isinstance(noeud, list):
+        for sous in noeud:
+            yield from _valeurs(sous)
+
+
+def _chaines(noeud):
+    """Toutes les chaînes d'un nœud JSON, **clés comprises**.
+
+    Le pendant asymétrique de `_valeurs` : du côté de ce que nous écrivons, une clé est
+    aussi légitime qu'une valeur. Sans elle, `org.xcontest.XCTrack.navig.TaskCompetition`
+    — clé de notre `Navigation.State`, et valeur de `_active` dans la source — passerait
+    pour une chaîne personnelle survivante.
+    """
+    if isinstance(noeud, str):
+        yield noeud
+    elif isinstance(noeud, dict):
+        for cle, sous in noeud.items():
+            yield cle
+            yield from _chaines(sous)
+    elif isinstance(noeud, list):
+        for sous in noeud:
+            yield from _chaines(sous)
+
+
+def _ecrites():
+    """Ce que *nous* avons écrit : les clés remplacées et toutes les chaînes des valeurs.
+
+    Tout ce qui est là est légitime dans le fichier produit, et doit donc être soustrait
+    des marqueurs — sans quoi `WGS84`, `CLASSIC` ou `xctrack-internal.wpt`, présents des
+    deux côtés, feraient échouer le contrôle sur du vocabulaire XCTrack.
+    """
+    ecrites = set()
+    for remplacement in REMPLACEMENTS.values():
+        for cle, valeur in remplacement.items():
+            ecrites.add(cle)
+            ecrites.update(_chaines(valeur))
+    return ecrites
+
+
+def marqueurs(sources: dict) -> list:
+    """Les chaînes personnelles de la source, cherchées ensuite dans **tous** les produits.
+
+    L'union sur les cinq fichiers n'est pas un détail : les exports `pages` n'ont pas de
+    `preferences`, donc rien à remplacer. Sans l'union, ils ne seraient contrôlés contre
+    rien — alors que leur `layout`, recopié à l'octet près, pourrait porter un nom relevé
+    dans les `preferences` d'un `backup`.
+    """
+    ecrites = _ecrites()
+    trouves = set()
+    for origine, document in sources.items():
+        preferences = document.get('preferences', {})
+        for cle in REMPLACEMENTS.get(origine, {}):
+            trouves.update(_valeurs(preferences.get(cle)))
+    # Sous trois caractères, une chaîne est un code d'unité ou une abréviation, jamais une
+    # identité — et elle déclencherait sur n'importe quoi.
+    return sorted(m for m in trouves - ecrites if len(m) >= 3)
+
 
 # Toute valeur à décimales longues est traitée comme une coordonnée potentielle, quelle
 # que soit sa clé — un tri par nom de clé raterait `altSmoothed` ou une clé qu'une
@@ -192,8 +266,8 @@ DECIMALES_LONGUES = re.compile(r'"([^"]+)": (-?\d+\.\d{6,})')
 SANS_LIEU = {'lpWeight', 'TakeoffSpeed'}
 
 
-def verifier(nom: str, texte: str) -> None:
-    for marqueur in MARQUEURS:
+def verifier(nom: str, texte: str, personnelles: list) -> None:
+    for marqueur in personnelles:
         if marqueur in texte:
             sys.exit(f'ÉCHEC {nom} : le marqueur « {marqueur} » survit')
     for cle, brut in DECIMALES_LONGUES.findall(texte):
@@ -208,19 +282,33 @@ def main() -> None:
     if SOURCE is None or not SOURCE.is_dir():
         sys.exit('usage : deriver-exemples.py <répertoire des fichiers réels>')
     CIBLE.mkdir(parents=True, exist_ok=True)
-    for origine, destination in FICHIERS.items():
+
+    # Première passe : tout lire. Les marqueurs se relèvent **avant** tout remplacement,
+    # et sur les cinq fichiers à la fois — un nom vu dans l'un est cherché dans tous.
+    sources = {}
+    for origine in FICHIERS:
         texte = (SOURCE / origine).read_text(encoding='utf8')
         document = json.loads(texte)
         if json.dumps(document, indent=2, ensure_ascii=False) != texte:
             sys.exit(f'ÉCHEC {origine} : Python ne reproduit pas ce fichier à l’octet près')
+        sources[origine] = document
 
+    personnelles = marqueurs(sources)
+    if not personnelles:
+        sys.exit('ÉCHEC : aucun marqueur relevé — le contrôle serait vert pour rien')
+    print(f'{len(personnelles)} chaînes personnelles relevées dans la source, cherchées '
+          f'dans chaque fichier produit.')
+
+    # Seconde passe : remplacer, contrôler, écrire.
+    for origine, destination in FICHIERS.items():
+        document = sources[origine]
         for cle, valeur in REMPLACEMENTS.get(origine, {}).items():
             if cle not in document['preferences']:
                 sys.exit(f'ÉCHEC {origine} : clé « {cle} » absente, le remplacement est muet')
             document['preferences'][cle] = valeur
 
         produit = json.dumps(document, indent=2, ensure_ascii=False)
-        verifier(destination, produit)
+        verifier(destination, produit, personnelles)
         (CIBLE / destination).write_text(produit, encoding='utf8')
         print(f'{destination} : {len(produit.encode("utf8"))} octets')
 
