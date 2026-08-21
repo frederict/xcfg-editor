@@ -52,6 +52,16 @@ import {
  * `versionCode` lu leur donnerait la même autorité, et le pilote ne saurait plus ce qu'il
  * peut croire.
  *
+ * ## Une seule couche à l'écran, toujours
+ *
+ * Ranger, renommer, lire une carte d'identité, vérifier une empreinte, confirmer une
+ * suppression : **aucun de ces gestes n'ouvre de boîte par-dessus une autre**. Chacun
+ * ouvre un *niveau* qui remplace la liste dans le panneau, avec son titre et son
+ * « ← Retour à la liste ». C'était le seul endroit de l'application où des modales
+ * s'empilaient, et le dommage n'était pas l'empilement : c'était que les deux boutons
+ * « Fermer » se retrouvaient à la même hauteur, 128 px l'un de l'autre. Voir
+ * `createViewStack` pour ce que la `<dialog>` native donnait et par quoi c'est remplacé.
+ *
  * ## Ce que l'interface refuse de taire
  *
  * - un rangement **non durable** (`snapshot.durable === false`) est annoncé en tête, avant
@@ -133,7 +143,19 @@ export interface LibraryPanelHandle {
   /** Relit la bibliothèque et redessine. Rendu pour que l'assembleur puisse forcer. */
   refresh: () => Promise<void>
   /**
-   * Se désabonne des changements et ferme les boîtes ouvertes. **Ne ferme pas la
+   * Referme le niveau ouvert dans le panneau — nommer, carte d'identité, empreinte,
+   * confirmation — et rend `true` s'il y en avait un.
+   *
+   * **C'est ce qui remplace l'`Échap` d'une modale imbriquée.** Celui qui héberge le
+   * panneau dans une `<dialog>` l'appelle sur l'événement `cancel` et ne referme la boîte
+   * que si le panneau rend `false` : `Échap` recule alors d'un niveau, et ne ferme la
+   * bibliothèque que depuis la liste.
+   */
+  back: () => boolean
+  /** Le titre du niveau ouvert, `undefined` quand la liste est à l'écran. */
+  viewTitle: () => string | undefined
+  /**
+   * Se désabonne des changements et referme les niveaux ouverts. **Ne ferme pas la
    * bibliothèque** : elle appartient à l'assembleur, qui peut la rouvrir ailleurs.
    */
   close: () => void
@@ -423,92 +445,212 @@ function defaultDownload(bytes: Uint8Array, fileName: string): void {
   URL.revokeObjectURL(url)
 }
 
-/* ------------------------------------------------------------------- boîtes de dialogue */
+/* ============================================== les niveaux, à l’intérieur du panneau */
 
-interface DialogChoice {
+/**
+ * Ce panneau n'ouvre **aucune boîte de dialogue par-dessus une autre**. Nommer, renommer,
+ * lire une carte d'identité, vérifier une empreinte, confirmer une suppression : chacun de
+ * ces gestes ouvre un **niveau** qui *remplace* la liste à l'intérieur du panneau, avec son
+ * titre et son « ← Retour à la liste ».
+ *
+ * ## Pourquoi pas une seconde `<dialog>`
+ *
+ * Mesuré au `getBoundingClientRect()` sur la version précédente : « Ranger la configuration
+ * ouverte » ouvrait une modale par-dessus celle de la bibliothèque, et les deux boutons
+ * « Fermer » se retrouvaient **à la même hauteur, 128 px l'un de l'autre**. Rien ne disait
+ * lequel fermait quoi, et « Supprimer » ajoutait une troisième couche. Un pilote qui n'est
+ * pas informaticien n'a aucune raison de savoir qu'il existe des couches : il faut donc
+ * qu'il n'y en ait qu'une, toujours, et qu'elle porte le nom de ce qu'on est en train de
+ * faire.
+ *
+ * ## Ce que la `<dialog>` native donnait gratuitement, et comment on le rend
+ *
+ * | Ce qui disparaît avec l'empilement | Ce qui le remplace, explicitement |
+ * |---|---|
+ * | le piège de focus | la couche qui reste — celle de la bibliothèque — le tient toujours ; et le contenu remplacé passe en `hidden`, donc hors de l'ordre de tabulation **et** hors de l'arbre d'accessibilité |
+ * | `Échap` | `back()` est rendu à l'appelant : `openLibraryDialog` l'appelle sur l'événement `cancel` et ne referme la boîte que s'il ne restait aucun niveau. Hors modale, le panneau écoute `Échap` lui-même |
+ * | l'inertie du fond | il n'y a plus de fond : un seul contenu est présent à la fois |
+ * | le retour du focus à l'ouvrant | mémorisé à l'ouverture du niveau, rendu à sa fermeture |
+ * | l'annonce du titre à l'ouverture | un `role="status"` hors du contenu masqué dit le niveau ouvert, puis le retour |
+ */
+
+interface ViewChoice {
   label: string
   primary?: boolean
   run: () => void | Promise<void>
 }
 
-interface DialogOptions {
+interface ViewSpec {
   title: string
   /** Le corps, déjà construit par l'appelant : du texte, une liste, un formulaire. */
   body: HTMLElement
-  choices: DialogChoice[]
-  /** Appelé sur « Fermer », « Annuler » ou « Échap ». */
+  choices: ViewChoice[]
+  /** Appelé sur « ← Retour », sur le bouton de fin, ou sur « Échap ». */
   onCancel?: () => void
+  /** L'intitulé du bouton de fin. Défaut : « Annuler ». */
   cancelLabel?: string
-  /** Élément à mettre au focus à l'ouverture. Défaut : le premier bouton principal. */
+  /** Élément à mettre au focus. Défaut : le premier bouton principal, sinon le retour. */
   focus?: HTMLElement
+  /**
+   * `grave` cadre le niveau d'un filet ambre. Réservé à ce qui ne se rattrape pas : une
+   * suppression sans corbeille. En perdant la modale, la confirmation a perdu son
+   * interruption — le filet et le titre la rendent, le texte n'a pas changé d'un mot.
+   */
+  tone?: 'grave'
 }
 
+interface ViewFrame {
+  title: string
+  node: HTMLElement
+  returnFocus: HTMLElement | undefined
+}
+
+interface ViewStack {
+  /** Ouvre un niveau par-dessus le précédent — sans jamais ajouter de couche à l'écran. */
+  open: (spec: ViewSpec) => void
+  /** Referme le niveau du dessus. Rend `false` s'il n'y en avait aucun. */
+  back: () => boolean
+  /** Referme tous les niveaux d'un coup, sans appeler leurs annulations. */
+  reset: () => void
+  /** Combien de niveaux sont empilés — `0` quand la liste est à l'écran. */
+  depth: () => number
+  /** Le titre du niveau ouvert, `undefined` sur la liste. */
+  title: () => string | undefined
+}
+
+/** Les `id` des titres de niveau, pour `aria-labelledby`. */
+let viewSequence = 0
+
 /**
- * Une modale de ce panneau, quelle qu'elle soit.
- *
- * Toutes passent par ici pour une raison précise : **la tête est collante**
- * (`.modal__head`, `position: sticky`), et son bouton « Fermer » reste donc atteignable
- * quand la boîte défile. C'est un acquis récent du cadre — la carte d'identité d'une
- * sauvegarde complète défile sur plusieurs écrans, et c'est exactement le cas où on le
- * perdrait sans y penser.
+ * La pile de niveaux d'un panneau. `main` est tout ce qui se laisse remplacer : la tête,
+ * les bandeaux, la liste, le pied. Ce qui doit rester audible — l'annonceur — vit dehors,
+ * sans quoi il serait masqué avec le reste et n'annoncerait plus rien.
  */
-function openDialog(options: DialogOptions): { close: () => void } {
-  const dialog = el('dialog', 'modal modal--library')
-  dialog.setAttribute('aria-label', options.title)
+function createViewStack(
+  root: HTMLElement, main: HTMLElement, announce: (text: string) => void
+): ViewStack {
+  const host = el('div', 'library__view')
+  host.hidden = true
+  root.append(host)
 
-  const box = el('div', 'modal__box')
-  const head = el('div', 'modal__head')
-  head.append(el('h2', 'modal__title', options.title))
-  const dismiss = button('Fermer', 'btn btn--ghost')
-  head.append(dismiss)
-  box.append(head, options.body)
+  const frames: ViewFrame[] = []
 
-  const actions = el('div', 'modal__actions')
-  const cancel = button(options.cancelLabel ?? 'Annuler')
-  actions.append(cancel)
-
-  let primaryButton: HTMLButtonElement | undefined
-  for (const choice of options.choices) {
-    const node = button(choice.label, choice.primary === true ? 'btn btn--primary' : 'btn')
-    node.addEventListener('click', () => {
-      close()
-      void choice.run()
-    })
-    if (choice.primary === true && primaryButton === undefined) primaryButton = node
-    actions.append(node)
+  const show = (): void => {
+    const top = frames[frames.length - 1]
+    host.textContent = ''
+    if (top === undefined) {
+      host.hidden = true
+      main.hidden = false
+      return
+    }
+    // `hidden` plutôt qu'un `display: none` de feuille de style : c'est la seule forme qui
+    // sorte AUSSI le contenu de l'arbre d'accessibilité et de l'ordre de tabulation, ce
+    // que faisait l'inertie du fond d'une modale.
+    main.hidden = true
+    host.hidden = false
+    host.append(top.node)
   }
-  box.append(actions)
-  dialog.append(box)
 
-  const close = (): void => {
-    if (dialog.open) dialog.close()
-    dialog.remove()
+  const back = (): boolean => {
+    const top = frames.pop()
+    if (top === undefined) return false
+    show()
+    const below = frames[frames.length - 1]
+    announce(below === undefined
+      ? 'Retour à la liste des configurations.'
+      : `Retour : ${below.title}.`)
+    // L'ouvrant a pu disparaître entre-temps — la liste se redessine sur un changement
+    // venu d'un autre onglet. Le focus reste alors dans le panneau plutôt que de retomber
+    // sur le document.
+    const target = top.returnFocus?.isConnected === true
+      ? top.returnFocus
+      : main.querySelector('button')
+    if (target instanceof HTMLElement) target.focus()
+    return true
   }
-  const giveUp = (): void => {
-    close()
-    options.onCancel?.()
+
+  const open = (spec: ViewSpec): void => {
+    const returnFocus = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : undefined
+
+    const node = el('section', 'library__viewFrame')
+    if (spec.tone === 'grave') node.classList.add('library__viewFrame--grave')
+    const titleId = `library-view-${++viewSequence}`
+    node.setAttribute('role', 'group')
+    node.setAttribute('aria-labelledby', titleId)
+
+    const head = el('div', 'library__viewHead')
+    // Le retour est en HAUT À GAUCHE, le « Fermer » de la bibliothèque en haut à droite :
+    // c'est ce qui remplace les deux « Fermer » qui se touchaient.
+    const backButton = button(
+      frames.length === 0 ? '← Retour à la liste' : '← Retour', 'btn library__back'
+    )
+    const heading = el('h3', 'library__viewTitle', spec.title)
+    heading.id = titleId
+    head.append(backButton, heading)
+
+    const bodyWrap = el('div', 'library__viewBody')
+    bodyWrap.append(spec.body)
+
+    const actions = el('div', 'library__viewActions')
+    const cancel = button(spec.cancelLabel ?? 'Annuler')
+    actions.append(cancel)
+
+    let primaryButton: HTMLButtonElement | undefined
+    for (const choice of spec.choices) {
+      const control = button(choice.label, choice.primary === true ? 'btn btn--primary' : 'btn')
+      control.addEventListener('click', () => {
+        // On referme AVANT d'agir : le message de l'action s'affiche alors sur la liste,
+        // là où le pilote revient, et un geste qui enchaîne sur un autre niveau le
+        // remplace au lieu de s'ajouter.
+        back()
+        void choice.run()
+      })
+      if (choice.primary === true && primaryButton === undefined) primaryButton = control
+      actions.append(control)
+    }
+
+    const giveUp = (): void => {
+      if (back()) spec.onCancel?.()
+    }
+    backButton.addEventListener('click', giveUp)
+    cancel.addEventListener('click', giveUp)
+
+    node.append(head, bodyWrap, actions)
+    frames.push({ title: spec.title, node, returnFocus })
+    show()
+    announce(spec.title)
+
+    /*
+     * Un niveau s'ouvre sur son DÉBUT. La boîte de la bibliothèque défile (`.modal__box`),
+     * et la carte d'identité d'une sauvegarde complète tient sur plusieurs écrans : sans
+     * cette remise à zéro, on entrerait dans la carte à la hauteur où l'on avait laissé la
+     * liste. Même raison qu'au focus, mesurée au pilote CDP sur la version en modales.
+     */
+    const scroller = root.closest('.modal__box')
+    if (scroller instanceof HTMLElement) scroller.scrollTop = 0
+    else if (typeof root.scrollIntoView === 'function') root.scrollIntoView({ block: 'nearest' })
+
+    /*
+     * Le focus va au bouton principal — sauf sur un niveau `grave`, où il va au RETOUR.
+     * Sur « Supprimer », le bouton principal est la suppression : l'ouvrir avec elle sous
+     * la barre d'espace ferait du geste le plus destructeur celui qui demande le moins
+     * d'intention. On ouvre donc sur la sortie, et supprimer se vise.
+     */
+    const landing = spec.focus
+      ?? (spec.tone === 'grave' ? backButton : primaryButton)
+      ?? backButton
+    landing.focus()
   }
-  cancel.addEventListener('click', giveUp)
-  dismiss.addEventListener('click', giveUp)
-  dialog.addEventListener('cancel', (event) => {
-    event.preventDefault()
-    giveUp()
-  })
 
-  document.body.append(dialog)
-  // `showModal` n'existe pas partout sous happy-dom selon la version : la boîte doit
-  // rester utilisable — et testable — même si la modalité native manque.
-  if (typeof dialog.showModal === 'function') dialog.showModal()
-  else dialog.setAttribute('open', '')
-  /*
-   * Le focus va au bouton principal quand il y en a un, sinon au « Fermer » de la TÊTE —
-   * jamais à celui du bas. Mesuré au pilote CDP : donner le focus au bouton de fin faisait
-   * s'ouvrir la carte d'identité défilée jusqu'en bas, sur son dernier paragraphe, au lieu
-   * de son titre. Une boîte doit s'ouvrir sur son début.
-   */
-  ;(options.focus ?? primaryButton ?? dismiss).focus()
-
-  return { close }
+  return {
+    open,
+    back,
+    reset: () => { frames.length = 0; show() },
+    depth: () => frames.length,
+    title: () => frames[frames.length - 1]?.title
+  }
 }
 
 interface FieldSpec {
@@ -519,8 +661,8 @@ interface FieldSpec {
   hint?: string
 }
 
-/** Une boîte à champs : nommer, renommer, annoter. Rend les valeurs saisies. */
-function openFormDialog(spec: {
+/** Un niveau à champs : nommer, renommer, annoter. Rend les valeurs saisies. */
+function openFormView(views: ViewStack, spec: {
   title: string
   lead: string
   fields: FieldSpec[]
@@ -546,7 +688,7 @@ function openFormDialog(spec: {
   }
 
   const first = [...inputs.values()][0]
-  openDialog({
+  views.open({
     title: spec.title,
     body,
     focus: first,
@@ -575,6 +717,14 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
 
   const root = el('section', 'library')
   root.setAttribute('aria-label', 'Bibliothèque de configurations')
+
+  /*
+   * Tout ce qui se laisse remplacer par un niveau vit dans `main` : la tête, les bandeaux,
+   * la liste, le pied. Quand un niveau s'ouvre, `main` passe en `hidden` — le pilote ne
+   * voit plus qu'une chose à la fois, et un lecteur d'écran non plus.
+   */
+  const main = el('div', 'library__main')
+  root.append(main)
 
   /* --- tête : ce qu'on peut faire --- */
 
@@ -606,9 +756,9 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
   const archivePicker = hiddenPicker('.zip')
   head.append(filePicker, archivePicker)
 
-  root.append(head)
+  main.append(head)
 
-  root.append(el(
+  main.append(el(
     'p', 'library__lead',
     'Gardez plusieurs configurations sous un nom, dans ce navigateur, et revenez à ' +
     'l’une d’elles quand vous voulez. Rien n’est envoyé nulle part : tout reste sur cet ' +
@@ -619,18 +769,29 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
 
   const storageNote = el('div', 'library__banner library__banner--storage')
   storageNote.hidden = true
-  root.append(storageNote)
+  main.append(storageNote)
 
   const flash = el('div', 'library__flash')
   flash.setAttribute('role', 'status')
   flash.hidden = true
-  root.append(flash)
+  main.append(flash)
 
   const listWrap = el('div', 'library__body')
-  root.append(listWrap)
+  main.append(listWrap)
 
   const foot = el('p', 'library__foot')
-  root.append(foot)
+  main.append(foot)
+
+  /*
+   * L'annonceur vit HORS de `main` : masqué avec lui, il n'annoncerait plus rien. C'est
+   * ce qui remplace, pour un lecteur d'écran, l'annonce qu'une `<dialog>` fait d'elle-même
+   * en s'ouvrant.
+   */
+  const announcer = el('p', 'sr-only')
+  announcer.setAttribute('role', 'status')
+  root.append(announcer)
+
+  const views = createViewStack(root, main, (text) => { announcer.textContent = text })
 
   /* ------------------------------------------------------------------ dire ce qui arrive */
 
@@ -816,10 +977,10 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
     body.append(identitySection, readSection, assumedSection,
       personalSection(entry), previewSection(entry))
 
-    openDialog({
+    views.open({
       title: `Carte d’identité — ${entry.name}`,
       body,
-      cancelLabel: 'Fermer',
+      cancelLabel: 'Retour à la liste',
       choices: []
     })
   }
@@ -839,7 +1000,7 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
   }
 
   const askStore = (source: CurrentDocument, then?: () => void | Promise<void>): void => {
-    openFormDialog({
+    openFormView(views, {
       title: 'Ranger la configuration ouverte',
       lead: 'Donnez-lui un nom que vous reconnaîtrez dans six mois — « Comp Annecy », ' +
         '« Vol-biv Alpes », « École ». Les octets rangés sont ceux de votre fichier, ' +
@@ -894,7 +1055,7 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
       'bibliothèque, et vous y reviendrez d’un clic.'
     ))
 
-    openDialog({
+    views.open({
       title: 'Des modifications ne sont pas enregistrées',
       body,
       choices: [
@@ -926,7 +1087,7 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
    *
    * `bytesOf` refuse de rendre des octets qui ne portent plus leur empreinte — c'est la
    * propriété centrale du socle, et on ne la contourne pas. Mais un pilote à qui l'on dit
-   * « altérés » veut voir de quoi on parle : la boîte s'ouvre alors quand même, avec
+   * « altérés » veut voir de quoi on parle : le niveau s'ouvre alors quand même, avec
    * l'empreinte enregistrée, l'aveu qu'aucune n'a pu être recalculée, et la raison exacte.
    * Une vérification qui ne s'affiche que lorsqu'elle réussit ne vérifie rien.
    */
@@ -972,7 +1133,12 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
         : 'Différentes — cette entrée ne sera pas restituée.'
     ))
     if (failure !== undefined) body.append(el('p', 'library__caveat', failure))
-    openDialog({ title: `Empreinte — ${entry.name}`, body, cancelLabel: 'Fermer', choices: [] })
+    views.open({
+      title: `Empreinte — ${entry.name}`,
+      body,
+      cancelLabel: 'Retour à la liste',
+      choices: []
+    })
   }
 
   const askRemove = (entry: LibraryEntry): void => {
@@ -983,9 +1149,10 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
     body.append(el('p', 'library__caveat',
       'Si vous n’en êtes pas sûr : ressortez d’abord le fichier, ou exportez la ' +
       'bibliothèque entière.'))
-    openDialog({
-      title: 'Supprimer cette entrée ?',
+    views.open({
+      title: `Supprimer « ${entry.name} » ?`,
       body,
+      tone: 'grave',
       choices: [{
         label: 'Supprimer',
         primary: true,
@@ -998,8 +1165,9 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
   }
 
   const askRemoveBroken = (broken: BrokenEntry): void => {
-    openDialog({
+    views.open({
       title: 'Supprimer cette entrée illisible ?',
+      tone: 'grave',
       body: el('p', 'library__note',
         `L’entrée ${broken.id} ne se relit pas : ${broken.reason}. On ne sait pas ce ` +
         'qu’elle contenait ; la supprimer libère sa place et ne perd rien de lisible.'),
@@ -1057,10 +1225,10 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
       list.append(item)
     }
     body.append(list)
-    openDialog({
+    views.open({
       title: 'Bibliothèque importée',
       body,
-      cancelLabel: 'Fermer',
+      cancelLabel: 'Retour à la liste',
       choices: []
     })
     const rejected = counts.get('rejected') ?? 0
@@ -1126,7 +1294,7 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
     verify.addEventListener('click', () => { void guard('Vérification', () => doVerify(entry)) })
     const rename = button('Renommer', 'btn btn--ghost')
     rename.addEventListener('click', () => {
-      openFormDialog({
+      openFormView(views, {
         title: `Renommer « ${entry.name} »`,
         lead: 'Le nom est à vous ; les octets rangés ne bougent pas.',
         fields: [
@@ -1327,14 +1495,29 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
     archivePicker.value = ''
   })
 
+  /*
+   * `Échap` hors modale. Dans une `<dialog>`, la touche lève `cancel` sur la boîte et
+   * c'est `openLibraryDialog` qui décide — l'écouter ici aussi reculerait de deux niveaux
+   * d'un seul coup. Le test `root.closest('dialog')` départage les deux cas sans que
+   * l'appelant ait à dire lequel il est.
+   */
+  root.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return
+    if (root.closest('dialog') !== null) return
+    if (!views.back()) return
+    event.preventDefault()
+  })
+
   void refresh()
 
   return {
     element: root,
     refresh,
+    back: () => views.back(),
+    viewTitle: () => views.title(),
     close: () => {
       unsubscribe()
-      for (const dialog of document.querySelectorAll('dialog.modal--library')) dialog.remove()
+      views.reset()
     }
   }
 }
@@ -1389,8 +1572,17 @@ export function openLibraryDialog(
     options.onClose?.()
   }
   dismiss.addEventListener('click', giveUp)
+  /*
+   * `Échap` fait ce qu'on attend, et une seule chose à la fois : depuis un niveau — la
+   * saisie d'un nom, une carte d'identité, une confirmation — il **recule** vers la liste ;
+   * depuis la liste, il ferme la bibliothèque. C'est la contrepartie explicite de ce que
+   * l'empilement de `<dialog>` donnait tout seul, en fermant chaque fois la couche du
+   * dessus — sauf qu'ici il n'y a plus de couche du dessus à confondre avec celle du
+   * dessous.
+   */
   dialog.addEventListener('cancel', (event) => {
     event.preventDefault()
+    if (handle.panel.back()) return
     giveUp()
   })
 

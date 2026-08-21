@@ -17,6 +17,7 @@ import {
   identityCard,
   personalDataCount,
   personalDatumWhere,
+  openLibraryDialog,
   renderLibraryPanel,
   stemOf,
   type CurrentDocument,
@@ -95,15 +96,33 @@ async function waitFor(condition: () => boolean, label: string): Promise<void> {
   expect.fail(`condition jamais atteinte : ${label}`)
 }
 
-const openDialogs = (): HTMLDialogElement[] =>
-  [...document.querySelectorAll('dialog.modal--library')] as HTMLDialogElement[]
+/**
+ * Les niveaux ouverts dans le panneau. Il n'y en a **jamais plus d'un à l'écran** : c'est
+ * la propriété que ce fichier surveille, et `layers()` la mesure au lieu de la supposer.
+ */
+const openViews = (): HTMLElement[] =>
+  [...document.querySelectorAll('.library__viewFrame')] as HTMLElement[]
 
-function lastDialog(): HTMLDialogElement {
-  const all = openDialogs()
-  const dialog = all[all.length - 1]
-  expect(dialog, 'aucune boîte de dialogue ouverte').toBeDefined()
-  return dialog!
+/** Le niveau ouvert. Échoue s'il n'y en a aucun — ou s'il y en a deux. */
+function currentView(): HTMLElement {
+  const frames = openViews()
+  expect(frames, 'aucun niveau ouvert dans le panneau').toHaveLength(1)
+  return frames[0]!
 }
+
+/** Le titre du niveau ouvert : c'est lui qui dit au pilote où il est. */
+const viewTitle = (): string =>
+  text(currentView().querySelector('.library__viewTitle')).trim()
+
+/**
+ * Les couches empilées à l'écran : les `<dialog>` ouvertes, plus le niveau du panneau
+ * s'il y en a un. C'est le chiffre de l'audit — il valait 2, puis 3 au moment de
+ * supprimer.
+ */
+const layers = (): number =>
+  [...document.querySelectorAll('dialog')].filter((node) => node.hasAttribute('open')).length
+
+const text = (node: ParentNode | null): string => (node as HTMLElement | null)?.textContent ?? ''
 
 function findButton(root: ParentNode, label: string): HTMLButtonElement {
   const found = [...root.querySelectorAll('button')]
@@ -116,8 +135,6 @@ function findButton(root: ParentNode, label: string): HTMLButtonElement {
 function click(root: ParentNode, label: string): void {
   findButton(root, label).click()
 }
-
-const text = (node: ParentNode | null): string => (node as HTMLElement | null)?.textContent ?? ''
 
 const flashText = (panel: HTMLElement): string =>
   text(panel.querySelector('.library__flash'))
@@ -149,10 +166,9 @@ function ouvert(bytes: Uint8Array, modified: boolean, fileName = 'comp-annecy.xc
   return { fileName, modified, bytes: async () => bytes }
 }
 
-/** Remplit un champ de la boîte courante par son intitulé. */
+/** Remplit un champ du niveau ouvert, par son intitulé. */
 function fill(label: string, value: string): void {
-  const dialog = lastDialog()
-  const field = [...dialog.querySelectorAll('.library__field')]
+  const field = [...currentView().querySelectorAll('.library__field')]
     .find((node) => text(node.querySelector('.library__fieldLabel')).startsWith(label))
   expect(field, `champ absent : ${label}`).toBeDefined()
   const input = field!.querySelector('input, textarea') as HTMLInputElement | HTMLTextAreaElement
@@ -301,11 +317,11 @@ describe('libraryPanel — le geste du pilote', () => {
 
     click(harness.panel, 'Ranger la configuration ouverte')
     // Le nom proposé est le radical du fichier ouvert : le pilote n'a rien à taper.
-    const input = lastDialog().querySelector('.library__input') as HTMLInputElement
+    const input = currentView().querySelector('.library__input') as HTMLInputElement
     expect(input.value).toBe('comp-annecy')
     fill('Nom', 'Comp Annecy')
     fill('Note', 'Réglée pour la manche de samedi')
-    click(lastDialog(), 'Ranger')
+    click(currentView(), 'Ranger')
     await settle()
 
     expect(text(harness.panel.querySelector('.library__entryName'))).toBe('Comp Annecy')
@@ -361,7 +377,7 @@ describe('libraryPanel — le geste du pilote', () => {
     click(harness.panel, 'Vérifier l’empreinte')
     await settle()
 
-    const dialog = lastDialog()
+    const dialog = currentView()
     const digests = [...dialog.querySelectorAll('.library__digest')].map((n) => n.textContent)
     expect(digests).toHaveLength(2)
     expect(digests[0]).toBe(await sha256Hex(PAGES))
@@ -377,7 +393,7 @@ describe('libraryPanel — le geste du pilote', () => {
     click(harness.panel, 'Carte d’identité')
     await settle()
 
-    const dialog = lastDialog()
+    const dialog = currentView()
     const titres = [...dialog.querySelectorAll('.library__heading')].map((n) => n.textContent)
     expect(titres).toContain('Ce que le fichier déclare')
     expect(titres).toContain('Ce que cet éditeur suppose')
@@ -386,17 +402,16 @@ describe('libraryPanel — le geste du pilote', () => {
     expect(text(dialog)).toContain('aucune image n’est produite par ce panneau')
   })
 
-  it('une boîte sans action s’ouvre sur son début, pas sur son dernier paragraphe', async () => {
+  it('un niveau sans action s’ouvre sur son début, pas sur son dernier paragraphe', async () => {
     // Le focus au bouton de fin faisait défiler la carte jusqu'en bas à l'ouverture
-    // (mesuré au pilote CDP). Il va donc au « Fermer » de la tête collante.
+    // (mesuré au pilote CDP). Il va donc au retour, en tête du niveau.
     const { library } = bibliotheque()
     await library.add({ name: 'Comp Annecy', bytes: BACKUP, fileName: 'b.xcfg' })
     const harness = await mount({ library })
 
     click(harness.panel, 'Carte d’identité')
     await settle()
-    const dialog = lastDialog()
-    const head = dialog.querySelector('.modal__head') as HTMLElement
+    const head = currentView().querySelector('.library__viewHead') as HTMLElement
     expect(head.contains(document.activeElement)).toBe(true)
   })
 
@@ -407,7 +422,7 @@ describe('libraryPanel — le geste du pilote', () => {
 
     click(harness.panel, 'Renommer')
     fill('Nom', 'École')
-    click(lastDialog(), 'Enregistrer')
+    click(currentView(), 'Enregistrer')
     await settle()
 
     expect(text(harness.panel.querySelector('.library__entryName'))).toBe('École')
@@ -429,7 +444,7 @@ describe('libraryPanel — charger une autre configuration', () => {
     expect(harness.loaded).toHaveLength(1)
     expect(harness.loaded[0]!.entry.name).toBe('École')
     expect(Buffer.from(harness.loaded[0]!.bytes).equals(Buffer.from(PAGES))).toBe(true)
-    expect(openDialogs()).toHaveLength(0)
+    expect(openViews()).toHaveLength(0)
   })
 
   it('avec des modifications non enregistrées, on s’arrête et on demande', async () => {
@@ -441,8 +456,8 @@ describe('libraryPanel — charger une autre configuration', () => {
     await settle()
 
     expect(harness.loaded).toHaveLength(0)
-    const dialog = lastDialog()
-    expect(dialog.getAttribute('aria-label')).toBe('Des modifications ne sont pas enregistrées')
+    const dialog = currentView()
+    expect(viewTitle()).toBe('Des modifications ne sont pas enregistrées')
     // Trois issues, dont la première ne perd rien.
     expect(findButton(dialog, 'Ranger d’abord, puis charger')).toBeDefined()
     expect(findButton(dialog, 'Charger sans ranger')).toBeDefined()
@@ -455,7 +470,7 @@ describe('libraryPanel — charger une autre configuration', () => {
     const harness = await mount({ library, current: () => ouvert(BACKUP, true) })
 
     click(harness.panel, 'Charger')
-    click(lastDialog(), 'Annuler')
+    click(currentView(), 'Annuler')
     await settle()
 
     expect(harness.loaded).toHaveLength(0)
@@ -471,10 +486,10 @@ describe('libraryPanel — charger une autre configuration', () => {
     })
 
     click(harness.panel, 'Charger')
-    click(lastDialog(), 'Ranger d’abord, puis charger')
+    click(currentView(), 'Ranger d’abord, puis charger')
     await settle()
     fill('Nom', 'Travail en cours')
-    click(lastDialog(), 'Ranger')
+    click(currentView(), 'Ranger')
     await settle()
 
     const snapshot = await library.read()
@@ -491,7 +506,7 @@ describe('libraryPanel — charger une autre configuration', () => {
     const harness = await mount({ library, current: () => ouvert(BACKUP, true) })
 
     click(harness.panel, 'Charger')
-    click(lastDialog(), 'Charger sans ranger')
+    click(currentView(), 'Charger sans ranger')
     await settle()
 
     expect(harness.loaded.map((l) => l.entry.name)).toEqual(['École'])
@@ -535,7 +550,7 @@ describe('libraryPanel — une entrée illisible', () => {
 
     const broken = harness.panel.querySelector('.library__entry--broken') as HTMLElement
     click(broken, 'Supprimer')
-    click(lastDialog(), 'Supprimer')
+    click(currentView(), 'Supprimer')
     await settle()
 
     expect((await library.read()).broken).toEqual([])
@@ -568,8 +583,8 @@ describe('libraryPanel — une entrée illisible', () => {
     click(harness.panel, 'Vérifier l’empreinte')
     await settle()
 
-    const dialog = lastDialog()
-    expect(dialog.getAttribute('aria-label')).toContain('Empreinte')
+    const dialog = currentView()
+    expect(viewTitle()).toContain('Empreinte')
     expect(text(dialog.querySelector('.library__digest'))).toBe(entry.sha256)
     expect(text(dialog)).toContain('aucune — les octets n’ont pas été rendus')
     expect(text(dialog.querySelector('.library__verdict'))).toContain('Différentes')
@@ -584,7 +599,7 @@ describe('libraryPanel — le quota, le conflit, la durabilité', () => {
     const harness = await mount({ library, current: () => ouvert(PAGES, false) })
 
     click(harness.panel, 'Ranger la configuration ouverte')
-    click(lastDialog(), 'Ranger')
+    click(currentView(), 'Ranger')
     await settle()
 
     const flash = harness.panel.querySelector('.library__flash') as HTMLElement
@@ -605,7 +620,7 @@ describe('libraryPanel — le quota, le conflit, la durabilité', () => {
 
     click(harness.panel, 'Renommer')
     fill('Nom', 'Ce que je tape ici')
-    click(lastDialog(), 'Enregistrer')
+    click(currentView(), 'Enregistrer')
     await settle()
 
     const flash = harness.panel.querySelector('.library__flash') as HTMLElement
@@ -665,7 +680,7 @@ describe('libraryPanel — ce qui est personnel est signalé', () => {
     click(harness.panel, 'Carte d’identité')
     await settle()
 
-    const dialog = lastDialog()
+    const dialog = currentView()
     const data = [...dialog.querySelectorAll('.library__datum')]
     expect(data.length).toBeGreaterThan(0)
     // Au moins une donnée est marquée comme voyageant avec les pages.
@@ -681,7 +696,7 @@ describe('libraryPanel — ce qui est personnel est signalé', () => {
 
     click(harness.panel, 'Carte d’identité')
     await settle()
-    const dialog = lastDialog()
+    const dialog = currentView()
     if (dialog.querySelector('.library__datum') === null) {
       // La mise en garde est celle du modèle, la même sur les quatre écrans.
       expect(text(dialog)).toContain('un inventaire vide ne prouve donc pas une absence')
@@ -768,7 +783,300 @@ describe('libraryPanel — ce que l’assembleur reçoit', () => {
     click(harness.panel, 'Ranger la configuration ouverte')
     await settle()
     expect(flashText(harness.panel)).toContain('Aucun fichier n’est ouvert')
-    expect(openDialogs()).toHaveLength(0)
+    expect(openViews()).toHaveLength(0)
+  })
+})
+
+/* ============================================ une seule couche, et un seul « Fermer » */
+
+/*
+ * Le défaut mesuré par l'audit du 21 août 2026 (§ B.4) : « Ranger la configuration
+ * ouverte » ouvrait une seconde `<dialog>` par-dessus celle de la bibliothèque, et les
+ * deux boutons « Fermer » se retrouvaient à la même hauteur, 128 px l'un de l'autre.
+ * « Supprimer » ajoutait une troisième couche.
+ *
+ * ⚠️ Ce que ces tests ne mesurent PAS : les pixels. happy-dom ne fait aucune mise en page —
+ * `getBoundingClientRect()` y rend des zéros. La collision des deux « Fermer » se mesure au
+ * navigateur, et elle l'a été (voir le rapport de ce travail). Ce qui est prouvé ici est ce
+ * dont la collision découlait : **le nombre de couches**, et le fait qu'il n'y ait jamais
+ * deux façons de fermer quelque chose de différent à l'écran en même temps.
+ */
+
+describe('libraryPanel — les niveaux ne s’empilent pas', () => {
+  it('ranger n’ouvre aucune boîte : le niveau remplace la liste', async () => {
+    const { library } = bibliotheque()
+    const harness = await mount({ library, current: () => ouvert(PAGES, false) })
+
+    expect(layers()).toBe(0)
+    click(harness.panel, 'Ranger la configuration ouverte')
+    await settle()
+
+    // Une seule chose à l'écran : le niveau. Aucune `<dialog>` n'a été créée.
+    expect(document.querySelectorAll('dialog')).toHaveLength(0)
+    expect(openViews()).toHaveLength(1)
+    expect(viewTitle()).toBe('Ranger la configuration ouverte')
+
+    // Et la liste n'est plus là : ni à l'œil, ni à la tabulation, ni pour un lecteur d'écran.
+    const main = harness.panel.querySelector('.library__main') as HTMLElement
+    expect(main.hidden).toBe(true)
+    expect(findButton(currentView(), '← Retour à la liste')).toBeDefined()
+  })
+
+  it('au plus profond — supprimer — il n’y a toujours qu’un niveau', async () => {
+    const { library } = bibliotheque()
+    await library.add({ name: 'Essai audit', bytes: PAGES, fileName: 'p.xcfg' })
+    const harness = await mount({ library, current: () => ouvert(BACKUP, true) })
+
+    // Le chemin le plus profond de l'audit : bibliothèque → charger (document modifié)
+    // → ranger d'abord → puis, depuis la liste, supprimer.
+    click(harness.panel, 'Charger')
+    await settle()
+    expect(openViews()).toHaveLength(1)
+
+    click(currentView(), 'Ranger d’abord, puis charger')
+    await settle()
+    // Le niveau suivant REMPLACE le précédent : il ne s'ajoute pas.
+    expect(openViews()).toHaveLength(1)
+    expect(viewTitle()).toBe('Ranger la configuration ouverte')
+
+    click(currentView(), 'Ranger')
+    await settle()
+    expect(openViews()).toHaveLength(0)
+
+    click(harness.panel, 'Supprimer')
+    await settle()
+    expect(openViews()).toHaveLength(1)
+    expect(document.querySelectorAll('dialog')).toHaveLength(0)
+  })
+
+  it('un seul bouton de fermeture existe à la fois, et il n’en ferme qu’un', async () => {
+    const { library } = bibliotheque()
+    await library.add({ name: 'Essai audit', bytes: PAGES, fileName: 'p.xcfg' })
+    const harness = await mount({ library })
+
+    click(harness.panel, 'Carte d’identité')
+    await settle()
+
+    // Aucun « Fermer » dans le panneau : le panneau ne se ferme pas lui-même, et le seul
+    // « Fermer » de l'écran est celui de la bibliothèque, posé par l'assembleur.
+    const labels = [...harness.panel.querySelectorAll('button')]
+      .filter((node) => !(node.closest('[hidden]') !== null))
+      .map((node) => (node.textContent ?? '').trim())
+    expect(labels.filter((label) => label === 'Fermer')).toHaveLength(0)
+    // Le retour est nommé pour ce qu'il fait, et il est unique.
+    expect(labels.filter((label) => label.includes('Retour à la liste'))).toHaveLength(2)
+  })
+
+  it('le retour rend la liste, et le focus au bouton qui a ouvert le niveau', async () => {
+    const { library } = bibliotheque()
+    await library.add({ name: 'Essai audit', bytes: PAGES, fileName: 'p.xcfg' })
+    const harness = await mount({ library })
+
+    const opener = findButton(harness.panel, 'Carte d’identité')
+    opener.focus()
+    opener.click()
+    await settle()
+    expect(currentView().contains(document.activeElement)).toBe(true)
+
+    click(currentView(), '← Retour à la liste')
+    await settle()
+
+    expect(openViews()).toHaveLength(0)
+    expect((harness.panel.querySelector('.library__main') as HTMLElement).hidden).toBe(false)
+    expect(document.activeElement).toBe(opener)
+  })
+
+  it('un formulaire ouvre son premier champ, une carte ouvre son retour', async () => {
+    const { library } = bibliotheque()
+    await library.add({ name: 'Essai audit', bytes: PAGES, fileName: 'p.xcfg' })
+    const harness = await mount({ library, current: () => ouvert(PAGES, false) })
+
+    click(harness.panel, 'Ranger la configuration ouverte')
+    await settle()
+    expect((document.activeElement as HTMLElement).className).toContain('library__input')
+
+    click(currentView(), 'Annuler')
+    click(harness.panel, 'Vérifier l’empreinte')
+    await settle()
+    expect((document.activeElement as HTMLElement).className).toContain('library__back')
+  })
+
+  it('le niveau ouvert est annoncé, et le retour aussi', async () => {
+    const { library } = bibliotheque()
+    await library.add({ name: 'Essai audit', bytes: PAGES, fileName: 'p.xcfg' })
+    const harness = await mount({ library })
+
+    // L'annonceur vit HORS du contenu masqué : masqué avec lui, il n'annoncerait rien.
+    const announcer = harness.panel.querySelector('[role="status"].sr-only') as HTMLElement
+    expect(announcer.closest('.library__main')).toBeNull()
+
+    click(harness.panel, 'Carte d’identité')
+    await settle()
+    expect(announcer.textContent).toContain('Carte d’identité')
+
+    click(currentView(), 'Retour à la liste')
+    await settle()
+    expect(announcer.textContent).toContain('Retour à la liste')
+  })
+
+  it('« back » dit s’il restait un niveau — c’est ce qui arbitre Échap', async () => {
+    const { library } = bibliotheque()
+    await library.add({ name: 'Essai audit', bytes: PAGES, fileName: 'p.xcfg' })
+    const harness = await mount({ library })
+
+    expect(harness.handle.back()).toBe(false)
+    expect(harness.handle.viewTitle()).toBeUndefined()
+
+    click(harness.panel, 'Carte d’identité')
+    await settle()
+    expect(harness.handle.viewTitle()).toContain('Carte d’identité')
+    expect(harness.handle.back()).toBe(true)
+    expect(harness.handle.back()).toBe(false)
+  })
+
+  it('hors modale, Échap recule d’un niveau et ne fait rien de plus', async () => {
+    const { library } = bibliotheque()
+    await library.add({ name: 'Essai audit', bytes: PAGES, fileName: 'p.xcfg' })
+    const harness = await mount({ library })
+
+    click(harness.panel, 'Renommer')
+    await settle()
+    expect(openViews()).toHaveLength(1)
+
+    const escape = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
+    ;(document.activeElement as HTMLElement).dispatchEvent(escape)
+    await settle()
+
+    expect(openViews()).toHaveLength(0)
+    expect(escape.defaultPrevented).toBe(true)
+    // Rien n'a été écrit : reculer n'est pas valider.
+    expect((await library.read()).entries[0]!.name).toBe('Essai audit')
+
+    // Depuis la liste, Échap n'a rien à annuler : l'événement repart intact vers l'hôte.
+    const again = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
+    harness.panel.dispatchEvent(again)
+    expect(again.defaultPrevented).toBe(false)
+  })
+
+  it('fermer le panneau referme le niveau ouvert avec lui', async () => {
+    const { library } = bibliotheque()
+    await library.add({ name: 'Essai audit', bytes: PAGES, fileName: 'p.xcfg' })
+    const harness = await mount({ library })
+
+    click(harness.panel, 'Carte d’identité')
+    await settle()
+    harness.handle.close()
+
+    expect(openViews()).toHaveLength(0)
+    expect((harness.panel.querySelector('.library__main') as HTMLElement).hidden).toBe(false)
+  })
+})
+
+/* ================================== la confirmation de suppression garde sa qualité */
+
+describe('libraryPanel — supprimer nomme ce qui va être perdu', () => {
+  it('l’entrée est nommée, sa taille dite, l’absence de corbeille aussi, et l’issue donnée', async () => {
+    const { library } = bibliotheque()
+    await library.add({ name: 'Essai audit', bytes: PAGES, fileName: 'p.xcfg' })
+    const harness = await mount({ library })
+
+    click(harness.panel, 'Supprimer')
+    await settle()
+
+    const view = currentView()
+    // Le titre nomme désormais l'entrée : en cessant d'être une modale, la confirmation a
+    // gagné le nom dans son titre plutôt que de le laisser au seul corps du texte.
+    expect(viewTitle()).toBe('Supprimer « Essai audit » ?')
+    expect(text(view)).toContain('Essai audit')
+    expect(text(view)).toContain(formatByteSize(PAGES.byteLength))
+    expect(text(view)).toContain('n’a pas de corbeille')
+    // L'issue pour qui doute : ressortir le fichier, ou exporter la bibliothèque.
+    expect(text(view.querySelector('.library__caveat'))).toContain('ressortez d’abord le fichier')
+    // Et le geste reste explicite : rien n'est supprimé tant qu'on n'a pas dit « Supprimer ».
+    expect(findButton(view, 'Supprimer')).toBeDefined()
+    expect(findButton(view, 'Annuler')).toBeDefined()
+    expect((await library.read()).entries).toHaveLength(1)
+  })
+
+  it('ce qui ne se rattrape pas est cadré — le filet remplace l’interruption de la modale', async () => {
+    const { library } = bibliotheque()
+    await library.add({ name: 'Essai audit', bytes: PAGES, fileName: 'p.xcfg' })
+    const harness = await mount({ library })
+
+    click(harness.panel, 'Supprimer')
+    await settle()
+    expect(currentView().className).toContain('library__viewFrame--grave')
+    // Le niveau s'ouvre sur sa SORTIE, pas sur la suppression : le geste le plus
+    // destructeur ne doit pas être celui qui demande le moins d'intention.
+    expect((document.activeElement as HTMLElement).className).toContain('library__back')
+
+    click(currentView(), 'Annuler')
+    await settle()
+    expect((await library.read()).entries).toHaveLength(1)
+
+    click(harness.panel, 'Supprimer')
+    click(currentView(), 'Supprimer')
+    await settle()
+    expect((await library.read()).entries).toHaveLength(0)
+  })
+})
+
+/* ============================================== le panneau dans la modale de l'assembleur */
+
+describe('openLibraryDialog — une couche, et Échap qui fait ce qu’on attend', () => {
+  it('la bibliothèque ouvre une seule `<dialog>`, et le niveau ne s’y ajoute pas', async () => {
+    const { library } = bibliotheque()
+    await library.add({ name: 'Essai audit', bytes: PAGES, fileName: 'p.xcfg' })
+    const handle = openLibraryDialog({ library, download: () => {} })
+    handle.open()
+    await settle()
+
+    expect(layers()).toBe(1)
+    click(handle.element, 'Carte d’identité')
+    await settle()
+
+    // Le niveau vit DANS la boîte : le compte de couches ne bouge pas.
+    expect(layers()).toBe(1)
+    expect(openViews()).toHaveLength(1)
+    expect(currentView().closest('dialog')).toBe(handle.element)
+
+    // Un seul « Fermer » à l'écran, celui de la boîte, et il est hors du niveau.
+    const closers = [...handle.element.querySelectorAll('button')]
+      .filter((node) => (node.textContent ?? '').trim() === 'Fermer')
+    expect(closers).toHaveLength(1)
+    expect(currentView().contains(closers[0]!)).toBe(false)
+
+    handle.close()
+  })
+
+  it('Échap recule d’abord, et ne ferme la bibliothèque que depuis la liste', async () => {
+    const { library } = bibliotheque()
+    await library.add({ name: 'Essai audit', bytes: PAGES, fileName: 'p.xcfg' })
+    let closed = false
+    const handle = openLibraryDialog({
+      library, download: () => {}, onClose: () => { closed = true }
+    })
+    handle.open()
+    await settle()
+
+    click(handle.element, 'Supprimer')
+    await settle()
+    expect(openViews()).toHaveLength(1)
+
+    // La touche Échap sur une `<dialog>` lève `cancel` : c'est ce que le navigateur fait.
+    handle.element.dispatchEvent(new Event('cancel', { cancelable: true }))
+    await settle()
+    // Elle a reculé — et surtout, elle n'a pas fermé la bibliothèque sous le pilote.
+    expect(openViews()).toHaveLength(0)
+    expect(closed).toBe(false)
+    expect(handle.element.isConnected).toBe(true)
+    // Rien n'a été supprimé au passage.
+    expect((await library.read()).entries).toHaveLength(1)
+
+    handle.element.dispatchEvent(new Event('cancel', { cancelable: true }))
+    await settle()
+    expect(closed).toBe(true)
+    expect(handle.element.isConnected).toBe(false)
   })
 })
 

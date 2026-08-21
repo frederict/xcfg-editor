@@ -46,7 +46,7 @@ import { renderLibraryPanel, type CurrentDocument, type LibraryPanelHandle } fro
  * - **Deux onglets se synchronisent** : une entrée rangée dans l'onglet B apparaît dans
  *   l'onglet A sans aucune action de sa part (`BroadcastChannel`).
  * - **Les octets altérés ne ressortent pas** : rien n'est téléchargé, le message le dit, et
- *   la boîte d'empreinte s'ouvre quand même pour montrer laquelle manque.
+ *   le niveau d'empreinte s'ouvre quand même pour montrer laquelle manque.
  * - `navigator.storage.estimate()` a rendu 10,0 Go de quota — d'où le palier « Go » de
  *   `formatByteSize`.
  *

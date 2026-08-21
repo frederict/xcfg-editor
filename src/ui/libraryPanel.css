@@ -332,6 +332,89 @@
 
 .library__hint { font-size: 11.5px; color: var(--app-ink-soft); }
 
+/* ------------------------------------------------- un niveau, jamais une couche de plus */
+
+/*
+ * Nommer, renommer, lire une carte, vérifier une empreinte, confirmer une suppression :
+ * chacun de ces gestes REMPLACE la liste ici même, dans le panneau, au lieu d'ouvrir une
+ * seconde boîte de dialogue par-dessus la première.
+ *
+ * Ce que ça achète, mesuré : une seule couche à l'écran au moment le plus profond, et un
+ * seul bouton « Fermer » visible — celui de la bibliothèque, en haut à droite. Le retour
+ * est en haut à GAUCHE et ne dit pas « Fermer » : les deux ne se confondent plus.
+ *
+ * Rien de neuf n'est introduit : le meuble reste celui d'`app.css` (`.btn`, les filets, les
+ * variables `--app-*`), et le mode sombre suit sans une ligne de plus.
+ */
+
+.library__main[hidden] { display: none; }
+
+.library__view { display: grid; gap: 0.9rem; }
+
+.library__viewFrame { display: grid; gap: 0.9rem; }
+
+.library__viewHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 0.9rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid var(--app-line);
+}
+
+/* Le retour ne se laisse pas écraser par un titre long dans une fenêtre étroite. */
+.library__back { flex: none; }
+
+/*
+ * Le retour reste atteignable quand le niveau défile — c'est ce que la tête collante de
+ * l'ancienne modale imbriquée donnait, et qu'on lui doit : la carte d'identité d'une
+ * sauvegarde complète tient sur plusieurs écrans, et arrivé en bas on ne doit pas avoir
+ * pour seule sortie visible le « Fermer » de la bibliothèque, qui ferme autre chose.
+ *
+ * Le décalage n'est pas un chiffre inventé : c'est la hauteur de `.modal__head`, elle-même
+ * collante à `top: 0` — mesurée 65,7 px au navigateur, soit 4,1 rem à 16 px de racine
+ * (1,3 rem de rembourrage haut, la hauteur d'un `.btn`, 0,7 rem bas, 1 px de filet).
+ *
+ * ⚠️ Sous 46 rem, le titre de la boîte peut passer à deux lignes et cette hauteur change :
+ * la règle est donc bornée, et en dessous le retour défile comme le reste — le second
+ * « Retour à la liste », en pied de niveau, reste là pour tout le monde. `z-index` sous
+ * celui de la tête (11) : si la hauteur bougeait quand même, le retour passerait DESSOUS
+ * plutôt que par-dessus « Fermer ».
+ */
+@media (min-width: 46rem) {
+  .modal--libraryPanel .library__viewHead {
+    position: sticky;
+    top: 4.1rem;
+    z-index: 10;
+    margin: 0 -1.4rem;
+    padding: 0.5rem 1.4rem 0.55rem;
+    background: var(--app-bg);
+  }
+}
+
+.library__viewTitle { margin: 0; font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
+
+.library__viewBody { display: grid; gap: 0.9rem; min-width: 0; }
+
+.library__viewActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  padding-top: 0.2rem;
+}
+
+/*
+ * Ce qui ne se rattrape pas. En cessant d'être une modale, la confirmation de suppression
+ * a perdu l'interruption que la modale lui donnait : le filet ambre et le titre qui nomme
+ * l'entrée la rendent. Le texte, lui, n'a pas changé d'un mot — il dit ce qui part, qu'il
+ * n'y a pas de corbeille, et par quoi commencer si l'on doute.
+ */
+.library__viewFrame--grave {
+  border-left: 3px solid var(--app-flag-line);
+  padding-left: 0.9rem;
+}
+
 /* ------------------------------------------------------------------------- les modales */
 
 .modal--library { max-width: min(52rem, 94vw); width: min(52rem, 94vw); }
