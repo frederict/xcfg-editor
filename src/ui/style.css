@@ -371,6 +371,52 @@
   stroke-linecap: round;
 }
 
+/* Graphique d'altitude (`WAltitudeDataGraph`, altitudeDataGraph.ts) : au repos, l'axe des
+   zéros et ses quatre repères. Mesuré sur
+   `captures-air3/2026-08-21_planche-sol-8-boussole-barres-graphiques-espace-aerien.png`,
+   cellule de 427 × 323 : axe noir de 3 px à 45,8 % de la hauteur, casse de 15 px (police
+   ≈ 0,065 × la hauteur), repères à 5 px des bords. */
+.xc-altgraph {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  font-size: calc(var(--xc-h, 100) * 0.065px);
+  line-height: 1.15;
+  overflow: hidden;
+}
+.xc-altgraph__axis {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--xc-altgraph-zero, 0.458) * 100%);
+  height: calc(var(--xc-h, 100) * 0.0093px);
+  background: var(--xc-ink);
+}
+.xc-altgraph__label {
+  color: var(--xc-ink);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.xc-altgraph__top {
+  position: absolute;
+  top: calc(var(--xc-h, 100) * 0.006px);
+  right: calc(var(--xc-h, 100) * 0.015px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.xc-altgraph__zero {
+  position: absolute;
+  left: calc(var(--xc-h, 100) * 0.006px);
+  top: calc(var(--xc-altgraph-zero, 0.458) * 100%);
+}
+.xc-altgraph__bottom {
+  position: absolute;
+  right: calc(var(--xc-h, 100) * 0.015px);
+  bottom: calc(var(--xc-h, 100) * 0.012px);
+}
+
 /* « Texte libre » (`WFreeText`, freeText.ts) : le texte de la clé `text`, en haut à
    gauche, replié, SANS titre. Taille et marge viennent des clés `text_size` et
    `text_padding` (voir `TEXT_SIZE_TO_PX` dans freeText.ts) et sont donc posées en ligne

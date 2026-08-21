@@ -24,6 +24,7 @@ import { drawCompTaskSummary } from './compTaskSummary'
 import { drawOptiPotential } from './optiPotential'
 import { drawCompassDigital } from './compassDigital'
 import { drawEmitTestEvent, drawFreeText } from './freeText'
+import { drawAltitudeDataGraph } from './altitudeDataGraph'
 
 /**
  * Les types « titre + valeur + unité » : les 23 du corpus, puis les 19 que la revue des
@@ -151,3 +152,8 @@ register('WCompassDigital', drawCompassDigital)
 // fichier, et qui ne portent AUCUN titre sur l'appareil (freeText.ts).
 register('WFreeText', drawFreeText)
 register('WEmitTestEvent', drawEmitTestEvent)
+
+// Écart 2.4 — WAltitudeDataGraph ne dessinait rien du tout. L'appareil trace ses axes
+// même au repos ; les barres de gain, elles, sont recalculées sur le vol en cours et ne
+// sont donc pas reproduites (altitudeDataGraph.ts).
+register('WAltitudeDataGraph', drawAltitudeDataGraph)
