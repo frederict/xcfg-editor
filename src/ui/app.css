@@ -2428,3 +2428,91 @@ body.is-dragging .veil {
 }
 
 
+
+/* ==================================================================================== */
+/* assemblage : réglages généraux, version, bibliothèque, partage                        */
+/* ==================================================================================== */
+
+/*
+ * Quatre modules autonomes viennent se poser dans ce cadre. Chacun porte sa propre
+ * feuille, chargée avec lui : ce qui suit ne fait que **leur donner leur place**, jamais
+ * leur apparence — pas une couleur, pas une taille de texte n'est décidée ici pour eux.
+ *
+ * Le partage de l'espace suit le principe du projet, et il n'y a pas d'exception :
+ * une page dessinée à sa taille réelle ne partage sa largeur avec rien. Les trois modules
+ * qui s'ouvrent par-dessus une page sont donc des **modales** ; le quatrième — les
+ * réglages généraux — est une **vue**, qui ne montre aucune page.
+ */
+
+/* -------------------------------------------------- les deux lectures du bandeau fichier */
+
+/*
+ * Les deux commandes rejoignent le bandeau qui décrit déjà le fichier — format, appareil
+ * déclaré, langue des libellés. C'est le même sujet : ce que ce fichier-ci contient. Le
+ * `margin-left: auto` les pousse au bout de la ligne ; sur une fenêtre étroite, le
+ * `flex-wrap` du bandeau les fait passer dessous, entières.
+ */
+.meta__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-left: auto;
+  padding: 0.2rem 0;
+}
+
+/* La phrase de rappel de la page d'accueil : la bibliothèque existe sans fichier ouvert. */
+.landing__note {
+  margin: 1.6rem 0 0;
+  max-width: 62ch;
+  color: var(--app-ink-soft);
+  font-size: 14px;
+}
+
+/* ---------------------------------------------------- la vue des réglages généraux */
+
+/*
+ * L'hôte de `preferencesPage.ts`. Le module se dessine lui-même sur 66 rem centrées et
+ * porte tout son rembourrage : cette règle ne sert qu'à tenir le message d'attente et le
+ * message d'échec pendant que le catalogue arrive. Rien d'autre — une largeur imposée
+ * ici entrerait en conflit avec la sienne.
+ */
+.prefs-host { display: block; }
+
+/* --------------------------------------------------------- la boîte du diagnostic */
+
+/*
+ * Plus étroite que le carrousel des pages (84 rem), plus large que la palette (46) : le
+ * rapport de compatibilité est une suite de constats en texte, et une ligne de plus de
+ * 90 caractères se relit mal. Le panneau lui-même vient de `versionDiagnostic.css`.
+ */
+.modal--version {
+  max-width: min(60rem, 94vw);
+  width: min(60rem, 94vw);
+}
+
+/*
+ * La boîte défile : un fichier de 2022 produit des dizaines de constats. Le rembourrage
+ * du haut passe donc à la tête collante, comme pour la palette, le carrousel, le partage
+ * et la bibliothèque — c'est ce qui garde « Fermer » atteignable une fois la liste
+ * défilée à fond.
+ */
+.modal--version .modal__box {
+  padding-top: 0;
+  max-height: 88vh;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+/* L'emplacement d'un module chargé à la demande, le temps qu'il arrive. */
+.modal__slot { min-height: 3rem; }
+
+/* ------------------------------------------ les avertissements dans la boîte de partage */
+
+/*
+ * `sharingDialog.ts` réserve un emplacement (`notice`) pour les avertissements que
+ * `warnings.ts` calcule déjà, et n'en fabrique aucun lui-même. Ils arrivent donc dans la
+ * boîte tels quels : seule leur marge du bas, réglée pour la vue d'ensemble, n'a plus de
+ * sens dans une grille de modale qui pose déjà ses écarts.
+ */
+.warnings--notice { margin: 0; }

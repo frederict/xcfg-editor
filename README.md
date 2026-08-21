@@ -74,10 +74,25 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
 - **Éditer** : déplacer, redimensionner, ajouter, supprimer et réordonner des gadgets ;
   régler leurs options ; gérer les pages (insérer, dupliquer, supprimer, réordonner).
   Annuler / rétablir.
+- **Consulter les réglages généraux** — les 216 préférences qui vivent hors des pages :
+  unités, touches, capteurs, son, espaces aériens. Dans l'arborescence des 23 lignes du
+  menu de l'instrument, et **en lecture seule** : aucun contrôle de formulaire n'est
+  construit. La page dit aussi ce qu'elle ne sait pas présenter, et pourquoi.
+- **Diagnostiquer l'écart de version** : choisir la version de XCTrack visée, et voir ce
+  que le fichier porte qu'elle ne lit plus, ou ce qu'elle attend et qu'il n'a pas. Le
+  diagnostic **constate, il ne supprime rien** — l'outil de nettoyage n'existe pas encore.
 - **Dire ce que votre fichier révèle de vous** avant que vous ne le partagiez. Un export
   `backup` porte votre nom, votre voile, vos capteurs appairés, vos fichiers de waypoints
-  — jusqu'au nom de la compétition à laquelle vous participez. L'outil sait en **dériver
-  un export `pages`**, qui ne transporte que les écrans, et vous montre ce qu'il écarte.
+  — jusqu'au nom de la compétition à laquelle vous participez. Au moment d'enregistrer,
+  l'outil propose donc deux issues : le **fichier complet**, à l'octet près, ou une
+  **version partageable** — un export `pages` dont les textes que vous avez écrits sont
+  remplacés, avec l'inventaire de chaque remplacement, son emplacement et sa raison,
+  montré *avant* le téléchargement. Le nom du fichier produit est horodaté et **ne
+  reprend rien du nom d'origine**, qui contient souvent un prénom.
+- **Ranger plusieurs configurations sous un nom**, dans votre navigateur, et revenir à
+  l'une d'elles : une pour la compétition, une pour le vol-bivouac, une pour l'école. Les
+  octets rangés sont ceux de votre fichier, vérifiés par empreinte à la relecture. Rien
+  n'est envoyé nulle part.
 - **Parler votre langue** : les noms et descriptions des gadgets sont ceux de XCTrack
   lui-même, extraits de l'application, en 33 langues.
 
@@ -100,7 +115,14 @@ Autant le dire tout de suite.
 - **Ni suggestion, ni correction automatique.** L'outil ne réarrange pas vos pages et ne
   décide pas à votre place.
 - **Pas de bibliothèque communautaire, pas de compte, pas de serveur.** C'est un choix :
-  ce qui n'existe pas ne fuite pas.
+  ce qui n'existe pas ne fuite pas. La bibliothèque de configurations vit **dans votre
+  navigateur** (IndexedDB) et n'en sort que si vous l'exportez vous-même ; vider les
+  données du site l'efface, et un autre appareil ne la voit pas.
+- **Les préférences générales ne sont pas modifiables.** L'éditeur les montre, il ne les
+  écrit pas : la section `preferences` porte du JSON imbriqué qu'on ne réécrit pas sans
+  l'avoir vérifié sur l'appareil.
+- **Aucun aperçu d'image dans la bibliothèque.** La place est réservée dans les données,
+  la vignette est un cadre vide qui le dit.
 
 ## Installer et lancer
 
@@ -175,9 +197,10 @@ téléphone rangés dans un bouton d'appel. Le format d'export ne garantit rien 
 ### Régénérer la base des versions de XCTrack
 
 `src/catalog/widgetVersions/` répond à une question : *pour un couple (widget, clé
-d'option), dans quelles versions de XCTrack existe-t-il ?* C'est ce qui permettra de
-distinguer un réglage devenu caduc d'un réglage parfaitement valide — donc de nettoyer
-une configuration sans rien casser.
+d'option), dans quelles versions de XCTrack existe-t-il ?* C'est elle qui alimente le
+diagnostic « Version et compatibilité », lequel distingue un réglage devenu caduc d'un
+réglage parfaitement valide. Le **nettoyage**, lui, n'est pas écrit : le diagnostic dit
+ce qu'il sait et ce qu'il ignore, et rien ne supprime encore quoi que ce soit.
 
 Elle est reproductible, une version à la fois, à partir d'un APK **que l'on possède**.
 Deux outils, sans réseau ni dépendance :
@@ -217,8 +240,8 @@ Ce dépôt ne fournit pas d'outil pour rassembler les APK : chacun apporte les s
 
 `src/catalog/preferenceCatalog/` décrit les réglages qui vivent **hors des pages** : les
 unités, les touches, le son, les capteurs, les espaces aériens — la section `preferences`
-d'un export `backup`. **L'éditeur ne les modifie pas encore** ; le catalogue est le
-préalable, et il est mesurable dès maintenant.
+d'un export `backup`. Il alimente la page « Réglages généraux », qui les **consulte** :
+**l'éditeur ne les modifie pas**, et n'en construit donc aucun contrôle de formulaire.
 
 ```bash
 unzip -o mon-xctrack.apk AndroidManifest.xml resources.arsc 'classes*.dex' \
@@ -237,11 +260,24 @@ Deux sources sont lues séparément, puis croisées :
   défaut, et la **portée** : `PUBLIC` (écrite dans un export), `INTERNAL` (locale à
   l'appareil), `SECURE` (chiffrée).
 
-Le croisement se vérifie : sur XCTrack 1.0.3-beta5, les 135 clés `PUBLIC` du bytecode plus
-la seule qu'Android persiste sans passer par cette classe font **exactement** les 136 clés
-d'une sauvegarde réelle. Ni une de plus, ni une de moins.
+Le croisement se vérifie : sur XCTrack 1.0.3-beta5, les 136 clés `PUBLIC` du bytecode sont
+**exactement** les 136 clés d'une sauvegarde réelle. Ni une de plus, ni une de moins.
 
-**Ce que le catalogue ne sait pas, il le dit.** 85 clés sur 216 n'ont pas de libellé,
+L'extraction **refuse de rendre un relevé vide**. La reconnaissance de la classe de
+configuration repose sur l'énumération de portée, qui a varié — quatre constantes en
+2022, aucune de la 0.9.9.1 à la 0.9.10.3 — et une reconnaissance ratée produisait un
+catalogue plausible mais amputé du tiers de ses clés, sans un mot. Un relevé sans aucune
+préférence déclarée est désormais une erreur bruyante : rien n'est écrit, et le
+catalogue précédent reste en place. `python3 tools/extract-preferences.py --self-test`
+éprouve ce garde-fou sans APK.
+
+Vingt-quatre clés supplémentaires sont publiées **à côté** des préférences, sous
+`directReads` : la classe de configuration les lit à même les préférences partagées
+d'Android, sans objet de préférence. On y publie ce qui est lu — l'accesseur, donc le
+type, et le fait qu'aucune n'est réécrite — et rien de plus : leur portée n'est écrite
+nulle part, et les ranger avec les autres les dirait exportables sans mesure.
+
+**Ce que le catalogue ne sait pas, il le dit.** 86 clés sur 217 n'ont pas de libellé,
 dont 49 des 136 qu'un fichier réel porte : XCTrack les règle dans des écrans construits en
 code (espaces aériens, cartes, actions automatiques, sons), où la clé n'est plus argument
 du même appel que son libellé, ou bien ce ne sont pas des réglages mais de l'état

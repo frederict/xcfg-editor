@@ -19,7 +19,6 @@ import { buildDeviceSelector } from './deviceSelector'
 import {
   createEditor, type Editor, type Viewport, type WidgetEdit, type WidgetStructureEdit
 } from './editor'
-import { exportFileName } from './export'
 import {
   applyPageOperation, operationAnnouncement, renderPageManager, type PageOperation
 } from './pageManager'
@@ -29,11 +28,21 @@ import {
   DOCK_HEIGHT_DEFAULT, DOCK_HEIGHT_MIN, readDockHeight, writeDockHeight,
   type DetailEditing, type DetailInspecting, type Orientation, type ViewContext
 } from './views'
-import { computeWarnings, warningsAt, type Warning } from './warnings'
+import { computeWarnings, REFERENCE_VERSION_CODE, warningsAt, type Warning } from './warnings'
 import { renderWidgetList, type WidgetList } from './widgetList'
 // Type seul : effacé à la compilation, il ne ramène pas la palette dans le morceau
 // principal — même parti que `PropertyField` juste au-dessus.
 import type { PaletteSources } from './widgetPalette'
+/*
+ * Les quatre modules assemblés ici ne sont **jamais** importés autrement que par
+ * `import()` : chacun traîne son catalogue derrière lui — celui des préférences pèse
+ * à lui seul une trentaine de kilo-octets transférés. Seuls leurs **types** entrent
+ * ici, et un type disparaît à la compilation : le morceau principal ne grossit pas.
+ */
+import type { CurrentDocument, LibraryDialogHandle } from './libraryPanel'
+import type { SharingResult, SharingSource } from './sharingDialog'
+import type { VersionPanel } from './versionDiagnostic'
+import type { Library } from '../library/library'
 
 interface Session {
   container: Container
@@ -67,9 +76,23 @@ interface Session {
   history: EditHistory
 }
 
+/**
+ * Les trois surfaces qui occupent le cadre, l'une après l'autre — jamais deux ensemble.
+ *
+ * `preferences` est une **vue** et non une modale : consulter 216 réglages répartis sur
+ * 23 lignes de menu est une lecture longue, avec un filtre et des replis, et la page que
+ * `preferencesPage.ts` construit se dessine sur 66 rem. Une boîte modale la contraindrait
+ * pour rien — et il n'y a, dans cette vue, aucun rendu d'écran d'instrument à qui elle
+ * prendrait de la largeur.
+ *
+ * Les quatre autres nouveautés sont des **modales** (partage, version, bibliothèque) parce
+ * qu'elles se posent PAR-DESSUS ce qu'on regardait et qu'on y revient : c'est le principe
+ * du projet — rien ne partage la largeur avec le rendu d'une page.
+ */
 type View =
   | { kind: 'overview' }
   | { kind: 'detail'; orientation: Orientation; index: number }
+  | { kind: 'preferences' }
 
 let session: Session | undefined
 let failure: string | undefined
@@ -229,6 +252,18 @@ const redoButton = el('button', 'btn btn--ghost', 'Rétablir')
 redoButton.type = 'button'
 redoButton.hidden = true
 
+/**
+ * La bibliothèque, dans la barre de tête et **jamais masquée** : c'est la seule commande
+ * qui a un sens sans fichier ouvert — on y vient précisément pour reprendre une
+ * configuration rangée. La mettre derrière l'ouverture d'un fichier en ferait un trésor
+ * enfermé dans son propre coffre.
+ */
+const libraryButton = el('button', 'btn', 'Bibliothèque')
+libraryButton.type = 'button'
+libraryButton.title =
+  'Ranger la configuration ouverte sous un nom, et retrouver celles déjà rangées. ' +
+  'Tout reste dans ce navigateur : aucun serveur, aucun compte.'
+
 const fileName = el('span', 'app-bar__file')
 
 const bar = el('header', 'app-bar')
@@ -236,7 +271,10 @@ const brand = el('div', 'brand')
 const brandRole = el('span', 'brand__role', 'visionneuse')
 brand.append(el('span', 'brand__name', 'Configuration XCTrack'), brandRole)
 const actions = el('div', 'app-bar__actions')
-actions.append(fileName, undoButton, redoButton, editToggle, openLabel, fileInput, exportButton)
+actions.append(
+  fileName, undoButton, redoButton, editToggle, libraryButton, openLabel, fileInput,
+  exportButton
+)
 bar.append(brand, actions)
 
 const content = el('main', 'content')
@@ -288,6 +326,14 @@ function landing(): HTMLElement {
     steps.append(step)
   }
   panel.append(steps)
+
+  // Sans cette phrase, un pilote revenu le lendemain ne voit qu'une invitation à ouvrir un
+  // fichier et ne devine pas que ses configurations rangées l'attendent dans la barre.
+  panel.append(el(
+    'p', 'landing__note',
+    'Déjà venu ? Les configurations que vous avez rangées sont dans « Bibliothèque », en ' +
+    'haut à droite : elles ne sont jamais parties de ce navigateur.'
+  ))
   return panel
 }
 
@@ -319,6 +365,37 @@ function metaStrip(current: Session): HTMLElement {
   if (current.settings.fromDefaults) {
     add('Réglages de rendu', 'valeurs supposées, absentes du fichier')
   }
+
+  /*
+   * Les deux lectures qui prolongent ce bandeau, posées là où le pilote regarde déjà ce
+   * que le fichier dit de lui-même. Elles ne sont pas dans la barre de tête : celle-ci
+   * porte ce qui vaut à tout instant — ouvrir, ranger, enregistrer, modifier — alors que
+   * ces deux-là ne parlent que du fichier ouvert, et ne se lisent qu'en consultation.
+   *
+   * Aucune des deux ne télécharge quoi que ce soit tant qu'on ne l'a pas cliquée.
+   */
+  const actions = el('div', 'meta__actions')
+
+  const preferencesButton = el('button', 'btn', 'Réglages généraux')
+  preferencesButton.type = 'button'
+  preferencesButton.title =
+    'Tout ce qui se règle hors des pages de gadgets : unités, touches, capteurs, son, ' +
+    'espaces aériens. En lecture seule.'
+  preferencesButton.addEventListener('click', () => {
+    view = { kind: 'preferences' }
+    render()
+    window.scrollTo({ top: 0 })
+  })
+
+  const versionButton = el('button', 'btn', 'Version et compatibilité')
+  versionButton.type = 'button'
+  versionButton.title =
+    'Choisir la version de XCTrack visée, et voir ce que ce fichier porte qu’elle ne ' +
+    'connaît pas — ou l’inverse.'
+  versionButton.addEventListener('click', () => openVersionDialog())
+
+  actions.append(preferencesButton, versionButton)
+  strip.append(actions)
   return strip
 }
 
@@ -329,11 +406,11 @@ const ATTENTION_KINDS = ['structure', 'geometry', 'personal-data']
  * Un avertissement : ce qu'il dit, pourquoi, et le détail énumérable replié au-delà de
  * quatre éléments — une liste de trente widgets noierait les six autres avertissements.
  */
-function warningCard(warning: Warning): HTMLElement {
+function warningCard(warning: Warning, level: 'h3' | 'h4' = 'h3'): HTMLElement {
   const card = el('article', 'warning')
   if (ATTENTION_KINDS.includes(warning.kind)) card.classList.add('warning--attention')
   card.append(
-    el('h3', 'warning__title', warning.title),
+    el(level, 'warning__title', warning.title),
     el('p', 'warning__detail', warning.detail)
   )
 
@@ -358,6 +435,23 @@ function warningPanel(warnings: Warning[]): HTMLElement | undefined {
   panel.append(el('h2', 'warnings__title', 'Ce que dit ce fichier'))
   for (const warning of warnings) panel.append(warningCard(warning))
   return panel
+}
+
+/**
+ * Les mêmes avertissements, préparés pour la boîte d'export partageable — c'est son
+ * paramètre `notice`, un emplacement que `sharingDialog.ts` réserve exprès et ne remplit
+ * jamais lui-même : « les avertissements ont leur propre chaîne, et la dupliquer les
+ * ferait diverger ». On ne refabrique donc rien, on donne ce que `warnings.ts` calcule.
+ *
+ * Seuls les niveaux de titre changent : la boîte porte déjà un `h2`, les avertissements
+ * y descendent d'un cran pour que la structure du document reste juste.
+ */
+function warningNotice(warnings: Warning[]): HTMLElement | undefined {
+  if (warnings.length === 0) return undefined
+  const notice = el('section', 'warnings warnings--notice')
+  notice.append(el('h3', 'warnings__title', 'Ce que ce fichier révèle de vous'))
+  for (const warning of warnings) notice.append(warningCard(warning, 'h4'))
+  return notice
 }
 
 /* ------------------------------------------------------------------- mode édition */
@@ -396,7 +490,13 @@ function insideEditor(target: EventTarget | null): boolean {
  * disparaître, ce qu'un bouton muet ne dit pas.
  */
 function syncEditControls(): void {
-  const editable = session !== undefined && session.container.parseError === undefined
+  // La vue des préférences est une consultation, et rien d'autre : elle ne montre aucune
+  // page, donc « Modifier les pages » n'y désignerait rien. Les trois commandes s'effacent
+  // le temps de la lecture et reviennent telles quelles ensuite — le mode, lui, n'a pas
+  // été changé.
+  const editable = session !== undefined
+    && session.container.parseError === undefined
+    && view.kind !== 'preferences'
   const history = session?.history
 
   brandRole.textContent = editMode ? 'édition' : 'visionneuse'
@@ -1483,6 +1583,454 @@ function openPagesDialog(): void {
   dialog.showModal()
 }
 
+/* ============================================ les quatre modules branchés à la demande */
+
+/**
+ * Une modale est ouverte par-dessus la vue.
+ *
+ * Six boîtes cohabitent désormais (palette, pages, préférences non — c'est une vue —,
+ * version, bibliothèque, partage) : les énumérer une à une dans chaque garde de clavier
+ * était le moyen sûr d'en oublier une à la septième. La question posée au document est
+ * la seule qui ne se périme pas.
+ */
+function modalOpen(): boolean {
+  return document.querySelector('dialog[open]') !== null
+}
+
+/**
+ * Dire un échec sans effacer ce que le pilote regardait.
+ *
+ * `failure` — la variable d'état de l'ouverture — remplace la vue entière : s'en servir
+ * pour un module qui n'a pas su se charger effacerait la session, c'est-à-dire punirait
+ * le pilote d'une panne de réseau. Une boîte qui se ferme laisse tout en place.
+ */
+function tellProblem(title: string, message: string): void {
+  const dialog = el('dialog', 'modal')
+  const box = el('div', 'modal__box')
+  box.append(el('h2', 'modal__title', title), el('p', 'problem__message', message))
+  const actions = el('div', 'modal__actions')
+  const dismiss = el('button', 'btn btn--primary', 'Fermer')
+  dismiss.type = 'button'
+  dismiss.addEventListener('click', () => {
+    dialog.close()
+    dialog.remove()
+  })
+  actions.append(dismiss)
+  box.append(actions)
+  dialog.append(box)
+  dialog.addEventListener('cancel', () => dialog.remove())
+  document.body.append(dialog)
+  dialog.showModal()
+  dismiss.focus()
+}
+
+/* ------------------------------------------- 1. les préférences générales, en vue pleine */
+
+/**
+ * Le jeton du chargement en cours. La page arrive après un `import()` et un catalogue :
+ * entre-temps le pilote a pu revenir en arrière, ouvrir un autre fichier, ou changer de
+ * langue. Un jeton dit si le résultat qui arrive est encore celui qu'on attendait — même
+ * garde que `panelHost` pour le panneau de réglages, à ceci près qu'ici il n'y a pas
+ * d'élément stable à comparer : la vue entière est remplacée.
+ */
+let preferencesToken = 0
+
+/**
+ * La vue des préférences : un hôte posé tout de suite, la page dedans quand elle arrive.
+ *
+ * `openPreferencesPage` est l'entrée que le module désigne — c'est elle qui charge le
+ * catalogue dans la bonne langue. Elle est atteinte par `import()` : les 147 Ko émis
+ * (environ 32 Ko transférés) ne partent que si le pilote clique.
+ */
+function buildPreferencesView(current: Session): HTMLElement {
+  const host = el('section', 'prefs-host')
+  host.append(el('p', 'hint-note', 'Chargement des réglages généraux…'))
+
+  const token = ++preferencesToken
+  const back = (): void => {
+    view = { kind: 'overview' }
+    render()
+    window.scrollTo({ top: 0 })
+  }
+
+  void import('./preferencesPage')
+    .then((module) => module.openPreferencesPage({
+      document: current.container.document,
+      language: current.language,
+      fileName: current.container.fileName,
+      ...(current.versionName === undefined ? {} : { fileVersionName: current.versionName }),
+      ...(current.versionCode === undefined ? {} : { fileVersionCode: current.versionCode }),
+      // Sans `onClose`, le module ne construit aucun bouton « Fermer » : la vue serait
+      // sans issue visible. C'est l'assembleur qui décide où l'on retombe — ici la vue
+      // d'ensemble, d'où l'on est venu.
+      onClose: back
+    }))
+    .then((page) => {
+      if (token !== preferencesToken || !host.isConnected) return
+      host.textContent = ''
+      host.append(page.element)
+    })
+    .catch((error: unknown) => {
+      if (token !== preferencesToken || !host.isConnected) return
+      host.textContent = ''
+      host.append(problem(
+        'Réglages illisibles',
+        `Le catalogue des préférences n’a pas pu être chargé : ${String(error)}`,
+        'Le fichier, lui, n’est pas en cause : il reste ouvert et intact.'
+      ))
+      const again = el('button', 'btn', 'Revenir aux pages')
+      again.type = 'button'
+      again.addEventListener('click', back)
+      host.append(again)
+    })
+
+  return host
+}
+
+/* ---------------------------------------------- 2. version visée et compatibilité, en modale */
+
+let versionDialog: HTMLDialogElement | undefined
+let versionPanel: VersionPanel | undefined
+let versionToken = 0
+
+/**
+ * Le diagnostic de version, par-dessus la vue.
+ *
+ * Une modale et non une section de la vue d'ensemble, pour une raison qui tient au module
+ * lui-même : `buildVersionPanel` est asynchrone **à dessein** — c'est l'appel qui
+ * déclenche le téléchargement de la base des versions. Posée en permanence sous le
+ * bandeau du fichier, elle la ferait charger à chaque ouverture de fichier, pour un
+ * renseignement que la plupart des pilotes ne demandent jamais.
+ */
+function openVersionDialog(): void {
+  if (!session || versionDialog !== undefined) return
+  flushRecord()
+  const current = session
+
+  const dialog = el('dialog', 'modal modal--version')
+  dialog.setAttribute('aria-label', 'Version visée et compatibilité')
+  const box = el('div', 'modal__box')
+  const head = el('div', 'modal__head')
+  head.append(el('h2', 'modal__title', 'Version visée et compatibilité'))
+  const close = el('button', 'btn', 'Fermer')
+  close.type = 'button'
+  close.addEventListener('click', () => closeVersionDialog())
+  head.append(close)
+  box.append(head)
+
+  box.append(el(
+    'p', 'modal__lead',
+    'Le format de XCTrack change à chaque version. Choisissez la version visée : ' +
+    'l’éditeur dit alors ce que ce fichier porte qu’elle ne connaît pas, et ce qu’elle ' +
+    'attend qu’il n’a pas. Rien n’est supprimé ni modifié — c’est un constat.'
+  ))
+
+  const host = el('div', 'modal__slot')
+  host.append(el('p', 'hint-note', 'Chargement de la base des versions…'))
+  box.append(host)
+  dialog.append(box)
+
+  versionDialog = dialog
+  const token = ++versionToken
+  dialog.addEventListener('cancel', (event) => {
+    event.preventDefault()
+    closeVersionDialog()
+  })
+  document.body.append(dialog)
+  dialog.showModal()
+  close.focus()
+
+  void import('./versionDiagnostic')
+    .then((module) => module.buildVersionPanel({
+      document: current.container.document,
+      language: current.language
+    }))
+    .then((panel) => {
+      if (token !== versionToken) return
+      versionPanel = panel
+      host.textContent = ''
+      host.append(panel.element)
+    })
+    .catch((error: unknown) => {
+      if (token !== versionToken) return
+      host.textContent = ''
+      host.append(el(
+        'p', 'hint-note',
+        `La base des versions n’a pas pu être chargée : ${String(error)}`
+      ))
+    })
+}
+
+function closeVersionDialog(): void {
+  const dialog = versionDialog
+  versionDialog = undefined
+  versionPanel = undefined
+  // Un chargement encore en vol ne doit pas remplir une boîte disparue.
+  versionToken += 1
+  if (!dialog) return
+  if (dialog.open) dialog.close()
+  dialog.remove()
+}
+
+/**
+ * Le document a changé sous la boîte — édition, annulation, opération sur les pages. Le
+ * panneau sait se rebrancher, présélection comprise : un diagnostic qui décrirait l'arbre
+ * d'avant serait faux sans le dire.
+ */
+function syncVersionDialog(): void {
+  if (!versionDialog) return
+  if (!session || session.container.parseError !== undefined) {
+    closeVersionDialog()
+    return
+  }
+  versionPanel?.setDocument(session.container.document)
+}
+
+/* ------------------------------------------------ 3. la bibliothèque, en modale */
+
+interface LibraryKit {
+  panel: typeof import('./libraryPanel')
+  core: typeof import('../library')
+  library: Library
+}
+
+let libraryKit: Promise<LibraryKit> | undefined
+let libraryDialog: LibraryDialogHandle | undefined
+let libraryOpening = false
+
+/**
+ * La bibliothèque et son magasin, montés une seule fois, au premier clic.
+ *
+ * Trois `import()` : le panneau, le socle `src/library/`, et le catalogue des familles —
+ * ce dernier parce que `describe` en a besoin. Sans lui, chaque carte afficherait
+ * « Pro : inconnu » : honnête, mais c'est un renseignement qu'on a sous la main.
+ * `isProWidget` ne dépend pas de la langue (c'est un drapeau du type, pas un libellé) :
+ * le catalogue chargé au premier clic vaut donc pour toute la session.
+ *
+ * Le magasin durable d'abord, le repli en mémoire ensuite et **seulement s'il le faut** :
+ * le panneau annonce lui-même, en tête, qu'un rangement non durable est un brouillon.
+ */
+function loadLibraryKit(): Promise<LibraryKit> {
+  libraryKit ??= (async (): Promise<LibraryKit> => {
+    const [panel, core, catalog] = await Promise.all([
+      import('./libraryPanel'),
+      import('../library'),
+      loadWidgetCatalog(session?.language ?? 'fr')
+    ])
+    let store
+    try {
+      store = await core.openIndexedDbStore()
+    } catch {
+      store = core.createMemoryStore()
+    }
+    const library = core.createLibrary({
+      store,
+      describe: {
+        isProWidget: catalog.isProWidget,
+        referenceVersionCode: REFERENCE_VERSION_CODE
+      }
+    })
+    return { panel, core, library }
+  })()
+  return libraryKit
+}
+
+/**
+ * Ce que la bibliothèque sait du document ouvert — **relu à chaque geste**, jamais figé.
+ *
+ * C'est un getter parce que `modified` change sous le panneau : c'est lui, et lui seul,
+ * qui fait que charger une autre configuration s'arrête et demande au lieu d'écraser un
+ * travail en cours. Les octets, eux, sont produits au clic par `exportContainer` — donc
+ * à l'octet près quand rien n'a bougé.
+ */
+function currentForLibrary(): CurrentDocument | undefined {
+  const current = session
+  if (!current) return undefined
+  return {
+    fileName: current.container.fileName,
+    modified: current.container.modified,
+    bytes: () => exportContainer(current.container)
+  }
+}
+
+function closeLibraryDialog(): void {
+  const handle = libraryDialog
+  libraryDialog = undefined
+  handle?.close()
+}
+
+function openLibrary(): void {
+  if (libraryDialog !== undefined || libraryOpening) return
+  flushRecord()
+  libraryOpening = true
+  libraryButton.disabled = true
+
+  void loadLibraryKit()
+    .then((kit) => {
+      const handle = kit.panel.openLibraryDialog({
+        library: kit.library,
+        current: currentForLibrary,
+        language: session?.language ?? 'fr',
+        estimateStorage: kit.core.estimateStorage,
+        requestPersistence: kit.core.requestPersistence,
+        onLoad: (entry, bytes) => {
+          // Le nom du fichier d'origine est conservé dans l'entrée ; à défaut, le nom
+          // donné à l'entrée fait l'affaire — il faut bien une extension pour que
+          // `openContainer` sache quoi en dire.
+          const name = entry.fileName === '' ? `${entry.name}.xcfg` : entry.fileName
+          closeLibraryDialog()
+          // Copie : les octets viennent du magasin, et `openContainer` les garde comme
+          // source de réémission. Rien ne doit pouvoir les modifier derrière son dos.
+          void loadBytes(bytes.slice(), name)
+        },
+        onClose: () => { libraryDialog = undefined }
+      })
+      libraryDialog = handle
+      handle.open()
+    })
+    .catch((error: unknown) => {
+      tellProblem(
+        'Bibliothèque indisponible',
+        `Elle n’a pas pu être ouverte : ${String(error)}. Le fichier ouvert, lui, ` +
+        'n’a pas bougé.'
+      )
+    })
+    .finally(() => {
+      libraryOpening = false
+      libraryButton.disabled = false
+    })
+}
+
+libraryButton.addEventListener('click', () => openLibrary())
+
+/* --------------------------------------------------- 4. l'export partageable, en modale */
+
+/**
+ * Ce que la boîte de partage a besoin de savoir du fichier ouvert, et rien de plus.
+ *
+ * Les annexes d'une archive ne sont décrites que par leur nom et leur taille : la boîte
+ * les **liste** pour dire ce qu'une version partageable laisse derrière elle — cet
+ * éditeur n'inspecte ni leur contenu ni les métadonnées d'une image, et un `.xczfg`
+ * anonymisé serait donc une promesse fausse.
+ */
+function sharingSource(current: Session): SharingSource {
+  return {
+    document: current.container.document,
+    fileName: current.container.fileName,
+    kind: current.container.kind,
+    extras: current.container.extras.map((entry) => ({
+      name: entry.name,
+      byteLength: entry.data.byteLength
+    }))
+  }
+}
+
+/**
+ * L'écriture du fichier. `produced` vaut `undefined` sur le chemin ordinaire : on réémet
+ * alors ce que `exportContainer` rend — les octets d'origine quand rien n'a bougé. C'est
+ * exactement là que se tient la fidélité à l'octet près, et c'est pourquoi ce
+ * `?? await exportContainer(...)` ne doit jamais être remplacé par une sérialisation.
+ */
+async function deliver(
+  current: Session, produced: Uint8Array | undefined, fileName: string
+): Promise<void> {
+  const bytes = produced ?? await exportContainer(current.container)
+  // Copie dans un ArrayBuffer simple : `Blob` n'accepte pas une vue dont le tampon
+  // pourrait être partagé, et le conteneur ne garantit rien de son origine.
+  const buffer = new ArrayBuffer(bytes.byteLength)
+  new Uint8Array(buffer).set(bytes)
+  const url = URL.createObjectURL(new Blob([buffer], { type: 'application/octet-stream' }))
+  const link = el('a')
+  link.href = url
+  link.download = fileName
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
+/**
+ * Le fichier illisible n'a qu'une issue, et elle est la bonne : ses octets tels qu'ils
+ * sont entrés. La boîte de partage n'est pas ouverte pour lui — elle proposerait une
+ * « version partageable » dérivée d'un document vide, c'est-à-dire un fichier sans
+ * contenu présenté comme une configuration. Le nom, lui, vient de la même fonction que
+ * partout ailleurs.
+ */
+async function downloadIntact(current: Session): Promise<void> {
+  const { buildExportFileName } = await import('../model/sharing')
+  await deliver(current, undefined, buildExportFileName({
+    originalFileName: current.container.fileName,
+    when: new Date()
+  }))
+}
+
+let exportPending = false
+
+/**
+ * Enregistrer, c'est choisir ce qu'on donne.
+ *
+ * La boîte de `sharingDialog.ts` remplace la confirmation d'export d'avant : celle-ci ne
+ * faisait qu'avertir, et le nom qu'elle produisait **reprenait le nom d'origine** — or ce
+ * nom porte souvent un prénom (`2022-02-08_marie_ok.xcfg` existe dans le corpus). Un outil
+ * qui promet d'anonymiser un fichier et en recopie le nom n'a rien anonymisé.
+ *
+ * Deux points du contrat sont tenus ici et se voient mal :
+ *
+ * 1. **La boîte est rendue juste avant d'être ouverte.** L'horodatage du nom est celui du
+ *    rendu : rendre puis attendre ferait montrer un nom qui n'est plus celui produit.
+ * 2. **Les avertissements ne sont pas refabriqués.** Ils passent par `notice`, avec le
+ *    recalcul que méritait déjà un document modifié.
+ */
+function askBeforeExport(current: Session): void {
+  if (exportPending) return
+
+  if (current.container.parseError !== undefined) {
+    exportPending = true
+    void downloadIntact(current).finally(() => { exportPending = false })
+    return
+  }
+
+  // Les avertissements sont calculés à l'import ; un document modifié en mérite un
+  // recalcul, car ce qu'il contient a changé depuis. Ce qui ne change pas : ils sont dits
+  // AVANT le téléchargement, modifié ou non.
+  const notice = warningNotice(warningsAt(
+    current.container.modified
+      ? computeWarnings({
+        document: current.container.document,
+        layout: current.layout,
+        settings: current.settings,
+        language: current.language
+      })
+      : current.warnings,
+    'export'
+  ))
+
+  exportPending = true
+  exportButton.disabled = true
+  void import('./sharingDialog')
+    .then((module) => {
+      const handle = module.renderSharingDialog({
+        source: sharingSource(current),
+        language: current.language,
+        ...(notice === undefined ? {} : { notice }),
+        onConfirm: (result: SharingResult) => {
+          // `sharingBytes` rend `undefined` pour un export ordinaire : c'est le signal de
+          // réémettre le conteneur, jamais de sérialiser.
+          void deliver(current, module.sharingBytes(result), result.fileName)
+        }
+      })
+      handle.open()
+    })
+    .catch((error: unknown) => {
+      tellProblem(
+        'Enregistrement impossible',
+        `La boîte d’enregistrement n’a pas pu être chargée : ${String(error)}`
+      )
+    })
+    .finally(() => {
+      exportPending = false
+      exportButton.disabled = false
+    })
+}
+
 function render(): void {
   // Le calque appartient à la vue qu'on efface : on le démonte explicitement, pour que
   // ses écoutes de fenêtre (`pointermove`, `pointerup`) partent avec lui.
@@ -1515,6 +2063,7 @@ function render(): void {
   // l'arbre disparu.
   syncPagesDialog()
   syncPaletteDialog()
+  syncVersionDialog()
 
   content.textContent = ''
   // La page est le seul objet dessiné à sa taille réelle : en édition, le cadre s'élargit
@@ -1522,7 +2071,11 @@ function render(): void {
   // effectivement une page en édition.
   content.classList.remove('content--wide')
   exportButton.hidden = session === undefined
-  tools.hidden = session === undefined || session.container.parseError !== undefined
+  // Le gabarit d'écran ne règle que le dessin d'une page : la vue des préférences n'en
+  // montre aucune, et le sélecteur y serait une commande sans effet.
+  tools.hidden = session === undefined
+    || session.container.parseError !== undefined
+    || view.kind === 'preferences'
   fileName.textContent = session?.container.fileName ?? ''
   syncEditControls()
 
@@ -1547,6 +2100,11 @@ function render(): void {
       'Ses octets sont conservés intacts : « Enregistrer une copie » vous le rend tel qu’il est entré, ' +
       'sans la moindre réécriture.'
     ))
+    return
+  }
+
+  if (view.kind === 'preferences') {
+    content.append(buildPreferencesView(session))
     return
   }
 
@@ -1650,7 +2208,12 @@ function installDeviceSelector(initialDevice: Device): void {
 
 /* ------------------------------------------------------------------------- import */
 
-async function load(file: File): Promise<void> {
+/**
+ * Ouvrir des octets, d'où qu'ils viennent : le sélecteur de fichiers, un dépôt à la
+ * souris, ou une entrée de la bibliothèque — dont les octets ont déjà été vérifiés contre
+ * leur empreinte avant d'arriver ici.
+ */
+async function loadBytes(bytes: Uint8Array, name: string): Promise<void> {
   // Ferme le pas en attente et son minuteur avant que la session ne disparaisse.
   flushRecord()
   failure = undefined
@@ -1659,12 +2222,17 @@ async function load(file: File): Promise<void> {
   // l'historique de l'ancien n'a plus aucun sens ici.
   editMode = false
   selection = undefined
-  // Le carrousel et la palette parlaient du fichier précédent.
+  // Toutes les boîtes ouvertes parlaient du fichier précédent. Le diagnostic de version
+  // saurait se rebrancher, mais sa présélection et son palier retenu appartenaient à
+  // l'autre fichier : on repart de zéro plutôt que de laisser un choix orphelin.
   closePagesDialog()
   closePaletteDialog()
+  closeVersionDialog()
   paletteQuery = ''
+  // Les réglages généraux affichés étaient ceux de l'autre fichier.
+  if (view.kind === 'preferences') view = { kind: 'overview' }
   try {
-    const container = await openContainer(new Uint8Array(await file.arrayBuffer()), file.name)
+    const container = await openContainer(bytes, name)
     const settings = readRenderSettings(container.document)
     const info = getMember(container.document, 'info')
     const declaredDevice = info ? readString(info, 'device') : undefined
@@ -1699,6 +2267,10 @@ async function load(file: File): Promise<void> {
   }
   view = { kind: 'overview' }
   render()
+}
+
+async function load(file: File): Promise<void> {
+  await loadBytes(new Uint8Array(await file.arrayBuffer()), file.name)
 }
 
 fileInput.addEventListener('change', () => {
@@ -1741,90 +2313,6 @@ window.addEventListener('drop', (event) => {
   const file = event.dataTransfer?.files?.[0]
   if (file) void load(file)
 })
-
-/* -------------------------------------------------------------------------- export */
-
-/**
- * Réémission des octets — la seule action offerte, et la seule offerte aussi quand le
- * fichier est illisible. Le fichier n'est jamais modifié : `exportContainer` rend sa
- * source telle quelle. Le nom, lui, est horodaté et distinct de l'original — deux
- * fichiers homonymes sur une carte SD la veille d'une manche sont une erreur d'import
- * qui se découvre en vol.
- */
-async function download(current: Session): Promise<void> {
-  const bytes = await exportContainer(current.container)
-  // Copie dans un ArrayBuffer simple : `Blob` n'accepte pas une vue dont le tampon
-  // pourrait être partagé, et le conteneur ne garantit rien de son origine.
-  const buffer = new ArrayBuffer(bytes.byteLength)
-  new Uint8Array(buffer).set(bytes)
-  const url = URL.createObjectURL(new Blob([buffer], { type: 'application/octet-stream' }))
-  const link = el('a')
-  link.href = url
-  link.download = exportFileName(current.container.fileName, new Date())
-  link.click()
-  URL.revokeObjectURL(url)
-}
-
-/**
- * Ce que le pilote s'apprête à donner, dit AVANT le téléchargement et non après : une
- * fois le fichier sur la carte SD ou dans une conversation, l'avertissement arrive trop
- * tard. On avertit, on ne dépouille pas en silence — le document sort intact.
- */
-function askBeforeExport(current: Session): void {
-  // Les avertissements sont calculés à l'import ; un document modifié en mérite un
-  // recalcul, car ce qu'il contient a changé depuis. Ce qui ne change pas : ils sont dits
-  // AVANT le téléchargement, modifié ou non.
-  const warnings = warningsAt(
-    current.container.modified
-      ? computeWarnings({
-        document: current.container.document,
-        layout: current.layout,
-        settings: current.settings,
-        language: current.language
-      })
-      : current.warnings,
-    'export'
-  )
-  if (warnings.length === 0) {
-    void download(current)
-    return
-  }
-
-  const dialog = el('dialog', 'modal')
-  const box = el('div', 'modal__box')
-  box.append(el('h2', 'modal__title', 'Avant de partager ce fichier'))
-  for (const warning of warnings) box.append(warningCard(warning))
-
-  box.append(el(
-    'p', 'modal__name',
-    `Nom du fichier produit : ${exportFileName(current.container.fileName, new Date())}`
-  ))
-
-  const actions = el('div', 'modal__actions')
-  const cancel = el('button', 'btn', 'Annuler')
-  cancel.type = 'button'
-  const confirm = el('button', 'btn btn--primary', 'Enregistrer quand même')
-  confirm.type = 'button'
-  actions.append(cancel, confirm)
-  box.append(actions)
-  dialog.append(box)
-
-  const close = (): void => {
-    dialog.close()
-    dialog.remove()
-  }
-  cancel.addEventListener('click', close)
-  confirm.addEventListener('click', () => {
-    close()
-    void download(current)
-  })
-  // Échap ferme la boîte native : rien n'est téléchargé, comme « Annuler ».
-  dialog.addEventListener('cancel', () => dialog.remove())
-
-  document.body.append(dialog)
-  dialog.showModal()
-  confirm.focus()
-}
 
 exportButton.addEventListener('click', () => {
   // Un pas de curseur encore en attente est clos avant de sortir le fichier : il est
@@ -1877,6 +2365,10 @@ window.addEventListener('beforeunload', (event) => {
 window.addEventListener('keydown', (event) => {
   if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 'z') return
   if (!editMode || session === undefined || isTyping(event.target)) return
+  // Une boîte est ouverte par-dessus : le pilote y travaille, et défaire une modification
+  // qu'il ne voit pas serait une surprise. La bibliothèque et le partage s'ouvrent
+  // désormais depuis la barre de tête, donc aussi depuis une page en édition.
+  if (modalOpen()) return
   event.preventDefault()
   stepHistory(event.shiftKey ? 'redo' : 'undo')
 })
@@ -1886,7 +2378,7 @@ window.addEventListener('keydown', (event) => {
   if (current.kind !== 'detail') return
   // Une boîte modale est ouverte par-dessus : Échap la ferme, les flèches appartiennent à
   // ses commandes. Rien de tout cela ne doit changer la page qui se trouve derrière.
-  if (pagesDialog !== undefined || paletteDialog !== undefined) return
+  if (modalOpen()) return
   // Les flèches appartiennent au curseur de zoom quand il a le focus.
   if (event.target instanceof HTMLInputElement) return
   // En édition, flèches et Échap appartiennent au calque et au panneau : déplacer un
