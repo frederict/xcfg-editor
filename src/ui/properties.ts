@@ -876,7 +876,11 @@ function buildDefaultsSummary(
 function defaultsNote(
   trust: DefaultsTrust, options: PropertiesPanelOptions, form: PropertyForm
 ): string {
-  const reference = `Défauts relevés sur XCTrack ${DEFAULTS_VERSION_NAME} (versionCode ${DEFAULTS_VERSION_CODE})`
+  // « Défauts » sans autre mot se lit comme « anomalies » : un pilote croit qu'on a
+  // trouvé quelque chose de cassé dans sa configuration. Le français ne distingue pas
+  // *default* de *fault* ; il faut donc le désambiguïser à chaque emploi.
+  const reference =
+    `Valeurs d’origine relevées sur XCTrack ${DEFAULTS_VERSION_NAME} (versionCode ${DEFAULTS_VERSION_CODE})`
   const missing = form.missingDefaults.length === 0
     ? ''
     : ` ${form.missingDefaults.length} réglage${form.missingDefaults.length > 1 ? 's' : ''} ` +
