@@ -240,9 +240,6 @@ fileInput.type = 'file'
 fileInput.accept = '.xcfg,.xczfg'
 fileInput.id = 'file-input'
 
-const openLabel = el('label', 'btn btn--primary', 'Ouvrir un fichier')
-openLabel.htmlFor = fileInput.id
-
 const exportButton = el('button', 'btn', 'Enregistrer une copie')
 exportButton.type = 'button'
 exportButton.hidden = true
@@ -251,33 +248,232 @@ exportButton.hidden = true
  * L'entrée en édition : un interrupteur, pas un autre écran. Le pilote garde sa page
  * sous les yeux, son zoom, son gabarit ; seules les zones de survol cèdent la place au
  * calque. Ressortir est aussi immédiat, et ne défait rien.
+ *
+ * Les deux intitulés ne sont volontairement pas symétriques. Hors édition, le bouton est
+ * le seul endroit où un pilote apprend que l'outil modifie : il le dit en entier
+ * — « Modifier les pages ». En édition, il n'a plus rien à apprendre à personne et la
+ * barre est à son plus plein : « Consulter » suffit, et rend 90 px à la page.
  */
 const editToggle = el('button', 'btn', 'Modifier les pages')
 editToggle.type = 'button'
 editToggle.hidden = true
 editToggle.setAttribute('aria-pressed', 'false')
 
-const undoButton = el('button', 'btn btn--ghost', 'Annuler')
+/**
+ * Annuler et rétablir : deux flèches encadrées, et non deux mots gris.
+ *
+ * Ce sont les commandes les plus fréquentes de toute l'édition — celles vers lesquelles
+ * la main part sans réfléchir dès qu'un geste rate. Elles restent donc dans la barre,
+ * quel que soit l'encombrement. En texte grisé sans cadre, l'œil les prenait pour une
+ * légende ; en flèches encadrées, elles se lisent comme des boutons et tiennent en
+ * 30 px de côté, au-dessus des 24 px de cible minimale.
+ *
+ * Le dessin est un `<svg>` plutôt qu'un caractère : `↶` et `↷` manquent à certaines
+ * polices Android, et un carré vide dans la barre de tête serait pire que le mot qu'il
+ * remplace. Le nom accessible, lui, reste une phrase entière — « Annuler : Déplacer
+ * Altitude GPS » —, posée par `syncEditControls`.
+ */
+function historyGlyph(direction: 'undo' | 'redo'): SVGSVGElement {
+  const ns = 'http://www.w3.org/2000/svg'
+  const svg = document.createElementNS(ns, 'svg')
+  svg.setAttribute('viewBox', '0 0 24 24')
+  svg.setAttribute('aria-hidden', 'true')
+  svg.setAttribute('focusable', 'false')
+  svg.classList.add('btn__glyph')
+  const path = document.createElementNS(ns, 'path')
+  // Une flèche qui revient en arrière (annuler) ou repart en avant (rétablir) : même
+  // dessin, retourné. Deux formes en miroir ne se confondent pas, là où deux flèches
+  // droites ne différant que par une barre se confondent (constat de l'audit sur la
+  // barre flottante).
+  path.setAttribute('d', direction === 'undo'
+    ? 'M8 7H14a5 5 0 0 1 0 10H9M8 7l3.5-3.5M8 7l3.5 3.5'
+    : 'M16 7H10a5 5 0 0 0 0 10h5M16 7l-3.5-3.5M16 7l-3.5 3.5')
+  path.setAttribute('fill', 'none')
+  path.setAttribute('stroke', 'currentColor')
+  path.setAttribute('stroke-width', '2')
+  path.setAttribute('stroke-linecap', 'round')
+  path.setAttribute('stroke-linejoin', 'round')
+  svg.append(path)
+  return svg
+}
+
+const undoButton = el('button', 'btn btn--icon')
 undoButton.type = 'button'
 undoButton.hidden = true
+undoButton.append(historyGlyph('undo'))
 
-const redoButton = el('button', 'btn btn--ghost', 'Rétablir')
+const redoButton = el('button', 'btn btn--icon')
 redoButton.type = 'button'
 redoButton.hidden = true
-
-/**
- * La bibliothèque, dans la barre de tête et **jamais masquée** : c'est la seule commande
- * qui a un sens sans fichier ouvert — on y vient précisément pour reprendre une
- * configuration rangée. La mettre derrière l'ouverture d'un fichier en ferait un trésor
- * enfermé dans son propre coffre.
- */
-const libraryButton = el('button', 'btn', 'Bibliothèque')
-libraryButton.type = 'button'
-libraryButton.title =
-  'Ranger la configuration ouverte sous un nom, et retrouver celles déjà rangées. ' +
-  'Tout reste dans ce navigateur : aucun serveur, aucun compte.'
+redoButton.append(historyGlyph('redo'))
 
 const fileName = el('span', 'app-bar__file')
+
+/* ------------------------------------------------- menu des commandes secondaires */
+
+/**
+ * Un menu déroulant, et le seul de l'application.
+ *
+ * **Ce qui reste dans la barre, et pourquoi.** Le critère est la fréquence d'usage,
+ * doublée d'une exception pour ce qui dit l'état du document :
+ *
+ * - « Modifier les pages » / « Consulter » — le geste qui fait de l'outil un éditeur ;
+ *   le cacher recréerait le défaut que l'accueil vient de corriger ;
+ * - « Annuler » / « Rétablir » — plusieurs fois par minute en édition ;
+ * - « Enregistrer une copie » / « Enregistrer les modifications » — l'action principale,
+ *   et le **seul signal visible** qu'un travail est en cours : son intitulé change quand
+ *   le document est modifié. Rien de tout cela ne peut vivre derrière un menu ;
+ * - le nom du fichier, qui dit sur quoi l'on travaille.
+ *
+ * **Ce qui se range.** Quatre commandes qui servent au plus une fois par session :
+ * ouvrir un fichier, la bibliothèque, les réglages généraux, le diagnostic de version.
+ * Les deux dernières n'étaient jusqu'ici atteignables que depuis la vue d'ensemble — il
+ * fallait quatre gestes pour aller les lire depuis une page ouverte, et le retour ne
+ * ramenait pas d'où l'on venait. Dans le menu, elles sont à deux gestes depuis
+ * n'importe quel écran.
+ *
+ * **Clavier.** Le bouton ouvre et ferme ; les flèches parcourent les entrées avec un
+ * `tabindex` glissant, `Début` et `Fin` vont aux extrémités, `Échap` referme et rend le
+ * focus au bouton. Le focus n'est pas piégé : sortir du menu à la tabulation le referme
+ * et laisse la tabulation continuer son chemin, comme si le menu n'existait pas.
+ */
+interface Menu {
+  root: HTMLElement
+  button: HTMLButtonElement
+  /** Ajoute une entrée et rend son bouton — l'appelant en règle `hidden` et `disabled`. */
+  add: (label: string, title: string, run: () => void) => HTMLButtonElement
+  close: () => void
+}
+
+function buildMenu(label: string): Menu {
+  const root = el('div', 'menu')
+  const button = el('button', 'btn menu__button')
+  button.type = 'button'
+  button.setAttribute('aria-haspopup', 'menu')
+  button.setAttribute('aria-expanded', 'false')
+  button.append(el('span', undefined, label), el('span', 'menu__chevron'))
+
+  const list = el('div', 'menu__list')
+  list.setAttribute('role', 'menu')
+  list.setAttribute('aria-label', label)
+  list.hidden = true
+  root.append(button, list)
+
+  /** Les entrées réellement utilisables : une entrée éteinte ne prend pas le focus. */
+  const usable = (): HTMLButtonElement[] =>
+    [...list.querySelectorAll('button')].filter((item) => !item.hidden && !item.disabled)
+
+  const focusAt = (position: number): void => {
+    const items = usable()
+    if (items.length === 0) return
+    const wrapped = ((position % items.length) + items.length) % items.length
+    for (const [rank, item] of items.entries()) item.tabIndex = rank === wrapped ? 0 : -1
+    items[wrapped]?.focus()
+  }
+
+  const close = (restoreFocus = false): void => {
+    if (list.hidden) return
+    list.hidden = true
+    button.setAttribute('aria-expanded', 'false')
+    if (restoreFocus) button.focus()
+  }
+
+  const open = (): void => {
+    if (!list.hidden) return
+    list.hidden = false
+    button.setAttribute('aria-expanded', 'true')
+    focusAt(0)
+  }
+
+  button.addEventListener('click', () => { if (list.hidden) open(); else close(true) })
+
+  root.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      if (list.hidden) return
+      event.preventDefault()
+      close(true)
+      return
+    }
+    if (list.hidden) return
+    const items = usable()
+    const at = items.indexOf(document.activeElement as HTMLButtonElement)
+    if (event.key === 'ArrowDown') { event.preventDefault(); focusAt(at + 1) }
+    else if (event.key === 'ArrowUp') { event.preventDefault(); focusAt(at - 1) }
+    else if (event.key === 'Home') { event.preventDefault(); focusAt(0) }
+    else if (event.key === 'End') { event.preventDefault(); focusAt(items.length - 1) }
+  })
+
+  // Sortir du menu referme le menu — à la tabulation comme au clic ailleurs. Le focus
+  // n'est jamais retenu : c'est la différence entre un menu et un piège.
+  root.addEventListener('focusout', (event) => {
+    const next = event.relatedTarget
+    if (next instanceof Node && root.contains(next)) return
+    close()
+  })
+  document.addEventListener('pointerdown', (event) => {
+    const target = event.target
+    if (target instanceof Node && root.contains(target)) return
+    close()
+  })
+
+  return {
+    root,
+    button,
+    close: () => close(),
+    add: (itemLabel, itemTitle, run) => {
+      const item = el('button', 'menu__item', itemLabel)
+      item.type = 'button'
+      item.setAttribute('role', 'menuitem')
+      item.title = itemTitle
+      item.tabIndex = -1
+      item.addEventListener('click', () => { close(true); run() })
+      list.append(item)
+      return item
+    }
+  }
+}
+
+const menu = buildMenu('Fichier')
+
+/**
+ * Ouvrir un fichier : un bouton du menu, et non plus l'étiquette du champ de fichier.
+ * Le champ, lui, reste dans la barre en `sr-only` — c'est la seule façon d'ouvrir un
+ * fichier à la tabulation sans passer par le menu, et l'étiquette de la zone de dépôt de
+ * l'accueil continue de le désigner.
+ */
+const openItem = menu.add(
+  'Ouvrir un fichier…',
+  'Choisir un .xcfg ou un .xczfg exporté depuis l’instrument. Le fichier reste sur ' +
+  'cette machine.',
+  () => fileInput.click()
+)
+
+/**
+ * La bibliothèque, **jamais éteinte** : c'est la seule commande qui a un sens sans
+ * fichier ouvert — on y vient précisément pour reprendre une configuration rangée. La
+ * mettre derrière l'ouverture d'un fichier en ferait un trésor enfermé dans son propre
+ * coffre.
+ */
+const libraryButton = menu.add(
+  'Bibliothèque…',
+  'Ranger la configuration ouverte sous un nom, et retrouver celles déjà rangées. ' +
+  'Tout reste dans ce navigateur : aucun serveur, aucun compte.',
+  () => { void openLibrary() }
+)
+
+const preferencesItem = menu.add(
+  'Réglages généraux',
+  'Tout ce qui se règle hors des pages de gadgets : unités, touches, capteurs, son, ' +
+  'espaces aériens. En lecture seule.',
+  () => openPreferences()
+)
+
+const versionItem = menu.add(
+  'Version et compatibilité…',
+  'Choisir la version de XCTrack visée, et voir ce que ce fichier porte qu’elle ne ' +
+  'connaît pas — ou l’inverse.',
+  () => openVersionDialog()
+)
 
 const bar = el('header', 'app-bar')
 const brand = el('div', 'brand')
@@ -292,8 +488,7 @@ brandRole.hidden = true
 brand.append(el('span', 'brand__name', 'Configuration XCTrack'), brandRole)
 const actions = el('div', 'app-bar__actions')
 actions.append(
-  fileName, undoButton, redoButton, editToggle, libraryButton, openLabel, fileInput,
-  exportButton
+  fileName, undoButton, redoButton, editToggle, menu.root, fileInput, exportButton
 )
 bar.append(brand, actions)
 
@@ -363,8 +558,9 @@ function landing(): HTMLElement {
   // fichier et ne devine pas que ses configurations rangées l'attendent dans la barre.
   panel.append(el(
     'p', 'landing__note',
-    'Déjà venu ? Les configurations que vous avez rangées sont dans « Bibliothèque », en ' +
-    'haut à droite : elles ne sont jamais parties de ce navigateur.'
+    'Déjà venu ? Les configurations que vous avez rangées sont dans le menu « Fichier », ' +
+    'en haut à droite, sous « Bibliothèque » : elles ne sont jamais parties de ce ' +
+    'navigateur.'
   ))
   return panel
 }
@@ -399,35 +595,13 @@ function metaStrip(current: Session): HTMLElement {
   }
 
   /*
-   * Les deux lectures qui prolongent ce bandeau, posées là où le pilote regarde déjà ce
-   * que le fichier dit de lui-même. Elles ne sont pas dans la barre de tête : celle-ci
-   * porte ce qui vaut à tout instant — ouvrir, ranger, enregistrer, modifier — alors que
-   * ces deux-là ne parlent que du fichier ouvert, et ne se lisent qu'en consultation.
-   *
-   * Aucune des deux ne télécharge quoi que ce soit tant qu'on ne l'a pas cliquée.
+   * Les deux lectures qui prolongeaient ce bandeau — réglages généraux, diagnostic de
+   * version — sont passées dans le menu « Fichier » de la barre de tête. Elles n'étaient
+   * ici atteignables que depuis la vue d'ensemble : depuis une page ouverte, il fallait
+   * revenir en arrière, lire, fermer, puis rouvrir sa page. Une commande qui ne sert
+   * qu'une fois par session mérite un menu ; elle ne mérite pas d'être introuvable la
+   * moitié du temps.
    */
-  const actions = el('div', 'meta__actions')
-
-  const preferencesButton = el('button', 'btn', 'Réglages généraux')
-  preferencesButton.type = 'button'
-  preferencesButton.title =
-    'Tout ce qui se règle hors des pages de gadgets : unités, touches, capteurs, son, ' +
-    'espaces aériens. En lecture seule.'
-  preferencesButton.addEventListener('click', () => {
-    view = { kind: 'preferences' }
-    render()
-    window.scrollTo({ top: 0 })
-  })
-
-  const versionButton = el('button', 'btn', 'Version et compatibilité')
-  versionButton.type = 'button'
-  versionButton.title =
-    'Choisir la version de XCTrack visée, et voir ce que ce fichier porte qu’elle ne ' +
-    'connaît pas — ou l’inverse.'
-  versionButton.addEventListener('click', () => openVersionDialog())
-
-  actions.append(preferencesButton, versionButton)
-  strip.append(actions)
   return strip
 }
 
@@ -534,6 +708,15 @@ function currentPage(): Page | undefined {
 }
 
 /**
+ * Une vue mémorisée désigne-t-elle encore quelque chose ? Un rang de page retenu avant
+ * un détour peut être devenu hors bornes — page supprimée, fichier rouvert.
+ */
+function viewExists(candidate: View): boolean {
+  if (candidate.kind !== 'detail') return true
+  return session?.layout[candidate.orientation][candidate.index] !== undefined
+}
+
+/**
  * Le rendu de la page en pixels de la fenêtre. Mesuré à chaque appel et non mémorisé :
  * le curseur de zoom redimensionne la plaque sous le calque, qui n'en est pas averti.
  */
@@ -570,9 +753,16 @@ function syncEditControls(): void {
     && view.kind !== 'preferences'
   const history = session?.history
 
-  brandRole.hidden = !editMode
+  // Le badge décrit l'écran où l'on est, pas un drapeau interne : dans les réglages
+  // généraux, qui ne montrent aucune page et n'offrent ni annulation ni sortie, annoncer
+  // « édition » serait annoncer un mode dont rien n'est atteignable. Il revient tel quel
+  // au retour — `editMode`, lui, n'a pas bougé.
+  brandRole.hidden = !editMode || !editable
   editToggle.hidden = !editable
-  editToggle.textContent = editMode ? 'Revenir à la consultation' : 'Modifier les pages'
+  editToggle.textContent = editMode ? 'Consulter' : 'Modifier les pages'
+  editToggle.title = editMode
+    ? 'Consulter — quitter le mode édition. Rien n’est défait.'
+    : 'Modifier les pages — déplacer, redimensionner et ajouter des gadgets.'
   editToggle.setAttribute('aria-pressed', String(editMode))
 
   undoButton.hidden = !editMode || !editable
@@ -581,8 +771,21 @@ function syncEditControls(): void {
   redoButton.disabled = history?.canRedo() !== true
   const undoLabel = history?.undoDescription()
   const redoLabel = history?.redoDescription()
-  undoButton.title = undoLabel === undefined ? 'Rien à annuler' : `Annuler : ${undoLabel}`
-  redoButton.title = redoLabel === undefined ? 'Rien à rétablir' : `Rétablir : ${redoLabel}`
+  // Le bouton ne porte qu'une flèche : la phrase entière est son nom accessible, et non
+  // une simple infobulle — un lecteur d'écran annoncerait sinon « bouton », rien de plus.
+  const undoName = undoLabel === undefined ? 'Rien à annuler' : `Annuler : ${undoLabel}`
+  const redoName = redoLabel === undefined ? 'Rien à rétablir' : `Rétablir : ${redoLabel}`
+  undoButton.title = undoName
+  redoButton.title = redoName
+  undoButton.setAttribute('aria-label', undoName)
+  redoButton.setAttribute('aria-label', redoName)
+
+  // Les deux lectures du menu ne parlent que d'un fichier ouvert. Éteintes sans fichier,
+  // elles disent qu'elles existent sans mentir sur ce qu'elles feraient — les cacher
+  // ferait croire que le menu change de contenu d'un écran à l'autre.
+  const readable = session !== undefined && session.container.parseError === undefined
+  preferencesItem.disabled = !readable || view.kind === 'preferences'
+  versionItem.disabled = !readable
 
   // Un document modifié se réécrit à l'export ; intact, il ressort octet pour octet.
   // Le bouton dit lequel des deux va se produire.
@@ -1829,6 +2032,25 @@ function tellProblem(title: string, message: string): void {
 let preferencesToken = 0
 
 /**
+ * La vue d'où l'on est parti lire les réglages généraux.
+ *
+ * « Fermer » ramenait toujours à la vue d'ensemble : un pilote parti d'une page ouverte
+ * la retrouvait fermée, et devait la rouvrir. Le menu rend les réglages atteignables
+ * depuis n'importe quel écran — il faut donc que le retour en fasse autant, sans quoi
+ * on gagne un aller et on perd le retour.
+ */
+let viewBeforePreferences: View | undefined
+
+/** Aller lire les réglages généraux, en retenant d'où l'on vient. */
+function openPreferences(): void {
+  if (!session || view.kind === 'preferences') return
+  viewBeforePreferences = view
+  view = { kind: 'preferences' }
+  render()
+  window.scrollTo({ top: 0 })
+}
+
+/**
  * La vue des préférences : un hôte posé tout de suite, la page dedans quand elle arrive.
  *
  * `openPreferencesPage` est l'entrée que le module désigne — c'est elle qui charge le
@@ -1841,7 +2063,12 @@ function buildPreferencesView(current: Session): HTMLElement {
 
   const token = ++preferencesToken
   const back = (): void => {
-    view = { kind: 'overview' }
+    // La page d'où l'on venait peut avoir disparu entre-temps — fichier rouvert, page
+    // supprimée : `render()` retomberait sur un rang hors bornes. La vue d'ensemble
+    // reste le refuge, mais elle n'est plus le seul retour possible.
+    const previous = viewBeforePreferences
+    viewBeforePreferences = undefined
+    view = previous !== undefined && viewExists(previous) ? previous : { kind: 'overview' }
     render()
     window.scrollTo({ top: 0 })
   }
@@ -2094,7 +2321,6 @@ function openLibrary(): void {
     })
 }
 
-libraryButton.addEventListener('click', () => openLibrary())
 
 /* --------------------------------------------------- 4. l'export partageable, en modale */
 
@@ -2279,7 +2505,12 @@ function render(): void {
     content.append(problem(
       'Fichier illisible',
       failure,
-      'Vérifiez qu’il s’agit bien d’un export XCTrack (.xcfg ou .xczfg).'
+      // L'écran d'erreur ne montre plus la zone de dépôt, et « Ouvrir un fichier » a
+      // rejoint le menu : sans cette phrase, il n'y aurait plus rien à quoi se raccrocher
+      // — le dépôt continue pourtant de fonctionner sur toute la page.
+      'Vérifiez qu’il s’agit bien d’un export XCTrack (.xcfg ou .xczfg). Vous pouvez ' +
+      'déposer un autre fichier n’importe où sur cette page, ou le choisir dans le menu ' +
+      '« Fichier », en haut à droite.'
     ))
     return
   }
@@ -2431,9 +2662,14 @@ async function loadBytes(bytes: Uint8Array, name: string): Promise<void> {
   closePagesDialog()
   closePaletteDialog()
   closeVersionDialog()
+  // Un fichier déposé sur la page n'est pas un clic : rien ne refermerait le menu resté
+  // ouvert, qui se retrouverait posé au-dessus d'une vue qu'il n'a pas ouverte.
+  menu.close()
   paletteQuery = ''
-  // Les réglages généraux affichés étaient ceux de l'autre fichier.
+  // Les réglages généraux affichés étaient ceux de l'autre fichier, et la vue retenue
+  // pour le retour désignait une page de l'autre fichier.
   if (view.kind === 'preferences') view = { kind: 'overview' }
+  viewBeforePreferences = undefined
   try {
     const container = await openContainer(bytes, name)
     const settings = readRenderSettings(container.document)

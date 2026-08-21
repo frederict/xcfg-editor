@@ -156,19 +156,24 @@ describe('assemblage — toute boîte qui déborde garde sa fermeture atteignabl
   })
 })
 
-describe('assemblage — les deux lectures du fichier sont dans le bandeau du fichier', () => {
-  it('le bandeau porte une zone d’actions', () => {
-    // Le bandeau décrit déjà ce que le fichier dit de lui-même : les deux lectures qui le
-    // prolongent y sont, plutôt que dans une barre de tête qui parle de tout autre chose.
-    expect(read('src/ui/app.css')).toContain('.meta__actions {')
-    expect(main).toContain("el('div', 'meta__actions')")
+describe('assemblage — les deux lectures du fichier sont atteignables partout', () => {
+  it('elles ont quitté le bandeau du fichier, que seule la vue d’ensemble affiche', () => {
+    // Le bandeau décrit bien ce que le fichier dit de lui-même — mais il ne paraît que
+    // dans la vue d'ensemble : depuis une page ouverte, les deux lectures étaient
+    // introuvables. Le menu « Fichier », lui, est de tous les écrans.
+    expect(read('src/ui/app.css')).not.toContain('.meta__actions {')
+    expect(main).not.toContain("el('div', 'meta__actions')")
   })
 
-  it('la bibliothèque, elle, reste dans la barre de tête et sans fichier ouvert', () => {
+  it('la bibliothèque est du menu, et n’y est jamais éteinte', () => {
     // C'est la seule commande qui a un sens quand rien n'est ouvert : on y vient pour
-    // reprendre une configuration rangée.
-    expect(main).toMatch(/const libraryButton = el\('button', 'btn', 'Bibliothèque'\)/)
+    // reprendre une configuration rangée. Les deux lectures, elles, s'éteignent sans
+    // fichier — elles n'auraient rien à lire.
+    expect(main).toMatch(/const libraryButton = menu\.add\(\s*\n\s*'Bibliothèque…'/)
     expect(main).not.toMatch(/libraryButton\.hidden\s*=/)
+    expect(main).not.toMatch(/libraryButton\.disabled = !readable/)
+    expect(main).toContain('preferencesItem.disabled = !readable')
+    expect(main).toContain('versionItem.disabled = !readable')
   })
 })
 
@@ -326,6 +331,129 @@ describe('assemblage — l’accueil dit que l’outil modifie', () => {
 
   it('le badge de mode ne paraît que dans le mode qu’il nomme', () => {
     expect(main).toContain("const brandRole = el('span', 'brand__role', 'édition')")
-    expect(main).toContain('brandRole.hidden = !editMode')
+    // Et seulement sur un écran où ce mode veut dire quelque chose : les réglages
+    // généraux ne montrent aucune page et n'offrent ni annulation ni sortie.
+    expect(main).toContain('brandRole.hidden = !editMode || !editable')
+  })
+})
+
+describe('assemblage — la barre de tête garde le fréquent et range le reste', () => {
+  const barre = main.slice(
+    main.indexOf("const actions = el('div', 'app-bar__actions')"),
+    main.indexOf("const content = el('main', 'content')")
+  )
+
+  it('la barre ne porte que le fréquent et ce qui dit l’état du document', () => {
+    // Nom du fichier, annuler/rétablir, l'interrupteur de mode, le menu, enregistrer.
+    // Rien d'autre : six commandes passaient sur deux lignes sous 1100 px.
+    expect(barre).toContain(
+      'fileName, undoButton, redoButton, editToggle, menu.root, fileInput, exportButton'
+    )
+  })
+
+  it('le bouton d’enregistrement reste dans la barre, avec son changement d’intitulé', () => {
+    // C'est le seul signal visible qu'un travail est en cours : il ne peut pas se cacher.
+    expect(main).toContain(
+      "exportButton.textContent = modified ? 'Enregistrer les modifications' : 'Enregistrer une copie'"
+    )
+    expect(barre).toContain('exportButton')
+  })
+
+  it('les quatre commandes rangées sont celles qui servent une fois par session', () => {
+    const menu = main.slice(main.indexOf("const menu = buildMenu('Fichier')"), main.indexOf("const bar = el('header', 'app-bar')"))
+    for (const entry of [
+      "'Ouvrir un fichier…'", "'Bibliothèque…'", "'Réglages généraux'",
+      "'Version et compatibilité…'"
+    ]) expect(menu).toContain(entry)
+  })
+
+  it('les deux lectures ne sont plus prisonnières de la vue d’ensemble', () => {
+    // Elles vivaient dans le bandeau du fichier, que seule la vue d'ensemble affiche.
+    const meta = main.slice(main.indexOf('function metaStrip('), main.indexOf('ATTENTION_KINDS'))
+    expect(meta).not.toContain('preferencesButton')
+    expect(meta).not.toContain('versionButton')
+    expect(main).toContain('function openPreferences(): void')
+  })
+
+  it('« Fermer » rend la vue d’où l’on venait', () => {
+    // Sinon on gagne un aller et on perd le retour : quatre gestes pour un aller-retour.
+    expect(main).toContain('let viewBeforePreferences: View | undefined')
+    expect(main).toContain('viewBeforePreferences = view')
+    expect(main).toMatch(/view = previous !== undefined && viewExists\(previous\) \? previous : \{ kind: 'overview' \}/)
+    // Un fichier rouvert n'a plus les pages de l'ancien : le retour retenu s'oublie.
+    expect(main).toMatch(/if \(view\.kind === 'preferences'\) view = \{ kind: 'overview' \}\s*\n\s*viewBeforePreferences = undefined/)
+  })
+
+  it('l’écran d’erreur dit encore où déposer un autre fichier', () => {
+    // « Ouvrir un fichier » a rejoint le menu, et cet écran n'a pas de zone de dépôt :
+    // sans la phrase, il ne resterait rien à quoi se raccrocher.
+    const echec = main.slice(main.indexOf("'Fichier illisible'"), main.indexOf("'Fichier illisible'") + 700)
+    expect(echec).toContain('n’importe où sur cette page')
+    expect(echec).toContain('« Fichier »')
+  })
+
+  it('l’accueil dit où sont rangées les configurations, et il dit vrai', () => {
+    const landing = main.slice(main.indexOf('function landing()'), main.indexOf('function problem('))
+    expect(landing).toContain('dans le menu « Fichier »')
+  })
+})
+
+describe('assemblage — le menu s’ouvre au clavier et ne retient personne', () => {
+  const menu = main.slice(
+    main.indexOf('function buildMenu(label: string): Menu'),
+    main.indexOf("const menu = buildMenu('Fichier')")
+  )
+
+  it('le bouton annonce ce qu’il ouvre, et la liste ce qu’elle est', () => {
+    expect(menu).toContain("button.setAttribute('aria-haspopup', 'menu')")
+    expect(menu).toContain("button.setAttribute('aria-expanded', 'false')")
+    expect(menu).toContain("list.setAttribute('role', 'menu')")
+    expect(menu).toContain("item.setAttribute('role', 'menuitem')")
+  })
+
+  it('les flèches parcourent les entrées avec un tabindex glissant', () => {
+    expect(menu).toContain('item.tabIndex = rank === wrapped ? 0 : -1')
+    for (const key of ['ArrowDown', 'ArrowUp', 'Home', 'End']) expect(menu).toContain(key)
+  })
+
+  it('Échap referme et rend le focus au bouton', () => {
+    expect(menu).toMatch(/event\.key === 'Escape'[\s\S]{0,160}close\(true\)/)
+  })
+
+  it('le focus n’est pas piégé : en sortir referme', () => {
+    // Tabulation comme clic ailleurs. C'est la différence entre un menu et un piège.
+    expect(menu).toContain("root.addEventListener('focusout'")
+    expect(menu).toContain("document.addEventListener('pointerdown'")
+  })
+
+  it('un fichier déposé referme le menu', () => {
+    // Un dépôt n'est pas un clic : ni `pointerdown` ni `focusout` ne le verraient, et le
+    // menu resterait posé au-dessus d'une vue qu'il n'a pas ouverte.
+    expect(main).toMatch(/closeVersionDialog\(\)\s*\n(\s*\/\/[^\n]*\n)*\s*menu\.close\(\)/)
+  })
+
+  it('une entrée éteinte ne prend pas le focus', () => {
+    expect(menu).toContain('.filter((item) => !item.hidden && !item.disabled)')
+  })
+
+  it('les cibles du menu et les deux flèches passent les 24 px', () => {
+    const css = read('src/ui/app.css')
+    expect(css).toMatch(/\.menu__item \{[^}]*min-height: 34px/)
+    expect(css).toMatch(/\.btn--icon \{[^}]*width: 30px/)
+    expect(css).toMatch(/\.btn--icon \{[^}]*height: 30px/)
+  })
+
+  it('les deux flèches portent une phrase entière comme nom accessible', () => {
+    // Le bouton ne montre qu'un dessin : sans `aria-label`, un lecteur d'écran
+    // n'annoncerait que « bouton ».
+    expect(main).toContain("undoButton.setAttribute('aria-label', undoName)")
+    expect(main).toContain("redoButton.setAttribute('aria-label', redoName)")
+    expect(main).toContain("svg.setAttribute('aria-hidden', 'true')")
+  })
+
+  it('le menu se pose au-dessus de la page, jamais à côté', () => {
+    // Rien ne partage la largeur avec le rendu d'une page, pas même un menu.
+    const css = read('src/ui/app.css')
+    expect(css).toMatch(/\.menu__list \{[^}]*position: absolute/)
   })
 })

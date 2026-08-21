@@ -107,6 +107,21 @@ body {
 .btn--ghost { border-color: transparent; color: var(--app-ink-soft); padding-inline: 0.35rem; }
 .btn--ghost:hover:not(:disabled) { color: var(--app-ink); border-color: transparent; }
 
+/*
+ * Un bouton qui ne porte qu'un dessin. Carré, 30 px de côté : au-dessus des 24 px de
+ * cible minimale recommandée, et cadré comme les autres — c'est ce cadre qui le fait
+ * lire comme un bouton plutôt que comme une légende, y compris quand il est éteint.
+ * Son nom accessible est posé en `aria-label` : le dessin, lui, est `aria-hidden`.
+ */
+.btn--icon {
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+}
+
+.btn__glyph { width: 18px; height: 18px; display: block; }
+
 /* --------------------------------------------------------------------- barre de tête */
 
 .app-bar {
@@ -136,15 +151,78 @@ body {
 
 .app-bar__actions { display: flex; align-items: center; gap: 0.6rem; }
 
+/*
+ * Le nom du fichier cède la place aux commandes plutôt que de pousser la barre sur deux
+ * lignes. `min-width: 0` autorise le rétrécissement dans une ligne flexible ; l'ellipse
+ * fait le reste, et le nom entier reste lisible en infobulle.
+ */
 .app-bar__file {
   font-family: var(--font-data);
   font-size: 12px;
   color: var(--app-ink-soft);
-  max-width: 40ch;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 24ch;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* ------------------------------------------------- menu des commandes secondaires */
+
+/*
+ * Le seul menu déroulant de l'application. Il se pose au-dessus de la page — jamais à
+ * côté : rien ne partage la largeur avec le rendu d'une page, pas même un menu.
+ */
+.menu { position: relative; display: flex; }
+
+/* Le chevron est dessiné, pas écrit : aucune police à supposer, et rien à annoncer. */
+.menu__chevron {
+  width: 0;
+  height: 0;
+  margin-left: 0.45rem;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid currentColor;
+}
+
+.menu__button[aria-expanded='true'] { border-color: var(--app-ink-soft); }
+.menu__button[aria-expanded='true'] .menu__chevron { transform: rotate(180deg); }
+
+.menu__list {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  min-width: 15rem;
+  display: flex;
+  flex-direction: column;
+  padding: 0.3rem;
+  background: var(--app-panel);
+  border: 1px solid var(--app-line-strong);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.22);
+}
+
+/* 34 px de haut : au-dessus des 24 px de cible minimale, et confortable au doigt. */
+.menu__item {
+  display: flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0.35rem 0.7rem;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--app-ink);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.menu__item:hover:not(:disabled) { background: var(--app-bg); }
+.menu__item:disabled { opacity: 0.4; cursor: default; }
 
 .content {
   width: 100%;
@@ -2506,23 +2584,6 @@ body.is-dragging .veil {
  * qui s'ouvrent par-dessus une page sont donc des **modales** ; le quatrième — les
  * réglages généraux — est une **vue**, qui ne montre aucune page.
  */
-
-/* -------------------------------------------------- les deux lectures du bandeau fichier */
-
-/*
- * Les deux commandes rejoignent le bandeau qui décrit déjà le fichier — format, appareil
- * déclaré, langue des libellés. C'est le même sujet : ce que ce fichier-ci contient. Le
- * `margin-left: auto` les pousse au bout de la ligne ; sur une fenêtre étroite, le
- * `flex-wrap` du bandeau les fait passer dessous, entières.
- */
-.meta__actions {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-  margin-left: auto;
-  padding: 0.2rem 0;
-}
 
 /* La phrase de rappel de la page d'accueil : la bibliothèque existe sans fichier ouvert. */
 .landing__note {
