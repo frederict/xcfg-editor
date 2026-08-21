@@ -856,18 +856,50 @@ describe('une clé absente reste absente tant qu’on ne l’a pas demandée', (
     expect(row.dataset.state).toBe('absent')
     expect(row.querySelector('input, select')).toBeNull()
 
-    // La valeur que XCTrack appliquera est écrite à la place de la valeur, en retrait —
-    // et la marque d'état continue de dire que la clé n'est pas dans le fichier.
+    // La valeur d'usine est écrite à la place de la valeur, en retrait — et la marque
+    // d'état continue de dire que la clé n'est pas dans le fichier.
     const implicite = row.querySelector<HTMLElement>('.prefs__implicit')
     expect(implicite?.textContent).toBe('Oui')
+    expect(implicite?.title).toContain('est la valeur d’usine de XCTrack, pas une valeur réglée')
+    expect(implicite?.title).toContain('votre appareil garde le réglage qu’il a déjà')
     expect(row.querySelector('.prefs__state')?.textContent).toBe('absente du fichier')
 
     const button = controlOf<HTMLButtonElement>(page, 'Tweak.VolumeUp', 'button.prefs__adopt')
     expect(button.textContent).toBe('Définir cette valeur')
-    // L'infobulle dit les deux moitiés : ce que ça ne change pas, et à quoi ça sert.
-    expect(button.title).toContain('ne change donc rien à ce qu’il fait maintenant')
-    expect(button.title).toContain('une mise à jour qui la change changera votre réglage')
-    expect(button.title).toContain('figée')
+    // L'infobulle sépare les deux appareils, parce que la mesure les sépare : celui qui
+    // n'a jamais réglé cela, et celui qui l'a réglé et que l'import ne ramène pas à
+    // l'usine.
+    expect(button.title).toContain('l’écrire ne change alors rien d’immédiat')
+    expect(button.title).toContain('l’import écrira cette valeur à la place de la sienne')
+    expect(button.title).toContain('mesuré sur l’AIR³')
+  })
+
+  it('n’affirme nulle part qu’une clé absente rende le réglage à l’usine', () => {
+    // Mesuré sur l'AIR³ : `Display.Theme` retirée d'une sauvegarde, sauvegarde importée
+    // en « Remplacer tout », configuration réexportée — la clé revient à la valeur que
+    // l'appareil portait déjà (`WhiteHCTheme`), pas à celle de l'APK (`WhiteTheme`). Le
+    // témoin de la même manche (`Display.WidgetTitleSize`, 140 → 200) prouve que l'import
+    // a bien écrit le reste. L'import fusionne le bloc « preferences ».
+    //
+    // Cette page a été écrite sur la supposition inverse ; rien n'en doit rester.
+    const { page } = editable(FORMES_PRESERVEES)
+    const said = [
+      ...[...page.element.querySelectorAll<HTMLElement>('[title]')].map((node) => node.title),
+      page.element.textContent ?? ''
+    ]
+    for (const text of said) {
+      expect(text).not.toMatch(/appliquera son défaut|appliquera sa valeur d’usine/)
+      expect(text).not.toMatch(/la même valeur qu’aujourd’hui/)
+    }
+
+    // Et ce qui est mesuré est dit, sur la ligne même d'une clé absente.
+    const implicite = rowElement(page, 'Tweak.VolumeUp')
+      .querySelector<HTMLElement>('.prefs__implicit')!
+    expect(implicite.title).toContain('votre appareil garde le réglage qu’il a déjà')
+    expect(implicite.title).toContain('Mesuré sur l’AIR³')
+    // Les deux limites de la mesure, jamais gommées.
+    expect(implicite.title).toContain('« Remplacer tout »')
+    expect(implicite.title).toContain('Sur un appareil qui n’y a jamais touché')
   })
 
   it('l’écrit au défaut relevé, puis la ligne devient une ligne comme les autres', () => {
@@ -1142,12 +1174,17 @@ describe('rendre un défaut explicite, et le rendre à l’implicite', () => {
     const { page } = editable(BACKUP_2026)
     const retirer = controlOf<HTMLButtonElement>(page, 'Display.Fullscreen', '.prefs__drop')
     expect(retirer.getAttribute('aria-label')).toBe('Retirer Plein écran du fichier')
-    expect(retirer.title).toContain('la même valeur qu’aujourd’hui')
+    // Ce que l'infobulle ne dit plus, parce que la mesure l'a réfuté : que l'appareil
+    // reviendrait à sa valeur d'usine. Il garde le réglage qu'il a déjà.
+    expect(retirer.title).toContain('il ne dira plus rien de ce réglage')
+    expect(retirer.title).toContain('votre appareil garde le réglage qu’il a déjà')
+    expect(retirer.title).not.toContain('la même valeur qu’aujourd’hui')
     expect(retirer.title).toContain('suivra les mises à jour de XCTrack')
 
     const { page: neuve } = editable(FORMES_PRESERVEES)
     const definir = controlOf<HTMLButtonElement>(neuve, 'Tweak.VolumeUp', '.prefs__adopt')
-    expect(definir.title).toContain('figée')
+    expect(definir.title).toContain('met le réglage à l’abri d’une mise à jour de XCTrack')
+    expect(definir.title).toContain('l’import écrira cette valeur à la place de la sienne')
   })
 
   it('remet les comptes d’accord après un retrait', () => {
@@ -1422,7 +1459,7 @@ describe('rétablir la valeur d’usine d’un réglage que le pilote a changé'
     const { page } = editable(BACKUP_2026)
     const title = restoreButton(page, 'Display.Theme').title
     expect(title).toContain('Écrit « Display.Theme » : Blanc dans le fichier, à la place de Haut contraste blanc.')
-    expect(title).toContain('« Définir cette valeur » et « Retirer » laissent l’appareil se comporter exactement comme aujourd’hui, celui-ci non')
+    expect(title).toContain('ils ne touchent qu’un réglage que vous n’avez jamais choisi, celui-ci remplace le vôtre')
   })
 
   it('emploie le même intitulé que le panneau des gadgets, mot pour mot', () => {

@@ -17,6 +17,19 @@ en fichiers statiques, elle n'a pas de serveur à qui parler.
 
 ---
 
+## À quoi ça ressemble
+
+<!--
+  CAPTURE À PRENDRE — captures/editeur-paysage.png
+  Écran ...... l'éditeur entier, mode consultation, panneau des gadgets ouvert.
+  Fichier .... tests/fixtures/exports/2026-08-20_backup-00.xcfg
+               (fixture anonymisée — JAMAIS une configuration réelle, voir CLAUDE.md).
+  État ....... gabarit « AIR³ 7.2 », paysage, première page, aucun gadget sélectionné.
+  Refaire .... npm run dev, puis déposer le fichier ci-dessus dans la page.
+-->
+*Capture à venir : une page de la sauvegarde de test, dessinée à la géométrie d'un
+AIR³ 7.2.*
+
 ## Le problème
 
 Configurer ses pages au doigt, sur un écran de sept pouces posé sur les genoux, prend des
@@ -66,44 +79,83 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
   configuration embarque des ressources).
 - **Dessiner les pages** à la géométrie de l'instrument, sur huit gabarits d'écran
   (AIR³ 7.2, 7.3, 7.35, et cinq ratios courants), en paysage et en portrait.
-- **Signaler ce qui cloche** avant que vous ne le découvriez en vol : un gadget
-  entièrement recouvert par un autre et donc inatteignable au clic, une page qui ne
-  s'affichera jamais, un gadget trop petit pour être lu à bout de bras, un réglage écrit
-  par une version antérieure de XCTrack. L'outil **signale, il ne corrige jamais tout
-  seul**.
+- **Signaler ce qui cloche** avant que vous ne le découvriez en vol. Sept règles, et
+  chacune dit ce qu'elle vaut : un gadget entièrement recouvert par un autre et donc
+  impossible à toucher ; une page qui ne s'affichera jamais ; une page d'assistant de
+  thermique que rien n'atteint automatiquement ; un gadget **peut-être** trop petit pour
+  être lu à bout de bras — le seuil vient d'une norme et s'applique à la taille physique
+  réelle de la dalle, mais le rapport entre hauteur du gadget et hauteur du texte reste
+  une hypothèse assumée, faute d'une campagne de mesure sur l'appareil ; deux cartes
+  routières sur la même page ; un gadget Pro dans un fichier qui ne déclare pas de
+  licence — celui-là est **une question, pas un constat** : ce que XCTrack en fait n'a
+  jamais été vérifié sur l'appareil, et la règle l'écrit ; et un réglage écrit par une
+  version antérieure de XCTrack. L'outil **signale, il ne corrige jamais tout seul**.
 - **Éditer** : déplacer, redimensionner, ajouter, supprimer et réordonner des gadgets ;
   régler leurs options ; gérer les pages (insérer, dupliquer, supprimer, réordonner).
   Annuler / rétablir.
-- **Régler les réglages généraux** — les 216 préférences qui vivent hors des pages :
+- **Régler les réglages généraux** — les 217 préférences qui vivent hors des pages :
   unités, touches, capteurs, son, espaces aériens. Dans l'arborescence des 23 lignes du
   menu de l'instrument. En consultation, **aucun contrôle de formulaire n'est
   construit** ; en édition, 77 des 93 lignes présentées se règlent — case, liste,
   curseur, nombre, texte, couleur —, avec annulation et rétablissement comme le reste.
   Les seize autres, la valeur JSON imbriquée et tout ce que la page ne sait pas nommer
   restent affichés **sans contrôle**, chacun disant pourquoi.
-- **Rendre explicite un réglage qui ne l'est pas** — et l'inverse. Une clé absente du
-  fichier vaut son défaut de façon implicite : les réglages généraux **comme le panneau
-  d'un gadget** montrent cette valeur et proposent de l'écrire d'un clic. Cela ne change
-  rien à ce que fait l'appareil aujourd'hui ; ce que ça change est pour plus tard — tant
-  que la clé est absente, une mise à jour de XCTrack qui change ce défaut change votre
-  réglage sans prévenir, alors qu'une valeur écrite est figée. Le geste inverse existe
-  dans les réglages généraux : une valeur écrite qui vaut déjà le défaut peut être
-  retirée du fichier. Aucun bouton là où le défaut n'est pas relevé, ni là où le relevé
-  n'en donne qu'une valeur composée (`{"theme": …, "terrain": …}`) — écrire une valeur
-  devinée serait pire que ne rien proposer.
-- **Diagnostiquer l'écart de version** : choisir la version de XCTrack visée, et voir ce
-  que le fichier porte qu'elle ne lit plus, ou ce qu'elle attend et qu'il n'a pas. Le
-  diagnostic **constate**, et distingue soigneusement ce qui est mesuré de ce qui ne
-  l'est pas : un réglage retiré par XCTrack, un trou de notre propre relevé, et un
+- **Écrire, retirer, rétablir : trois gestes autour de la valeur d'usine**, et ils ne se
+  valent pas. Une clé absente du fichier vaut sa valeur d'usine de façon implicite ; une
+  clé écrite fige cette valeur. D'où :
+  - **« Définir cette valeur »** écrit dans le fichier une valeur d'usine qui n'y est pas.
+    Sur les deux écrans : le panneau d'un gadget **comme** les réglages généraux. Cela ne
+    change rien à ce que fait l'appareil aujourd'hui ; ce que ça change est pour plus
+    tard — tant que la clé est absente, une mise à jour de XCTrack qui change cette valeur
+    d'usine change votre réglage sans prévenir, alors qu'une valeur écrite est figée.
+  - **« Retirer »** fait l'inverse : une valeur écrite qui vaut **déjà** la valeur d'usine
+    retourne à l'implicite. Dans les réglages généraux, et sur ce seul état — retirer une
+    valeur que vous avez choisie changerait le comportement de l'appareil, ce qu'un bouton
+    discret ne doit pas faire d'un clic. Neutre, lui aussi.
+  - **« Rétablir la valeur d'usine »** remplace une valeur que vous avez choisie par celle
+    qu'un XCTrack neuf applique. Sur les deux écrans également. **C'est le seul des trois
+    qui change ce que fait l'appareil en vol** : il ne se révèle donc pas au survol, il
+    prend sa propre ligne sous le réglage, montre les deux valeurs en présence *avant* le
+    clic, et dit sur quelle version de XCTrack la valeur d'usine a été relevée dès que ce
+    n'est pas celle du fichier. Il **écrit** la valeur d'usine plutôt que d'effacer la
+    clé : la ligne passe alors à l'état d'usine, d'où « Retirer » devient offert. Deux
+    clics délibérés, deux effets séparés.
+
+  Aucun bouton là où la valeur d'usine n'est pas relevée, là où XCTrack la calcule au
+  démarrage, là où il en publie deux qui se contredisent (`Sensors.ManualQnh` : 1013 et
+  1013.25), ni là où le relevé n'en donne qu'une valeur composée
+  (`{"theme": …, "terrain": …}`) — écrire une valeur devinée serait pire que ne rien
+  proposer.
+- **Diagnostiquer l'écart de version** : vous choisissez votre version de XCTrack **par
+  son nom** — celui qu'affiche votre appareil, « 1.0.3-beta » — parmi les 46 entrées que
+  notre relevé distingue, et l'outil part de celle que le fichier déclare lui-même, déjà
+  présélectionnée. Il montre alors ce que le fichier porte que cette version ne lit plus,
+  et ce qu'elle attend et qu'il n'a pas. Comme plusieurs versions acceptent souvent
+  exactement les mêmes réglages, l'outil **nomme celles que son relevé ne sait pas
+  distinguer de la vôtre** : le choix entre deux voisines est sans effet, et il vaut mieux
+  le dire que le laisser deviner. Le diagnostic **constate** — huit familles d'écart,
+  chacune avec sa conduite à tenir — et distingue soigneusement ce qui est mesuré de ce
+  qui ne l'est pas : un réglage retiré par XCTrack, un trou de notre propre relevé, et un
   réglage sur lequel nous sommes aveugles n'appellent pas la même conduite.
 - **Enlever les réglages qu'une ancienne version a laissés** — et rien d'autre. XCTrack
   conserve les réglages qu'il ne connaît plus : une sauvegarde de 2026 traîne encore des
-  interrupteurs de 2023. L'outil propose de les retirer **uniquement** lorsqu'un fichier
-  réel du corpus atteste le reliquat ; un doute, un trou de relevé ou une clé que notre
-  extraction n'a jamais vue ne sont **jamais** proposés à la suppression. Ne rien enlever
-  ne casse rien, enlever à tort casse une configuration de vol : tout le tri est bâti sur
-  ce déséquilibre. Vous voyez la liste, vous décochez ce que vous gardez, vous agissez
-  d'un geste explicite, et vous pouvez revenir en arrière juste après.
+  interrupteurs de 2023. C'est le seul endroit où l'outil propose **de lui-même** de
+  retirer quelque chose du document, et le tri est volontairement étroit : un réglage
+  n'est proposé que lorsqu'un fichier réel du corpus atteste le reliquat. Un trou de notre
+  relevé — le réglage existait, c'est notre extraction qui l'a manqué — ou une clé que
+  cette extraction n'a jamais vue ne sont **jamais** proposés ; et même un reliquat
+  attesté dont le relevé ne sait pas dire depuis quand il ne sert plus reste en place, car
+  on ne propose pas de supprimer ce qu'on ne saurait pas expliquer. Ne rien enlever ne
+  casse rien, enlever à tort casse une configuration de vol : tout le tri est bâti sur ce
+  déséquilibre.
+
+  Mesuré sur la sauvegarde de référence du corpus
+  (`tests/fixtures/exports/2026-08-20_backup-00.xcfg`, écrite par XCTrack 1.0.3-beta) :
+  **9 réglages proposés, sur 4 gadgets, pour 1 059 réglages de gadgets examinés.** Vous
+  voyez la liste — chaque réglage avec la dernière version de XCTrack qui le lisait encore
+  —, vous décochez ce que vous préférez garder, vous agissez d'un geste explicite, et vous
+  pouvez revenir en arrière juste après : remis, le fichier ressort **à l'octet près**. Le
+  nettoyage se trouve sous le diagnostic de version, et seulement en mode édition.
 - **Dire ce que votre fichier révèle de vous** avant que vous ne le partagiez. Un export
   `backup` porte votre nom, votre voile, vos capteurs appairés, vos fichiers de waypoints
   — jusqu'au nom de la compétition à laquelle vous participez. Au moment d'enregistrer,
@@ -117,7 +169,58 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
   octets rangés sont ceux de votre fichier, vérifiés par empreinte à la relecture. Rien
   n'est envoyé nulle part.
 - **Parler votre langue** : les noms et descriptions des gadgets sont ceux de XCTrack
-  lui-même, extraits de l'application, en 33 langues.
+  lui-même, extraits de l'application — 33 langues pour les gadgets, 34 pour leurs
+  options, 35 pour les libellés des réglages généraux. Ces trois chiffres ne sont pas un
+  choix de notre part : c'est ce que l'APK porte.
+
+### En images
+
+*Trois écrans restent à montrer. Les captures se font sur les fixtures anonymisées de
+`tests/fixtures/`, jamais sur une configuration réelle — une carte affichée peut révéler
+un domicile au bâtiment près.*
+
+<!--
+  CAPTURE À PRENDRE — captures/panneau-gadget.png
+  Écran ...... l'éditeur en mode édition, panneau de réglages d'un gadget déplié.
+  Fichier .... tests/fixtures/exports/2026-08-20_backup-00.xcfg
+  État ....... la boussole de la première page paysage (13e gadget de la page, la seule
+               du corpus qui porte `windStyle`) : elle offre quatre lignes « Rétablir la
+               valeur d'usine », dont celle de `windStyle`, les deux valeurs en présence
+               lisibles. Faire tenir dans le même cadre le bloc des clés absentes de fin
+               de panneau, avec son bouton « Définir cette valeur ».
+  Refaire .... npm run dev, déposer le fichier, passer en « Modifier », choisir la
+               boussole dans la liste des gadgets.
+-->
+*Capture à venir : le panneau d'un gadget, ses trois gestes de valeur d'usine.*
+
+<!--
+  CAPTURE À PRENDRE — captures/reglages-generaux.png
+  Écran ...... la page « Réglages généraux », mode édition.
+  Fichier .... tests/fixtures/exports/2026-08-20_backup-00.xcfg
+  État ....... entrée de menu « Affichage » ouverte ; y faire tenir dans le même cadre
+               une ligne réglée (« Rétablir la valeur d'usine »), une ligne absente du
+               fichier (« Définir cette valeur ») et une ligne qui vaut déjà la valeur
+               d'usine (« Retirer »). Sur ce fichier, 23 lignes portent le geste
+               « Rétablir » : il y a de quoi choisir.
+  Refaire .... npm run dev, déposer le fichier, « Modifier les réglages ».
+-->
+*Capture à venir : les réglages généraux, dans l'arborescence du menu de l'instrument.*
+
+<!--
+  CAPTURE À PRENDRE — captures/version-et-nettoyage.png
+  Écran ...... la modale « Version visée et compatibilité », nettoyage déplié.
+  Fichier .... tests/fixtures/exports/2026-08-20_backup-00.xcfg
+  État ....... version présélectionnée d'après le fichier (1.0.3-beta), la phrase des
+               versions indistinguables visible, et la section « Enlever ce qu'une
+               ancienne version a laissé » ouverte sur ses 9 réglages / 4 gadgets.
+  Refaire .... banc d'essai dédié, qui sert exactement à cela :
+                   npm run dev -- --port 5178
+                   http://localhost:5178/src/ui/versionDiagnostic.demo.html
+               (le nettoyage n'y apparaît que parce que la page joue l'hôte ; rien
+               n'est réécrit sur le disque). Dans l'éditeur : « Modifier », puis
+               « Version et compatibilité… ».
+-->
+*Capture à venir : le choix de version, le diagnostic, et le nettoyage qu'il ouvre.*
 
 ## Ce qu'il ne sait pas faire, et ce qui reste incertain
 
@@ -150,13 +253,37 @@ Autant le dire tout de suite.
   XCTrack remplit la liste en code, n'ont qu'un champ texte plutôt qu'une liste inventée.
 - **Aucun aperçu d'image dans la bibliothèque.** La place est réservée dans les données,
   la vignette est un cadre vide qui le dit.
+- **L'interface est en français, et en français seulement.** Un socle de traduction en
+  cinq langues (français, anglais, néerlandais, allemand, espagnol) existe dans le code —
+  `src/i18n/` —, mais **aucun écran ne s'en sert à ce jour**. Les libellés de XCTrack,
+  eux, suivent déjà votre langue : ce sont deux choses distinctes, et les confondre
+  ferait lire à un pilote tchèque des noms de gadgets en anglais alors que son instrument
+  les lui montre en tchèque.
+
+## Donner votre avis, signaler ce qui cloche
+
+L'outil est écrit pour des pilotes, et il ne s'améliore que par ce qu'ils en disent.
+**Les retours passent par les issues GitHub :**
+
+**<https://github.com/frederict/xcfg-editor/issues>**
+
+Tout est utile : un gadget mal dessiné, un réglage que l'éditeur ne montre pas, un mot
+obscur, une version de XCTrack absente de la liste, un fichier qui refuse de s'ouvrir.
+Dire quel appareil, quelle version de XCTrack et ce que vous attendiez fait gagner
+beaucoup de temps.
+
+⚠️ **N'attachez jamais votre propre `.xcfg`.** Il porte votre nom, vos capteurs, vos
+fichiers de waypoints, parfois vos coordonnées — et une issue GitHub est publique. Si un
+fichier est indispensable pour comprendre le problème, produisez-en d'abord une **version
+partageable** avec l'outil lui-même (bouton d'enregistrement), et relisez l'inventaire des
+remplacements qu'il vous montre avant d'envoyer quoi que ce soit.
 
 ## Installer et lancer
 
 Il faut Node.js 22 ou plus récent.
 
 ```bash
-git clone <l'URL du dépôt>
+git clone https://github.com/frederict/xcfg-editor.git
 cd xcfg-editor
 npm ci
 npm run dev          # http://localhost:5173
@@ -196,10 +323,20 @@ Quelques conventions, qui expliquent la forme du code :
 - **Les tests éprouvent des propriétés, pas des captures d'écran de sortie.** Un test qui
   compare un objet à lui-même est vert quoi qu'il arrive et n'apprend rien : plusieurs
   tests posent explicitement des garde-fous contre ce piège.
+- **Trois bancs d'essai** montent un écran hors de l'éditeur, sur les fixtures, et c'est
+  là que se refont les captures : `src/ui/versionDiagnostic.demo.html` (choix de version,
+  diagnostic, nettoyage), `src/ui/sharingDialog.demo.html` (l'enregistrement et sa version
+  partageable) et `src/ui/libraryPanel.demo.html` (la bibliothèque). `npm run dev` les
+  sert ; `vite build` ne les emporte pas dans `dist/`.
+- **Les captures se refont depuis une recette écrite.** Chaque emplacement de capture de
+  ce fichier porte, en commentaire HTML juste au-dessus, le fichier de `tests/fixtures/` à
+  ouvrir et l'état exact à obtenir. Une capture qu'on ne sait pas refaire vieillit en
+  place — et une capture prise sur une configuration réelle peut révéler un domicile au
+  bâtiment près.
 
 Ces choix reposent sur des relevés faits sur un AIR³ 7.2 réel : corpus de fichiers
 observés sur quatre ans et huit versions de XCTrack, rendu constaté en vol, planche des
-75 widgets capturée page par page. **Ces relevés ne sont pas publiés** — ils contiennent
+75 gadgets capturée page par page. **Ces relevés ne sont pas publiés** — ils contiennent
 des configurations de vol et des positions personnelles. Ce qu'ils ont établi est en
 revanche présent ici, dans les commentaires du code et dans les données extraites de
 l'APK, et les tests le vérifient.
@@ -209,7 +346,7 @@ l'APK, et les tests le vérifient.
 Les fichiers de `tests/fixtures/exports/` sont **dérivés de configurations de vol
 réelles**, puis anonymisés : nom du pilote, voile, coordonnées GPS, points de virage et
 noms de fichiers de waypoints ont été remplacés par des valeurs d'exemple. Le `layout` est
-conservé à l'octet près — c'est ce qui donne au corpus ses 105 widgets, ses 41 classes et
+conservé à l'octet près — c'est ce qui donne au corpus ses 105 gadgets, ses 41 classes et
 sa géométrie réelle, qu'aucun fichier écrit à la main n'égalerait.
 
 `tests/fixtures/deriver-exemples.py` dit ligne par ligne ce qui a été remplacé et ce qui
@@ -218,7 +355,7 @@ suite.
 
 ⚠️ **Si vous contribuez, ne versionnez jamais un `.xcfg` exporté de votre propre
 instrument.** Même un export `pages` peut porter du texte que vous avez écrit : le titre
-personnalisé d'un widget, le contenu d'un `WFreeText`, et jusqu'au nom et au numéro de
+personnalisé d'un gadget, le contenu d'un `WFreeText`, et jusqu'au nom et au numéro de
 téléphone rangés dans un bouton d'appel. Le format d'export ne garantit rien à lui seul.
 
 ### Régénérer la base des versions de XCTrack
@@ -251,7 +388,7 @@ consigne au lieu de le corriger en douce.
 
 Ce n'est pas une précaution théorique, et l'inverse ne l'est pas non plus : **XCTrack
 conserve les clés qu'il ne connaît plus**. Dans une même sauvegarde de 1.0.3, sur cinq
-widgets cartographiques, deux portent `mapWidget_showTerrain` et trois portent
+gadgets cartographiques, deux portent `mapWidget_showTerrain` et trois portent
 `mapWidget_panningTimeout` — jamais les deux. Les seconds ont été refaits depuis le
 remplacement, les premiers traînent un reliquat vieux de deux ans.
 
@@ -291,8 +428,8 @@ Deux sources sont lues séparément, puis croisées :
 
 - **les écrans de réglages** (`res/xml/preferences_*.xml`), où la clé et son libellé sont
   deux attributs du *même* élément — l'appariement le plus sûr du projet ;
-- **la classe de configuration** dans le bytecode, qui donne le type de la valeur, son
-  défaut, et la **portée** : `PUBLIC` (écrite dans un export), `INTERNAL` (locale à
+- **la classe de configuration** dans le bytecode, qui donne le type de la valeur, sa
+  valeur d'usine, et la **portée** : `PUBLIC` (écrite dans un export), `INTERNAL` (locale à
   l'appareil), `SECURE` (chiffrée).
 
 Le croisement se vérifie : sur XCTrack 1.0.3-beta5, les 136 clés `PUBLIC` du bytecode sont
@@ -368,9 +505,9 @@ mêmes relevés, par un troisième outil sans réseau :
 python3 tools/build-preference-database.py --surveys relevés/ --corpus mes-exports/
 ```
 
-Cinquante-cinq relevés, quarante-sept inventaires distincts, **vingt-deux paliers**, 278
-clés sur toute l'histoire pour 216 au dernier palier. Mêmes trois tables que du côté des
-widgets, et le corpus les remplit dans les deux sens : `Sensors.ExtTypes`, lue jusqu'à
+Cinquante-cinq relevés, quarante-sept versions distinctes, **vingt-deux inventaires** —
+les paliers —, 278 clés sur toute l'histoire pour 216 au dernier palier. Mêmes trois
+tables que du côté des gadgets, et le corpus les remplit dans les deux sens : `Sensors.ExtTypes`, lue jusqu'à
 0.9.8.7 et jamais après, traîne encore dans un fichier de 0.9.9.1 — c'est un **reliquat**,
 nettoyable ; `Sound.AcousticVario.CustomProfile`, qu'aucun relevé ne voit avant 1.0.0,
 figure dans des fichiers de 2023 à 2025 — c'est un **trou du relevé**, à ne jamais

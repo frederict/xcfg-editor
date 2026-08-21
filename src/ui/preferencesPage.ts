@@ -98,36 +98,43 @@ import {
  *   2025 en porte 27. La page dit « je ne sais pas » : jamais « supprimable », jamais
  *   « inconnue donc ignorée ».
  *
- * ## Absente n'est pas « réglée au défaut » — et l'écriture ne le décide pas en silence
+ * ## Une clé absente ne dit rien — et surtout pas « valeur d'usine »
  *
- * Une clé absente du fichier signifie « XCTrack appliquera son défaut » — ce n'est pas la
- * même chose que « réglée à cette valeur ». Les deux ont leur état, et le compte les
- * sépare. Voir `PreferenceState`.
+ * Une clé absente du fichier n'est pas une clé réglée à la valeur d'usine. Les deux ont
+ * leur état, et le compte les sépare. Voir `PreferenceState` et `ABSENT_KEY_ON_IMPORT`.
  *
  * **Décision de cette page : une clé absente le reste tant que le pilote ne demande pas
- * explicitement le contraire.** Elle ne reçoit aucun contrôle — un champ prérempli au
- * défaut inviterait à « confirmer » une valeur, et le premier geste maladroit écrirait
- * une ligne de plus dans le fichier sans rien changer au comportement de l'appareil.
- * À la place, la ligne montre **la valeur que XCTrack appliquera** et un bouton
- * « Définir cette valeur » qui l'écrit telle quelle. Une fois la clé écrite, la ligne
- * devient une ligne comme les autres.
+ * explicitement le contraire.** Elle ne reçoit aucun contrôle — un champ prérempli à la
+ * valeur d'usine inviterait à « confirmer » une valeur, et le premier geste maladroit
+ * écrirait une ligne de plus dans le fichier. À la place, la ligne montre **la valeur
+ * d'usine de XCTrack**, en retrait, et un bouton « Définir cette valeur » qui l'écrit
+ * telle quelle. Une fois la clé écrite, la ligne devient une ligne comme les autres.
  *
- * Ce bouton n'apparaît que si le catalogue relève un défaut **écrivable** : les huit
- * `Unit.*` et les autres défauts calculés au démarrage (`defaultSource: 'runtime'`) n'en
- * ont pas, et la ligne le dit plutôt que d'inventer une valeur de départ.
+ * Ce bouton n'apparaît que si le catalogue relève une valeur d'usine **inscriptible** :
+ * les huit `Unit.*` et les autres valeurs calculées au démarrage
+ * (`defaultSource: 'runtime'`) n'en ont pas, et la ligne le dit plutôt que d'inventer.
  *
  * ## Implicite, explicite, et ce que ça change vraiment
  *
- * Rendre un défaut explicite ne change **rien** au comportement d'aujourd'hui. Son
- * intérêt est entièrement dans l'avenir, et le pilote ne peut pas le deviner : tant que
- * la clé est absente, l'appareil suit le défaut de **la version de XCTrack installée**,
- * et une mise à jour qui change ce défaut change le réglage sans prévenir. Écrite, la
- * valeur est figée. Les infobulles des deux boutons disent cela, et rien d'autre.
+ * Cette page a longtemps affirmé qu'écrire ou retirer une clé ne changeait **rien** au
+ * comportement de l'appareil. C'était une supposition, et la mesure l'a réfutée :
+ * l'import fusionne le bloc `preferences` et **ne touche jamais une clé absente**
+ * (`ABSENT_KEY_ON_IMPORT`). Sur un appareil déjà réglé, écrire une clé que le fichier ne
+ * portait pas **change** ce que l'appareil applique, et la retirer ne le ramène **pas**
+ * à sa valeur d'usine.
  *
- * Le geste inverse existe : une valeur écrite **égale au défaut relevé** (état `default`)
- * porte un bouton « Retirer », qui la rend au défaut de XCTrack. Il n'est offert que sur
- * cet état-là — sur une valeur réglée, retirer la clé changerait le comportement de
- * l'appareil, et ce n'est pas ce qu'un bouton discret doit faire d'un clic.
+ * Ce que les deux gestes font vraiment :
+ *
+ * - **« Définir cette valeur »** écrit la valeur d'usine dans le fichier. Sur une
+ *   installation neuve, elle s'appliquerait de toute façon et l'écrire ne change rien
+ *   d'immédiat — cela met le réglage à l'abri d'une mise à jour de XCTrack qui changerait
+ *   sa valeur d'usine. Sur un appareil déjà réglé, elle **remplacera** le réglage en
+ *   place ;
+ * - **« Retirer »** fait taire le fichier sur ce réglage. L'appareil gardera le sien.
+ *
+ * « Retirer » n'est offert que sur l'état `default` — une valeur écrite égale à la valeur
+ * d'usine relevée. Sur une valeur réglée, faire taire le fichier priverait la sauvegarde
+ * d'un réglage délibéré, et ce n'est pas ce qu'un bouton discret doit faire d'un clic.
  *
  * ## Le troisième geste, qui n'est neutre ni pour l'appareil ni pour l'écran
  *
@@ -147,6 +154,35 @@ import {
  * `default`, d'où « Retirer » devient offert. Le pilote qui veut aller jusqu'à l'implicite
  * y va d'un second clic, et voit les deux effets séparément.
  */
+
+/**
+ * Ce qu'un import fait d'une clé absente — **mesuré sur l'AIR³**, et non plus supposé.
+ *
+ * Toute cette page a d'abord été écrite sur la supposition inverse : « une clé absente,
+ * c'est XCTrack qui applique sa valeur d'usine ». C'est faux.
+ *
+ * Protocole de la mesure : `Display.Theme` retirée d'une sauvegarde, sauvegarde importée
+ * en **« Remplacer tout »**, configuration réexportée. La clé revient à la valeur que
+ * l'appareil portait déjà (`WhiteHCTheme`), et non à la valeur d'usine de l'APK
+ * (`WhiteTheme`). Un témoin de contrôle dans la même manche — `Display.WidgetTitleSize`,
+ * 140 → 200 — prouve que l'import a bien écrit les autres préférences : sans lui, la
+ * manche n'aurait rien démontré.
+ *
+ * L'import est donc une **fusion** sur le bloc `preferences`, pas un remplacement. Une
+ * clé absente du fichier n'est jamais touchée.
+ *
+ * Deux limites, que les textes ne doivent pas gommer :
+ *
+ * - la mesure porte sur le mode **« Remplacer tout »** ; les deux autres modes d'import
+ *   ne touchent que les pages ;
+ * - le cas de l'**installation neuve** n'a pas été testé. La valeur d'usine s'y applique
+ *   nécessairement, aucune valeur antérieure n'existant — mais c'est une déduction, et
+ *   elle se dit comme telle : « un appareil qui n'y a jamais touché ».
+ */
+export const ABSENT_KEY_ON_IMPORT =
+  'À l’import (« Remplacer tout »), votre appareil garde le réglage qu’il a déjà : une ' +
+  'clé absente du fichier n’est pas touchée. Mesuré sur l’AIR³. Sur un appareil qui n’y ' +
+  'a jamais touché, c’est la valeur d’usine de XCTrack qui s’applique.'
 
 /* ------------------------------------------------------------------ le modèle de page */
 
@@ -169,12 +205,15 @@ export type PreferenceState =
    * l'écran ne disent pas la même chose. On ne choisit pas : on montre les deux.
    */
   | 'conflict'
-  /** Absente du fichier : XCTrack appliquera son défaut. Ce n'est PAS « au défaut ». */
+  /**
+   * Absente du fichier : il ne dit rien de ce réglage. Ce n'est PAS « réglée à la valeur
+   * d'usine » — à l'import, l'appareil garde le sien (`ABSENT_KEY_ON_IMPORT`).
+   */
   | 'absent'
   /**
    * Absente, et Android ne l'écrit qu'une fois réglée au moins une fois sur l'appareil
    * (les clés que la classe de configuration ne déclare pas). Son absence ne dit donc
-   * même pas quel défaut s'appliquera.
+   * rien du tout : ni ce que l'appareil applique, ni ce qu'il appliquerait neuf.
    */
   | 'unwritten'
 
@@ -800,8 +839,9 @@ export function writePreference(
 /**
  * Retire une préférence du fichier, et rend combien d'occurrences ont disparu.
  *
- * C'est l'exact inverse de l'insertion : la clé cesse d'être écrite, XCTrack appliquera
- * de nouveau son défaut. **Toutes** les occurrences partent — `removeMember` le fait, et
+ * C'est l'exact inverse de l'insertion : la clé cesse d'être écrite, et le fichier ne dit
+ * plus rien de ce réglage — à l'import, l'appareil gardera le sien
+ * (`ABSENT_KEY_ON_IMPORT`). **Toutes** les occurrences partent — `removeMember` le fait, et
  * c'est la seule postcondition prévisible après un geste de suppression ; n'en retirer
  * qu'une laisserait le réglage en place avec la valeur du doublon, sans signal.
  *
@@ -821,9 +861,9 @@ export interface PreferenceEdit {
   /** Le libellé du réglage, celui que la ligne affiche. */
   label: string
   /**
-   * `set` : une valeur remplacée. `inserted` : une clé que le fichier ne portait pas —
-   * un défaut implicite rendu explicite. `removed` : l'inverse, une clé retirée du
-   * fichier, qui rend le réglage au défaut de XCTrack.
+   * `set` : une valeur remplacée. `inserted` : une clé que le fichier ne portait pas,
+   * désormais écrite. `removed` : l'inverse, une clé retirée du fichier, qui fait taire
+   * la sauvegarde sur ce réglage.
    */
   outcome: 'set' | 'inserted' | 'removed'
   /** La valeur désormais écrite, telle qu'on la lit. Vide pour un retrait. */
@@ -1149,14 +1189,14 @@ function stateTitle(row: PreferenceRow): string {
   }
   if (row.state === 'absent') {
     return row.defaultText === undefined
-      ? 'Cette clé n’est pas dans le fichier : XCTrack appliquera sa valeur d’usine. Ce n’est pas la même chose qu’une valeur réglée.'
-      : `Cette clé n’est pas dans le fichier : XCTrack appliquera sa valeur d’usine, « ${row.defaultText} ». ` +
-        'Ce n’est pas la même chose qu’une valeur réglée à cette valeur.'
+      ? `Cette clé n’est pas dans le fichier : il ne dit rien de ce réglage. ${ABSENT_KEY_ON_IMPORT}`
+      : `Cette clé n’est pas dans le fichier : il ne dit rien de ce réglage. ` +
+        `${ABSENT_KEY_ON_IMPORT} Elle vaut « ${row.defaultText} ».`
   }
   if (row.state === 'unwritten') {
     return 'Cette clé n’est pas dans le fichier, et XCTrack ne l’y écrit qu’une fois réglée ' +
-      'au moins une fois sur l’appareil : son absence ne dit même pas quelle valeur d’usine ' +
-      's’appliquera.'
+      'au moins une fois sur l’appareil : son absence ne dit rien — ni ce que votre ' +
+      'appareil applique, ni ce qu’il appliquerait neuf.'
   }
   return row.undecidableReason ?? 'Aucune valeur d’usine connue pour cette clé.'
 }
@@ -1474,29 +1514,31 @@ function buildRowElement(row: PreferenceRow, ctx: PageContext): HTMLElement {
 }
 
 /**
- * Ce qu'une clé absente montre : **la valeur que XCTrack appliquera**, et le bouton qui
- * la fige.
+ * Ce qu'une clé absente montre : **la valeur d'usine de XCTrack**, et le bouton qui
+ * l'écrit.
  *
- * ## Pourquoi montrer le défaut ici
+ * ## Pourquoi montrer la valeur d'usine ici
  *
- * Une clé absente vaut son défaut de façon **implicite**. La page l'a toujours su — le
- * défaut était dans l'infobulle de la marque d'état — mais caché derrière un survol il
- * ne servait à personne. Il est maintenant écrit à la place de la valeur, en retrait et
- * accompagné de « XCTrack appliquera », pour qu'on ne le lise jamais comme une valeur
- * réglée : c'est la distinction que toute cette page défend.
+ * Elle était dans l'infobulle de la marque d'état, donc derrière un survol, donc nulle
+ * part. Elle est maintenant écrite à la place de la valeur, en retrait et en italique,
+ * pour qu'on ne la lise jamais comme une valeur réglée : c'est la distinction que toute
+ * cette page défend.
  *
- * ## Pourquoi le bouton sert à quelque chose
+ * Ce qu'elle **n'est pas** : ce que l'appareil du pilote applique. L'import ne touche
+ * pas une clé absente (`ABSENT_KEY_ON_IMPORT`) ; sur un appareil déjà réglé, c'est le
+ * réglage de l'appareil qui vaut, et cet outil ne le connaît pas.
  *
- * Figer la valeur ne change **rien** au comportement d'aujourd'hui, et c'est ce qui rend
- * le geste difficile à comprendre. Son intérêt est entièrement dans l'avenir : tant que
- * la clé est absente, l'appareil suit le défaut de **la version de XCTrack installée**,
- * et une mise à jour qui change ce défaut change le réglage sans prévenir. Écrite, la
- * valeur est à l'abri. L'infobulle le dit en toutes lettres — c'est la seule chose que
- * le pilote ne peut pas deviner de lui-même.
+ * ## Ce que le bouton fait, et ce qu'il ne fait pas
  *
- * Sans défaut relevé, **pas de bouton** : écrire une valeur devinée serait pire que ne
- * rien proposer. Les huit `Unit.*` (défaut calculé selon la langue de l'appareil) et les
- * clés qu'aucune source ne documente sont dans ce cas, et la ligne le dit.
+ * Il écrit la valeur d'usine dans le fichier. Sur une installation neuve, elle
+ * s'appliquerait de toute façon : l'écrire met alors le réglage à l'abri d'une mise à
+ * jour de XCTrack qui changerait cette valeur d'usine. Sur un appareil déjà réglé, elle
+ * **remplacera** ce qui s'y trouve — c'est le seul des trois gestes de cette page dont
+ * l'effet dépend de l'appareil, et l'infobulle le dit avant le clic.
+ *
+ * Sans valeur d'usine relevée, **pas de bouton** : écrire une valeur devinée serait pire
+ * que ne rien proposer. Les huit `Unit.*` (valeur calculée selon la langue de l'appareil)
+ * et les clés qu'aucune source ne documente sont dans ce cas, et la ligne le dit.
  */
 function buildImplicitCell(
   row: PreferenceRow, entry: PreferenceEntry,
@@ -1513,18 +1555,19 @@ function buildImplicitCell(
 
   const implicit = el('span', 'prefs__implicit', row.defaultText)
   implicit.title =
-    `Cette clé n’est pas dans le fichier : XCTrack appliquera « ${row.defaultText} », ` +
-    'sa valeur d’usine. Ce n’est pas la même chose qu’une valeur réglée à cette valeur.'
+    `« ${row.defaultText} » est la valeur d’usine de XCTrack, pas une valeur réglée : ` +
+    `cette clé n’est pas dans le fichier. ${ABSENT_KEY_ON_IMPORT}`
 
   const button = el('button', 'btn prefs__adopt', 'Définir cette valeur')
   button.type = 'button'
   button.title =
     `Écrit « ${row.key} » : ${row.defaultText} dans le fichier.\n\n` +
-    'Votre appareil se comporte déjà ainsi aujourd’hui — écrire la valeur ne change donc ' +
-    'rien à ce qu’il fait maintenant. Ce que ça change est pour plus tard : tant que la ' +
-    'clé est absente, l’appareil suit la valeur d’usine de la version de XCTrack ' +
-    'installée, et une mise à jour qui la change changera votre réglage sans rien vous ' +
-    'demander. Une fois écrite, la valeur est figée : elle restera celle-là.'
+    'Sur un appareil qui n’a jamais réglé cela, c’est déjà ce qu’il applique : l’écrire ne ' +
+    'change alors rien d’immédiat, et met le réglage à l’abri d’une mise à jour de XCTrack ' +
+    'qui changerait sa valeur d’usine.\n\n' +
+    'Sur un appareil qui l’a déjà réglé, l’import écrira cette valeur à la place de la ' +
+    'sienne : tant que la clé reste absente, il garde la sienne (mesuré sur l’AIR³, ' +
+    'import « Remplacer tout »).'
   button.addEventListener('click', () => {
     if (commit(typeof seed === 'string' ? seed : String(seed), false)) done()
   })
@@ -1532,15 +1575,16 @@ function buildImplicitCell(
 }
 
 /**
- * Le geste inverse : retirer du fichier une valeur qui vaut déjà le défaut.
+ * Le geste inverse : retirer du fichier une valeur qui vaut déjà la valeur d'usine.
  *
- * Il n'est offert que sur l'état `default` — une valeur écrite, égale au défaut relevé.
- * Sur une valeur réglée, retirer la clé **changerait** le comportement de l'appareil, et
- * ce n'est pas ce qu'un bouton discret doit pouvoir faire d'un clic ; le pilote passe
- * alors par le contrôle, qui dit ce qu'il écrit.
+ * Il n'est offert que sur l'état `default` — une valeur écrite, égale à la valeur d'usine
+ * relevée. Sur une valeur réglée, faire taire le fichier priverait la sauvegarde d'un
+ * choix délibéré, et ce n'est pas ce qu'un bouton discret doit pouvoir faire d'un clic ;
+ * le pilote passe alors par le contrôle, qui dit ce qu'il écrit.
  *
- * Le sens est le symétrique exact de « Définir cette valeur », et l'infobulle le dit du
- * même point de vue : la valeur d'aujourd'hui ne bouge pas, c'est son avenir qui change.
+ * Le sens est le symétrique exact de « Définir cette valeur » : le fichier cesse de dire
+ * quoi que ce soit de ce réglage. Ce que l'infobulle ne dit plus, parce que c'est faux :
+ * que l'appareil reviendrait à sa valeur d'usine (`ABSENT_KEY_ON_IMPORT`).
  */
 function buildDropButton(
   row: PreferenceRow, done: () => void, drop: () => boolean
@@ -1549,11 +1593,11 @@ function buildDropButton(
   button.type = 'button'
   button.setAttribute('aria-label', `Retirer ${row.label} du fichier`)
   button.title =
-    `Retire « ${row.key} » du fichier. XCTrack appliquera alors sa valeur d’usine, ` +
-    `${row.defaultText ?? 'celui qu’il porte'} — la même valeur qu’aujourd’hui, puisque ` +
-    'c’est déjà celle qui est écrite.\n\n' +
-    'Ce que ça change : la valeur cesse d’être figée et suivra les mises à jour de ' +
-    'XCTrack. C’est l’inverse exact de « Définir cette valeur ».'
+    `Retire « ${row.key} » du fichier : il ne dira plus rien de ce réglage.\n\n` +
+    `${ABSENT_KEY_ON_IMPORT}\n\n` +
+    'Ce que ça change pour l’appareil qui n’y a jamais touché : la valeur cesse d’être ' +
+    'figée et suivra les mises à jour de XCTrack. C’est l’inverse exact de « Définir ' +
+    'cette valeur ».'
   button.addEventListener('click', () => { if (drop()) done() })
   return button
 }
@@ -1595,13 +1639,13 @@ function restorable(row: PreferenceRow, entry: PreferenceEntry, ctx: EditContext
  *
  * ## Pourquoi il ne ressemble ni à l'un ni à l'autre des deux premiers
  *
- * « Définir cette valeur » et « Retirer » sont **neutres pour l'appareil** : écrire une
- * valeur déjà appliquée ne change rien, la retirer non plus. Ils ne décident que de
- * l'avenir — ce qui arrivera le jour où une mise à jour de XCTrack changera la valeur
- * d'usine. C'est ce qui autorise « Retirer » à être discret, révélé au survol.
+ * « Définir cette valeur » et « Retirer » ne touchent qu'une ligne dont le pilote n'a
+ * jamais rien décidé : l'une écrit la valeur d'usine, l'autre fait taire le fichier. Sur
+ * un appareil qui n'y a jamais touché, ni l'une ni l'autre ne change son comportement.
+ * C'est ce qui autorise « Retirer » à être discret, révélé au survol.
  *
- * Celui-ci remplace une valeur que le pilote a réglée. **L'appareil ne se comportera plus
- * pareil en vol.** Un bouton révélé au survol serait ici un piège : il se découvre après
+ * Celui-ci remplace une valeur que le pilote **a** réglée, et il la remplace partout.
+ * **L'appareil ne se comportera plus pareil en vol.** Un bouton révélé au survol serait ici un piège : il se découvre après
  * le geste et non avant. Il prend donc sa propre ligne, sous le réglage, à pleine
  * opacité, et il porte à côté de lui les deux valeurs en présence — celle du fichier et
  * celle d'usine — pour qu'on lise l'échange avant de cliquer, pas après.
@@ -1626,10 +1670,9 @@ function buildRestoreParts(
   button.setAttribute('aria-label', `Rétablir ${row.label} à sa valeur d’usine`)
   button.title =
     `Écrit « ${row.key} » : ${factory} dans le fichier, à la place de ${current}.\n\n` +
-    'Ce geste-ci n’est pas comme les deux autres de cette page : « Définir cette valeur » ' +
-    'et « Retirer » laissent l’appareil se comporter exactement comme aujourd’hui, ' +
-    'celui-ci non. Il remplace un réglage que vous avez choisi par celui que XCTrack pose ' +
-    `sur une installation neuve.${caveat}`
+    'Ce geste-ci n’est pas comme les deux autres de cette page : ils ne touchent qu’un ' +
+    'réglage que vous n’avez jamais choisi, celui-ci remplace le vôtre par celui que ' +
+    `XCTrack pose sur une installation neuve.${caveat}`
   button.addEventListener('click', () => { if (restore()) done() })
 
   const note = el('span', 'prefs__restore-note',
