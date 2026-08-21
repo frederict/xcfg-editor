@@ -2576,7 +2576,11 @@ function openLibrary(): void {
           closeLibraryDialog()
           // Copie : les octets viennent du magasin, et `openContainer` les garde comme
           // source de réémission. Rien ne doit pouvoir les modifier derrière son dos.
-          void loadBytes(bytes.slice(), name)
+          //
+          // `confirmed` : la bibliothèque a déjà posé la question, et mieux que nous —
+          // elle offre « ranger d'abord, puis charger », l'issue qui ne perd rien. Voir
+          // `askLoad` dans `libraryPanel.ts`.
+          void loadBytes(bytes.slice(), name, { confirmed: true })
         },
         onClose: () => { libraryDialog = undefined }
       })
@@ -2942,12 +2946,124 @@ function installDeviceSelector(initialDevice: Device): void {
 /* ------------------------------------------------------------------------- import */
 
 /**
- * Ouvrir des octets, d'où qu'ils viennent : le sélecteur de fichiers, un dépôt à la
- * souris, ou une entrée de la bibliothèque — dont les octets ont déjà été vérifiés contre
- * leur empreinte avant d'arriver ici.
+ * # Du travail en cours, et ce qu'il faut en dire
+ *
+ * C'est la question que `beforeunload` pose déjà au navigateur — « y a-t-il quelque chose
+ * à perdre ? » —, sortie de son écoute et rendue disponible à l'intérieur de la page.
+ * L'avertissement de fermeture d'onglet et la confirmation de remplacement répondent
+ * désormais tous deux à celle-ci, et à elle seule : ils ne peuvent plus diverger, ce qui
+ * était précisément le défaut signalé — le navigateur retenait le pilote, l'outil
+ * écrasait quand même.
+ *
+ * Rien n'est modifié ici, pas même le pas d'historique en attente : la lecture doit
+ * pouvoir se faire sans conséquence, puisqu'elle sert justement à décider si l'on touche
+ * à quoi que ce soit.
  */
-async function loadBytes(bytes: Uint8Array, name: string): Promise<void> {
-  // Ferme le pas en attente et son minuteur avant que la session ne disparaisse.
+interface UnsavedWork {
+  /** Le fichier qui porte ce travail — c'est lui qu'on refermerait. */
+  fileName: string
+  /**
+   * Ce que le pilote vient de changer, nommé comme l'annulation le nomme (« Régler
+   * Volume — Vario »). `undefined` seulement si l'historique n'a rien à en dire.
+   */
+  lastChange: string | undefined
+}
+
+function unsavedWork(): UnsavedWork | undefined {
+  const current = session
+  if (current?.container.modified !== true) return undefined
+  return {
+    fileName: current.container.fileName,
+    // Le pas en cours de regroupement n'est pas encore enregistré, et c'est pourtant le
+    // plus récent — celui que le pilote a sous les yeux. On le lit sans le clore :
+    // fermer la boîte doit laisser l'historique exactement où il était.
+    lastChange: pendingStep?.description ?? current.history.undoDescription()
+  }
+}
+
+/**
+ * Demander avant de remplacer un document modifié.
+ *
+ * Trois choses tiennent ce texte, et aucune n'est cosmétique :
+ *
+ * 1. **La boîte dit ce qui est perdu, pas « êtes-vous sûr ».** L'historique nomme ses pas
+ *    (`Régler Volume — Vario`) : c'est ce nom-là que le pilote reconnaît, et c'est lui
+ *    qu'on cite. « Vos modifications » ne lui apprendrait rien qu'il ne sache déjà.
+ * 2. **La sortie de secours ne coûte rien et ne change rien.** Refuser ne fait
+ *    strictement rien : le document, la page ouverte, le gadget sélectionné et
+ *    l'historique n'ont pas été touchés, parce qu'on demande *avant* de démonter quoi que
+ *    ce soit. C'est aussi l'action par défaut — celle du focus, celle d'Échap.
+ * 3. **Elle ne paraît que s'il y a quelque chose à perdre.** L'appelant ne l'atteint
+ *    qu'avec un `UnsavedWork` en main ; un document intact se remplace sans un mot, sans
+ *    quoi la boîte deviendrait un réflexe et cesserait d'être lue.
+ */
+function askBeforeReplace(incoming: string, work: UnsavedWork, proceed: () => void): void {
+  const dialog = el('dialog', 'modal modal--replace')
+  const box = el('div', 'modal__box')
+  box.append(
+    el('h2', 'modal__title', 'Vos modifications ne sont pas enregistrées'),
+    el(
+      'p', 'problem__message',
+      `Ouvrir « ${incoming} » referme « ${work.fileName} » et tout ce que vous venez d’y ` +
+      'changer. Cet outil ne garde rien de lui-même : ce qui n’est pas enregistré est perdu.'
+    )
+  )
+  if (work.lastChange !== undefined) {
+    box.append(el(
+      'p', 'replace__last',
+      `Dernier changement en date : « ${work.lastChange} ».`
+    ))
+  }
+  box.append(el(
+    'p', 'replace__hint',
+    'Pour ne rien perdre : gardez vos modifications, puis « Enregistrer les modifications » ' +
+    'en haut de la page — ou rangez cette configuration dans la bibliothèque.'
+  ))
+
+  const actions = el('div', 'modal__actions')
+  const dismiss = (): void => {
+    dialog.close()
+    dialog.remove()
+  }
+  // Nommé pour ce qu'il fait, comme l'autre : « Ouvrir quand même » cacherait la perte
+  // derrière une concession.
+  const replace = el('button', 'btn', `Ouvrir « ${incoming} » et les perdre`)
+  replace.type = 'button'
+  replace.addEventListener('click', () => {
+    dismiss()
+    proceed()
+  })
+  const keep = el('button', 'btn btn--primary', 'Garder mes modifications')
+  keep.type = 'button'
+  keep.addEventListener('click', dismiss)
+  // Le geste destructeur à gauche, celui qui ne perd rien sous le focus : Échap et Entrée
+  // mènent l'un comme l'autre à garder le travail.
+  actions.append(replace, keep)
+  box.append(actions)
+  dialog.append(box)
+  dialog.addEventListener('cancel', () => dialog.remove())
+  document.body.append(dialog)
+  dialog.showModal()
+  keep.focus()
+}
+
+/** Un fichier illisible, dit sans effacer ce que le pilote regardait. */
+function tellUnreadable(incoming: string, kept: string, detail: string): void {
+  tellProblem(
+    'Ce fichier n’a pas pu être lu',
+    `« ${incoming} » n’a rien donné d’exploitable. « ${kept} » reste ouvert, et tout ce ` +
+    'que vous y avez changé est toujours là.',
+    detail
+  )
+}
+
+/**
+ * Tout ce qui parlait du fichier précédent s'en va. Appelé au dernier moment, quand le
+ * remplacement est acquis : c'est la ligne au-delà de laquelle il n'y a plus de retour.
+ */
+function closeDocument(): void {
+  // Ferme le pas en attente et son minuteur avant que la session ne disparaisse : le
+  // minuteur, sinon, s'exécuterait contre l'historique du fichier suivant.
   flushRecord()
   failure = undefined
   session = undefined
@@ -2969,48 +3085,140 @@ async function loadBytes(bytes: Uint8Array, name: string): Promise<void> {
   // pour le retour désignait une page de l'autre fichier.
   if (view.kind === 'preferences') view = { kind: 'overview' }
   viewBeforePreferences = undefined
-  try {
-    const container = await openContainer(bytes, name)
-    const settings = readRenderSettings(container.document)
-    const info = getMember(container.document, 'info')
-    const declaredDevice = info ? readString(info, 'device') : undefined
-    const device = deviceFor(declaredDevice)
-    // C'est l'interface qui connaît le navigateur : `resolveLanguage` reçoit la langue
-    // système en paramètre, le modèle ne la lit jamais lui-même.
-    const systemLanguage = catalogLanguage(navigator.language)
-    // L'historique prend le document en charge dès l'ouverture, et le conteneur adopte
-    // SON document : les deux ne peuvent alors plus diverger, et `container.modified`
-    // reste faux tant que rien n'a été enregistré — un fichier seulement consulté ressort
-    // donc toujours octet pour octet.
-    const history = createHistory(container.document)
-    container.document = history.current()
-    const layout = readLayout(container.document)
-    const language = resolveLanguage(settings.language, systemLanguage)
-    session = {
-      container,
-      layout,
-      settings,
-      history,
-      device,
-      declaredDevice: deviceIsDeclared(declaredDevice, device) ? device.label : undefined,
-      language,
-      languageFromBrowser: settings.language.kind === 'system',
-      versionCode: info ? readNumber(info, 'versionCode') : undefined,
-      versionName: info ? readString(info, 'versionName') : undefined,
-      warnings: computeWarnings({ document: container.document, layout, settings, language })
-    }
-    installDeviceSelector(device)
-    // La règle « gadget Pro sans licence » du contrôle avant vol attend un morceau
-    // téléchargé à part. Le rendu d'en bas se fait sans elle ; celui-ci la porte, et
-    // seulement si le pilote regarde toujours le même fichier — sinon il repeindrait la
-    // vue d'ensemble d'un fichier qu'il vient de refermer.
-    const opened = session
-    void loadProWidgets(language).then(() => { if (session === opened) render() })
-  } catch (error) {
-    failure = formatTechnicalDetail(error)
+}
+
+/**
+ * La session que ce conteneur donne — **fabriquée avant tout démontage**. Elle ne touche à
+ * rien : si l'une des lectures échoue, l'appelant n'a qu'à ne pas s'en servir, et le
+ * document ouvert n'a pas bougé d'un octet.
+ */
+function buildSession(container: Container): Session {
+  const settings = readRenderSettings(container.document)
+  const info = getMember(container.document, 'info')
+  const declaredDevice = info ? readString(info, 'device') : undefined
+  const device = deviceFor(declaredDevice)
+  // C'est l'interface qui connaît le navigateur : `resolveLanguage` reçoit la langue
+  // système en paramètre, le modèle ne la lit jamais lui-même.
+  const systemLanguage = catalogLanguage(navigator.language)
+  // L'historique prend le document en charge dès l'ouverture, et le conteneur adopte
+  // SON document : les deux ne peuvent alors plus diverger, et `container.modified`
+  // reste faux tant que rien n'a été enregistré — un fichier seulement consulté ressort
+  // donc toujours octet pour octet.
+  const history = createHistory(container.document)
+  container.document = history.current()
+  const layout = readLayout(container.document)
+  const language = resolveLanguage(settings.language, systemLanguage)
+  return {
+    container,
+    layout,
+    settings,
+    history,
+    device,
+    declaredDevice: deviceIsDeclared(declaredDevice, device) ? device.label : undefined,
+    language,
+    languageFromBrowser: settings.language.kind === 'system',
+    versionCode: info ? readNumber(info, 'versionCode') : undefined,
+    versionName: info ? readString(info, 'versionName') : undefined,
+    warnings: computeWarnings({ document: container.document, layout, settings, language })
   }
+}
+
+/** L'échec d'ouverture en pleine page — le seul écran qui porte la marche à suivre. */
+function failToOpen(detail: string): void {
+  closeDocument()
+  failure = detail
   view = { kind: 'overview' }
   render()
+}
+
+/** Le remplacement lui-même, une fois qu'il est acquis et qu'il ne peut plus échouer. */
+function adopt(container: Container): void {
+  let built: Session
+  try {
+    built = buildSession(container)
+  } catch (error) {
+    // Rien n'a encore été démonté : le document ouvert survit à cet échec-là aussi.
+    const work = unsavedWork()
+    const detail = formatTechnicalDetail(error)
+    if (work) tellUnreadable(container.fileName, work.fileName, detail)
+    else failToOpen(detail)
+    return
+  }
+
+  closeDocument()
+  session = built
+  installDeviceSelector(built.device)
+  // La règle « gadget Pro sans licence » du contrôle avant vol attend un morceau
+  // téléchargé à part. Le rendu d'en bas se fait sans elle ; celui-ci la porte, et
+  // seulement si le pilote regarde toujours le même fichier — sinon il repeindrait la
+  // vue d'ensemble d'un fichier qu'il vient de refermer.
+  void loadProWidgets(built.language).then(() => { if (session === built) render() })
+  view = { kind: 'overview' }
+  render()
+}
+
+interface LoadOptions {
+  /**
+   * Le pilote a déjà été prévenu ailleurs, et a déjà dit oui. La bibliothèque pose sa
+   * propre question — « ranger d'abord, puis charger » —, mieux placée que celle-ci
+   * puisqu'elle offre l'issue qui ne perd rien : la reposer serait la faire cliquer deux
+   * fois pour un seul geste.
+   */
+  confirmed?: boolean
+}
+
+/**
+ * Ouvrir des octets, d'où qu'ils viennent : le sélecteur de fichiers, un dépôt à la
+ * souris, ou une entrée de la bibliothèque — dont les octets ont déjà été vérifiés contre
+ * leur empreinte avant d'arriver ici.
+ *
+ * **L'ordre a changé, et c'est tout le correctif.** Les octets sont lus d'abord ; le
+ * document ouvert n'est démonté qu'une fois qu'on tient de quoi le remplacer *et* que le
+ * pilote l'a accepté. Trois conséquences, dans cet ordre :
+ *
+ * 1. Un fichier illisible ne détruit plus un travail non enregistré : il n'y a rien à
+ *    mettre à la place, on ne démonte donc rien et on le dit dans une boîte.
+ * 2. Un document modifié ne se fait pas écraser sans un mot.
+ * 3. Refuser ne demande aucune restauration : rien n'a été défait, il n'y a rien à
+ *    refaire.
+ */
+async function loadBytes(
+  bytes: Uint8Array, name: string, options: LoadOptions = {}
+): Promise<void> {
+  const work = unsavedWork()
+
+  let container: Container | undefined
+  let unreadable: string | undefined
+  try {
+    container = await openContainer(bytes, name)
+    // Un contenu qui n'a pas pu être analysé n'est pas une exception : le conteneur
+    // existe, il porte ses octets intacts et son échec. Il n'en reste pas moins un
+    // cul-de-sac — la vue qu'il donne ne sait rien montrer.
+    unreadable = container.parseError
+  } catch (error) {
+    unreadable = formatTechnicalDetail(error)
+  }
+
+  // Un fichier illisible ne prend jamais la place d'un travail non enregistré : ce serait
+  // échanger un document valide contre une impasse, et sur un geste — un dépôt à la
+  // souris — que le pilote n'a même pas eu à confirmer.
+  if (unreadable !== undefined && work !== undefined) {
+    tellUnreadable(name, work.fileName, unreadable)
+    return
+  }
+
+  // Sans rien à perdre, l'échec reprend la pleine page, comme avant : c'est là que se
+  // trouve la marche à suivre, et il n'y a aucune session à préserver derrière.
+  if (container === undefined) {
+    failToOpen(unreadable ?? '')
+    return
+  }
+
+  if (work === undefined || options.confirmed === true) {
+    adopt(container)
+    return
+  }
+  askBeforeReplace(name, work, () => adopt(container))
 }
 
 async function load(file: File): Promise<void> {
@@ -3096,9 +3304,14 @@ redoButton.addEventListener('click', () => stepHistory('redo'))
  * Prévenir avant de perdre. Le navigateur n'affiche que son propre texte — on ne choisit
  * que le fait de demander —, et il ne le demande qu'après une interaction avec la page,
  * ce qui est toujours le cas ici : un document modifié l'a forcément été à la souris.
+ *
+ * La question passe par `unsavedWork()`, la même que celle du remplacement de document.
+ * Un pilote qui voyait le navigateur le retenir à la fermeture et l'outil écraser sans un
+ * mot au dépôt d'un fichier avait sous les yeux deux réponses contradictoires à une
+ * question unique : il n'y en a plus qu'une.
  */
 window.addEventListener('beforeunload', (event) => {
-  if (session?.container.modified !== true) return
+  if (unsavedWork() === undefined) return
   event.preventDefault()
   event.returnValue = ''
 })

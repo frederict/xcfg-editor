@@ -7,8 +7,8 @@
  *    c'est l'écran de l'instrument, il ne dépend pas des préférences de l'ordinateur.
  *    Aucune règle de ce fichier ne redéfinit une variable `--xc-*` ;
  * 2. la couleur appartient à l'instrument. Le cadre est achromatique : la seule teinte
- *    admise est l'ambre des pages que XCTrack masque hors vol, et le bleu du contour de
- *    focus, qui est une information et non une décoration.
+ *    admise est l'ambre des avertissements, et le bleu du contour de focus, qui est une
+ *    information et non une décoration.
  */
 
 :root {
@@ -463,8 +463,9 @@ body {
 /* -------------------------------------------------------------------- avertissements */
 
 /* Sobres et achromatiques comme le reste du cadre : seule la famille « attention »
-   (structure, géométrie, données personnelles) porte l'ambre, déjà employé par les
-   pages masquées hors vol. Le cadre ne rivalise pas avec l'instrument qu'il entoure. */
+   (structure, géométrie, données personnelles) porte l'ambre, celui-là même dont le
+   carrousel des pages marque une page activée pour aucune navigation. Le cadre ne
+   rivalise pas avec l'instrument qu'il entoure. */
 .warnings {
   margin: 0 0 2.5rem;
   display: grid;
@@ -620,6 +621,27 @@ body {
 
 .modal__actions { display: flex; justify-content: flex-end; gap: 0.6rem; }
 
+/* La confirmation avant de remplacer un document modifié. Le nom du fichier entrant est
+   dans l'intitulé du bouton : il peut être long, et les deux issues passent alors l'une
+   sous l'autre plutôt que de déborder de la boîte. */
+.modal--replace .modal__actions { flex-wrap: wrap; }
+
+/* Ce que le pilote perdrait, nommé comme l'annulation le nomme. La teinte est celle des
+   constats à surveiller : c'est le seul endroit de la boîte qui porte un fait, le reste
+   n'est que conséquence. */
+.replace__last {
+  margin: 0;
+  padding: 0.5rem 0.7rem;
+  border-left: 3px solid var(--app-flag-line);
+  border-radius: 3px;
+  background: var(--app-flag-bg);
+  color: var(--app-flag-ink);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.replace__hint { margin: 0; color: var(--app-ink-soft); font-size: 13.5px; }
+
 /* ---------------------------------------------------------------------- vue d'ensemble */
 
 .section + .section { margin-top: 3.5rem; }
@@ -636,15 +658,6 @@ body {
 
 .section__name { text-transform: uppercase; letter-spacing: 0.16em; font-weight: 700; }
 .section__count { font-family: var(--font-data); font-size: 11px; color: var(--app-ink-soft); }
-
-.section__note {
-  margin: 0.9rem 0 0;
-  padding-left: 0.7rem;
-  border-left: 2px solid var(--app-flag-line);
-  color: var(--app-ink-soft);
-  font-size: 13px;
-  max-width: 62ch;
-}
 
 .empty-note { color: var(--app-ink-soft); font-size: 13px; }
 
@@ -677,7 +690,6 @@ body {
 }
 
 .card:hover { border-color: var(--app-ink-soft); transform: translateY(-2px); }
-.card--conditional { border-left: 3px solid var(--app-flag-line); }
 
 .card__head { display: flex; align-items: center; gap: 0.55rem; }
 
@@ -2303,8 +2315,8 @@ body.is-dragging .veil {
  * qu'ajouter à la fin, et deux commandes distinctes le disent mieux qu'une seule.
  *
  * Rien ici n'introduit de couleur : l'ambre est celui des avertissements déjà en place
- * (`.section__note`), et la confirmation de suppression se distingue par un aplat encré,
- * pas par un rouge. Voir l'en-tête de cette feuille.
+ * (`.warning--attention`), et la confirmation de suppression se distingue par un aplat
+ * encré, pas par un rouge. Voir l'en-tête de cette feuille.
  */
 
 .pages { margin-top: 2.5rem; }

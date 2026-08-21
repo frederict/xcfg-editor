@@ -564,3 +564,102 @@ describe('brancher le nettoyage sur la boîte de version', () => {
     expect(main).toContain('rien ne bouge tant que vous ne le ')
   })
 })
+
+/**
+ * Remplacer un document sans demander était le défaut le plus coûteux relevé par le pilote
+ * d'essai : « j'ai déposé un autre fichier, l'ancien a disparu, ma modification avec, et
+ * la flèche annuler disait "Rien à annuler" ». Il avait relevé lui-même l'incohérence qui
+ * rend le correctif simple — le navigateur, lui, le retenait bien avant de fermer
+ * l'onglet.
+ *
+ * Ces contrôles portent sur l'**ordre des opérations** dans `loadBytes`, et sur lui seul :
+ * c'est de lui que découlent les trois propriétés attendues, et aucun test d'exécution ne
+ * l'atteint — `main.ts` monte un DOM entier et branche des écoutes de fenêtre.
+ */
+describe('assemblage — un document modifié ne se fait pas remplacer sans un mot', () => {
+  const loadBytes = main.slice(
+    main.indexOf('async function loadBytes('),
+    main.indexOf('async function load(file: File)')
+  )
+
+  it('une seule question sert l’avertissement de fermeture et la confirmation', () => {
+    // C'est l'incohérence que le pilote a relevée : l'outil savait qu'il avait du travail
+    // en cours pour retenir l'onglet, et l'écrasait quand même. Deux réponses à une
+    // question unique ne peuvent tenir que si elles sortent du même endroit.
+    expect(main).toContain('function unsavedWork(): UnsavedWork | undefined')
+    expect(main).toMatch(
+      /window\.addEventListener\('beforeunload', \(event\) => \{\s*\n\s*if \(unsavedWork\(\) === undefined\) return/
+    )
+    expect(main).not.toContain('if (session?.container.modified !== true) return')
+  })
+
+  it('la question se pose sans rien clore : l’historique reste où il était', () => {
+    // `flushRecord()` en tête de `loadBytes` refermait le pas en cours de regroupement —
+    // donc changeait l'historique — avant même de savoir si le pilote accepterait. Le pas
+    // en attente se lit désormais tel quel, et n'est clos que par le démontage.
+    expect(loadBytes).not.toContain('flushRecord()')
+    expect(main).toContain('lastChange: pendingStep?.description ?? current.history.undoDescription()')
+    expect(main).toMatch(/function closeDocument\(\): void \{[\s\S]{0,400}flushRecord\(\)/)
+  })
+
+  it('la boîte nomme ce qui serait perdu, elle ne demande pas « êtes-vous sûr »', () => {
+    // L'historique nomme ses pas (« Régler Volume — Vario ») ; le pilote a cité ces
+    // libellés comme un point fort. C'est ce nom-là qu'il faut lui remettre sous les yeux.
+    expect(main).toContain('Dernier changement en date : « ${work.lastChange} ».')
+    expect(main).toContain('Vos modifications ne sont pas enregistrées')
+  })
+
+  it('la sortie de secours est celle qui ne perd rien, et elle a le focus', () => {
+    const ask = main.slice(
+      main.indexOf('function askBeforeReplace('),
+      main.indexOf('/** Un fichier illisible, dit sans effacer')
+    )
+    expect(ask).toContain("el('button', 'btn btn--primary', 'Garder mes modifications')")
+    expect(ask).toContain('keep.focus()')
+    // Échap ferme la boîte et ne fait rien d'autre : aucune reprise n'est nécessaire,
+    // puisque rien n'a été démonté.
+    expect(ask).toMatch(/dialog\.addEventListener\('cancel', \(\) => dialog\.remove\(\)\)/)
+    expect(ask).not.toContain('closeDocument()')
+    expect(ask).not.toContain('adopt(')
+  })
+
+  it('rien n’est démonté avant que le remplacement ne soit acquis', () => {
+    // La propriété entière tient là : `closeDocument()` — le point de non-retour — n'est
+    // atteint que depuis `adopt()`, après la lecture des octets ET après l'accord.
+    const teardown = [...main.matchAll(/^\s*closeDocument\(\)$/gm)]
+    expect(teardown).toHaveLength(2)
+    const adopt = main.slice(
+      main.indexOf('function adopt(container: Container): void'),
+      main.indexOf('interface LoadOptions')
+    )
+    expect(adopt).toContain('built = buildSession(container)')
+    // La session est fabriquée d'abord, démontage ensuite : même une lecture qui échoue
+    // en cours de route laisse le document ouvert intact.
+    expect(adopt.indexOf('buildSession(container)')).toBeLessThan(adopt.indexOf('closeDocument()'))
+  })
+
+  it('un fichier illisible ne détruit pas un travail non enregistré', () => {
+    // Le cas que le pilote n'a pas eu à rencontrer pour qu'il compte : un dépôt à la
+    // souris ne se confirme pas, et un fichier corrompu remplaçait un document valide par
+    // un cul-de-sac. Les deux échecs — l'exception et le contenu inanalysable — comptent.
+    expect(loadBytes).toContain('unreadable = container.parseError')
+    expect(loadBytes).toContain('unreadable = formatTechnicalDetail(error)')
+    expect(loadBytes).toMatch(
+      /if \(unreadable !== undefined && work !== undefined\) \{\s*\n\s*tellUnreadable\(name, work\.fileName, unreadable\)\s*\n\s*return/
+    )
+  })
+
+  it('sans rien à perdre, aucune boîte ne paraît', () => {
+    // Une confirmation qui paraît toujours use l'attention et finit par être cliquée sans
+    // être lue. Un document intact se remplace sans un mot, comme avant.
+    expect(loadBytes).toMatch(
+      /if \(work === undefined \|\| options\.confirmed === true\) \{\s*\n\s*adopt\(container\)/
+    )
+  })
+
+  it('la bibliothèque ne pose pas la question deux fois', () => {
+    // `libraryPanel.ts` la pose déjà, et mieux : « ranger d'abord, puis charger » est
+    // l'issue qui ne perd rien, et elle n'a de sens que là.
+    expect(main).toContain('void loadBytes(bytes.slice(), name, { confirmed: true })')
+  })
+})
