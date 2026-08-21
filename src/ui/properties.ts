@@ -74,6 +74,17 @@ import {
  * l'écriture : c'est la même frontière que `compareToDefault`, qui rend `unknown` dès
  * qu'elle ne peut plus comparer terme à terme. Écrire une valeur devinée dans une
  * configuration de vol serait le seul vrai risque de cette fonctionnalité.
+ *
+ * ## Le troisième geste, qui lui n'est pas neutre
+ *
+ * Écrire une clé absente ne change rien à ce que l'appareil fait aujourd'hui. Rétablir la
+ * valeur d'usine d'un réglage que le pilote a **choisi**, si : l'appareil ne se comportera
+ * plus pareil en vol. Le geste existe donc — un pilote qui cherche « remettre comme au
+ * départ » doit le trouver — mais il ne se présente pas comme l'autre : sa propre ligne
+ * sous le réglage, à pleine opacité, les deux valeurs en présence affichées, et
+ * l'avertissement de version dans la phrase plutôt que dans l'infobulle. Voir
+ * `restorable` et `buildRestoreLine`, et le pendant côté préférences
+ * (`ui/preferencesPage.ts`).
  */
 
 /* ------------------------------------------------------- les textes du catalogue */
@@ -923,12 +934,14 @@ function buildPanel(options: PropertiesPanelOptions, live: LivePanel): Propertie
   const rows: Array<{ element: HTMLElement; haystack: string; state: DefaultState }> = []
   const rules: HTMLElement[] = []
 
+  const restore = readOnly ? undefined : restoreContext(options, live)
+
   form.fields.forEach((field, index) => {
     // En consultation, `changed` n'est même pas fabriqué : `buildRow` ne construit aucun
     // contrôle qui pourrait l'appeler, et il ne reçoit donc rien à appeler.
     const row = readOnly
       ? buildReadOnlyRow(field, `${prefix}-${index}`)
-      : buildRow(field, `${prefix}-${index}`, () => options.onChange?.(field, form))
+      : buildRow(field, `${prefix}-${index}`, () => options.onChange?.(field, form), restore)
     rows.push({
       element: row,
       haystack: normalize(`${field.label} ${field.path}`),
@@ -1406,8 +1419,141 @@ function originMark(field: PropertyField): HTMLElement {
   return mark
 }
 
+/* ------------------------------------------------- le troisième geste : rétablir l'usine */
+
+/**
+ * L'intitulé du troisième geste. **Le même mot à mot que dans l'écran des préférences**
+ * (`ui/preferencesPage.ts`, `RESTORE_LABEL`) : deux formulations pour un même geste, sur
+ * deux écrans du même outil, seraient un défaut à elles seules — c'est déjà la règle des
+ * deux premiers.
+ */
+export const RESTORE_LABEL = 'Rétablir la valeur d’usine'
+
+/** Ce qu'il faut pour offrir le troisième geste, une fois par panneau. */
+interface RestoreContext {
+  /** Ce que vaut le relevé face à ce fichier-ci — voir `defaultsTrust`. */
+  trust: DefaultsTrust
+  /** Rétablit la valeur d'usine du champ. Rend `false` quand rien n'a bougé. */
+  run: (field: PropertyField) => boolean
+}
+
+/**
+ * Le geste, monté une fois pour tout le panneau.
+ *
+ * `undefined` en consultation, et `undefined` aussi quand le nœud source est introuvable :
+ * sans lui, `rebuild` ne saurait pas d'où relire le formulaire.
+ */
+function restoreContext(
+  options: PropertiesPanelOptions, live: LivePanel
+): RestoreContext | undefined {
+  const { form } = options
+  const source = formSource.get(form)
+  if (source === undefined) return undefined
+  return {
+    trust: defaultsTrust(options.fileVersionCode),
+    run: (field) => {
+      if (field.defaultText === undefined) return false
+      if (!setFieldValue(field, field.defaultText)) return false
+      // Refait depuis le document, jamais rapiécé : la ligne rétablie perd sa marque
+      // « personnalisé », le compte du bandeau suit, et le geste disparaît de lui-même.
+      const fresh = rebuild(live, options, buildPropertyForm(source, form.language))
+      const same = fresh.form.fields.find((one) => one.path === field.path)
+      if (same !== undefined) options.onChange?.(same, fresh.form)
+      focusRow(live.panel ?? fresh, field.path)
+      return true
+    }
+  }
+}
+
+/**
+ * Vrai si « Rétablir la valeur d'usine » peut être offert sur ce champ.
+ *
+ * `defaultState === 'custom'` porte l'essentiel du refus, et c'est voulu : c'est le seul
+ * état où `compareToDefault` a **conclu** que le fichier porte autre chose que le relevé.
+ * Son troisième état, `unknown`, n'est pas un repli poli mais un refus de conclure — type
+ * de gadget absent du relevé, clé universelle, clé apparue depuis, valeur composée ou de
+ * type différent. On ne rétablit pas ce qu'on n'a pas su comparer.
+ *
+ * Reste à vérifier que la valeur s'écrit : `setFieldValue` ne sait poser qu'une chaîne ou
+ * un littéral, jamais reconstruire un objet ou un tableau.
+ */
+function restorable(field: PropertyField): boolean {
+  if (field.defaultState !== 'custom' || field.defaultText === undefined) return false
+  return field.valueKind === 'string' || field.valueKind === 'literal'
+}
+
+/**
+ * La ligne du troisième geste : le bouton, et la phrase qui dit ce qu'il échange.
+ *
+ * ## Pourquoi il ne ressemble pas à « Définir cette valeur »
+ *
+ * Le bloc de fin propose d'**écrire une valeur que l'appareil applique déjà** : le geste
+ * est neutre, il ne décide que de l'avenir. Celui-ci remplace un réglage que le pilote a
+ * choisi — l'appareil ne se comportera plus pareil en vol. Il prend donc sa propre ligne
+ * sous le réglage, à pleine opacité, et porte les deux valeurs en présence à côté du
+ * bouton : on voit l'échange avant de cliquer, pas après.
+ *
+ * ## Pourquoi il s'affiche en édition, alors que la comparaison ne s'y affiche pas
+ *
+ * Le bandeau de comparaison est réservé à la consultation parce qu'un **compte** se périme
+ * à chaque cran de curseur. Un geste par ligne ne se périme pas : le panneau est refait
+ * depuis le document à chaque écriture. Et c'est en édition qu'il sert — c'est là qu'on
+ * peut y répondre. Même raisonnement que le bloc des clés absentes.
+ *
+ * ## Pourquoi la version se dit à l'écran, et pas seulement au survol
+ *
+ * Le relevé vient d'**une seule** version de XCTrack. Sur un fichier venu d'ailleurs, la
+ * valeur d'usine affichée n'est peut-être pas celle qu'un gadget neuf porterait — et là
+ * où « Définir cette valeur » ne risque rien, celui-ci écrirait une valeur relevée
+ * ailleurs par-dessus un réglage délibéré. L'avertissement est donc dans la phrase :
+ * « avant le clic » exclut le survol.
+ */
+function buildRestoreLine(field: PropertyField, ctx: RestoreContext): HTMLElement {
+  const line = el('div', 'props__restore')
+  line.dataset.trust = ctx.trust
+  const factory = readableDefault(field) ?? field.defaultText ?? '?'
+  const current = readableValue(field)
+  const caveat = restoreCaveat(ctx.trust)
+
+  const button = el('button', 'btn props__restore-btn', RESTORE_LABEL)
+  button.type = 'button'
+  button.setAttribute('aria-label', `Rétablir ${field.label} à sa valeur d’usine`)
+  button.title =
+    `Écrit « ${field.path} » : ${factory} dans le fichier, à la place de ${current}.\n\n` +
+    'Ce geste-ci n’est pas comme « Définir cette valeur » en fin de panneau : celui-là ' +
+    'laisse l’appareil se comporter exactement comme aujourd’hui, celui-ci non. Il ' +
+    'remplace un réglage que vous avez choisi par celui que XCTrack pose sur un gadget ' +
+    `neuf de ce type.${caveat}`
+  button.addEventListener('click', () => { ctx.run(field) })
+
+  const note = el('span', 'props__restore-note',
+    `« ${factory} » d’usine, « ${current} » dans ce fichier. ` +
+    `Rétablir change ce que fait l’appareil en vol.${caveat}`)
+
+  line.append(button, note)
+  return line
+}
+
+/**
+ * Ce qu'il faut ajouter quand le fichier ne vient pas de la version du relevé.
+ *
+ * Rien à dire quand elle coïncide : une phrase de prudence servie à tort apprend au
+ * lecteur à ne plus lire les phrases de prudence.
+ */
+function restoreCaveat(trust: DefaultsTrust): string {
+  if (trust === 'exact') return ''
+  if (trust === 'indicative') {
+    return ` Cette valeur d’usine a été relevée sur XCTrack ${DEFAULTS_VERSION_NAME}, qui ` +
+      'n’est pas la version d’où vient ce fichier : vérifiez que c’est bien celle à rétablir.'
+  }
+  return ` Cette valeur d’usine a été relevée sur XCTrack ${DEFAULTS_VERSION_NAME} et la ` +
+    'version de ce fichier n’est pas connue ici : vérifiez que c’est bien celle à rétablir.'
+}
+
 /** Une ligne du panneau : intitulé, contrôle, et le `?` de l'aide quand il y en a une. */
-function buildRow(field: PropertyField, id: string, changed: () => void): HTMLElement {
+function buildRow(
+  field: PropertyField, id: string, changed: () => void, restore?: RestoreContext
+): HTMLElement {
   const row = el('div', 'props__row')
   row.dataset.key = field.path
   row.dataset.control = field.control
@@ -1446,6 +1592,8 @@ function buildRow(field: PropertyField, id: string, changed: () => void): HTMLEl
   }
 
   if (field.help !== undefined) row.append(...helpParts(field.help, id))
+  // Après l'aide : c'est un geste, il vient une fois le réglage lu, jamais avant.
+  if (restore !== undefined && restorable(field)) row.append(buildRestoreLine(field, restore))
   return row
 }
 

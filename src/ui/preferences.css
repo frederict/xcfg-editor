@@ -438,6 +438,64 @@
 }
 
 /*
+ * Le troisième geste — « Rétablir la valeur d'usine » — et pourquoi il ne ressemble à
+ * aucun des deux autres.
+ *
+ * « Définir cette valeur » et « Retirer » ne changent rien à ce que fait l'appareil : le
+ * premier tient dans la cellule, le second s'efface jusqu'au survol. Celui-ci **remplace
+ * un réglage du pilote**. Il ne peut donc ni s'effacer, ni se glisser au bout d'une
+ * ligne : il prend toute la largeur, sous le réglage, avec un filet à gauche — le même
+ * signal d'attention que la page emploie déjà pour les valeurs d'usine contradictoires —
+ * et la phrase qui dit ce qui remplacera quoi. On voit avant de cliquer, pas après.
+ */
+.prefs__restore {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.35rem 0 0.1rem;
+  padding: 0.35rem 0.55rem;
+  border-left: 3px solid var(--app-flag-line, #cf9c2c);
+  background: var(--app-panel, #f6f7f8);
+  border-radius: 0 4px 4px 0;
+}
+
+/* `hidden` doit l'emporter sur le `display: flex` ci-dessus : sinon l'emplacement
+   réservé occuperait une rangée de grille sur chaque ligne réglable de la page. */
+.prefs__restore[hidden] { display: none; }
+
+/*
+ * Bouton plein et bordé, jamais fantôme : c'est le seul geste de cette page qui change le
+ * comportement de l'appareil, il se voit comme tel. Même taille que ses deux voisins —
+ * ce qui les distingue est le poids, pas l'échelle.
+ */
+.prefs__restore-btn {
+  flex: none;
+  font-size: 11.5px;
+  padding: 0.3rem 0.55rem;
+  white-space: nowrap;
+}
+
+/* Les deux valeurs en présence, et ce que l'échange coûte. Lisible sans survol : une
+   mise en garde qui se cache derrière un pointeur n'existe pas au clavier. */
+.prefs__restore-note {
+  flex: 1 1 18rem;
+  min-width: 0;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--prefs-soft);
+  max-width: 78ch;
+}
+
+/* Le relevé ne vient pas de la version de ce fichier : la phrase passe à la couleur
+   d'attention du reste de l'application, comme le fait déjà le panneau des gadgets. */
+.prefs__restore[data-trust='indicative'] .prefs__restore-note,
+.prefs__restore[data-trust='unstated'] .prefs__restore-note {
+  color: var(--app-flag-ink, #7a5410);
+}
+
+/*
  * Pourquoi ces lignes-là ne se règlent pas. Une phrase par bloc et par raison, sous le
  * bloc — comme la note « ne quittent jamais l'appareil » juste à côté, et pour la même
  * raison : quinze fois la même phrase entre quinze lignes de réglages ne dit rien de

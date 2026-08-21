@@ -1465,6 +1465,53 @@ body.is-dragging .veil {
   cursor: help;
 }
 
+/*
+ * Le troisième geste — « Rétablir la valeur d'usine » — et pourquoi il ne ressemble pas
+ * à « Définir cette valeur ».
+ *
+ * Ce dernier écrit une valeur que l'appareil applique déjà : il tient au bout d'une ligne
+ * du bloc de fin, sans plus d'égards, parce qu'il ne change rien au vol. Celui-ci
+ * **remplace un réglage du pilote**. Il prend donc toute la largeur de la ligne, sous le
+ * réglage, avec le filet d'attention à gauche, et la phrase qui dit ce qui remplacera
+ * quoi. On voit avant de cliquer, pas après.
+ */
+.props__restore {
+  flex-basis: 100%;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.3rem 0 0.15rem;
+  padding: 0.35rem 0.55rem;
+  border-left: 3px solid var(--app-flag-line);
+  background: var(--app-panel);
+  border-radius: 0 4px 4px 0;
+}
+
+/* Bouton plein et bordé, jamais fantôme : c'est le seul geste du panneau qui change le
+   comportement de l'appareil, il se voit comme tel. */
+.props__restore-btn {
+  flex: none;
+  font-size: 11.5px;
+  padding: 0.15rem 0.5rem;
+  white-space: nowrap;
+}
+
+/* Les deux valeurs en présence, et ce que l'échange coûte. Lisible sans survol : une mise
+   en garde derrière un pointeur n'existe pas au clavier. */
+.props__restore-note {
+  flex: 1 1 16rem;
+  min-width: 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--app-ink-soft);
+}
+
+/* Le relevé ne vient pas de la version de ce fichier : la phrase passe à la couleur
+   d'attention, comme le bandeau de la consultation et le bloc de fin. */
+.props__restore[data-trust="indicative"] .props__restore-note,
+.props__restore[data-trust="unstated"] .props__restore-note { color: var(--app-flag-ink); }
+
 /* --------------------------------------------------------------- mode édition */
 
 /*

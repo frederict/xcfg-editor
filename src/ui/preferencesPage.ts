@@ -128,6 +128,24 @@ import {
  * porte un bouton « Retirer », qui la rend au défaut de XCTrack. Il n'est offert que sur
  * cet état-là — sur une valeur réglée, retirer la clé changerait le comportement de
  * l'appareil, et ce n'est pas ce qu'un bouton discret doit faire d'un clic.
+ *
+ * ## Le troisième geste, qui n'est neutre ni pour l'appareil ni pour l'écran
+ *
+ * Les deux précédents ne changent **rien** à ce que l'appareil fait aujourd'hui. Le
+ * troisième — « Rétablir la valeur d'usine », sur une valeur réglée qui diffère du relevé
+ * (état `custom`) — remplace un choix du pilote. L'appareil ne se comportera plus pareil
+ * en vol.
+ *
+ * Il ne peut donc pas se présenter comme les deux autres : il prend sa propre ligne sous
+ * le réglage, à pleine opacité, et affiche les deux valeurs en présence avant le clic. Il
+ * ne s'offre que là où la valeur d'usine est connue **sans ambiguïté** — ni calculée au
+ * démarrage, ni contradictoire — et, quand le fichier ne vient pas de la version du
+ * catalogue, il le dit dans sa phrase et non dans son infobulle. Voir `restorable` et
+ * `buildRestoreParts`.
+ *
+ * Il **écrit** la valeur d'usine, il ne retire pas la clé : la ligne passe à l'état
+ * `default`, d'où « Retirer » devient offert. Le pilote qui veut aller jusqu'à l'implicite
+ * y va d'un second clic, et voit les deux effets séparément.
  */
 
 /* ------------------------------------------------------------------ le modèle de page */
@@ -1175,6 +1193,15 @@ interface EditContext {
   document: JsonNode
   catalog: PreferenceCatalog
   conflicts: Set<string>
+  /**
+   * Ce que vaut la comparaison au catalogue pour ce fichier — voir `catalogTrust`.
+   *
+   * Elle ne sert qu'au troisième geste, « Rétablir la valeur d'usine » : c'est le seul
+   * qui écrive une valeur **relevée ailleurs** par-dessus une valeur que le pilote a
+   * réglée lui-même. Les deux autres n'ont rien à avertir — ils ne changent pas le
+   * comportement de l'appareil.
+   */
+  trust: CatalogTrust
   onEdit: (edit: PreferenceEdit) => void
   /** Rappelé après chaque écriture effective : bandeau, confidentialité, entrées masquées. */
   wrote: (row: PreferenceRow, previous: PreferenceState, edit: PreferenceEdit) => void
@@ -1260,6 +1287,10 @@ function buildRowElement(row: PreferenceRow, ctx: PageContext): HTMLElement {
   if (!mute) state.title = stateTitle(row)
   element.append(state)
 
+  // L'emplacement du troisième geste — voir `fillRestore`. Il n'existe que dans une page
+  // modifiable : rien à réserver là où rien ne s'écrit.
+  const restoreSlot = settable ? el('div', 'prefs__restore') : undefined
+
   const rendered: RenderedRow = {
     element,
     haystack: normalize(`${row.label} ${row.key} ${row.value ?? ''}`),
@@ -1272,13 +1303,18 @@ function buildRowElement(row: PreferenceRow, ctx: PageContext): HTMLElement {
     state.textContent = stateLabel(row)
     state.title = stateTitle(row)
     rendered.haystack = normalize(`${row.label} ${row.key} ${row.value ?? ''}`)
+    fillRestore()
   }
 
   /**
    * Une écriture demandée par un contrôle. Rend `false` quand rien n'a bougé — reposer
    * une valeur à l'identique n'est pas une modification et ne doit pas en avoir l'air.
+   *
+   * `description` remplace la phrase d'historique quand l'appelant sait mieux ce qu'il
+   * vient de faire : « Rétablir X à sa valeur d'usine » n'est pas « Régler X », et
+   * l'annulation doit se lire dans les mots du geste.
    */
-  function commit(text: string, continuous: boolean): boolean {
+  function commit(text: string, continuous: boolean, description?: string): boolean {
     const context = ctx.edit
     if (context === undefined || entry === undefined) return false
     const asString = writesString(entry, currentNode(context.document, row.key))
@@ -1294,9 +1330,9 @@ function buildRowElement(row: PreferenceRow, ctx: PageContext): HTMLElement {
       label: row.label,
       outcome,
       text,
-      description: outcome === 'inserted'
+      description: description ?? (outcome === 'inserted'
         ? `Écrire ${row.label} dans le fichier`
-        : `Régler ${row.label}`,
+        : `Régler ${row.label}`),
       continuous
     }
     if (row.personal !== undefined && text.trim() !== '') edit.personal = row.personal
@@ -1337,6 +1373,45 @@ function buildRowElement(row: PreferenceRow, ctx: PageContext): HTMLElement {
     return true
   }
 
+  /**
+   * Le troisième geste : remplacer une valeur réglée par la valeur d'usine.
+   *
+   * Il **écrit**, il ne retire pas. Retirer la clé rendrait aussi le comportement
+   * d'usine, mais ce n'est pas le même geste : la valeur cesserait d'être figée. Écrire
+   * la valeur d'usine amène la ligne à l'état `default`, d'où « Retirer » devient
+   * offert — le pilote qui veut aller jusqu'à l'implicite y va d'un second clic,
+   * délibéré, et voit chacun des deux effets séparément.
+   */
+  function restore(): boolean {
+    const context = ctx.edit
+    if (context === undefined || entry?.default === undefined) return false
+    return commit(defaultAsText(entry.default), false,
+      `Rétablir ${row.label} à sa valeur d’usine`)
+  }
+
+  /**
+   * La ligne du troisième geste, refaite à chaque changement d'état.
+   *
+   * Elle n'existe pas dans une page en lecture seule : `settable` la conditionne comme
+   * il conditionne les contrôles.
+   */
+  function fillRestore(): void {
+    if (restoreSlot === undefined) return
+    restoreSlot.textContent = ''
+    const context = ctx.edit
+    const offer = settable && context !== undefined && entry !== undefined &&
+      restorable(row, entry, context)
+    restoreSlot.hidden = !offer
+    if (!offer || context === undefined || entry === undefined) return
+    restoreSlot.dataset.trust = context.trust
+    restoreSlot.append(...buildRestoreParts(row, context, () => {
+      // L'état a changé sous le bouton : le contrôle doit montrer la valeur rétablie, et
+      // la ligne gagne « Retirer » puisqu'elle vaut désormais la valeur d'usine.
+      fillCell()
+      cell.querySelector<HTMLElement>('input, select')?.focus()
+    }, restore))
+  }
+
   function fillCell(): void {
     cell.textContent = ''
     const context = ctx.edit
@@ -1374,6 +1449,12 @@ function buildRowElement(row: PreferenceRow, ctx: PageContext): HTMLElement {
   fillCell()
 
   if (row.personal !== undefined) element.append(personalMark(row.personal))
+  // Sa place est **sous** la ligne, sur toute la largeur, et après la marque de donnée
+  // personnelle : un élément qui occupe la grille entière renverrait à la ligne suivante
+  // tout ce qui le suit. Masqué (`hidden`) il ne prend aucune place du tout — c'est
+  // pourquoi il est réservé plutôt que créé et détruit.
+  if (restoreSlot !== undefined) element.append(restoreSlot)
+  fillRestore()
   if (row.help !== undefined) element.append(el('p', 'prefs__help', row.help))
 
   // Une ligne qui ne se règle pas dans une page qui se règle doit dire pourquoi — mais
@@ -1473,6 +1554,103 @@ function buildDropButton(
     'XCTrack. C’est l’inverse exact de « Définir cette valeur ».'
   button.addEventListener('click', () => { if (drop()) done() })
   return button
+}
+
+/* ------------------------------------------------- le troisième geste : rétablir l'usine */
+
+/**
+ * L'intitulé du troisième geste. **Le même mot à mot dans le panneau des gadgets**
+ * (`ui/properties.ts`) : deux formulations pour un même geste, sur deux écrans du même
+ * outil, seraient un défaut à elles seules — c'est déjà la règle des deux premiers.
+ */
+export const RESTORE_LABEL = 'Rétablir la valeur d’usine'
+
+/**
+ * Vrai si « Rétablir la valeur d'usine » peut être offert sur cette ligne.
+ *
+ * Trois refus, et aucun n'est un repli poli :
+ *
+ * - **la valeur n'est pas réglée** — l'état n'est `custom` que pour une valeur écrite qui
+ *   diffère de la valeur d'usine relevée. Sur les cinq autres états, le geste n'a pas
+ *   d'objet ;
+ * - **la valeur d'usine n'est pas connue**, ou XCTrack la calcule au démarrage
+ *   (`defaultSource: 'runtime'`, les huit `Unit.*`) : on ne rétablit pas une valeur qu'on
+ *   inventerait ;
+ * - **XCTrack en publie deux et elles se contredisent** (`Sensors.ManualQnh` : 1013 et
+ *   1013.25). On ne peut pas proposer de revenir à « la » valeur d'usine quand il y en a
+ *   deux — c'est déjà la raison pour laquelle « Retirer » n'y est pas offert. L'état
+ *   `conflict` écarte ces clés avant d'arriver ici ; la garde est écrite quand même,
+ *   pour que ce refus-là ne dépende pas d'un calcul d'état qui pourrait changer.
+ */
+function restorable(row: PreferenceRow, entry: PreferenceEntry, ctx: EditContext): boolean {
+  if (row.state !== 'custom' || row.defaultText === undefined) return false
+  if (entry.default === undefined || entry.defaultSource === 'runtime') return false
+  return !(ctx.conflicts.has(row.key) && entry.xmlDefault !== undefined)
+}
+
+/**
+ * Le bouton du troisième geste, et la phrase qui dit ce qu'il change.
+ *
+ * ## Pourquoi il ne ressemble ni à l'un ni à l'autre des deux premiers
+ *
+ * « Définir cette valeur » et « Retirer » sont **neutres pour l'appareil** : écrire une
+ * valeur déjà appliquée ne change rien, la retirer non plus. Ils ne décident que de
+ * l'avenir — ce qui arrivera le jour où une mise à jour de XCTrack changera la valeur
+ * d'usine. C'est ce qui autorise « Retirer » à être discret, révélé au survol.
+ *
+ * Celui-ci remplace une valeur que le pilote a réglée. **L'appareil ne se comportera plus
+ * pareil en vol.** Un bouton révélé au survol serait ici un piège : il se découvre après
+ * le geste et non avant. Il prend donc sa propre ligne, sous le réglage, à pleine
+ * opacité, et il porte à côté de lui les deux valeurs en présence — celle du fichier et
+ * celle d'usine — pour qu'on lise l'échange avant de cliquer, pas après.
+ *
+ * ## Pourquoi la version pèse, et se dit à l'écran
+ *
+ * Le relevé vient d'**une seule** version de XCTrack. Sur un fichier venu d'ailleurs, la
+ * valeur d'usine affichée n'est peut-être pas celle que l'appareil du pilote appliquerait
+ * — et là où les deux premiers gestes ne risquent rien, celui-ci écrirait une valeur
+ * relevée ailleurs par-dessus un réglage délibéré. L'avertissement est donc **visible**,
+ * dans la phrase, et pas seulement dans l'infobulle : « avant le clic » exclut le survol.
+ */
+function buildRestoreParts(
+  row: PreferenceRow, ctx: EditContext, done: () => void, restore: () => boolean
+): HTMLElement[] {
+  const factory = row.defaultText ?? '?'
+  const current = row.value ?? '?'
+  const caveat = restoreCaveat(ctx)
+
+  const button = el('button', 'btn prefs__restore-btn', RESTORE_LABEL)
+  button.type = 'button'
+  button.setAttribute('aria-label', `Rétablir ${row.label} à sa valeur d’usine`)
+  button.title =
+    `Écrit « ${row.key} » : ${factory} dans le fichier, à la place de ${current}.\n\n` +
+    'Ce geste-ci n’est pas comme les deux autres de cette page : « Définir cette valeur » ' +
+    'et « Retirer » laissent l’appareil se comporter exactement comme aujourd’hui, ' +
+    'celui-ci non. Il remplace un réglage que vous avez choisi par celui que XCTrack pose ' +
+    `sur une installation neuve.${caveat}`
+  button.addEventListener('click', () => { if (restore()) done() })
+
+  const note = el('span', 'prefs__restore-note',
+    `« ${factory} » d’usine, « ${current} » dans ce fichier. ` +
+    `Rétablir change ce que fait l’appareil en vol.${caveat}`)
+  return [button, note]
+}
+
+/**
+ * Ce qu'il faut ajouter quand le fichier ne vient pas de la version du catalogue.
+ *
+ * Rien à dire quand elle coïncide : une phrase de prudence servie à tort apprend au
+ * lecteur à ne plus lire les phrases de prudence.
+ */
+function restoreCaveat(ctx: EditContext): string {
+  if (ctx.trust === 'exact') return ''
+  const version = ctx.catalog.meta.versionName ?? String(ctx.catalog.meta.versionCode ?? 0)
+  if (ctx.trust === 'indicative') {
+    return ` Cette valeur d’usine a été relevée sur XCTrack ${version}, qui n’est pas la ` +
+      'version d’où vient ce fichier : vérifiez que c’est bien celle à rétablir.'
+  }
+  return ` Cette valeur d’usine a été relevée sur XCTrack ${version} et la version de ce ` +
+    'fichier n’est pas connue ici : vérifiez que c’est bien celle à rétablir.'
 }
 
 /** Le contrôle d'une ligne qui se règle, choisi sur le type que XCTrack affiche. */
@@ -1733,19 +1911,46 @@ function catalogNote(options: PreferencesPageOptions): string {
     : ` ${formatCount(catalog.fallbackStringCount)} textes manquent dans cette langue et sont ` +
       `affichés en anglais.`
 
-  if (options.fileVersionCode === undefined) {
+  const trust = catalogTrust(options)
+  if (trust === 'unstated') {
     return `${reference}. Ce fichier ne dit pas de quelle version il vient : les libellés ` +
       `et les défauts changent d’une version à l’autre, la lecture est donc indicative.${fallback}`
   }
-  if (options.fileVersionCode === catalog.meta.versionCode) {
+  if (trust === 'exact') {
     return `${reference} — la version même de ce fichier.${fallback}`
   }
+  return `${reference}. Ce fichier vient de ${fileVersionText(options)} : les libellés et les ` +
+    `défauts changent d’une version à l’autre, la lecture est donc indicative.${fallback}`
+}
+
+/**
+ * Ce que vaut la comparaison au catalogue, pour ce fichier-ci.
+ *
+ * Les trois mêmes valeurs, les mêmes mots et le même arbitrage que `defaultsTrust` du
+ * relevé des gadgets (`catalog/widgetDefaults.ts`) — deux relevés distincts, une seule
+ * façon de dire ce qu'ils valent :
+ *
+ * - `exact` — le fichier vient de la version du catalogue ;
+ * - `indicative` — une autre version : les valeurs d'usine ont pu changer entre les deux ;
+ * - `unstated` — le fichier ne dit pas d'où il vient (`info.versionCode` absent).
+ *
+ * Ce n'est jamais un motif de **masquer** une comparaison — la plupart des clés ne
+ * bougent pas d'une version à l'autre. C'est un motif de le **dire**, et de le dire avant
+ * un geste qui écrit.
+ */
+export type CatalogTrust = 'exact' | 'indicative' | 'unstated'
+
+export function catalogTrust(options: PreferencesPageOptions): CatalogTrust {
+  if (options.fileVersionCode === undefined) return 'unstated'
+  return options.fileVersionCode === options.catalog.meta.versionCode ? 'exact' : 'indicative'
+}
+
+/** La version du fichier, nommée quand elle a un nom, chiffrée sinon. */
+function fileVersionText(options: PreferencesPageOptions): string {
   const name = options.fileVersionName
-  const which = name === undefined
+  return name === undefined
     ? `la version ${String(options.fileVersionCode)}`
     : `la version ${name} (versionCode ${String(options.fileVersionCode)})`
-  return `${reference}. Ce fichier vient de ${which} : les libellés et les défauts changent ` +
-    `d’une version à l’autre, la lecture est donc indicative.${fallback}`
 }
 
 /**
@@ -1978,6 +2183,7 @@ export function renderPreferencesPage(options: PreferencesPageOptions): Preferen
       document: options.document,
       catalog: options.catalog,
       conflicts: new Set(options.catalog.meta.defaultConflicts),
+      trust: catalogTrust(options),
       onEdit,
       secrets: [],
       wrote: (row, previous, edit) => {

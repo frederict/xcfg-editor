@@ -1225,3 +1225,176 @@ describe('les clés que le gadget n’écrit pas', () => {
     expect(visibleKeys(panel)).toEqual(['nav_label'])
   })
 })
+
+/* =========================================== le troisième geste : rétablir la valeur d'usine */
+
+/**
+ * Les deux premiers gestes du panneau sont **neutres pour l'appareil** : écrire une clé
+ * absente pose la valeur que XCTrack applique déjà, la retirer la lui rend. Celui-ci
+ * remplace un réglage que le pilote a choisi — l'appareil ne se comportera plus pareil en
+ * vol.
+ *
+ * Tout ce bloc en vérifie les trois conséquences : il se voit (il ne se révèle pas au
+ * survol), il ne s'offre que là où la valeur d'usine est connue **avec certitude**, et il
+ * dit d'où elle vient quand le fichier ne vient pas de la version du relevé.
+ */
+describe('rétablir la valeur d’usine d’un réglage que le pilote a changé', () => {
+  function restoreLine(panel: { element: HTMLElement }, key: string): HTMLElement | null {
+    return panel.element.querySelector<HTMLElement>(`[data-key="${key}"] .props__restore`)
+  }
+
+  function restoreButton(panel: { element: HTMLElement }, key: string): HTMLButtonElement {
+    const button = panel.element
+      .querySelector<HTMLButtonElement>(`[data-key="${key}"] .props__restore-btn`)
+    if (button === null) throw new Error(`pas de bouton de rétablissement pour ${key}`)
+    return button
+  }
+
+  it('ne l’offre que sur ce que le relevé a su comparer, et qui s’en écarte', () => {
+    const panel = renderProperties({ form: buildPropertyForm(compass(document())) })
+
+    // Les quatre réglages du pilote : la comparaison a conclu, la valeur est simple.
+    for (const key of ['rotation', 'navigation_target', 'windStyle', 'showBearing']) {
+      expect(restoreLine(panel, key), key).not.toBeNull()
+    }
+    // Déjà à la valeur d'usine : il n'y a rien à rétablir.
+    for (const key of ['showHeading', 'showBackground']) {
+      expect(restoreLine(panel, key), key).toBeNull()
+    }
+    // « hors relevé » — le troisième état de `compareToDefault` est un refus de conclure,
+    // pas un repli poli : on ne rétablit pas ce qu'on n'a pas su comparer.
+    for (const key of ['_border', '_bg', '_theme']) {
+      expect(fieldAt(panel.form, key).defaultState, key).toBe('unknown')
+      expect(restoreLine(panel, key), key).toBeNull()
+    }
+    expect(panel.element.querySelectorAll('.props__restore')).toHaveLength(4)
+  })
+
+  it('ne l’offre jamais sur une valeur composée : elle ne se reconstruit pas de mémoire', () => {
+    const doc = document()
+    const panel = renderProperties({ form: buildPropertyForm(map(doc)) })
+    for (const field of panel.form.fields) {
+      if (field.valueKind !== 'object' && field.valueKind !== 'array') continue
+      expect(restoreLine(panel, field.path), field.path).toBeNull()
+    }
+  })
+
+  it('ne l’offre pas du tout en consultation : rien ne s’écrit là', () => {
+    const doc = document()
+    const before = serializeJson(doc)
+    const panel = readOnlyPanel(compass(doc))
+    expect(panel.element.querySelectorAll('.props__restore')).toHaveLength(0)
+    expect(panel.element.querySelectorAll('.props__restore-btn')).toHaveLength(0)
+    expect(serializeJson(doc)).toBe(before)
+  })
+
+  it('se voit sans survol, et dit ce qu’il échange avant le clic', () => {
+    const panel = renderProperties({ form: buildPropertyForm(compass(document())) })
+    const line = restoreLine(panel, 'windStyle')!
+    const button = restoreButton(panel, 'windStyle')
+
+    // Il ne se déguise pas : un vrai bouton, pas un fantôme révélé au survol comme
+    // « Retirer » de l'écran des préférences — celui-ci change le vol.
+    expect(button.textContent).toBe('Rétablir la valeur d’usine')
+    expect(button.className).not.toContain('btn--ghost')
+    expect(button.getAttribute('aria-label'))
+      .toBe(`Rétablir ${fieldAt(panel.form, 'windStyle').label} à sa valeur d’usine`)
+
+    // Les deux valeurs en présence, à l'écran et dans la langue du pilote.
+    const note = line.querySelector('.props__restore-note')!.textContent!
+    expect(note).toContain('« Aucun » d’usine')
+    expect(note).toContain('« Arc » dans ce fichier')
+    expect(note).toContain('change ce que fait l’appareil en vol')
+  })
+
+  it('écrit exactement la valeur du relevé, sans toucher à un autre octet', () => {
+    const doc = document()
+    const before = serializeJson(doc)
+    const panel = renderProperties({ form: buildPropertyForm(compass(doc)) })
+    restoreButton(panel, 'windStyle').click()
+
+    const after = serializeJson(doc)
+    // Une seule plage diverge, et c'est la valeur : rien n'a été réécrit ni réindenté.
+    // C'est la preuve que l'écriture passe par le noyau préservant de `core/`, et non
+    // par un `JSON.parse` / `JSON.stringify` qui normaliserait tout le fichier.
+    expect(singleDifference(before, after)).toEqual({ before: 'ARC', after: 'NONE' })
+    expect(diffLines(before, after)).toEqual(['            "windStyle": "NONE",'])
+  })
+
+  it('rend le fichier à l’octet près quand on repose la valeur qu’il portait', () => {
+    const doc = document()
+    const panel = renderProperties({ form: buildPropertyForm(compass(doc)) })
+    restoreButton(panel, 'showBearing').click()
+    expect(serializeJson(doc)).not.toBe(source)
+
+    // Le panneau a été refait : c'est le champ frais qu'il faut reposer.
+    expect(setFieldValue(fieldAt(panel.form, 'showBearing'), 'true')).toBe(true)
+    expect(serializeJson(doc)).toBe(source)
+    expect(sha256(serializeJson(doc))).toBe(sha256(source))
+  })
+
+  it('l’annulation le défait, empreinte comprise', () => {
+    const history = createHistory(document())
+    const doc = history.current()
+    const panel = renderProperties({
+      form: buildPropertyForm(compass(doc)),
+      // Ce que `main.ts` branche : chaque écriture effective devient un pas d'historique.
+      onChange: (field) => { history.record(`Régler ${field.label}`) }
+    })
+
+    restoreButton(panel, 'windStyle').click()
+    expect(history.canUndo()).toBe(true)
+    expect(serializeJson(history.current())).not.toBe(source)
+    expect(sha256(serializeJson(history.undo()))).toBe(sha256(source))
+    expect(history.isDirty()).toBe(false)
+  })
+
+  it('le geste disparaît une fois accompli, et la ligne se dit au relevé', () => {
+    const doc = document()
+    const panel = renderProperties({ form: buildPropertyForm(compass(doc)) })
+    restoreButton(panel, 'windStyle').click()
+
+    expect(restoreLine(panel, 'windStyle')).toBeNull()
+    expect(fieldAt(panel.form, 'windStyle').defaultState).toBe('default')
+    expect(panel.form.customizedCount).toBe(3)
+    // Le contrôle montre la valeur rétablie : le panneau est refait depuis le document.
+    const select = panel.element.querySelector<HTMLSelectElement>('[data-key="windStyle"] select')!
+    expect(select.value).toBe('NONE')
+  })
+
+  it('dit d’où vient la valeur d’usine dès que le fichier ne vient pas de cette version', () => {
+    const trustOf = (options: Record<string, unknown>): { trust: string; note: string } => {
+      const panel = renderProperties({
+        form: buildPropertyForm(compass(document())), ...options
+      })
+      const line = restoreLine(panel, 'windStyle')!
+      return { trust: line.dataset.trust!, note: line.querySelector('.props__restore-note')!.textContent! }
+    }
+
+    // La version même du relevé : rien à ajouter. Une phrase de prudence servie à tort
+    // apprend au lecteur à ne plus lire les phrases de prudence.
+    const exact = trustOf({ fileVersionCode: DEFAULTS_VERSION_CODE })
+    expect(exact.trust).toBe('exact')
+    expect(exact.note).not.toContain('vérifiez')
+
+    // Une autre version : l'avertissement est **dans la phrase**, pas dans l'infobulle —
+    // « avant le clic » exclut le survol.
+    const other = trustOf({ fileVersionCode: 91230, fileVersionName: '0.9.12.3' })
+    expect(other.trust).toBe('indicative')
+    expect(other.note).toContain(DEFAULTS_VERSION_NAME)
+    expect(other.note).toContain('vérifiez que c’est bien celle à rétablir')
+
+    // Version inconnue : on ne prétend pas savoir, et on le dit pareillement.
+    const unstated = trustOf({})
+    expect(unstated.trust).toBe('unstated')
+    expect(unstated.note).toContain('n’est pas connue ici')
+    expect(unstated.note).toContain('vérifiez que c’est bien celle à rétablir')
+  })
+
+  it('l’infobulle dit ce qui sépare ce geste de « Définir cette valeur »', () => {
+    const panel = renderProperties({ form: buildPropertyForm(compass(document())) })
+    const title = restoreButton(panel, 'windStyle').title
+    expect(title).toContain('Écrit « windStyle » : Aucun dans le fichier, à la place de Arc.')
+    expect(title).toContain('celui-là laisse l’appareil se comporter exactement comme aujourd’hui, celui-ci non')
+  })
+})

@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { decode, getMember } from '../../src/core/access'
 import { parseJson } from '../../src/core/parseJson'
+import { createHistory } from '../../src/model/history'
 import { serializeJson } from '../../src/core/serializeJson'
 import type { JsonNode } from '../../src/core/jsonDocument'
 import {
@@ -23,6 +24,7 @@ import {
   tallyText,
   removePreference,
   writePreference,
+  RESTORE_LABEL,
   writesString,
   type PreferenceEdit,
   type PreferenceRow
@@ -1015,7 +1017,8 @@ describe('preferences.css habille les contrôles sans sortir du cadre', () => {
   it('pose les contrôles sur les jetons du cadre, jamais sur une couleur en dur', () => {
     for (const rule of ['.prefs__select', '.prefs__text', '.prefs__number', '.prefs__slider',
       '.prefs__checkbox', '.prefs__adopt', '.prefs__drop', '.prefs__aside',
-      '.prefs__implicit', '.prefs__refusal', '.prefs__filled']) {
+      '.prefs__implicit', '.prefs__refusal', '.prefs__filled',
+      '.prefs__restore', '.prefs__restore-btn', '.prefs__restore-note']) {
       expect(css, rule).toContain(rule)
     }
     const rules = css.replace(/\/\*[\s\S]*?\*\//g, '')
@@ -1189,5 +1192,237 @@ describe('rendre un défaut explicite, et le rendre à l’implicite', () => {
     // le réglage touché sur l'appareil.
     expect(removePreference(document, '_ttsSpeed')).toBe(0)
     expect(serializeJson(document)).toBe(source)
+  })
+})
+
+/* =========================================== le troisième geste : rétablir la valeur d'usine */
+
+/**
+ * Les deux gestes du couple implicite ↔ explicite sont **neutres pour l'appareil** :
+ * écrire une valeur déjà appliquée ne change rien, la retirer non plus. Celui-ci remplace
+ * un réglage que le pilote a choisi — l'appareil ne se comportera plus pareil en vol.
+ *
+ * Il ne peut donc être ni discret ni présenté comme une commodité. Ce bloc en vérifie les
+ * trois conséquences : il se voit (jamais révélé au survol), il ne s'offre que là où la
+ * valeur d'usine est connue **sans ambiguïté**, et il dit d'où elle vient quand le fichier
+ * ne vient pas de la version du catalogue.
+ */
+describe('rétablir la valeur d’usine d’un réglage que le pilote a changé', () => {
+  function restoreLine(
+    page: ReturnType<typeof renderPreferencesPage>, key: string
+  ): HTMLElement | null {
+    const line = rowElement(page, key).querySelector<HTMLElement>('.prefs__restore')
+    return line === null || line.hidden ? null : line
+  }
+
+  function restoreButton(
+    page: ReturnType<typeof renderPreferencesPage>, key: string
+  ): HTMLButtonElement {
+    const line = restoreLine(page, key)
+    const button = line?.querySelector<HTMLButtonElement>('.prefs__restore-btn')
+    if (button === undefined || button === null) {
+      throw new Error(`pas de bouton de rétablissement pour ${key}`)
+    }
+    return button
+  }
+
+  it('ne l’offre que sur une valeur réglée dont la valeur d’usine est sûre', () => {
+    const { page } = editable(BACKUP_2026)
+
+    // Réglée par le pilote, valeur d'usine relevée : c'est le seul cas qui a un objet.
+    for (const key of ['Display.Theme', 'Display.Orientation', 'Sensors.AcousticVario.AvgLift']) {
+      expect(rowElement(page, key).dataset.state, key).toBe('custom')
+      expect(restoreLine(page, key), key).not.toBeNull()
+    }
+
+    // Déjà à la valeur d'usine : rien à rétablir — c'est « Retirer » qui a un sens là.
+    expect(restoreLine(page, 'Display.Fullscreen')).toBeNull()
+
+    // Deux valeurs d'usine contradictoires (1013 et 1013.25) : on ne peut pas proposer de
+    // revenir à « la » valeur d'usine quand il y en a deux. Même refus que « Retirer ».
+    expect(rowElement(page, 'Sensors.ManualQnh').dataset.state).toBe('conflict')
+    expect(restoreLine(page, 'Sensors.ManualQnh')).toBeNull()
+
+    // Valeur d'usine calculée au démarrage selon la langue de l'appareil : il n'y a rien
+    // à rétablir qu'on n'inventerait pas.
+    expect(rowElement(page, 'Unit.Altitude').dataset.state).toBe('undecidable')
+    expect(restoreLine(page, 'Unit.Altitude')).toBeNull()
+
+    // Absente du fichier : c'est « Définir cette valeur » qui s'y offre, pas celui-ci.
+    const { page: neuve } = editable(FORMES_PRESERVEES)
+    expect(rowElement(neuve, 'Tweak.VolumeUp').dataset.state).toBe('absent')
+    expect(restoreLine(neuve, 'Tweak.VolumeUp')).toBeNull()
+  })
+
+  it('l’offre sur toutes les lignes réglées, et sur celles-là seulement', () => {
+    const { page } = editable(BACKUP_2026)
+    for (const row of screenRows(BACKUP_2026)) {
+      const offered = row.state === 'custom' && editRefusal(row) === undefined
+      expect(restoreLine(page, row.key) !== null, row.key).toBe(offered)
+    }
+    // Trente réglages du pilote dans ce fichier, dont six touches (`Keys.*`) que cette
+    // page ne propose pas de régler : sur l'appareil, elles se capturent dans une boîte
+    // de dialogue dont le domaine n'est pas relevé. Restent vingt-quatre.
+    expect(page.element.querySelectorAll('.prefs__restore:not([hidden])')).toHaveLength(24)
+  })
+
+  it('ne l’offre pas du tout dans une page en lecture seule', () => {
+    const page = renderPreferencesPage({ document: documentOf(BACKUP_2026), catalog })
+    expect(page.element.querySelectorAll('.prefs__restore')).toHaveLength(0)
+    expect(page.element.querySelectorAll('.prefs__restore-btn')).toHaveLength(0)
+  })
+
+  it('se voit sans survol, et dit ce qu’il échange avant le clic', () => {
+    const { page } = editable(BACKUP_2026)
+    const button = restoreButton(page, 'Display.Theme')
+
+    // Un vrai bouton bordé, pas le fantôme de « Retirer » : ce geste-là change le vol.
+    expect(button.textContent).toBe('Rétablir la valeur d’usine')
+    expect(button.className).not.toContain('btn--ghost')
+    expect(button.getAttribute('aria-label')).toBe('Rétablir Thème à sa valeur d’usine')
+
+    const note = restoreLine(page, 'Display.Theme')!
+      .querySelector('.prefs__restore-note')!.textContent!
+    expect(note).toContain('« Blanc » d’usine')
+    expect(note).toContain('« Haut contraste blanc » dans ce fichier')
+    expect(note).toContain('change ce que fait l’appareil en vol')
+  })
+
+  it('écrit la valeur d’usine, et pas un octet de plus', () => {
+    const { source, document, page, edits } = editable(BACKUP_2026)
+    restoreButton(page, 'Display.Theme').click()
+
+    const after = serializeJson(document)
+    // Une seule plage diverge, et c'est la valeur : rien n'a été réécrit ni réindenté.
+    // C'est la preuve que l'écriture passe par le noyau préservant de `core/`, jamais par
+    // un `JSON.parse` / `JSON.stringify` qui normaliserait tout le fichier.
+    // `singleDifference` cadre la plage sur le préfixe et le suffixe communs : de
+    // « WhiteHCTheme » à « WhiteTheme », seul « HC » disparaît.
+    expect(singleDifference(source, after)).toEqual({ before: 'HC', after: '' })
+    expect(after).toContain('"Display.Theme": "WhiteTheme"')
+    expect(after.split('\n')).toHaveLength(source.split('\n').length)
+    expect(edits).toHaveLength(1)
+    expect(edits[0]?.outcome).toBe('set')
+    expect(edits[0]?.description).toBe('Rétablir Thème à sa valeur d’usine')
+    expect(edits[0]?.continuous).toBe(false)
+  })
+
+  it('laisse intactes les écritures voisines que JSON.stringify dégraderait', () => {
+    // Le fichier de formes porte `1.0E7`, `-0.0`, un entier au-delà de 2^53 et une clé
+    // doublée. Rétablir un flottant voisin ne doit toucher à aucun des quatre.
+    const source = readFileSync(FORMES_PRESERVEES, 'utf8')
+    const document = parseJson(source)
+    const page = renderPreferencesPage({ document, catalog, onEdit: () => {} })
+
+    restoreButton(page, 'Sensors.AcousticVario.BueeLimit').click()
+    const after = serializeJson(document)
+
+    expect(singleDifference(source, after)).toEqual({ before: '3.0', after: '2' })
+    for (const shape of ['1.0E7', '-0.0', '9007199254740993', '"_clef_doublee": 1']) {
+      expect(after, shape).toContain(shape)
+    }
+  })
+
+  it('mène la ligne à l’état d’usine, d’où « Retirer » devient offert', () => {
+    const { page } = editable(BACKUP_2026)
+    const row = rowElement(page, 'Display.Theme')
+    expect(row.querySelector('.prefs__drop')).toBeNull()
+
+    restoreButton(page, 'Display.Theme').click()
+
+    expect(row.dataset.state).toBe('default')
+    expect(restoreLine(page, 'Display.Theme')).toBeNull()
+    // Le contrôle montre la valeur rétablie, et le second geste — celui qui rend la clé à
+    // l'implicite — devient accessible. Deux clics délibérés, deux effets séparés.
+    expect(row.querySelector<HTMLSelectElement>('select')?.value).toBe('WhiteTheme')
+    expect(row.querySelector('.prefs__drop')).not.toBeNull()
+  })
+
+  it('remet les comptes d’accord, et le geste s’efface une fois accompli', () => {
+    const { page } = editable(BACKUP_2026)
+    const avant = { ...page.summary }
+    restoreButton(page, 'Display.Theme').click()
+
+    expect(page.summary.customCount).toBe(avant.customCount - 1)
+    expect(page.summary.defaultCount).toBe(avant.defaultCount + 1)
+    expect(page.summary.fileKeyCount).toBe(avant.fileKeyCount)
+    expect(page.element.querySelectorAll('.prefs__restore:not([hidden])')).toHaveLength(23)
+  })
+
+  it('l’annulation le défait, empreinte comprise', () => {
+    const source = readFileSync(BACKUP_2026, 'utf8')
+    const document = parseJson(source)
+    const history = createHistory(document)
+    const page = renderPreferencesPage({
+      document: history.current(), catalog,
+      // Ce que `main.ts` branche : chaque écriture effective devient un pas d'historique.
+      onEdit: (edit) => { history.record(edit.description) }
+    })
+
+    restoreButton(page, 'Display.Theme').click()
+    expect(history.canUndo()).toBe(true)
+    expect(history.undoDescription()).toBe('Rétablir Thème à sa valeur d’usine')
+    expect(serializeJson(history.current())).not.toBe(source)
+    expect(sha256(serializeJson(history.undo()))).toBe(sha256(source))
+    expect(history.isDirty()).toBe(false)
+  })
+
+  it('apparaît dès qu’un réglage s’écarte de la valeur d’usine, sans recharger la page', () => {
+    const { page } = editable(BACKUP_2026)
+    expect(restoreLine(page, 'Display.Fullscreen')).toBeNull()
+
+    const box = controlOf<HTMLInputElement>(page, 'Display.Fullscreen', '.prefs__checkbox')
+    box.checked = false
+    box.dispatchEvent(new Event('change'))
+
+    expect(rowElement(page, 'Display.Fullscreen').dataset.state).toBe('custom')
+    expect(restoreLine(page, 'Display.Fullscreen')).not.toBeNull()
+  })
+
+  it('dit d’où vient la valeur d’usine dès que le fichier ne vient pas de cette version', () => {
+    const trustOf = (options: Record<string, unknown>): { trust: string; note: string } => {
+      const page = renderPreferencesPage({
+        document: documentOf(BACKUP_2026), catalog, onEdit: () => {}, ...options
+      })
+      const line = restoreLine(page, 'Display.Theme')!
+      return {
+        trust: line.dataset.trust!,
+        note: line.querySelector('.prefs__restore-note')!.textContent!
+      }
+    }
+
+    // La version même du catalogue : rien à ajouter. Une phrase de prudence servie à tort
+    // apprend au lecteur à ne plus lire les phrases de prudence.
+    const exact = trustOf({ fileVersionCode: catalog.meta.versionCode })
+    expect(exact.trust).toBe('exact')
+    expect(exact.note).not.toContain('vérifiez')
+
+    // Une autre version : l'avertissement est **dans la phrase**, pas dans l'infobulle —
+    // « avant le clic » exclut le survol, et exclut le clavier.
+    const other = trustOf({ fileVersionCode: 91230, fileVersionName: '0.9.12.3' })
+    expect(other.trust).toBe('indicative')
+    expect(other.note).toContain(catalog.meta.versionName!)
+    expect(other.note).toContain('vérifiez que c’est bien celle à rétablir')
+
+    // Version inconnue : on ne prétend pas savoir, et on le dit pareillement.
+    const unstated = trustOf({})
+    expect(unstated.trust).toBe('unstated')
+    expect(unstated.note).toContain('n’est pas connue ici')
+    expect(unstated.note).toContain('vérifiez que c’est bien celle à rétablir')
+  })
+
+  it('l’infobulle dit ce qui sépare ce geste des deux autres', () => {
+    const { page } = editable(BACKUP_2026)
+    const title = restoreButton(page, 'Display.Theme').title
+    expect(title).toContain('Écrit « Display.Theme » : Blanc dans le fichier, à la place de Haut contraste blanc.')
+    expect(title).toContain('« Définir cette valeur » et « Retirer » laissent l’appareil se comporter exactement comme aujourd’hui, celui-ci non')
+  })
+
+  it('emploie le même intitulé que le panneau des gadgets, mot pour mot', () => {
+    // Deux formulations pour un même geste, sur deux écrans du même outil, seraient un
+    // défaut à elles seules. C'est déjà la règle des deux premiers gestes.
+    expect(RESTORE_LABEL).toBe('Rétablir la valeur d’usine')
+    const { page } = editable(BACKUP_2026)
+    expect(restoreButton(page, 'Display.Theme').textContent).toBe(RESTORE_LABEL)
   })
 })
