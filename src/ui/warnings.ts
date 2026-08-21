@@ -1,8 +1,18 @@
+import type { Device } from '../catalog/devices'
 import { families as CATALOG_FAMILIES } from '../catalog/widgetCatalog/en.json'
 import { readableName } from '../catalog/widgetNames'
 import { decode, getMember, readNumber, readString } from '../core/access'
 import type { JsonNode } from '../core/jsonDocument'
 import { findDuplicateKeys } from '../core/parseJson'
+import type { Orientation } from '../model/grid'
+import {
+  RULE_SUMMARIES,
+  RULE_TITLES,
+  describeLocation,
+  inspectLayout,
+  type Finding,
+  type InspectionRuleId
+} from '../model/inspection'
 import type { Layout, Page } from '../model/layout'
 import {
   collectPersonalData,
@@ -15,9 +25,15 @@ import type { Widget } from '../model/widget'
 import { plural } from './prose'
 
 /**
- * Ce que l'interface doit dire au pilote, et rien de plus. Neuf familles, calculées ici
- * plutôt que dans `main.ts` : c'est la seule logique non triviale de la couche
- * d'interface, elle a donc ses propres tests.
+ * Ce que l'interface doit dire au pilote, et rien de plus. Neuf familles sur le
+ * **fichier**, calculées ici plutôt que dans `main.ts` : c'est la seule logique non
+ * triviale de la couche d'interface, elle a donc ses propres tests.
+ *
+ * Les sept règles du **contrôle avant vol** — ce que les pages feront une fois en l'air —
+ * ne sont pas écrites ici : elles vivent dans `src/model/inspection.ts`, qui est un
+ * module pur. Ce fichier ne fait que les habiller de la même forme et les ranger aux
+ * mêmes endroits, et c'est là que le seul recoupement des deux lectures est tranché.
+ * Voir `preflightWarnings`, tout en bas.
  *
  * Trois principes tenus d'un bout à l'autre :
  *
@@ -45,6 +61,11 @@ import { plural } from './prose'
  */
 export const REFERENCE_VERSION_CODE = 100030
 
+/**
+ * Les neuf familles qui parlent du **fichier**, plus les sept règles du contrôle avant
+ * vol, qui parlent du **comportement des pages en vol** et gardent l'identifiant que
+ * `src/model/inspection.ts` leur donne — voir `preflightWarnings`, tout en bas.
+ */
 export type WarningKind =
   | 'export-type'
   | 'theme-not-drawn'
@@ -56,6 +77,7 @@ export type WarningKind =
   | 'structure'
   | 'geometry'
   | 'covered-buttons'
+  | InspectionRuleId
 
 /**
  * Quand l'avertissement se montre. Les données personnelles ne concernent le pilote
@@ -436,6 +458,49 @@ export function isActionButton(shortName: string): boolean {
   return ACTION_BUTTONS.has(shortName)
 }
 
+/**
+ * L'index du widget qui recouvre entièrement celui de rang `position` **en peignant un
+ * fond plein**, ou `-1`. Le prédicat de la règle « caché sous un autre », isolé pour
+ * qu'il n'ait qu'une définition : `scanPage` en tire ses deux avertissements, et
+ * `coveredByOpaqueWidget` la liste que le contrôle avant vol consulte pour ne pas redire
+ * ce qui est déjà dit. Deux lectures divergentes du même fait géométrique donneraient au
+ * pilote deux réponses différentes sur le même gadget.
+ */
+function opaqueCoverIndex(page: Page, position: number): number {
+  const widget = page.widgets[position]
+  if (widget === undefined) return -1
+  return page.widgets.findIndex(
+    (other, index) => index > position && other.background <= 0 && covers(other, widget)
+  )
+}
+
+/**
+ * L'emplacement d'un gadget, écrit pour servir de clé — même découpage que
+ * `InspectionLocation` de `src/model/inspection.ts`, rangs à partir de 1 compris.
+ */
+function locationKey(orientation: Orientation, pageRank: number, widgetRank: number): string {
+  return `${orientation}:${pageRank}:${widgetRank}`
+}
+
+/**
+ * Les gadgets dont ce module dit déjà qu'ils sont cachés sous un fond plein — qu'il en
+ * ait fait un défaut (`geometry`) ou un montage volontaire (`covered-buttons`).
+ *
+ * C'est la clé du raccord avec `src/model/inspection.ts` : voir `preflightWarnings`.
+ */
+export function coveredByOpaqueWidget(layout: Layout): ReadonlySet<string> {
+  const keys = new Set<string>()
+  for (const orientation of ['landscape', 'portrait'] as const) {
+    layout[orientation].forEach((page, index) => {
+      page.widgets.forEach((_, position) => {
+        if (opaqueCoverIndex(page, position) === -1) return
+        keys.add(locationKey(orientation, index + 1, position + 1))
+      })
+    })
+  }
+  return keys
+}
+
 /** Ce que la lecture des rectangles a trouvé, rangé selon ce que le pilote doit en faire. */
 interface GeometryFindings {
   /** De vrais défauts : le widget ne rendra pas le service attendu. */
@@ -482,9 +547,7 @@ function scanPage(page: Page, where: string, language: string, found: GeometryFi
     // Aucun type n'est traité à part : `_bg` suffit. L'exclusion qui visait
     // `WLiveMessage` (registerTransparent) était un pansement sur l'inversion — les
     // 10 occurrences du corpus portent `_bg: 100` et le critère les écarte tout seul.
-    const hider = page.widgets.findIndex(
-      (other, index) => index > position && other.background <= 0 && covers(other, widget)
-    )
+    const hider = opaqueCoverIndex(page, position)
     if (hider === -1) return
 
     const cover = `gadget ${hider + 1} (${readableName(page.widgets[hider]!.shortName, language)})`
@@ -664,4 +727,143 @@ export function computeWarnings(input: WarningInput): Warning[] {
 /** Les avertissements d'un moment donné — à l'import, ou juste avant l'export. */
 export function warningsAt(warnings: Warning[], moment: WarningMoment): Warning[] {
   return warnings.filter((warning) => warning.moment === moment)
+}
+
+/* ------------------------------------------------------- 10. le contrôle avant vol */
+
+/**
+ * # Le raccord avec `src/model/inspection.ts`
+ *
+ * Les neuf familles au-dessus parlent du **fichier** : d'où il vient, ce qu'il révèle,
+ * ce que cet éditeur n'a pas su en lire. Le contrôle avant vol, lui, parle du
+ * **comportement des pages en vol** — sept règles, écrites et éprouvées dans
+ * `src/model/inspection.ts`, qui est un module pur et le reste.
+ *
+ * Il n'a pas d'écran à lui, et il n'en aura pas : ce que le pilote doit vérifier avant
+ * de décoller n'est pas une rubrique de plus à aller chercher. Ses constats prennent
+ * donc la forme des autres — un `Warning` par règle, le détail replié au-delà de quatre
+ * lignes — et se rangent dans les deux emplacements que la vue d'ensemble a déjà : le
+ * panneau déplié « À vérifier dans ce fichier », et la ligne repliée des remarques.
+ *
+ * ## Un constat par règle, jamais un par gadget
+ *
+ * Une configuration réelle en rend seize. Seize encadrés d'égal poids visuel avant la
+ * première vignette, c'est exactement ce que le repli des remarques a déjà corrigé une
+ * fois. Groupés par règle, ils font au plus sept cartes, dont le titre dit la règle et
+ * dont la liste dit les gadgets — la grammaire de `warningCard`, sans rien y changer.
+ *
+ * ## Ce qui monte dans le panneau d'alerte, et ce qui n'y monte pas
+ *
+ * `severity` seule ne suffit pas à en décider. Le panneau déplié porte un liséré
+ * d'alerte au-dessus des pages : y mettre une supposition, c'est alerter sur ce qu'on
+ * n'a pas vérifié — précisément le reproche qu'a valu à cet outil un avertissement
+ * criant au loup sur un montage voulu. Une règle n'y monte donc que si elle est **à la
+ * fois** grave (`likely-error`) **et** établie (`measured` ou `documented`). Le doute
+ * n'est pas tu pour autant : il se range dans les remarques, son titre dit qu'il reste
+ * à confirmer, et son explication porte ce qui le trancherait.
+ *
+ * `views.ts` tient la liste des familles qui alertent ; `warnings.test.ts` vérifie
+ * qu'elle est bien ce que cette règle donne, règle par règle.
+ *
+ * ## Le seul recoupement des deux modules, et comment il est levé
+ *
+ * La règle 1 (« gadget impossible à toucher ») et la lecture géométrique de ce
+ * module-ci regardent tous deux le recouvrement, mais ne posent pas la même question :
+ * `scanPage` demande « ce gadget sera-t-il **visible** ? » et ne retient donc comme
+ * masquants que les fonds pleins ; la règle 1 demande « un appui l'atteindra-t-il ? »,
+ * et un gadget qui ne peint rien prend les appuis tout autant qu'un opaque.
+ *
+ * Là où les deux se rejoignent — un gadget entièrement couvert par **un** gadget au
+ * fond plein —, ce module a déjà parlé, et il a mieux à dire : il distingue le bouton
+ * d'action, dont le montage sous une carte est voulu et fonctionne, du gadget d'affichage
+ * qui ne montrera jamais sa valeur. Deux avertissements pour une seule cause valent
+ * moins qu'un, et ces deux-là se contrediraient : sur la configuration du propriétaire,
+ * ses deux « Luminosité de l'écran » rangés sous l'assistant de thermique reçoivent de
+ * `covered-buttons` un « toujours actif au doigt, rien à corriger », là où la règle 1
+ * annoncerait qu'aucun appui ne les atteint. C'est le même faux avertissement qu'il
+ * avait signalé, sous un autre nom.
+ *
+ * Ces constats-là sont donc retirés, et **eux seuls**. Ce que la règle 1 apporte et que
+ * ce module ne sait pas voir reste : le recouvrement par un gadget **transparent** — sur
+ * la même configuration, deux `WLiveMessage` invisibles posés sur deux boutons de
+ * navigation et deux afficheurs de compétition — et le recouvrement par **plusieurs**
+ * gadgets dont aucun ne couvre seul.
+ */
+export interface PreflightInput {
+  document: JsonNode
+  layout: Layout
+  /** Langue des libellés de gadgets, déjà résolue — comme pour `computeWarnings`. */
+  language: string
+  /**
+   * Le gabarit d'écran choisi dans la barre d'outils : c'est lui qui donne les
+   * millimètres de la règle de lisibilité. Il change sans que le fichier bouge, ce qui
+   * est la raison pour laquelle ces constats se calculent au rendu et non à l'import.
+   */
+  device: Device
+  /**
+   * `catalog.isProWidget` d'un catalogue déjà chargé. Absent : la règle Pro n'est pas
+   * évaluée du tout, plutôt que devinée — c'est le contrat d'`inspectLayout`.
+   */
+  isProWidget?: (shortName: string) => boolean
+  /** Distance œil–instrument, en millimètres, quand le pilote l'a dite. */
+  readingDistanceMm?: number
+}
+
+/**
+ * Ce qui ouvre l'explication d'une règle qui repose sur une hypothèse. Le `toVerify` du
+ * modèle suit immédiatement : il dit ce qui lèverait le doute, et c'est le seul
+ * renseignement qui vaille tant qu'il n'est pas levé.
+ */
+const HYPOTHESIS_LEAD = 'Ce n’est pas un constat mesuré mais une question, et voici ce qui la trancherait.'
+
+/**
+ * Ce que le titre gagne quand la règle repose sur une hypothèse. Il se lit aussi sur la
+ * ligne repliée des remarques, qui n'affiche que les titres : sans lui, une supposition
+ * et une mesure y seraient indiscernables.
+ *
+ * « à confirmer sur l'instrument » et non « à vérifier » : le panneau déplié s'intitule
+ * déjà « À vérifier dans ce fichier », et ces deux-là ne veulent pas dire la même chose.
+ */
+const HYPOTHESIS_MARK = ' — à confirmer sur l’instrument'
+
+/** Vrai si la règle mérite le panneau déplié : grave, et établie. Voir l'en-tête. */
+export function isAttentionFinding(finding: Finding): boolean {
+  return finding.severity === 'likely-error' && finding.certainty !== 'hypothesis'
+}
+
+export function preflightWarnings(input: PreflightInput): Warning[] {
+  const alreadySaid = coveredByOpaqueWidget(input.layout)
+  const findings = inspectLayout(input).filter((finding) => {
+    if (finding.ruleId !== 'unreachable-widget') return true
+    const { orientation, pageRank, widgetRank } = finding.location
+    return !alreadySaid.has(locationKey(orientation, pageRank, widgetRank ?? 0))
+  })
+
+  // Un groupe par règle, dans l'ordre où `inspectLayout` les rend — celui des règles.
+  const groups = new Map<InspectionRuleId, Finding[]>()
+  for (const finding of findings) {
+    const group = groups.get(finding.ruleId)
+    if (group) group.push(finding)
+    else groups.set(finding.ruleId, [finding])
+  }
+
+  const warnings: Warning[] = []
+  for (const [ruleId, group] of groups) {
+    // La certitude et la gravité sont des propriétés de la règle, pas du gadget : tous
+    // les constats d'un groupe portent les mêmes. Le premier parle donc pour tous.
+    const first = group[0]!
+    const doubt = first.certainty === 'hypothesis'
+    warnings.push({
+      kind: ruleId,
+      // Le contrôle porte sur la configuration ouverte, pas sur ce qu'on s'apprête à
+      // donner à quelqu'un : il se lit à l'import, avec le reste.
+      moment: 'import',
+      title: doubt ? `${RULE_TITLES[ruleId]}${HYPOTHESIS_MARK}` : RULE_TITLES[ruleId],
+      detail: doubt
+        ? `${RULE_SUMMARIES[ruleId]} ${HYPOTHESIS_LEAD} ${first.toVerify ?? ''}`.trim()
+        : RULE_SUMMARIES[ruleId],
+      items: group.map((finding) => `${describeLocation(finding.location)} : ${finding.message}`)
+    })
+  }
+  return warnings
 }

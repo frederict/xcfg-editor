@@ -290,6 +290,33 @@ describe('assemblage — la vue d’ensemble montre les pages avant les constats
     expect(main).not.toContain('function warningPanel')
   })
 
+  /**
+   * Le contrôle avant vol n'a pas d'écran à lui : ses constats se joignent à ceux du
+   * fichier avant le tri, et se rangent dans les deux mêmes panneaux. Un troisième
+   * emplacement serait une rubrique de plus à aller chercher — or c'est ce qu'on
+   * vérifie avant de décoller.
+   */
+  it('le contrôle avant vol se joint aux constats du fichier, sans panneau à lui', () => {
+    expect(main).toContain('preflightWarnings({')
+    expect(main).toMatch(/splitWarnings\(warningsAt\(session\.warnings, 'import'\)\.concat\(/)
+    expect(main).not.toMatch(/function (preflight|inspection)Panel/)
+  })
+
+  /**
+   * Deux de ses règles dépendent de choses qui bougent sans que le fichier soit rouvert :
+   * le gabarit d'écran et la géométrie des pages en mode édition. Figées à l'import,
+   * comme `session.warnings`, elles mentiraient dès le premier geste.
+   */
+  it('il se calcule au rendu, jamais mémorisé dans la session', () => {
+    expect(main).not.toMatch(/preflight:/)
+    expect(main.indexOf('preflightWarnings({')).toBeGreaterThan(main.indexOf('function render()'))
+  })
+
+  /** Le liséré d'alerte suit le panneau : une seule liste, pas deux copies. */
+  it('la famille qui alerte et la famille qui se peint en alerte sont la même liste', () => {
+    expect(main).toContain('const ATTENTION_KINDS = ATTENTION_WARNING_KINDS')
+  })
+
   it('rien n’est supprimé : la ligne repliée porte tous les constats', () => {
     // Ils disent des choses vraies que rien d'autre ne dit ; ils passent seulement après
     // les pages, qui sont ce que le pilote vient voir.

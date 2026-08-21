@@ -11,6 +11,7 @@ import {
   DEFAULT_READING_DISTANCE_MM,
   MINIMUM_CHARACTER_ANGLE_ARCMIN,
   OBSOLETE_WIDGET_KEYS,
+  RULE_SUMMARIES,
   RULE_TITLES,
   characterHeightMm,
   describeLocation,
@@ -639,6 +640,30 @@ describe('ce que ce module refuse de signaler', () => {
       expect(title.length, id).toBeGreaterThan(5)
     }
     expect(Object.keys(RULE_TITLES)).toHaveLength(7)
+  })
+
+  /**
+   * Le résumé dit ce que vaut la règle, le message dit ce qui se passe sur ce gadget-là.
+   * Une interface qui groupe pose l'un au-dessus des autres : si le résumé recopiait un
+   * message, le pilote relirait la même phrase à chaque ligne.
+   */
+  it('chaque règle a un résumé, et aucun ne recopie un message de constat', () => {
+    const document = parseJson(readFileSync(BACKUP_2026, 'utf8'))
+    const findings = inspectLayout({
+      document,
+      layout: readLayout(document),
+      device: deviceFor(readString(getMember(document, 'info')!, 'device')),
+      language: 'fr',
+      isProWidget: (name) => name === 'WButtonBrightness'
+    })
+
+    expect(Object.keys(RULE_SUMMARIES)).toEqual(Object.keys(RULE_TITLES))
+    for (const [id, summary] of Object.entries(RULE_SUMMARIES)) {
+      expect(summary.length, id).toBeGreaterThan(40)
+      for (const finding of findings) {
+        expect(finding.message, `${id} / ${finding.ruleId}`).not.toContain(summary)
+      }
+    }
   })
 
   it('un constat « hypothesis » dit toujours ce qui le lèverait, et lui seul', () => {

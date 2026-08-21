@@ -250,8 +250,23 @@ export function buildOverview(
  * au-dessus des pages, le reste se replie derrière une ligne. Un pilote ouvre son
  * fichier pour **voir ses pages** ; quatre encadrés d'égal poids visuel avant la
  * première vignette lui font faire défiler un écran et demi de prose pour rien.
+ *
+ * ## Les règles du contrôle avant vol s'y rangent par un critère, pas par goût
+ *
+ * `road-maps-on-same-page` est la seule des sept règles de `src/model/inspection.ts` à
+ * être **grave** (`likely-error`) **et établie** (XCTrack le dit dans ses propres
+ * réglages). Les six autres sont soit de simples renseignements, soit des suppositions —
+ * et une supposition n'a rien à faire derrière un liséré d'alerte : c'est ce qui a valu
+ * à cet outil de crier au loup sur un montage volontaire. Elles descendent donc dans la
+ * ligne repliée, où leur titre dit qu'elles restent à confirmer.
+ *
+ * Le critère est écrit dans `isAttentionFinding` et `warnings.test.ts` vérifie, règle par
+ * règle, que cette liste est exactement ce qu'il donne : ajouter une huitième règle
+ * grave et établie sans l'ajouter ici fera tomber ce test.
  */
-export const ATTENTION_WARNING_KINDS = ['structure', 'geometry', 'personal-data']
+export const ATTENTION_WARNING_KINDS = [
+  'structure', 'geometry', 'personal-data', 'road-maps-on-same-page'
+]
 
 /**
  * Sépare ce qui alerte de ce qui renseigne. Le type est volontairement minimal — la

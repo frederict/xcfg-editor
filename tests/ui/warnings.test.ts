@@ -1,15 +1,22 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import CATALOG from '../../src/catalog/widgetCatalog/en.json'
+import { getMember, readString } from '../../src/core/access'
 import { parseJson } from '../../src/core/parseJson'
 import type { JsonNode } from '../../src/core/jsonDocument'
 import { readLayout } from '../../src/model/layout'
 import { readRenderSettings } from '../../src/model/preferences'
+import { DEVICES, deviceFor } from '../../src/catalog/devices'
+import { inspectLayout } from '../../src/model/inspection'
+import { ATTENTION_WARNING_KINDS, splitWarnings } from '../../src/ui/views'
 import {
   REFERENCE_VERSION_CODE,
   computeWarnings,
   isActionButton,
+  isAttentionFinding,
+  preflightWarnings,
   warningsAt,
+  type PreflightInput,
   type Warning,
   type WarningKind
 } from '../../src/ui/warnings'
@@ -89,6 +96,28 @@ function button(
     "CLASS": "org.xcontest.XCTrack.widget.w.${shortName}",
     "X1": ${x1}, "Y1": ${y1}, "X2": ${x2}, "Y2": ${y2},
     "_border": true, "_bg": 100, "_theme": ""
+  }`
+}
+
+/**
+ * Le drapeau Pro tel que le catalogue extrait de l'APK le porte — la même lecture que
+ * `catalog.isProWidget`, sans charger le morceau de langue.
+ */
+const PRO_WIDGETS: ReadonlySet<string> = new Set(
+  Object.entries(CATALOG.widgets)
+    .filter(([, entry]) => (entry as { pro?: boolean }).pro === true)
+    .map(([shortName]) => shortName)
+)
+
+const isProWidget = (shortName: string): boolean => PRO_WIDGETS.has(shortName)
+
+/** Un widget « Carte » dont la carte routière est allumée — la règle des deux cartes. */
+function map(x1: number, y1: number, x2: number, y2: number): string {
+  return `{
+    "CLASS": "org.xcontest.XCTrack.widget.w.WMap",
+    "X1": ${x1}, "Y1": ${y1}, "X2": ${x2}, "Y2": ${y2},
+    "_border": true, "_bg": 100, "_theme": "",
+    "mapWidget_mapAppearance": { "theme": "ClearpilotForest", "terrain": "None" }
   }`
 }
 
@@ -597,5 +626,231 @@ describe('avertissements — ce qui n’est délibérément pas signalé', () =>
     const first = widget(0, 0, 5000, 5000)
     const second = widget(2500, 2500, 7500, 7500)
     expect(kinds(warningsOf(documentWith([first, second])))).not.toContain('geometry')
+  })
+})
+
+/* ================================================= 10. le contrôle avant vol branché */
+
+/**
+ * Les sept règles de `src/model/inspection.ts` sont éprouvées chez elles
+ * (`tests/model/inspection.test.ts`). Ce qui se vérifie **ici** est le raccord, et lui
+ * seul : où les constats atterrissent, ce qui n'est pas dit deux fois, et de quel ton se
+ * disent ceux qui reposent sur une supposition.
+ */
+describe('contrôle avant vol — le raccord avec les neuf familles', () => {
+  const AIR3 = DEVICES[0]!
+
+  function preflightOfFile(name: string, options: Partial<PreflightInput> = {}): Warning[] {
+    const document = parseJson(readFileSync(EXPORTS + name, 'utf8'))
+    const layout = readLayout(document)
+    return preflightWarnings({
+      document,
+      layout,
+      language: 'fr',
+      device: deviceFor(readString(getMember(document, 'info')!, 'device')),
+      isProWidget,
+      ...options
+    })
+  }
+
+  const REAL = '2026-08-20_backup-00.xcfg'
+
+  it('ne s’ouvre pas un troisième emplacement : tout se range dans les deux poids', () => {
+    const { attention, remarks } = splitWarnings(preflightOfFile(REAL))
+    expect(attention.length + remarks.length).toBe(preflightOfFile(REAL).length)
+  })
+
+  /**
+   * Seize constats sur cette configuration, et cinq encadrés. Un encadré par constat
+   * aurait repoussé la première vignette hors de l'écran — c'est exactement ce que le
+   * repli des remarques a déjà corrigé une fois.
+   */
+  it('groupe par règle : cinq encadrés pour seize constats', () => {
+    const warnings = preflightOfFile(REAL)
+    expect(warnings).toHaveLength(5)
+    expect(warnings.reduce((sum, warning) => sum + warning.items.length, 0)).toBe(14)
+    expect(kinds(warnings)).toEqual([
+      'unreachable-widget', 'page-never-shown', 'widget-too-small',
+      'pro-widget-without-licence', 'obsolete-key'
+    ])
+  })
+
+  /**
+   * **Le faux avertissement qui ne doit jamais revenir, deuxième round.** Les deux
+   * « Luminosité de l'écran » de `landscape[3]` sont rangés sous l'assistant de
+   * thermique : `covered-buttons` en dit déjà « toujours actif au doigt, rien à
+   * corriger ». La règle 1 annoncerait, du même fichier et sur les mêmes gadgets,
+   * qu'aucun appui ne les atteint. Le pilote a signalé ce message une fois ; deux
+   * messages contradictoires seraient pire.
+   */
+  it('la règle 1 se tait là où « boutons cachés » a déjà parlé', () => {
+    const covered = pick(warningsOfFile(REAL), 'covered-buttons')
+    expect(covered?.items).toHaveLength(2)
+    for (const item of covered?.items ?? []) expect(item).toContain('Paysage, page 4')
+
+    const unreachable = pick(preflightOfFile(REAL), 'unreachable-widget')
+    for (const item of unreachable?.items ?? []) expect(item).not.toContain('Paysage, page 4')
+  })
+
+  /**
+   * **Ce que la règle 1 apporte et qu'aucune autre ne voit** : le recouvrement par un
+   * gadget qui ne peint rien. Deux `WLiveMessage` invisibles (`_bg: 100`) sont posés sur
+   * `landscape[4]` par-dessus deux boutons de navigation et deux afficheurs de
+   * compétition. `scanGeometry` les ignore — à juste titre, ils restent visibles — et
+   * n'a donc rien à en dire.
+   */
+  it('mais garde le recouvrement par un gadget transparent, que rien d’autre ne voit', () => {
+    const unreachable = pick(preflightOfFile(REAL), 'unreachable-widget')
+    expect(unreachable?.items).toHaveLength(4)
+    for (const item of unreachable?.items ?? []) expect(item).toContain('Paysage, page 5')
+    expect(kinds(warningsOfFile(REAL))).not.toContain('geometry')
+  })
+
+  /**
+   * Le liséré d'alerte au-dessus des pages est un budget, pas un décor : la
+   * configuration avec laquelle le propriétaire vole n'en consomme rien.
+   */
+  it('n’alerte sur rien dans la configuration réelle du corpus', () => {
+    for (const name of CORPUS) {
+      expect(splitWarnings(preflightOfFile(name)).attention, name).toEqual([])
+    }
+  })
+
+  it('sans le drapeau Pro, la règle Pro se tait plutôt que de deviner', () => {
+    const kinds = preflightOfFile(REAL, { isProWidget: undefined }).map((w) => w.kind)
+    expect(kinds).not.toContain('pro-widget-without-licence')
+  })
+
+  /**
+   * Les millimètres viennent de la dalle du gabarit choisi, qui se change sans rouvrir
+   * le fichier : c'est pourquoi ces constats se calculent au rendu et non à l'import.
+   */
+  it('le gabarit d’écran change les constats de lisibilité', () => {
+    const small = DEVICES.find((device) => device.id === 'ratio-16-9')!
+    const onAir3 = pick(preflightOfFile(REAL), 'widget-too-small')?.items.length ?? 0
+    const onSmall = pick(preflightOfFile(REAL, { device: small }), 'widget-too-small')?.items.length ?? 0
+    expect(small.diagonalInches).toBeLessThan(AIR3.diagonalInches)
+    expect(onSmall).toBeGreaterThan(onAir3)
+  })
+})
+
+describe('contrôle avant vol — le ton des trois doutes assumés', () => {
+  /**
+   * Un document qui déclenche les sept règles à la fois. Il n'existe pas dans le corpus
+   * — et c'est heureux : aucune configuration réelle ne les réunit. Il sert à vérifier
+   * le classement **règle par règle**, y compris pour les deux qui ne se déclenchent
+   * jamais sur les fichiers du propriétaire.
+   */
+  const ALL_SEVEN = parseJson(`{
+    "info": {
+      "device": "AIR3 AIR3-7.2 8.1.0", "exportType": "backup",
+      "versionCode": ${REFERENCE_VERSION_CODE}, "proUpTo": 0
+    },
+    "layout": {
+      "landscape": [
+        {
+          "CLASS": "org.xcontest.XCTrack.page.WPThermalAssistant",
+          "navigations": "all",
+          "widgets": [
+            ${button(0, 0, 5000, 5000, 'WButtonNavig')},
+            ${widget(0, 0, 5000, 5000, 100)},
+            {
+              "CLASS": "org.xcontest.XCTrack.widget.w.WAltitude",
+              "X1": 0, "Y1": 6000, "X2": 1000, "Y2": 6300,
+              "_border": true, "_bg": 100, "_theme": "",
+              "mapWidget_showTerrain": true
+            },
+            ${button(6000, 0, 7000, 1000)},
+            ${map(7000, 0, 8000, 1000)},
+            ${map(8000, 0, 9000, 1000)}
+          ]
+        },
+        { "CLASS": "org.xcontest.XCTrack.page.WPThermalAssistant", "navigations": "none", "widgets": [] }
+      ],
+      "portrait": []
+    }
+  }`)
+
+  const SEVEN = preflightWarnings({
+    document: ALL_SEVEN,
+    layout: readLayout(ALL_SEVEN),
+    language: 'fr',
+    device: DEVICES[0]!,
+    isProWidget
+  })
+
+  it('les sept règles se déclenchent bien sur ce document', () => {
+    expect(new Set(kinds(SEVEN))).toEqual(new Set([
+      'unreachable-widget', 'page-never-shown', 'thermal-page-not-auto-target',
+      'widget-too-small', 'pro-widget-without-licence', 'road-maps-on-same-page',
+      'obsolete-key'
+    ]))
+  })
+
+  /**
+   * Le critère est écrit une fois, dans `isAttentionFinding` : grave **et** établie.
+   * `ATTENTION_WARNING_KINDS` en est la conséquence, pas un choix parallèle — une
+   * huitième règle grave et établie ajoutée sans y figurer fera tomber ce test.
+   */
+  it('la liste des familles qui alertent est exactement ce que le critère donne', () => {
+    const findings = inspectLayout({
+      document: ALL_SEVEN,
+      layout: readLayout(ALL_SEVEN),
+      language: 'fr',
+      device: DEVICES[0]!,
+      isProWidget
+    })
+    expect(findings.length).toBeGreaterThan(0)
+    for (const finding of findings) {
+      expect(ATTENTION_WARNING_KINDS.includes(finding.ruleId), finding.ruleId)
+        .toBe(isAttentionFinding(finding))
+    }
+    // Une seule des sept : « deux cartes routières sur la même page ».
+    expect(splitWarnings(SEVEN).attention.map((warning) => warning.kind))
+      .toEqual(['road-maps-on-same-page'])
+  })
+
+  /**
+   * Une supposition et une mesure ne doivent pas se lire du même ton. La ligne repliée
+   * des remarques n'affiche que les titres : sans marque dans le titre, elles y seraient
+   * indiscernables.
+   */
+  it('le titre d’une hypothèse dit qu’elle reste à confirmer, celui d’une mesure non', () => {
+    const doubts = ['unreachable-widget', 'widget-too-small', 'pro-widget-without-licence']
+    for (const warning of SEVEN) {
+      const expected = doubts.includes(warning.kind)
+      expect(warning.title.includes('à confirmer sur l’instrument'), warning.kind).toBe(expected)
+    }
+  })
+
+  it('et son explication porte ce qui trancherait la question', () => {
+    const doubt = pick(SEVEN, 'pro-widget-without-licence')
+    expect(doubt?.detail).toContain('une question')
+    expect(doubt?.detail).toContain('Un essai sur l’AIR³')
+
+    const measured = pick(SEVEN, 'obsolete-key')
+    expect(measured?.detail).not.toContain('une question')
+  })
+
+  /**
+   * Ces textes sont posés tels quels dans la page — jamais interprétés. Le pilote lirait
+   * les astérisques d'emphase, et « 0.48 » n'est pas un nombre français : la fraction
+   * supposée se dit désormais en pour-cent entiers.
+   *
+   * Les numéros de version — « XCTrack 1.0.3 » — sont des identifiants et gardent leurs
+   * points : c'est la règle du socle, un identifiant ne se met pas en forme.
+   */
+  it('aucun Markdown ni fraction à l’anglaise dans ce que le pilote lit', () => {
+    for (const warning of SEVEN) {
+      const text = textOf(warning)
+      expect(text, warning.kind).not.toContain('**')
+      expect(text, warning.kind).not.toMatch(/(?<![\d.])0\.\d/)
+    }
+  })
+
+  /** Le contrôle porte sur la configuration ouverte, pas sur ce qu'on s'apprête à donner. */
+  it('se dit à l’import, avec le reste', () => {
+    expect(warningsAt(SEVEN, 'export')).toEqual([])
+    expect(warningsAt(SEVEN, 'import')).toHaveLength(SEVEN.length)
   })
 })

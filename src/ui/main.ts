@@ -26,13 +26,15 @@ import {
 } from './pageManager'
 import type { PropertyField, PropertyForm } from './properties'
 import {
-  aspectRatioOf, buildDetail, buildOverview, clampDockHeight, dockHeightCeiling,
-  DOCK_HEIGHT_DEFAULT, DOCK_HEIGHT_MIN, readDockHeight, remarksSummary, revealOffset,
-  splitWarnings, writeDockHeight,
+  aspectRatioOf, ATTENTION_WARNING_KINDS, buildDetail, buildOverview, clampDockHeight,
+  dockHeightCeiling, DOCK_HEIGHT_DEFAULT, DOCK_HEIGHT_MIN, readDockHeight, remarksSummary,
+  revealOffset, splitWarnings, writeDockHeight,
   type DetailEditing, type DetailInspecting, type Orientation, type ViewContext,
   type VisibleBand
 } from './views'
-import { computeWarnings, REFERENCE_VERSION_CODE, warningsAt, type Warning } from './warnings'
+import {
+  computeWarnings, preflightWarnings, REFERENCE_VERSION_CODE, warningsAt, type Warning
+} from './warnings'
 import { renderWidgetList, type WidgetList } from './widgetList'
 // Type seul : effacé à la compilation, il ne ramène pas la palette dans le morceau
 // principal — même parti que `PropertyField` juste au-dessus.
@@ -709,8 +711,14 @@ function metaStrip(current: Session): HTMLElement {
   return strip
 }
 
-/** Familles qui décrivent un défaut, et non un simple fait sur le fichier. */
-const ATTENTION_KINDS = ['structure', 'geometry', 'personal-data']
+/**
+ * Familles qui décrivent un défaut, et non un simple fait sur le fichier.
+ *
+ * La même liste que celle dont `splitWarnings` se sert pour choisir le panneau : elle
+ * était recopiée ici, et deux copies auraient fini par désigner un encadré rangé dans la
+ * ligne repliée mais peint comme une alerte. Le liséré suit le panneau, toujours.
+ */
+const ATTENTION_KINDS = ATTENTION_WARNING_KINDS
 
 /**
  * Un avertissement : ce qu'il dit, pourquoi, et le détail énumérable replié au-delà de
@@ -1183,6 +1191,31 @@ function loadPaletteCatalog(language: string): Promise<WidgetCatalog> {
     paletteCatalogs.set(language, catalog)
     return catalog
   })
+}
+
+/**
+ * Le drapeau « Pro » d'un type de gadget, pour la règle du contrôle avant vol qui
+ * demande ce que XCTrack fera d'un gadget Pro dans un fichier sans licence déclarée.
+ *
+ * Il vit dans le même catalogue que la palette, et il ne dépend pas de la langue — c'est
+ * un drapeau du type, pas un libellé, comme le dit déjà `loadLibraryKit`. **Un seul
+ * chargement suffit donc pour toute la session**, quelle que soit la langue du fichier
+ * ouvert ensuite.
+ *
+ * Tant qu'il n'est pas arrivé, `inspectLayout` **n'évalue pas la règle du tout** plutôt
+ * que de deviner : c'est son contrat, et c'est pourquoi le premier rendu peut se faire
+ * sans elle. Le rendu que déclenche `loadBytes` quand le morceau arrive la porte.
+ */
+let isProWidget: ((shortName: string) => boolean) | undefined
+let proWidgetLoading: Promise<void> | undefined
+
+function loadProWidgets(language: string): Promise<void> {
+  proWidgetLoading ??= loadWidgetCatalog(language)
+    .then((catalog) => { isProWidget = catalog.isProWidget })
+    // Un catalogue qui n'arrive pas ne doit pas priver le pilote des six autres règles.
+    // La règle Pro reste alors muette, ce qui est exactement ce qu'elle promet.
+    .catch(() => undefined)
+  return proWidgetLoading
 }
 
 /**
@@ -2852,7 +2885,26 @@ function render(): void {
   // Deux poids, deux places : ce qui décrit un défaut reste déplié, ce qui renseigne se
   // replie en une ligne. Les deux passent avant les pages, mais la ligne repliée ne coûte
   // qu'elle-même — c'est ce qui ramène la première vignette dans le premier écran.
-  const { attention, remarks } = splitWarnings(warningsAt(session.warnings, 'import'))
+  //
+  // Le contrôle avant vol vient s'y joindre plutôt que de s'ouvrir un troisième
+  // emplacement : ses sept règles se rangent dans les deux mêmes poids, selon ce que
+  // chacune vaut (`preflightWarnings`).
+  //
+  // Il se calcule **ici, à chaque rendu**, là où `session.warnings` se calcule à
+  // l'ouverture. Ce n'est pas une inconséquence : deux de ses règles dépendent de choses
+  // qui bougent sans que le fichier soit rouvert — le gabarit d'écran, que la barre
+  // d'outils change et qui donne les millimètres de la lisibilité, et la géométrie des
+  // pages, que le mode édition déplace. Un constat figé à l'import mentirait dès le
+  // premier geste.
+  const { attention, remarks } = splitWarnings(warningsAt(session.warnings, 'import').concat(
+    preflightWarnings({
+      document: session.container.document,
+      layout: session.layout,
+      language: session.language,
+      device: session.device,
+      ...(isProWidget === undefined ? {} : { isProWidget })
+    })
+  ))
   const alert = attentionPanel(attention)
   if (alert) content.append(alert)
   const folded = remarksPanel(remarks)
@@ -2948,6 +3000,12 @@ async function loadBytes(bytes: Uint8Array, name: string): Promise<void> {
       warnings: computeWarnings({ document: container.document, layout, settings, language })
     }
     installDeviceSelector(device)
+    // La règle « gadget Pro sans licence » du contrôle avant vol attend un morceau
+    // téléchargé à part. Le rendu d'en bas se fait sans elle ; celui-ci la porte, et
+    // seulement si le pilote regarde toujours le même fichier — sinon il repeindrait la
+    // vue d'ensemble d'un fichier qu'il vient de refermer.
+    const opened = session
+    void loadProWidgets(language).then(() => { if (session === opened) render() })
   } catch (error) {
     failure = formatTechnicalDetail(error)
   }

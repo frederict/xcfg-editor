@@ -42,6 +42,14 @@ import type { Widget } from './widget'
  * les clics tout autant qu'un opaque — c'est même exactement ce qui se passe chez le propriétaire,
  * où deux `WLiveMessage` invisibles (`_bg: 100`) volent les clics de quatre widgets dont
  * deux `WButtonNavig` que l'instrument dessine visiblement.
+ *
+ * **Ce recoupement est levé à l'affichage, pas ici.** Là où les deux modules disent le
+ * même gadget — recouvert par **un** widget au fond plein —, c'est `warnings.ts` qui
+ * parle, parce qu'il a mieux à dire : il distingue le bouton d'action, dont le montage
+ * sous une carte est voulu et fonctionne, du widget d'affichage qui ne montrera jamais
+ * sa valeur. Le tri est dans `preflightWarnings` (`src/ui/warnings.ts`), avec son
+ * pourquoi. Ce module, lui, rend tous ses constats : il ne sait pas dans quelle
+ * interface ils seront lus.
  */
 
 /* ============================================================== la forme d'un constat */
@@ -118,6 +126,47 @@ export const RULE_TITLES: Record<InspectionRuleId, string> = {
   'pro-widget-without-licence': 'Gadget Pro sans licence déclarée',
   'road-maps-on-same-page': 'Deux cartes routières sur la même page',
   'obsolete-key': 'Réglage d’une version antérieure'
+}
+
+/**
+ * Ce que la règle regarde, et **d'où vient ce qu'elle affirme** — une ou deux phrases,
+ * sans un seul chiffre propre à un gadget.
+ *
+ * Le partage du travail avec `Finding.message` est net, et il faut le tenir : le message
+ * dit ce qui se passe **sur ce gadget-là**, ce résumé dit ce que vaut la règle **en
+ * général**. Une interface qui groupe les constats par règle — c'est ce que fait
+ * `src/ui/warnings.ts` — pose ce résumé une fois en tête et les messages en dessous ;
+ * recopier l'un dans l'autre ferait relire au pilote la même phrase à chaque ligne.
+ *
+ * Même raison d'être que `RULE_TITLES` juste au-dessus : une seule source pour la langue
+ * du produit, plutôt qu'une reformulation par écran.
+ */
+export const RULE_SUMMARIES: Record<InspectionRuleId, string> = {
+  'unreachable-widget':
+    'Aucun point de ces gadgets n’échappe à ceux qui sont dessinés après eux, et c’est le ' +
+    'gadget le plus en avant qui reçoit l’appui. Ils peuvent rester parfaitement visibles : ' +
+    'un gadget qui ne peint aucun fond prend les appuis tout autant qu’un gadget opaque.',
+  'page-never-shown':
+    'XCTrack le dit dans sa propre boîte de réglage : une page dont aucun type de ' +
+    'navigation n’est coché n’est affichée dans aucun contexte de vol.',
+  'thermal-page-not-auto-target':
+    'Le manuel de XCTrack dit que, lorsqu’une orientation porte plusieurs pages ' +
+    'd’assistant de thermique, c’est la dernière qui sert de cible au basculement ' +
+    'automatique en spirale.',
+  'widget-too-small':
+    'Le seuil vient de l’ISO 9241-303 et s’applique à la taille physique réelle de la ' +
+    'dalle du gabarit d’écran choisi, pas à des pixels : changer de gabarit change ces ' +
+    'millimètres.',
+  'pro-widget-without-licence':
+    'Ce fichier déclare « proUpTo: 0 » et porte des gadgets réservés à la licence Pro.',
+  'road-maps-on-same-page':
+    'XCTrack prévient dans ses propres réglages qu’une seule carte routière est possible ' +
+    'par page, à cause d’une limitation de sa bibliothèque de cartes.',
+  'obsolete-key':
+    'Ces gadgets portent des réglages qu’une version antérieure de XCTrack a écrits. Il ' +
+    'n’y a rien à y faire avant de voler ; pour savoir ce qu’une version donnée en fait, ' +
+    'et éventuellement les enlever, voir « Version et compatibilité » dans le menu ' +
+    '« Fichier ».'
 }
 
 export interface InspectionInput {
@@ -523,8 +572,11 @@ function unreachableWidgetFindings(input: InspectionInput): Finding[] {
           'donne lui aussi la main au gadget le plus en avant. Il peut rester parfaitement ' +
           'visible — un gadget qui ne peint rien vole les appuis tout autant qu’un gadget ' +
           'opaque. Pour le régler, passez par la liste des gadgets de la page.',
+        // Les astérisques d'emphase n'ont rien à faire ici : ce texte est posé tel quel
+        // dans la page, jamais interprété comme du Markdown, et le pilote lirait
+        // « **en vol** ».
         toVerify:
-          'Ce qu’il advient de ce gadget **en vol** n’a pas été observé : XCTrack route ' +
+          'Ce qu’il advient de ce gadget en vol n’a pas été observé : XCTrack route ' +
           'peut-être l’appui autrement qu’en édition. La question compte surtout pour les ' +
           'boutons d’action, qui n’existent que pour être touchés en vol.'
       })
@@ -622,10 +674,12 @@ function tooSmallFindings(input: InspectionInput): Finding[] {
           `${mm(minimumCharacterMm)} mm que l’ISO 9241-303 donne pour minimum absolu à ` +
           `${Math.round(distanceMm / 10)} cm. Sera-t-elle encore lisible à bout de bras, ` +
           'en plein soleil, avec des gants ? À vérifier sur l’instrument.',
+        // La fraction se dit en pour-cent et non en `0.48` : le point décimal anglais
+        // n'a pas sa place dans une phrase française, et c'est un entier qui sort ici.
         toVerify:
           'La part de la hauteur du gadget qu’occupe réellement le glyphe de la valeur ' +
-          `(ici supposée ${ASSUMED_VALUE_HEIGHT_RATIO}) n’a été mesurée que sur un seul ` +
-          'gadget, une seule capture. Les captures de la planche des 75 gadgets ' +
+          `(ici supposée ${Math.round(ASSUMED_VALUE_HEIGHT_RATIO * 100)} %) n’a été ` +
+          'mesurée que sur un seul gadget, une seule capture. Les captures de la planche des 75 gadgets ' +
           'suffiraient à la mesurer type par type, sans toucher à l’appareil.'
       })
     })
