@@ -98,14 +98,37 @@ describe('WAirspaceProximity', () => {
       expect(el.style.getPropertyValue('--xc-airprox-cols')).toBe('2')
     })
 
-    it('la teinte porte sur l’identité de la zone, pas sur ses distances', () => {
-      // 7 bandes sur 8 sur la capture — voir le NON TRANCHÉ dans style.css pour la
-      // huitième.
+    /**
+     * **La règle est le PICTOGRAMME, pas le rang de la ligne.**
+     * `captures-air3/2026-08-21_espace-aerien-teinture.png` porte quatre widgets de
+     * hauteurs différentes et de motif rigoureusement identique : les deux lignes
+     * d'identité sont toujours teintées, et une ligne de distance l'est quand sa flèche
+     * TRAVERSE la hachure. Les deux lectures envisagées auparavant — « l'identité est
+     * teintée, les distances non » et son inverse — sont toutes les deux fausses ; elles
+     * tombaient juste 7 fois sur 8, une seule ligne les départageant.
+     */
+    it('teinte les deux lignes d’identité, et la distance dont la flèche traverse la hachure', () => {
       const el = drawAirspaceProximity(widget(), settings, language)
       const teintees = [...el.querySelectorAll('.xc-airprox__line--tinted')]
-      expect(teintees.length).toBe(4)
-      for (const ligne of teintees) {
-        expect(ligne.classList.contains('xc-airprox__dist')).toBe(false)
+      // 2 identités × 2 zones, plus la seule distance traversante du relevé.
+      expect(teintees.length).toBe(5)
+      expect(teintees.filter(l => l.classList.contains('xc-airprox__dist'))).toHaveLength(1)
+      const traversante = teintees.find(l => l.classList.contains('xc-airprox__dist'))!
+      expect(traversante.classList.contains('xc-airprox__dist--horizontal')).toBe(true)
+    })
+
+    it('les distances qui s’arrêtent avant la hachure restent sur blanc', () => {
+      const el = drawAirspaceProximity(widget(), settings, language)
+      const distances = [...el.querySelectorAll('.xc-airprox__dist')]
+      expect(distances).toHaveLength(4)
+      expect(distances.filter(l => !l.classList.contains('xc-airprox__line--tinted'))).toHaveLength(3)
+    })
+
+    it('le pictogramme porte la hachure que la flèche franchit ou non', () => {
+      const el = drawAirspaceProximity(widget(), settings, language)
+      for (const icone of el.querySelectorAll('.xc-airprox__icon')) {
+        expect(icone.querySelector('.xc-airprox__hatch')).not.toBeNull()
+        expect(icone.querySelectorAll('.xc-airprox__hatch-tooth').length).toBeGreaterThan(3)
       }
     })
 
