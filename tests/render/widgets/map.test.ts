@@ -238,3 +238,26 @@ describe('barre d’échelle (écart 2.5)', () => {
     expect(echelle.lastElementChild?.className).toBe('xc-map__scale-bar')
   })
 })
+
+/**
+ * `fontSize` vaut « SMALL » par défaut sur les trois cartes (relevé des 75 gadgets). Lire
+ * la clé du seul fichier et retomber sur « MEDIUM » quand elle manque grossissait de 25 %
+ * les étiquettes de toute carte qui ne l'écrit pas — c'est-à-dire de toute carte posée par
+ * notre propre éditeur. Même famille de défaut que les six `readBoolean(...) === true`.
+ */
+describe('taille des étiquettes : le défaut du relevé, pas MEDIUM', () => {
+  const taille = (params: Record<string, unknown>): number =>
+    Number.parseFloat(
+      (drawThermalAssistant(widget('WThermalAssistant', params), settings, language)
+        .querySelector('.xc-map__label') as HTMLElement).style.fontSize
+    )
+
+  it('une clé absente vaut SMALL, pas MEDIUM', () => {
+    expect(taille({})).toBeCloseTo(0.8, 6)
+  })
+
+  it('la clé écrite l’emporte, dans les deux sens', () => {
+    expect(taille({ fontSize: 'MEDIUM' })).toBeCloseTo(1, 6)
+    expect(taille({ fontSize: 'LARGE' })).toBeCloseTo(1.25, 6)
+  })
+})

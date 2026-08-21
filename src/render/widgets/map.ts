@@ -1,7 +1,6 @@
 import type { Widget } from '../../model/widget'
 import type { RenderSettings } from '../../model/preferences'
-import { readNumber, readString } from '../../core/access'
-import { widgetBoolean } from '../defaults'
+import { widgetBoolean, widgetNumber, widgetString } from '../defaults'
 import { readRotation } from './rotation'
 
 /**
@@ -42,8 +41,16 @@ export type MapKind = 'WCompMap' | 'WXCAssistant' | 'WThermalAssistant'
 const FONT_SCALE: Record<string, number> = { SMALL: 0.8, MEDIUM: 1, LARGE: 1.25 }
 const DEFAULT_FONT_SCALE = 1
 
+/**
+ * **Le repli n'est plus `MEDIUM`.** `fontSize` vaut `"SMALL"` par défaut sur les trois
+ * cartes (relevé des 75 gadgets) : lire la clé du seul fichier et retomber sur `MEDIUM`
+ * quand elle manque grossissait de 25 % les étiquettes de toute carte qui ne l'écrit pas
+ * — c'est-à-dire de toute carte posée par notre propre éditeur. Même famille de défaut
+ * que les `readBoolean(...) === true` : `widgetString` va chercher le relevé.
+ * `DEFAULT_FONT_SCALE` ne sert plus que si le relevé lui-même ignore le type.
+ */
 function fontScale(widget: Widget): number {
-  const size = readString(widget.node, 'fontSize')
+  const size = widgetString(widget, 'fontSize')
   const scale = size !== undefined ? FONT_SCALE[size] : undefined
   return scale ?? DEFAULT_FONT_SCALE
 }
@@ -57,7 +64,7 @@ const BASE_RECENT_WIDTH = 3
 const BASE_LINE_THICKNESS = 10
 
 function recentTraceWidth(widget: Widget): number {
-  const thickness = readNumber(widget.node, 'line_thickness') ?? BASE_LINE_THICKNESS
+  const thickness = widgetNumber(widget, 'line_thickness') ?? BASE_LINE_THICKNESS
   return BASE_RECENT_WIDTH * (thickness / BASE_LINE_THICKNESS)
 }
 
