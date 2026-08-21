@@ -269,7 +269,7 @@ describe('buildExportFileName — la forme retenue', () => {
 
   it('ne reprend jamais le radical d’origine, même quand il porte un prénom', () => {
     // C'est la règle qui fait tenir la promesse : un fichier anonymisé dont le nom dit
-    // « fred » n'est pas anonymisé.
+    // « marie » n'est pas anonymisé.
     for (const original of [
       '2022-02-08_marie_ok.xcfg',
       'Amélie – sauvegarde (finale).xcfg',

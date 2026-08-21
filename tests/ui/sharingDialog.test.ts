@@ -67,7 +67,7 @@ describe('planSharing — deux issues, deux noms', () => {
     )
     expect(plan.plainFileName).toBe('xctrack_2026-08-21-153207_backup.xcfg')
     // Le prénom du nom d'origine ne doit reparaître nulle part.
-    expect(plan.plainFileName).not.toContain('fred')
+    expect(plan.plainFileName).not.toContain('marie')
   })
 
   it('l’archive garde son extension sur le chemin ordinaire', () => {
