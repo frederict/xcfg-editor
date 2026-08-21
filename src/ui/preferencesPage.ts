@@ -597,7 +597,7 @@ function buildRow(key: string, ctx: RowContext): PreferenceRow {
     : node.raw
 
   if (entry === undefined) {
-    row.undecidableReason = 'Cet éditeur ne connaît pas cette clé : il n’en sait ni le rôle ni le défaut.'
+    row.undecidableReason = 'Cet éditeur ne connaît pas cette clé : il n’en sait ni le rôle ni la valeur d’usine.'
     return row
   }
 
@@ -613,7 +613,7 @@ function buildRow(key: string, ctx: RowContext): PreferenceRow {
     return row
   }
   if (entry.default === undefined) {
-    row.undecidableReason = 'Le catalogue ne relève aucune valeur par défaut pour cette clé.'
+    row.undecidableReason = 'Le catalogue ne relève aucune valeur d’usine pour cette clé.'
     return row
   }
 
@@ -622,7 +622,7 @@ function buildRow(key: string, ctx: RowContext): PreferenceRow {
   if (text === undefined) {
     // Une valeur structurée face à un défaut scalaire : on ne compare pas des formes
     // différentes, on le dit.
-    row.undecidableReason = 'La valeur du fichier est une structure ; le défaut relevé est une valeur simple.'
+    row.undecidableReason = 'La valeur du fichier est une structure ; la valeur d’usine relevée est une valeur simple.'
     return row
   }
   row.state = sameAsDefault(text, entry.default) ? 'default' : 'custom'
@@ -646,8 +646,8 @@ export function applyPattern(text: string, value: string | undefined): string {
 }
 
 const RUNTIME_DEFAULT_REASON =
-  'XCTrack remplit cette liste en code et son défaut dépend de la langue et du pays de ' +
-  'l’appareil : il n’y a rien à comparer.'
+  'XCTrack remplit cette liste en code et sa valeur d’usine dépend de la langue et du ' +
+  'pays de l’appareil : il n’y a rien à comparer.'
 
 /**
  * Vrai si la page sait présenter cette clé sous son libellé, dans son écran.
@@ -1118,17 +1118,16 @@ function plural(count: number, singular: string, many: string): string {
 
 /** Ce que la marque d'état dit, en toutes lettres. */
 export function stateLabel(row: PreferenceRow): string {
-  if (row.state === 'custom') {
-    return row.defaultText === undefined ? 'réglé' : `≠ défaut ${row.defaultText}`
-  }
-  if (row.state === 'default') return '= défaut'
-  if (row.state === 'conflict') {
-    // Les deux défauts à l'écran, et pas seulement dans l'infobulle : XCTrack se
-    // contredit, cet éditeur ne tranche pas à sa place et le montre.
-    return `défauts contradictoires ${row.defaultText ?? '?'} / ${row.otherDefaultText ?? '?'}`
-  }
+  // Ni le mot « défaut », ni les signes = et ≠. Le premier se lit *anomalie* : « 46 au
+  // défaut » annonçait 46 pannes, et « ≠ DÉFAUT (VIDE) » en capitales à côté du nom du
+  // pilote lui désignait le sien. Les seconds sont des signes de mathématiques posés sur
+  // ce nom. La valeur d'usine elle-même n'est pas perdue : `stateTitle` la dit en toutes
+  // lettres, et l'infobulle a la place d'une phrase là où la marque n'a que trois mots.
+  if (row.state === 'custom') return 'réglé par vous'
+  if (row.state === 'default') return 'valeur d’usine'
+  if (row.state === 'conflict') return 'valeur d’usine incertaine'
   if (row.state === 'absent') return 'absente du fichier'
-  if (row.state === 'unwritten') return 'jamais écrite'
+  if (row.state === 'unwritten') return 'jamais réglée'
   return 'rien à comparer'
 }
 
@@ -1136,27 +1135,30 @@ export function stateLabel(row: PreferenceRow): string {
 function stateTitle(row: PreferenceRow): string {
   if (row.state === 'custom') {
     return row.defaultText === undefined
-      ? 'Cette valeur diffère de ce que XCTrack applique par défaut.'
-      : `Par défaut, XCTrack applique « ${row.defaultText} ».`
+      ? 'Cette valeur diffère de la valeur d’usine de XCTrack.'
+      : `La valeur d’usine de XCTrack est « ${row.defaultText} ».`
   }
-  if (row.state === 'default') return 'Valeur inchangée : c’est le défaut de XCTrack.'
+  if (row.state === 'default') return 'Valeur inchangée : c’est la valeur d’usine de XCTrack.'
   if (row.state === 'conflict') {
-    return `XCTrack publie deux défauts contradictoires pour cette clé : ` +
+    // Les deux valeurs restent dites, mais ici et non plus en capitales sur la ligne : ce
+    // qui est incertain, c'est ce que XCTrack pose d'usine, jamais la valeur du pilote.
+    return `XCTrack annonce deux valeurs d’usine différentes pour cette clé : ` +
       `« ${row.defaultText ?? '?'} » dans son code et « ${row.otherDefaultText ?? '?'} » dans ` +
-      `son écran de réglages. Cet éditeur ne choisit pas : la valeur du fichier fait foi, ` +
-      `et la comparaison est suspendue.`
+      `son écran de réglages. Cet éditeur ne choisit pas à sa place. Votre valeur, elle, ` +
+      `est celle du fichier.`
   }
   if (row.state === 'absent') {
     return row.defaultText === undefined
-      ? 'Cette clé n’est pas dans le fichier : XCTrack appliquera son défaut. Ce n’est pas la même chose qu’une valeur réglée.'
-      : `Cette clé n’est pas dans le fichier : XCTrack appliquera son défaut, « ${row.defaultText} ». ` +
+      ? 'Cette clé n’est pas dans le fichier : XCTrack appliquera sa valeur d’usine. Ce n’est pas la même chose qu’une valeur réglée.'
+      : `Cette clé n’est pas dans le fichier : XCTrack appliquera sa valeur d’usine, « ${row.defaultText} ». ` +
         'Ce n’est pas la même chose qu’une valeur réglée à cette valeur.'
   }
   if (row.state === 'unwritten') {
     return 'Cette clé n’est pas dans le fichier, et XCTrack ne l’y écrit qu’une fois réglée ' +
-      'au moins une fois sur l’appareil : son absence ne dit même pas quel défaut s’appliquera.'
+      'au moins une fois sur l’appareil : son absence ne dit même pas quelle valeur d’usine ' +
+      's’appliquera.'
   }
-  return row.undecidableReason ?? 'Aucune valeur par défaut connue pour cette clé.'
+  return row.undecidableReason ?? 'Aucune valeur d’usine connue pour cette clé.'
 }
 
 /*
@@ -1502,9 +1504,9 @@ function buildImplicitCell(
 ): HTMLElement[] {
   const seed = entry.defaultSource === 'runtime' ? undefined : entry.default
   if (seed === undefined || row.defaultText === undefined) {
-    const note = el('span', 'prefs__value prefs__value--none', 'pas de valeur de départ')
+    const note = el('span', 'prefs__value prefs__value--none', 'valeur d’usine inconnue')
     note.title = row.undecidableReason ??
-      'Le catalogue ne relève aucune valeur par défaut écrivable pour cette clé : ' +
+      'Le catalogue ne relève aucune valeur d’usine inscriptible pour cette clé : ' +
       'cet éditeur n’a rien avec quoi la créer, et il n’en invente pas.'
     return [note]
   }
@@ -1512,7 +1514,7 @@ function buildImplicitCell(
   const implicit = el('span', 'prefs__implicit', row.defaultText)
   implicit.title =
     `Cette clé n’est pas dans le fichier : XCTrack appliquera « ${row.defaultText} », ` +
-    'son défaut. Ce n’est pas la même chose qu’une valeur réglée à cette valeur.'
+    'sa valeur d’usine. Ce n’est pas la même chose qu’une valeur réglée à cette valeur.'
 
   const button = el('button', 'btn prefs__adopt', 'Définir cette valeur')
   button.type = 'button'
@@ -1520,9 +1522,9 @@ function buildImplicitCell(
     `Écrit « ${row.key} » : ${row.defaultText} dans le fichier.\n\n` +
     'Votre appareil se comporte déjà ainsi aujourd’hui — écrire la valeur ne change donc ' +
     'rien à ce qu’il fait maintenant. Ce que ça change est pour plus tard : tant que la ' +
-    'clé est absente, l’appareil suit le défaut de la version de XCTrack installée, et une ' +
-    'mise à jour qui change ce défaut changera votre réglage sans rien vous demander. ' +
-    'Une fois écrite, la valeur est figée : elle restera celle-là.'
+    'clé est absente, l’appareil suit la valeur d’usine de la version de XCTrack ' +
+    'installée, et une mise à jour qui la change changera votre réglage sans rien vous ' +
+    'demander. Une fois écrite, la valeur est figée : elle restera celle-là.'
   button.addEventListener('click', () => {
     if (commit(typeof seed === 'string' ? seed : String(seed), false)) done()
   })
@@ -1547,7 +1549,7 @@ function buildDropButton(
   button.type = 'button'
   button.setAttribute('aria-label', `Retirer ${row.label} du fichier`)
   button.title =
-    `Retire « ${row.key} » du fichier. XCTrack appliquera alors son défaut, ` +
+    `Retire « ${row.key} » du fichier. XCTrack appliquera alors sa valeur d’usine, ` +
     `${row.defaultText ?? 'celui qu’il porte'} — la même valeur qu’aujourd’hui, puisque ` +
     'c’est déjà celle qui est écrite.\n\n' +
     'Ce que ça change : la valeur cesse d’être figée et suivra les mises à jour de ' +
@@ -1866,16 +1868,20 @@ function fillSummaryBox(
     `— le fichier porte ${plural(summary.fileKeyCount, 'clé', 'clés')}.`))
 
   const parts: string[] = []
-  if (summary.defaultCount > 0) parts.push(`${formatCount(summary.defaultCount)} au défaut`)
+  if (summary.defaultCount > 0) {
+    parts.push(`${formatCount(summary.defaultCount)} à la valeur d’usine`)
+  }
   if (summary.absentCount > 0) {
     parts.push(`${formatCount(summary.absentCount)} absente${summary.absentCount > 1 ? 's' : ''} du fichier`)
   }
   if (summary.unwrittenCount > 0) {
-    parts.push(`${formatCount(summary.unwrittenCount)} jamais écrite${summary.unwrittenCount > 1 ? 's' : ''}`)
+    parts.push(`${formatCount(summary.unwrittenCount)} jamais réglée${summary.unwrittenCount > 1 ? 's' : ''}`)
   }
-  if (summary.undecidableCount > 0) parts.push(`${formatCount(summary.undecidableCount)} sans défaut connu`)
+  if (summary.undecidableCount > 0) {
+    parts.push(`${formatCount(summary.undecidableCount)} sans valeur d’usine connue`)
+  }
   if (summary.conflictCount > 0) {
-    parts.push(`${formatCount(summary.conflictCount)} au défaut contradictoire`)
+    parts.push(`${formatCount(summary.conflictCount)} à la valeur d’usine incertaine`)
   }
   if (parts.length > 0) box.append(el('p', 'prefs__summary-detail', `${parts.join(', ')}.`))
 
@@ -1904,7 +1910,7 @@ function fillSummaryBox(
  */
 function catalogNote(options: PreferencesPageOptions): string {
   const { catalog } = options
-  const reference = `Libellés et valeurs par défaut extraits de XCTrack ` +
+  const reference = `Libellés et valeurs d’usine extraits de XCTrack ` +
     `${catalog.meta.versionName ?? '?'} (versionCode ${String(catalog.meta.versionCode ?? 0)})`
   const fallback = catalog.fallbackStringCount === 0
     ? ''
@@ -1914,13 +1920,15 @@ function catalogNote(options: PreferencesPageOptions): string {
   const trust = catalogTrust(options)
   if (trust === 'unstated') {
     return `${reference}. Ce fichier ne dit pas de quelle version il vient : les libellés ` +
-      `et les défauts changent d’une version à l’autre, la lecture est donc indicative.${fallback}`
+      `et les valeurs d’usine changent d’une version à l’autre, la lecture est donc ` +
+      `indicative.${fallback}`
   }
   if (trust === 'exact') {
     return `${reference} — la version même de ce fichier.${fallback}`
   }
-  return `${reference}. Ce fichier vient de ${fileVersionText(options)} : les libellés et les ` +
-    `défauts changent d’une version à l’autre, la lecture est donc indicative.${fallback}`
+  return `${reference}. Ce fichier vient de ${fileVersionText(options)} : les libellés et ` +
+    `les valeurs d’usine changent d’une version à l’autre, la lecture est donc ` +
+    `indicative.${fallback}`
 }
 
 /**
@@ -2054,8 +2062,8 @@ const LEFTOVER_LEADS: Record<LeftoverReason, string> = {
   unlabelled:
     'Ce sont bien des réglages, mais XCTrack les configure dans des écrans construits en ' +
     'code, où la clé n’est plus rattachée à son libellé : l’application ne les nomme nulle ' +
-    'part qu’on puisse lire. La valeur et la comparaison au défaut restent justes — c’est ' +
-    'le nom qui manque, pas le sens.',
+    'part qu’on puisse lire. La valeur et la comparaison à la valeur d’usine restent ' +
+    'justes — c’est le nom qui manque, pas le sens.',
   state:
     'Ces clés ne règlent rien : elles enregistrent l’état de l’application. Cette page en ' +
     'donne la nature et la taille, jamais le contenu.',

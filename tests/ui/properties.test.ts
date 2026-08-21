@@ -734,12 +734,12 @@ describe('la consultation sépare ce que le pilote a réglé de ce que XCTrack a
     expect(states.every((state) => ['custom', 'default', 'unknown'].includes(state!))).toBe(true)
   })
 
-  it('les trois clés universelles sont « hors relevé » : le relevé les a écrites lui-même', () => {
+  it('les trois clés universelles sont sans valeur d’usine : le relevé les a écrites lui-même', () => {
     const panel = readOnlyPanel(compass(document()))
     for (const key of ['_border', '_bg', '_theme']) {
       const row = panel.element.querySelector<HTMLElement>(`[data-key="${key}"]`)!
       expect(row.dataset.default).toBe('unknown')
-      expect(row.querySelector('.props__origin')?.textContent).toBe('hors relevé')
+      expect(row.querySelector('.props__origin')?.textContent).toBe('valeur d’usine inconnue')
     }
   })
 
@@ -758,24 +758,24 @@ describe('la consultation sépare ce que le pilote a réglé de ce que XCTrack a
     ])
   })
 
-  it('affiche la valeur du relevé sur la ligne qui s’en écarte', () => {
+  it('affiche la valeur d’usine sur la ligne qui s’en écarte', () => {
     // La boussole du corpus dessine le vent en arc ; XCTrack n'en dessine aucun par défaut.
     const panel = readOnlyPanel(compass(document()))
     const row = panel.element.querySelector<HTMLElement>('[data-key="windStyle"]')!
     expect(row.dataset.default).toBe('custom')
     const mark = row.querySelector<HTMLElement>('.props__origin')!
-    // Le défaut se dit dans la langue du panneau, comme la valeur juste à côté : la
-    // constante du fichier reste dans l'infobulle, pour qui compare deux sauvegardes.
+    // La valeur d'usine se dit dans la langue du panneau, comme la valeur juste à côté :
+    // la constante du fichier reste dans l'infobulle, pour qui compare deux sauvegardes.
     const none = fieldAt(panel.form, 'windStyle').choices.find((one) => one.value === 'NONE')!
-    expect(mark.textContent).toBe(`≠ défaut ${none.label}`)
+    expect(mark.textContent).toBe(`réglé par vous · d’usine : ${none.label}`)
     expect(mark.title).toContain('XCTrack écrit « NONE »')
 
     const bool = panel.element.querySelector<HTMLElement>('[data-key="showBearing"] .props__origin')!
-    expect(bool.textContent).toBe('≠ défaut Non')
+    expect(bool.textContent).toBe('réglé par vous · d’usine : Non')
 
     const same = panel.element.querySelector<HTMLElement>('[data-key="showBackground"]')!
     expect(same.dataset.default).toBe('default')
-    expect(same.querySelector('.props__origin')?.textContent).toBe('= défaut')
+    expect(same.querySelector('.props__origin')?.textContent).toBe('valeur d’usine')
   })
 
   it('c’est sur un widget chargé que la distinction paie : 63 réglages, 17 du pilote', () => {
@@ -1020,7 +1020,7 @@ describe('les clés que le gadget n’écrit pas', () => {
     expect(composite.dataset.writable).toBe('false')
     expect(composite.querySelector('.props__adopt')).toBeNull()
     expect(composite.querySelector('.props__absent-none')!.textContent)
-      .toBe('pas de valeur de départ')
+      .toBe('valeur d’usine composée')
   })
 
   it('dit la valeur dans la langue du pilote, la chaîne vide comprise', () => {

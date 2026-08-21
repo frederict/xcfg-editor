@@ -1048,7 +1048,7 @@ function buildDefaultsSummary(
   if (!form.defaultsKnown) {
     box.append(el(
       'p', 'props__defaults-count',
-      'Le relevé des valeurs par défaut ne décrit pas ce type de gadget : rien à comparer.'
+      'Le catalogue des valeurs d’usine ne décrit pas ce type de gadget : rien à comparer.'
     ))
     box.append(el('p', 'props__defaults-note', defaultsNote(trust, options, form)))
     return box
@@ -1100,7 +1100,7 @@ function defaultsNote(
   // trouvé quelque chose de cassé dans sa configuration. Le français ne distingue pas
   // *default* de *fault* ; il faut donc le désambiguïser à chaque emploi.
   const reference =
-    `Valeurs d’origine relevées sur XCTrack ${DEFAULTS_VERSION_NAME} (versionCode ${DEFAULTS_VERSION_CODE})`
+    `Valeurs d’usine relevées sur XCTrack ${DEFAULTS_VERSION_NAME} (versionCode ${DEFAULTS_VERSION_CODE})`
   // Le nombre de clés absentes ne prouve **pas** que le fichier vient d'une autre
   // version, comme on l'a d'abord écrit ici : le fichier de 2026 porte le versionCode du
   // relevé lui-même et son `WXCAssistant` ignore quand même quinze de ses clés. Une clé
@@ -1119,13 +1119,13 @@ function defaultsNote(
   }
   if (trust === 'unstated') {
     return `${reference}. Ce fichier ne dit pas de quelle version il vient : les valeurs ` +
-      `par défaut changent d’une version à l’autre, la comparaison est donc indicative.${missing}`
+      `d’usine changent d’une version à l’autre, la comparaison est donc indicative.${missing}`
   }
   const name = options.fileVersionName
   const which = name === undefined
     ? `la version ${String(options.fileVersionCode)}`
     : `la version ${name} (versionCode ${String(options.fileVersionCode)})`
-  return `${reference}. Ce fichier vient de ${which} : les valeurs par défaut changent ` +
+  return `${reference}. Ce fichier vient de ${which} : les valeurs d’usine changent ` +
     `d’une version à l’autre, la comparaison est donc indicative.${missing}`
 }
 
@@ -1185,22 +1185,23 @@ function missingNote(
     'la valeur de son propre code, celle qui est dite en regard. Ce n’est pas la même ' +
     'chose qu’un réglage posé à cette valeur.'
   const reference =
-    `Valeurs d’origine relevées sur XCTrack ${DEFAULTS_VERSION_NAME} (versionCode ${DEFAULTS_VERSION_CODE})`
+    `Valeurs d’usine relevées sur XCTrack ${DEFAULTS_VERSION_NAME} (versionCode ${DEFAULTS_VERSION_CODE})`
 
   let origin: string
   if (trust === 'exact') {
     origin = `${reference} — la version même de ce fichier.`
   } else if (trust === 'unstated') {
-    origin = `${reference} ; la version de ce fichier n’est pas connue ici. Les valeurs par ` +
-      'défaut changent d’une version à l’autre : ce que votre appareil applique peut ' +
+    origin = `${reference} ; la version de ce fichier n’est pas connue ici. Les valeurs ` +
+      'd’usine changent d’une version à l’autre : ce que votre appareil applique peut ' +
       'donc différer de ce qui est écrit ici.'
   } else {
     const name = options.fileVersionName
     const which = name === undefined
       ? `la version ${String(options.fileVersionCode)}`
       : `la version ${name} (versionCode ${String(options.fileVersionCode)})`
-    origin = `${reference}, et ce fichier vient de ${which} : un défaut a pu changer entre ` +
-      'les deux, et ce que votre appareil applique peut différer de ce qui est écrit ici.'
+    origin = `${reference}, et ce fichier vient de ${which} : une valeur d’usine a pu ` +
+      'changer entre les deux, et ce que votre appareil applique peut différer de ce qui ' +
+      'est écrit ici.'
   }
 
   // En consultation, rien ne s'écrit : promettre un geste qu'on n'offre pas serait pire
@@ -1208,7 +1209,8 @@ function missingNote(
   const gesture = readOnly
     ? ''
     : ' Les définir ne change rien à ce que fait l’appareil aujourd’hui — cela fige la ' +
-      'valeur, qui ne bougera plus le jour où une mise à jour de XCTrack changera ce défaut.'
+      'valeur, qui ne bougera plus le jour où une mise à jour de XCTrack changera cette ' +
+      'valeur d’usine.'
 
   return `${applied} ${origin}${gesture}`
 }
@@ -1230,7 +1232,7 @@ function buildMissingRow(
   const value = el('span', 'props__absent-default', readableMissing(missing))
   value.title =
     `Cette clé n’est pas dans le fichier : XCTrack appliquera « ${readableMissing(missing)} », ` +
-    'son défaut. Ce n’est pas la même chose qu’une valeur réglée à cette valeur.'
+    'sa valeur d’usine. Ce n’est pas la même chose qu’une valeur réglée à cette valeur.'
 
   row.append(label, value)
   if (!readOnly) row.append(adoptControl(missing, options, live))
@@ -1263,9 +1265,9 @@ function adoptControl(
   const source = formSource.get(form)
 
   if (!missing.writable || missing.raw === undefined || source === undefined) {
-    const note = el('span', 'props__absent-none', 'pas de valeur de départ')
+    const note = el('span', 'props__absent-none', 'valeur d’usine composée')
     note.title =
-      'Le relevé décrit ce réglage par une valeur composée : cet éditeur n’écrit que des ' +
+      'Le catalogue décrit ce réglage par une valeur composée : cet éditeur n’écrit que des ' +
       'valeurs simples, et il n’en invente pas une pour la remplacer. Le réglage reste ' +
       'modifiable une fois que XCTrack l’aura écrit lui-même.'
     return note
@@ -1279,18 +1281,21 @@ function adoptControl(
     `Écrit « ${missing.key} » : ${readableMissing(missing)} dans le fichier.\n\n` +
     'Votre appareil se comporte déjà ainsi aujourd’hui — écrire la valeur ne change donc ' +
     'rien à ce qu’il fait maintenant. Ce que ça change est pour plus tard : tant que la ' +
-    'clé est absente, l’appareil suit le défaut de la version de XCTrack installée, et une ' +
-    'mise à jour qui change ce défaut changera votre réglage sans rien vous demander. ' +
+    'clé est absente, l’appareil suit la valeur d’usine de la version de XCTrack ' +
+    'installée, et une mise à jour qui la change changera votre réglage sans rien vous ' +
+    'demander. ' +
     'Une fois écrite, la valeur est figée : elle restera celle-là.' +
     // L'avertissement dit exactement ce qu'on sait, et pas un mot de plus : « une autre
     // version » quand on l'a lue, « on ne sait pas d'où vient ce fichier » sinon.
     (trust === 'exact'
       ? ''
       : trust === 'indicative'
-        ? `\n\nCe défaut a été relevé sur XCTrack ${DEFAULTS_VERSION_NAME}, qui n’est pas ` +
-          'la version d’où vient ce fichier : vérifiez que c’est bien la valeur à figer.'
-        : `\n\nCe défaut a été relevé sur XCTrack ${DEFAULTS_VERSION_NAME} et la version ` +
-          'de ce fichier n’est pas connue ici : vérifiez que c’est bien la valeur à figer.')
+        ? `\n\nCette valeur d’usine a été relevée sur XCTrack ${DEFAULTS_VERSION_NAME}, ` +
+          'qui n’est pas la version d’où vient ce fichier : vérifiez que c’est bien la ' +
+          'valeur à figer.'
+        : `\n\nCette valeur d’usine a été relevée sur XCTrack ${DEFAULTS_VERSION_NAME} ` +
+          'et la version de ce fichier n’est pas connue ici : vérifiez que c’est bien la ' +
+          'valeur à figer.')
 
   button.addEventListener('click', () => {
     if (!writeMissingDefault(source.node, missing)) return
@@ -1397,7 +1402,12 @@ function originMark(field: PropertyField): HTMLElement {
   if (field.defaultState === 'custom') {
     const readable = readableDefault(field)
     const mark = el('span', 'props__origin props__origin--custom')
-    mark.textContent = readable === undefined ? 'personnalisé' : `≠ défaut ${readable}`
+    // « ≠ défaut Blanc » posait un signe de mathématiques sur la ligne et le mot qui se
+    // lit *anomalie* juste après. La valeur d'usine reste dite — c'est ce qu'on vient
+    // chercher ici —, mais nommée pour ce qu'elle est.
+    mark.textContent = readable === undefined
+      ? 'réglé par vous'
+      : `réglé par vous · d’usine : ${readable}`
     // L'infobulle garde la valeur **telle qu'elle s'écrit dans le fichier** : c'est celle
     // qu'on cherche quand on compare deux sauvegardes ou qu'on lit un rapport de bogue,
     // et la ligne visible, elle, doit parler la langue du pilote.
@@ -1407,13 +1417,13 @@ function originMark(field: PropertyField): HTMLElement {
     return mark
   }
   if (field.defaultState === 'default') {
-    const mark = el('span', 'props__origin props__origin--same', '= défaut')
+    const mark = el('span', 'props__origin props__origin--same', 'valeur d’usine')
     mark.title = 'Valeur inchangée : c’est ce que XCTrack écrit sur un gadget neuf de ce type.'
     return mark
   }
-  const mark = el('span', 'props__origin props__origin--unknown', 'hors relevé')
+  const mark = el('span', 'props__origin props__origin--unknown', 'valeur d’usine inconnue')
   mark.title =
-    'Le relevé des valeurs par défaut ne décrit pas ce réglage — clé universelle écrite ' +
+    'Le catalogue des valeurs d’usine ne décrit pas ce réglage — clé universelle écrite ' +
     'à la main lors du relevé, clé apparue depuis, ou valeur non comparable. Rien n’est ' +
     'affirmé de cette ligne.'
   return mark

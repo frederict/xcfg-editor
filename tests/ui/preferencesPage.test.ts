@@ -147,12 +147,12 @@ describe('« absente » et « réglée au défaut » sont deux choses différent
     expect(absent!.value).toBeUndefined()
   })
 
-  it('distingue « jamais écrite » d’« absente » pour les clés qu’Android n’écrit qu’une fois réglées', () => {
+  it('distingue « jamais réglée » d’« absente » pour les clés qu’Android n’écrit qu’une fois réglées', () => {
     // `_ttsSpeed` n'est pas déclarée par la classe de configuration : son absence ne dit
     // même pas quel défaut s'appliquera.
     const row = rowFor(BACKUP_2026, '_ttsSpeed')
     expect(row.state).toBe('unwritten')
-    expect(stateLabel(row)).toBe('jamais écrite')
+    expect(stateLabel(row)).toBe('jamais réglée')
   })
 
   it('ne compte jamais comme manquante une clé que l’export ne porte jamais', () => {
@@ -259,7 +259,7 @@ describe('l’état sérialisé se dit sans se déplier', () => {
 
 /* --------------------------------------------------- les défauts, y compris douteux */
 
-describe('la comparaison au défaut dit ce qu’elle vaut', () => {
+describe('la comparaison à la valeur d’usine dit ce qu’elle vaut', () => {
   it('compare le texte, puis le nombre', () => {
     expect(sameAsDefault('true', true)).toBe(true)
     expect(sameAsDefault('1013.0', 1013)).toBe(true)
@@ -270,16 +270,19 @@ describe('la comparaison au défaut dit ce qu’elle vaut', () => {
     expect(sameAsDefault('', 0)).toBe(false)
   })
 
-  it('ne choisit pas entre deux défauts que XCTrack publie contradictoires', () => {
+  it('ne choisit pas entre deux valeurs d’usine que XCTrack publie contradictoires', () => {
     expect(catalog.meta.defaultConflicts).toContain('Sensors.ManualQnh')
     const row = rowFor(BACKUP_2026, 'Sensors.ManualQnh')
     expect(row.state).toBe('conflict')
     expect(row.defaultText).toBe('1013 HPa')
     expect(row.otherDefaultText).toBe('1013.25 HPa')
-    expect(stateLabel(row)).toBe('défauts contradictoires 1013 HPa / 1013.25 HPa')
+    // La marque ne porte plus les deux valeurs : en capitales et collées à la valeur du
+    // pilote, elles se lisaient comme une alerte sur son QNH. L'infobulle les dit toutes
+    // les deux, et dit à qui appartient laquelle.
+    expect(stateLabel(row)).toBe('valeur d’usine incertaine')
   })
 
-  it('suspend la comparaison quand le défaut dépend de la locale', () => {
+  it('suspend la comparaison quand la valeur d’usine dépend de la locale', () => {
     const row = rowFor(BACKUP_2026, 'Unit.Altitude')
     expect(row.state).toBe('undecidable')
     expect(row.value).toBe('m')
@@ -287,11 +290,11 @@ describe('la comparaison au défaut dit ce qu’elle vaut', () => {
     expect(row.defaultText).toBeUndefined()
   })
 
-  it('dit la valeur dans la langue du pilote, et le défaut de la même façon', () => {
+  it('dit la valeur dans la langue du pilote, et la valeur d’usine de la même façon', () => {
     const theme = rowFor(BACKUP_2026, 'Display.Theme')
     expect(theme.value).toBe('Haut contraste blanc')
     expect(theme.defaultText).toBe('Blanc')
-    expect(stateLabel(theme)).toBe('≠ défaut Blanc')
+    expect(stateLabel(theme)).toBe('réglé par vous')
 
     const bool = rowFor(BACKUP_2026, 'Display.Fullscreen')
     expect(bool.value).toBe('Oui')
@@ -863,7 +866,7 @@ describe('une clé absente reste absente tant qu’on ne l’a pas demandée', (
     expect(button.textContent).toBe('Définir cette valeur')
     // L'infobulle dit les deux moitiés : ce que ça ne change pas, et à quoi ça sert.
     expect(button.title).toContain('ne change donc rien à ce qu’il fait maintenant')
-    expect(button.title).toContain('une mise à jour qui change ce défaut changera votre réglage')
+    expect(button.title).toContain('une mise à jour qui la change changera votre réglage')
     expect(button.title).toContain('figée')
   })
 
@@ -884,13 +887,13 @@ describe('une clé absente reste absente tant qu’on ne l’a pas demandée', (
     expect(row.querySelector<HTMLInputElement>('input[type="checkbox"]')?.checked).toBe(true)
   })
 
-  it('ne propose rien à écrire quand le catalogue n’a pas de valeur de départ', () => {
+  it('ne propose rien à écrire quand le catalogue n’a pas de valeur d’usine', () => {
     const { page } = editable(FORMES_PRESERVEES)
-    // Défaut calculé au démarrage selon la langue de l'appareil : il n'y a rien à poser.
+    // Valeur d'usine calculée au démarrage selon la langue de l'appareil : rien à poser.
     for (const key of ['Unit.CompetitionDistance', '_ttsSpeed']) {
       const row = rowElement(page, key)
       expect(row.querySelector('button.prefs__adopt'), key).toBeNull()
-      expect(row.textContent, key).toContain('pas de valeur de départ')
+      expect(row.textContent, key).toContain('valeur d’usine inconnue')
     }
   })
 
@@ -905,8 +908,8 @@ describe('une clé absente reste absente tant qu’on ne l’a pas demandée', (
   })
 })
 
-describe('les défauts contradictoires ne sont pas tranchés par l’écriture', () => {
-  it('garde les deux défauts à l’écran après une modification', () => {
+describe('les valeurs d’usine contradictoires ne sont pas tranchées par l’écriture', () => {
+  it('garde les deux valeurs d’usine sous les yeux après une modification', () => {
     const { page } = editable(BACKUP_2026)
     const row = rowElement(page, 'Sensors.ManualQnh')
     expect(row.dataset.state).toBe('conflict')
@@ -916,10 +919,14 @@ describe('les défauts contradictoires ne sont pas tranchés par l’écriture',
     field.dispatchEvent(new Event('input'))
 
     // La comparaison reste suspendue : cet éditeur ne choisit pas entre 1013 et 1013,25.
+    // Les deux valeurs sont dans l'infobulle et non plus en capitales sur la ligne — un
+    // pilote y lisait une alerte sur son QNH, c'est-à-dire sur son altitude.
     expect(row.dataset.state).toBe('conflict')
-    const mark = row.querySelector('.prefs__state')?.textContent ?? ''
-    expect(mark).toContain('1013')
-    expect(mark).toContain('1013.25')
+    const state = row.querySelector<HTMLElement>('.prefs__state')!
+    expect(state.textContent).toBe('valeur d’usine incertaine')
+    expect(state.title).toContain('1013')
+    expect(state.title).toContain('1013.25')
+    expect(state.title).toContain('Votre valeur, elle, est celle du fichier.')
   })
 
   it('le champ suit le pas relevé, au dixième d’hectopascal', () => {
