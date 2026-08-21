@@ -200,8 +200,8 @@ export function personalInventoryOf(identity: EntryIdentity): {
       key: legacy.key ?? '(clé inconnue)',
       kind: 'freeText',
       basis: 'declared',
-      reason: 'relevé par une version antérieure de cet éditeur, qui n’en disait pas la '
-        + 'nature. Rechargez cette entrée pour obtenir le relevé complet.',
+      reason: 'repéré par une version antérieure de cet éditeur, qui n’en disait pas la '
+        + 'nature. Rechargez cette entrée pour obtenir l’inventaire complet.',
       filled: value.trim() !== '',
       ...(value === '' ? {} : { value })
     }

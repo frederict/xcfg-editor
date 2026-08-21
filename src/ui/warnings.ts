@@ -170,7 +170,7 @@ function assumedValueWarnings(settings: RenderSettings, language: string): Warni
       title: 'Thème, unités et typographie supposés',
       detail:
         'Ce fichier ne porte aucune préférence : le thème, les unités et la taille des ' +
-        'titres employés pour dessiner ces pages sont des valeurs par défaut relevées ' +
+        'titres employés pour dessiner ces pages sont des valeurs d’usine relevées ' +
         'ailleurs, pas celles de votre appareil. La géométrie, elle, vient bien du fichier.',
       items: [
         `Thème : ${settings.theme}`,
@@ -320,9 +320,10 @@ function versionWarning(info: JsonNode | undefined): Warning | undefined {
     title: older ? 'Fichier plus ancien que l’outil' : 'Fichier plus récent que l’outil',
     detail:
       `Ce fichier vient de la version ${name ?? 'inconnue'} (versionCode ${code}), alors que ` +
-      `cet éditeur a été relevé sur la version ${REFERENCE_VERSION_CODE}. Le format change à ` +
-      'chaque version : des réglages peuvent être dessinés autrement qu’ils ne le seront sur ' +
-      'l’appareil. Le fichier n’est pas modifié pour autant — il ressort à l’octet près.',
+      `cet éditeur se règle sur la version ${REFERENCE_VERSION_CODE} pour le dessiner. Le ` +
+      'format change à chaque version : des réglages peuvent être dessinés autrement ' +
+      'qu’ils ne le seront sur l’appareil. Le fichier n’est pas modifié pour autant — il ' +
+      'ressort à l’octet près.',
     items: []
   }
 }

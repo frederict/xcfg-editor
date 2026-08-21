@@ -2096,7 +2096,7 @@ function buildPrivacyBox(inventory: PreferenceInventory, catalog: PreferenceCata
     body.append(el('p', 'prefs__privacy-note',
       `Aucune des ${formatCount(counts.total)} lignes de ce fichier n’est signalée par ` +
       `XCTrack lui-même : les seuls réglages dont il déclare la sensibilité sont ceux qu’il ` +
-      `chiffre, et elles ne sont pas exportées. Ce relevé est donc un jugement de cet ` +
+      `chiffre, et elles ne sont pas exportées. Cet inventaire est donc un jugement de cet ` +
       `éditeur, et chaque ligne dit le sien.`))
   }
 

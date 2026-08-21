@@ -77,7 +77,7 @@ const PAGE_KINDS: Record<string, Omit<PageKind, 'shortName'>> = {
   },
   WPXCAssistant: {
     label: 'Page d’assistant XC',
-    note: 'Son comportement hors vol n’a pas été relevé sur l’appareil.',
+    note: 'Son comportement hors vol n’a pas été mesuré sur l’appareil.',
     hiddenOutOfFlight: false
   }
 }
