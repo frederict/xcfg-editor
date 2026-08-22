@@ -484,3 +484,32 @@ describe('app.css — le bandeau laisse la page visible sur une fenêtre courte'
     expect(sized).toContain('max-height: var(--dock-body-height);')
   })
 })
+
+/**
+ * Le reçu d'enregistrement, et ce qu'il coûte à la page.
+ *
+ * Il vit dans la barre de tête, qui est COLLANTE : chaque pixel qu'il y prend est un pixel
+ * que la page n'a pas. Relevé au navigateur, 1024 × 640, français : les deux phrases
+ * mesurent 664,8 px et 911,3 px au naturel pour 865 px de place, et le plafond de 78ch les
+ * bornait toutes deux à 620 px — quatre lignes de texte pour deux lignes de largeur
+ * disponible. Le reçu valait 99,3 px, la barre 171,4 ; après, 74,2 et 139,9.
+ */
+describe('app.css — le reçu d’enregistrement ne prend pas quatre lignes pour deux phrases', () => {
+  it('les deux phrases ne sont plus bornées à la mesure de la prose', () => {
+    expect(rule('.app-bar__receiptText')).not.toContain('max-width')
+    expect(rule('.app-bar__receiptHint')).not.toContain('max-width')
+  })
+
+  it('le bloc des phrases laisse la place à la fermeture au lieu de la renvoyer à la ligne', () => {
+    // `flex: 1 1 auto` lui donnait toute la largeur du reçu : le bouton passait dessous, et
+    // ses 32,7 px reprenaient les 18,8 px de texte qu'on venait de gagner.
+    const said = rule('.app-bar__receiptSaid')
+    expect(said).toContain('flex: 1 1 0;')
+    expect(said).toContain('min-width: 0;')
+  })
+
+  it('les deux phrases restent deux paragraphes séparés', () => {
+    // Serrer n'est pas coller : l'écart tombe à 0,15 rem, il ne disparaît pas.
+    expect(rule('.app-bar__receiptSaid')).toMatch(/gap: 0\.1\d*rem;/)
+  })
+})

@@ -256,14 +256,45 @@ body {
  * n'est pas un avertissement, et l'ambre de ce carnet ne doit rester lisible que là où
  * elle signale. Le fond de plaque (`--app-bg`) suffit à le détacher de la barre, qui est
  * en `--app-panel`.
+ *
+ * # Ce qu'il coûte, et ce que ce coût a été ramené à
+ *
+ * Il porte deux phrases, et les deux restent : la seconde dit où regarder, et une mesure
+ * a montré 0 fichier arrivé sur 4 dans un onglet contre 3 sur 3 dans un autre — le pilote
+ * qui n'enregistre qu'une fois doit la lire dès la première. Ce qui se corrige, c'est la
+ * place que ces deux phrases prennent dans une barre COLLANTE : sur une fenêtre de 640 px,
+ * chaque pixel de barre est un pixel que la page n'a pas.
+ *
+ * Relevé au navigateur, fenêtre 1024 × 640, français, reçu affiché : les deux phrases
+ * mesurent 664,8 px et 911,3 px au naturel pour 865 px de place. Le plafond de 78ch les
+ * bornait toutes deux à 620 px : **quatre lignes de texte** là où la barre en offrait la
+ * largeur pour deux. Le reçu valait 99,3 px et portait la barre à 171,4.
+ *
+ * La mesure de ligne du carnet — 78ch — vaut pour la prose qu'on lit en colonne. Ce
+ * reçu-ci n'est pas de la prose en colonne : c'est un bandeau d'une ou deux phrases, lu
+ * une fois, dans une barre dont la largeur EST la mesure. Le plafond tombe donc ici, et
+ * ici seulement.
+ *
+ * ⚠ `flex: 1 1 0` et `min-width: 0` sur le bloc des phrases ne sont pas décoratifs : sans
+ * eux, le bloc prend toute la largeur du reçu, la fermeture est renvoyée à la ligne, et
+ * les 32,7 px du bouton remplacent les 18,8 px de texte qu'on venait de gagner.
+ *
+ * Après (même relevé) : reçu 74,2 px, barre 139,9 — 31,5 px rendus à la page.
+ *
+ * ⚠ **Cela ne suffit pas, et c'est démontrable.** Pour que la plaque paysage (361,5 px)
+ * tienne entre la barre et le bandeau à 640 px de fenêtre, la barre doit rester sous
+ * 640 − 174 (bandeau au plancher) − 361,5 = 104,5 px. Le reçu à lui seul en vaut 74,2 sur
+ * une barre qui en vaut déjà 56,1 : aucune mise en forme ne fait tenir deux phrases de
+ * 664,8 et 911,3 px sur une ligne de 865. **À cette hauteur de fenêtre, la page ne revient
+ * que quand le reçu s'en va** — voir `dismissReceiptOnNextMove` dans `main.ts`.
  */
 .app-bar__receipt {
   flex: 1 0 100%;
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
-  gap: 0.3rem 0.8rem;
-  padding: 0.5rem 0.7rem;
+  gap: 0.2rem 0.8rem;
+  padding: 0.4rem 0.7rem;
   border: 1px solid var(--app-line);
   border-left: 3px solid var(--app-line-strong);
   border-radius: 5px;
@@ -271,16 +302,21 @@ body {
   font-size: 13px;
 }
 
-/* Les deux phrases forment UN bloc : sans lui, chacune serait un élément flexible pour
-   son compte et la seconde partagerait sa ligne avec le bouton de fermeture. */
-.app-bar__receiptSaid { flex: 1 1 auto; display: grid; gap: 0.3rem; }
+/*
+ * Les deux phrases forment UN bloc : sans lui, chacune serait un élément flexible pour
+ * son compte et la seconde partagerait sa ligne avec le bouton de fermeture.
+ *
+ * `flex: 1 1 0` plutôt que `1 1 auto`, et `min-width: 0` : le bloc prend ce qui reste
+ * une fois la fermeture placée, au lieu de la pousser à la ligne suivante.
+ */
+.app-bar__receiptSaid { flex: 1 1 0; min-width: 0; display: grid; gap: 0.15rem; }
 
-/* 78ch : la même mesure de ligne que partout ailleurs dans le carnet. */
-.app-bar__receiptText { margin: 0; max-width: 78ch; }
+/* Pas de plafond de mesure : la largeur de la barre est la mesure de ce bandeau-ci. Voir
+   l'en-tête de `.app-bar__receipt` pour ce que le plafond de 78ch coûtait. */
+.app-bar__receiptText { margin: 0; }
 
 .app-bar__receiptHint {
   margin: 0;
-  max-width: 78ch;
   font-size: 12.5px;
   color: var(--app-ink-quiet);
 }
@@ -2953,6 +2989,7 @@ body.is-dragging .veil {
 }
 
 .editnote__text { margin: 0; max-width: 72ch; }
+
 
 /* --- la palette, en boîte modale --- */
 

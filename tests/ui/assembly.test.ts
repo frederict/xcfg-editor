@@ -303,7 +303,7 @@ describe('assemblage — sélectionner un gadget l’amène sous les yeux du pil
 describe('assemblage — un gadget déplacé à la flèche reste sous les yeux du pilote', () => {
   const reveal = main.slice(
     main.indexOf('function revealWidget(index: number): void'),
-    main.indexOf('/** Le gadget sélectionné, amené dans la bande visible. */')
+    main.indexOf('function revealWholePlate(): boolean')
   )
 
   it('le déplacement au clavier rappelle le défilement, le glissé non', () => {
@@ -339,6 +339,107 @@ describe('assemblage — un gadget déplacé à la flèche reste sous les yeux d
     expect(reveal).toContain('visibleBand()')
     expect(reveal).toContain('window.scrollBy({ top: offset')
     expect(main).not.toContain('plate.scrollIntoView')
+  })
+})
+
+/**
+ * Le contre-essai du 22 août : « dès que je modifie quoi que ce soit, il n'existe plus
+ * aucune position de défilement où je vois ma page en entier ». La position existe —
+ * relevé au navigateur, elle est unique à 2 px près sur 601 —, elle est simplement
+ * introuvable à la molette. L'outil y va donc lui-même.
+ */
+describe('assemblage — la page entière est cadrée quand elle tient', () => {
+  const plate = main.slice(
+    main.indexOf('function revealWholePlate(): boolean'),
+    main.indexOf('function syncSelectionMarks')
+  )
+
+  it('la plaque passe avant le gadget, et le gadget reste le repli', () => {
+    expect(plate).toMatch(/if \(revealWholePlate\(\)\) return\s*\n\s*revealWidget\(chosen\)/)
+  })
+
+  it('elle ne cadre rien quand la plaque ne tient pas dans la bande', () => {
+    // Fenêtre trop courte, reçu ouvert, bandeau tiré haut : on ne triche pas, on rend
+    // `false` et l'appelant montre au moins le gadget.
+    expect(plate).toContain('if (box.height > band.bottom - band.top) return false')
+  })
+
+  it('la bande mesurée est la bande COLLANTE, pas celle du moment', () => {
+    // `visibleBand` compte aussi `.tools`, qui n'est pas collant et que le défilement
+    // emporte : la compter revient à refuser un défilement au motif qu'il n'a pas eu lieu.
+    // Mesuré : 306,7 px contre 362,8, pour une plaque de 361,5 — la différence entre
+    // « elle ne tient pas » et « elle tient ».
+    expect(plate).toContain('stickyBand()')
+    expect(plate).not.toContain('visibleBand()')
+    expect(main).toContain('function stickyBand(): VisibleBand')
+    expect(main.slice(main.indexOf('function stickyBand(): VisibleBand')))
+      .not.toMatch(/^[\s\S]{0,400}tools/)
+  })
+
+  it('la place que le bandeau se laisse est reposée avant d’être lue', () => {
+    // Elle est publiée par un `ResizeObserver`, donc APRÈS la frappe : sans ce rappel, le
+    // premier gadget choisi mesurait un bandeau encore à sa hauteur par défaut.
+    expect(plate).toMatch(/publishDockChrome\(\)\s*\n\s*const band = stickyBand\(\)/)
+  })
+
+  it('le cadrage attend la frame suivante', () => {
+    // Le calque finit de poser ses marques APRÈS avoir rappelé `onSelectionChange` : le
+    // document n'a pas encore sa hauteur, et le navigateur ramenait le défilement demandé
+    // (413 px) à la course alors disponible (176,5).
+    expect(plate).toContain('requestAnimationFrame(')
+    // La sélection a pu changer entre la demande et la frame : c'est la nouvelle qui commande.
+    expect(plate).toContain('if (selection !== chosen) return')
+  })
+
+  it('c’est la fenêtre qui défile, jamais la plaque', () => {
+    expect(plate).toContain('window.scrollBy({ top: offset')
+    expect(main).not.toContain('bed.scrollIntoView')
+  })
+})
+
+/**
+ * Le reçu d'enregistrement vit dans la barre de tête, qui est collante : tant qu'il est là,
+ * la page ne rentre pas sur une fenêtre courte. Le pilote du 22 août l'a trouvé « encore là
+ * six minutes plus tard ».
+ */
+describe('assemblage — le reçu s’efface au geste suivant, jamais pendant qu’on le lit', () => {
+  const dismiss = main.slice(
+    main.indexOf('let receiptShownAt'),
+    main.indexOf('/**\n * Le cadre entre dans le document')
+  )
+
+  it('aucune horloge n’efface le reçu toute seule', () => {
+    // Ni `setTimeout` ni `setInterval` autour du reçu : ce qui disparaît tout seul
+    // disparaît aussi pendant qu'on le lit, et pendant qu'on est parti regarder ailleurs.
+    expect(dismiss).not.toContain('setTimeout')
+    expect(dismiss).not.toContain('setInterval')
+  })
+
+  it('le geste suivant l’efface, une fois le temps de lecture passé', () => {
+    expect(dismiss).toContain('performance.now() - receiptShownAt < RECEIPT_READ_MS')
+    expect(dismiss).toContain('clearReceipt()')
+  })
+
+  it('le temps de lecture est un compte mesuré, pas un chiffre rond posé là', () => {
+    // 42 mots — le français, le plus long des cinq — à 130 mots par minute.
+    expect(main).toContain('const RECEIPT_READ_MS = 20_000')
+    expect(main).toMatch(/42 mots en français[\s\S]{0,600}130 mots par minute/)
+  })
+
+  it('ce qui part du reçu lui-même ne compte pas pour un geste', () => {
+    expect(dismiss).toContain('if (event.target instanceof Node && receipt.contains(event.target)) return')
+  })
+
+  it('le défilement n’est pas un geste', () => {
+    // La molette ne dit pas qu'on a lu — et c'est justement en défilant que le pilote
+    // cherche la page que le reçu lui prend.
+    expect(dismiss).not.toContain("'scroll'")
+    expect(dismiss).not.toContain("'wheel'")
+  })
+
+  it('l’horodatage se prend à l’horloge monotone', () => {
+    expect(main).toContain('receiptShownAt = performance.now()')
+    expect(main).not.toContain('receiptShownAt = Date.now()')
   })
 })
 

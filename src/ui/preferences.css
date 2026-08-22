@@ -431,6 +431,13 @@
  * en dehors du survol — donc en permanence sur un écran tactile, qui ne survole
  * jamais. `.btn--ghost` porte déjà la même intention sans ce défaut ; il n'y a rien à
  * ajouter ici.
+ *
+ * ⚠ « Il n'y a rien à ajouter ici » a été écrit quand `.btn--ghost` n'avait aucun filet,
+ * et c'était une erreur d'appréciation : à côté de la marque inerte « valeur d'usine »,
+ * tiretée mais visible, ce bouton-là était le seul objet sans contour de la ligne. Deux
+ * pilotes l'ont dit. Le filet est revenu dans `app.css`, sur `.btn--ghost` et donc sur les
+ * six commandes qui la portent ; ce que cette règle-ci retient est juste et le reste :
+ * la discrétion se joue sur l'encre, jamais sur l'opacité.
  */
 
 /*
@@ -478,8 +485,9 @@
  * Le troisième geste — « Rétablir la valeur d'usine » — et pourquoi il ne ressemble à
  * aucun des deux autres.
  *
- * « Définir cette valeur » et « Retirer » ne changent rien à ce que fait l'appareil : le
- * premier tient dans la cellule, le second s'efface jusqu'au survol. Celui-ci **remplace
+ * « Définir cette valeur » et « Retirer du fichier » ne changent rien à ce que fait
+ * l'appareil : le premier tient dans la cellule, le second porte l'encre douce de
+ * `.btn--ghost` — discret, mais bordé comme toute commande. Celui-ci **remplace
  * un réglage du pilote**. Il ne peut donc ni s'effacer, ni se glisser au bout d'une
  * ligne : il prend toute la largeur, sous le réglage, avec un filet à gauche — le même
  * signal d'attention que la page emploie déjà pour les valeurs d'usine contradictoires —

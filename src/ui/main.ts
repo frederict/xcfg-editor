@@ -917,7 +917,76 @@ function renderReceipt(): void {
  */
 function clearReceipt(): void {
   lastReceipt = undefined
+  receiptShownAt = undefined
   renderReceipt()
+}
+
+/**
+ * L'instant où le reçu courant est apparu — `performance.now()`, jamais l'horloge murale :
+ * il ne s'agit que de mesurer une durée écoulée, et l'heure système peut reculer.
+ */
+let receiptShownAt: number | undefined
+
+/**
+ * Le temps qu'il faut pour LIRE le reçu, avant que le geste suivant ait le droit de
+ * l'effacer.
+ *
+ * ⚠ Ce nombre est un compte **mesuré** multiplié par une vitesse **supposée**, et les deux
+ * se disent séparément.
+ *
+ * Mesuré : le reçu complet — les deux phrases, nom de fichier et taille compris — vaut
+ * 42 mots en français, 41 en allemand et en néerlandais, 40 en anglais, 39 en espagnol.
+ * Le français est le plus long des cinq ; c'est lui qui décide.
+ *
+ * Supposé : 130 mots par minute. C'est une vitesse de lecture lente, choisie exprès —
+ * l'usage courant place la lecture silencieuse d'un texte suivi entre 200 et 260 mots par
+ * minute, mais ce reçu-ci n'est pas un texte suivi : il contient un nom de fichier
+ * horodaté et une taille, qui se lisent signe à signe et non d'un coup d'œil. 42 mots à
+ * 130 mots/minute font 19,4 secondes, arrondies à 20.
+ *
+ * ⚠ Ce délai n'efface JAMAIS le reçu tout seul. Il ne fait qu'autoriser le geste suivant
+ * du pilote à l'effacer : rien ne disparaît pendant qu'on lit, rien ne disparaît pendant
+ * qu'on est parti regarder dans ses téléchargements, et qui revient à l'écran le retrouve.
+ * C'est aussi ce qui met ce comportement hors du champ du critère « délai ajustable » :
+ * il n'y a pas de délai au bout duquel quelque chose se produit.
+ */
+const RECEIPT_READ_MS = 20_000
+
+/**
+ * Le reçu s'efface au geste suivant du pilote — et pas avant de l'avoir lu.
+ *
+ * Le pilote d'essai du 22 août : « il était encore là six minutes plus tard », après être
+ * allé ouvrir le manuel. Le reçu vit dans la barre de tête, qui est COLLANTE : en
+ * 1024 × 640 il la porte de 56,1 px à 139,9 et ne laisse plus que 326,1 px à une plaque
+ * paysage qui en demande 361,5. Tant qu'il est là, la page ne rentre pas — c'est
+ * démontré au pied de `.app-bar__receipt`, dans `app.css` : aucune mise en forme ne suffit.
+ *
+ * Le geste suivant est donc ce qui l'efface, et non une horloge. Un pilote qui a cliqué
+ * ailleurs a fini d'en avoir besoin ; un pilote qui n'a rien fait ne s'est peut-être pas
+ * encore retourné vers son écran. Le défilement n'en est pas un : la molette ne dit pas
+ * qu'on a lu, et c'est justement en défilant que le pilote cherche sa page.
+ */
+function dismissReceiptOnNextMove(): void {
+  if (lastReceipt === undefined || receiptShownAt === undefined) return
+  if (performance.now() - receiptShownAt < RECEIPT_READ_MS) return
+  clearReceipt()
+}
+
+/*
+ * En capture, sur le document entier : un seul point d'accroche vaut mieux que le geste
+ * par geste, qui en oublie toujours un. Ce qui part du reçu lui-même ne compte pas —
+ * cliquer « Fermer » passe déjà par `clearReceipt`, et viser le texte pour le sélectionner
+ * n'est pas passer à autre chose.
+ *
+ * `click` en plus de `pointerdown` : un vrai clic donne les deux, mais une activation
+ * posée par le code — un `element.click()`, ce dont vivent les tests et les harnais — ne
+ * donne que le second. Sans lui, le comportement n'était pas vérifiable.
+ */
+for (const kind of ['pointerdown', 'keydown', 'click'] as const) {
+  document.addEventListener(kind, (event) => {
+    if (event.target instanceof Node && receipt.contains(event.target)) return
+    dismissReceiptOnNextMove()
+  }, true)
 }
 
 /**
@@ -2007,6 +2076,34 @@ function visibleBand(): VisibleBand {
   return { top, bottom }
 }
 
+/**
+ * La bande que le défilement ne peut PAS dégager : ce qui reste collé quoi qu'on fasse.
+ *
+ * Différence avec `visibleBand`, et elle compte : celle-ci retient aussi le bandeau des
+ * gabarits d'écran (`.tools`) quand il est encore à l'image. Or `.tools` n'est pas
+ * collant — il est dans le flux, au-dessus de la page, et le défilement l'emporte. Le
+ * compter revient à refuser un défilement au motif qu'il n'a pas encore eu lieu.
+ *
+ * Mesuré, fenêtre 1024 × 640, un premier gadget choisi depuis le haut de la page :
+ * `visibleBand` rend 306,7 px — 56,1 de barre de tête, plus les 56 px de `.tools` — pour
+ * une plaque de 361,5, donc « elle ne tient pas ». La bande collante, elle, en rend 362,8,
+ * et la plaque tient. Sans cette distinction, le cadrage de la page ne se déclenchait qu'au
+ * DEUXIÈME gadget choisi, une fois `.tools` défilé hors de vue : plaque vue à 34,4 % au
+ * premier clic, 100 % au second.
+ *
+ * ⚠ Réservée au cadrage de la plaque. `revealWidget` continue de passer par `visibleBand` :
+ * amener un gadget sous des yeux qui regardent le haut de la page, c'est autre chose que
+ * décider si la page entière peut tenir après défilement.
+ */
+function stickyBand(): VisibleBand {
+  return {
+    top: bar.getBoundingClientRect().bottom,
+    bottom: dockElement === undefined || dockElement.hidden
+      ? window.innerHeight
+      : dockElement.getBoundingClientRect().top
+  }
+}
+
 /** Un défilement animé, sauf pour qui a demandé qu'on lui épargne les animations. */
 function revealBehavior(): ScrollBehavior {
   return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true
@@ -2055,10 +2152,75 @@ function revealWidget(index: number): void {
   window.scrollBy({ top: offset, behavior: revealBehavior() })
 }
 
-/** Le gadget sélectionné, amené dans la bande visible. */
+/**
+ * La PLAQUE entière amenée dans la bande visible, quand elle y tient.
+ *
+ * ## Pourquoi la place réservée ne suffisait pas
+ *
+ * `--dock-page-room` réserve à la page exactement la hauteur d'une plaque paysage.
+ * « Exactement » est le mot : relevé au navigateur en 1024 × 640, un gadget choisi, après
+ * une modification — la bande dégagée vaut 362,3 px pour une plaque de 361,5. **0,8 px de
+ * marge.** Sur les 601 positions de défilement de ce document, **deux** montrent la plaque
+ * entière. Le pilote d'essai, qui a échantillonné de 25 en 25 px, a donc trouvé 97,2 % de
+ * la plaque au mieux, et 88,1 % de la scène — le chiffre qu'il rapporte. Les deux mesures
+ * étaient justes ; c'est la marge qui n'existait pas.
+ *
+ * Et elle ne peut pas beaucoup grandir : à 640 px de fenêtre, barre de tête repliée sur
+ * deux lignes, le bandeau à son plancher (`DOCK_HEIGHT_MIN`) et son enveloppe, il reste
+ * 640 − 100,6 − 62 − 112 = 365,4 px. Quatre pixels de marge au lieu d'un : toujours pas
+ * une position qu'on trouve à la molette. Écraser le bandeau davantage ferait perdre les
+ * deux, ce que `.dock__body` explique.
+ *
+ * ## Ce que l'outil fait donc à la place
+ *
+ * Il y va lui-même. La position qui dégage la plaque existe — c'est la promesse du
+ * `sticky` —, elle est simplement introuvable à la main : autant l'y poser. Le calcul est
+ * celui de `revealWidget`, avec la plaque pour cible au lieu du gadget.
+ *
+ * Rend `true` quand elle a fait son office, `false` quand la plaque ne tient pas dans la
+ * bande — fenêtre trop courte, reçu d'enregistrement ouvert, bandeau tiré haut à la
+ * poignée. Dans ce cas-là on ne triche pas : l'appelant retombe sur le gadget seul.
+ */
+function revealWholePlate(): boolean {
+  if (view.kind !== 'detail') return false
+  const bed = content.querySelector('.bed')
+  if (!(bed instanceof HTMLElement)) return false
+  const box = bed.getBoundingClientRect()
+  if (box.height <= 0) return false
+  // Le bandeau vient d'être déplié par `openDockForSelection`, mais la place qu'il se
+  // laisse (`--dock-chrome-room`) est reposée par un `ResizeObserver`, c'est-à-dire APRÈS
+  // la frappe. On la repose donc à la main, avant de mesurer quoi que ce soit.
+  publishDockChrome()
+  const band = stickyBand()
+  if (box.height > band.bottom - band.top) return false
+  const offset = revealOffset(box, band)
+  if (offset !== 0) window.scrollBy({ top: offset, behavior: revealBehavior() })
+  return true
+}
+
+/**
+ * Ce que la sélection amène sous les yeux : **la page entière** quand elle tient entre la
+ * barre de tête et le bandeau, le gadget seul quand elle n'y tient pas.
+ *
+ * L'ordre compte. Montrer le gadget est le strict minimum — c'est la boucle *j'agis → je
+ * vois* —, mais un pilote qui redimensionne un widget a besoin de voir ce qu'il écrase :
+ * « sur mon 13 pouces je ne peux toujours pas redimensionner un gadget en voyant ce qu'il
+ * recouvre ». Quand la page tient, la lui donner entière répond aux deux à la fois.
+ */
 function revealSelection(): void {
   if (selection === undefined) return
-  revealWidget(selection)
+  const chosen = selection
+  // ⚠ À la frame suivante, jamais tout de suite. Le calque d'édition finit de poser ses
+  // marques et sa barre d'outils APRÈS avoir rappelé `onSelectionChange` : le document
+  // n'a pas encore sa hauteur. Mesuré au premier gadget choisi — le défilement demandé
+  // valait 413 px, la course disponible n'était encore que de 176,5, et le navigateur
+  // ramenait le tout au bout du document. La page s'arrêtait à 34,4 % au lieu de 100 %.
+  requestAnimationFrame(() => {
+    // La sélection a changé entre-temps : c'est la nouvelle qui commande, pas celle-ci.
+    if (selection !== chosen) return
+    if (revealWholePlate()) return
+    revealWidget(chosen)
+  })
 }
 
 /**
@@ -3351,6 +3513,7 @@ async function deliver(
   link.download = fileName
   link.click()
   lastReceipt = { fileName, byteLength: bytes.byteLength }
+  receiptShownAt = performance.now()
   renderReceipt()
 }
 
