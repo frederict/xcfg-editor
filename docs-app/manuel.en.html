@@ -929,6 +929,15 @@
     words, in the panel where you decide</strong>. You do not have to come back here to
     understand what it is offering: this chapter says where that knowledge comes from and
     on which device it was taken, the screen says what it would do to yours.</p>
+    <p><strong>And “without the setting” is not “without anything”: the neighbourhood
+    counts.</strong> Two map settings, <code>mapWidget_showOpenStreet</code> and
+    <code>mapWidget_showTerrain</code>, are only read <strong>together</strong>: on its own,
+    neither of them does anything at all. Removing the first from a map that carries both
+    puts out the terrain shading the second turns on — measured on 22 August 2026, and the
+    tool no longer offers it. Every measurement therefore carries the neighbourhood it was
+    taken in; outside that neighbourhood, the tool draws no conclusion. It is also why
+    <code>nav_use_brackets</code> set to no is without effect on a thermal assistant, which
+    does not read it, and live on a map, which derives its distance label from it.</p>
   </div>
 
   <p>It starts by reassuring you, and the sentence now promises only what was measured:
@@ -938,14 +947,14 @@
   smaller and changes nothing on your pages.”</p>
 
   <ol class="manual__steps">
-    <li>Unfold <span class="manual__ui">See these 6 settings, and untick what you would
+    <li>Unfold <span class="manual__ui">See these 4 settings, and untick what you would
     rather keep</span> — the number is the one from your file. Everything is ticked to
     start with; each line says up to which XCTrack release the setting was still written,
     and its value when that value is simple.</li>
     <li>Untick what you want to keep. The count updates, and the button says exactly how
     many settings it is going to remove.</li>
     <li>Click the button. The panel is replaced by a message and by
-    <span class="manual__ui">Put these 6 settings back</span>.</li>
+    <span class="manual__ui">Put these 4 settings back</span>.</li>
   </ol>
 
   <p>Going back is complete: put back, the file comes out byte for byte. The gesture is also

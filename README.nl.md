@@ -267,7 +267,7 @@ een belofte van getrouwheid die alleen de auteur kan nagaan, is niets waard.
 
   Gemeten op de referentieback-up van het corpus
   (`tests/fixtures/exports/2026-08-20_backup-00.xcfg`, geschreven door XCTrack 1.0.3-beta):
-  **6 voorgestelde en 3 laten staan instellingen, op 4 widgets, op 1 059 onderzochte
+  **4 voorgestelde en 5 laten staan instellingen, op 4 widgets, op 1 059 onderzochte
   widgetinstellingen.** U ziet de lijst — elke instelling met de laatste versie van XCTrack
   die ze nog schreef, en wat het toestel met haar en zonder haar heeft teruggelezen —, u vinkt
   af wat u liever houdt, u handelt met een uitdrukkelijk gebaar, en u kunt er meteen daarna op
@@ -289,6 +289,18 @@ een belofte van getrouwheid die alleen de auteur kan nagaan, is niets waard.
   beslist** — ‘de windpijl zou van dit kompas verdwijnen’ — en de meting er vlak onder, in
   de woorden die het toestel heeft geschreven. De piloot hoeft niets te doen: ze verdwijnen
   vanzelf.
+
+  ⚠️ **En ‘zonder de instelling’ is niet ‘zonder niets’: de buurt telt.** Op de avond van
+  diezelfde 22 augustus toonde een plaat met tien kaarten op het toestel dat
+  `mapWidget_showOpenStreet` en `mapWidget_showTerrain` **alleen samen worden gelezen** —
+  op zichzelf doet geen van beide iets. De eerste weghalen van een kaart die ze allebei
+  draagt breekt het paar en **dooft de reliëfschaduw** die de tweede aansteekt. Het
+  gereedschap stelde dat voor; het stelt het niet meer voor. Elke meting van de opname
+  draagt daarom nu de buurt waarin ze genomen is, instelling per instelling, met inbegrip
+  van de eis dat een buur **afwezig** is — buiten die buurt is er geen oordeel. Het is ook
+  wat toelaat te zeggen dat `nav_use_brackets` op *nee* zonder gevolg is op een
+  thermiekassistent, die ze niet leest, en levend op een kaart, die er haar afstandslabel
+  uit afleidt.
 - **Zeggen wat uw bestand over u prijsgeeft** voordat u het deelt. Een `backup`-export draagt
   uw naam, uw scherm, uw gekoppelde sensoren, uw waypointbestanden — tot en met de naam van
   de wedstrijd waaraan u deelneemt. Bij het opslaan biedt het gereedschap daarom **drie
@@ -395,11 +407,11 @@ alle vijf exemplaren — alleen onze eigen tekst verandert.*
 ![Het venster ‘Beoogde versie en compatibiliteit’: versie 1.0.3-beta voorgeselecteerd, de
 zin over de niet te onderscheiden versies, het blok ‘Verouderde instellingen’ met zijn
 negen regels, en de sectie ‘Weghalen wat een oudere versie heeft achtergelaten’ uitgeklapt
-op haar zes aankruisvakjes, gevolgd door de drie laten staan
+op haar vier aankruisvakjes, gevolgd door de vijf laten staan
 instellingen.](captures/version-et-nettoyage.nl.png)
 
-*De versiekeuze, de diagnose, en het opruimen dat eruit voortkomt — zes voorgestelde en drie
-laten staan instellingen, op vier widgets.*
+*De versiekeuze, de diagnose, en het opruimen dat eruit voortkomt — vier voorgestelde en
+vijf laten staan instellingen, op vier widgets.*
 
 ![Het venster ‘Deze configuratie opslaan’: de drie uitwegen, en daarna de inventaris van de
 vijf vervangen teksten — elk met zijn pagina, zijn widget, de oude waarde doorstreept, de

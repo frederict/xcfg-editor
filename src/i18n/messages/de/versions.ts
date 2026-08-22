@@ -239,7 +239,11 @@ const versions: DomainCatalog<'versions'> = {
   'cleanup.heldUnmeasured': 'Niemand hat gemessen, was ihr Entfernen auf einem Gerät ändern würde. Wir raten nicht: sie bleibt bestehen.',
 
   'removalEffect.windArrowGone': 'der Windpfeil würde von diesem Kompass verschwinden',
+  'removalEffect.windArcBecomesArrow': 'dieser Kompass würde den Wind wieder als Pfeil statt als Bogen zeigen',
   'removalEffect.terrainShadingGone': 'die Geländeschattierung würde auf dieser Karte erlöschen',
+  'removalEffect.mapThemeGone': 'der OpenStreetMap-Hintergrund würde von dieser Karte verschwinden',
+  'removalEffect.mapThemeAndTerrainGone': 'der OpenStreetMap-Hintergrund und die Geländeschattierung würden von dieser Karte verschwinden',
+  'removalEffect.distanceBracketsReturn': 'die Navigationsentfernung stünde auf dieser Karte wieder in Klammern',
   'removalEffect.unnamed': 'dieses Widget würde nicht mehr dasselbe anzeigen',
 
   /* ------------------------------------------- ce que porte chaque réglage périmé */

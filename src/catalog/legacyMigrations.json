@@ -1,53 +1,382 @@
 {
-  "_source": "AIR3 7.2, XCTrack 1.0.3-beta (versionCode 100030) — imports mesures les 21 et 22 aout 2026",
-  "_methode": "Chaque reglage a ete porte sur l'appareil dans un fichier de pages, importe, puis relu dans l'export que l'appareil a reecrit. La colonne 'present' est ce que l'instrument a ecrit avec le reglage ; la colonne 'absent' vient du releve des 75 gadgets (widgetDefaults.json), ou le gadget ne portait que ses huit cles universelles. Les deux se comparent : egales, le retrait ne change rien ; differentes, le retrait change ce que l'instrument affiche. Quand le retrait change quelque chose, 'effect' nomme d'un identifiant ce que le pilote verrait changer ; la phrase qui le dit et ses quatre traductions vivent dans src/i18n/messages/<langue>/versions.ts sous removalEffect.*, ce fichier ne portant aucune prose d'interface.",
-  "_limite": "Un verdict 'inert' vaut contre ce point de comparaison-la, et contre lui seul. Quand 'requires' est present, les DEUX colonnes ont ete prises dans ce voisinage-la et non sur un gadget nu : c'est le cas de newWindArrow, dont l'absence a ete lue sur un compas portant showWind:true. Ce qui n'est pas dans cette table n'a jamais ete mesure : le nettoyage s'en abstient.",
+  "_source": "AIR3 7.2, XCTrack 1.0.3-beta (versionCode 100030) - imports mesures les 21 et 22 aout 2026",
+  "_methode": "Chaque cas est un COUPLE d'observations prises sur la meme planche : le meme gadget avec le reglage ('present') et sans lui ('absent'), toutes ses autres cles legacy identiques. Les planches sont des pages fabriquees a la main, importees sur l'appareil, affichees, puis relues dans l'export que l'appareil a reecrit. Egaux, le retrait ne change rien ; differents, il change ce que l'instrument affiche, et 'effect' nomme d'un identifiant ce que le pilote verrait changer - la phrase qui le dit et ses quatre traductions vivent dans src/i18n/messages/<langue>/versions.ts sous removalEffect.*, ce fichier ne portant aucune prose d'interface. Les 30 cas sont derives mecaniquement de 54 observations sans une contradiction.",
+  "_limite": "Un verdict ne vaut que dans le VOISINAGE ou il a ete pris, et 'requires' le dit cle par cle : une valeur attendue, ou null quand la mesure exige que la cle soit ABSENTE. C'est la borne la plus severe et elle a ete apprise cher : le 22 aout 2026, la table donnait mapWidget_showOpenStreet:false pour sans effet parce que la valeur d'usine d'un gadget nu est la meme - alors que ce reglage et mapWidget_showTerrain ne sont lus qu'ENSEMBLE, et que retirer le premier eteint l'ombrage du relief que le second allume. Un verdict 'inert' ne vaut en outre qu'au palier mesure ; un 'live' vaut a tous les paliers, un danger mesure ne s'oubliant pas. Ce qui n'est pas dans cette table n'a jamais ete mesure : le nettoyage s'en abstient.",
   "_measuredTiers": "20",
   "_measuredVersionCode": 100030,
   "_measuredVersionName": "1.0.3-beta",
   "migrations": {
     "showWind": {
       "successor": "windStyle",
-      "widgets": ["WCompass"],
-      "measure": "2026-08-22 — trois WCompass poses a la palette cote a cote, ne differant que par ce reglage : absent -> NONE, false -> NONE, true -> ARROW.",
-      "values": {
-        "false": { "present": "NONE", "absent": "NONE", "verdict": "inert" },
-        "true": { "present": "ARROW", "absent": "NONE", "verdict": "live", "effect": "windArrowGone" }
-      }
+      "widgets": [
+        "WCompass"
+      ],
+      "measure": "2026-08-22 (planches A, D, K, I) - neuf WCompass poses a la palette, couvrant les neuf combinaisons de showWind et newWindArrow (absent, false, true chacun), puis les deux compas du corpus 2025 dont le reglage a ete retire pour de bon. windStyle vaut NONE partout sauf quand showWind vaut true : ARROW seul ou avec newWindArrow:false, ARC avec newWindArrow:true.",
+      "cases": [
+        {
+          "value": "false",
+          "requires": {
+            "newWindArrow": "false"
+          },
+          "present": "NONE",
+          "absent": "NONE",
+          "verdict": "inert"
+        },
+        {
+          "value": "false",
+          "requires": {
+            "newWindArrow": "true"
+          },
+          "present": "NONE",
+          "absent": "NONE",
+          "verdict": "inert"
+        },
+        {
+          "value": "false",
+          "requires": {
+            "newWindArrow": null
+          },
+          "present": "NONE",
+          "absent": "NONE",
+          "verdict": "inert"
+        },
+        {
+          "value": "true",
+          "requires": {
+            "newWindArrow": "false"
+          },
+          "present": "ARROW",
+          "absent": "NONE",
+          "verdict": "live",
+          "effect": "windArrowGone"
+        },
+        {
+          "value": "true",
+          "requires": {
+            "newWindArrow": "true"
+          },
+          "present": "ARC",
+          "absent": "NONE",
+          "verdict": "live",
+          "effect": "windArrowGone"
+        },
+        {
+          "value": "true",
+          "requires": {
+            "newWindArrow": null
+          },
+          "present": "ARROW",
+          "absent": "NONE",
+          "verdict": "live",
+          "effect": "windArrowGone"
+        }
+      ]
     },
     "newWindArrow": {
       "successor": "windStyle",
-      "widgets": ["WCompass"],
-      "requires": { "showWind": "true" },
-      "measure": "2026-08-22 — un WCompass portant showWind:true et newWindArrow:false ressort ARROW ; le compas C de la meme planche, portant showWind:true SEUL, ressort ARROW lui aussi. La valeur true n'a jamais ete isolee.",
-      "values": {
-        "false": { "present": "ARROW", "absent": "ARROW", "verdict": "inert" }
-      }
+      "widgets": [
+        "WCompass"
+      ],
+      "measure": "2026-08-22 (planches A, D, K, I) - meme planche de neuf compas. newWindArrow seul ne change rien : il n'est lu que lorsque showWind vaut true, ou il choisit entre l'arc (true) et la fleche (false ou absent). Le retrait a ete rejoue sur le compas du corpus 2025 qui porte showWind:true et newWindArrow:true (planche I) : ARC devient ARROW.",
+      "cases": [
+        {
+          "value": "false",
+          "requires": {
+            "showWind": "false"
+          },
+          "present": "NONE",
+          "absent": "NONE",
+          "verdict": "inert"
+        },
+        {
+          "value": "false",
+          "requires": {
+            "showWind": "true"
+          },
+          "present": "ARROW",
+          "absent": "ARROW",
+          "verdict": "inert"
+        },
+        {
+          "value": "false",
+          "requires": {
+            "showWind": null
+          },
+          "present": "NONE",
+          "absent": "NONE",
+          "verdict": "inert"
+        },
+        {
+          "value": "true",
+          "requires": {
+            "showWind": "false"
+          },
+          "present": "NONE",
+          "absent": "NONE",
+          "verdict": "inert"
+        },
+        {
+          "value": "true",
+          "requires": {
+            "showWind": "true"
+          },
+          "present": "ARC",
+          "absent": "ARROW",
+          "verdict": "live",
+          "effect": "windArcBecomesArrow"
+        },
+        {
+          "value": "true",
+          "requires": {
+            "showWind": null
+          },
+          "present": "NONE",
+          "absent": "NONE",
+          "verdict": "inert"
+        }
+      ]
     },
     "nav_use_brackets": {
       "successor": "nav_label",
-      "widgets": ["WCompMap", "WThermalAssistant", "WXCAssistant"],
-      "measure": "2026-08-21 (F3 et F5) puis 2026-08-22 (trois occurrences) — true comme false ressortent DISTANCE_BRACKETS, qui est aussi ce que XCTrack ecrit sur un gadget nu.",
-      "values": {
-        "false": { "present": "DISTANCE_BRACKETS", "absent": "DISTANCE_BRACKETS", "verdict": "inert" },
-        "true": { "present": "DISTANCE_BRACKETS", "absent": "DISTANCE_BRACKETS", "verdict": "inert" }
-      }
+      "widgets": [
+        "WCompMap",
+        "WThermalAssistant",
+        "WXCAssistant"
+      ],
+      "measure": "2026-08-22 (planches F, J, G, H) - nav_use_brackets pose seul sur les trois classes de gadgets, et aux cotes du couple cartographique. Trois faits mesures : WThermalAssistant ne le lit pas du tout ; sur WCompMap et WXCAssistant, false donne nav_label DISTANCE la ou le gadget nu donne DISTANCE_BRACKETS ; et la presence du couple mapWidget_showOpenStreet + mapWidget_showTerrain le neutralise. Le cas false a ete rejoue sur la carte du corpus 2025 qui le porte (planche G) : le retrait ramene les crochets.",
+      "cases": [
+        {
+          "value": "false",
+          "requires": {
+            "mapWidget_showOpenStreet": "false",
+            "mapWidget_showTerrain": "true"
+          },
+          "widgets": [
+            "WCompMap"
+          ],
+          "present": "DISTANCE_BRACKETS",
+          "absent": "DISTANCE_BRACKETS",
+          "verdict": "inert"
+        },
+        {
+          "value": "false",
+          "requires": {
+            "mapWidget_showOpenStreet": null,
+            "mapWidget_showTerrain": null
+          },
+          "widgets": [
+            "WCompMap",
+            "WXCAssistant"
+          ],
+          "present": "DISTANCE",
+          "absent": "DISTANCE_BRACKETS",
+          "verdict": "live",
+          "effect": "distanceBracketsReturn"
+        },
+        {
+          "value": "false",
+          "requires": {
+            "mapWidget_showOpenStreet": null,
+            "mapWidget_showTerrain": null
+          },
+          "widgets": [
+            "WThermalAssistant"
+          ],
+          "present": "DISTANCE_BRACKETS",
+          "absent": "DISTANCE_BRACKETS",
+          "verdict": "inert"
+        },
+        {
+          "value": "true",
+          "requires": {
+            "mapWidget_showOpenStreet": "false",
+            "mapWidget_showTerrain": "true"
+          },
+          "widgets": [
+            "WCompMap",
+            "WXCAssistant"
+          ],
+          "present": "DISTANCE_BRACKETS",
+          "absent": "DISTANCE_BRACKETS",
+          "verdict": "inert"
+        },
+        {
+          "value": "true",
+          "requires": {
+            "mapWidget_showOpenStreet": null,
+            "mapWidget_showTerrain": "true"
+          },
+          "widgets": [
+            "WCompMap",
+            "WXCAssistant"
+          ],
+          "present": "DISTANCE_BRACKETS",
+          "absent": "DISTANCE_BRACKETS",
+          "verdict": "inert"
+        },
+        {
+          "value": "true",
+          "requires": {
+            "mapWidget_showOpenStreet": null,
+            "mapWidget_showTerrain": null
+          },
+          "present": "DISTANCE_BRACKETS",
+          "absent": "DISTANCE_BRACKETS",
+          "verdict": "inert"
+        }
+      ]
     },
     "mapWidget_showOpenStreet": {
-      "successor": "mapWidget_mapAppearance.theme",
-      "widgets": ["WCompMap", "WXCAssistant"],
-      "measure": "2026-08-22 — deux gadgets cartographiques portant false (aux cotes de mapWidget_showTerrain:true) ressortent theme None, ce que XCTrack ecrit aussi sur un gadget nu. La valeur true n'a jamais ete portee sur l'appareil.",
-      "values": {
-        "false": { "present": "None", "absent": "None", "verdict": "inert" }
-      }
+      "successor": "mapWidget_mapAppearance",
+      "widgets": [
+        "WCompMap",
+        "WXCAssistant"
+      ],
+      "measure": "2026-08-22 (planches B, C, E, G, H) - les neuf combinaisons de mapWidget_showOpenStreet et mapWidget_showTerrain (absent, false, true chacun) sur WCompMap, les quatre couples sur WXCAssistant. Les deux reglages ne sont lus qu'ENSEMBLE : seul, chacun est ignore. Retirer celui-ci quand l'autre est present rompt le couple et rend le gadget a ses valeurs d'usine - rejoue sur les deux cartes du corpus 2026 (planches G et H).",
+      "cases": [
+        {
+          "value": "false",
+          "requires": {
+            "mapWidget_showTerrain": "false"
+          },
+          "widgets": [
+            "WCompMap"
+          ],
+          "present": "theme=None terrain=None",
+          "absent": "theme=None terrain=None",
+          "verdict": "inert"
+        },
+        {
+          "value": "false",
+          "requires": {
+            "mapWidget_showTerrain": "true"
+          },
+          "present": "theme=None terrain=Light",
+          "absent": "theme=None terrain=None",
+          "verdict": "live",
+          "effect": "terrainShadingGone"
+        },
+        {
+          "value": "false",
+          "requires": {
+            "mapWidget_showTerrain": null
+          },
+          "present": "theme=None terrain=None",
+          "absent": "theme=None terrain=None",
+          "verdict": "inert"
+        },
+        {
+          "value": "true",
+          "requires": {
+            "mapWidget_showTerrain": "false"
+          },
+          "widgets": [
+            "WCompMap"
+          ],
+          "present": "theme=Lightpilot terrain=None",
+          "absent": "theme=None terrain=None",
+          "verdict": "live",
+          "effect": "mapThemeGone"
+        },
+        {
+          "value": "true",
+          "requires": {
+            "mapWidget_showTerrain": "true"
+          },
+          "present": "theme=Lightpilot terrain=LightShading",
+          "absent": "theme=None terrain=None",
+          "verdict": "live",
+          "effect": "mapThemeAndTerrainGone"
+        },
+        {
+          "value": "true",
+          "requires": {
+            "mapWidget_showTerrain": null
+          },
+          "widgets": [
+            "WCompMap"
+          ],
+          "present": "theme=None terrain=None",
+          "absent": "theme=None terrain=None",
+          "verdict": "inert"
+        }
+      ]
     },
     "mapWidget_showTerrain": {
-      "successor": "mapWidget_mapAppearance.terrain",
-      "widgets": ["WCompMap", "WXCAssistant"],
-      "measure": "2026-08-22 — deux gadgets cartographiques portant true ressortent terrain Light, la ou XCTrack ecrit terrain None sur un gadget nu : le retrait eteint l'ombrage du relief. La valeur false n'a jamais ete portee sur l'appareil.",
-      "values": {
-        "true": { "present": "Light", "absent": "None", "verdict": "live", "effect": "terrainShadingGone" }
-      }
+      "successor": "mapWidget_mapAppearance",
+      "widgets": [
+        "WCompMap",
+        "WXCAssistant"
+      ],
+      "measure": "2026-08-22 (planches B, C, E, G, H) - meme planche que mapWidget_showOpenStreet, dont ce reglage est indissociable. theme suit showOpenStreet (Lightpilot ou None) et terrain suit showTerrain (Light, ou LightShading quand showOpenStreet vaut true aussi) ; l'absence de l'un des deux ramene les deux a None.",
+      "cases": [
+        {
+          "value": "false",
+          "requires": {
+            "mapWidget_showOpenStreet": "false"
+          },
+          "present": "theme=None terrain=None",
+          "absent": "theme=None terrain=None",
+          "verdict": "inert"
+        },
+        {
+          "value": "false",
+          "requires": {
+            "mapWidget_showOpenStreet": "true"
+          },
+          "widgets": [
+            "WCompMap"
+          ],
+          "present": "theme=Lightpilot terrain=None",
+          "absent": "theme=None terrain=None",
+          "verdict": "live",
+          "effect": "mapThemeGone"
+        },
+        {
+          "value": "false",
+          "requires": {
+            "mapWidget_showOpenStreet": null
+          },
+          "widgets": [
+            "WCompMap"
+          ],
+          "present": "theme=None terrain=None",
+          "absent": "theme=None terrain=None",
+          "verdict": "inert"
+        },
+        {
+          "value": "true",
+          "requires": {
+            "mapWidget_showOpenStreet": "false"
+          },
+          "present": "theme=None terrain=Light",
+          "absent": "theme=None terrain=None",
+          "verdict": "live",
+          "effect": "terrainShadingGone"
+        },
+        {
+          "value": "true",
+          "requires": {
+            "mapWidget_showOpenStreet": "true"
+          },
+          "widgets": [
+            "WCompMap"
+          ],
+          "present": "theme=Lightpilot terrain=LightShading",
+          "absent": "theme=None terrain=None",
+          "verdict": "live",
+          "effect": "mapThemeAndTerrainGone"
+        },
+        {
+          "value": "true",
+          "requires": {
+            "mapWidget_showOpenStreet": null
+          },
+          "present": "theme=None terrain=None",
+          "absent": "theme=None terrain=None",
+          "verdict": "inert"
+        }
+      ]
     }
   }
 }

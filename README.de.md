@@ -275,7 +275,7 @@ Absicht — ein Treueversprechen, das nur der Autor nachprüfen kann, ist nichts
 
   Gemessen an der Referenzsicherung des Bestands
   (`tests/fixtures/exports/2026-08-20_backup-00.xcfg`, geschrieben von XCTrack 1.0.3-beta):
-  **6 vorgeschlagene und 3 stehen gelassene Einstellungen, auf 4 Widgets, bei 1 059
+  **4 vorgeschlagene und 5 stehen gelassene Einstellungen, auf 4 Widgets, bei 1 059
   untersuchten Widget-Einstellungen.** Sie sehen die Liste — jede Einstellung mit der
   letzten XCTrack-Version, die sie noch schrieb, und was das Gerät mit ihr und ohne sie
   zurückgelesen hat —, Sie wählen ab, was Sie lieber behalten, Sie handeln
@@ -298,6 +298,18 @@ Absicht — ein Treueversprechen, das nur der Autor nachprüfen kann, ist nichts
   Bereich, wo man entscheidet** — „der Windpfeil würde von diesem Kompass verschwinden“ —
   und der Messung gleich darunter, in den Worten, die das Gerät geschrieben hat. Der Pilot
   muss nichts tun: sie verschwinden von selbst.
+
+  ⚠️ **Und „ohne die Einstellung“ ist nicht „ohne alles“: die Nachbarschaft zählt.** Am
+  Abend desselben 22. August zeigte eine Tafel mit zehn Karten auf dem Gerät, dass
+  `mapWidget_showOpenStreet` und `mapWidget_showTerrain` **nur zusammen gelesen werden** —
+  allein bewirkt keine von beiden irgendetwas. Entfernt man die erste von einer Karte, die
+  beide trägt, zerreißt das Paar und **löscht die Geländeschattierung**, die die zweite
+  einschaltet. Das Werkzeug bot es an; es bietet es nicht mehr an. Jede Messung des
+  Protokolls trägt daher jetzt die Nachbarschaft, in der sie genommen wurde, Einstellung
+  für Einstellung, einschließlich der Forderung, dass ein Nachbar **fehlt** — außerhalb
+  dieser Nachbarschaft gibt es kein Urteil. Das ist auch der Grund, warum
+  `nav_use_brackets` auf *nein* auf einem Thermikassistenten wirkungslos ist, der sie gar
+  nicht liest, und auf einer Karte lebendig, die ihre Entfernungsanzeige daraus ableitet.
 - **Sagen, was Ihre Datei über Sie verrät**, bevor Sie sie weitergeben. Ein
   `backup`-Export enthält Ihren Namen, Ihren Schirm, Ihre gekoppelten Sensoren, Ihre
   Wegpunktdateien — bis hin zum Namen des Wettkampfs, an dem Sie teilnehmen. Beim Speichern
@@ -405,11 +417,11 @@ wechselt.*
 ![Der Dialog „Angepeilte Version und Kompatibilität“: die Version 1.0.3-beta
 vorausgewählt, der Satz über die nicht unterscheidbaren Versionen, der Block „Veraltete
 Einstellungen“ mit seinen neun Zeilen und der aufgeklappte Abschnitt „Entfernen, was eine
-ältere Version hinterlassen hat“ mit seinen sechs Kästchen, gefolgt von den drei stehen
+ältere Version hinterlassen hat“ mit seinen vier Kästchen, gefolgt von den fünf stehen
 gelassenen Einstellungen.](captures/version-et-nettoyage.de.png)
 
-*Die Versionswahl, die Diagnose und das Aufräumen, das sie eröffnet — sechs vorgeschlagene
-und drei stehen gelassene Einstellungen auf vier Widgets.*
+*Die Versionswahl, die Diagnose und das Aufräumen, das sie eröffnet — vier vorgeschlagene
+und fünf stehen gelassene Einstellungen auf vier Widgets.*
 
 ![Der Dialog „Diese Konfiguration speichern“: die drei Wege, dann das Verzeichnis der fünf
 ersetzten Texte — jeder mit seiner Seite, seinem Widget, dem durchgestrichenen alten Wert,

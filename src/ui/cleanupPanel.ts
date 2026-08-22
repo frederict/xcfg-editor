@@ -232,7 +232,11 @@ function gadgetSummary(tr: Translator, entries: CleanupEntry[], language: string
  */
 const EFFECT_KEYS = {
   windArrowGone: 'removalEffect.windArrowGone',
-  terrainShadingGone: 'removalEffect.terrainShadingGone'
+  windArcBecomesArrow: 'removalEffect.windArcBecomesArrow',
+  terrainShadingGone: 'removalEffect.terrainShadingGone',
+  mapThemeGone: 'removalEffect.mapThemeGone',
+  mapThemeAndTerrainGone: 'removalEffect.mapThemeAndTerrainGone',
+  distanceBracketsReturn: 'removalEffect.distanceBracketsReturn'
 } as const
 
 /**

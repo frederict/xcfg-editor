@@ -325,7 +325,7 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
 
   Mesuré sur la sauvegarde de référence du corpus
   (`tests/fixtures/exports/2026-08-20_backup-00.xcfg`, écrite par XCTrack 1.0.3-beta) :
-  **6 réglages proposés et 3 laissés en place, sur 4 gadgets, pour 1 059 réglages de
+  **4 réglages proposés et 5 laissés en place, sur 4 gadgets, pour 1 059 réglages de
   gadgets examinés.** Vous voyez la liste — chaque réglage avec la dernière version de
   XCTrack qui l'écrivait encore, et ce que l'appareil en a relu avec lui et sans lui —, vous décochez ce que vous préférez garder, vous agissez d'un geste explicite, et vous
   pouvez revenir en arrière juste après : remis, le fichier ressort **à l'octet près**. Le
@@ -345,6 +345,18 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
   en place, chacun avec sa raison **écrite en français dans le panneau où l'on décide** —
   « la flèche de vent disparaîtrait de ce compas » — et la mesure juste dessous, dans les
   mots que l'appareil a écrits. Le pilote n'a rien à en faire : ils partiront d'eux-mêmes.
+
+  ⚠️ **Et « sans le réglage » n'est pas « sans rien » : le voisinage compte.** Le même
+  22 août au soir, une planche de dix cartes portée sur l'appareil a montré que
+  `mapWidget_showOpenStreet` et `mapWidget_showTerrain` **ne sont lus qu'ensemble** — posé
+  seul, ni l'un ni l'autre ne fait quoi que ce soit. Retirer le premier d'une carte qui
+  porte les deux rompt le couple et **éteint l'ombrage du relief** que le second allume.
+  L'outil le proposait ; il ne le propose plus. Chaque mesure du relevé porte donc
+  désormais le voisinage dans lequel elle a été prise, réglage par réglage, y compris
+  l'exigence qu'un voisin soit **absent** — hors de ce voisinage, il n'y a pas de verdict.
+  C'est aussi ce qui permet de dire que `nav_use_brackets` réglé sur *non* est sans effet
+  sur un assistant de thermique, qui ne le lit pas, et vivant sur une carte, qui en tire
+  l'affichage de la distance.
 - **Dire ce que votre fichier révèle de vous** avant que vous ne le partagiez. Un export
   `backup` porte votre nom, votre voile, vos capteurs appairés, vos fichiers de waypoints
   — jusqu'au nom de la compétition à laquelle vous participez. Au moment d'enregistrer,
@@ -744,12 +756,12 @@ réglages restent français dans les cinq captures — seule notre prose change.
 
 ![La modale « Version visée et compatibilité » : la version 1.0.3-beta présélectionnée,
 la phrase des versions indistinguables, le bloc « Réglages périmés » et ses neuf lignes,
-et la section « Enlever ce qu'une ancienne version a laissé » dépliée sur ses six cases
-à cocher, suivie des trois réglages laissés en
+et la section « Enlever ce qu'une ancienne version a laissé » dépliée sur ses quatre cases
+à cocher, suivie des cinq réglages laissés en
 place.](captures/version-et-nettoyage.fr.png)
 
-*Le choix de version, le diagnostic, et le nettoyage qu'il ouvre — six réglages proposés et
-trois laissés en place, sur quatre gadgets.*
+*Le choix de version, le diagnostic, et le nettoyage qu'il ouvre — quatre réglages proposés
+et cinq laissés en place, sur quatre gadgets.*
 
 <!--
   REFAIRE CETTE CAPTURE — captures/version-et-nettoyage.<langue>.png (1200 × 1960)
@@ -767,11 +779,11 @@ trois laissés en place, sur quatre gadgets.*
   Fichier .... tests/fixtures/exports/2026-08-20_backup-00.xcfg
   État ....... version présélectionnée d'après le fichier (1.0.3-beta), la phrase des
                versions indistinguables visible, et la section « Enlever ce qu'une
-               ancienne version a laissé » ouverte sur ses 6 réglages / 4 gadgets, plus
-               le bloc des 3 réglages laissés en place qui la suit.
+               ancienne version a laissé » ouverte sur ses 4 réglages / 4 gadgets, plus
+               le bloc des 5 réglages laissés en place qui la suit.
   Refaire .... npm run dev -- --port 5179, déposer le fichier, « Modifier les pages »
                (le nettoyage ne s'offre qu'en édition), menu « Fichier » puis
-               « Version et compatibilité… », enfin déplier « Voir ces 6 réglages, et
+               « Version et compatibilité… », enfin déplier « Voir ces 4 réglages, et
                décocher ce que vous préférez garder ».
   Cadrage .... viewport de 1200 × 1960 points CSS, émulation comme ci-dessus. La boîte
                ne défile alors dans aucune des cinq langues.
@@ -829,6 +841,14 @@ trois laissés en place, sur quatre gadgets.*
   ⚠ LE CADRAGE EST À REMESURER, pas à deviner : une dizaine de lignes de texte s'ajoutent
   à la boîte et 1 960 points ne suffiront pas. Reprendre la méthode ci-dessus — mesurer le
   contenu dans les cinq langues, diviser par 0,88, l'allemand commande.
+
+  LA DETTE S'AGGRAVE, le 2026-08-22 en soirée, et le compte a encore changé : la table des
+  réglages périmés porte maintenant le VOISINAGE de chaque mesure, et les deux
+  `mapWidget_showOpenStreet` de cette fixture sont passés de PROPOSÉS à LAISSÉS EN PLACE —
+  mesuré sur l'appareil, les retirer éteint l'ombrage du relief. La section s'ouvre donc
+  sur QUATRE cases et non six, et le bloc du dessous en nomme CINQ et non trois. Deux
+  lignes de plus dans la boîte, deux de moins dans la liste : le cadrage est toujours à
+  remesurer, et c'est le même calcul.
 -->
 
 

@@ -240,7 +240,11 @@ const versions: DomainCatalog<'versions'> = {
   'cleanup.heldUnmeasured': 'Nadie ha medido lo que su retirada cambiaría en un aparato. No adivinamos: se queda en su sitio.',
 
   'removalEffect.windArrowGone': 'la flecha de viento desaparecería de esta brújula',
+  'removalEffect.windArcBecomesArrow': 'esta brújula volvería a mostrar el viento como flecha en lugar de arco',
   'removalEffect.terrainShadingGone': 'el sombreado del relieve se apagaría en este mapa',
+  'removalEffect.mapThemeGone': 'el fondo de OpenStreetMap desaparecería de este mapa',
+  'removalEffect.mapThemeAndTerrainGone': 'el fondo de OpenStreetMap y el sombreado del relieve desaparecerían de este mapa',
+  'removalEffect.distanceBracketsReturn': 'la distancia de navegación volvería a mostrarse entre paréntesis en este mapa',
   'removalEffect.unnamed': 'este widget ya no mostraría lo mismo',
 
   /* ------------------------------------------- ce que porte chaque réglage périmé */

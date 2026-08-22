@@ -257,7 +257,7 @@ de fidelidad que solo el autor puede comprobar no vale nada.
 
   Medido en la copia de seguridad de referencia del corpus
   (`tests/fixtures/exports/2026-08-20_backup-00.xcfg`, escrita por XCTrack 1.0.3-beta):
-  **6 ajustes propuestos y 3 dejados donde están, en 4 widgets, sobre 1 059 ajustes de
+  **4 ajustes propuestos y 5 dejados donde están, en 4 widgets, sobre 1 059 ajustes de
   widgets examinados.** Usted ve la lista — cada ajuste con la última versión de XCTrack que
   aún lo escribía, y lo que el aparato ha releído con él y sin él —, desmarca lo que
   prefiere conservar, actúa con un gesto explícito, y puede volver atrás justo después:
@@ -279,6 +279,17 @@ de fidelidad que solo el autor puede comprobar no vale nada.
   en el panel donde se decide** — «la flecha de viento desaparecería de esta brújula» — y
   la medida justo debajo, en las palabras que ha escrito el aparato. El piloto no tiene
   nada que hacer: se irán solos.
+
+  ⚠️ **Y «sin el ajuste» no es «sin nada»: la vecindad cuenta.** La tarde de ese mismo 22
+  de agosto, un tablero de diez mapas llevado al aparato mostró que
+  `mapWidget_showOpenStreet` y `mapWidget_showTerrain` **solo se leen juntos** — por
+  separado, ninguno de los dos hace nada. Quitar el primero de un mapa que lleva los dos
+  rompe la pareja y **apaga el sombreado del relieve** que enciende el segundo. La
+  herramienta lo proponía; ya no lo propone. Cada medida del registro lleva por tanto
+  ahora la vecindad en la que fue tomada, ajuste por ajuste, incluida la exigencia de que
+  un vecino esté **ausente** — fuera de esa vecindad no hay veredicto. Es también lo que
+  permite decir que `nav_use_brackets` puesto en *no* es inocuo en un asistente de
+  térmica, que no lo lee, y vivo en un mapa, que deriva de él su etiqueta de distancia.
 - **Decir lo que su archivo revela de usted** antes de que lo comparta. Una exportación
   `backup` lleva su nombre, su vela, sus sensores emparejados, sus archivos de waypoints —
   hasta el nombre de la competición en la que participa. Al guardar, la herramienta propone
@@ -382,12 +393,12 @@ en los cinco ejemplares — solo cambia nuestra propia prosa.*
 
 ![La ventana «Versión objetivo y compatibilidad»: la versión 1.0.3-beta preseleccionada, la
 frase de las versiones indistinguibles, el bloque «Ajustes obsoletos» y sus nueve líneas, y
-la sección «Quitar lo que dejó una versión antigua» desplegada sobre sus seis casillas,
-seguida de los tres ajustes dejados donde
+la sección «Quitar lo que dejó una versión antigua» desplegada sobre sus cuatro casillas,
+seguida de los cinco ajustes dejados donde
 están.](captures/version-et-nettoyage.es.png)
 
-*La elección de versión, el diagnóstico y la limpieza que abre — seis ajustes propuestos y
-tres dejados donde están, en cuatro widgets.*
+*La elección de versión, el diagnóstico y la limpieza que abre — cuatro ajustes propuestos
+y cinco dejados donde están, en cuatro widgets.*
 
 ![El cuadro «Guardar esta configuración»: las tres salidas, y después el inventario de los
 cinco textos reemplazados — cada uno con su página, su widget, el valor antiguo tachado, el

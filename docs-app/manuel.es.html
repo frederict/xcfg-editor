@@ -932,6 +932,15 @@
     en el panel donde usted decide</strong>. No tiene que volver aquí para entender lo que se
     le propone: este capítulo dice de dónde viene ese saber y en qué aparato se tomó, la
     pantalla dice lo que le haría al suyo.</p>
+    <p><strong>Y «sin el ajuste» no es «sin nada»: la vecindad cuenta.</strong> Dos ajustes
+    de mapa, <code>mapWidget_showOpenStreet</code> y <code>mapWidget_showTerrain</code>, solo
+    se leen <strong>juntos</strong>: por separado, ninguno de los dos hace nada. Quitar el
+    primero de un mapa que lleva los dos apaga el sombreado del relieve que enciende el
+    segundo — medido el 22 de agosto de 2026, y la herramienta ya no lo propone. Cada medida
+    lleva por tanto la vecindad en la que fue tomada; fuera de esa vecindad, la herramienta
+    no concluye. Por eso también <code>nav_use_brackets</code> puesto en no es inocuo en un
+    asistente de térmica, que no lo lee, y vivo en un mapa, que deriva de él su etiqueta de
+    distancia.</p>
   </div>
 
   <p>Empieza por tranquilizarle, y la frase ya solo promete lo que se ha medido: «XCTrack lee
@@ -940,14 +949,14 @@
   el archivo sin cambiar nada en sus páginas.»</p>
 
   <ol class="manual__steps">
-    <li>Despliegue <span class="manual__ui">Ver estos 6 ajustes, y desmarcar lo que prefiera
+    <li>Despliegue <span class="manual__ui">Ver estos 4 ajustes, y desmarcar lo que prefiera
     conservar</span> — el número es el de su archivo. Todo está marcado al principio; cada
     línea dice hasta qué versión de XCTrack seguía escribiéndose el ajuste, y su valor cuando
     es simple.</li>
     <li>Desmarque lo que quiera conservar. La cuenta se actualiza, y el botón dice exactamente
     cuántos ajustes va a quitar.</li>
     <li>Pulse el botón. El panel es reemplazado por un mensaje y por
-    <span class="manual__ui">Devolver estos 6 ajustes</span>.</li>
+    <span class="manual__ui">Devolver estos 4 ajustes</span>.</li>
   </ol>
 
   <p>La vuelta atrás es completa: devueltos, el archivo sale byte a byte igual. El gesto queda

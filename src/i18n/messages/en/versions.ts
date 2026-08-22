@@ -239,7 +239,11 @@ const versions: DomainCatalog<'versions'> = {
   'cleanup.heldUnmeasured': 'Nobody has measured what removing it would change on a device. We do not guess: it stays in place.',
 
   'removalEffect.windArrowGone': 'the wind arrow would disappear from this compass',
+  'removalEffect.windArcBecomesArrow': 'this compass would show the wind as an arrow again instead of an arc',
   'removalEffect.terrainShadingGone': 'the terrain shading would go out on this map',
+  'removalEffect.mapThemeGone': 'the OpenStreetMap background would disappear from this map',
+  'removalEffect.mapThemeAndTerrainGone': 'the OpenStreetMap background and the terrain shading would both disappear from this map',
+  'removalEffect.distanceBracketsReturn': 'the navigation distance would go back into brackets on this map',
   'removalEffect.unnamed': 'this widget would no longer show the same thing',
 
   /* ------------------------------------------- ce que porte chaque réglage périmé */

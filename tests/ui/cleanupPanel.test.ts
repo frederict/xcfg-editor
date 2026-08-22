@@ -72,13 +72,17 @@ describe('ce que l’écran annonce', () => {
   it('dit combien de réglages partent et sur quels gadgets', () => {
     const panel = harnessOf(BACKUP_2026, 20)
     const text = panel.text()
-    expect(text).toContain('6 réglages')
+    expect(text).toContain('4 réglages')
     expect(text).toContain('4 gadgets')
     // Les gadgets sont NOMMÉS, pas seulement comptés : c'est ce qui permet au pilote de
     // savoir de quoi on lui parle avant d'ouvrir la liste.
-    expect(text).toContain('Carte de la manche (2)')
+    expect(text).toContain('Carte XC')
+    expect(text).toContain('Carte de la manche')
     expect(text).toContain('Assistant thermique')
     expect(text).toContain('Boussole et vent')
+    // Et quand un même type revient, il est compté une fois, chiffre à l'appui : la
+    // sauvegarde de 2025 en porte quatre du même.
+    expect(harnessOf(BACKUP_2025, 20).text()).toContain('Assistant thermique (4)')
   })
 
   it('n’inquiète pas, mais ne rassure plus que sur ce qui a été mesuré', () => {
@@ -143,11 +147,11 @@ describe('le geste', () => {
   it('propose une case par réglage, toutes cochées au départ', () => {
     const panel = harnessOf(BACKUP_2026, 20)
     const boxes = panel.boxes()
-    expect(boxes).toHaveLength(6)
+    expect(boxes).toHaveLength(4)
     expect(boxes.every((box) => box.checked)).toBe(true)
-    expect(panel.button(/Enlever/)?.textContent).toContain('6')
-    // Les trois laissés en place n'ont PAS de case : rien à décider sur eux.
-    expect(panel.section.plan().held).toHaveLength(3)
+    expect(panel.button(/Enlever/)?.textContent).toContain('4')
+    // Les cinq laissés en place n'ont PAS de case : rien à décider sur eux.
+    expect(panel.section.plan().held).toHaveLength(5)
   })
 
   it('n’agit pas tant qu’on ne le lui demande pas', () => {
@@ -163,9 +167,9 @@ describe('le geste', () => {
     const boxes = panel.boxes()
     boxes[0]!.checked = false
     boxes[0]!.dispatchEvent(new Event('change'))
-    expect(panel.text()).toContain('5 cochés sur 6')
+    expect(panel.text()).toContain('3 cochés sur 4')
     expect(panel.text()).toContain('1 réglage restera en place')
-    expect(panel.button(/Enlever/)?.textContent).toContain('5')
+    expect(panel.button(/Enlever/)?.textContent).toContain('3')
   })
 
   it('n’enlève que les réglages restés cochés', () => {
@@ -176,7 +180,7 @@ describe('le geste', () => {
     box.dispatchEvent(new Event('change'))
     panel.button(/Enlever/)?.click()
 
-    expect(panel.events[0]?.keyCount).toBe(5)
+    expect(panel.events[0]?.keyCount).toBe(3)
     const after = serializeJson(panel.document)
     expect(after).toContain(`"${kept.key}"`)
   })
@@ -199,7 +203,7 @@ describe('le geste', () => {
 
     panel.button(/Enlever/)?.click()
     expect(serializeJson(panel.document)).not.toBe(source)
-    expect(panel.text()).toContain('6 réglages enlevés')
+    expect(panel.text()).toContain('4 réglages enlevés')
     expect(panel.text()).toContain('4 gadgets')
 
     panel.button(/Remettre/)?.click()
@@ -217,8 +221,8 @@ describe('le geste', () => {
     panel.button(/Enlever/)?.click()
     panel.button(/Remettre/)?.click()
     expect(panel.events.map((event) => event.kind)).toEqual(['applied', 'reverted'])
-    expect(panel.events[0]?.description).toBe('Enlever 6 réglages d’une ancienne version')
-    expect(panel.events[1]?.description).toBe('Remettre 6 réglages d’une ancienne version')
+    expect(panel.events[0]?.description).toBe('Enlever 4 réglages d’une ancienne version')
+    expect(panel.events[1]?.description).toBe('Remettre 4 réglages d’une ancienne version')
   })
 
   it('laisse le retour en arrière en place quand l’hôte recalcule', () => {
@@ -270,7 +274,9 @@ describe('le geste', () => {
     const text = harnessOf(BACKUP_2026, 20).text()
     // Le cas mesuré : l'écran nomme le réglage d'aujourd'hui et ses deux valeurs.
     expect(text).toContain('sans lui, windStyle passe de ARROW à NONE')
-    expect(text).toContain('sans lui, mapWidget_mapAppearance.terrain passe de Light à None')
+    expect(text).toContain(
+      'sans lui, mapWidget_mapAppearance passe de theme=None terrain=Light '
+      + 'à theme=None terrain=None')
     expect(text).toContain('showWind')
   })
 
@@ -298,7 +304,8 @@ describe('le geste', () => {
    */
   it('n’escamote jamais la mesure derrière la phrase française', () => {
     const text = harnessOf(BACKUP_2026, 20).text()
-    for (const measured of ['windStyle', 'ARROW', 'NONE', 'mapWidget_mapAppearance.terrain']) {
+    for (const measured of ['windStyle', 'ARROW', 'NONE', 'mapWidget_mapAppearance',
+      'theme=None terrain=Light']) {
       expect(text, measured).toContain(measured)
     }
   })
@@ -315,17 +322,17 @@ describe('le geste', () => {
     expect(text).toContain('avec ou sans lui, nav_label vaut DISTANCE_BRACKETS')
   })
 
-  /** 9 = 6 + 3, dit par l'écran plutôt que laissé à la soustraction du pilote. */
+  /** 9 = 4 + 5, dit par l'écran plutôt que laissé à la soustraction du pilote. */
   it('raccorde son compte à celui du diagnostic', () => {
     const text = harnessOf(BACKUP_2026, 20).text()
-    expect(text).toContain('3 autres réglages ont été trouvés et ne sont pas proposés')
+    expect(text).toContain('5 autres réglages ont été trouvés et ne sont pas proposés')
   })
 
-  it('laisse les trois sous les yeux même après le retrait des six autres', () => {
+  it('laisse les cinq sous les yeux même après le retrait des quatre autres', () => {
     const panel = harnessOf(BACKUP_2026, 20)
     panel.button(/Enlever/)?.click()
     // Le fichier n'est pas « propre » pour autant : ce qui reste est encore dit.
-    expect(panel.text()).toContain('3 réglages trouvés, et laissés en place')
+    expect(panel.text()).toContain('5 réglages trouvés, et laissés en place')
   })
 })
 
@@ -344,7 +351,7 @@ describe('dans le panneau de diagnostic', () => {
     const panel = await buildVersionPanel({
       document, database: db, tr, onCleanup: (event) => events.push(event)
     })
-    expect(panel.cleanupPlan()?.entries).toHaveLength(6)
+    expect(panel.cleanupPlan()?.entries).toHaveLength(4)
 
     const text = panel.element.textContent ?? ''
     expect(text).toContain('Réglages périmés')
@@ -365,9 +372,9 @@ describe('dans le panneau de diagnostic', () => {
     act?.click()
 
     expect(events).toHaveLength(1)
-    // Le diagnostic est à jour : les six retirés ont disparu du constat, les trois
+    // Le diagnostic est à jour : les quatre retirés ont disparu du constat, les cinq
     // laissés en place y sont toujours — et c'est bien ce qu'ils sont.
-    expect(panel.diagnosis()?.counts.legacy).toBe(3)
+    expect(panel.diagnosis()?.counts.legacy).toBe(5)
     const undo = [...panel.element.querySelectorAll('button')]
       .find((node) => /^Remettre/.test(node.textContent ?? ''))
     expect(undo).toBeDefined()
@@ -392,7 +399,7 @@ describe('dans le panneau de diagnostic', () => {
     const panel = await buildVersionPanel({
       document: documentOf(BACKUP_2026), database: db, tr, onCleanup: () => undefined
     })
-    expect(panel.cleanupPlan()?.entries).toHaveLength(6)
+    expect(panel.cleanupPlan()?.entries).toHaveLength(4)
     const older = [...panel.select.querySelectorAll('option')]
       .find((node) => node.textContent === '0.9.8.7')
     expect(older).toBeDefined()
@@ -421,7 +428,7 @@ describe('le français des libellés', () => {
     // rendre : la phrase du singulier ne porte pas de nombre, celle du pluriel le porte
     // au milieu.
     const panel = harnessOf(BACKUP_2026, 20)
-    expect(panel.button(/Enlever/)?.textContent).toBe('Enlever ces 6 réglages')
+    expect(panel.button(/Enlever/)?.textContent).toBe('Enlever ces 4 réglages')
 
     for (const box of panel.boxes().slice(1)) {
       box.checked = false
@@ -455,12 +462,12 @@ describe('le nettoyage dans les cinq langues', () => {
   it('nomme le geste dans la langue du pilote, nombre compris', () => {
     const button = (language: UiLanguage): string =>
       harnessOf(BACKUP_2026, 20, makeTranslator(language, CATALOGS[language]))
-        .button(/6/)?.textContent ?? ''
-    expect(button('fr')).toBe('Enlever ces 6 réglages')
-    expect(button('en')).toBe('Remove these 6 settings')
-    expect(button('nl')).toBe('Deze 6 instellingen weghalen')
-    expect(button('de')).toBe('Diese 6 Einstellungen entfernen')
-    expect(button('es')).toBe('Quitar estos 6 ajustes')
+        .button(/4/)?.textContent ?? ''
+    expect(button('fr')).toBe('Enlever ces 4 réglages')
+    expect(button('en')).toBe('Remove these 4 settings')
+    expect(button('nl')).toBe('Deze 4 instellingen weghalen')
+    expect(button('de')).toBe('Diese 4 Einstellungen entfernen')
+    expect(button('es')).toBe('Quitar estos 4 ajustes')
   })
 
   it('ne laisse aucun mot français dans les quatre autres langues', () => {

@@ -237,7 +237,11 @@ const versions: DomainCatalog<'versions'> = {
   'cleanup.heldUnmeasured': 'Niemand heeft gemeten wat het weghalen ervan op een toestel zou veranderen. Wij gokken niet: zij blijft staan.',
 
   'removalEffect.windArrowGone': 'de windpijl zou van dit kompas verdwijnen',
+  'removalEffect.windArcBecomesArrow': 'dit kompas zou de wind weer als pijl tonen in plaats van als boog',
   'removalEffect.terrainShadingGone': 'de reliëfschaduw zou op deze kaart uitgaan',
+  'removalEffect.mapThemeGone': 'de OpenStreetMap-ondergrond zou van deze kaart verdwijnen',
+  'removalEffect.mapThemeAndTerrainGone': 'de OpenStreetMap-ondergrond en de reliëfschaduw zouden van deze kaart verdwijnen',
+  'removalEffect.distanceBracketsReturn': 'de navigatieafstand zou op deze kaart weer tussen haakjes komen te staan',
   'removalEffect.unnamed': 'deze widget zou niet meer hetzelfde tonen',
 
   /* ------------------------------------------- ce que porte chaque réglage périmé */

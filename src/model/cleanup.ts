@@ -45,13 +45,20 @@ import { widgetOptionKeys } from './widget'
  * encore lu**, donc que le nettoyage mord exactement dans l'état où le réglage sert
  * encore. « Périmé » veut dire « remplacé depuis », jamais « sans effet ».
  *
- * Troisième serrure, donc : `catalog/legacyMigrations.ts`, qui porte pour chaque couple
- * *(réglage, valeur)* ce que l'appareil écrit **avec** et **sans**. Égaux, le retrait est
- * sans effet et se propose ; différents ou jamais mesurés, l'entrée passe dans `held` et
- * l'interface dit pourquoi. Sur la sauvegarde de référence, cela fait **6 réglages
- * proposés et 3 laissés en place** là où les neuf partaient auparavant, dont
- * `showWind: true` et deux `mapWidget_showTerrain: true` — ce dernier éteignant l'ombrage
- * du relief sur deux cartes.
+ * Troisième serrure, donc : `catalog/legacyMigrations.ts`, qui porte pour chaque cas
+ * *(réglage, valeur, **voisinage**)* ce que l'appareil écrit **avec** et **sans**. Égaux,
+ * le retrait est sans effet et se propose ; différents ou jamais mesurés, l'entrée passe
+ * dans `held` et l'interface dit pourquoi. Sur la sauvegarde de référence, cela fait
+ * **4 réglages proposés et 5 laissés en place** là où les neuf partaient auparavant.
+ *
+ * ⚠️ **Le voisinage est arrivé après coup, et il a retiré deux propositions.** La table
+ * du 22 août à midi comparait le réglage à la valeur d'usine d'un gadget **nu**, ce qui
+ * n'est pas « sans le réglage » : mesuré le soir même sur l'appareil,
+ * `mapWidget_showOpenStreet` et `mapWidget_showTerrain` **ne sont lus qu'ensemble**, et
+ * retirer le premier d'une carte qui porte les deux éteint l'ombrage du relief que le
+ * second allume. Les deux `mapWidget_showOpenStreet: false` de la sauvegarde de référence
+ * étaient proposés ; ils sont désormais retenus, aux côtés des deux
+ * `mapWidget_showTerrain: true` et du `showWind: true`.
  *
  * Tout le reste est écarté, y compris ce que le diagnostic qualifie pourtant de
  * « suppression défendable » :

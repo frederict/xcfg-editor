@@ -250,7 +250,7 @@ author can check is worth nothing.
 
   Measured on the reference backup of the corpus
   (`tests/fixtures/exports/2026-08-20_backup-00.xcfg`, written by XCTrack 1.0.3-beta):
-  **6 settings offered and 3 left in place, across 4 widgets, out of 1,059 widget settings
+  **4 settings offered and 5 left in place, across 4 widgets, out of 1,059 widget settings
   examined.** You see the list — each setting with the last XCTrack release that still
   wrote it, and what the device read back with it and without it — you
   untick what you would rather keep, you act with one explicit gesture, and you can go
@@ -272,6 +272,18 @@ author can check is worth nothing.
   the panel where you decide** — “the wind arrow would disappear from this compass” — and
   the measurement right below, in the words the device wrote. There is nothing for the
   pilot to do: they will go on their own.
+
+  ⚠️ **And “without the setting” is not “without anything”: the neighbourhood counts.** On
+  the evening of that same 22 August, a board of ten maps carried onto the device showed
+  that `mapWidget_showOpenStreet` and `mapWidget_showTerrain` **are only read together** —
+  on its own, neither of them does anything at all. Removing the first one from a map that
+  carries both breaks the pair and **puts out the terrain shading** the second one turns
+  on. The tool used to offer that removal; it no longer does. Every measurement in the
+  survey therefore now carries the neighbourhood it was taken in, setting by setting,
+  including the requirement that a neighbour be **absent** — outside that neighbourhood
+  there is no verdict. It is also what lets us say that `nav_use_brackets` set to *no* is
+  without effect on a thermal assistant, which does not read it, and live on a map, which
+  derives its distance label from it.
 - **Say what your file reveals about you** before you share it. A `backup` export carries
   your name, your glider, your paired sensors, your waypoint files — down to the name of
   the competition you are flying. So when you save, the tool offers **three outcomes**,
@@ -374,12 +386,12 @@ only our own prose changes.*
 
 ![The “Target version and compatibility” dialog: release 1.0.3-beta preselected, the
 sentence about indistinguishable releases, the “Outdated settings” block and its nine
-lines, and the “Remove what an older release left behind” section unfolded on its six
-tickboxes, followed by the three settings left in
+lines, and the “Remove what an older release left behind” section unfolded on its four
+tickboxes, followed by the five settings left in
 place.](captures/version-et-nettoyage.en.png)
 
-*The version choice, the diagnosis, and the cleanup it opens — six settings offered and
-three left in place, across four widgets.*
+*The version choice, the diagnosis, and the cleanup it opens — four settings offered and
+five left in place, across four widgets.*
 
 ![The “Save this configuration” box: the three outcomes, then the inventory of the five
 replaced texts — each with its page, its widget, the old value struck through, the new

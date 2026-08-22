@@ -358,7 +358,11 @@ const versions = {
    * porte pas son point final.
    */
   'removalEffect.windArrowGone': 'la flèche de vent disparaîtrait de ce compas',
+  'removalEffect.windArcBecomesArrow': 'l’indicateur de vent de ce compas repasserait de l’arc à la flèche',
   'removalEffect.terrainShadingGone': 'l’ombrage du relief s’éteindrait sur cette carte',
+  'removalEffect.mapThemeGone': 'le fond de carte OpenStreetMap disparaîtrait de cette carte',
+  'removalEffect.mapThemeAndTerrainGone': 'le fond de carte OpenStreetMap et l’ombrage du relief disparaîtraient de cette carte',
+  'removalEffect.distanceBracketsReturn': 'la distance de navigation se remettrait entre parenthèses sur cette carte',
   /** Le repli : une mesure dit qu'un retrait change quelque chose sans dire quoi. */
   'removalEffect.unnamed': 'ce gadget n’afficherait plus la même chose',
 

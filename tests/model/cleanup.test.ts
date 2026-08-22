@@ -68,32 +68,61 @@ function markOf(entry: CleanupEntry): string {
 /* ------------------------------------------------------------- le plan, sur le corpus */
 
 describe('le plan sur les fichiers réels', () => {
-  it('trouve les neuf reliquats de la sauvegarde 1.0.3, et n’en propose que six', () => {
+  it('trouve les neuf reliquats de la sauvegarde 1.0.3, et n’en propose que quatre', () => {
     const plan = planOf(BACKUP_2026, 20)
     expect(plan.entries.length + plan.held.length).toBe(9)
-    expect(plan.entries).toHaveLength(6)
+    expect(plan.entries).toHaveLength(4)
     expect(plan.widgetCount).toBe(4)
     expect(plan.examinedCount).toBe(1059)
     // Rien de reconnu comme reliquat n'a dû être retenu faute d'explication.
     expect(plan.withheldCount).toBe(0)
   })
 
-  it('laisse en place les trois dont le retrait changerait l’instrument', () => {
+  it('laisse en place les cinq dont le retrait changerait l’instrument', () => {
     const plan = planOf(BACKUP_2026, 20)
     expect(plan.held.map((entry) => `${entry.key}=${entry.removal.verdict}`)).toEqual([
+      'mapWidget_showOpenStreet=live',
       'mapWidget_showTerrain=live',
+      'mapWidget_showOpenStreet=live',
       'mapWidget_showTerrain=live',
       'showWind=live'
     ])
     // Et l'écran a de quoi le dire : le réglage d'aujourd'hui, avec et sans.
-    const wind = plan.held[2]
+    const wind = plan.held[4]
     expect(wind?.removal.successor).toBe('windStyle')
     expect(wind?.removal.present).toBe('ARROW')
     expect(wind?.removal.absent).toBe('NONE')
-    const terrain = plan.held[0]
-    expect(terrain?.removal.successor).toBe('mapWidget_mapAppearance.terrain')
-    expect(terrain?.removal.present).toBe('Light')
-    expect(terrain?.removal.absent).toBe('None')
+    const terrain = plan.held[1]
+    expect(terrain?.removal.successor).toBe('mapWidget_mapAppearance')
+    expect(terrain?.removal.present).toBe('theme=None terrain=Light')
+    expect(terrain?.removal.absent).toBe('theme=None terrain=None')
+  })
+
+  /**
+   * ⚠️ **Le cas qui a coûté le plus cher, et qui doit rester rouge si on le défait.**
+   *
+   * `mapWidget_showOpenStreet: false` a été proposé pendant une journée, sur ces deux
+   * cartes-là, parce que la table le comparait à la valeur d'usine d'un gadget nu — la
+   * même, `terrain=None`. Le 22 août 2026 au soir, une planche de dix cartes a montré sur
+   * l'AIR³ que les deux réglages cartographiques **ne sont lus qu'ensemble** : sur ces
+   * gadgets, qui portent aussi `mapWidget_showTerrain: true`, retirer celui-ci rompt le
+   * couple et **éteint l'ombrage du relief**. La conséquence porte donc le même nom que
+   * celle de son voisin, et pour la même raison.
+   */
+  it('refuse les deux réglages cartographiques dont le retrait éteindrait le relief', () => {
+    const plan = planOf(BACKUP_2026, 20)
+    const osm = plan.held.filter((entry) => entry.key === 'mapWidget_showOpenStreet')
+    expect(osm.map((entry) => entry.path)).toEqual([
+      'layout/portrait/0/widgets/0/mapWidget_showOpenStreet',
+      'layout/portrait/1/widgets/0/mapWidget_showOpenStreet'
+    ])
+    for (const entry of osm) {
+      expect(entry.removal.verdict, entry.path).toBe('live')
+      expect(entry.removal.effect, entry.path).toBe('terrainShadingGone')
+      expect(entry.removal.present, entry.path).toBe('theme=None terrain=Light')
+      expect(entry.removal.absent, entry.path).toBe('theme=None terrain=None')
+    }
+    expect(plan.entries.map((entry) => entry.key)).not.toContain('mapWidget_showOpenStreet')
   })
 
   it('ne propose que des retraits mesurés sans effet, jamais un « on suppose »', () => {
@@ -117,15 +146,15 @@ describe('le plan sur les fichiers réels', () => {
   it('désigne chaque réglage par son chemin dans le document', () => {
     const plan = planOf(BACKUP_2026, 20)
     expect(plan.entries.map((entry) => entry.path)).toEqual([
-      'layout/portrait/0/widgets/0/mapWidget_showOpenStreet',
       'layout/portrait/0/widgets/0/nav_use_brackets',
-      'layout/portrait/1/widgets/0/mapWidget_showOpenStreet',
       'layout/portrait/1/widgets/0/nav_use_brackets',
       'layout/portrait/2/widgets/0/nav_use_brackets',
       'layout/portrait/2/widgets/6/newWindArrow'
     ])
     expect(plan.held.map((entry) => entry.path)).toEqual([
+      'layout/portrait/0/widgets/0/mapWidget_showOpenStreet',
       'layout/portrait/0/widgets/0/mapWidget_showTerrain',
+      'layout/portrait/1/widgets/0/mapWidget_showOpenStreet',
       'layout/portrait/1/widgets/0/mapWidget_showTerrain',
       'layout/portrait/2/widgets/6/showWind'
     ])
@@ -176,15 +205,69 @@ describe('le plan sur les fichiers réels', () => {
 
   it('trouve les quatre reliquats de la sauvegarde 0.9.12.3, et n’en propose aucun', () => {
     // Les mesures d'aller-retour ont été prises sur 1.0.3-beta, palier 20, et sur elle
-    // seule. Visés sur 15, 16 ou 17, les quatre reliquats sont reconnus, nommés, et
-    // laissés en place : deux parce que leur retrait éteint l'ombrage du relief, deux
-    // parce que personne n'a mesuré ce qu'il ferait à ces paliers-là.
+    // seule ; les rejouer ailleurs demanderait une autre version de XCTrack sur
+    // l'appareil, et ce n'est pas faisable (voir l'en-tête de `legacyMigrations.ts`).
+    //
+    // Ce n'est pourtant PAS ce qui retient ces quatre-là, et c'est le renseignement de la
+    // soirée du 22 août 2026 : les deux `mapWidget_showOpenStreet` étaient « jamais
+    // mesurés » et le sont aujourd'hui — **vivants**. Les quatre réglages que l'outil
+    // laisse sur cette sauvegarde sont quatre moitiés de deux couples cartographiques, et
+    // en retirer une seule éteint l'ombrage du relief. Aucun n'attend une mesure : ils
+    // attendent qu'on ne les touche pas.
     for (const tier of [15, 16, 17]) {
       const plan = planOf(BACKUP_2025, tier)
       expect(plan.entries, `palier ${tier}`).toEqual([])
       expect(plan.held.map((entry) => entry.removal.verdict), `palier ${tier}`)
-        .toEqual(['unmeasured', 'live', 'unmeasured', 'live'])
+        .toEqual(['live', 'live', 'live', 'live'])
+      expect(plan.held.map((entry) => entry.removal.effect), `palier ${tier}`)
+        .toEqual(['terrainShadingGone', 'terrainShadingGone',
+          'terrainShadingGone', 'terrainShadingGone'])
     }
+  })
+
+  /**
+   * L'autre moitié du même renseignement, au palier où les mesures valent : sur cette
+   * sauvegarde de 2025, deux retraits que l'outil proposait la veille sont désormais
+   * refusés — les deux `mapWidget_showOpenStreet: false` qui accompagnent un
+   * `mapWidget_showTerrain: true`, et le `nav_use_brackets: false` d'une carte, dont le
+   * retrait rendrait ses crochets à l'étiquette de distance.
+   */
+  it('refuse aussi, au palier 20, le nav_use_brackets qui rendrait les crochets', () => {
+    const plan = planOf(BACKUP_2025, 20)
+    expect(plan.entries).toHaveLength(11)
+    expect(plan.held).toHaveLength(10)
+    const brackets = plan.held.filter((entry) => entry.key === 'nav_use_brackets')
+    expect(brackets.map((entry) => entry.path))
+      .toEqual(['layout/landscape/4/widgets/0/nav_use_brackets'])
+    expect(brackets[0]?.removal).toEqual({
+      verdict: 'live', successor: 'nav_label',
+      present: 'DISTANCE', absent: 'DISTANCE_BRACKETS', effect: 'distanceBracketsReturn'
+    })
+    // Le même réglage, à `true`, reste proposé sur huit autres gadgets : le verdict porte
+    // sur une valeur, jamais sur une clé.
+    expect(plan.entries.filter((entry) => entry.key === 'nav_use_brackets')).toHaveLength(8)
+  })
+
+  /**
+   * `newWindArrow: true` n'avait jamais été porté sur l'appareil : le compas de 2025 qui
+   * le porte recevait « personne ne l'a mesuré ». Il l'est depuis le 22 août 2026 —
+   * `showWind: true` seul donne `ARROW`, avec `newWindArrow: true` il donne `ARC` — et le
+   * retrait n'efface donc pas la flèche, il lui fait perdre sa forme en arc.
+   */
+  it('sait désormais ce que « newWindArrow: true » perdrait : l’arc, pas la flèche', () => {
+    const plan = planOf(BACKUP_2025, 20)
+    const arc = plan.held.filter((entry) => entry.key === 'newWindArrow')
+    expect(arc.map((entry) => entry.path))
+      .toEqual(['layout/landscape/0/widgets/12/newWindArrow'])
+    expect(arc[0]?.removal).toEqual({
+      verdict: 'live', successor: 'windStyle',
+      present: 'ARC', absent: 'ARROW', effect: 'windArcBecomesArrow'
+    })
+    // Sur le même compas, `showWind: true` part de `ARC` et non de `ARROW` : les deux
+    // mesures se lisent ensemble, et l'écran les montre côte à côte.
+    const wind = plan.held.filter((entry) => entry.path.endsWith('12/showWind'))
+    expect(wind[0]?.removal.present).toBe('ARC')
+    expect(wind[0]?.removal.absent).toBe('NONE')
   })
 
   it('ne trouve rien à enlever à un fichier visé sur une version antérieure à lui', () => {
@@ -311,10 +394,13 @@ function crowdedDocument(): JsonNode {
 function laboratory(cases: Record<string, { widgets: string[]; values: string[] }>): MigrationTable {
   const migrations: MigrationsFile['migrations'] = {}
   for (const [key, { widgets, values }] of Object.entries(cases)) {
-    const measured: Record<string, { present: string; absent: string; verdict: 'inert' }> = {}
-    for (const value of values) measured[value] = { present: 'x', absent: 'x', verdict: 'inert' }
     migrations[key] = {
-      successor: `${key}_moderne`, widgets, measure: 'laboratoire', values: measured
+      successor: `${key}_moderne`,
+      widgets,
+      measure: 'laboratoire',
+      cases: values.map((value) => ({
+        value, present: 'x', absent: 'x', verdict: 'inert' as const
+      }))
     }
   }
   return new MigrationTable({
@@ -495,23 +581,25 @@ function removedLines(before: string, after: string, keys: string[]): string[] {
 }
 
 describe('appliquer un plan', () => {
-  it('retire les six réglages proposés et rien d’autre, à la ligne près', () => {
+  it('retire les quatre réglages proposés et rien d’autre, à la ligne près', () => {
     const source = readFileSync(BACKUP_2026, 'utf8')
     const document = parseJson(source)
     const plan = planCleanup(db, readLayout(document), 20)
     const outcome = applyCleanup(plan)
 
-    expect(outcome.keyCount).toBe(6)
-    expect(outcome.occurrenceCount).toBe(6)
+    expect(outcome.keyCount).toBe(4)
+    expect(outcome.occurrenceCount).toBe(4)
     expect(outcome.widgetCount).toBe(4)
     expect(outcome.stale).toEqual([])
 
     const keys = [...new Set(plan.entries.map((entry) => entry.key))]
-    expect(removedLines(source, serializeJson(document), keys)).toHaveLength(6)
-    // Les trois laissés en place n'ont pas bougé d'une ligne.
+    expect(removedLines(source, serializeJson(document), keys)).toHaveLength(4)
+    // Les cinq laissés en place n'ont pas bougé d'une ligne — les deux moitiés de chacun
+    // des deux couples cartographiques comprises.
     const after = serializeJson(document)
     expect(after).toContain('"showWind": true')
     expect(after.match(/"mapWidget_showTerrain": true/g)).toHaveLength(2)
+    expect(after.match(/"mapWidget_showOpenStreet": false/g)).toHaveLength(2)
   })
 
   it('remet tout : le fichier ressort à l’octet près', () => {
@@ -519,7 +607,7 @@ describe('appliquer un plan', () => {
     const document = parseJson(source)
     const outcome = applyCleanup(planCleanup(db, readLayout(document), 20))
     expect(serializeJson(document)).not.toBe(source)
-    expect(revertCleanup(outcome)).toBe(6)
+    expect(revertCleanup(outcome)).toBe(4)
     expect(serializeJson(document)).toBe(source)
   })
 
@@ -568,7 +656,7 @@ describe('appliquer un plan', () => {
       plan.entries.filter((entry) => entry.key !== 'nav_use_brackets').map((entry) => entry.path)
     )
     const outcome = applyCleanup(plan, selected)
-    expect(outcome.keyCount).toBe(3)
+    expect(outcome.keyCount).toBe(1)
     for (const entry of kept) {
       expect(getMember(entry.node, entry.key), entry.path).toBeDefined()
     }
@@ -580,7 +668,7 @@ describe('appliquer un plan', () => {
     applyCleanup(plan)
     const again = applyCleanup(plan)
     expect(again.keyCount).toBe(0)
-    expect(again.stale).toHaveLength(6)
+    expect(again.stale).toHaveLength(4)
   })
 
   it('n’agit pas sur un document que le plan ne décrit plus', () => {

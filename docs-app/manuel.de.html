@@ -987,6 +987,16 @@
     hierher zurückkommen, um zu verstehen, was es Ihnen anbietet: dieses Kapitel sagt, woher
     dieses Wissen kommt und auf welchem Gerät es gewonnen wurde, der Bildschirm sagt, was es
     mit Ihrem täte.</p>
+    <p><strong>Und „ohne die Einstellung“ ist nicht „ohne alles“: die Nachbarschaft
+    zählt.</strong> Zwei Karteneinstellungen, <code>mapWidget_showOpenStreet</code> und
+    <code>mapWidget_showTerrain</code>, werden nur <strong>zusammen</strong> gelesen: allein
+    bewirkt keine von beiden irgendetwas. Entfernt man die erste von einer Karte, die beide
+    trägt, erlischt die Geländeschattierung, die die zweite einschaltet — gemessen am
+    22. August 2026, und das Werkzeug bietet es nicht mehr an. Jede Messung trägt daher die
+    Nachbarschaft, in der sie genommen wurde; außerhalb dieser Nachbarschaft zieht das
+    Werkzeug keinen Schluss. Deshalb ist <code>nav_use_brackets</code> auf nein bei einem
+    Thermikassistenten wirkungslos, der sie nicht liest, und bei einer Karte lebendig, die
+    ihre Entfernungsanzeige daraus ableitet.</p>
   </div>
 
   <p>Er beginnt damit, Sie zu beruhigen, und der Satz verspricht nur noch, was gemessen
@@ -996,14 +1006,14 @@
   und ändert nichts an Ihren Seiten.“</p>
 
   <ol class="manual__steps">
-    <li>Klappen Sie <span class="manual__ui">Diese 6 Einstellungen ansehen und abwählen, was
+    <li>Klappen Sie <span class="manual__ui">Diese 4 Einstellungen ansehen und abwählen, was
     Sie lieber behalten</span> auf — die Zahl ist die Ihrer Datei. Am Anfang ist alles
     angehakt; jede Zeile sagt, bis zu welcher XCTrack-Version die Einstellung noch
     geschrieben wurde, und ihren Wert, wenn er einfach ist.</li>
     <li>Wählen Sie ab, was Sie behalten wollen. Die Zählung wird aktualisiert, und die
     Schaltfläche sagt genau, wie viele Einstellungen sie entfernen wird.</li>
     <li>Klicken Sie die Schaltfläche. Der Bereich wird durch eine Meldung ersetzt und durch
-    <span class="manual__ui">Diese 6 Einstellungen zurücklegen</span>.</li>
+    <span class="manual__ui">Diese 4 Einstellungen zurücklegen</span>.</li>
   </ol>
 
   <p>Die Umkehr ist vollständig: zurückgelegt kommt die Datei Byte für Byte wieder heraus.
