@@ -371,7 +371,56 @@ const app: DomainCatalog<'app'> = {
   'app.replaceHint': 'Om niets te verliezen: houd uw wijzigingen, en gebruik dan ‘De ' +
     'wijzigingen opslaan’ boven aan de pagina — of berg deze configuratie op in de bibliotheek.',
   'app.replaceAndLose': '‘{incoming}’ openen en ze kwijtraken',
-  'app.keepChanges': 'Mijn wijzigingen houden'
+  'app.keepChanges': 'Mijn wijzigingen houden',
+  /* --------------------------------- wat u hebt gewijzigd: één lijst, twee schermen */
+
+  'menu.changes': 'Wat u hebt gewijzigd',
+  'menu.changesHint': 'De lijst van alles wat het geopende bestand scheidt van het document dat u voor u hebt.',
+  'changes.title': 'Wat u hebt gewijzigd',
+  'changes.none': 'Er is niets gewijzigd sinds ‘{name}’ werd geopend.',
+  'changes.noneWhy': 'Het document is, teken voor teken, wat het bestand heeft geleverd: nu opgeslagen komt het er met dezelfde SHA-256-vingerafdruk weer uit.',
+  'changes.lead': 'Tussen ‘{name}’, het bestand dat u hebt geopend, en het document dat u voor u hebt: {what}.',
+  'changes.caveat': 'Deze opgave vergelijkt twee toestanden; ze telt uw handelingen niet. Wat u hebt gedaan en weer ongedaan gemaakt, staat er niet in, en een rang die alleen is opgeschoven is geen verplaatsing.',
+
+  'changes.pagesAdded': { one: '{count} pagina toegevoegd', other: '{count} pagina’s toegevoegd' },
+  'changes.pagesRemoved': { one: '{count} pagina verwijderd', other: '{count} pagina’s verwijderd' },
+  'changes.pagesChanged': { one: '{count} pagina gewijzigd', other: '{count} pagina’s gewijzigd' },
+  'changes.widgetsAdded': { one: '{count} widget toegevoegd', other: '{count} widgets toegevoegd' },
+  'changes.widgetsRemoved': { one: '{count} widget verwijderd', other: '{count} widgets verwijderd' },
+  'changes.widgetsChanged': { one: '{count} widget gewijzigd', other: '{count} widgets gewijzigd' },
+  'changes.settingsTouched': { one: '{count} algemene instelling', other: '{count} algemene instellingen' },
+  'changes.otherTouched': { one: '{count} andere bestandsregel', other: '{count} andere bestandsregels' },
+
+  'changes.pagesHeading': 'De pagina’s',
+  'changes.settingsHeading': 'De algemene instellingen',
+  'changes.settingsNote': 'Elke instelling wordt genoemd naar haar bestandsregel, zoals XCTrack die schrijft. ‘Instellingen’, in de bovenste balk, geeft u de titel in gewone woorden.',
+  'changes.otherHeading': 'De overige bestandsregels',
+  'changes.otherNote': 'Wat het bestand draagt buiten uw pagina’s en uw instellingen om: zijn identiteitskaart en wat uw versie van XCTrack daar verder schrijft.',
+
+  'changes.pageAt': 'Pagina {rank} — {orientation}',
+  'changes.pageAdded': 'toegevoegd',
+  'changes.pageRemoved': 'verwijderd',
+  'changes.pageCarries': { one: 'ze draagt {count} widget', other: 'ze draagt {count} widgets' },
+  'changes.pageCarried': { one: 'ze droeg {count} widget', other: 'ze droeg {count} widgets' },
+  'changes.pageMoved': 'van rang {from} naar rang {to} verplaatst',
+  'changes.pageTypeChanged': 'paginatype: {from} wordt {to}',
+  'changes.pageNavigations': 'navigaties gewijzigd',
+
+  'changes.widgetAdded': 'toegevoegd',
+  'changes.widgetRemoved': 'verwijderd',
+  'changes.widgetReshaped': 'verplaatst of van grootte veranderd',
+  'changes.widgetRestacked': 'voor of achter zijn buren gezet',
+  'changes.widgetSettings': { one: '{count} instelling gewijzigd', other: '{count} instellingen gewijzigd' },
+
+  'changes.settingAdded': 'toegevoegd',
+  'changes.settingChanged': 'gewijzigd',
+  'changes.settingRemoved': 'verwijderd',
+
+  'changes.reorderedWhat': 'De volgorde van de bestandsregels',
+  'changes.reordered': 'dezelfde regels, anders gerangschikt',
+  'changes.unexplainedWhat': 'Een verschil zonder naam',
+  'changes.unexplained': 'het document is ergens gewijzigd wat deze opgave niet kan benoemen',
+  'changes.otherwise': 'hier is nog iets anders gewijzigd'
 }
 
 export default app

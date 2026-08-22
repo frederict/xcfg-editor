@@ -125,7 +125,13 @@ export type DomainCatalog<D extends Domain> = {
  */
 export const DOMAIN_PREFIXES: Readonly<Record<Domain, readonly string[]>> = {
   common: ['common', 'provenance', 'factoryValue'],
-  app: ['action', 'app', 'dock', 'editor', 'landing', 'menu', 'pageKind', 'view', 'zoom'],
+  // `changes` : le relevé de ce que le pilote a changé depuis l'ouverture du fichier.
+  // Une famille fermée, dessinée par `buildChangeSummary` (`views.ts`) pour ses DEUX
+  // affichages — l'écran consultable et la boîte d'enregistrement.
+  app: [
+    'action', 'app', 'changes', 'dock', 'editor', 'landing', 'menu', 'pageKind', 'view',
+    'zoom'
+  ],
   // `inputDevice` : les quatre périphériques d'entrée que le noyau d'un boîtier déclare,
   // dits dans la langue du pilote. Une famille de valeurs fermée, donc son propre préfixe.
   preferences: ['inputDevice', 'preferences'],

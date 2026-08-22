@@ -361,7 +361,56 @@ const app: DomainCatalog<'app'> = {
   'app.replaceHint': 'To lose nothing: keep your changes, then “Save the changes” at the top ' +
     'of the page — or put this configuration away in the library.',
   'app.replaceAndLose': 'Open “{incoming}” and lose them',
-  'app.keepChanges': 'Keep my changes'
+  'app.keepChanges': 'Keep my changes',
+  /* ------------------------------------------- what you changed: one list, two places */
+
+  'menu.changes': 'What you changed',
+  'menu.changesHint': 'The list of everything that separates the file you opened from the document in front of you.',
+  'changes.title': 'What you changed',
+  'changes.none': 'Nothing has changed since “{name}” was opened.',
+  'changes.noneWhy': 'The document is, character for character, the one the file delivered: saved now, it comes back out with the same SHA-256 fingerprint.',
+  'changes.lead': 'Between “{name}”, the file you opened, and the document in front of you: {what}.',
+  'changes.caveat': 'This compares two states; it does not count your actions. Anything you did and then undid is not here, and a rank that merely shifted is not a move.',
+
+  'changes.pagesAdded': { one: '{count} page added', other: '{count} pages added' },
+  'changes.pagesRemoved': { one: '{count} page removed', other: '{count} pages removed' },
+  'changes.pagesChanged': { one: '{count} page changed', other: '{count} pages changed' },
+  'changes.widgetsAdded': { one: '{count} widget added', other: '{count} widgets added' },
+  'changes.widgetsRemoved': { one: '{count} widget removed', other: '{count} widgets removed' },
+  'changes.widgetsChanged': { one: '{count} widget changed', other: '{count} widgets changed' },
+  'changes.settingsTouched': { one: '{count} general setting', other: '{count} general settings' },
+  'changes.otherTouched': { one: '{count} other file line', other: '{count} other file lines' },
+
+  'changes.pagesHeading': 'The pages',
+  'changes.settingsHeading': 'The general settings',
+  'changes.settingsNote': 'Each setting is named by its file line, the way XCTrack writes it. “Settings”, in the top bar, gives you its plain title.',
+  'changes.otherHeading': 'The other file lines',
+  'changes.otherNote': 'What the file carries outside your pages and your settings: its identity card, and whatever else your version of XCTrack writes there.',
+
+  'changes.pageAt': 'Page {rank} — {orientation}',
+  'changes.pageAdded': 'added',
+  'changes.pageRemoved': 'removed',
+  'changes.pageCarries': { one: 'it carries {count} widget', other: 'it carries {count} widgets' },
+  'changes.pageCarried': { one: 'it carried {count} widget', other: 'it carried {count} widgets' },
+  'changes.pageMoved': 'moved from rank {from} to rank {to}',
+  'changes.pageTypeChanged': 'page type: {from} becomes {to}',
+  'changes.pageNavigations': 'navigations changed',
+
+  'changes.widgetAdded': 'added',
+  'changes.widgetRemoved': 'removed',
+  'changes.widgetReshaped': 'moved or resized',
+  'changes.widgetRestacked': 'brought in front of or behind its neighbours',
+  'changes.widgetSettings': { one: '{count} setting changed', other: '{count} settings changed' },
+
+  'changes.settingAdded': 'added',
+  'changes.settingChanged': 'changed',
+  'changes.settingRemoved': 'removed',
+
+  'changes.reorderedWhat': 'The order of the file lines',
+  'changes.reordered': 'the same lines, arranged differently',
+  'changes.unexplainedWhat': 'A difference with no name',
+  'changes.unexplained': 'the document changed somewhere this list cannot name',
+  'changes.otherwise': 'something else changed here'
 }
 
 export default app

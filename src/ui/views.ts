@@ -1,5 +1,8 @@
 import { physicalSize, type Device } from '../catalog/devices'
 import { readableName } from '../catalog/widgetNames'
+import type {
+  DocumentChanges, PageChange, SettingChange, WidgetChange
+} from '../model/changes'
 import type { Layout, Page } from '../model/layout'
 import {
   isRepairableHere, reachabilityMessage, reachabilityRemedy, type ReachabilityReason
@@ -920,5 +923,254 @@ export function buildDetail(options: DetailOptions): HTMLElement {
   // `position: sticky; bottom: 0` le maintient au bas de l'écran tant que la page défile,
   // puis le laisse se poser à sa place à la fin du défilement.
   if (editing) root.append(editing.dock)
+  return root
+}
+
+/* ==================================================================================== */
+/* ce que vous avez changé : une liste, deux endroits                                    */
+/* ==================================================================================== */
+
+/**
+ * # Le relevé des changements, dessiné une seule fois pour deux écrans
+ *
+ * Le pilote d'essai l'a demandé aux deux premières batteries : « avant d'enregistrer une
+ * configuration avec laquelle je vais voler, je voudrais **la liste** ». L'annulation ne
+ * nomme que le dernier geste ; une demi-heure de travail ne se relit pas un pas à la fois.
+ *
+ * ## Pourquoi une seule fonction, et pas deux écrans qui comptent chacun
+ *
+ * La liste paraît à deux endroits — la boîte d'enregistrement, juste avant de donner le
+ * fichier, et un écran consultable à tout moment. **Deux comptes qui divergeraient d'un
+ * écran à l'autre seraient pires que pas de compte du tout** : le pilote n'aurait plus
+ * aucune raison de croire ni l'un ni l'autre, et ce dépôt s'est déjà fait prendre à des
+ * chiffres qui se contredisaient d'un écran au voisin (voir `personalData.ts`, qui existe
+ * pour la même raison).
+ *
+ * La divergence est donc rendue **impossible par construction**, à deux niveaux :
+ *
+ * 1. Un seul calcul — `computeChanges` (`src/model/changes.ts`), appelé une fois par
+ *    `main.ts` sur la même paire de documents.
+ * 2. Un seul dessin — cette fonction. Les deux appelants passent le **même**
+ *    `DocumentChanges` ; il ne leur reste comme latitude que `folded`, qui décide si le
+ *    détail est replié derrière son en-tête. Le texte, lui, est le même mot pour mot, et
+ *    `views.test.ts` le vérifie en comparant les deux rendus caractère par caractère.
+ *
+ * ## Ce que ce relevé ne dit pas
+ *
+ * Il dit ce que **le document** a changé. Ce que **le fichier produit** emportera en plus
+ * ou en moins — les trois issues d'enregistrement ne donnent pas le même fichier — est une
+ * autre question, et la boîte d'enregistrement y répond déjà ailleurs. Les confondre
+ * ferait lire « 7 réglages » à un pilote dont la version partageable n'en emporte aucun.
+ *
+ * ## Vie privée
+ *
+ * Ce relevé nomme des lignes du fichier, jamais leur contenu : `Pilot.Name` s'y lit, la
+ * valeur du pilote jamais. Ce n'en est pas moins **sa** configuration sur **son** écran —
+ * rien de tout cela ne sort de la page, et les captures d'écran de ce dépôt se font sur
+ * les fixtures anonymisées de `tests/fixtures/`.
+ */
+export interface ChangeSummaryOptions {
+  /** L'écart, calculé une fois par l'appelant et partagé par les deux affichages. */
+  changes: DocumentChanges
+  /** Le nom du fichier ouvert : ce à quoi le document est comparé. */
+  fileName: string
+  /**
+   * La langue des **libellés de XCTrack** — celle du fichier ouvert. Les noms de gadgets
+   * la suivent, comme partout ailleurs : voir `src/i18n/axes.ts`.
+   */
+  language: string
+  tr: Translator
+  /**
+   * Replie le détail derrière son en-tête. C'est la **seule** différence permise entre les
+   * deux affichages : la boîte d'enregistrement a un bouton à garder sous les yeux, l'écran
+   * consultable n'a rien d'autre à montrer.
+   */
+  folded?: boolean
+}
+
+/** Les fragments du chapeau, dans l'ordre où ils se lisent. */
+function headlineParts(changes: DocumentChanges, tr: Translator): string[] {
+  const counts = changes.counts
+  const parts: string[] = []
+  const add = (count: number, text: string): void => { if (count > 0) parts.push(text) }
+  add(counts.pagesAdded, tr.t('changes.pagesAdded', { count: counts.pagesAdded }))
+  add(counts.pagesRemoved, tr.t('changes.pagesRemoved', { count: counts.pagesRemoved }))
+  add(counts.pagesChanged, tr.t('changes.pagesChanged', { count: counts.pagesChanged }))
+  add(counts.widgetsAdded, tr.t('changes.widgetsAdded', { count: counts.widgetsAdded }))
+  add(counts.widgetsRemoved, tr.t('changes.widgetsRemoved', { count: counts.widgetsRemoved }))
+  add(counts.widgetsChanged, tr.t('changes.widgetsChanged', { count: counts.widgetsChanged }))
+  add(counts.preferences, tr.t('changes.settingsTouched', { count: counts.preferences }))
+  add(counts.other, tr.t('changes.otherTouched', { count: counts.other }))
+  return parts
+}
+
+/**
+ * Une ligne du relevé : ce dont on parle, puis ce qui lui est arrivé.
+ *
+ * Les faits sont joints en **une phrase** par le formateur d'énumération de la langue —
+ * « déplacé ou redimensionné et 2 réglages modifiés » — et non alignés en badges. C'est la
+ * direction du dépôt : des phrases entières plutôt que des pastilles en capitales, et
+ * c'est aussi ce qu'un lecteur d'écran sait lire d'un trait.
+ *
+ * `line` marque une ligne du fichier — `Pilot.Name` — pour que la fonte de données la
+ * distingue d'une phrase.
+ */
+function changeItem(
+  what: string, facts: readonly string[], tr: Translator, line = false
+): HTMLElement {
+  const item = el('li', line ? 'changes__item changes__item--line' : 'changes__item')
+  item.append(el('span', 'changes__what', what))
+  if (facts.length > 0) item.append(el('span', 'changes__how', tr.format.list(facts)))
+  return item
+}
+
+function widgetFacts(change: WidgetChange, tr: Translator): string[] {
+  if (change.kind === 'added') return [tr.t('changes.widgetAdded')]
+  if (change.kind === 'removed') return [tr.t('changes.widgetRemoved')]
+  const facts: string[] = []
+  if (change.reshaped) facts.push(tr.t('changes.widgetReshaped'))
+  if (change.restacked) facts.push(tr.t('changes.widgetRestacked'))
+  if (change.settings.length > 0) {
+    facts.push(tr.t('changes.widgetSettings', { count: change.settings.length }))
+  }
+  if (change.otherwise) facts.push(tr.t('changes.otherwise'))
+  return facts
+}
+
+function pageFacts(change: PageChange, tr: Translator): string[] {
+  if (change.kind === 'added') {
+    const facts = [tr.t('changes.pageAdded')]
+    if (change.widgetCount > 0) {
+      facts.push(tr.t('changes.pageCarries', { count: change.widgetCount }))
+    }
+    return facts
+  }
+  if (change.kind === 'removed') {
+    const facts = [tr.t('changes.pageRemoved')]
+    if (change.widgetCount > 0) {
+      facts.push(tr.t('changes.pageCarried', { count: change.widgetCount }))
+    }
+    return facts
+  }
+  const facts: string[] = []
+  if (change.moved) {
+    facts.push(tr.t('changes.pageMoved', { from: change.fromRank ?? 0, to: change.toRank ?? 0 }))
+  }
+  if (change.classChange) {
+    facts.push(tr.t('changes.pageTypeChanged', {
+      from: pageKind(change.classChange.from, tr).label,
+      to: pageKind(change.classChange.to, tr).label
+    }))
+  }
+  if (change.navigationsChanged) facts.push(tr.t('changes.pageNavigations'))
+  if (change.otherwise) facts.push(tr.t('changes.otherwise'))
+  return facts
+}
+
+/** « Page 3 — Paysage », le repère que le pilote lit partout ailleurs dans l'outil. */
+function pageTitle(change: PageChange, tr: Translator): string {
+  return tr.t('changes.pageAt', {
+    rank: change.toRank ?? change.fromRank ?? 0,
+    orientation: orientationLabel(change.orientation, tr)
+  })
+}
+
+function settingFact(change: SettingChange, tr: Translator): string {
+  if (change.kind === 'added') return tr.t('changes.settingAdded')
+  if (change.kind === 'removed') return tr.t('changes.settingRemoved')
+  return tr.t('changes.settingChanged')
+}
+
+function changeSection(heading: string, note: string | undefined): HTMLElement {
+  const section = el('section', 'changes__section')
+  section.append(el('h3', 'changes__heading', heading))
+  if (note !== undefined) section.append(el('p', 'changes__note', note))
+  return section
+}
+
+/**
+ * Le relevé, prêt à être posé dans une modale comme dans la boîte d'enregistrement.
+ *
+ * L'élément rendu ne garde **aucun nœud du document** : un écran peut le conserver aussi
+ * longtemps qu'il veut sans empêcher le document de vivre.
+ */
+export function buildChangeSummary(options: ChangeSummaryOptions): HTMLElement {
+  const { changes, fileName, language, tr } = options
+  const root = el('div', 'changes')
+
+  if (changes.identical) {
+    root.append(el('span', 'changes__lead', tr.t('changes.none', { name: fileName })))
+    root.append(el('p', 'changes__note', tr.t('changes.noneWhy')))
+    return root
+  }
+
+  // Un `span` et non un `p` : replié, ce chapeau devient le contenu d'un `summary`, dont
+  // le modèle de contenu n'accepte pas de paragraphe. Il est mis en bloc par la feuille.
+  const lead = el('span', 'changes__lead', tr.t('changes.lead', {
+    name: fileName,
+    what: tr.format.list(headlineParts(changes, tr))
+  }))
+  const body = el('div', 'changes__body')
+
+  const pages = changes.pages
+  if (pages.length > 0) {
+    const section = changeSection(tr.t('changes.pagesHeading'), undefined)
+    const list = el('ul', 'changes__list')
+    for (const change of pages) {
+      const item = changeItem(pageTitle(change, tr), pageFacts(change, tr), tr)
+      if (change.widgets.length > 0) {
+        const sub = el('ul', 'changes__list changes__list--sub')
+        for (const widget of change.widgets) {
+          sub.append(changeItem(readableName(widget.shortName, language),
+            widgetFacts(widget, tr), tr))
+        }
+        item.append(sub)
+      }
+      list.append(item)
+    }
+    section.append(list)
+    body.append(section)
+  }
+
+  if (changes.preferences.length > 0) {
+    const section = changeSection(tr.t('changes.settingsHeading'), tr.t('changes.settingsNote'))
+    const list = el('ul', 'changes__list')
+    for (const change of changes.preferences) {
+      list.append(changeItem(change.key, [settingFact(change, tr)], tr, true))
+    }
+    section.append(list)
+    body.append(section)
+  }
+
+  if (changes.other.length > 0 || changes.reordered || changes.unexplained) {
+    const section = changeSection(tr.t('changes.otherHeading'), tr.t('changes.otherNote'))
+    const list = el('ul', 'changes__list')
+    for (const change of changes.other) {
+      list.append(changeItem(change.key, [settingFact(change, tr)], tr, true))
+    }
+    if (changes.reordered) {
+      list.append(changeItem(tr.t('changes.reorderedWhat'), [tr.t('changes.reordered')], tr))
+    }
+    if (changes.unexplained) {
+      list.append(changeItem(tr.t('changes.unexplainedWhat'), [tr.t('changes.unexplained')], tr))
+    }
+    section.append(list)
+    body.append(section)
+  }
+
+  body.append(el('p', 'changes__note', tr.t('changes.caveat')))
+
+  if (options.folded !== true) {
+    root.append(lead, body)
+    return root
+  }
+
+  // Replié : l'en-tête EST le chapeau, mot pour mot. Rien n'est écrit deux fois, et rien
+  // ne peut donc diverger entre les deux affichages.
+  const fold = el('details', 'changes__fold')
+  const head = el('summary', 'changes__summary')
+  head.append(lead)
+  fold.append(head, body)
+  root.append(fold)
   return root
 }

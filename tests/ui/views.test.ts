@@ -2,7 +2,13 @@ import { readFileSync } from 'node:fs'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { DEVICES } from '../../src/catalog/devices'
 import { readableName } from '../../src/catalog/widgetNames'
+import { getMember, setString } from '../../src/core/access'
+import type { JsonNode } from '../../src/core/jsonDocument'
 import { parseJson } from '../../src/core/parseJson'
+import { computeChanges } from '../../src/model/changes'
+import {
+  cloneNode, pageWidgets, pagesNode, setWidgetBounds
+} from '../../src/model/mutations'
 import { serializeJson } from '../../src/core/serializeJson'
 import { readLayout, type Page } from '../../src/model/layout'
 import { pageReachability } from '../../src/model/reachability'
@@ -12,6 +18,7 @@ import {
   DOCK_HEIGHT_KEY,
   DOCK_HEIGHT_MAX,
   DOCK_HEIGHT_MIN,
+  buildChangeSummary,
   buildDetail,
   buildOverview,
   clampDockHeight,
@@ -28,7 +35,7 @@ import {
 import { makeTranslator } from '../../src/i18n'
 import frenchMessages from '../../src/i18n/messages/fr'
 import { pageKind } from '../../src/ui/views'
-import { PAGES_2026 } from '../fixtures/paths'
+import { BACKUP_2026, PAGES_2026 } from '../fixtures/paths'
 import '../../src/render/widgets'
 
 /**
@@ -601,5 +608,99 @@ describe('ce que la page ouverte dit de son propre sort', () => {
     const band = bands(opened('"none"'))[0]!
     expect(band.className).toBe('editnote')
     expect(band.getAttribute('role')).toBe('note')
+  })
+})
+
+describe('le relevé des changements : une liste, deux affichages', () => {
+  function couple(): [JsonNode, JsonNode] {
+    const original = parseJson(readFileSync(BACKUP_2026, 'utf8'))
+    return [original, cloneNode(original)]
+  }
+
+  function summary(
+    before: JsonNode, after: JsonNode, folded?: boolean
+  ): HTMLElement {
+    return buildChangeSummary({
+      changes: computeChanges(before, after),
+      fileName: '2026-08-20_backup-00.xcfg',
+      language: 'fr',
+      tr,
+      folded
+    })
+  }
+
+  it('dit qu’il n’y a rien quand il n’y a rien — et pourquoi c’est rassurant', () => {
+    const [before, after] = couple()
+    const root = summary(before, after)
+    expect(root.textContent).toContain('Rien n’a changé')
+    expect(root.textContent).toContain('SHA-256')
+    expect(root.querySelectorAll('.changes__item')).toHaveLength(0)
+  })
+
+  it('annonce les comptes du calcul, sans en inventer un seul', () => {
+    const [before, after] = couple()
+    setString(getMember(after, 'preferences')!, 'Pilot.Name', '"Autre"')
+    setWidgetBounds(pageWidgets(pagesNode(after, 'landscape').items[0]!).items[0]!, { y2: 4000 })
+    const changes = computeChanges(before, after)
+    const lead = summary(before, after).querySelector('.changes__lead')!
+
+    expect(changes.counts.total).toBe(3)
+    expect(lead.textContent).toContain('1 page modifiée')
+    expect(lead.textContent).toContain('1 gadget modifié')
+    expect(lead.textContent).toContain('1 réglage général')
+  })
+
+  /**
+   * **La preuve que les deux écrans ne peuvent pas diverger.**
+   *
+   * L'écran consultable et la boîte d'enregistrement montrent la même liste. Ils
+   * n'appellent qu'une fonction — celle-ci — et ne diffèrent que par `folded`, qui décide
+   * si le détail est replié. Le texte, lui, est le même caractère pour caractère : c'est
+   * ce que ce test constate, et non ce qu'il espère.
+   *
+   * Deux comptes qui se contrediraient d'un écran à l'autre seraient pires que pas de
+   * compte du tout — le dépôt s'est déjà fait prendre à ça.
+   */
+  it('dit exactement la même chose replié et déplié', () => {
+    const [before, after] = couple()
+    setString(getMember(after, 'preferences')!, 'Pilot.Name', '"Autre"')
+    setWidgetBounds(pageWidgets(pagesNode(after, 'landscape').items[0]!).items[0]!, { y2: 4000 })
+
+    const open = summary(before, after, false)
+    const folded = summary(before, after, true)
+    expect(folded.querySelector('details')).not.toBeNull()
+    expect(open.querySelector('details')).toBeNull()
+    expect(folded.textContent).toBe(open.textContent)
+  })
+
+  it('nomme un gadget comme XCTrack le nomme, dans la langue du fichier', () => {
+    const [before, after] = couple()
+    setWidgetBounds(pageWidgets(pagesNode(after, 'landscape').items[0]!).items[0]!, { y2: 4000 })
+    const root = summary(before, after)
+    const sub = root.querySelector('.changes__list--sub .changes__what')!
+    expect(sub.textContent).toBe(readableName('WStatusLine', 'fr'))
+  })
+
+  it('nomme un réglage par sa ligne du fichier, et le dit', () => {
+    const [before, after] = couple()
+    setString(getMember(after, 'preferences')!, 'Pilot.Name', '"Autre"')
+    const root = summary(before, after)
+    const line = root.querySelector('.changes__item--line .changes__what')!
+    expect(line.textContent).toBe('Pilot.Name')
+    expect(root.textContent).toContain('ligne du fichier')
+  })
+
+  it('ne montre jamais la valeur d’un réglage, seulement son nom de ligne', () => {
+    const [before, after] = couple()
+    setString(getMember(after, 'preferences')!, 'Pilot.Name', '"Jean Dupont"')
+    const root = summary(before, after)
+    expect(root.textContent).toContain('Pilot.Name')
+    expect(root.textContent).not.toContain('Jean Dupont')
+  })
+
+  it('rappelle qu’il compare deux états et ne compte pas les gestes', () => {
+    const [before, after] = couple()
+    setString(getMember(after, 'preferences')!, 'Pilot.Name', '"Autre"')
+    expect(summary(before, after).textContent).toContain('compare deux états')
   })
 })

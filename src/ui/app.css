@@ -3378,6 +3378,98 @@ body.is-dragging .veil {
   font-size: 13px;
 }
 
+/* ---------------------------------- ce que vous avez changé : un relevé, deux endroits */
+
+/*
+ * La même liste paraît dans deux boîtes — l'écran consultable et la boîte
+ * d'enregistrement —, dessinée par `buildChangeSummary` (`views.ts`). Elle n'a donc qu'un
+ * jeu de règles : deux apparences pour un seul contenu recommenceraient, en peinture, la
+ * divergence que ce relevé existe pour rendre impossible.
+ *
+ * Rien ici n'est un badge en capitales : le relevé se lit en phrases, comme le reste du
+ * carnet de préparation de vol.
+ */
+.changes { display: grid; gap: 0.9rem; }
+
+/* Le chapeau porte les comptes. `span` et non `p` : replié, il devient le contenu d'un
+   `summary`, qui n'accepte pas de paragraphe. */
+.changes__lead {
+  display: block;
+  max-width: 78ch;
+  font-size: 14px;
+  color: var(--app-ink);
+}
+
+.changes__body { display: grid; gap: 0.9rem; }
+.changes__section { display: grid; gap: 0.4rem; }
+
+.changes__heading {
+  margin: 0;
+  font-family: var(--font-title);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.changes__note {
+  margin: 0;
+  max-width: 78ch;
+  color: var(--app-ink-soft);
+  font-size: 12px;
+}
+
+.changes__list { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.3rem; }
+
+/* Les gadgets d'une page se rangent sous elle, tenus par un filet : c'est la page qui les
+   porte, et l'indentation seule ne le dirait pas assez. */
+.changes__list--sub {
+  margin: 0.25rem 0 0.4rem 0.2rem;
+  padding-left: 0.7rem;
+  border-left: 2px solid var(--app-line);
+}
+
+.changes__item { font-size: 13px; line-height: 1.45; }
+.changes__what { font-weight: 600; }
+
+/* Une ligne du fichier n'est pas une phrase : la fonte de données la distingue, et c'est
+   ce qui permet au pilote de la retrouver telle quelle dans « Réglages ». */
+.changes__item--line .changes__what {
+  font-family: var(--font-data);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.changes__how { color: var(--app-ink-soft); }
+.changes__how::before { content: " — "; }
+
+/* Replié : la boîte d'enregistrement garde son bouton sous les yeux, et le chapeau reste
+   lisible sans qu'on ait à déplier. */
+.changes__summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 0.15rem 0;
+}
+.changes__summary::-webkit-details-marker { display: none; }
+.changes__fold[open] .changes__summary { margin-bottom: 0.6rem; }
+
+.modal--changes {
+  max-width: min(52rem, 94vw);
+  width: min(52rem, 94vw);
+}
+
+/*
+ * La boîte défile : une demi-heure de travail sur un fichier de neuf pages produit une
+ * liste plus haute qu'un écran. Le rembourrage du haut passe donc à la tête collante,
+ * comme pour la palette, le carrousel, le diagnostic de version, le partage et la
+ * bibliothèque — c'est ce qui garde « Fermer » atteignable une fois la liste défilée à
+ * fond, et `assembly.test.ts` le vérifie sur les cinq feuilles.
+ */
+.modal--changes .modal__box {
+  padding-top: 0;
+  max-height: 88vh;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
 
 
 /* ==================================================================================== */

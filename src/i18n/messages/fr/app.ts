@@ -683,7 +683,70 @@ const app = {
     'modifications » en haut de la page — ou rangez cette configuration dans la bibliothèque.',
   /** Nommé pour ce qu'il fait : « Ouvrir quand même » cacherait la perte derrière une concession. */
   'app.replaceAndLose': 'Ouvrir « {incoming} » et les perdre',
-  'app.keepChanges': 'Garder mes modifications'
+  'app.keepChanges': 'Garder mes modifications',
+  /* --------------------------------- ce que vous avez changé : un relevé, deux écrans */
+
+  /**
+   * Le relevé compare **deux états**, il ne compte pas des gestes. C'est ce que sa prose
+   * doit faire entendre : un gadget déplacé dix fois qui revient à sa place n'a pas
+   * changé, et le pilote qui lirait « 10 déplacements » croirait avoir modifié ce qu'il
+   * n'a pas modifié — juste avant de confier le fichier à son instrument.
+   *
+   * `changes.caveat` le dit en toutes lettres, et `changes.none` porte le cas qui
+   * rassure : l'écart vide, celui qui prouve que rien n'est compté.
+   *
+   * ⚠️ Un réglage est nommé par sa **ligne du fichier** — `Pilot.Name` — et jamais par sa
+   * valeur : ce relevé s'affiche sur l'écran d'un pilote et peut nommer ce qu'il a écrit,
+   * mais il n'a aucune raison d'en montrer le contenu. `changes.settingsNote` renvoie aux
+   * réglages généraux, qui en donnent le titre en clair.
+   */
+  'menu.changes': 'Ce que vous avez changé',
+  'menu.changesHint': 'La liste de ce qui sépare le fichier ouvert du document que vous avez sous les yeux.',
+  'changes.title': 'Ce que vous avez changé',
+  'changes.none': 'Rien n’a changé depuis l’ouverture de « {name} ».',
+  'changes.noneWhy': 'Le document est, au caractère près, celui que le fichier a livré : enregistré maintenant, il ressortira avec la même empreinte SHA-256.',
+  'changes.lead': 'Entre « {name} », le fichier que vous avez ouvert, et le document que vous avez sous les yeux : {what}.',
+  'changes.caveat': 'Ce relevé compare deux états ; il ne compte pas vos gestes. Ce que vous avez fait puis défait n’y figure pas, et un rang qui a seulement glissé n’est pas un déplacement.',
+
+  'changes.pagesAdded': { one: '{count} page ajoutée', other: '{count} pages ajoutées' },
+  'changes.pagesRemoved': { one: '{count} page retirée', other: '{count} pages retirées' },
+  'changes.pagesChanged': { one: '{count} page modifiée', other: '{count} pages modifiées' },
+  'changes.widgetsAdded': { one: '{count} gadget ajouté', other: '{count} gadgets ajoutés' },
+  'changes.widgetsRemoved': { one: '{count} gadget retiré', other: '{count} gadgets retirés' },
+  'changes.widgetsChanged': { one: '{count} gadget modifié', other: '{count} gadgets modifiés' },
+  'changes.settingsTouched': { one: '{count} réglage général', other: '{count} réglages généraux' },
+  'changes.otherTouched': { one: '{count} autre ligne du fichier', other: '{count} autres lignes du fichier' },
+
+  'changes.pagesHeading': 'Les pages',
+  'changes.settingsHeading': 'Les réglages généraux',
+  'changes.settingsNote': 'Chaque réglage est nommé par sa ligne du fichier, comme XCTrack l’écrit. « Réglages », dans la barre du haut, vous en donne le titre en clair.',
+  'changes.otherHeading': 'Les autres lignes du fichier',
+  'changes.otherNote': 'Ce que le fichier porte en dehors de vos pages et de vos réglages : sa carte d’identité, et ce que votre version de XCTrack y écrit d’autre.',
+
+  'changes.pageAt': 'Page {rank} — {orientation}',
+  'changes.pageAdded': 'ajoutée',
+  'changes.pageRemoved': 'retirée',
+  'changes.pageCarries': { one: 'elle porte {count} gadget', other: 'elle porte {count} gadgets' },
+  'changes.pageCarried': { one: 'elle portait {count} gadget', other: 'elle portait {count} gadgets' },
+  'changes.pageMoved': 'passée du rang {from} au rang {to}',
+  'changes.pageTypeChanged': 'type de page : {from} devient {to}',
+  'changes.pageNavigations': 'navigations changées',
+
+  'changes.widgetAdded': 'ajouté',
+  'changes.widgetRemoved': 'retiré',
+  'changes.widgetReshaped': 'déplacé ou redimensionné',
+  'changes.widgetRestacked': 'passé devant ou derrière ses voisins',
+  'changes.widgetSettings': { one: '{count} réglage modifié', other: '{count} réglages modifiés' },
+
+  'changes.settingAdded': 'ajouté',
+  'changes.settingChanged': 'modifié',
+  'changes.settingRemoved': 'retiré',
+
+  'changes.reorderedWhat': 'L’ordre des lignes du fichier',
+  'changes.reordered': 'les mêmes lignes, rangées autrement',
+  'changes.unexplainedWhat': 'Une différence sans nom',
+  'changes.unexplained': 'le document a changé quelque part que ce relevé ne sait pas nommer',
+  'changes.otherwise': 'autre chose a changé ici'
 } as const
 
 export default app

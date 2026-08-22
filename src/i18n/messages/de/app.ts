@@ -377,7 +377,56 @@ const app: DomainCatalog<'app'> = {
     'oben auf der Seite „Änderungen speichern“ — oder legen Sie diese Konfiguration in der ' +
     'Bibliothek ab.',
   'app.replaceAndLose': '„{incoming}“ öffnen und sie verlieren',
-  'app.keepChanges': 'Meine Änderungen behalten'
+  'app.keepChanges': 'Meine Änderungen behalten',
+  /* ----------------------------- was Sie geändert haben: eine Liste, zwei Bildschirme */
+
+  'menu.changes': 'Was Sie geändert haben',
+  'menu.changesHint': 'Die Liste dessen, was die geöffnete Datei von dem Dokument trennt, das Sie vor sich haben.',
+  'changes.title': 'Was Sie geändert haben',
+  'changes.none': 'Seit dem Öffnen von „{name}“ hat sich nichts geändert.',
+  'changes.noneWhy': 'Das Dokument ist Zeichen für Zeichen das, was die Datei geliefert hat: jetzt gespeichert, kommt es mit demselben SHA-256-Fingerabdruck wieder heraus.',
+  'changes.lead': 'Zwischen „{name}“, der von Ihnen geöffneten Datei, und dem Dokument vor Ihnen: {what}.',
+  'changes.caveat': 'Diese Aufstellung vergleicht zwei Zustände; sie zählt nicht Ihre Handgriffe. Was Sie getan und wieder rückgängig gemacht haben, steht nicht darin, und ein Rang, der nur nachgerückt ist, ist keine Verschiebung.',
+
+  'changes.pagesAdded': { one: '{count} Seite hinzugefügt', other: '{count} Seiten hinzugefügt' },
+  'changes.pagesRemoved': { one: '{count} Seite entfernt', other: '{count} Seiten entfernt' },
+  'changes.pagesChanged': { one: '{count} Seite geändert', other: '{count} Seiten geändert' },
+  'changes.widgetsAdded': { one: '{count} Widget hinzugefügt', other: '{count} Widgets hinzugefügt' },
+  'changes.widgetsRemoved': { one: '{count} Widget entfernt', other: '{count} Widgets entfernt' },
+  'changes.widgetsChanged': { one: '{count} Widget geändert', other: '{count} Widgets geändert' },
+  'changes.settingsTouched': { one: '{count} allgemeine Einstellung', other: '{count} allgemeine Einstellungen' },
+  'changes.otherTouched': { one: '{count} weitere Dateizeile', other: '{count} weitere Dateizeilen' },
+
+  'changes.pagesHeading': 'Die Seiten',
+  'changes.settingsHeading': 'Die allgemeinen Einstellungen',
+  'changes.settingsNote': 'Jede Einstellung wird nach ihrer Dateizeile benannt, so wie XCTrack sie schreibt. „Einstellungen“ in der oberen Leiste zeigt Ihnen den Titel im Klartext.',
+  'changes.otherHeading': 'Die weiteren Dateizeilen',
+  'changes.otherNote': 'Was die Datei außerhalb Ihrer Seiten und Ihrer Einstellungen trägt: ihren Ausweis und alles, was Ihre Version von XCTrack sonst dort schreibt.',
+
+  'changes.pageAt': 'Seite {rank} — {orientation}',
+  'changes.pageAdded': 'hinzugefügt',
+  'changes.pageRemoved': 'entfernt',
+  'changes.pageCarries': { one: 'sie trägt {count} Widget', other: 'sie trägt {count} Widgets' },
+  'changes.pageCarried': { one: 'sie trug {count} Widget', other: 'sie trug {count} Widgets' },
+  'changes.pageMoved': 'von Rang {from} auf Rang {to} verschoben',
+  'changes.pageTypeChanged': 'Seitentyp: {from} wird {to}',
+  'changes.pageNavigations': 'Navigationen geändert',
+
+  'changes.widgetAdded': 'hinzugefügt',
+  'changes.widgetRemoved': 'entfernt',
+  'changes.widgetReshaped': 'verschoben oder in der Größe geändert',
+  'changes.widgetRestacked': 'vor oder hinter seine Nachbarn gerückt',
+  'changes.widgetSettings': { one: '{count} Einstellung geändert', other: '{count} Einstellungen geändert' },
+
+  'changes.settingAdded': 'hinzugefügt',
+  'changes.settingChanged': 'geändert',
+  'changes.settingRemoved': 'entfernt',
+
+  'changes.reorderedWhat': 'Die Reihenfolge der Dateizeilen',
+  'changes.reordered': 'dieselben Zeilen, anders angeordnet',
+  'changes.unexplainedWhat': 'Ein Unterschied ohne Namen',
+  'changes.unexplained': 'das Dokument hat sich an einer Stelle geändert, die diese Aufstellung nicht benennen kann',
+  'changes.otherwise': 'hier hat sich noch etwas anderes geändert'
 }
 
 export default app

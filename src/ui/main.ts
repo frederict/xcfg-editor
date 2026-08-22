@@ -9,10 +9,11 @@ import { getMember, readNumber, readString } from '../core/access'
 import { exportContainer, openContainer, type Container } from '../core/container'
 import type { JsonNode } from '../core/jsonDocument'
 import { formatTechnicalDetail } from '../core/technicalDetail'
+import { computeChanges, type DocumentChanges } from '../model/changes'
 import { gridFor } from '../model/grid'
 import { createHistory, type EditHistory } from '../model/history'
 import { readLayout, type Layout, type Page } from '../model/layout'
-import { insertWidget } from '../model/mutations'
+import { cloneNode, insertWidget } from '../model/mutations'
 import { pageReachability } from '../model/reachability'
 import {
   labelFallbackLanguage, readRenderSettings, resolveLanguage, type RenderSettings
@@ -31,7 +32,8 @@ import {
 } from './pageManager'
 import type { PropertyField, PropertyForm } from './properties'
 import {
-  aspectRatioOf, ATTENTION_WARNING_KINDS, buildDetail, buildOverview, clampDockHeight,
+  aspectRatioOf, ATTENTION_WARNING_KINDS, buildChangeSummary, buildDetail, buildOverview,
+  clampDockHeight,
   dockHeightCeiling, DOCK_HEIGHT_DEFAULT, DOCK_HEIGHT_MIN, readDockHeight, remarksSummary,
   revealOffset, splitWarnings, writeDockHeight, ZOOM_MIN, ZOOM_STEP,
   type DetailEditing, type DetailInspecting, type Orientation, type ViewContext,
@@ -79,6 +81,25 @@ type LabelSource = 'file' | 'ui' | 'browser'
 
 interface Session {
   container: Container
+  /**
+   * **Le document tel que le fichier l'a livré**, figé à l'ouverture et jamais muté.
+   *
+   * C'est l'autre terme de la comparaison que `computeChanges` (`src/model/changes.ts`)
+   * met sous les yeux du pilote : « voilà ce que vous avez changé ». Il est pris ici, et
+   * pas ailleurs, pour trois raisons mesurées :
+   *
+   * - **`container.source`**, les octets d'origine, existent bien toute la session — c'est
+   *   ce qui fait la fidélité à l'octet près — mais les relire demande un décodage, une
+   *   analyse, et pour une archive `.xczfg` une décompression **asynchrone**. Un écran
+   *   consultable à tout moment ne peut pas dépendre d'une promesse.
+   * - **Le premier instantané de l'historique** est privé, et surtout il n'est **pas
+   *   éternel** : passé `HISTORY_LIMIT` pas, les plus anciens sont purgés et l'origine part
+   *   avec eux (`prunedOrigin`). Le pilote qui travaille une demi-heure — celui à qui ce
+   *   relevé s'adresse — est précisément celui qui la perdrait.
+   * - **Une copie structurelle** coûte ce que coûte un pas d'historique, sur cent que le
+   *   dépôt s'autorise déjà : rien.
+   */
+  original: JsonNode
   layout: Layout
   settings: RenderSettings
   /** Gabarit d'affichage courant : choisi par le pilote, jamais écrit dans le fichier. */
@@ -774,6 +795,19 @@ const libraryButton = menu.add(() => { void openLibrary() })
 
 const versionItem = menu.add(() => openVersionDialog())
 
+/**
+ * Le relevé des changements, atteignable **à tout moment** — c'est là toute sa raison
+ * d'être. Le pilote d'essai l'a demandé aux deux premières batteries : « avant
+ * d'enregistrer une configuration avec laquelle je vais voler, je voudrais la liste ».
+ * L'annulation ne nomme que le dernier geste ; une demi-heure de travail ne se relit pas
+ * un pas à la fois.
+ *
+ * Il est dans le menu et non dans la barre parce qu'on ne le consulte pas en continu ;
+ * il est dans le **menu** et non dans la seule boîte d'enregistrement parce qu'attendre
+ * d'avoir la main sur le bouton d'export pour découvrir ce qu'on a fait est trop tard.
+ */
+const changesItem = menu.add(() => openChangesDialog())
+
 /*
  * Le manuel. Volontairement **jamais désactivé** — comme la bibliothèque, c'est une
  * commande qui garde son sens sans fichier ouvert, et c'est même là qu'elle sert le
@@ -887,6 +921,8 @@ function installChromeProse(tr: Translator): void {
   libraryButton.title = tr.t('menu.libraryHint')
   versionItem.textContent = tr.t('menu.version')
   versionItem.title = tr.t('menu.versionHint')
+  changesItem.textContent = tr.t('menu.changes')
+  changesItem.title = tr.t('menu.changesHint')
   manualItem.textContent = tr.t('menu.manual')
   manualItem.title = tr.t('menu.manualHint')
   // Le reçu est de la prose lui aussi : sans cette ligne, un pilote qui change de langue
@@ -1427,6 +1463,9 @@ function syncEditControls(): void {
   // ferait croire que le menu change de contenu d'un écran à l'autre.
   const readable = session !== undefined && session.container.parseError === undefined
   versionItem.disabled = !readable
+  // Le relevé n'est pas éteint quand il est vide : c'est précisément le cas qui rassure —
+  // « rien n'a changé » est une réponse, et un bouton éteint ne la donnerait pas.
+  changesItem.disabled = !readable
 
   // Les réglages généraux ont leur bouton dans la barre. Il ne se cache pas quand il n'y
   // a rien à lire — un bouton qui apparaît et disparaît fait douter du chemin — mais il
@@ -3041,6 +3080,97 @@ function openPagesDialog(): void {
   dialog.showModal()
 }
 
+/* ------------------------------------------- ce que vous avez changé, à tout moment */
+
+let changesDialog: HTMLDialogElement | undefined
+
+/**
+ * **L'unique calcul de l'écart, pour les deux affichages.**
+ *
+ * L'écran consultable et la boîte d'enregistrement montrent la même liste. Ils
+ * l'obtiennent par cette fonction et par elle seule : deux comptes qui divergeraient d'un
+ * écran à l'autre seraient pires que pas de compte du tout — le pilote n'aurait plus
+ * aucune raison de croire ni l'un ni l'autre. Un seul calcul, un seul dessin
+ * (`buildChangeSummary`), et la divergence devient impossible plutôt qu'improbable.
+ *
+ * Rend `undefined` quand il n'y a rien à comparer : pas de document, ou un document que
+ * l'analyse n'a pas pu lire — un fichier illisible n'a pas d'état d'origine à opposer.
+ */
+function documentChanges(): DocumentChanges | undefined {
+  if (!session || session.container.parseError !== undefined) return undefined
+  return computeChanges(session.original, session.container.document)
+}
+
+function fillChangesDialog(dialog: HTMLDialogElement): void {
+  if (!session) return
+  const current = session
+  const changes = documentChanges()
+  if (changes === undefined) return
+  dialog.textContent = ''
+
+  const tr = translator()
+  const box = el('div', 'modal__box')
+  const head = el('div', 'modal__head')
+  head.append(el('h2', 'modal__title', tr.t('changes.title')))
+  const close = el('button', 'btn', tr.t('app.close'))
+  close.type = 'button'
+  close.addEventListener('click', () => closeChangesDialog())
+  head.append(close)
+  box.append(head)
+
+  box.append(buildChangeSummary({
+    changes,
+    fileName: current.container.fileName,
+    // Les noms de gadgets suivent le fichier ouvert, jamais la langue de l'interface :
+    // c'est la promesse centrale de l'outil. Voir `src/i18n/axes.ts`.
+    language: current.language,
+    tr
+  }))
+
+  dialog.append(box)
+}
+
+/**
+ * Le relevé se refait à chaque rendu : un gadget déplacé pendant que la boîte est ouverte
+ * doit s'y voir, et un geste annulé doit en disparaître. C'est ce qui en fait un constat
+ * et non une photographie prise à l'ouverture de la boîte.
+ */
+function syncChangesDialog(): void {
+  if (!changesDialog) return
+  if (!session || session.container.parseError !== undefined) {
+    closeChangesDialog()
+    return
+  }
+  fillChangesDialog(changesDialog)
+}
+
+function closeChangesDialog(): void {
+  const dialog = changesDialog
+  changesDialog = undefined
+  if (!dialog) return
+  dialog.close()
+  dialog.remove()
+}
+
+function openChangesDialog(): void {
+  if (!session || changesDialog !== undefined) return
+  // Le pas en cours d'écriture doit être au document avant qu'on le compare : sans cela,
+  // un déplacement encore « en vol » manquerait au relevé. Le document, lui, est déjà muté
+  // — c'est l'historique que `flushRecord` met à jour —, mais l'appel garde les deux
+  // lectures alignées, comme le fait le carrousel des pages.
+  flushRecord()
+  const dialog = el('dialog', 'modal modal--changes')
+  dialog.setAttribute('aria-label', translator().t('changes.title'))
+  dialog.addEventListener('cancel', () => {
+    changesDialog = undefined
+    dialog.remove()
+  })
+  changesDialog = dialog
+  fillChangesDialog(dialog)
+  document.body.append(dialog)
+  dialog.showModal()
+}
+
 /* ============================================ les quatre modules branchés à la demande */
 
 /**
@@ -3966,6 +4096,7 @@ function render(): void {
   syncPagesDialog()
   syncPaletteDialog()
   syncVersionDialog()
+  syncChangesDialog()
 
   content.textContent = ''
   // La page est le seul objet dessiné à sa taille réelle : en édition, le cadre s'élargit
@@ -4378,12 +4509,17 @@ function buildSession(container: Container): Session {
   // SON document : les deux ne peuvent alors plus diverger, et `container.modified`
   // reste faux tant que rien n'a été enregistré — un fichier seulement consulté ressort
   // donc toujours octet pour octet.
+  // Pris AVANT l'historique, sur l'arbre que `openContainer` vient d'analyser et que rien
+  // n'a encore touché. `cloneNode` recopie chaque littéral avec son texte source : la
+  // copie est indistinguable de l'original, `3.0` compris.
+  const original = cloneNode(container.document)
   const history = createHistory(container.document)
   container.document = history.current()
   const layout = readLayout(container.document)
   const language = resolveLanguage(settings.language, fallback.language)
   return {
     container,
+    original,
     layout,
     settings,
     history,

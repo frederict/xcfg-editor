@@ -81,6 +81,9 @@ const IDENTICAL_ON_PURPOSE: ReadonlySet<string> = new Set<string>([
   ...UI_LANGUAGES.map((language) => `${language}/editor.toolTitle`),
   ...UI_LANGUAGES.map((language) => `${language}/editor.doneWithTally`),
   ...UI_LANGUAGES.map((language) => `${language}/editor.doneWithRank`),
+  // « Page {rank} — {orientation} » : le mot que l'anglais emploie est celui du français,
+  // et le reste n'est que des repères et un tiret. Les trois autres langues diffèrent.
+  'en/changes.pageAt',
   'en/view.portrait',
   'en/view.pageCard',
   'en/view.pageCount',

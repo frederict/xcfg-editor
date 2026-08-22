@@ -364,7 +364,56 @@ const app: DomainCatalog<'app'> = {
   'app.replaceHint': 'Para no perder nada: conserve sus cambios y luego use «Guardar los ' +
     'cambios» en lo alto de la página — o guarde esta configuración en la biblioteca.',
   'app.replaceAndLose': 'Abrir «{incoming}» y perderlos',
-  'app.keepChanges': 'Conservar mis cambios'
+  'app.keepChanges': 'Conservar mis cambios',
+  /* ------------------------------------ lo que ha cambiado: una lista, dos pantallas */
+
+  'menu.changes': 'Lo que ha cambiado',
+  'menu.changesHint': 'La lista de lo que separa el archivo abierto del documento que tiene delante.',
+  'changes.title': 'Lo que ha cambiado',
+  'changes.none': 'Nada ha cambiado desde que abrió «{name}».',
+  'changes.noneWhy': 'El documento es, carácter por carácter, el que entregó el archivo: guardado ahora, saldrá con la misma huella SHA-256.',
+  'changes.lead': 'Entre «{name}», el archivo que abrió, y el documento que tiene delante: {what}.',
+  'changes.caveat': 'Este recuento compara dos estados; no cuenta sus gestos. Lo que hizo y luego deshizo no figura aquí, y un rango que solo se ha desplazado no es un movimiento.',
+
+  'changes.pagesAdded': { one: '{count} página añadida', other: '{count} páginas añadidas' },
+  'changes.pagesRemoved': { one: '{count} página retirada', other: '{count} páginas retiradas' },
+  'changes.pagesChanged': { one: '{count} página modificada', other: '{count} páginas modificadas' },
+  'changes.widgetsAdded': { one: '{count} widget añadido', other: '{count} widgets añadidos' },
+  'changes.widgetsRemoved': { one: '{count} widget retirado', other: '{count} widgets retirados' },
+  'changes.widgetsChanged': { one: '{count} widget modificado', other: '{count} widgets modificados' },
+  'changes.settingsTouched': { one: '{count} ajuste general', other: '{count} ajustes generales' },
+  'changes.otherTouched': { one: '{count} otra línea del archivo', other: '{count} otras líneas del archivo' },
+
+  'changes.pagesHeading': 'Las páginas',
+  'changes.settingsHeading': 'Los ajustes generales',
+  'changes.settingsNote': 'Cada ajuste se nombra por su línea del archivo, tal como XCTrack la escribe. «Ajustes», en la barra superior, le da el título en claro.',
+  'changes.otherHeading': 'Las demás líneas del archivo',
+  'changes.otherNote': 'Lo que el archivo lleva fuera de sus páginas y de sus ajustes: su carné de identidad y lo demás que su versión de XCTrack escribe ahí.',
+
+  'changes.pageAt': 'Página {rank} — {orientation}',
+  'changes.pageAdded': 'añadida',
+  'changes.pageRemoved': 'retirada',
+  'changes.pageCarries': { one: 'lleva {count} widget', other: 'lleva {count} widgets' },
+  'changes.pageCarried': { one: 'llevaba {count} widget', other: 'llevaba {count} widgets' },
+  'changes.pageMoved': 'pasada del rango {from} al rango {to}',
+  'changes.pageTypeChanged': 'tipo de página: {from} pasa a ser {to}',
+  'changes.pageNavigations': 'navegaciones modificadas',
+
+  'changes.widgetAdded': 'añadido',
+  'changes.widgetRemoved': 'retirado',
+  'changes.widgetReshaped': 'movido o redimensionado',
+  'changes.widgetRestacked': 'puesto delante o detrás de sus vecinos',
+  'changes.widgetSettings': { one: '{count} ajuste modificado', other: '{count} ajustes modificados' },
+
+  'changes.settingAdded': 'añadido',
+  'changes.settingChanged': 'modificado',
+  'changes.settingRemoved': 'retirado',
+
+  'changes.reorderedWhat': 'El orden de las líneas del archivo',
+  'changes.reordered': 'las mismas líneas, ordenadas de otro modo',
+  'changes.unexplainedWhat': 'Una diferencia sin nombre',
+  'changes.unexplained': 'el documento ha cambiado en algún punto que este recuento no sabe nombrar',
+  'changes.otherwise': 'aquí ha cambiado algo más'
 }
 
 export default app
