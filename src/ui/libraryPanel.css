@@ -30,7 +30,7 @@
   gap: 0.6rem 1rem;
 }
 
-.library__title { margin: 0; font-size: 16px; font-weight: 600; }
+.library__title { margin: 0; font-family: var(--font-title); font-size: 17px; font-weight: 600; }
 
 .library__actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 
@@ -206,11 +206,10 @@
 
 .library__heading {
   margin: 0;
-  font-size: 13px;
+  font-family: var(--font-title);
+  font-size: 15px;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--app-ink-soft);
+  color: var(--app-ink);
   padding-bottom: 0.3rem;
   border-bottom: 1px solid var(--app-line);
 }
@@ -430,7 +429,7 @@
   }
 }
 
-.library__viewTitle { margin: 0; font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
+.library__viewTitle { margin: 0; font-family: var(--font-title); font-size: 16px; font-weight: 600; overflow-wrap: anywhere; }
 
 .library__viewBody { display: grid; gap: 0.9rem; min-width: 0; }
 

@@ -100,11 +100,10 @@
 
 .sharing__heading {
   margin: 0;
-  font-size: 13px;
+  font-family: var(--font-title);
+  font-size: 15px;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--app-ink-soft);
+  color: var(--app-ink);
   padding-bottom: 0.3rem;
   border-bottom: 1px solid var(--app-line);
 }

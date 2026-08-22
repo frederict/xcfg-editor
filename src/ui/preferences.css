@@ -40,7 +40,7 @@
 }
 
 .prefs__titles { min-width: 0; }
-.prefs__title { margin: 0; font-size: 19px; font-weight: 600; letter-spacing: -0.01em; }
+.prefs__title { margin: 0; font-family: var(--font-title, Georgia, serif); font-size: 21px; font-weight: 600; }
 
 .prefs__subtitle {
   margin: 0.2rem 0 0;
@@ -189,17 +189,15 @@
 }
 
 .prefs__screen-name {
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  font-weight: 700;
+  font-family: var(--font-title, Georgia, serif);
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .prefs__screen-count {
   font-family: var(--font-data, monospace);
   font-size: 11px;
   color: var(--prefs-soft);
-  text-transform: none;
-  letter-spacing: 0;
 }
 
 .prefs__category {
@@ -594,24 +592,55 @@
 /* --------------------------------------------------------------- la marque d'état */
 
 .prefs__state {
-  font-family: var(--font-data, monospace);
+  /* La pastille se pose au début de sa colonne et n'occupe que la largeur de sa phrase :
+     étirée sur les 12 rem de la colonne, elle ferait un cartouche vide autour du mot. */
+  justify-self: start;
   /* 12 px, et non 10,5 : cette marque est ce qui distingue « valeur d'usine » de « réglé
      par vous » — la distinction que le manuel désigne comme la plus importante de la page.
      La rendre plus petite que le reste revenait à hiérarchiser à l'envers. Même taille que
      `.props__origin`, qui dit la même chose dans le panneau d'un gadget. */
   font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  /*
+   * Une pastille, et non plus des capitales. « RÉGLÉ PAR VOUS » criait la phrase que la
+   * maquette dit à voix normale ; la forme porte désormais la distinction — aplat ambre
+   * pour ce que le pilote a réglé, filet seul pour ce que XCTrack pose d'usine.
+   */
+  padding: 0.1rem 0.55rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
   color: var(--prefs-soft);
   cursor: help;
 }
 
-.prefs__state--custom { color: var(--app-ink, #15181c); font-weight: 700; }
-.prefs__state--conflict { color: var(--app-flag-ink, #7a5410); font-weight: 700; }
+/* La ligne au défaut : un contour, rien dedans. Elle ne réclame pas le regard. */
+.prefs__state--default,
+.prefs__state--absent,
+.prefs__state--unwritten { border-color: var(--app-line, #ddd6c8); }
 
-/* Les trois états d'absence se lisent d'un coup d'œil : la ligne est en retrait. */
+.prefs__state--custom {
+  border-color: var(--app-flag-line, #cf9c2c);
+  background: var(--app-flag-bg, #f7eacd);
+  color: var(--app-flag-ink, #7a5410);
+  font-weight: 600;
+}
+
+.prefs__state--conflict {
+  border-color: var(--app-flag-line, #cf9c2c);
+  color: var(--app-flag-ink, #7a5410);
+  font-weight: 600;
+}
+
+/*
+ * Les trois états d'absence se lisent d'un coup d'œil : la ligne est en retrait.
+ *
+ * ⚠ Le retrait est porté par l'ENCRE, et l'opacité ne fait plus que l'appuyer. Une
+ * opacité de 0,62 sur l'encre pleine tombait à 4,44:1 contre le fond du carnet — sous les
+ * 4,5:1 exigés d'un texte —, et `getComputedStyle().color` ne l'aurait jamais dit : il
+ * rend la couleur AVANT l'opacité. Mesuré ici à la main : encre douce à 0,85 vaut 4,93:1
+ * en thème clair et 6,26:1 en sombre. Une ligne en retrait reste une ligne qui se lit.
+ */
 .prefs__row[data-state='absent'],
-.prefs__row[data-state='unwritten'] { opacity: 0.62; }
+.prefs__row[data-state='unwritten'] { opacity: 0.85; color: var(--prefs-soft); }
 
 .prefs__row[data-state='custom'] { background: color-mix(in srgb, var(--app-panel, #f6f7f8) 70%, transparent); }
 .prefs__row[data-state='custom'] .prefs__label { font-weight: 600; }
@@ -623,9 +652,7 @@
   /* Le marqueur d'une donnée personnelle : lui aussi porte une information qu'on ne
      peut pas se permettre de manquer avant de partager un fichier. */
   font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding: 0.05rem 0.35rem;
+  padding: 0.05rem 0.5rem;
   border: 1px solid var(--app-flag-line, #cf9c2c);
   border-radius: 999px;
   color: var(--app-flag-ink, #7a5410);
@@ -660,7 +687,7 @@
   background: var(--app-panel, #f6f7f8);
 }
 
-.prefs__empty-title { margin: 0; font-size: 15px; font-weight: 600; }
+.prefs__empty-title { margin: 0; font-family: var(--font-title, Georgia, serif); font-size: 16px; font-weight: 600; }
 
 .prefs__empty-text {
   margin: 0.6rem 0 0;

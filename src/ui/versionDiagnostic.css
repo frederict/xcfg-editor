@@ -102,10 +102,10 @@
 
 .vdiag__detail-title {
   margin: 0.6rem 0 0.2rem;
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--app-ink-soft, #59616a);
+  font-family: var(--font-title, Georgia, serif);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--app-ink, #221f1a);
 }
 
 /* ----------------------------------------------------------------- le diagnostic */
@@ -118,7 +118,8 @@
 
 .vdiag__tally {
   margin: 0;
-  font-size: 1rem;
+  font-family: var(--font-title, Georgia, serif);
+  font-size: 1.1rem;
   font-weight: 600;
 }
 
@@ -169,18 +170,17 @@
   align-items: baseline;
   gap: 0.5rem;
   margin: 0 0 0.4rem;
-  font-size: 0.95rem;
+  font-family: var(--font-title, Georgia, serif);
+  font-size: 1rem;
 }
 
 .vdiag__badge {
   flex: none;
-  padding: 0.1rem 0.45rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  padding: 0.1rem 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 600;
   border: 1px solid currentcolor;
-  border-radius: 3px;
+  border-radius: 999px;
 }
 
 .vdiag__cat-text { flex: 1 1 12rem; }
