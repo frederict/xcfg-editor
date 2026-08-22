@@ -1042,10 +1042,17 @@ plutôt que par la visite guidée, et son sommaire reste à gauche pendant toute
   Écran ...... la boîte « Ce que vous avez changé », ouverte par le menu « Fichier ».
   Langues .... CINQ exemplaires : .fr, .en, .nl, .de, .es. Le texte EST le sujet — ce qui
                est compté, et la phrase qui dit que rien n'est compté deux fois.
-  Fichier .... tests/fixtures/exports/2026-08-20_backup-00.xcfg. Il déclare le français :
-               « Barre d'état » reste donc en français dans les cinq captures, comme sur
-               l'écran des réglages généraux. C'est la séparation des deux axes, et elle
-               se voit ici à l'œil nu.
+  Fichier .... tests/fixtures/exports/2026-08-20_backup-00.xcfg.
+               ⚠ Il porte `Display.Language` VIDE, donc il ne déclare AUCUNE langue : les
+               noms de gadgets suivent alors le pilote, et non le fichier. Mesuré au
+               navigateur le 2026-08-22 : la même ligne lit « Barre d'état » quand le
+               globe est sur le français et « Statuszeile » quand il est sur l'allemand.
+               C'est correct — c'est le repli documenté (`labelFallbackLanguage`) — mais
+               ce n'est PAS le cas qui montre la séparation des deux axes. Ne pas écrire
+               en légende que le nom reste français : il ne reste pas. Si l'on veut un
+               jour l'illustrer ici, il faut une fixture qui déclare vraiment sa langue.
+               Corollaire pour la fabrication : tant qu'aucune langue n'a été choisie au
+               globe, ces noms suivent le NAVIGATEUR, pas l'interface.
   ⚠ Vie privée. Cette boîte peut nommer des lignes que le pilote a écrites — un titre de
                gadget, un texte libre, `Pilot.Name`. Elle ne montre JAMAIS leur valeur,
                mais la fixture reste obligatoire : une configuration réelle y ferait
