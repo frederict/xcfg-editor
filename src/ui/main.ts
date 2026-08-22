@@ -52,8 +52,6 @@ import type { VersionPanel } from './versionDiagnostic'
 import type { CleanupEvent } from './cleanupPanel'
 import type { Library } from '../library/library'
 import { initialUiLanguage, loadTranslator, type Translator } from '../i18n'
-import { plural } from './prose'
-import type { PluralForms } from '../i18n'
 
 interface Session {
   container: Container
@@ -115,9 +113,6 @@ type View =
  * `render()` qu'une fois qu'il est arrivé. Les rendus suivants viennent tous d'un geste
  * du pilote, donc bien après.
  */
-/** « 12 réglages » — la barre de tête le dit, et le bandeau le redit. */
-const SETTING_COUNT: PluralForms = { one: '{count} réglage', other: '{count} réglages' }
-
 let uiTranslator: Translator | undefined
 
 /**
@@ -311,15 +306,19 @@ function el<K extends keyof HTMLElementTagNameMap>(
 
 /* ------------------------------------------------------------------------ ossature */
 
-const app = document.querySelector('#app')
-if (!(app instanceof HTMLElement)) throw new Error('#app introuvable')
+const appRoot = document.querySelector('#app')
+if (!(appRoot instanceof HTMLElement)) throw new Error('#app introuvable')
+const app: HTMLElement = appRoot
 
 const fileInput = el('input', 'sr-only')
 fileInput.type = 'file'
 fileInput.accept = '.xcfg,.xczfg'
 fileInput.id = 'file-input'
 
-const exportButton = el('button', 'btn', 'Enregistrer une copie')
+// Les intitulés de la barre de tête sont posés par `installChromeProse`, une fois le
+// catalogue de la langue arrivé — voir l'amorçage. Ils changent ensuite avec l'état du
+// document (`syncEditControls`).
+const exportButton = el('button', 'btn')
 exportButton.type = 'button'
 exportButton.hidden = true
 
@@ -333,7 +332,7 @@ exportButton.hidden = true
  * — « Modifier les pages ». En édition, il n'a plus rien à apprendre à personne et la
  * barre est à son plus plein : « Consulter » suffit, et rend 90 px à la page.
  */
-const editToggle = el('button', 'btn', 'Modifier les pages')
+const editToggle = el('button', 'btn')
 editToggle.type = 'button'
 editToggle.hidden = true
 editToggle.setAttribute('aria-pressed', 'false')
@@ -429,10 +428,8 @@ function gearGlyph(): SVGSVGElement {
 const preferencesButton = el('button', 'btn app-bar__prefs')
 preferencesButton.type = 'button'
 preferencesButton.hidden = true
-preferencesButton.title =
-  'Réglages généraux — tout ce qui se règle hors des pages de gadgets : unités, touches, ' +
-  'capteurs, son, espaces aériens.'
-preferencesButton.append(gearGlyph(), el('span', 'app-bar__prefs-name', 'Réglages'))
+const preferencesName = el('span', 'app-bar__prefs-name')
+preferencesButton.append(gearGlyph(), preferencesName)
 preferencesButton.addEventListener('click', () => { openPreferences() })
 
 /* ------------------------------------------------- menu des commandes secondaires */
@@ -467,22 +464,28 @@ preferencesButton.addEventListener('click', () => { openPreferences() })
 interface Menu {
   root: HTMLElement
   button: HTMLButtonElement
-  /** Ajoute une entrée et rend son bouton — l'appelant en règle `hidden` et `disabled`. */
-  add: (label: string, title: string, run: () => void) => HTMLButtonElement
+  /** Pose l'intitulé du bouton et le nom accessible de la liste, une fois la prose là. */
+  setLabel: (label: string) => void
+  /**
+   * Ajoute une entrée et rend son bouton — l'appelant en règle `hidden`, `disabled`, son
+   * intitulé et son infobulle. Le menu est bâti avant que le catalogue de la langue soit
+   * arrivé : il ne peut donc pas porter ses mots lui-même.
+   */
+  add: (run: () => void) => HTMLButtonElement
   close: () => void
 }
 
-function buildMenu(label: string): Menu {
+function buildMenu(): Menu {
   const root = el('div', 'menu')
   const button = el('button', 'btn menu__button')
   button.type = 'button'
   button.setAttribute('aria-haspopup', 'menu')
   button.setAttribute('aria-expanded', 'false')
-  button.append(el('span', undefined, label), el('span', 'menu__chevron'))
+  const buttonLabel = el('span')
+  button.append(buttonLabel, el('span', 'menu__chevron'))
 
   const list = el('div', 'menu__list')
   list.setAttribute('role', 'menu')
-  list.setAttribute('aria-label', label)
   list.hidden = true
   root.append(button, list)
 
@@ -546,12 +549,15 @@ function buildMenu(label: string): Menu {
   return {
     root,
     button,
+    setLabel: (label) => {
+      buttonLabel.textContent = label
+      list.setAttribute('aria-label', label)
+    },
     close: () => close(),
-    add: (itemLabel, itemTitle, run) => {
-      const item = el('button', 'menu__item', itemLabel)
+    add: (run) => {
+      const item = el('button', 'menu__item')
       item.type = 'button'
       item.setAttribute('role', 'menuitem')
-      item.title = itemTitle
       item.tabIndex = -1
       item.addEventListener('click', () => { close(true); run() })
       list.append(item)
@@ -560,7 +566,7 @@ function buildMenu(label: string): Menu {
   }
 }
 
-const menu = buildMenu('Fichier')
+const menu = buildMenu()
 
 /**
  * Ouvrir un fichier : un bouton du menu, et non plus l'étiquette du champ de fichier.
@@ -568,12 +574,7 @@ const menu = buildMenu('Fichier')
  * fichier à la tabulation sans passer par le menu, et l'étiquette de la zone de dépôt de
  * l'accueil continue de le désigner.
  */
-const openItem = menu.add(
-  'Ouvrir un fichier…',
-  'Choisir un .xcfg ou un .xczfg exporté depuis l’instrument. Le fichier reste sur ' +
-  'cette machine.',
-  () => fileInput.click()
-)
+const openItem = menu.add(() => fileInput.click())
 
 /**
  * La bibliothèque, **jamais éteinte** : c'est la seule commande qui a un sens sans
@@ -581,19 +582,9 @@ const openItem = menu.add(
  * mettre derrière l'ouverture d'un fichier en ferait un trésor enfermé dans son propre
  * coffre.
  */
-const libraryButton = menu.add(
-  'Bibliothèque…',
-  'Ranger la configuration ouverte sous un nom, et retrouver celles déjà rangées. ' +
-  'Tout reste dans ce navigateur : aucun serveur, aucun compte.',
-  () => { void openLibrary() }
-)
+const libraryButton = menu.add(() => { void openLibrary() })
 
-const versionItem = menu.add(
-  'Version et compatibilité…',
-  'Choisir la version de XCTrack visée, et voir ce que ce fichier porte qu’elle ne ' +
-  'connaît pas — ou l’inverse.',
-  () => openVersionDialog()
-)
+const versionItem = menu.add(() => openVersionDialog())
 
 /*
  * Le manuel. Volontairement **jamais désactivé** — comme la bibliothèque, c'est une
@@ -601,12 +592,7 @@ const versionItem = menu.add(
  * plus : un pilote qui découvre l'outil n'a rien à ouvrir, il a besoin qu'on lui dise
  * quoi faire. Il ne figure donc pas dans `syncEditControls`.
  */
-menu.add(
-  'Manuel d’utilisation…',
-  'Comment sortir le fichier de l’instrument, préparer ses pages, et ce qu’il ne faut ' +
-  'jamais partager.',
-  () => openManual()
-)
+const manualItem = menu.add(() => openManual())
 
 const bar = el('header', 'app-bar')
 const brand = el('div', 'brand')
@@ -616,9 +602,10 @@ const brand = el('div', 'brand')
  * « visionneuse » au repos décrivait l'outil au lieu de décrire l'état — un pilote venu
  * préparer ses écrans y lisait que l'outil ne les modifiait pas.
  */
-const brandRole = el('span', 'brand__role', 'édition')
+const brandRole = el('span', 'brand__role')
 brandRole.hidden = true
-brand.append(el('span', 'brand__name', 'Configuration XCTrack'), brandRole)
+const brandName = el('span', 'brand__name')
+brand.append(brandName, brandRole)
 const actions = el('div', 'app-bar__actions')
 actions.append(
   fileName, undoButton, redoButton, preferencesButton, editToggle, menu.root, fileInput,
@@ -637,49 +624,69 @@ const tools = el('div', 'tools')
 tools.hidden = true
 
 const veil = el('div', 'veil')
-veil.append(el('span', 'veil__text', 'Déposez le fichier pour l’ouvrir'))
+const veilText = el('span', 'veil__text')
+veil.append(veilText)
 
-app.append(bar, tools, content, veil)
+/**
+ * Les mots du cadre — barre de tête, menu, voile de dépôt —, posés **une fois** quand le
+ * catalogue de la langue est arrivé.
+ *
+ * Ces éléments sont bâtis pendant que ce fichier s'exécute de haut en bas, donc avant le
+ * traducteur : ils naissent muets. C'est aussi pourquoi le cadre n'est accroché au
+ * document qu'ici — un pilote ne doit pas voir une seconde de boutons vides avant sa
+ * langue. Ce qui change ensuite avec l'état du document est repris par
+ * `syncEditControls`, et non ici.
+ */
+function installChromeProse(tr: Translator): void {
+  brandName.textContent = tr.t('app.name')
+  brandRole.textContent = tr.t('app.editingRole')
+  veilText.textContent = tr.t('app.dropVeil')
+
+  preferencesName.textContent = tr.t('app.settings')
+  preferencesButton.title = tr.t('app.settingsHint')
+
+  menu.setLabel(tr.t('menu.file'))
+  openItem.textContent = tr.t('menu.openFile')
+  openItem.title = tr.t('menu.openFileHint')
+  libraryButton.textContent = tr.t('menu.library')
+  libraryButton.title = tr.t('menu.libraryHint')
+  versionItem.textContent = tr.t('menu.version')
+  versionItem.title = tr.t('menu.versionHint')
+  manualItem.textContent = tr.t('menu.manual')
+  manualItem.title = tr.t('menu.manualHint')
+
+  app.append(bar, tools, content, veil)
+}
 
 /* --------------------------------------------------------------------------- vues */
 
 function landing(): HTMLElement {
+  const tr = translator()
   const panel = el('section', 'landing')
   panel.append(
-    el('h1', 'landing__title', 'Préparez vos pages XCTrack avant de voler'),
-    el(
-      'p', 'landing__lead',
-      'Ouvrez un fichier .xcfg ou .xczfg exporté depuis l’instrument : ses pages ' +
-      's’affichent telles que l’appareil les dessine, à leur taille réelle. Déplacez un ' +
-      'gadget, redimensionnez-le, ajoutez-en, puis récupérez une copie neuve à remettre ' +
-      'sur la carte SD.'
-    ),
+    el('h1', 'landing__title', tr.t('landing.title')),
+    el('p', 'landing__lead', tr.t('landing.lead')),
     // Les deux garanties qui décident un pilote à confier sa configuration de vol à un
     // site web. Elles étaient jusqu'ici portées par le mot « visionneuse », qui les liait
     // à une promesse fausse : elles valent aussi quand on modifie, puisqu'on ne réécrit
     // que ce qu'on a changé.
-    el(
-      'p', 'landing__lead',
-      'Votre fichier ne quitte pas cette machine : tout se passe dans ce navigateur, ' +
-      'sans serveur et sans compte. Et ce que vous n’avez pas touché ressort exactement ' +
-      'comme il est entré, sans une virgule réécrite — vos réglages resteront les vôtres.'
-    )
+    el('p', 'landing__lead', tr.t('landing.privacy'))
   )
 
   const dropzone = el('label', 'dropzone')
   dropzone.htmlFor = fileInput.id
   dropzone.append(
-    el('span', 'dropzone__strong', 'Déposez votre fichier ici'),
-    el('span', undefined, 'ou cliquez pour le choisir — .xcfg ou .xczfg')
+    el('span', 'dropzone__strong', tr.t('landing.dropHere')),
+    el('span', undefined, tr.t('landing.dropOrPick'))
   )
   panel.append(dropzone)
 
   const steps = el('ul', 'landing__steps')
   const items: [string, string][] = [
-    ['Sur l’instrument', 'Réglages, puis « Exporter la configuration ». Le fichier atterrit sur la carte SD.'],
-    ['Ici', 'Les pages apparaissent numérotées dans l’ordre où « page suivante » les fait défiler en vol.'],
-    ['Modifier', 'Déplacez un gadget au doigt ou à la souris, changez sa taille, ajoutez-en d’autres : la page se redessine à sa taille réelle sous vos yeux.'],
-    ['À savoir', 'C’est le réglage « navigations » d’une page, et non son type, qui décide des moments où l’appareil la montre.']
+    [tr.t('landing.stepDeviceTitle'), tr.t('landing.stepDeviceText')],
+    [tr.t('landing.stepHereTitle'), tr.t('landing.stepHereText')],
+    [tr.t('landing.stepEditTitle'), tr.t('landing.stepEditText')],
+    [tr.t('landing.stepKnowTitle'), tr.t('landing.stepKnowText')]
   ]
   for (const [title, detail] of items) {
     const step = el('li', 'landing__step')
@@ -690,16 +697,11 @@ function landing(): HTMLElement {
 
   // Sans cette phrase, un pilote revenu le lendemain ne voit qu'une invitation à ouvrir un
   // fichier et ne devine pas que ses configurations rangées l'attendent dans la barre.
-  panel.append(el(
-    'p', 'landing__note',
-    'Déjà venu ? Les configurations que vous avez rangées sont dans le menu « Fichier », ' +
-    'en haut à droite, sous « Bibliothèque » : elles ne sont jamais parties de ce ' +
-    'navigateur.'
-  ))
+  panel.append(el('p', 'landing__note', tr.t('landing.returning')))
   // Un second chemin vers le manuel, ici et pas seulement dans le menu : celui qui
   // découvre l'outil n'a rien à ouvrir, et il ne pense pas à chercher de l'aide dans un
   // menu appelé « Fichier ».
-  const help = el('button', 'btn btn--ghost', 'Lire le manuel d’utilisation')
+  const help = el('button', 'btn btn--ghost', tr.t('landing.readManual'))
   help.type = 'button'
   help.addEventListener('click', () => openManual())
   panel.append(help)
@@ -729,12 +731,13 @@ function problem(
  */
 function technicalDetail(detail: string): HTMLElement {
   const box = el('details', 'problem__detail')
-  box.append(el('summary', 'problem__detailSummary', 'Détail technique'))
+  box.append(el('summary', 'problem__detailSummary', translator().t('app.technicalDetail')))
   box.append(el('p', 'problem__detailText', detail))
   return box
 }
 
 function metaStrip(current: Session): HTMLElement {
+  const tr = translator()
   const strip = el('div', 'meta')
   const add = (label: string, value: string): void => {
     const item = el('div', 'meta__item')
@@ -742,18 +745,22 @@ function metaStrip(current: Session): HTMLElement {
     strip.append(item)
   }
   // Le nom du fichier est déjà dans la barre de tête : ne pas le répéter ici.
-  add('Format', current.container.kind === 'xczfg' ? 'archive .xczfg' : 'fichier .xcfg')
+  add(tr.t('app.metaFormat'), current.container.kind === 'xczfg'
+    ? tr.t('app.containerArchive')
+    : tr.t('app.containerPlain'))
   // Ce que le fichier dit de l'appareil, distinct du gabarit d'affichage choisi
   // au-dessus : l'un est une donnée, l'autre un réglage de la visionneuse.
-  add('Appareil du fichier', current.declaredDevice ?? 'non déclaré')
+  add(tr.t('app.metaDevice'), current.declaredDevice ?? tr.t('app.notDeclared'))
   add(
-    'Libellés',
+    tr.t('app.metaLabels'),
+    // `language` est un code de langue lu dans le fichier — un identifiant : il se passe
+    // en `string`, jamais en `number`, et n'est donc pas mis en forme.
     current.languageFromBrowser
-      ? `${current.language} (langue du navigateur)`
-      : `${current.language} (déclaré par le fichier)`
+      ? tr.t('app.labelsFromBrowser', { language: current.language })
+      : tr.t('app.labelsFromFile', { language: current.language })
   )
   if (current.settings.fromDefaults) {
-    add('Réglages de rendu', 'valeurs supposées, absentes du fichier')
+    add(tr.t('app.metaRenderSettings'), tr.t('app.renderSettingsAssumed'))
   }
 
   /*
@@ -797,7 +804,9 @@ function warningCard(warning: Warning, level: 'h3' | 'h4' = 'h3'): HTMLElement {
       // « éléments » ne nommait rien : selon l'avertissement, ce sont des pages, des
       // gadgets, des fichiers ou des lignes du fichier. Le titre de la carte, juste
       // au-dessus, dit déjà de quoi il s'agit ; il ne manquait que le nombre.
-      box.append(el('summary', 'warning__summary', `Voir le détail (${warning.items.length})`), list)
+      box.append(el('summary', 'warning__summary', translator().t('app.seeDetail', {
+        count: warning.items.length
+      })), list)
       card.append(box)
     } else {
       card.append(list)
@@ -814,7 +823,7 @@ function warningCard(warning: Warning, level: 'h3' | 'h4' = 'h3'): HTMLElement {
 function attentionPanel(warnings: Warning[]): HTMLElement | undefined {
   if (warnings.length === 0) return undefined
   const panel = el('section', 'warnings')
-  panel.append(el('h2', 'warnings__title', 'À vérifier dans ce fichier'))
+  panel.append(el('h2', 'warnings__title', translator().t('app.attentionTitle')))
   for (const warning of warnings) panel.append(warningCard(warning))
   return panel
 }
@@ -865,7 +874,7 @@ function remarksPanel(warnings: Warning[]): HTMLElement | undefined {
 function warningNotice(warnings: Warning[]): HTMLElement | undefined {
   if (warnings.length === 0) return undefined
   const notice = el('section', 'warnings warnings--notice')
-  notice.append(el('h3', 'warnings__title', 'Ce que ce fichier révèle de vous'))
+  notice.append(el('h3', 'warnings__title', translator().t('app.revealsTitle')))
   for (const warning of warnings) notice.append(warningCard(warning, 'h4'))
   return notice
 }
@@ -915,6 +924,7 @@ function insideEditor(target: EventTarget | null): boolean {
  * disparaître, ce qu'un bouton muet ne dit pas.
  */
 function syncEditControls(): void {
+  const tr = translator()
   // Un seul mode pour deux surfaces. Les réglages généraux ont longtemps été une
   // consultation et rien d'autre ; depuis qu'ils se modifient, ils obéissent au même
   // interrupteur que les pages — sans quoi la consultation cesserait d'être une
@@ -927,13 +937,11 @@ function syncEditControls(): void {
   brandRole.hidden = !editMode || !editable
   editToggle.hidden = !editable
   editToggle.textContent = editMode
-    ? 'Consulter'
-    : (onPreferences ? 'Modifier les réglages' : 'Modifier les pages')
+    ? tr.t('app.inspect')
+    : (onPreferences ? tr.t('app.editSettings') : tr.t('app.editPages'))
   editToggle.title = editMode
-    ? 'Consulter — quitter le mode édition. Rien n’est défait.'
-    : (onPreferences
-      ? 'Modifier les réglages — changer les valeurs des réglages généraux.'
-      : 'Modifier les pages — déplacer, redimensionner et ajouter des gadgets.')
+    ? tr.t('app.inspectHint')
+    : (onPreferences ? tr.t('app.editSettingsHint') : tr.t('app.editPagesHint'))
   editToggle.setAttribute('aria-pressed', String(editMode))
 
   undoButton.hidden = !editMode || !editable
@@ -944,8 +952,12 @@ function syncEditControls(): void {
   const redoLabel = history?.redoDescription()
   // Le bouton ne porte qu'une flèche : la phrase entière est son nom accessible, et non
   // une simple infobulle — un lecteur d'écran annoncerait sinon « bouton », rien de plus.
-  const undoName = undoLabel === undefined ? 'Rien à annuler' : `Annuler : ${undoLabel}`
-  const redoName = redoLabel === undefined ? 'Rien à rétablir' : `Rétablir : ${redoLabel}`
+  const undoName = undoLabel === undefined
+    ? tr.t('action.undoNothing')
+    : tr.t('action.undoNamed', { what: undoLabel })
+  const redoName = redoLabel === undefined
+    ? tr.t('action.redoNothing')
+    : tr.t('action.redoNamed', { what: redoLabel })
   undoButton.title = undoName
   redoButton.title = redoName
   undoButton.setAttribute('aria-label', undoName)
@@ -968,7 +980,7 @@ function syncEditControls(): void {
   // Un document modifié se réécrit à l'export ; intact, il ressort octet pour octet.
   // Le bouton dit lequel des deux va se produire.
   const modified = session?.container.modified === true
-  exportButton.textContent = modified ? 'Enregistrer les modifications' : 'Enregistrer une copie'
+  exportButton.textContent = modified ? tr.t('app.saveChanges') : tr.t('app.saveCopy')
   exportButton.classList.toggle('btn--primary', modified)
 }
 
@@ -1051,8 +1063,7 @@ function repaint(): void {
   // alors qu'on vient d'en poser un quinzième.
   const count = content.querySelector('.chip--count')
   if (count) {
-    const total = page.widgets.length
-    count.textContent = plural({ one: '{count} gadget', other: '{count} gadgets' }, total)
+    count.textContent = translator().t('common.widgetCount', { count: page.widgets.length })
   }
 }
 
@@ -1138,17 +1149,17 @@ function onStructureEdit(edit: WidgetStructureEdit): void {
  */
 function updateDockCount(form: PropertyForm, editMode: boolean): void {
   if (!dockCount) return
-  const total = form.fields.length
+  const tr = translator()
+  const settings = tr.t('dock.settingCount', { count: form.fields.length })
   dockCount.textContent = editMode || !form.defaultsKnown
-    ? plural(SETTING_COUNT, total)
+    ? settings
     // En consultation, le compte qui compte n'est pas le nombre de lignes : c'est ce que
     // le pilote a effectivement changé. Il est dit dès la barre de tête, qui survit au
     // repli du bandeau.
-    : `${plural(SETTING_COUNT, total)} · ` +
-      `${plural({
-        one: '{count} personnalisé',
-        other: '{count} personnalisés'
-      }, form.customizedCount)}`
+    : tr.t('dock.countPair', {
+      settings,
+      customized: tr.t('dock.customizedCount', { count: form.customizedCount })
+    })
 }
 
 function onPropertyChange(field: PropertyField, widget: Widget, fresh?: PropertyForm): void {
@@ -1156,7 +1167,10 @@ function onPropertyChange(field: PropertyField, widget: Widget, fresh?: Property
   session.container.modified = true
   if (fresh) updateDockCount(fresh, true)
   const label = field.label === '' ? field.path : field.label
-  const description = `Régler ${label} — ${readableName(widget.shortName, session.language)}`
+  const description = translator().t('app.setSettingNamed', {
+    label,
+    name: readableName(widget.shortName, session.language)
+  })
   if (field.control === 'slider' || field.control === 'number') {
     recordSoon(`${selection ?? -1}:${field.path}`, description)
   } else {
@@ -1358,10 +1372,11 @@ function fillPaletteDialog(dialog: HTMLDialogElement): void {
   if (!session || view.kind !== 'detail') return
   dialog.textContent = ''
 
+  const tr = translator()
   const box = el('div', 'modal__box')
   const head = el('div', 'modal__head')
-  head.append(el('h2', 'modal__title', 'Ajouter un gadget'))
-  const close = el('button', 'btn', 'Fermer')
+  head.append(el('h2', 'modal__title', tr.t('app.addWidget')))
+  const close = el('button', 'btn', tr.t('app.close'))
   close.type = 'button'
   close.addEventListener('click', () => closePaletteDialog())
   head.append(close)
@@ -1374,11 +1389,7 @@ function fillPaletteDialog(dialog: HTMLDialogElement): void {
   }
 
   if (!acceptsWidgets(page)) {
-    box.append(el(
-      'p', 'hint-note',
-      'Cette page n’a pas d’emplacement pour des gadgets. Cet outil ne peut pas en ' +
-      'créer un : il n’invente rien que le fichier ne porte déjà.'
-    ))
+    box.append(el('p', 'hint-note', tr.t('app.pageHasNoWidgetSlot')))
     dialog.append(box)
     return
   }
@@ -1388,7 +1399,7 @@ function fillPaletteDialog(dialog: HTMLDialogElement): void {
   if (module === undefined || catalog === undefined) {
     // « palette » ne nomme rien que le pilote ait vu : le bouton qui ouvre cette boîte
     // s'appelle « Ajouter un gadget ».
-    box.append(el('p', 'hint-note', 'Chargement…'))
+    box.append(el('p', 'hint-note', tr.t('app.loading')))
     dialog.append(box)
     // La boîte a pu être fermée ou refaite entre-temps : ce résultat-ci serait périmé.
     void Promise.all([loadPalette(), loadPaletteCatalog(session.language)])
@@ -1448,7 +1459,7 @@ function openPaletteDialog(): void {
   if (!session || paletteDialog !== undefined) return
   flushRecord()
   const dialog = el('dialog', 'modal modal--palette')
-  dialog.setAttribute('aria-label', 'Ajouter un gadget')
+  dialog.setAttribute('aria-label', translator().t('app.addWidget'))
   // Échap ferme la boîte native : rien n'est ajouté, le document reste tel qu'il est.
   dialog.addEventListener('cancel', () => {
     paletteDialog = undefined
@@ -1500,7 +1511,7 @@ function applyDockHeight(): void {
     dockGrip.setAttribute('aria-valuemin', String(DOCK_HEIGHT_MIN))
     dockGrip.setAttribute('aria-valuemax', String(ceiling))
     dockGrip.setAttribute('aria-valuenow', String(height))
-    dockGrip.setAttribute('aria-valuetext', `${height} pixels`)
+    dockGrip.setAttribute('aria-valuetext', translator().t('dock.heightPixels', { count: height }))
   }
 }
 
@@ -1524,14 +1535,13 @@ function saveDockHeight(): void {
  * annoncer un maximum qu'on refuserait serait mentir au lecteur d'écran.
  */
 function buildDockGrip(): HTMLElement {
+  const tr = translator()
   const grip = el('div', 'dock__grip')
   grip.tabIndex = 0
   grip.setAttribute('role', 'separator')
   grip.setAttribute('aria-orientation', 'horizontal')
-  grip.setAttribute('aria-label', 'Hauteur du bandeau de réglages')
-  grip.title =
-    'Glissez pour changer la hauteur du bandeau — au clavier, flèches haut et bas, ' +
-    'Page↑ et Page↓ par crans larges, Origine et Fin aux extrêmes.'
+  grip.setAttribute('aria-label', tr.t('dock.gripLabel'))
+  grip.title = tr.t('dock.gripHint')
 
   grip.addEventListener('pointerdown', (event) => {
     if (event.button !== 0) return
@@ -1591,14 +1601,15 @@ window.addEventListener('resize', () => applyDockHeight())
  */
 function syncDock(): void {
   if (!dockElement || !dockToggle || !panelHost) return
+  const tr = translator()
   dockElement.classList.toggle('dock--collapsed', dockCollapsed)
   // Replié, le bandeau emporte la liste des widgets avec ses réglages — et la liste est
   // le seul chemin vers les widgets qu'aucun clic n'atteint. Sans sélection, le bouton
   // nomme donc ce que le dépliage donne à cet instant : la liste, pas des réglages qui
   // n'existent pas encore.
   dockToggle.textContent = dockCollapsed
-    ? (selection === undefined ? 'Liste des gadgets' : 'Déplier les réglages')
-    : 'Replier'
+    ? (selection === undefined ? tr.t('dock.widgetList') : tr.t('dock.expandSettings'))
+    : tr.t('dock.collapse')
   dockToggle.setAttribute('aria-expanded', String(!dockCollapsed))
   // Replié, c'est le corps entier qui disparaît : ses deux zones, et la place qu'il prend.
   if (dockBody) dockBody.hidden = dockCollapsed
@@ -1608,7 +1619,7 @@ function syncDock(): void {
   if (widgetListHost) widgetListHost.hidden = listHidden
   if (listToggle) {
     listToggle.hidden = dockCollapsed
-    listToggle.textContent = listHidden ? 'Afficher la liste' : 'Masquer la liste'
+    listToggle.textContent = listHidden ? tr.t('dock.showList') : tr.t('dock.hideList')
     listToggle.setAttribute('aria-pressed', String(!listHidden))
   }
 }
@@ -1731,6 +1742,7 @@ function syncSelectionMarks(): void {
 /** Reconstruit le bandeau depuis le rang sélectionné — jamais depuis un nœud retenu. */
 function refreshPanel(): void {
   if (!panelHost || !session) return
+  const tr = translator()
   // L'intitulé du bouton de repli dépend de la sélection, qui vient peut-être de changer.
   syncDock()
   const page = currentPage()
@@ -1738,9 +1750,13 @@ function refreshPanel(): void {
   const name = widget === undefined ? undefined : readableName(widget.shortName, session.language)
 
   if (selectionLabel) {
-    selectionLabel.textContent = widget === undefined
-      ? 'Aucun gadget sélectionné'
-      : `${name} — rang ${(selection ?? 0) + 1} sur ${page?.widgets.length ?? 0}`
+    selectionLabel.textContent = widget === undefined || name === undefined
+      ? tr.t('dock.noSelection')
+      : tr.t('dock.selectionRank', {
+        name,
+        index: (selection ?? 0) + 1,
+        total: page?.widgets.length ?? 0
+      })
   }
 
   // La liste met en évidence le rang courant, quelle que soit son origine — un clic sur la
@@ -1752,7 +1768,7 @@ function refreshPanel(): void {
   // bandeau replié, où le panneau lui-même a disparu.
   // Sans sélection, la barre de tête n'annonce pas un manque : elle dit le geste à faire.
   // C'est le seul texte que le bandeau replié — son état d'arrivée — laisse voir.
-  if (dockTitle) dockTitle.textContent = name ?? 'Choisissez un gadget pour voir ses réglages'
+  if (dockTitle) dockTitle.textContent = name ?? tr.t('dock.chooseWidget')
   if (dockClass) dockClass.textContent = widget?.shortName ?? ''
   if (dockCount) dockCount.textContent = ''
 
@@ -1760,11 +1776,7 @@ function refreshPanel(): void {
   if (widget === undefined) {
     panelHost.append(el(
       'p', 'hint-note',
-      editMode
-        ? 'Cliquez un gadget sur la page : ses réglages apparaissent ici, dans l’ordre où ' +
-          'l’instrument les présente.'
-        : 'Cliquez un gadget sur la page — ou choisissez-le dans la liste — pour lire ses ' +
-          'réglages. Rien n’est modifiable ici : c’est la consultation.'
+      editMode ? tr.t('dock.hintEditing') : tr.t('dock.hintInspecting')
     ))
     return
   }
@@ -1772,7 +1784,7 @@ function refreshPanel(): void {
   const module = propertiesModule
   if (module === undefined) {
     const host = panelHost
-    host.append(el('p', 'hint-note', 'Chargement des réglages…'))
+    host.append(el('p', 'hint-note', tr.t('dock.loadingSettings')))
     // `panelHost` a changé : la vue a été reconstruite entre-temps, et elle a rappelé
     // `refreshPanel` de son côté. Ce résultat-ci est périmé.
     void loadProperties().then(() => { if (panelHost === host) refreshPanel() })
@@ -1864,14 +1876,10 @@ function refreshWidgetList(): void {
  * ses réglages.
  */
 function buildDock(): HTMLElement {
+  const tr = translator()
   const dock = el('section', 'dock')
   dock.dataset.mode = editMode ? 'edition' : 'consultation'
-  dock.setAttribute(
-    'aria-label',
-    editMode
-      ? 'Gadgets de la page et réglages du gadget sélectionné'
-      : 'Gadgets de la page et réglages du gadget sélectionné, en lecture seule'
-  )
+  dock.setAttribute('aria-label', editMode ? tr.t('dock.label') : tr.t('dock.labelReadOnly'))
   // Fin de glissé d'un curseur, sortie d'un champ : le pas en attente est clos ici
   // plutôt qu'au bout du délai. En consultation rien n'écrit, donc rien n'est en attente ;
   // l'écoute ne se pose pas, pour qu'aucun chemin du bandeau ne touche à l'historique.
@@ -1880,16 +1888,16 @@ function buildDock(): HTMLElement {
   dockGrip = buildDockGrip()
 
   const head = el('div', 'dock__head')
-  dockTitle = el('h2', 'dock__title', 'Aucun gadget sélectionné')
+  dockTitle = el('h2', 'dock__title', tr.t('dock.noSelection'))
   dockClass = el('span', 'dock__class')
   dockCount = el('span', 'dock__count')
-  listToggle = el('button', 'btn btn--ghost dock__list-toggle', 'Masquer la liste')
+  listToggle = el('button', 'btn btn--ghost dock__list-toggle', tr.t('dock.hideList'))
   listToggle.type = 'button'
   listToggle.addEventListener('click', () => {
     listHidden = !listHidden
     syncDock()
   })
-  dockToggle = el('button', 'btn dock__toggle', 'Replier')
+  dockToggle = el('button', 'btn dock__toggle', tr.t('dock.collapse'))
   dockToggle.type = 'button'
   dockToggle.addEventListener('click', () => {
     // Le pilote vient de se prononcer : le dépliage automatique de la sélection s'arrête
@@ -1973,6 +1981,7 @@ function buildInspecting(page: Page): DetailInspecting {
 }
 
 function buildEditing(current: Session, page: Page, orientation: Orientation): DetailEditing {
+  const tr = translator()
   const grid = gridFor(current.device, orientation)
 
   const editBar = el('div', 'editbar')
@@ -1981,28 +1990,23 @@ function buildEditing(current: Session, page: Page, orientation: Orientation): D
   // Les deux commandes qui ne portent pas sur le widget sélectionné : ce qu'on ajoute à
   // la page, et les pages elles-mêmes. Elles sont à part du reste de la barre, qui décrit.
   const barActions = el('div', 'editbar__actions')
-  const paletteButton = el('button', 'btn', 'Ajouter un gadget')
+  const paletteButton = el('button', 'btn', tr.t('app.addWidget'))
   paletteButton.type = 'button'
   // La boîte charge le module au besoin et se remplit elle-même quand il arrive.
   paletteButton.addEventListener('click', () => openPaletteDialog())
-  const pagesButton = el('button', 'btn', 'Gérer les pages')
+  const pagesButton = el('button', 'btn', tr.t('app.managePages'))
   pagesButton.type = 'button'
   pagesButton.addEventListener('click', () => openPagesDialog())
   barActions.append(paletteButton, pagesButton)
 
   editBar.append(
-    el('span', 'editbar__badge', 'Édition'),
+    el('span', 'editbar__badge', tr.t('app.editingBadge')),
     selectionLabel,
     // La grille de l'appareil, dite explicitement : c'est elle qui explique pourquoi un
     // widget ne se pose pas exactement là où on l'a lâché.
-    el('span', 'editbar__grid', `Grille ${grid.cols} × ${grid.rows}`),
+    el('span', 'editbar__grid', tr.t('app.gridSize', { cols: grid.cols, rows: grid.rows })),
     barActions,
-    el(
-      'span', 'editbar__hint',
-      'Glisser : déplacer · équerres et segments : redimensionner · flèches : une cellule · ' +
-      'Maj + flèches : redimensionner · Ctrl + flèches : changer de rang · Ctrl + D : ' +
-      'dupliquer · Suppr : supprimer · Échap : désélectionner'
-    )
+    el('span', 'editbar__hint', tr.t('app.editKeysHint'))
   )
 
   const dock = buildDock()
@@ -2109,8 +2113,9 @@ function runPageOperation(
     // après, nommé pour ce qu'il est.
     pagesMessage = {
       orientation,
-      text: 'Cette modification n’a pas pu être faite : vos pages n’ont pas bougé. ' +
-        `Détail technique : ${formatTechnicalDetail(error)}`
+      text: translator().t('app.pageOperationFailed', {
+        detail: formatTechnicalDetail(error)
+      })
     }
     syncPagesDialog()
     return
@@ -2150,22 +2155,17 @@ function fillPagesDialog(dialog: HTMLDialogElement): void {
   const current = session
   dialog.textContent = ''
 
+  const tr = translator()
   const box = el('div', 'modal__box')
   const head = el('div', 'modal__head')
-  head.append(el('h2', 'modal__title', 'Gérer les pages'))
-  const close = el('button', 'btn', 'Fermer')
+  head.append(el('h2', 'modal__title', tr.t('app.managePages')))
+  const close = el('button', 'btn', tr.t('app.close'))
   close.type = 'button'
   close.addEventListener('click', () => closePagesDialog())
   head.append(close)
   box.append(head)
 
-  box.append(el(
-    'p', 'modal__lead',
-    'Insérer, dupliquer, supprimer, réordonner. Chaque opération est enregistrée : ' +
-    '« Annuler » la défait comme le reste. La classe d’une page, elle, n’est pas ' +
-    'proposée à la modification — XCTrack la fixe à la création, et l’effet d’un ' +
-    'changement après coup n’a pas été vérifié sur l’appareil.'
-  ))
+  box.append(el('p', 'modal__lead', tr.t('app.managePagesLead')))
 
   const ctx: ViewContext = {
     device: current.device,
@@ -2222,7 +2222,7 @@ function openPagesDialog(): void {
   if (!session || pagesDialog !== undefined) return
   flushRecord()
   const dialog = el('dialog', 'modal modal--pages')
-  dialog.setAttribute('aria-label', 'Gérer les pages')
+  dialog.setAttribute('aria-label', translator().t('app.managePages'))
   // Échap ferme la boîte native : rien n'est annulé, le document reste tel qu'il est.
   dialog.addEventListener('cancel', () => {
     pagesDialog = undefined
@@ -2262,7 +2262,7 @@ function tellProblem(title: string, message: string, detail?: string): void {
   box.append(el('h2', 'modal__title', title), el('p', 'problem__message', message))
   if (detail !== undefined) box.append(technicalDetail(detail))
   const actions = el('div', 'modal__actions')
-  const dismiss = el('button', 'btn btn--primary', 'Fermer')
+  const dismiss = el('button', 'btn btn--primary', translator().t('app.close'))
   dismiss.type = 'button'
   dismiss.addEventListener('click', () => {
     dialog.close()
@@ -2343,8 +2343,9 @@ function openPreferences(): void {
  * (environ 32 Ko transférés) ne partent que si le pilote clique.
  */
 function buildPreferencesView(current: Session): HTMLElement {
+  const tr = translator()
   const host = el('section', 'prefs-host')
-  host.append(el('p', 'hint-note', 'Chargement des réglages généraux…'))
+  host.append(el('p', 'hint-note', tr.t('app.loadingSettingsPage')))
 
   const token = ++preferencesToken
   const back = (): void => {
@@ -2398,12 +2399,12 @@ function buildPreferencesView(current: Session): HTMLElement {
       if (token !== preferencesToken || !host.isConnected) return
       host.textContent = ''
       host.append(problem(
-        'Les réglages généraux n’ont pas pu s’ouvrir',
-        'La liste des réglages que XCTrack propose n’a pas pu être chargée.',
-        'Le fichier, lui, n’est pas en cause : il reste ouvert et intact.',
+        tr.t('app.settingsFailedTitle'),
+        tr.t('app.settingsFailedMessage'),
+        tr.t('app.fileNotAtFault'),
         formatTechnicalDetail(error)
       ))
-      const again = el('button', 'btn', 'Revenir aux pages')
+      const again = el('button', 'btn', tr.t('app.backToPages'))
       again.type = 'button'
       again.addEventListener('click', back)
       host.append(again)
@@ -2441,8 +2442,11 @@ function openManual(): void {
   void import('./manualDialog')
     .then((module) => { module.openManualDialog() })
     .catch((error: unknown) => {
-      tellProblem('Le manuel n’a pas pu s’ouvrir',
-        'Votre fichier n’a pas bougé. Réessayez.', formatTechnicalDetail(error))
+      tellProblem(
+        translator().t('app.manualFailedTitle'),
+        translator().t('app.fileUntouchedRetry'),
+        formatTechnicalDetail(error)
+      )
     })
     .finally(() => { manualPending = false })
 }
@@ -2452,12 +2456,13 @@ function openVersionDialog(): void {
   flushRecord()
   const current = session
 
+  const tr = translator()
   const dialog = el('dialog', 'modal modal--version')
-  dialog.setAttribute('aria-label', 'Version visée et compatibilité')
+  dialog.setAttribute('aria-label', tr.t('app.versionDialogTitle'))
   const box = el('div', 'modal__box')
   const head = el('div', 'modal__head')
-  head.append(el('h2', 'modal__title', 'Version visée et compatibilité'))
-  const close = el('button', 'btn', 'Fermer')
+  head.append(el('h2', 'modal__title', tr.t('app.versionDialogTitle')))
+  const close = el('button', 'btn', tr.t('app.close'))
   close.type = 'button'
   close.addEventListener('click', () => closeVersionDialog())
   head.append(close)
@@ -2467,16 +2472,10 @@ function openVersionDialog(): void {
   // « rien n'est supprimé ni modifié » : c'était vrai tant que la boîte ne savait que
   // constater. Elle sait maintenant retirer, et promettre le contraire de ce qu'un bouton
   // fait quelques centimètres plus bas serait le pire des deux textes.
-  box.append(el(
-    'p', 'modal__lead',
-    'Le format de XCTrack change à chaque version. Choisissez la version visée : ' +
-    'l’éditeur dit alors ce que ce fichier porte qu’elle ne connaît pas, et ce qu’elle ' +
-    'attend qu’il n’a pas. C’est un constat : rien ne bouge tant que vous ne le ' +
-    'demandez pas.'
-  ))
+  box.append(el('p', 'modal__lead', tr.t('app.versionLead')))
 
   const host = el('div', 'modal__slot')
-  host.append(el('p', 'hint-note', 'Chargement de la base des versions…'))
+  host.append(el('p', 'hint-note', tr.t('app.loadingVersions')))
   box.append(host)
   dialog.append(box)
 
@@ -2520,9 +2519,9 @@ function openVersionDialog(): void {
       if (token !== versionToken) return
       host.textContent = ''
       host.append(problem(
-        'Le diagnostic de version n’a pas pu s’ouvrir',
-        'La liste des versions de XCTrack n’a pas pu être chargée.',
-        'Le fichier, lui, n’est pas en cause : il reste ouvert et intact.',
+        tr.t('app.versionFailedTitle'),
+        tr.t('app.versionFailedMessage'),
+        tr.t('app.fileNotAtFault'),
         formatTechnicalDetail(error)
       ))
     })
@@ -2661,9 +2660,8 @@ function openLibrary(): void {
     })
     .catch((error: unknown) => {
       tellProblem(
-        'La bibliothèque n’a pas pu s’ouvrir',
-        'Votre navigateur n’a pas donné accès au rangement de cet outil. Le fichier ' +
-        'ouvert, lui, n’a pas bougé.',
+        translator().t('app.libraryFailedTitle'),
+        translator().t('app.libraryFailedMessage'),
         formatTechnicalDetail(error)
       )
     })
@@ -2795,8 +2793,8 @@ function askBeforeExport(current: Session): void {
     })
     .catch((error: unknown) => {
       tellProblem(
-        'La boîte d’enregistrement n’a pas pu s’ouvrir',
-        'Rien n’a été enregistré et votre fichier n’a pas bougé. Réessayez.',
+        translator().t('app.exportDialogFailedTitle'),
+        translator().t('app.exportDialogFailedMessage'),
         formatTechnicalDetail(error)
       )
     })
@@ -2807,6 +2805,7 @@ function askBeforeExport(current: Session): void {
 }
 
 function render(): void {
+  const tr = translator()
   // Le calque appartient à la vue qu'on efface : on le démonte explicitement, pour que
   // ses écoutes de fenêtre (`pointermove`, `pointerup`) partent avec lui.
   editor?.destroy()
@@ -2856,14 +2855,12 @@ function render(): void {
 
   if (failure !== undefined) {
     content.append(problem(
-      'Ce fichier n’a pas pu être ouvert',
-      'Cet outil n’a rien su en tirer. Le fichier, lui, n’a pas été modifié.',
+      tr.t('app.openFailedTitle'),
+      tr.t('app.openFailedMessage'),
       // L'écran d'erreur ne montre plus la zone de dépôt, et « Ouvrir un fichier » a
       // rejoint le menu : sans cette phrase, il n'y aurait plus rien à quoi se raccrocher
       // — le dépôt continue pourtant de fonctionner sur toute la page.
-      'Vérifiez qu’il s’agit bien d’un export XCTrack (.xcfg ou .xczfg). Vous pouvez ' +
-      'déposer un autre fichier n’importe où sur cette page, ou le choisir dans le menu ' +
-      '« Fichier », en haut à droite.',
+      tr.t('app.openFailedHint'),
       failure
     ))
     return
@@ -2876,11 +2873,9 @@ function render(): void {
 
   if (session.container.parseError !== undefined) {
     content.append(problem(
-      'Ce fichier n’a pas pu être lu',
-      'Vérifiez que c’est bien le fichier .xcfg ou .xczfg produit par ' +
-      '« Réglages → Exporter la configuration » sur l’instrument, et qu’il est entier.',
-      'Ses octets sont conservés intacts : « Enregistrer une copie » vous le rend tel qu’il est entré, ' +
-      'sans la moindre réécriture.',
+      tr.t('app.unreadableTitle'),
+      tr.t('app.unreadableMessage'),
+      tr.t('app.unreadableHint'),
       session.container.parseError
     ))
     return
@@ -2917,7 +2912,7 @@ function render(): void {
         pageCount: pages.length,
         orientation,
         ctx,
-        tr: translator(),
+        tr,
         zoom,
         onBack: () => { view = { kind: 'overview' }; selection = undefined; render() },
         onGo: (index) => {
@@ -2939,17 +2934,12 @@ function render(): void {
     view = { kind: 'overview' }
   }
 
-  const title = el('h1', 'sr-only', 'Pages de la configuration')
+  const title = el('h1', 'sr-only', tr.t('app.overviewTitle'))
   content.append(title, metaStrip(session))
   if (editMode) {
     const note = el('div', 'editnote')
-    note.append(el(
-      'p', 'editnote__text',
-      'Mode édition : ouvrez une page pour y ajouter des gadgets, les déplacer et ' +
-      'régler leurs options. Les pages elles-mêmes — en insérer, en dupliquer, en ' +
-      'supprimer, changer leur ordre — se gèrent ici.'
-    ))
-    const pagesButton = el('button', 'btn btn--primary', 'Gérer les pages')
+    note.append(el('p', 'editnote__text', tr.t('app.editModeNote')))
+    const pagesButton = el('button', 'btn btn--primary', tr.t('app.managePages'))
     pagesButton.type = 'button'
     pagesButton.addEventListener('click', () => openPagesDialog())
     note.append(pagesButton)
@@ -2988,7 +2978,7 @@ function render(): void {
   if (folded) content.append(folded)
 
   content.append(
-    buildOverview(session.layout, ctx, translator(), (orientation, index) => {
+    buildOverview(session.layout, ctx, tr, (orientation, index) => {
       view = { kind: 'detail', orientation, index }
       render()
       window.scrollTo({ top: 0 })
@@ -3071,27 +3061,20 @@ function unsavedWork(): UnsavedWork | undefined {
  *    quoi la boîte deviendrait un réflexe et cesserait d'être lue.
  */
 function askBeforeReplace(incoming: string, work: UnsavedWork, proceed: () => void): void {
+  const tr = translator()
   const dialog = el('dialog', 'modal modal--replace')
   const box = el('div', 'modal__box')
   box.append(
-    el('h2', 'modal__title', 'Vos modifications ne sont pas enregistrées'),
-    el(
-      'p', 'problem__message',
-      `Ouvrir « ${incoming} » referme « ${work.fileName} » et tout ce que vous venez d’y ` +
-      'changer. Cet outil ne garde rien de lui-même : ce qui n’est pas enregistré est perdu.'
-    )
+    el('h2', 'modal__title', tr.t('app.unsavedTitle')),
+    el('p', 'problem__message', tr.t('app.replaceMessage', {
+      incoming,
+      kept: work.fileName
+    }))
   )
   if (work.lastChange !== undefined) {
-    box.append(el(
-      'p', 'replace__last',
-      `Dernier changement en date : « ${work.lastChange} ».`
-    ))
+    box.append(el('p', 'replace__last', tr.t('app.lastChange', { change: work.lastChange })))
   }
-  box.append(el(
-    'p', 'replace__hint',
-    'Pour ne rien perdre : gardez vos modifications, puis « Enregistrer les modifications » ' +
-    'en haut de la page — ou rangez cette configuration dans la bibliothèque.'
-  ))
+  box.append(el('p', 'replace__hint', tr.t('app.replaceHint')))
 
   const actions = el('div', 'modal__actions')
   const dismiss = (): void => {
@@ -3100,13 +3083,13 @@ function askBeforeReplace(incoming: string, work: UnsavedWork, proceed: () => vo
   }
   // Nommé pour ce qu'il fait, comme l'autre : « Ouvrir quand même » cacherait la perte
   // derrière une concession.
-  const replace = el('button', 'btn', `Ouvrir « ${incoming} » et les perdre`)
+  const replace = el('button', 'btn', tr.t('app.replaceAndLose', { incoming }))
   replace.type = 'button'
   replace.addEventListener('click', () => {
     dismiss()
     proceed()
   })
-  const keep = el('button', 'btn btn--primary', 'Garder mes modifications')
+  const keep = el('button', 'btn btn--primary', tr.t('app.keepChanges'))
   keep.type = 'button'
   keep.addEventListener('click', dismiss)
   // Le geste destructeur à gauche, celui qui ne perd rien sous le focus : Échap et Entrée
@@ -3122,10 +3105,10 @@ function askBeforeReplace(incoming: string, work: UnsavedWork, proceed: () => vo
 
 /** Un fichier illisible, dit sans effacer ce que le pilote regardait. */
 function tellUnreadable(incoming: string, kept: string, detail: string): void {
+  const tr = translator()
   tellProblem(
-    'Ce fichier n’a pas pu être lu',
-    `« ${incoming} » n’a rien donné d’exploitable. « ${kept} » reste ouvert, et tout ce ` +
-    'que vous y avez changé est toujours là.',
+    tr.t('app.unreadableTitle'),
+    tr.t('app.unreadableIncoming', { incoming, kept }),
     detail
   )
 }
@@ -3459,5 +3442,8 @@ window.addEventListener('keydown', (event) => {
 const uiLanguage = initialUiLanguage(window.localStorage, [...navigator.languages])
 void loadTranslator(uiLanguage).then((loaded) => {
   uiTranslator = loaded
+  // Les mots du cadre d'abord — c'est aussi ce qui l'accroche au document —, la vue
+  // ensuite : le premier affichage porte donc déjà toute sa prose.
+  installChromeProse(loaded)
   render()
 })

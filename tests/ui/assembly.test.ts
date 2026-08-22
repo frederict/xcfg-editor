@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
+import frenchMessages from '../../src/i18n/messages/fr/app'
 
 /**
  * Garde-fous textuels sur l'assemblage — `src/ui/main.ts` et les feuilles de style.
@@ -29,6 +30,15 @@ const root = path.join(here, '../..')
 const read = (relative: string): string => readFileSync(path.join(root, relative), 'utf8')
 
 const main = read('src/ui/main.ts')
+
+/**
+ * La prose de `main.ts` vit désormais dans le catalogue — voir `src/i18n/CLAUDE.md`. Les
+ * garde-fous qui portaient sur une **phrase** la cherchent donc ici, et ceux qui portent
+ * sur l'**assemblage** continuent de lire le source. La distinction n'est pas cosmétique :
+ * une phrase déplacée d'un fichier à l'autre ne doit pas faire tomber un test qui garde un
+ * point de montage, et une phrase supprimée doit continuer de le faire.
+ */
+const app = frenchMessages
 
 /** Les modules dont le poids interdit l'import statique, et ce qu'ils traînent. */
 const LAZY_MODULES: Array<{ specifier: string; carries: string }> = [
@@ -170,7 +180,8 @@ describe('assemblage — les deux lectures du fichier sont atteignables partout'
     // C'est la seule commande qui a un sens quand rien n'est ouvert : on y vient pour
     // reprendre une configuration rangée. Les deux lectures, elles, s'éteignent sans
     // fichier — elles n'auraient rien à lire.
-    expect(main).toMatch(/const libraryButton = menu\.add\(\s*\n\s*'Bibliothèque…'/)
+    expect(main).toContain('const libraryButton = menu.add(')
+    expect(app['menu.library']).toBe('Bibliothèque…')
     expect(main).not.toMatch(/libraryButton\.hidden\s*=/)
     expect(main).not.toMatch(/libraryButton\.disabled = !readable/)
     expect(main).toContain('versionItem.disabled = !readable')
@@ -209,7 +220,8 @@ describe('assemblage — le bandeau de réglages s’ouvre quand il a quelque ch
   })
 
   it('replié sans sélection, le bouton nomme la liste — le seul chemin vers les gadgets muraillés', () => {
-    expect(main).toContain("'Liste des gadgets'")
+    expect(main).toContain("tr.t('dock.widgetList')")
+    expect(app['dock.widgetList']).toBe('Liste des gadgets')
   })
 
   it('le repli tient : une fois le pilote prononcé, plus rien ne rouvre le bandeau', () => {
@@ -383,18 +395,16 @@ describe('assemblage — la vue d’ensemble montre les pages avant les constats
 
 describe('assemblage — l’accueil dit que l’outil modifie', () => {
   it('le premier écran nomme le geste d’édition', () => {
-    const landing = main.slice(main.indexOf('function landing()'), main.indexOf('function problem('))
-    expect(landing).toContain('Préparez vos pages XCTrack avant de voler')
-    expect(landing).toMatch(/Déplacez un gadget/)
-    expect(landing).toContain("'Modifier'")
+    expect(app['landing.title']).toBe('Préparez vos pages XCTrack avant de voler')
+    expect(app['landing.lead']).toMatch(/Déplacez un gadget/)
+    expect(app['landing.stepEditTitle']).toBe('Modifier')
   })
 
   it('les deux garanties survivent au changement de promesse', () => {
-    const landing = main.slice(main.indexOf('function landing()'), main.indexOf('function problem('))
     // Rien ne part de la machine, et ce qu'on n'a pas touché ressort tel quel : ce sont
     // les deux raisons qu'a un pilote de confier sa configuration de vol à un site web.
-    expect(landing).toContain('ne quitte pas cette machine')
-    expect(landing).toContain('sans une virgule réécrite')
+    expect(app['landing.privacy']).toContain('ne quitte pas cette machine')
+    expect(app['landing.privacy']).toContain('sans une virgule réécrite')
   })
 
   it('le mot « visionneuse » a disparu de ce que le pilote lit', () => {
@@ -407,10 +417,15 @@ describe('assemblage — l’accueil dit que l’outil modifie', () => {
       .replace(/^[ \t]*\/\/.*$/gm, ' ')
     const strings = [...code.matchAll(/'([^'\\\n]*)'/g)].map((m) => m[1] ?? '')
     expect(strings.filter((text) => /visionneuse/i.test(text))).toEqual([])
+    // La prose est passée au catalogue : c'est là qu'il faut aussi le vérifier.
+    expect(Object.values(app).flatMap((entry) =>
+      typeof entry === 'string' ? [entry] : Object.values(entry)
+    ).filter((text) => /visionneuse/i.test(text))).toEqual([])
   })
 
   it('le badge de mode ne paraît que dans le mode qu’il nomme', () => {
-    expect(main).toContain("const brandRole = el('span', 'brand__role', 'édition')")
+    expect(main).toContain("const brandRole = el('span', 'brand__role')")
+    expect(app['app.editingRole']).toBe('édition')
     // Et seulement sur un écran où ce mode veut dire quelque chose : les réglages
     // généraux ne montrent aucune page et n'offrent ni annulation ni sortie.
     expect(main).toContain('brandRole.hidden = !editMode || !editable')
@@ -443,8 +458,8 @@ describe('assemblage — la barre de tête garde le fréquent et range le reste'
   it('les réglages ont une entrée directe, et une seule', () => {
     expect(barre).toContain('preferencesButton')
     expect(main).toMatch(/const preferencesButton = el\('button', 'btn app-bar__prefs'\)/)
-    expect(main).toContain("preferencesButton.append(gearGlyph(), el('span', 'app-bar__prefs-name', 'Réglages'))")
-    expect(main).not.toContain("menu.add(\n  'Réglages")
+    expect(main).toContain('preferencesButton.append(gearGlyph(), preferencesName)')
+    expect(app['app.settings']).toBe('Réglages')
     expect(main).not.toContain('preferencesItem')
     // Le dessin ne nomme rien : c'est le mot qui porte le nom accessible.
     expect(main).toMatch(/svg\.setAttribute\('aria-hidden', 'true'\)/)
@@ -453,17 +468,26 @@ describe('assemblage — la barre de tête garde le fréquent et range le reste'
   it('le bouton d’enregistrement reste dans la barre, avec son changement d’intitulé', () => {
     // C'est le seul signal visible qu'un travail est en cours : il ne peut pas se cacher.
     expect(main).toContain(
-      "exportButton.textContent = modified ? 'Enregistrer les modifications' : 'Enregistrer une copie'"
+      "exportButton.textContent = modified ? tr.t('app.saveChanges') : tr.t('app.saveCopy')"
     )
+    expect(app['app.saveChanges']).toBe('Enregistrer les modifications')
+    expect(app['app.saveCopy']).toBe('Enregistrer une copie')
     expect(barre).toContain('exportButton')
   })
 
   it('les trois commandes rangées sont celles qui servent une fois par session', () => {
-    const menu = main.slice(main.indexOf("const menu = buildMenu('Fichier')"), main.indexOf("const bar = el('header', 'app-bar')"))
-    for (const entry of [
-      "'Ouvrir un fichier…'", "'Bibliothèque…'", "'Version et compatibilité…'"
-    ]) expect(menu).toContain(entry)
-    expect(menu).not.toContain("'Réglages généraux'")
+    const menu = main.slice(
+      main.indexOf('const menu = buildMenu()'),
+      main.indexOf("const bar = el('header', 'app-bar')")
+    )
+    for (const entry of ['openItem', 'libraryButton', 'versionItem', 'manualItem']) {
+      expect(menu).toContain(`const ${entry} = menu.add(`)
+    }
+    expect(app['menu.openFile']).toBe('Ouvrir un fichier…')
+    expect(app['menu.library']).toBe('Bibliothèque…')
+    expect(app['menu.version']).toBe('Version et compatibilité…')
+    // Les réglages généraux ont quitté le menu pour la barre : aucune entrée ne les nomme.
+    expect(menu).not.toContain('preferences')
   })
 
   it('les deux lectures ne sont plus prisonnières de la vue d’ensemble', () => {
@@ -486,22 +510,20 @@ describe('assemblage — la barre de tête garde le fréquent et range le reste'
   it('l’écran d’erreur dit encore où déposer un autre fichier', () => {
     // « Ouvrir un fichier » a rejoint le menu, et cet écran n'a pas de zone de dépôt :
     // sans la phrase, il ne resterait rien à quoi se raccrocher.
-    const mark = "'Ce fichier n’a pas pu être ouvert'"
-    const echec = main.slice(main.indexOf(mark), main.indexOf(mark) + 700)
-    expect(echec).toContain('n’importe où sur cette page')
-    expect(echec).toContain('« Fichier »')
+    expect(main).toContain("tr.t('app.openFailedHint')")
+    expect(app['app.openFailedHint']).toContain('n’importe où sur cette page')
+    expect(app['app.openFailedHint']).toContain('« Fichier »')
   })
 
   it('l’accueil dit où sont rangées les configurations, et il dit vrai', () => {
-    const landing = main.slice(main.indexOf('function landing()'), main.indexOf('function problem('))
-    expect(landing).toContain('dans le menu « Fichier »')
+    expect(app['landing.returning']).toContain('dans le menu « Fichier »')
   })
 })
 
 describe('assemblage — le menu s’ouvre au clavier et ne retient personne', () => {
   const menu = main.slice(
-    main.indexOf('function buildMenu(label: string): Menu'),
-    main.indexOf("const menu = buildMenu('Fichier')")
+    main.indexOf('function buildMenu(): Menu'),
+    main.indexOf('const menu = buildMenu()')
   )
 
   it('le bouton annonce ce qu’il ouvre, et la liste ce qu’elle est', () => {
@@ -610,8 +632,8 @@ describe('brancher le nettoyage sur la boîte de version', () => {
   it('la boîte ne promet plus que rien ne sera supprimé', () => {
     // Elle sait maintenant retirer. Promettre le contraire quelques centimètres au-dessus
     // du bouton qui le fait serait le pire des deux textes.
-    expect(main).not.toContain('Rien n’est supprimé ni modifié')
-    expect(main).toContain('rien ne bouge tant que vous ne le ')
+    expect(app['app.versionLead']).not.toContain('Rien n’est supprimé ni modifié')
+    expect(app['app.versionLead']).toContain('rien ne bouge tant que vous ne le demandez pas')
   })
 })
 
@@ -655,8 +677,9 @@ describe('assemblage — un document modifié ne se fait pas remplacer sans un m
   it('la boîte nomme ce qui serait perdu, elle ne demande pas « êtes-vous sûr »', () => {
     // L'historique nomme ses pas (« Régler Volume — Vario ») ; le pilote a cité ces
     // libellés comme un point fort. C'est ce nom-là qu'il faut lui remettre sous les yeux.
-    expect(main).toContain('Dernier changement en date : « ${work.lastChange} ».')
-    expect(main).toContain('Vos modifications ne sont pas enregistrées')
+    expect(main).toContain("tr.t('app.lastChange', { change: work.lastChange })")
+    expect(app['app.lastChange']).toBe('Dernier changement en date : « {change} ».')
+    expect(app['app.unsavedTitle']).toBe('Vos modifications ne sont pas enregistrées')
   })
 
   it('la sortie de secours est celle qui ne perd rien, et elle a le focus', () => {
@@ -664,7 +687,8 @@ describe('assemblage — un document modifié ne se fait pas remplacer sans un m
       main.indexOf('function askBeforeReplace('),
       main.indexOf('/** Un fichier illisible, dit sans effacer')
     )
-    expect(ask).toContain("el('button', 'btn btn--primary', 'Garder mes modifications')")
+    expect(ask).toContain("el('button', 'btn btn--primary', tr.t('app.keepChanges'))")
+    expect(app['app.keepChanges']).toBe('Garder mes modifications')
     expect(ask).toContain('keep.focus()')
     // Échap ferme la boîte et ne fait rien d'autre : aucune reprise n'est nécessaire,
     // puisque rien n'a été démonté.

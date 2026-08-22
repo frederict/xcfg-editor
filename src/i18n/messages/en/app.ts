@@ -112,7 +112,203 @@ const app: DomainCatalog<'app'> = {
   'editor.doneWithRank': '{what}. {rank}.',
   'editor.doneWithSize': '{what}: {size}.',
 
-  'editor.nothingToChange': '{rank}, nothing to change.'
+  'editor.nothingToChange': '{rank}, nothing to change.',
+
+  'app.name': 'XCTrack Configuration',
+
+  'app.editingRole': 'editing',
+  'app.editingBadge': 'Editing',
+
+  'app.dropVeil': 'Drop the file to open it',
+
+  'app.settings': 'Settings',
+  'app.settingsHint': 'General settings — everything set outside the widget pages: units, ' +
+    'buttons, sensors, sound, airspaces.',
+
+  'menu.file': 'File',
+  'menu.openFile': 'Open a file…',
+  'menu.openFileHint': 'Pick an .xcfg or .xczfg exported from the instrument. The file stays ' +
+    'on this machine.',
+  'menu.library': 'Library…',
+  'menu.libraryHint': 'Keep the open configuration under a name, and find the ones already ' +
+    'kept. Everything stays in this browser: no server, no account.',
+  'menu.version': 'Version and compatibility…',
+  'menu.versionHint': 'Pick the XCTrack version you are aiming at, and see what this file ' +
+    'carries that it does not know — or the other way round.',
+  'menu.manual': 'User manual…',
+  'menu.manualHint': 'How to get the file off the instrument, how to prepare your pages, and ' +
+    'what you must never share.',
+
+  'app.saveCopy': 'Save a copy',
+  'app.saveChanges': 'Save the changes',
+
+  'app.editPages': 'Edit the pages',
+  'app.editPagesHint': 'Edit the pages — move, resize and add widgets.',
+  'app.editSettings': 'Edit the settings',
+  'app.editSettingsHint': 'Edit the settings — change the values of the general settings.',
+  'app.inspect': 'View only',
+  'app.inspectHint': 'View only — leave editing mode. Nothing is undone.',
+
+  'action.undoNothing': 'Nothing to undo',
+  'action.undoNamed': 'Undo: {what}',
+
+  'landing.title': 'Set up your XCTrack pages before you fly',
+  'landing.lead': 'Open an .xcfg or .xczfg file exported from the instrument: its pages ' +
+    'appear just as the device draws them, at their real size. Move a widget, resize it, add ' +
+    'more, then take away a fresh copy to put back on the SD card.',
+
+  'landing.privacy': 'Your file never leaves this machine: everything happens in this ' +
+    'browser, with no server and no account. And whatever you have not touched comes back ' +
+    'exactly as it went in, without a single comma rewritten — your settings stay yours.',
+
+  'landing.dropHere': 'Drop your file here',
+  'landing.dropOrPick': 'or click to pick it — .xcfg or .xczfg',
+
+  'landing.stepDeviceTitle': 'On the instrument',
+  'landing.stepDeviceText': 'Settings, then “Export configuration”. The file lands on the SD card.',
+  'landing.stepHereTitle': 'Here',
+  'landing.stepHereText': 'The pages appear numbered in the order “next page” scrolls through ' +
+    'them in flight.',
+  'landing.stepEditTitle': 'Editing',
+  'landing.stepEditText': 'Move a widget with your finger or the mouse, change its size, add ' +
+    'others: the page is redrawn at its real size in front of you.',
+  'landing.stepKnowTitle': 'Worth knowing',
+  'landing.stepKnowText': 'It is a page’s “navigations” setting, not its type, that decides ' +
+    'when the device shows it.',
+
+  'landing.returning': 'Been here before? The configurations you kept are in the “File” menu, ' +
+    'top right, under “Library”: they have never left this browser.',
+  'landing.readManual': 'Read the user manual',
+
+  'app.metaFormat': 'Format',
+  'app.containerArchive': '.xczfg archive',
+  'app.containerPlain': '.xcfg file',
+  'app.metaDevice': 'Device named by the file',
+  'app.notDeclared': 'not declared',
+  'app.metaLabels': 'Labels',
+  'app.labelsFromBrowser': '{language} (browser language)',
+  'app.labelsFromFile': '{language} (declared by the file)',
+  'app.metaRenderSettings': 'Drawing settings',
+  'app.renderSettingsAssumed': 'assumed values, absent from the file',
+
+  'app.overviewTitle': 'Pages of the configuration',
+
+  'app.seeDetail': 'See the detail ({count})',
+  'app.attentionTitle': 'Worth checking in this file',
+  'app.revealsTitle': 'What this file reveals about you',
+
+  'app.editModeNote': 'Editing mode: open a page to add widgets to it, move them and set ' +
+    'their options. The pages themselves — adding, duplicating, deleting, reordering — are ' +
+    'managed here.',
+
+  'dock.settingCount': {
+    one: '{count} setting',
+    other: '{count} settings'
+  },
+  'dock.countPair': '{settings} · {customized}',
+  'dock.customizedCount': {
+    one: '{count} changed by you',
+    other: '{count} changed by you'
+  },
+
+  'dock.label': 'Widgets on the page, and settings of the selected widget',
+  'dock.labelReadOnly': 'Widgets on the page, and settings of the selected widget, read-only',
+
+  'dock.gripLabel': 'Height of the settings panel',
+  'dock.gripHint': 'Drag to change the height of the panel — on the keyboard, up and down ' +
+    'arrows, Page Up and Page Down for wide steps, Home and End for the extremes.',
+  'dock.heightPixels': {
+    one: '{count} pixel',
+    other: '{count} pixels'
+  },
+
+  'dock.widgetList': 'Widget list',
+  'dock.expandSettings': 'Unfold the settings',
+  'dock.collapse': 'Fold away',
+  'dock.showList': 'Show the list',
+  'dock.hideList': 'Hide the list',
+
+  'dock.noSelection': 'No widget selected',
+  'dock.selectionRank': '{name} — layer {index} of {total}',
+  'dock.chooseWidget': 'Pick a widget to see its settings',
+  'dock.hintEditing': 'Click a widget on the page: its settings appear here, in the order the ' +
+    'instrument presents them.',
+  'dock.hintInspecting': 'Click a widget on the page — or pick it from the list — to read its ' +
+    'settings. Nothing can be changed here: this is the viewing mode.',
+  'dock.loadingSettings': 'Loading the settings…',
+
+  'app.addWidget': 'Add a widget',
+  'app.managePages': 'Manage the pages',
+  'app.gridSize': 'Grid {cols} × {rows}',
+  'app.editKeysHint': 'Drag: move · corners and edges: resize · arrows: one cell · ' +
+    'Shift + arrows: resize · Ctrl + arrows: change layer · Ctrl + D: duplicate · ' +
+    'Delete: remove · Escape: deselect',
+
+  'app.setSettingNamed': 'Set {label} — {name}',
+
+  'app.pageHasNoWidgetSlot': 'This page has no place to put widgets. This tool cannot create ' +
+    'one: it never invents anything the file does not already carry.',
+
+  'app.managePagesLead': 'Add, duplicate, delete, reorder. Every operation is recorded: ' +
+    '“Undo” takes it back like the rest. A page’s class, on the other hand, is not offered ' +
+    'for change — XCTrack fixes it at creation, and the effect of changing it afterwards has ' +
+    'not been checked on the device.',
+
+  'app.pageOperationFailed': 'This change could not be made: your pages have not moved. ' +
+    'Technical detail: {detail}',
+
+  'app.close': 'Close',
+  'app.loading': 'Loading…',
+
+  'app.technicalDetail': 'Technical detail',
+
+  'app.loadingSettingsPage': 'Loading the general settings…',
+  'app.settingsFailedTitle': 'The general settings could not be opened',
+  'app.settingsFailedMessage': 'The list of settings XCTrack offers could not be loaded.',
+  'app.fileNotAtFault': 'The file itself is not at fault: it stays open and intact.',
+  'app.backToPages': 'Back to the pages',
+
+  'app.manualFailedTitle': 'The manual could not be opened',
+  'app.fileUntouchedRetry': 'Your file has not moved. Try again.',
+
+  'app.versionDialogTitle': 'Target version and compatibility',
+  'app.versionLead': 'The XCTrack format changes with every version. Pick the version you ' +
+    'are aiming at: the editor then says what this file carries that the version does not ' +
+    'know, and what it expects that the file does not have. This is an observation: nothing ' +
+    'moves until you ask for it.',
+  'app.loadingVersions': 'Loading the version database…',
+  'app.versionFailedTitle': 'The version report could not be opened',
+  'app.versionFailedMessage': 'The list of XCTrack versions could not be loaded.',
+
+  'app.libraryFailedTitle': 'The library could not be opened',
+  'app.libraryFailedMessage': 'Your browser did not give this tool access to its storage. The ' +
+    'open file has not moved.',
+
+  'app.exportDialogFailedTitle': 'The save dialog could not be opened',
+  'app.exportDialogFailedMessage': 'Nothing has been saved and your file has not moved. Try again.',
+
+  'app.openFailedTitle': 'This file could not be opened',
+  'app.openFailedMessage': 'This tool could make nothing of it. The file itself has not been ' +
+    'changed.',
+  'app.openFailedHint': 'Check that it really is an XCTrack export (.xcfg or .xczfg). You can ' +
+    'drop another file anywhere on this page, or pick one from the “File” menu, top right.',
+
+  'app.unreadableTitle': 'This file could not be read',
+  'app.unreadableMessage': 'Check that this is the .xcfg or .xczfg file produced by ' +
+    '“Settings → Export configuration” on the instrument, and that it is complete.',
+  'app.unreadableHint': 'Its bytes are kept intact: “Save a copy” gives it back exactly as it ' +
+    'went in, without the slightest rewrite.',
+  'app.unreadableIncoming': '“{incoming}” gave nothing usable. “{kept}” stays open, and ' +
+    'everything you changed in it is still there.',
+
+  'app.unsavedTitle': 'Your changes are not saved',
+  'app.replaceMessage': 'Opening “{incoming}” closes “{kept}” and everything you have just ' +
+    'changed in it. This tool keeps nothing of its own: whatever is not saved is lost.',
+  'app.lastChange': 'Most recent change: “{change}”.',
+  'app.replaceHint': 'To lose nothing: keep your changes, then “Save the changes” at the top ' +
+    'of the page — or put this configuration away in the library.',
+  'app.replaceAndLose': 'Open “{incoming}” and lose them',
+  'app.keepChanges': 'Keep my changes'
 }
 
 export default app
