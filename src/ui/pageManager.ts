@@ -710,9 +710,13 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
     else screen.disabled = true
     card.append(screen)
 
+    // ⚠️ Le nom de classe du fichier (`WPEmpty`…) n'est plus ici depuis le 2026-08-22 :
+    // répété sous chacune des neuf vignettes, il doublait « {kind.label} » sans rien
+    // ajouter, et un pilote-testeur l'a cité en tête des mots qui ne sont pas les siens.
+    // Il reste là où il sert — la vue de détail d'une page ouverte — et le sélecteur de
+    // type, plus bas sur cette carte, parle déjà les mots de XCTrack (`pageClassLabel`).
     const meta = el('div', 'pagecard__meta')
     meta.append(
-      el('span', 'pagecard__class', kind.shortName),
       el('span', 'pagecard__widgets', tr.t('common.widgetCount', { count: page.widgets.length }))
     )
     card.append(meta)

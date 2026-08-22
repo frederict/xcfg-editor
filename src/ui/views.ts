@@ -216,9 +216,17 @@ function pageCard(
     el('span', 'card__label', kind.label)
   )
 
+  /**
+   * ⚠️ **Le nom de classe du fichier — `WPEmpty`, `WPCompetition` — n'est pas ici.** Il
+   * l'a été jusqu'au 2026-08-22, sous chaque vignette : un pilote-testeur l'a nommé le
+   * premier de ses mots qui ne sont pas les siens, « la deuxième chose que je lis » sur
+   * une grille de neuf pages. Il ne se perd pas pour autant — la vue de détail le porte,
+   * une fois, sur la page qu'on a ouverte (`buildDetail`, jeton `chip`), et c'est là
+   * qu'il sert : relier ce qu'on voit à ce que le fichier écrit. Répété sous chaque
+   * vignette, il n'apprenait rien que « {kind.label} » ne dise déjà en français.
+   */
   const meta = el('span', 'card__meta')
   meta.append(
-    el('span', 'card__class', kind.shortName),
     el('span', 'card__count', tr.t('common.widgetCount', { count: page.widgets.length }))
   )
 

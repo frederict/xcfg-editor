@@ -743,6 +743,22 @@ describe('le carrousel', () => {
     expect(root.textContent).toContain('XCTrack ne permet pas de changer le type')
   })
 
+  /**
+   * Le nom de classe brut du fichier n'est plus écrit sous chaque vignette depuis le
+   * 2026-08-22 : sur neuf pages, il doublait neuf fois un intitulé déjà lisible en
+   * français. Ce que cet écran montre de la classe, ce sont les **mots de XCTrack**
+   * (`pageClassLabel`, relevés dans l'APK), dans le sélecteur — le pilote les retrouve
+   * sur son appareil, ce qui n'a jamais été vrai de `WPEmpty`.
+   */
+  it('n’écrit le nom de classe du fichier sous aucune vignette', () => {
+    const { root } = build()
+    expect(query(root, '.pages__slot')).not.toHaveLength(0)
+    expect(query(root, '.pagecard__class')).toHaveLength(0)
+    for (const slot of query<HTMLElement>(root, '.pagecard__meta')) {
+      expect(slot.textContent ?? '').not.toContain('WP')
+    }
+  })
+
   it('s’en tient à ce que fait l’appareil quand on le lui demande', () => {
     const { root } = build({ allowClassChange: false })
     expect(query(root, '.pagecard__class-select')).toHaveLength(0)

@@ -11,6 +11,7 @@ import {
   DOCK_HEIGHT_MAX,
   DOCK_HEIGHT_MIN,
   buildDetail,
+  buildOverview,
   clampDockHeight,
   dockHeightCeiling,
   readDockHeight,
@@ -181,6 +182,37 @@ function scene(selection: number | undefined): {
   })
   return { page, root, chosen, document: serializeJson(doc) }
 }
+
+/**
+ * Le nom de classe du fichier — `WPEmpty`, `WPCompetition` — a sa place **une fois**, sur
+ * la page qu'on a ouverte, et nulle part sur une grille de vignettes. Un pilote-testeur
+ * l'a nommé le 2026-08-22 en tête de ses « mots qui ne sont pas les miens » : « c'est
+ * écrit sous le nom de chaque page […] donc c'est la deuxième chose que je lis. »
+ *
+ * Ce test tient les deux bords à la fois : le retirer de la grille sans le garder dans le
+ * détail perdrait le seul lien entre ce que le pilote voit et ce que son fichier écrit.
+ */
+describe('le nom de classe du fichier : une fois, là où il sert', () => {
+  const overview = (): HTMLElement => {
+    const doc = parseJson(SOURCE)
+    const ctx: ViewContext = { device: AIR3, settings: readRenderSettings(doc), language: 'fr' }
+    return buildOverview(readLayout(doc), ctx, tr, () => {})
+  }
+
+  it('ne s’écrit sous aucune vignette de la vue d’ensemble', () => {
+    const root = overview()
+    expect(root.querySelectorAll('.card')).not.toHaveLength(0)
+    expect(root.textContent ?? '').not.toContain('WP')
+  })
+
+  it('s’écrit une fois sur la page ouverte, avec ce qu’elle est en français', () => {
+    const { page, root } = scene(undefined)
+    const chips = [...root.querySelectorAll('.detail__facts .chip')].map((one) => one.textContent)
+    expect(chips).toContain(pageKind(page.className, tr).shortName)
+    expect(root.querySelector('.detail__label')?.textContent)
+      .toContain(pageKind(page.className, tr).label)
+  })
+})
 
 describe('le bouton du zoom dit sa destination, pas son geste', () => {
   it('ne dit jamais « Rétablir » : deux sens du mot sont visibles en même temps', () => {
