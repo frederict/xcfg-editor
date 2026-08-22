@@ -138,7 +138,9 @@ body {
      ⚠ La forme, oui ; le **trait**, non. Un filet plein n'entoure que ce qui se clique —
      les marques qui ne font que renseigner (`.props__origin`, `.prefs__state`,
      `.prefs__personal`) portent un filet tireté. Deux pastilles identiques dont une
-     seule répondait au clic ont valu à un pilote d'essai de cliquer pour rien. */
+     seule répondait au clic ont valu à un pilote d'essai de cliquer pour rien.
+     ⚠ La règle n'a de sens que si **tout** ce qui se clique porte ce filet plein, y
+     compris les commandes discrètes : voir `.btn--ghost`, qui n'en portait aucun. */
   border-radius: 999px;
   background: transparent;
   color: var(--app-ink);
@@ -158,8 +160,36 @@ body {
 
 .btn--primary:hover { opacity: 0.88; }
 
-.btn--ghost { border-color: transparent; color: var(--app-ink-soft); padding-inline: 0.35rem; }
-.btn--ghost:hover:not(:disabled) { color: var(--app-ink); border-color: transparent; }
+/*
+ * La commande discrète — et pourquoi sa discrétion est portée par l'ENCRE, jamais par
+ * l'absence de filet.
+ *
+ * Elle a porté `border-color: transparent`, au repos comme au survol. Deux pilotes d'essai
+ * indépendants ont buté sur le même écran : dans une ligne de réglage, « Retirer du
+ * fichier » n'avait aucun filet pendant que la marque inerte « valeur d'usine », juste à
+ * côté, en portait un — tireté, mais **visible**. Mesuré au navigateur le 22 août, en
+ * français : bouton `rgba(0, 0, 0, 0)` à 11,5 px, marque `rgb(207, 156, 44)` tiretée à
+ * 12 px. « La seule chose qui a l'air cliquable est celle qui ne fait rien », et le pilote
+ * précédent avait effectivement cliqué la marque. Six commandes de l'outil étaient dans cet
+ * état, dont « Effacer toute la bibliothèque ».
+ *
+ * Ce qu'il restait pour dire « ceci se clique » a été inventorié avant d'ajouter quoi que
+ * ce soit, et ne suffit pas : pas de fond (`background: transparent`, au repos comme au
+ * survol), pas de soulignement, et le seul changement au survol était l'encre qui passe de
+ * `--app-ink-soft` à `--app-ink`. Le curseur `pointer` et le contour de focus ne se voient
+ * qu'après avoir visé — c'est-à-dire jamais sur un écran tactile, qui ne survole pas.
+ *
+ * Elle reprend donc le filet plein de `.btn`, à l'identique, et garde pour toute
+ * discrétion son encre douce et son rembourrage serré. **Discret n'est pas invisible** :
+ * sur « Effacer toute la bibliothèque », ne pas inviter au clic se joue sur l'encre, la
+ * place en fin de barre et la confirmation qui suit — pas sur le fait de se cacher.
+ *
+ * ⚠ Seule la COULEUR du filet change ; sa largeur valait déjà 1 px. La place réservée au
+ * bouton de retrait (`.prefs__aside`, qui la prend à l'intitulé) est donc inchangée au
+ * pixel près — mesuré : 109,3 px avant comme après.
+ */
+.btn--ghost { border-color: var(--app-line-strong); color: var(--app-ink-soft); padding-inline: 0.35rem; }
+.btn--ghost:hover:not(:disabled) { color: var(--app-ink); border-color: var(--app-ink-soft); }
 
 /*
  * Un bouton qui ne porte qu'un dessin. Carré, 30 px de côté : au-dessus des 24 px de

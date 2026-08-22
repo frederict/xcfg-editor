@@ -172,6 +172,36 @@ describe('app.css — une marque d’origine ne se déguise pas en bouton', () =
     expect(rule('.props__origin')).toContain('font-size: 12px;')
     expect(rule('.props__origin')).toContain('border-radius: 999px;')
   })
+
+  /*
+   * La moitié qui manquait : la règle « plein = agit, tireté = renseigne » ne tient que si
+   * TOUT ce qui agit porte le filet plein. `.btn--ghost` ne le portait pas — ni au repos ni
+   * au survol —, et deux pilotes d'essai ont lu la marque inerte comme la commande.
+   */
+  it('la commande discrète porte le filet plein, elle aussi', () => {
+    expect(rule('.btn--ghost')).toContain('border-color: var(--app-line-strong);')
+    expect(rule('.btn--ghost')).not.toContain('border-color: transparent')
+  })
+
+  it('elle ne perd pas son filet au survol', () => {
+    const hover = rule('.btn--ghost:hover:not(:disabled)')
+    expect(hover).toContain('border-color: var(--app-ink-soft);')
+    expect(hover).not.toContain('border-color: transparent')
+  })
+
+  it('sa discrétion tient à l’encre, pas à l’absence de contour', () => {
+    // Ce qui la distingue d'un bouton ordinaire, et qui doit rester : l'encre douce.
+    expect(rule('.btn--ghost')).toContain('color: var(--app-ink-soft);')
+  })
+
+  it('le filet ne coûte pas un pixel de largeur au bouton de retrait', () => {
+    // `.prefs__aside` réserve la place du bouton en la prenant à son intitulé (fantôme en
+    // `::before`, `border: 1px solid transparent`). Si `.btn--ghost` changeait la LARGEUR
+    // du filet et non sa seule couleur, les 36 lignes de l'écran des réglages perdraient
+    // l'alignement qu'un pilote vient de mesurer à 0 chevauchement sur 36.
+    expect(rule('.btn--ghost')).not.toMatch(/border(-\w+)?-width/)
+    expect(rule('.btn--ghost')).not.toMatch(/border:\s/)
+  })
 })
 
 /**
