@@ -70,7 +70,7 @@ const model: DomainCatalog<'model'> = {
   'personalReason.replayFile': 'uno de sus archivos de traza',
   'personalReason.speechText': 'texto que usted escribió',
   'personalReason.secureScope': 'ámbito SECURE: XCTrack lo guarda entre sus preferencias cifradas',
-  'personalReason.maskedField': 'campo de entrada oculto (`textPassword`)',
+  'personalReason.maskedField': 'campo de entrada oculto (textPassword)',
   'personalReason.broadcastChoice': 'una decisión de difusión que usted tomó, no un dato en sí',
   'personalReason.legacyRecord': 'detectado por una versión anterior de este editor, ' +
     'que no decía de qué naturaleza era. Vuelva a cargar esta entrada para obtener el ' +
@@ -255,8 +255,8 @@ const model: DomainCatalog<'model'> = {
   'inspection.tooSmall': '«{name}» solo mide {height} de alto en este dispositivo. Si el texto que muestra ocupa la mitad, medirá unos {value}, por debajo de los {minimum} que la norma ISO 9241-303 da como mínimo absoluto a {distance} cm. ¿Seguirá siendo legible con el brazo extendido, a pleno sol, con guantes? Por comprobar en el dispositivo.',
   'inspection.tooSmallToVerify': 'La parte de la altura del widget que ocupa realmente el glifo del valor (supuesta aquí en {ratio}) solo se ha medido en un widget y en una sola captura. Las capturas del muestrario de los 75 widgets bastarían para medirla tipo por tipo, sin tocar el dispositivo.',
 
-  'inspection.proWidget': '«{name}» es un widget Pro, y este archivo declara «proUpTo: 0». ¿Qué hará XCTrack con este widget en un dispositivo sin licencia Pro: sustituirlo por un marco «widget Pro», mostrarlo normalmente, o no cambiar nada? No lo sabemos.',
-  'inspection.proWidgetToVerify': 'El sentido de `info.proUpTo` no está establecido: 0 ' +
+  'inspection.proWidget': '«{name}» es un widget Pro. ¿Qué hará XCTrack con este widget en un dispositivo sin licencia Pro: sustituirlo por un marco «widget Pro», mostrarlo normalmente, o no cambiar nada? No lo sabemos. Lo que el archivo declara, tal cual: «proUpTo: 0».',
+  'inspection.proWidgetToVerify': 'El sentido de info.proUpTo no está establecido: 0 ' +
     'quizá signifique «sin licencia», quizá una fecha de fin en segundos. Los 21 archivos ' +
     'del muestreo llevan todos 0, en dos instalaciones; nunca se ha observado otro valor. ' +
     'Una prueba en el AIR³ con un widget Pro lo zanjaría.',
@@ -264,8 +264,8 @@ const model: DomainCatalog<'model'> = {
   'inspection.roadMaps': '«{name}» pide también un mapa de carreteras, y el widget {first} de esta página ya pide uno. XCTrack avisa en sus propios ajustes de que solo es posible un mapa de carreteras por página, por una limitación de su biblioteca de mapas. Lo que se mostrará en su lugar no es previsible.',
 
   'inspection.obsoleteKey': {
-    one: '«{name}» lleva un ajuste escrito por una versión anterior de XCTrack ({detail}). No se pierde nada: XCTrack 1.0.3 lo convierte al leerlo —está verificado en el dispositivo— y lo reescribirá con su nuevo nombre la primera vez que se ajuste este widget.',
-    other: '«{name}» lleva ajustes escritos por una versión anterior de XCTrack ({detail}). No se pierde nada: XCTrack 1.0.3 los convierte al leerlos —está verificado en el dispositivo— y los reescribirá con sus nuevos nombres la primera vez que se ajuste este widget.'
+    one: '«{name}» lleva un ajuste escrito por una versión anterior de XCTrack. No se pierde nada: XCTrack 1.0.3 lo convierte al leerlo —está verificado en el dispositivo— y lo reescribirá con su nuevo nombre la primera vez que se ajuste este widget. Tal como está escrito en el archivo: {detail}.',
+    other: '«{name}» lleva ajustes escritos por una versión anterior de XCTrack. No se pierde nada: XCTrack 1.0.3 los convierte al leerlos —está verificado en el dispositivo— y los reescribirá con sus nuevos nombres la primera vez que se ajuste este widget. Tal como están escritos en el archivo: {detail}.'
   },
 
   /* -------- fallos de la biblioteca y el detalle técnico — véase `fr/model.ts` */

@@ -216,7 +216,7 @@ const sharing: DomainCatalog<'sharing'> = {
     'des Geräts.',
   'warnings.exportUnknownTitle': 'Exportart unbestimmt',
   'warnings.exportUnknownDetail': 'Diese Datei sagt nicht, ob sie nur Seiten oder die ' +
-    'ganze Konfiguration enthält (`info.exportType` fehlt oder ist unbekannt). Was sie ' +
+    'ganze Konfiguration enthält (info.exportType fehlt oder ist unbekannt). Was sie ' +
     'beim Wiedereinlesen überschreiben wird, lässt sich hier also nicht ankündigen.',
   'warnings.exportUnknownItem': 'info.exportType: „{type}“',
 
@@ -229,7 +229,7 @@ const sharing: DomainCatalog<'sharing'> = {
   'warnings.assumedUnits': 'Höhe: {altitude} · Geschwindigkeit: {speed} · Vario: {vario}',
   'warnings.assumedTitles': 'Titel: {percent} %, {font}',
   'warnings.assumedLanguageTitle': 'Sprache der Beschriftungen unbestimmt',
-  'warnings.assumedLanguageDetail': 'Diese Datei gibt keine Anzeigesprache an (`Display.Language` leer oder Abschnitt `preferences` fehlt): auf dem Gerät folgt XCTrack dann der Sprache des Android-Systems — niemals ersatzweise dem Englischen. In Ermangelung von Besserem werden die Beschriftungen hier in {language} angezeigt — der Sprache, die Sie für diese Oberfläche gewählt haben, sonst der Ihres Browsers.',
+  'warnings.assumedLanguageDetail': 'Diese Datei gibt keine Anzeigesprache an (Display.Language leer oder Abschnitt preferences fehlt): auf dem Gerät folgt XCTrack dann der Sprache des Android-Systems — niemals ersatzweise dem Englischen. In Ermangelung von Besserem werden die Beschriftungen hier in {language} angezeigt — der Sprache, die Sie für diese Oberfläche gewählt haben, sonst der Ihres Browsers.',
 
   'warnings.personalLayoutTitle': 'Ihre Seiten enthalten Texte von Ihnen',
   'warnings.personalTitle': 'Diese Datei nennt Sie beim Namen',
@@ -265,10 +265,10 @@ const sharing: DomainCatalog<'sharing'> = {
   'warnings.externalAirspace': 'Luftraum: {file} (Airspace.Files)',
 
   'warnings.versionUnknownTitle': 'XCTrack-Version unbekannt',
-  'warnings.versionUnknownDetail': 'Diese Datei sagt nicht, aus welcher Version von XCTrack sie stammt (`info.versionCode` fehlt). Der Abstand zur Bezugsversion dieses Werkzeugs ({reference}) lässt sich also nicht messen; was angezeigt wird, kann seither seine Bedeutung geändert haben.',
+  'warnings.versionUnknownDetail': 'Diese Datei sagt nicht, aus welcher Version von XCTrack sie stammt (info.versionCode fehlt). Der Abstand zur Bezugsversion dieses Werkzeugs ({reference}) lässt sich also nicht messen; was angezeigt wird, kann seither seine Bedeutung geändert haben.',
   'warnings.versionOlderTitle': 'Datei älter als das Werkzeug',
   'warnings.versionNewerTitle': 'Datei neuer als das Werkzeug',
-  'warnings.versionGapDetail': 'Diese Datei stammt aus Version {name} (versionCode {code}), während sich dieser Editor zum Zeichnen auf Version {reference} einstellt. Das Format ändert sich mit jeder Version: Einstellungen können anders gezeichnet werden, als sie es auf dem Gerät sein werden. Die Datei wird deswegen nicht verändert — sie kommt so heraus, wie sie hineingegangen ist, ohne ein einziges neu geschriebenes Komma.',
+  'warnings.versionGapDetail': 'Diese Datei stammt aus Version {name}, während sich dieser Editor zum Zeichnen auf Version {reference} einstellt. Das Format ändert sich mit jeder Version: Einstellungen können anders gezeichnet werden, als sie es auf dem Gerät sein werden. Die Datei wird deswegen nicht verändert — sie kommt so heraus, wie sie hineingegangen ist, ohne ein einziges neu geschriebenes Komma. Was die Datei zu ihrer Version schreibt: versionCode {code}.',
   'warnings.versionNameUnknown': 'unbekannt',
 
   'warnings.structureTitle': 'Unerwarteter Aufbau',

@@ -70,7 +70,7 @@ const model: DomainCatalog<'model'> = {
   'personalReason.replayFile': 'eine Ihrer Track-Dateien',
   'personalReason.speechText': 'Text, den Sie eingegeben haben',
   'personalReason.secureScope': 'Bereich SECURE: XCTrack legt sie zu den verschlüsselten Einstellungen',
-  'personalReason.maskedField': 'verdecktes Eingabefeld (`textPassword`)',
+  'personalReason.maskedField': 'verdecktes Eingabefeld (textPassword)',
   'personalReason.broadcastChoice': 'eine Übertragungsentscheidung von Ihnen, keine Angabe an sich',
   'personalReason.legacyRecord': 'von einer früheren Fassung dieses Editors erkannt, ' +
     'die ihre Art nicht angab. Laden Sie diesen Eintrag neu, um die vollständige ' +
@@ -263,8 +263,8 @@ const model: DomainCatalog<'model'> = {
   'inspection.tooSmall': '„{name}“ ist auf diesem Gerät nur {height} hoch. Wenn der angezeigte Text die Hälfte davon einnimmt, misst er etwa {value} — unter den {minimum}, die die ISO 9241-303 als absolutes Mindestmaß auf {distance} cm angibt. Wird er auf Armeslänge, in praller Sonne, mit Handschuhen noch lesbar sein? Am Gerät zu prüfen.',
   'inspection.tooSmallToVerify': 'Der Anteil der Widget-Höhe, den das Zeichen des Werts tatsächlich einnimmt (hier mit {ratio} angenommen), wurde nur an einem einzigen Widget und einer einzigen Bildschirmaufnahme gemessen. Die Aufnahmen der Tafel mit den 75 Widgets würden genügen, ihn Typ für Typ zu messen, ohne das Gerät anzufassen.',
 
-  'inspection.proWidget': '„{name}“ ist ein Pro-Widget, und diese Datei gibt „proUpTo: 0“ an. Was macht XCTrack mit diesem Widget auf einem Gerät ohne Pro-Lizenz: es durch einen Rahmen „Pro-Widget“ ersetzen, es normal anzeigen oder nichts daran ändern? Wir wissen es nicht.',
-  'inspection.proWidgetToVerify': 'Die Bedeutung von `info.proUpTo` steht nicht fest: 0 ' +
+  'inspection.proWidget': '„{name}“ ist ein Pro-Widget. Was macht XCTrack mit diesem Widget auf einem Gerät ohne Pro-Lizenz: es durch einen Rahmen „Pro-Widget“ ersetzen, es normal anzeigen oder nichts daran ändern? Wir wissen es nicht. Was die Datei angibt, wörtlich: „proUpTo: 0“.',
+  'inspection.proWidgetToVerify': 'Die Bedeutung von info.proUpTo steht nicht fest: 0 ' +
     'heißt vielleicht „keine Lizenz“, vielleicht ein Ablaufdatum in Sekunden. Alle ' +
     '21 Dateien der Erhebung tragen 0, über zwei Installationen hinweg — kein anderer Wert ' +
     'wurde je beobachtet. Ein Versuch am AIR³ mit einem Pro-Widget würde es klären.',
@@ -272,8 +272,8 @@ const model: DomainCatalog<'model'> = {
   'inspection.roadMaps': '„{name}“ verlangt ebenfalls eine Straßenkarte, und Widget {first} dieser Seite verlangt bereits eine. XCTrack warnt in den eigenen Einstellungen, dass wegen einer Beschränkung seiner Kartenbibliothek nur eine Straßenkarte pro Seite möglich ist. Was stattdessen erscheint, ist nicht vorhersehbar.',
 
   'inspection.obsoleteKey': {
-    one: '„{name}“ trägt eine Einstellung, die eine frühere Version von XCTrack geschrieben hat ({detail}). Nichts geht verloren: XCTrack 1.0.3 wandelt sie beim Lesen um — das ist am Gerät überprüft — und schreibt sie unter ihrem neuen Namen zurück, sobald dieses Widget das nächste Mal eingestellt wird.',
-    other: '„{name}“ trägt Einstellungen, die eine frühere Version von XCTrack geschrieben hat ({detail}). Nichts geht verloren: XCTrack 1.0.3 wandelt sie beim Lesen um — das ist am Gerät überprüft — und schreibt sie unter ihren neuen Namen zurück, sobald dieses Widget das nächste Mal eingestellt wird.'
+    one: '„{name}“ trägt eine Einstellung, die eine frühere Version von XCTrack geschrieben hat. Nichts geht verloren: XCTrack 1.0.3 wandelt sie beim Lesen um — das ist am Gerät überprüft — und schreibt sie unter ihrem neuen Namen zurück, sobald dieses Widget das nächste Mal eingestellt wird. So steht sie in der Datei: {detail}.',
+    other: '„{name}“ trägt Einstellungen, die eine frühere Version von XCTrack geschrieben hat. Nichts geht verloren: XCTrack 1.0.3 wandelt sie beim Lesen um — das ist am Gerät überprüft — und schreibt sie unter ihren neuen Namen zurück, sobald dieses Widget das nächste Mal eingestellt wird. So stehen sie in der Datei: {detail}.'
   },
 
   /* ------------- Störungen der Bibliothek und die technische Angabe — siehe `fr/model.ts` */

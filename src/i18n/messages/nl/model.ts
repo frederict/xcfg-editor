@@ -70,7 +70,7 @@ const model: DomainCatalog<'model'> = {
   'personalReason.replayFile': 'een van uw spoorbestanden',
   'personalReason.speechText': 'tekst die u hebt ingevoerd',
   'personalReason.secureScope': 'bereik SECURE: XCTrack bewaart ze bij zijn versleutelde voorkeuren',
-  'personalReason.maskedField': 'verborgen invoerveld (`textPassword`)',
+  'personalReason.maskedField': 'verborgen invoerveld (textPassword)',
   'personalReason.broadcastChoice': 'een uitzendkeuze die u hebt gemaakt, geen gegeven op zich',
   'personalReason.legacyRecord': 'opgemerkt door een eerdere versie van deze editor, ' +
     'die de aard ervan niet vermeldde. Laad deze vermelding opnieuw voor de volledige ' +
@@ -263,8 +263,8 @@ const model: DomainCatalog<'model'> = {
   'inspection.tooSmall': '‘{name}’ is op dit toestel maar {height} hoog. Als de tekst die hij toont daar de helft van inneemt, meet die ongeveer {value} — onder de {minimum} die ISO 9241-303 als absoluut minimum geeft op {distance} cm. Zal die op armlengte, in de volle zon, met handschoenen nog leesbaar zijn? Na te gaan op het toestel.',
   'inspection.tooSmallToVerify': 'Het deel van de hoogte van de widget dat het teken van de waarde werkelijk inneemt (hier verondersteld op {ratio}) is maar op één widget en één schermafdruk gemeten. De afdrukken van het bord met de 75 widgets zouden volstaan om het type per type te meten, zonder het toestel aan te raken.',
 
-  'inspection.proWidget': '‘{name}’ is een Pro-widget, en dit bestand geeft ‘proUpTo: 0’ aan. Wat zal XCTrack met deze widget doen op een toestel zonder Pro-licentie: hem vervangen door een kader ‘Pro-widget’, hem gewoon tonen, of er niets aan veranderen? Wij weten het niet.',
-  'inspection.proWidgetToVerify': 'De betekenis van `info.proUpTo` staat niet vast: 0 ' +
+  'inspection.proWidget': '‘{name}’ is een Pro-widget. Wat zal XCTrack met deze widget doen op een toestel zonder Pro-licentie: hem vervangen door een kader ‘Pro-widget’, hem gewoon tonen, of er niets aan veranderen? Wij weten het niet. Wat het bestand aangeeft, letterlijk: ‘proUpTo: 0’.',
+  'inspection.proWidgetToVerify': 'De betekenis van info.proUpTo staat niet vast: 0 ' +
     'betekent misschien ‘geen licentie’, misschien een einddatum in seconden. Alle ' +
     '21 bestanden van de inventarisatie dragen 0, over twee installaties heen — geen ' +
     'andere waarde is ooit waargenomen. Een proef op de AIR³ met een Pro-widget zou het ' +
@@ -273,8 +273,8 @@ const model: DomainCatalog<'model'> = {
   'inspection.roadMaps': '‘{name}’ vraagt eveneens om een wegenkaart, en widget {first} van deze pagina vraagt er al om een. XCTrack waarschuwt in zijn eigen instellingen dat er door een beperking van zijn kaartbibliotheek maar één wegenkaart per pagina mogelijk is. Wat er in de plaats verschijnt, is niet te voorspellen.',
 
   'inspection.obsoleteKey': {
-    one: '‘{name}’ draagt een instelling die door een eerdere versie van XCTrack is geschreven ({detail}). Er gaat niets verloren: XCTrack 1.0.3 zet ze bij het lezen om — dat is op het toestel nagegaan — en zal ze onder haar nieuwe naam terugschrijven zodra deze widget de volgende keer wordt ingesteld.',
-    other: '‘{name}’ draagt instellingen die door een eerdere versie van XCTrack zijn geschreven ({detail}). Er gaat niets verloren: XCTrack 1.0.3 zet ze bij het lezen om — dat is op het toestel nagegaan — en zal ze onder hun nieuwe namen terugschrijven zodra deze widget de volgende keer wordt ingesteld.'
+    one: '‘{name}’ draagt een instelling die door een eerdere versie van XCTrack is geschreven. Er gaat niets verloren: XCTrack 1.0.3 zet ze bij het lezen om — dat is op het toestel nagegaan — en zal ze onder haar nieuwe naam terugschrijven zodra deze widget de volgende keer wordt ingesteld. Zoals ze in het bestand staat: {detail}.',
+    other: '‘{name}’ draagt instellingen die door een eerdere versie van XCTrack zijn geschreven. Er gaat niets verloren: XCTrack 1.0.3 zet ze bij het lezen om — dat is op het toestel nagegaan — en zal ze onder hun nieuwe namen terugschrijven zodra deze widget de volgende keer wordt ingesteld. Zoals ze in het bestand staan: {detail}.'
   },
 
   /* -------- storingen van de bibliotheek en de technische bijzonderheid — zie `fr/model.ts` */

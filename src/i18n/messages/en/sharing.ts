@@ -208,7 +208,7 @@ const sharing: DomainCatalog<'sharing'> = {
     'units, the airspace files and the sensor configuration of the device.',
   'warnings.exportUnknownTitle': 'Export type undetermined',
   'warnings.exportUnknownDetail': 'This file does not say whether it contains pages only or ' +
-    'the whole configuration (`info.exportType` absent or unknown). What it will overwrite ' +
+    'the whole configuration (info.exportType absent or unknown). What it will overwrite ' +
     'on re-import can therefore not be announced here.',
   'warnings.exportUnknownItem': 'info.exportType: “{type}”',
 
@@ -220,7 +220,7 @@ const sharing: DomainCatalog<'sharing'> = {
   'warnings.assumedUnits': 'Altitude: {altitude} · Speed: {speed} · Vario: {vario}',
   'warnings.assumedTitles': 'Titles: {percent} %, {font}',
   'warnings.assumedLanguageTitle': 'Label language undetermined',
-  'warnings.assumedLanguageDetail': 'This file declares no display language (`Display.Language` empty or `preferences` section absent): on the device, XCTrack then follows the Android system language — never English as a fallback. For want of better, the labels are shown here in {language} — the language you chose for this interface, or failing that your browser’s.',
+  'warnings.assumedLanguageDetail': 'This file declares no display language (Display.Language empty or preferences section absent): on the device, XCTrack then follows the Android system language — never English as a fallback. For want of better, the labels are shown here in {language} — the language you chose for this interface, or failing that your browser’s.',
 
   'warnings.personalLayoutTitle': 'Your pages carry texts of yours',
   'warnings.personalTitle': 'This file names you',
@@ -255,10 +255,10 @@ const sharing: DomainCatalog<'sharing'> = {
   'warnings.externalAirspace': 'Airspace: {file} (Airspace.Files)',
 
   'warnings.versionUnknownTitle': 'XCTrack release unknown',
-  'warnings.versionUnknownDetail': 'This file does not say which release of XCTrack it comes from (`info.versionCode` absent). The gap with this tool’s reference release ({reference}) can therefore not be measured; what is displayed may have changed meaning since.',
+  'warnings.versionUnknownDetail': 'This file does not say which release of XCTrack it comes from (info.versionCode absent). The gap with this tool’s reference release ({reference}) can therefore not be measured; what is displayed may have changed meaning since.',
   'warnings.versionOlderTitle': 'File older than the tool',
   'warnings.versionNewerTitle': 'File newer than the tool',
-  'warnings.versionGapDetail': 'This file comes from release {name} (versionCode {code}), whereas this editor sets itself on release {reference} to draw it. The format changes with every release: some settings may be drawn otherwise than they will be on the device. The file is not modified for all that — it comes out as it went in, without a single comma rewritten.',
+  'warnings.versionGapDetail': 'This file comes from release {name}, whereas this editor sets itself on release {reference} to draw it. The format changes with every release: some settings may be drawn otherwise than they will be on the device. The file is not modified for all that — it comes out as it went in, without a single comma rewritten. What the file writes for its release: versionCode {code}.',
   'warnings.versionNameUnknown': 'unknown',
 
   'warnings.structureTitle': 'Unexpected structure',

@@ -358,7 +358,7 @@ const sharing = {
     'unités, les fichiers d’espace aérien et la configuration des capteurs de l’appareil.',
   'warnings.exportUnknownTitle': 'Type d’export indéterminé',
   'warnings.exportUnknownDetail': 'Ce fichier ne dit pas s’il ne contient que des pages ou ' +
-    'toute la configuration (`info.exportType` absent ou inconnu). Ce qu’il écrasera à la ' +
+    'toute la configuration (info.exportType absent ou inconnu). Ce qu’il écrasera à la ' +
     'réimportation ne peut donc pas être annoncé ici.',
   'warnings.exportUnknownItem': 'info.exportType : « {type} »',
 
@@ -373,7 +373,7 @@ const sharing = {
   'warnings.assumedUnits': 'Altitude : {altitude} · Vitesse : {speed} · Vario : {vario}',
   'warnings.assumedTitles': 'Titres : {percent} %, {font}',
   'warnings.assumedLanguageTitle': 'Langue des libellés indéterminée',
-  'warnings.assumedLanguageDetail': 'Ce fichier ne déclare aucune langue d’affichage (`Display.Language` vide ou section `preferences` absente) : sur l’appareil, XCTrack suit alors la langue du système Android — jamais l’anglais par défaut. Faute de mieux, les libellés sont affichés ici en {language} — la langue que vous avez choisie pour cette interface, ou à défaut celle de votre navigateur.',
+  'warnings.assumedLanguageDetail': 'Ce fichier ne déclare aucune langue d’affichage (Display.Language vide ou section preferences absente) : sur l’appareil, XCTrack suit alors la langue du système Android — jamais l’anglais par défaut. Faute de mieux, les libellés sont affichés ici en {language} — la langue que vous avez choisie pour cette interface, ou à défaut celle de votre navigateur.',
 
   /* -------------------------------------------------------- 3. données personnelles */
 
@@ -425,10 +425,10 @@ const sharing = {
   /* ------------------------------------------------------------ 5. écart de version */
 
   'warnings.versionUnknownTitle': 'Version de XCTrack inconnue',
-  'warnings.versionUnknownDetail': 'Ce fichier ne dit pas de quelle version de XCTrack il vient (`info.versionCode` absent). L’écart avec la version de référence de cet outil ({reference}) ne peut donc pas être mesuré ; ce qui est affiché peut avoir changé de sens depuis.',
+  'warnings.versionUnknownDetail': 'Ce fichier ne dit pas de quelle version de XCTrack il vient (info.versionCode absent). L’écart avec la version de référence de cet outil ({reference}) ne peut donc pas être mesuré ; ce qui est affiché peut avoir changé de sens depuis.',
   'warnings.versionOlderTitle': 'Fichier plus ancien que l’outil',
   'warnings.versionNewerTitle': 'Fichier plus récent que l’outil',
-  'warnings.versionGapDetail': 'Ce fichier vient de la version {name} (versionCode {code}), alors que cet éditeur se règle sur la version {reference} pour le dessiner. Le format change à chaque version : des réglages peuvent être dessinés autrement qu’ils ne le seront sur l’appareil. Le fichier n’est pas modifié pour autant — il ressort tel qu’il est entré, sans une virgule réécrite.',
+  'warnings.versionGapDetail': 'Ce fichier vient de la version {name}, alors que cet éditeur se règle sur la version {reference} pour le dessiner. Le format change à chaque version : des réglages peuvent être dessinés autrement qu’ils ne le seront sur l’appareil. Le fichier n’est pas modifié pour autant — il ressort tel qu’il est entré, sans une virgule réécrite. Ce que le fichier écrit de sa version : versionCode {code}.',
   'warnings.versionNameUnknown': 'inconnue',
 
   /* ------------------------------------------------------- 6. structure inattendue */

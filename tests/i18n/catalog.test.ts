@@ -454,6 +454,30 @@ describe('les guillemets ne se coupent pas en fin de ligne', () => {
     }
   })
 
+  /**
+   * **Rien de ce catalogue n'est interprété.** Les phrases sont posées dans la page par
+   * `textContent`, jamais par un moteur Markdown : un accent grave s'affiche tel quel, et
+   * le pilote lit « (`info.versionCode` absent) », accents graves compris.
+   *
+   * Le cas s'était déjà présenté pour les astérisques d'emphase — `src/model/inspection.ts`
+   * porte le commentaire qui raconte leur retrait. Les accents graves ont survécu à cette
+   * relecture-là dans cinq messages, soit soixante valeurs sur les cinq langues, toutes
+   * dans les remarques sur le fichier : c'est précisément là qu'un pilote-testeur a dit
+   * sauter les lignes, le 2026-08-22.
+   *
+   * Ce test ne dit rien du **nom** ainsi cité, qui reste souvent le renseignement exact
+   * dont quelqu'un aura besoin ; il dit seulement qu'on ne l'habille pas d'une syntaxe
+   * que rien ne rendra.
+   */
+  it('n’écrit aucune syntaxe Markdown que rien ne rendra', () => {
+    for (const language of UI_LANGUAGES) {
+      for (const [key, text] of valuesOf(language)) {
+        expect(text, `${language} / ${key}`).not.toContain('`')
+        expect(text, `${language} / ${key}`).not.toMatch(/\*\*/u)
+      }
+    }
+  })
+
   it('aucune langue ne colle une espace à l’intérieur de ses propres guillemets', () => {
     // „ … “ en allemand, “ … ” en anglais, ‘ … ’ en néerlandais : l'ouvrant colle au mot
     // qui suit, le fermant au mot qui précède.

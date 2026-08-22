@@ -70,7 +70,7 @@ const model: DomainCatalog<'model'> = {
   'personalReason.replayFile': 'one of your track files',
   'personalReason.speechText': 'text you typed',
   'personalReason.secureScope': 'SECURE scope: XCTrack keeps it among its encrypted preferences',
-  'personalReason.maskedField': 'masked input field (`textPassword`)',
+  'personalReason.maskedField': 'masked input field (textPassword)',
   'personalReason.broadcastChoice': 'a broadcasting choice you made, not data in itself',
   'personalReason.legacyRecord': 'spotted by an earlier version of this editor, which ' +
     'did not say what kind it was. Reload this entry for the full inventory.',
@@ -245,8 +245,8 @@ const model: DomainCatalog<'model'> = {
   'inspection.tooSmall': '“{name}” is only {height} high on this device. If the text it displays takes up half of that, it will measure about {value} — below the {minimum} that ISO 9241-303 gives as an absolute minimum at {distance} cm. Will it still be readable at arm’s length, in full sun, with gloves on? To be checked on the instrument.',
   'inspection.tooSmallToVerify': 'The share of the widget’s height actually taken up by the glyph of the value (assumed here to be {ratio}) has been measured on a single widget, in a single screenshot. The screenshots of the 75-widget board would be enough to measure it type by type, without touching the device.',
 
-  'inspection.proWidget': '“{name}” is a Pro widget, and this file declares “proUpTo: 0”. What will XCTrack do with this widget on a device without a Pro licence: replace it with a “Pro widget” frame, show it normally, or leave it alone? We do not know.',
-  'inspection.proWidgetToVerify': 'The meaning of `info.proUpTo` is not established: 0 may ' +
+  'inspection.proWidget': '“{name}” is a Pro widget. What will XCTrack do with this widget on a device without a Pro licence: replace it with a “Pro widget” frame, show it normally, or leave it alone? We do not know. What the file declares, as written: “proUpTo: 0”.',
+  'inspection.proWidgetToVerify': 'The meaning of info.proUpTo is not established: 0 may ' +
     'mean “no licence”, or an expiry date in seconds. All 21 files in the corpus carry 0, ' +
     'across two installations — no other value has ever been observed. A trial on the AIR³ ' +
     'with a Pro widget would settle it.',
@@ -254,8 +254,8 @@ const model: DomainCatalog<'model'> = {
   'inspection.roadMaps': '“{name}” asks for a road map too, and widget {first} of this page already asks for one. XCTrack warns in its own settings that only one road map is possible per page, because of a limitation in its map library. What will be drawn instead is not predictable.',
 
   'inspection.obsoleteKey': {
-    one: '“{name}” carries a setting written by an earlier release of XCTrack ({detail}). Nothing is lost: XCTrack 1.0.3 converts it on reading — that is verified on the instrument — and will rewrite it under its new name the first time this widget is configured.',
-    other: '“{name}” carries settings written by an earlier release of XCTrack ({detail}). Nothing is lost: XCTrack 1.0.3 converts them on reading — that is verified on the instrument — and will rewrite them under their new names the first time this widget is configured.'
+    one: '“{name}” carries a setting written by an earlier release of XCTrack. Nothing is lost: XCTrack 1.0.3 converts it on reading — that is verified on the instrument — and will rewrite it under its new name the first time this widget is configured. As it is written in the file: {detail}.',
+    other: '“{name}” carries settings written by an earlier release of XCTrack. Nothing is lost: XCTrack 1.0.3 converts them on reading — that is verified on the instrument — and will rewrite them under their new names the first time this widget is configured. As they are written in the file: {detail}.'
   },
 
   /* -------------------- library failures and the technical detail — see `fr/model.ts` */

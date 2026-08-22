@@ -214,7 +214,7 @@ const sharing: DomainCatalog<'sharing'> = {
     'het toestel.',
   'warnings.exportUnknownTitle': 'Soort export onbepaald',
   'warnings.exportUnknownDetail': 'Dit bestand zegt niet of het alleen pagina’s dan wel de ' +
-    'hele configuratie bevat (`info.exportType` afwezig of onbekend). Wat het bij het ' +
+    'hele configuratie bevat (info.exportType afwezig of onbekend). Wat het bij het ' +
     'opnieuw inlezen zal overschrijven, kan hier dus niet worden aangekondigd.',
   'warnings.exportUnknownItem': 'info.exportType: ‘{type}’',
 
@@ -227,7 +227,7 @@ const sharing: DomainCatalog<'sharing'> = {
   'warnings.assumedUnits': 'Hoogte: {altitude} · Snelheid: {speed} · Vario: {vario}',
   'warnings.assumedTitles': 'Titels: {percent} %, {font}',
   'warnings.assumedLanguageTitle': 'Taal van de opschriften onbepaald',
-  'warnings.assumedLanguageDetail': 'Dit bestand geeft geen weergavetaal aan (`Display.Language` leeg of sectie `preferences` afwezig): op het toestel volgt XCTrack dan de taal van het Android-systeem — nooit het Engels als terugval. Bij gebrek aan beter worden de opschriften hier getoond in {language} — de taal die u voor deze interface hebt gekozen, of anders die van uw browser.',
+  'warnings.assumedLanguageDetail': 'Dit bestand geeft geen weergavetaal aan (Display.Language leeg of sectie preferences afwezig): op het toestel volgt XCTrack dan de taal van het Android-systeem — nooit het Engels als terugval. Bij gebrek aan beter worden de opschriften hier getoond in {language} — de taal die u voor deze interface hebt gekozen, of anders die van uw browser.',
 
   'warnings.personalLayoutTitle': 'Uw pagina’s dragen teksten van u',
   'warnings.personalTitle': 'Dit bestand noemt u bij naam',
@@ -262,10 +262,10 @@ const sharing: DomainCatalog<'sharing'> = {
   'warnings.externalAirspace': 'Luchtruim: {file} (Airspace.Files)',
 
   'warnings.versionUnknownTitle': 'XCTrack-versie onbekend',
-  'warnings.versionUnknownDetail': 'Dit bestand zegt niet uit welke versie van XCTrack het komt (`info.versionCode` afwezig). Het verschil met de referentieversie van dit gereedschap ({reference}) kan dus niet worden gemeten; wat wordt weergegeven kan sindsdien van betekenis zijn veranderd.',
+  'warnings.versionUnknownDetail': 'Dit bestand zegt niet uit welke versie van XCTrack het komt (info.versionCode afwezig). Het verschil met de referentieversie van dit gereedschap ({reference}) kan dus niet worden gemeten; wat wordt weergegeven kan sindsdien van betekenis zijn veranderd.',
   'warnings.versionOlderTitle': 'Bestand ouder dan het gereedschap',
   'warnings.versionNewerTitle': 'Bestand nieuwer dan het gereedschap',
-  'warnings.versionGapDetail': 'Dit bestand komt uit versie {name} (versionCode {code}), terwijl deze editor zich op versie {reference} instelt om het te tekenen. Het formaat verandert bij elke versie: instellingen kunnen anders worden getekend dan ze op het toestel zullen zijn. Het bestand wordt daarom niet gewijzigd — het komt eruit zoals het erin ging, zonder één herschreven komma.',
+  'warnings.versionGapDetail': 'Dit bestand komt uit versie {name}, terwijl deze editor zich op versie {reference} instelt om het te tekenen. Het formaat verandert bij elke versie: instellingen kunnen anders worden getekend dan ze op het toestel zullen zijn. Het bestand wordt daarom niet gewijzigd — het komt eruit zoals het erin ging, zonder één herschreven komma. Wat het bestand over zijn versie schrijft: versionCode {code}.',
   'warnings.versionNameUnknown': 'onbekend',
 
   'warnings.structureTitle': 'Onverwachte structuur',

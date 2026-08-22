@@ -109,7 +109,7 @@ const model = {
   'personalReason.replayFile': 'un de vos fichiers de trace',
   'personalReason.speechText': 'texte que vous avez saisi',
   'personalReason.secureScope': 'portée SECURE : XCTrack la range dans ses préférences chiffrées',
-  'personalReason.maskedField': 'champ de saisie masqué (`textPassword`)',
+  'personalReason.maskedField': 'champ de saisie masqué (textPassword)',
   'personalReason.broadcastChoice': 'un choix de diffusion que vous avez fait, pas une donnée en soi',
   'personalReason.legacyRecord': 'repéré par une version antérieure de cet éditeur, ' +
     'qui n’en disait pas la nature. Rechargez cette entrée pour obtenir l’inventaire complet.',
@@ -334,8 +334,8 @@ const model = {
   'inspection.tooSmall': '« {name} » ne fait que {height} de haut sur cet appareil. Si le texte qu’il affiche en occupe la moitié, il mesurera environ {value} — sous les {minimum} que l’ISO 9241-303 donne pour minimum absolu à {distance} cm. Sera-t-il encore lisible à bout de bras, en plein soleil, avec des gants ? À vérifier sur l’instrument.',
   'inspection.tooSmallToVerify': 'La part de la hauteur du gadget qu’occupe réellement le glyphe de la valeur (ici supposée {ratio}) n’a été mesurée que sur un seul gadget, une seule capture. Les captures de la planche des 75 gadgets suffiraient à la mesurer type par type, sans toucher à l’appareil.',
 
-  'inspection.proWidget': '« {name} » est un gadget Pro, et ce fichier déclare « proUpTo: 0 ». Que fera XCTrack de ce gadget sur un appareil sans licence Pro : le remplacer par un cadre « gadget Pro », l’afficher normalement, ou ne rien y changer ? Nous ne le savons pas.',
-  'inspection.proWidgetToVerify': 'Le sens de `info.proUpTo` n’est pas établi : 0 vaut ' +
+  'inspection.proWidget': '« {name} » est un gadget Pro. Que fera XCTrack de ce gadget sur un appareil sans licence Pro : le remplacer par un cadre « gadget Pro », l’afficher normalement, ou ne rien y changer ? Nous ne le savons pas. Ce que le fichier déclare, tel quel : « proUpTo: 0 ».',
+  'inspection.proWidgetToVerify': 'Le sens de info.proUpTo n’est pas établi : 0 vaut ' +
     'peut-être « pas de licence », peut-être une date de fin en secondes. Les 21 fichiers ' +
     'du corpus portent tous 0, sur deux installations — aucune autre valeur n’a jamais été ' +
     'observée. Un essai sur l’AIR³ avec un gadget Pro trancherait.',
@@ -343,8 +343,8 @@ const model = {
   'inspection.roadMaps': '« {name} » demande lui aussi une carte routière, et le gadget {first} de cette page en demande déjà une. XCTrack prévient dans ses propres réglages qu’une seule carte routière est possible par page, à cause d’une limitation de sa bibliothèque de cartes. Ce qui s’affichera à la place n’est pas prévisible.',
 
   'inspection.obsoleteKey': {
-    one: '« {name} » porte un réglage écrit par une version antérieure de XCTrack ({detail}). Rien n’est perdu : XCTrack 1.0.3 le convertit à la lecture — c’est vérifié sur l’instrument — et le réécrira sous son nouveau nom la première fois que ce gadget sera réglé.',
-    other: '« {name} » porte des réglages écrits par une version antérieure de XCTrack ({detail}). Rien n’est perdu : XCTrack 1.0.3 les convertit à la lecture — c’est vérifié sur l’instrument — et les réécrira sous leur nouveau nom la première fois que ce gadget sera réglé.'
+    one: '« {name} » porte un réglage écrit par une version antérieure de XCTrack. Rien n’est perdu : XCTrack 1.0.3 le convertit à la lecture — c’est vérifié sur l’instrument — et le réécrira sous son nouveau nom la première fois que ce gadget sera réglé. Tel qu’il s’écrit dans le fichier : {detail}.',
+    other: '« {name} » porte des réglages écrits par une version antérieure de XCTrack. Rien n’est perdu : XCTrack 1.0.3 les convertit à la lecture — c’est vérifié sur l’instrument — et les réécrira sous leur nouveau nom la première fois que ce gadget sera réglé. Tels qu’ils s’écrivent dans le fichier : {detail}.'
   },
 
   /* ============================ les pannes de la bibliothèque et du détail technique ===
