@@ -326,7 +326,10 @@ describe('règle 2 — page qui ne s’affichera jamais', () => {
     )
     expect(locations(findings)).toEqual(['Paysage, page 1'])
     expect(findings[0]!.severity).toBe('to-know')
-    expect(findings[0]!.certainty).toBe('documented')
+    // `measured` et non `documented` : la boîte de XCTrack disait l'intention, l'essai du
+    // 22 août 2026 sur AIR³ 7.2 a établi le fait — la page à `navigations: "none"` est la
+    // seule que le défilement saute. Voir l'en-tête de la règle.
+    expect(findings[0]!.certainty).toBe('measured')
     expect(findings[0]!.message).toContain('1 gadget ')
   })
 

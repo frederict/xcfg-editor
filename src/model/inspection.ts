@@ -617,9 +617,28 @@ function unreachableWidgetFindings(input: InspectionInput): Finding[] {
 }
 
 /**
- * Règle 2 — **documentée** par la boîte de XCTrack elle-même : « Activer / Désactiver —
- * Choisir les types de navigations pour lesquelles la page sera affichée »
- * (`edition-native-exploration.md` § 5.4). Aucun type coché = affichée pour aucun.
+ * Règle 2 — **mesurée**, comme la règle 7 et comme elle seule : deux des sept.
+ *
+ * Elle sortait en `documented`, sur la seule foi de la boîte de XCTrack — « Activer /
+ * Désactiver — Choisir les types de navigations pour lesquelles la page sera affichée »
+ * (`edition-native-exploration.md` § 5.4). Aucun type coché = affichée pour aucun : le
+ * texte dit l'intention, pas le fait.
+ *
+ * L'essai du 22 août 2026 a établi le fait (`docs/reference/2026-08-22-essai-pilote.md`
+ * § 2) : six pages importées sur un AIR³ 7.2, huit appuis de défilement au sol, cinq
+ * pages différentes revenant en boucle — et **la seule réellement sautée était celle dont
+ * `navigations` vaut `"none"`**. C'est le même essai qui a démenti « masquée hors vol »
+ * (voir l'en-tête de `src/ui/views.ts`) : il n'a pas seulement retiré une affirmation, il
+ * en a confirmé une autre. Les cinq README le racontent déjà ainsi.
+ *
+ * ⚠️ Ce que l'essai ne dit pas, et qu'aucune phrase ne doit ajouter : il a eu lieu **au
+ * sol**, sur un appareil et une version. C'est la boîte de XCTrack, et elle seule, qui
+ * couvre le comportement en vol selon la navigation choisie.
+ *
+ * L'étiquette ne change rien à l'affichage — `isAttentionFinding` ne regarde que
+ * `hypothesis`, et cette règle est `to-know`. Elle change ce que le dépôt affirme, ce qui
+ * est précisément l'enjeu.
+ *
  * 1 à 3 constats par fichier dans le corpus, dont la page de compétition de 15 widgets
  * du propriétaire.
  */
@@ -631,7 +650,7 @@ function pageNeverShownFindings(input: InspectionInput): Finding[] {
     findings.push({
       ruleId: 'page-never-shown',
       severity: 'to-know',
-      certainty: 'documented',
+      certainty: 'measured',
       location: { orientation, pageRank },
       message: input.tr.t('inspection.pageNeverShown', { count })
     })
