@@ -13,8 +13,10 @@ import { parseJson } from '../../src/core/parseJson'
 import { serializeJson } from '../../src/core/serializeJson'
 import { readLayout } from '../../src/model/layout'
 import {
-  CATEGORIES,
+  CATEGORY_ORDER,
+  CATEGORY_REMOVAL,
   buildVersionPanel,
+  categoryDescriptions,
   categoryOf,
   diagnose,
   divergenceSentence,
@@ -30,8 +32,42 @@ import {
   type FindingCategory
 } from '../../src/ui/versionDiagnostic'
 import { BACKUP_2025, BACKUP_2026, GSON_2022 } from '../fixtures/paths'
+import { makeTranslator } from '../../src/i18n'
+import de from '../../src/i18n/messages/de'
+import en from '../../src/i18n/messages/en'
+import es from '../../src/i18n/messages/es'
+import fr from '../../src/i18n/messages/fr'
+import nl from '../../src/i18n/messages/nl'
+import type { UiLanguage } from '../../src/i18n'
 
 const db = await loadVersionDatabase()
+
+/**
+ * Le traducteur est **passé**, jamais lu : ces écrans ne vont pas chercher la langue
+ * courante, et c'est ce qui permet de les éprouver dans les cinq d'affilée.
+ */
+const tr = makeTranslator('fr', fr)
+const CATEGORIES = categoryDescriptions(tr)
+
+/** Les cinq catalogues, pour éprouver l'écran dans les cinq langues. */
+const CATALOGS = { fr, de, en, es, nl }
+
+/**
+ * Le mot de chaque langue pour les trois statuts. Ce ne sont **pas** des calques :
+ * « angle mort » se dit *blind spot*, *blinde vlek*, *blinder Fleck*, *punto ciego* —
+ * l'expression que chaque langue emploie pour ce qu'on ne voit pas et qu'on sait ne pas
+ * voir. Le calque allemand, *toter Winkel*, est l'angle mort du rétroviseur : il est
+ * spatial, et le trou dont il s'agit ici est dans notre lecture.
+ */
+const STATUS_WORDS: Record<UiLanguage, {
+  outdated: string; blindSpot: string; unknown: string; unknownWidget: string
+}> = {
+  fr: { outdated: 'périmé', blindSpot: 'angle mort', unknown: 'inconnu', unknownWidget: 'gadget inconnu' },
+  en: { outdated: 'outdated', blindSpot: 'blind spot', unknown: 'unknown', unknownWidget: 'unknown widget' },
+  nl: { outdated: 'verouderd', blindSpot: 'blinde vlek', unknown: 'onbekend', unknownWidget: 'onbekende widget' },
+  de: { outdated: 'veraltet', blindSpot: 'blinder Fleck', unknown: 'unbekannt', unknownWidget: 'unbekanntes Widget' },
+  es: { outdated: 'obsoleto', blindSpot: 'punto ciego', unknown: 'desconocido', unknownWidget: 'widget desconocido' }
+}
 
 function documentOf(path: string): JsonNode {
   return parseJson(readFileSync(path, 'utf8'))
@@ -39,7 +75,7 @@ function documentOf(path: string): JsonNode {
 
 function diagnosisOf(path: string, tier: number, candidates?: number[]): Diagnosis {
   const document = documentOf(path)
-  return diagnose(db, readLayout(document), { tier, candidateTiers: candidates })
+  return diagnose(db, readLayout(document), { tier, tr, candidateTiers: candidates })
 }
 
 /** Les couples que la base déclare `gap` : un trou de notre relevé, jamais un reliquat. */
@@ -54,7 +90,7 @@ const KNOWN_GAPS: Array<[widget: string, key: string, tiers: number[]]> = [
 /* --------------------------------------------------------------------- le sélecteur */
 
 describe('le menu de versions', () => {
-  const options = versionOptions(db)
+  const options = versionOptions(db, tr)
 
   it('propose une entrée par version relevée, pas une par inventaire de réglages', () => {
     // 47 relevés, dont deux archives de 0.9.8.4 que rien ne distingue : 46 entrées.
@@ -119,13 +155,13 @@ describe('le menu de versions', () => {
 
   it('ne nomme jamais une version par un numéro interne', () => {
     for (let tier = 0; tier < db.schema.tierCount; tier += 1) {
-      expect(versionLabel(db, tier)).not.toContain('palier')
+      expect(versionLabel(db, tr, tier)).not.toContain('palier')
     }
-    expect(versionLabel(db, 20)).toBe('1.0.0-RC2')
-    expect(versionLabel(db, 19)).toBe('1.0.0-RC1 (construction 31-g598cd4ebb)')
+    expect(versionLabel(db, tr, 20)).toBe('1.0.0-RC2')
+    expect(versionLabel(db, tr, 19)).toBe('1.0.0-RC1 (construction 31-g598cd4ebb)')
     // Avec un numéro, c'est la version qui le porte qui est nommée, construction
     // comprise : ces messages-là servent précisément à départager des voisines.
-    expect(versionLabel(db, 20, 100030)).toBe('1.0.3-beta (construction 5-gc036d8f2c)')
+    expect(versionLabel(db, tr, 20, 100030)).toBe('1.0.3-beta (construction 5-gc036d8f2c)')
   })
 })
 
@@ -138,7 +174,7 @@ describe('l’écart affiché', () => {
     expect(Object.values(declared?.keysAdded ?? {}).flat()).toHaveLength(2)
     expect(previousPublishedTier(db, 20)).toBe(17)
 
-    const delta = tierDelta(db, 17, 20)
+    const delta = tierDelta(db, tr, 17, 20)
     expect(delta.fromTier).toBe(17)
     expect(delta.keysAddedCount).toBeGreaterThan(50)
     expect(delta.widgetsAdded.length).toBeGreaterThan(0)
@@ -146,7 +182,7 @@ describe('l’écart affiché', () => {
   })
 
   it('ne compte pas deux fois les réglages qu’un gadget entièrement neuf apporte', () => {
-    const delta = tierDelta(db, 17, 20)
+    const delta = tierDelta(db, tr, 17, 20)
     for (const entry of delta.keysAdded) {
       // Un gadget cité dans `keysAdded` existait déjà au départ de la comparaison.
       expect(db.widgetStatus(entry.widget, 17)).toBe('present')
@@ -155,7 +191,7 @@ describe('l’écart affiché', () => {
 
   it('dit qu’il n’y a rien à comparer quand rien n’est publié avant', () => {
     expect(previousPublishedTier(db, 0)).toBeNull()
-    const delta = tierDelta(db, previousPublishedTier(db, 0), 0)
+    const delta = tierDelta(db, tr, previousPublishedTier(db, 0), 0)
     expect(delta.fromTier).toBeNull()
     expect(delta.summary).toContain('rien à comparer')
   })
@@ -165,7 +201,7 @@ describe('l’écart affiché', () => {
 
 describe('présélection d’après le versionCode du fichier', () => {
   it('retient la version que le fichier déclare, et la nomme comme l’appareil', () => {
-    const suggestion = suggestTier(db, documentOf(BACKUP_2026))
+    const suggestion = suggestTier(db, tr, documentOf(BACKUP_2026))
     expect(suggestion.version).toEqual({ code: 100030, name: '1.0.3-beta' })
     expect(suggestion.basis).toBe('exact')
     expect(suggestion.candidateTiers).toEqual([20])
@@ -179,7 +215,7 @@ describe('présélection d’après le versionCode du fichier', () => {
   it('laisse le NOM déclaré trancher ce que le numéro laisse ambigu', () => {
     // 90615 est déclaré par deux APK aux inventaires différents : le versionCode ne dit
     // pas lequel a écrit le fichier — mais le versionName, lui, le dit.
-    const suggestion = suggestTier(db, documentOf(GSON_2022))
+    const suggestion = suggestTier(db, tr, documentOf(GSON_2022))
     expect(suggestion.version.name).toBe('0.9.6.2-beta-48-gcb6ffef8')
     expect(suggestion.basis).toBe('exact')
     expect(suggestion.candidateTiers).toEqual([0])
@@ -189,7 +225,7 @@ describe('présélection d’après le versionCode du fichier', () => {
 
   it('retient la plus récente, et le dit, quand ni le numéro ni le nom ne tranchent', () => {
     // Le même fichier privé de son nom : il ne reste que le numéro, qui ne suffit pas.
-    const suggestion = suggestTier(db, parseJson('{"info":{"versionCode":90615}}'))
+    const suggestion = suggestTier(db, tr, parseJson('{"info":{"versionCode":90615}}'))
     expect(suggestion.basis).toBe('ambiguous')
     expect(suggestion.candidateTiers).toEqual([0, 1])
     expect(suggestion.selected).toBe(1)
@@ -200,7 +236,7 @@ describe('présélection d’après le versionCode du fichier', () => {
   it('dit le repli quand aucune archive ne porte le numéro du fichier', () => {
     // 91230 (0.9.12.3) n'est dans aucune archive : la base se replie sur 91231, et ce
     // repli doit être dit au pilote, pas masqué.
-    const suggestion = suggestTier(db, documentOf(BACKUP_2025))
+    const suggestion = suggestTier(db, tr, documentOf(BACKUP_2025))
     expect(suggestion.version).toEqual({ code: 91230, name: '0.9.12.3' })
     expect(suggestion.basis).toBe('approximated')
     expect(suggestion.approximatedFrom).toBe(91231)
@@ -211,7 +247,7 @@ describe('présélection d’après le versionCode du fichier', () => {
   })
 
   it('ne présélectionne rien quand le fichier ne déclare pas sa version', () => {
-    const suggestion = suggestTier(db, parseJson('{"layout":{}}'))
+    const suggestion = suggestTier(db, tr, parseJson('{"layout":{}}'))
     expect(suggestion.basis).toBe('undeclared')
     expect(suggestion.selected).toBeNull()
     expect(suggestion.candidateTiers).toEqual([])
@@ -219,7 +255,7 @@ describe('présélection d’après le versionCode du fichier', () => {
   })
 
   it('ne devine pas une version pour un numéro inconnu de la base', () => {
-    const suggestion = suggestTier(db, parseJson('{"info":{"versionCode":100400}}'))
+    const suggestion = suggestTier(db, tr, parseJson('{"info":{"versionCode":100400}}'))
     expect(suggestion.basis).toBe('unrecognized')
     expect(suggestion.selected).toBeNull()
     expect(suggestion.message).toContain('les dépasse tous')
@@ -332,9 +368,9 @@ describe('les trois natures d’écart ne se confondent pas', () => {
   })
 
   it('n’autorise une suppression que sur ce qui est lu avant le palier visé', () => {
-    const defensible = Object.values(CATEGORIES)
-      .filter((description) => description.removal === 'defensible')
-      .map((description) => description.category)
+    const defensible = Object.entries(CATEGORY_REMOVAL)
+      .filter(([, stance]) => stance === 'defensible')
+      .map(([category]) => category)
     expect(defensible.sort()).toEqual(['legacy', 'past-only'])
     // Ce qui vient d'APRÈS le palier visé n'est pas un déchet : c'est un réglage d'une
     // version plus récente, que la version visée ignore et qu'une autre retrouvera.
@@ -441,7 +477,7 @@ describe('diagnostic des fichiers réels', () => {
     const report = diagnosisOf(BACKUP_2026, 20)
     const finding = report.keyFindings[0]
     expect(finding).toBeDefined()
-    expect(placeLabel(finding!.place)).toMatch(/^(Portrait|Paysage) · page \d+ · rang \d+ · /)
+    expect(placeLabel(tr, finding!.place)).toMatch(/^(Portrait|Paysage) · page \d+ · rang \d+ · /)
     expect(finding!.key.length).toBeGreaterThan(0)
   })
 
@@ -471,7 +507,7 @@ describe('diagnostic des fichiers réels', () => {
     expect(report.unstableCount).toBeGreaterThan(0)
     const unstable = report.keyFindings.find((finding) => !finding.stable)
     expect(unstable).toBeDefined()
-    expect(divergenceSentence(db, unstable!)).toContain('Remarque instable')
+    expect(divergenceSentence(db, tr, unstable!)).toContain('Remarque instable')
   })
 })
 
@@ -479,14 +515,14 @@ describe('diagnostic des fichiers réels', () => {
 
 /** La valeur d'`<option>` d'une version, telle que le menu la fabrique. */
 function valueOf(release: string): string {
-  const option = versionOptions(db).find((entry) => entry.release === release)
+  const option = versionOptions(db, tr).find((entry) => entry.release === release)
   expect(option, release).toBeDefined()
   return option?.value ?? ''
 }
 
 describe('le panneau', () => {
   it('présélectionne la version du fichier et affiche son diagnostic', async () => {
-    const panel = await buildVersionPanel({ document: documentOf(BACKUP_2026), database: db })
+    const panel = await buildVersionPanel({ document: documentOf(BACKUP_2026), database: db, tr })
     expect(panel.tier()).toBe(20)
     expect(panel.version()?.label).toBe('1.0.3-beta')
     expect(panel.select.value).toBe(valueOf('1.0.3-beta'))
@@ -502,7 +538,7 @@ describe('le panneau', () => {
   })
 
   it('ouvre le menu sur la version du fichier, avant toutes les autres', async () => {
-    const panel = await buildVersionPanel({ document: documentOf(BACKUP_2026), database: db })
+    const panel = await buildVersionPanel({ document: documentOf(BACKUP_2026), database: db, tr })
     const groups = [...panel.select.querySelectorAll('optgroup')]
     expect(groups[0]?.label).toBe('La version qui a écrit ce fichier')
     expect(groups[0]?.textContent).toBe('1.0.3-beta')
@@ -517,7 +553,7 @@ describe('le panneau', () => {
   })
 
   it('nomme les versions que le diagnostic ne distingue pas de celle choisie', async () => {
-    const panel = await buildVersionPanel({ document: documentOf(BACKUP_2026), database: db })
+    const panel = await buildVersionPanel({ document: documentOf(BACKUP_2026), database: db, tr })
     const text = panel.element.textContent ?? ''
     // C'est la contrepartie du menu par version : le pilote reconnaît la sienne, et
     // apprend du même coup que trois autres donneraient exactement le même constat.
@@ -526,29 +562,38 @@ describe('le panneau', () => {
     expect(text).toContain('vaut pour 4 versions')
   })
 
-  it('ne parle au pilote ni en programmeur ni en archiviste', async () => {
+  it('ne parle au pilote ni en programmeur ni en archiviste, dans les cinq langues', async () => {
     // Deux familles de mots, un seul écran. « palier » et « clé » sont nos concepts de
     // programme ; « reliquat », « attesté », « caduc », « corpus » sont ceux d'un
     // archiviste. Le pilote décide ici du sort de sa configuration de vol : il lit
     // « périmé », « angle mort », « inconnu », et ce que l'outil s'autorise à en faire.
+    //
+    // Le balayage passe maintenant par les cinq langues : dans les quatre autres, un mot
+    // français qui reparaîtrait ne serait pas du jargon mais une **traduction oubliée**,
+    // et c'est le même test qui l'attrape.
     const jargon = [
       'palier', 'schéma', 'Schéma', 'clé', 'clés',
       'reliquat', 'Reliquat', 'attest', 'Attest', 'caduc', 'corpus',
       'antérieur', 'postérieur', 'aveugle', 'extraction', 'constat', 'Constat'
     ]
-    for (const path of [BACKUP_2026, BACKUP_2025, GSON_2022]) {
-      const panel = await buildVersionPanel({
-        document: documentOf(path), database: db, onCleanup: () => undefined
-      })
-      const text = panel.element.textContent ?? ''
-      for (const word of jargon) {
-        expect(text, `${path} — ${word}`).not.toContain(word)
+    for (const [language, catalog] of Object.entries(CATALOGS)) {
+      for (const path of [BACKUP_2026, BACKUP_2025, GSON_2022]) {
+        const panel = await buildVersionPanel({
+          document: documentOf(path),
+          database: db,
+          tr: makeTranslator(language as UiLanguage, catalog),
+          onCleanup: () => undefined
+        })
+        const text = panel.element.textContent ?? ''
+        for (const word of jargon) {
+          expect(text, `${language} / ${path} — ${word}`).not.toContain(word)
+        }
       }
     }
   })
 
   it('recalcule le diagnostic quand le pilote change de version', async () => {
-    const panel = await buildVersionPanel({ document: documentOf(BACKUP_2026), database: db })
+    const panel = await buildVersionPanel({ document: documentOf(BACKUP_2026), database: db, tr })
     panel.select.value = valueOf('0.9.8.7') // même inventaire de réglages que 0.9.8.3
     panel.select.dispatchEvent(new Event('change'))
     expect(panel.tier()).toBe(5)
@@ -568,7 +613,7 @@ describe('le panneau', () => {
   it('ne rappelle rien quand la version choisie accepte les mêmes réglages', async () => {
     // 1.0.1-beta n'est pas 1.0.3-beta, mais notre relevé ne les distingue pas : annoncer
     // un changement de cible démentirait la phrase qui vient de dire le contraire.
-    const panel = await buildVersionPanel({ document: documentOf(BACKUP_2026), database: db })
+    const panel = await buildVersionPanel({ document: documentOf(BACKUP_2026), database: db, tr })
     panel.select.value = valueOf('1.0.1-beta')
     panel.select.dispatchEvent(new Event('change'))
     expect(panel.tier()).toBe(20)
@@ -580,7 +625,8 @@ describe('le panneau', () => {
   it('n’affiche aucun diagnostic tant qu’aucune version n’est choisie', async () => {
     const panel = await buildVersionPanel({
       document: parseJson('{"info":{"versionCode":100400},"layout":{}}'),
-      database: db
+      database: db,
+      tr
     })
     expect(panel.tier()).toBeNull()
     expect(panel.version()).toBeNull()
@@ -589,7 +635,7 @@ describe('le panneau', () => {
   })
 
   it('présélectionne la construction que le fichier de 2022 déclare', async () => {
-    const panel = await buildVersionPanel({ document: documentOf(GSON_2022), database: db })
+    const panel = await buildVersionPanel({ document: documentOf(GSON_2022), database: db, tr })
     // Le nom déclaré désigne la première des deux constructions, pas la plus récente.
     expect(panel.tier()).toBe(0)
     expect(panel.version()?.build).toBe('48-gcb6ffef8')
@@ -599,7 +645,7 @@ describe('le panneau', () => {
   })
 
   it('suit un changement de document', async () => {
-    const panel = await buildVersionPanel({ document: documentOf(BACKUP_2026), database: db })
+    const panel = await buildVersionPanel({ document: documentOf(BACKUP_2026), database: db, tr })
     panel.setDocument(documentOf(BACKUP_2025))
     expect(panel.tier()).toBe(17)
     expect(panel.diagnosis()?.counts.legacy).toBe(4)
@@ -613,14 +659,14 @@ describe('le panneau', () => {
   it('ne touche jamais au document : il ressort à l’octet près', async () => {
     const source = readFileSync(BACKUP_2026, 'utf8')
     const document = parseJson(source)
-    const panel = await buildVersionPanel({ document, database: db })
+    const panel = await buildVersionPanel({ document, database: db, tr })
     panel.select.value = valueOf('0.9.7.4-beta')
     panel.select.dispatchEvent(new Event('change'))
     expect(serializeJson(document)).toBe(source)
   })
 
   it('avertit qu’il ne diagnostique que les gadgets des pages', async () => {
-    const panel = await buildVersionPanel({ document: documentOf(BACKUP_2026), database: db })
+    const panel = await buildVersionPanel({ document: documentOf(BACKUP_2026), database: db, tr })
     const text = panel.element.textContent ?? ''
     expect(text).toContain('Seuls les gadgets des pages y sont examinés')
     expect(text).toContain('vario, unités, capteurs, espaces aériens')
@@ -632,7 +678,7 @@ describe('hors édition, le diagnostic dit où agir', () => {
     // Le constat parle de suppressions qui « se défendent » ; hors édition, aucun bouton
     // ne les permet. Un pilote d'essai a cherché ce bouton et ne l'a pas trouvé — l'outil
     // promettait une action qu'il n'offrait pas.
-    const panel = await buildVersionPanel({ document: documentOf(BACKUP_2026), database: db })
+    const panel = await buildVersionPanel({ document: documentOf(BACKUP_2026), database: db, tr })
     const note = panel.element.querySelector('.vdiag__readonly-note')
     expect(note).not.toBeNull()
     expect(note?.textContent).toContain('passez en modification')
@@ -640,8 +686,79 @@ describe('hors édition, le diagnostic dit où agir', () => {
 
   it('avec le rappel, c’est la section de nettoyage qui paraît, jamais la note', async () => {
     const panel = await buildVersionPanel({
-      document: documentOf(BACKUP_2026), database: db, onCleanup: () => {}
+      document: documentOf(BACKUP_2026), database: db, tr, onCleanup: () => {}
     })
     expect(panel.element.querySelector('.vdiag__readonly-note')).toBeNull()
+  })
+})
+
+/* --------------------------------------- les trois statuts, dans les cinq langues */
+
+describe('les trois statuts que le pilote lit', () => {
+  it('emploient, dans chaque langue, le mot de cette langue', () => {
+    for (const [language, catalog] of Object.entries(CATALOGS)) {
+      const words = STATUS_WORDS[language as UiLanguage]
+      const table = categoryDescriptions(makeTranslator(language as UiLanguage, catalog))
+      expect(table.legacy.badge, language).toBe(words.outdated)
+      expect(table['never-read'].badge, language).toBe(words.unknown)
+      expect(table['unknown-widget'].badge, language).toBe(words.unknownWidget)
+      // Trois familles techniques, un seul badge : le partage est voulu, et ce sont les
+      // TITRES qui les distinguent — sans quoi le pilote croirait à trois cas à traiter
+      // là où l'outil n'a qu'une chose à dire : nous ne voyons rien ici.
+      const blindSpots = ['straddled', 'gap', 'blind'] as const
+      for (const category of blindSpots) {
+        expect(table[category].badge, `${language} / ${category}`).toBe(words.blindSpot)
+      }
+      expect(new Set(blindSpots.map((category) => table[category].title)).size, language).toBe(3)
+    }
+  })
+
+  it('n’autorisent une suppression que sur deux cas, quelle que soit la langue', () => {
+    // Ce que l'outil s'autorise n'est pas de la prose : la décision ne bouge pas d'une
+    // langue à l'autre, et elle n'est plus rangée avec les phrases.
+    for (const [language, catalog] of Object.entries(CATALOGS)) {
+      const table = categoryDescriptions(makeTranslator(language as UiLanguage, catalog))
+      const defensible = CATEGORY_ORDER.filter((category) => table[category].removal === 'defensible')
+      expect(defensible, language).toEqual(['legacy', 'past-only'])
+      for (const category of CATEGORY_ORDER) {
+        expect(table[category].removal, `${language} / ${category}`).toBe(CATEGORY_REMOVAL[category])
+      }
+    }
+  })
+
+  it('portent ce mot jusque dans l’écran, sur un vrai fichier', async () => {
+    for (const [language, catalog] of Object.entries(CATALOGS)) {
+      const words = STATUS_WORDS[language as UiLanguage]
+      const panel = await buildVersionPanel({
+        document: documentOf(BACKUP_2026),
+        database: db,
+        tr: makeTranslator(language as UiLanguage, catalog)
+      })
+      // Visée sur sa propre version, la sauvegarde de 2026 porte neuf réglages périmés.
+      expect(panel.element.textContent, language).toContain(words.outdated)
+      // Visée sur 0.9.8.7, les mêmes réglages sont un angle mort : on n'y touche pas.
+      panel.select.value = valueOf('0.9.8.7')
+      panel.select.dispatchEvent(new Event('change'))
+      expect(panel.element.textContent, language).toContain(words.blindSpot)
+    }
+  })
+
+  it('énumèrent les versions indistinctes avec la ponctuation de chaque langue', async () => {
+    // Ce que `frenchList` ne pouvait pas rendre : la virgule d'Oxford anglaise, et
+    // l'alternance espagnole. Trois versions ici, donc les trois formes se lisent.
+    const listed: Record<string, string> = {}
+    for (const [language, catalog] of Object.entries(CATALOGS)) {
+      const panel = await buildVersionPanel({
+        document: documentOf(BACKUP_2026),
+        database: db,
+        tr: makeTranslator(language as UiLanguage, catalog)
+      })
+      listed[language] = panel.element.querySelector('.vdiag__same')?.textContent ?? ''
+    }
+    expect(listed.fr).toContain('1.0.2-beta, 1.0.1-beta et 1.0.0-RC2')
+    expect(listed.en).toContain('1.0.2-beta, 1.0.1-beta, and 1.0.0-RC2')
+    expect(listed.nl).toContain('1.0.2-beta, 1.0.1-beta en 1.0.0-RC2')
+    expect(listed.de).toContain('1.0.2-beta, 1.0.1-beta und 1.0.0-RC2')
+    expect(listed.es).toContain('1.0.2-beta, 1.0.1-beta y 1.0.0-RC2')
   })
 })

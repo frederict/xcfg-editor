@@ -9,9 +9,8 @@ import {
   type CleanupOutcome,
   type CleanupPlan
 } from '../model/cleanup'
-import type { PluralForms } from '../i18n'
+import type { Translator } from '../i18n'
 import type { Layout } from '../model/layout'
-import { plural, proseFormat } from './prose'
 import './cleanupPanel.css'
 
 /**
@@ -45,6 +44,15 @@ import './cleanupPanel.css'
  *    de téléphone, le nom d'une compétition (voir `src/model/personalData.ts`). Un
  *    interrupteur oublié se lit très bien sans cela.
  *
+ * ## La prose est au catalogue, la ligne de repérage aussi
+ *
+ * Les phrases de cet écran vivent dans `src/i18n/messages/<langue>/versions.ts`, sous le
+ * préfixe `cleanup.` — le même domaine que le diagnostic, puisque c'est le même lot de
+ * travail. La **ligne qui situe un gadget** (« Portrait · page 2 · rang 1 · … ») y est
+ * aussi, sous `versions.placePortrait` et `versions.placeLandscape` : les deux écrans la
+ * lisent maintenant au même endroit, là où ils l'écrivaient chacun de son côté. Ce module
+ * continue de ne rien importer de celui qui l'appelle.
+ *
  * ## Pourquoi `onChange` est obligatoire
  *
  * Ce module modifie le document **en place**. L'écran qui l'héberge doit donc pouvoir
@@ -67,10 +75,13 @@ export interface CleanupEvent {
 
 export interface CleanupSectionOptions {
   db: VersionDatabase
+  /** Le traducteur de **notre prose**, passé par l'écran qui héberge cette section. */
+  tr: Translator
   /** La disposition du document **vivant** : ses nœuds seront modifiés en place. */
   layout: Layout
   /** Le palier visé. Sans palier retenu, l'hôte n'appelle pas ce module. */
   tier: number
+  /** La langue des **libellés de XCTrack**, l'autre axe : elle suit le fichier ouvert. */
   language?: string
   /** Appelé après chaque geste — retrait comme remise. Voir l'en-tête. */
   onChange: (event: CleanupEvent) => void
@@ -93,11 +104,6 @@ export interface CleanupSection {
   reset: (layout: Layout, tier: number) => void
 }
 
-const ORIENTATION_LABELS: Record<'portrait' | 'landscape', string> = {
-  portrait: 'Portrait',
-  landscape: 'Paysage'
-}
-
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K, className?: string, text?: string
 ): HTMLElementTagNameMap[K] {
@@ -107,31 +113,20 @@ function el<K extends keyof HTMLElementTagNameMap>(
   return node
 }
 
-/** « 9 réglages » et « 3 gadgets », dits à plusieurs endroits de cet écran. */
-const SETTING_COUNT: PluralForms = { one: '{count} réglage', other: '{count} réglages' }
-const GADGET_COUNT: PluralForms = { one: '{count} gadget', other: '{count} gadgets' }
-
 /**
- * « ce réglage » / « ces 9 réglages ».
- *
- * Le cas qu'aucun `s` collé n'aurait su rendre : le nombre se glisse **entre** le
- * déterminant et le nom, et il disparaît au singulier — le français ne dit ni « 9 ces
- * réglages » ni « ce 1 réglage ». C'est précisément ce que le repère nommé du socle
- * permet : chaque forme est une phrase entière, libre de placer le nombre où sa langue
- * l'exige, ou de ne pas le porter du tout.
+ * « Portrait · page 2 · rang 1 · Carte de compétition ». Même ligne que `placeLabel` du
+ * diagnostic, et désormais **le même message** : elle est au catalogue, ce module la lit
+ * sans rien importer de celui qui l'appelle.
  */
-function theseSettings(count: number): string {
-  return plural({ one: 'ce réglage', other: 'ces {count} réglages' }, count)
-}
-
-/**
- * « Portrait · page 2 · rang 1 · Carte de compétition ». Même forme que `placeLabel` du
- * diagnostic — écrite ici plutôt qu'importée pour que ce module ne dépende pas de celui
- * qui l'appelle.
- */
-function placeOf(entry: CleanupEntry, language: string): string {
-  return `${ORIENTATION_LABELS[entry.orientation]} · page ${entry.pageRank}` +
-    ` · rang ${entry.widgetRank} · ${readableName(entry.shortName, language)}`
+function placeOf(tr: Translator, entry: CleanupEntry, language: string): string {
+  const where = {
+    page: entry.pageRank,
+    rank: entry.widgetRank,
+    name: readableName(entry.shortName, language)
+  }
+  return entry.orientation === 'portrait'
+    ? tr.t('versions.placePortrait', where)
+    : tr.t('versions.placeLandscape', where)
 }
 
 /**
@@ -154,29 +149,31 @@ function lastReadingRelease(db: VersionDatabase, tier: number): string | null {
  * Ce que porte le réglage, quand le dire est sans risque. `null` sinon — voir la
  * quatrième décision de l'en-tête.
  */
-function safeValue(entry: CleanupEntry): string | null {
+function safeValue(tr: Translator, entry: CleanupEntry): string | null {
   const node = getMember(entry.node, entry.key)
   if (node?.kind !== 'literal') return null
-  if (node.raw === 'true') return 'oui'
-  if (node.raw === 'false') return 'non'
+  if (node.raw === 'true') return tr.t('cleanup.valueYes')
+  if (node.raw === 'false') return tr.t('cleanup.valueNo')
+  // Un nombre écrit par XCTrack : il ressort **tel quel**, jamais mis en forme — « 1000 »
+  // est ce que le fichier porte, « 1 000 » ne s'y trouve nulle part.
   return node.raw
 }
 
 /** Le détail d'un réglage : depuis quand il ne sert plus, et ce qu'il porte. */
-function noteOf(db: VersionDatabase, entry: CleanupEntry): string {
+function noteOf(tr: Translator, db: VersionDatabase, entry: CleanupEntry): string {
   const release = lastReadingRelease(db, entry.lastReadTier)
   const since = release === null
-    ? 'plus lu par la version visée'
-    : `utilisé jusqu’à XCTrack ${release}`
-  const value = safeValue(entry)
-  const doubled = entry.occurrences > 1
-    ? `, écrit ${plural({ one: '{count} fois', other: '{count} fois' }, entry.occurrences)} dans ce gadget`
-    : ''
-  return value === null ? `${since}${doubled}` : `réglé sur ${value}, ${since}${doubled}`
+    ? tr.t('cleanup.noLongerRead')
+    : tr.t('cleanup.usedUntil', { release })
+  const value = safeValue(tr, entry)
+  const note = value === null ? since : tr.t('cleanup.noteWithValue', { value, since })
+  return entry.occurrences > 1
+    ? tr.t('cleanup.noteRepeated', { note, count: entry.occurrences })
+    : note
 }
 
 /** « Carte de compétition (3), Boussole (2) » — sur quels gadgets cela porte. */
-function gadgetSummary(entries: CleanupEntry[], language: string): string {
+function gadgetSummary(tr: Translator, entries: CleanupEntry[], language: string): string {
   const counts = new Map<string, number>()
   for (const entry of entries) {
     const name = readableName(entry.shortName, language)
@@ -187,7 +184,12 @@ function gadgetSummary(entries: CleanupEntry[], language: string): string {
     // `count > 1` est ici une condition d'affichage et non un accord : le compte n'est
     // écrit que s'il y en a plusieurs, « Boussole » se suffisant à lui-même. Rien à
     // reverser sur le pluriel du socle, qui choisit une forme et ne décide pas d'omettre.
-    .map(([name, count]) => (count > 1 ? `${name} (${proseFormat.number(count)})` : name))
+    //
+    // La parenthèse est écrite ici et non au catalogue : elle ne porte aucun mot, les cinq
+    // langues l'écrivent à l'identique, et une clé qui ne serait faite que de ponctuation
+    // serait indiscernable d'une traduction oubliée. C'est une colonne de données — le
+    // nombre, lui, est bien mis en forme par la langue.
+    .map(([name, count]) => (count > 1 ? `${name} (${tr.format.number(count)})` : name))
     .join(', ')
 }
 
@@ -195,7 +197,7 @@ function gadgetSummary(entries: CleanupEntry[], language: string): string {
  * Construit la section. Elle est vide — sans un mot — tant qu'il n'y a rien à enlever.
  */
 export function buildCleanupSection(options: CleanupSectionOptions): CleanupSection {
-  const { db, onChange } = options
+  const { db, tr, onChange } = options
   const language = options.language ?? 'fr'
 
   let layout = options.layout
@@ -220,8 +222,7 @@ export function buildCleanupSection(options: CleanupSectionOptions): CleanupSect
       kind: 'applied',
       keyCount: outcome.keyCount,
       widgetCount: outcome.widgetCount,
-      description: `Enlever ${plural(SETTING_COUNT, outcome.keyCount)} d’une ` +
-        'ancienne version'
+      description: tr.t('cleanup.removeStep', { count: outcome.keyCount })
     })
   }
 
@@ -237,7 +238,7 @@ export function buildCleanupSection(options: CleanupSectionOptions): CleanupSect
       kind: 'reverted',
       keyCount: count,
       widgetCount: outcome.widgetCount,
-      description: `Remettre ${plural(SETTING_COUNT, count)} d’une ancienne version`
+      description: tr.t('cleanup.restoreStep', { count })
     })
   }
 
@@ -247,17 +248,14 @@ export function buildCleanupSection(options: CleanupSectionOptions): CleanupSect
     root.classList.add('vclean--done')
     const done = el('p', 'vclean__done')
     done.setAttribute('role', 'status')
-    done.textContent =
-      `${plural({
-        one: '{count} réglage enlevé',
-        other: '{count} réglages enlevés'
-      }, outcome.keyCount)} sur ` +
-      `${plural(GADGET_COUNT, outcome.widgetCount)}. Votre appareil n’en sait ` +
-      'encore rien : le fichier ne change que lorsque vous l’enregistrez.'
+    done.textContent = tr.t('cleanup.removedTally', {
+      count: outcome.keyCount,
+      instances: tr.t('common.widgetCount', { count: outcome.widgetCount })
+    })
     root.append(done)
 
     const undo = el('button', 'vclean__undo',
-      `Remettre ${theseSettings(outcome.keyCount)}`)
+      tr.t('cleanup.undoButton', { count: outcome.keyCount }))
     undo.type = 'button'
     undo.addEventListener('click', () => { revert() })
     root.append(undo)
@@ -268,13 +266,10 @@ export function buildCleanupSection(options: CleanupSectionOptions): CleanupSect
   function renderList(): HTMLElement {
     const details = el('details', 'vclean__details')
     details.append(el('summary', undefined,
-      `Voir ${theseSettings(plan.entries.length)}, et décocher ce ` +
-      'que vous préférez garder'))
+      tr.t('cleanup.seeList', { count: plan.entries.length })))
 
     const body = el('div', 'vclean__details-body')
-    body.append(el('p', 'vclean__caveat',
-      'Les noms ci-dessous sont ceux qu’écrit XCTrack. L’application ne les montre plus ' +
-      'dans ses menus : c’est justement ce qui indique qu’elle ne s’en sert plus.'))
+    body.append(el('p', 'vclean__caveat', tr.t('cleanup.caveat')))
 
     const groups = new Map<string, CleanupEntry[]>()
     for (const entry of plan.entries) {
@@ -289,7 +284,7 @@ export function buildCleanupSection(options: CleanupSectionOptions): CleanupSect
       const item = el('li', 'vclean__group')
       const first = entries[0]
       if (first !== undefined) {
-        item.append(el('p', 'vclean__place', placeOf(first, language)))
+        item.append(el('p', 'vclean__place', placeOf(tr, first, language)))
       }
       const keys = el('ul', 'vclean__keys')
       for (const entry of entries) keys.append(keyItem(entry))
@@ -314,7 +309,7 @@ export function buildCleanupSection(options: CleanupSectionOptions): CleanupSect
     })
     label.append(box)
     label.append(el('span', 'vclean__key', entry.key))
-    label.append(el('span', 'vclean__note', noteOf(db, entry)))
+    label.append(el('span', 'vclean__note', noteOf(tr, db, entry)))
     item.append(label)
     return item
   }
@@ -331,16 +326,15 @@ export function buildCleanupSection(options: CleanupSectionOptions): CleanupSect
     const count = selected.size
     const total = plan.entries.length
     tally.textContent = count === total
-      ? `${plural({ one: '{count} réglage retenu', other: '{count} réglages retenus' }, total)}.`
-      : `${plural({ one: '{count} retenu', other: '{count} retenus' }, count)} ` +
-        `sur ${proseFormat.number(total)} — ` +
-        `${plural({
-          one: '{count} réglage restera',
-          other: '{count} réglages resteront'
-        }, total - count)} en place.`
+      ? tr.t('cleanup.allSelected', { count: total })
+      : tr.t('cleanup.someSelected', {
+        count,
+        total,
+        left: tr.t('cleanup.remaining', { count: total - count })
+      })
     go.textContent = count === 0
-      ? 'Aucun réglage retenu'
-      : `Enlever ${theseSettings(count)}`
+      ? tr.t('cleanup.noneSelected')
+      : tr.t('cleanup.removeButton', { count })
     go.disabled = count === 0
   }
 
@@ -354,21 +348,17 @@ export function buildCleanupSection(options: CleanupSectionOptions): CleanupSect
     }
     if (plan.entries.length === 0) return
 
-    root.append(el('h3', 'vclean__title', 'Enlever ce qu’une ancienne version a laissé'))
+    root.append(el('h3', 'vclean__title', tr.t('cleanup.title')))
 
     const lead = el('p', 'vclean__lead')
-    lead.textContent =
-      `${plural({
-        one: '{count} réglage de ce fichier n’est plus utilisé',
-        other: '{count} réglages de ce fichier ne sont plus utilisés'
-      }, plan.entries.length)} par la version visée, sur ` +
-      `${plural(GADGET_COUNT, plan.widgetCount)} : ` +
-      `${gadgetSummary(plan.entries, language)}.`
+    lead.textContent = tr.t('cleanup.lead', {
+      count: plan.entries.length,
+      instances: tr.t('common.widgetCount', { count: plan.widgetCount }),
+      list: gadgetSummary(tr, plan.entries, language)
+    })
     root.append(lead)
 
-    root.append(el('p', 'vclean__calm',
-      'Rien ne presse et rien n’est cassé : XCTrack les transporte sans les lire, et les ' +
-      'laisser là ne change rien à vos pages. Les enlever allège le fichier, c’est tout.'))
+    root.append(el('p', 'vclean__calm', tr.t('cleanup.calm')))
 
     root.append(renderList())
     action.append(go, tally)

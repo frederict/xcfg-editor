@@ -19,6 +19,8 @@ import {
 } from '../../src/model/cleanup'
 import { readLayout } from '../../src/model/layout'
 import { categoryOf, diagnose } from '../../src/ui/versionDiagnostic'
+import { makeTranslator } from '../../src/i18n'
+import fr from '../../src/i18n/messages/fr'
 import {
   BACKUP_2025,
   BACKUP_2026,
@@ -40,6 +42,9 @@ import {
  *    l'octet près.
  */
 const db = await loadVersionDatabase()
+
+/** `diagnose` nomme la version visée : il lui faut un traducteur, comme à tout écran. */
+const tr = makeTranslator('fr', fr)
 
 function documentOf(path: string): JsonNode {
   return parseJson(readFileSync(path, 'utf8'))
@@ -288,7 +293,7 @@ describe('un « gap » ou un « blind » n’entre jamais dans un plan', () => {
       const document = documentOf(path)
       const layout = readLayout(document)
       for (let tier = 0; tier < db.schema.tierCount; tier += 1) {
-        const report = diagnose(db, layout, { tier })
+        const report = diagnose(db, layout, { tier, tr })
         const legacy = new Set(
           report.keyFindings
             .filter((finding) => finding.category === 'legacy')

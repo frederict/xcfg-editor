@@ -11,9 +11,8 @@ import { readLayout, type Layout } from '../model/layout'
 import { widgetOptionKeys } from '../model/widget'
 import { buildCleanupSection, type CleanupEvent, type CleanupSection } from './cleanupPanel'
 import type { CleanupPlan } from '../model/cleanup'
-import type { PluralForms } from '../i18n'
+import { UI_FALLBACK_LANGUAGE, loadTranslator, type Translator } from '../i18n'
 import { splitVersionName } from '../catalog/versionName'
-import { plural, proseFormat } from './prose'
 import './versionDiagnostic.css'
 
 /**
@@ -55,6 +54,13 @@ import './versionDiagnostic.css'
  * *aveugle* → « angle mort », *attesté* → « de vrais fichiers le portent », *antérieur* /
  * *postérieur* → « lu avant seulement » / « apparu après », *caduc* → « périmé »,
  * *constat* → « remarque ». Le badge est en capitales par la CSS, jamais dans le texte.
+ *
+ * Ces mots-là sont maintenant **au catalogue** — `src/i18n/messages/<langue>/versions.ts`
+ * — dans les cinq langues, et ce module n'en porte plus un seul : *blind spot*, *blinde
+ * vlek*, *blinder Fleck*, *punto ciego*. Trois catégories (`straddled`, `gap`, `blind`)
+ * partagent **une seule clé de badge**, parce que le partage est délibéré : ce sont les
+ * titres qui les distinguent, jamais le mot du bandeau. Le traducteur arrive par les
+ * options — voir `VersionPanelOptions.tr` — et rien ici ne lit la langue courante.
  *
  * Une seule chose est dite une fois puis reprise par un pronom : **ce que nous avons pu
  * lire des versions de XCTrack**. Le paragraphe de cadrage l'annonce, et « nous » le
@@ -262,111 +268,108 @@ export interface CategoryDescription {
 }
 
 /**
- * Les huit cas, rédigés une fois pour toutes.
+ * Ce que l'outil s'autorise, cas par cas. **Ce n'est pas de la prose** : c'est la
+ * décision, elle ne dépend d'aucune langue, et elle reste donc ici quand les quatre
+ * phrases de chaque cas sont parties au catalogue.
  *
- * Le ton n'est pas un ornement : « cette clé est inconnue du palier visé » n'est pas
- * « cette clé est obsolète », et « notre relevé ne l'a jamais vue » n'est pas « XCTrack
- * l'a retirée ». Confondre `gap` et `legacy` conduirait à effacer des réglages valides ;
- * c'est la distinction dont dépend tout ce chantier, et elle tient dans ces phrases.
+ * Deux cas sur huit seulement autorisent une suppression, et c'est le renseignement
+ * central de tout l'écran.
  */
-export const CATEGORIES: Record<FindingCategory, CategoryDescription> = {
-  legacy: {
-    category: 'legacy',
-    badge: 'périmé',
-    title: 'Réglages périmés : la version visée ne les lit plus',
-    evidence:
-      'Nous lisons ces réglages dans des versions plus anciennes, plus dans celle-ci — et ' +
-      'de vrais fichiers écrits par cette version-là les portent quand même. XCTrack garde ' +
-      'sans les lire les réglages qu’il ne connaît plus : ici, nous l’avons vu se produire, ' +
-      'nous ne le supposons pas.',
-    verdict:
-      'Une suppression se défend ici. C’est le seul cas qu’un vrai fichier vient confirmer.',
-    removal: 'defensible'
-  },
-  'past-only': {
-    category: 'past-only',
-    badge: 'lu avant seulement',
-    title: 'Lus par des versions plus anciennes seulement',
-    evidence:
-      'Nous lisons ces réglages dans des versions plus anciennes, plus dans celle qui est ' +
-      'visée. Mais aucun vrai fichier ne vient le confirmer : nous n’avons ici que notre ' +
-      'lecture des versions, sans l’exemple qui la vérifie.',
-    verdict:
-      'Une suppression se défend, sur notre seule lecture. Rien ne dit que XCTrack les ait ' +
-      'retirés : nous ne les y lisons plus, c’est tout.',
-    removal: 'defensible'
-  },
-  'future-only': {
-    category: 'future-only',
-    badge: 'apparu après',
-    title: 'Apparus après la version visée',
-    evidence:
-      'Nous ne lisons ces réglages que dans des versions plus récentes que celle qui est ' +
-      'visée. Ce fichier vient donc d’une version plus récente que celle choisie ici.',
-    verdict:
-      'Ne pas supprimer. La version visée les ignore ; une version plus récente les ' +
-      'retrouvera intacts.',
-    removal: 'never'
-  },
-  straddled: {
-    category: 'straddled',
-    badge: 'angle mort',
-    title: 'Lus avant et après la version visée, mais pas par elle',
-    evidence:
-      'Nous lisons ces réglages dans les versions d’avant et dans celles d’après, et nous ' +
-      'les manquons juste ici. Un réglage qui disparaîtrait pour revenir à l’identique ' +
-      'serait une bizarrerie ; le plus simple est que notre lecture ait un trou à cet ' +
-      'endroit.',
-    verdict: 'Ne pas supprimer. Le trou est chez nous, pas dans votre fichier.',
-    removal: 'never'
-  },
-  'never-read': {
-    category: 'never-read',
-    badge: 'inconnu',
-    title: 'Inconnus : aucune version que nous ayons lue ne les lit',
-    evidence:
-      'Aucune des versions de XCTrack que nous avons pu lire ne porte ce réglage sur ce ' +
-      'gadget, et aucun vrai fichier ne l’y montre non plus. Nous ne savons pas d’où il ' +
-      'vient.',
-    verdict:
-      'Nous ne savons pas. Ce n’est pas la preuve que le réglage soit périmé — seulement ' +
-      'que nous ne le connaissons pas.',
-    removal: 'undecided'
-  },
-  gap: {
-    category: 'gap',
-    badge: 'angle mort',
-    title: 'Notre lecture a un trou : le réglage existait bien',
-    evidence:
-      'Nous n’avons pas vu ces réglages dans cette version-là, mais nous les lisons dans ' +
-      'des versions plus récentes, et un vrai fichier écrit par elle les porte. Le réglage ' +
-      'existait : c’est nous qui l’avons manqué.',
-    verdict:
-      'Ne jamais supprimer. Ce sont des réglages valides, et les prendre pour des réglages ' +
-      'périmés effacerait les vôtres.',
-    removal: 'never'
-  },
-  blind: {
-    category: 'blind',
-    badge: 'angle mort',
-    title: 'Réglages que nous ne voyons nulle part',
-    evidence:
-      'De vrais fichiers les portent, et aucune version que nous avons pu lire ne les ' +
-      'déclare. Nous ne les voyons nulle part, et notre silence ne dit rien d’eux.',
-    verdict: 'Rien à conclure. Ne pas supprimer sur cette base.',
-    removal: 'undecided'
-  },
-  'unknown-widget': {
-    category: 'unknown-widget',
-    badge: 'gadget inconnu',
-    title: 'Gadgets que la version visée ne connaît pas',
-    evidence:
-      'Ce type de gadget ne figure pas dans ce que nous avons lu de cette version. Nous ne ' +
-      'savons donc rien de ses réglages : un gadget que nous n’avons jamais vu n’est pas ' +
-      'un gadget retiré.',
-    verdict: 'Rien à conclure sur ses réglages.',
-    removal: 'undecided'
+export const CATEGORY_REMOVAL: Readonly<Record<FindingCategory, RemovalStance>> = {
+  legacy: 'defensible',
+  'past-only': 'defensible',
+  'future-only': 'never',
+  straddled: 'never',
+  'never-read': 'undecided',
+  gap: 'never',
+  blind: 'undecided',
+  'unknown-widget': 'undecided'
+}
+
+/** Les quatre phrases d'un cas, sans ce que le code décide. */
+type CategoryProse = Pick<CategoryDescription, 'badge' | 'title' | 'evidence' | 'verdict'>
+
+/**
+ * Les huit cas, rédigés une fois pour toutes — au catalogue, dans les cinq langues.
+ *
+ * Le ton n'est pas un ornement : « ce réglage est inconnu de la version visée » n'est pas
+ * « ce réglage est périmé », et « notre relevé ne l'a jamais vu » n'est pas « XCTrack l'a
+ * retiré ». Confondre `gap` et `legacy` conduirait à effacer des réglages valides ; c'est
+ * la distinction dont dépend tout ce chantier, et elle tient dans ces phrases.
+ *
+ * `straddled`, `gap` et `blind` lisent **le même badge** : « angle mort ». Le partage est
+ * voulu — trois familles techniques, une seule chose à retenir : nous ne voyons rien ici,
+ * donc nous ne touchons à rien. Ce sont les titres qui les distinguent.
+ */
+const CATEGORY_PROSE: Readonly<Record<FindingCategory, (tr: Translator) => CategoryProse>> = {
+  legacy: (tr) => ({
+    badge: tr.t('versions.badgeOutdated'),
+    title: tr.t('versions.titleLegacy'),
+    evidence: tr.t('versions.evidenceLegacy'),
+    verdict: tr.t('versions.verdictLegacy')
+  }),
+  'past-only': (tr) => ({
+    badge: tr.t('versions.badgeReadBefore'),
+    title: tr.t('versions.titlePastOnly'),
+    evidence: tr.t('versions.evidencePastOnly'),
+    verdict: tr.t('versions.verdictPastOnly')
+  }),
+  'future-only': (tr) => ({
+    badge: tr.t('versions.badgeAppearedLater'),
+    title: tr.t('versions.titleFutureOnly'),
+    evidence: tr.t('versions.evidenceFutureOnly'),
+    verdict: tr.t('versions.verdictFutureOnly')
+  }),
+  straddled: (tr) => ({
+    badge: tr.t('versions.badgeBlindSpot'),
+    title: tr.t('versions.titleStraddled'),
+    evidence: tr.t('versions.evidenceStraddled'),
+    verdict: tr.t('versions.verdictStraddled')
+  }),
+  'never-read': (tr) => ({
+    badge: tr.t('versions.badgeUnknown'),
+    title: tr.t('versions.titleNeverRead'),
+    evidence: tr.t('versions.evidenceNeverRead'),
+    verdict: tr.t('versions.verdictNeverRead')
+  }),
+  gap: (tr) => ({
+    badge: tr.t('versions.badgeBlindSpot'),
+    title: tr.t('versions.titleGap'),
+    evidence: tr.t('versions.evidenceGap'),
+    verdict: tr.t('versions.verdictGap')
+  }),
+  blind: (tr) => ({
+    badge: tr.t('versions.badgeBlindSpot'),
+    title: tr.t('versions.titleBlind'),
+    evidence: tr.t('versions.evidenceBlind'),
+    verdict: tr.t('versions.verdictBlind')
+  }),
+  'unknown-widget': (tr) => ({
+    badge: tr.t('versions.badgeUnknownWidget'),
+    title: tr.t('versions.titleUnknownWidget'),
+    evidence: tr.t('versions.evidenceUnknownWidget'),
+    verdict: tr.t('versions.verdictUnknownWidget')
+  })
+}
+
+/** Un cas, dit dans la langue du pilote. */
+export function categoryDescription(
+  tr: Translator, category: FindingCategory
+): CategoryDescription {
+  return {
+    category,
+    removal: CATEGORY_REMOVAL[category],
+    ...CATEGORY_PROSE[category](tr)
   }
+}
+
+/** Les huit, dans l'ordre d'affichage. Un écran les construit une fois. */
+export function categoryDescriptions(
+  tr: Translator
+): Record<FindingCategory, CategoryDescription> {
+  const table = {} as Record<FindingCategory, CategoryDescription>
+  for (const category of CATEGORY_ORDER) table[category] = categoryDescription(tr, category)
+  return table
 }
 
 /** L'ordre d'affichage : d'abord ce sur quoi on peut agir, ensuite ce qu'on ignore. */
@@ -382,11 +385,6 @@ export const CATEGORY_ORDER: FindingCategory[] = [
 ]
 
 export type Orientation = 'portrait' | 'landscape'
-
-const ORIENTATION_LABELS: Record<Orientation, string> = {
-  portrait: 'Portrait',
-  landscape: 'Paysage'
-}
 
 /** Où se trouve le gadget dont on parle, pour que le pilote le retrouve. */
 export interface WidgetPlace {
@@ -487,10 +485,6 @@ function pairsAt(db: VersionDatabase, tier: number): Map<string, Set<string>> {
   return table
 }
 
-/** « 3 versions portent ce numéro » — la phrase revient à deux endroits du choix. */
-const VERSIONS_BEAR: PluralForms = { one: '{count} version porte', other: '{count} versions portent' }
-const VERSION_COUNT: PluralForms = { one: '{count} version', other: '{count} versions' }
-
 /**
  * L'écart entre deux paliers, calculé sur les ensembles et non cumulé. Les réglages
  * apportés par un gadget entièrement nouveau ne sont **pas** comptés parmi les réglages
@@ -498,7 +492,7 @@ const VERSION_COUNT: PluralForms = { one: '{count} version', other: '{count} ver
  * le pilote ne pourrait pas relire.
  */
 export function tierDelta(
-  db: VersionDatabase, fromTier: number | null, toTier: number, language = 'fr'
+  db: VersionDatabase, tr: Translator, fromTier: number | null, toTier: number, language = 'fr'
 ): TierDelta {
   const target = db.tier(toTier)
   const source = fromTier === null ? undefined : db.tier(fromTier)
@@ -512,12 +506,7 @@ export function tierDelta(
       keysRemoved: [],
       keysAddedCount: 0,
       keysRemovedCount: 0,
-      summary:
-        'Aucune version publiée ne précède celle-ci parmi celles que nous avons pu lire : ' +
-        `rien à comparer. ${plural({
-          one: '{count} gadget connu',
-          other: '{count} gadgets connus'
-        }, target?.widgetCount ?? 0)}.`
+      summary: tr.t('versions.noPreviousRelease', { count: target?.widgetCount ?? 0 })
     }
   }
 
@@ -553,22 +542,25 @@ export function tierDelta(
 
   const parts: string[] = []
   if (widgetsAdded.length > 0) {
-    parts.push(plural({ one: '{count} gadget ajouté', other: '{count} gadgets ajoutés' }, widgetsAdded.length))
+    parts.push(tr.t('versions.widgetsAdded', { count: widgetsAdded.length }))
   }
   if (widgetsRemoved.length > 0) {
-    parts.push(plural({ one: '{count} gadget retiré', other: '{count} gadgets retirés' }, widgetsRemoved.length))
+    parts.push(tr.t('versions.widgetsRemoved', { count: widgetsRemoved.length }))
   }
   if (keysAddedCount > 0) {
-    parts.push(plural({ one: '{count} réglage ajouté', other: '{count} réglages ajoutés' }, keysAddedCount))
+    parts.push(tr.t('versions.settingsAdded', { count: keysAddedCount }))
   }
   if (keysRemovedCount > 0) {
-    parts.push(plural({ one: '{count} réglage retiré', other: '{count} réglages retirés' }, keysRemovedCount))
+    parts.push(tr.t('versions.settingsRemoved', { count: keysRemovedCount }))
   }
 
-  const fromName = versionLabel(db, fromTier)
+  const fromName = versionLabel(db, tr, fromTier)
+  // Une colonne de comptes, pas une énumération dans une phrase : `format.list` écrirait
+  // « 2 gadgets ajoutés et 12 réglages ajoutés », là où le français du dépôt aligne les
+  // quatre mesures. Voir `src/i18n/CLAUDE.md` § 4.
   const summary = parts.length === 0
-    ? `Rien ne distingue cette version de ${fromName} : nous y lisons les mêmes réglages.`
-    : `Depuis ${fromName} : ${parts.join(', ')}.`
+    ? tr.t('versions.deltaNone', { version: fromName })
+    : tr.t('versions.deltaSince', { version: fromName, changes: parts.join(', ') })
 
   return {
     fromTier,
@@ -600,21 +592,21 @@ export { splitVersionName } from '../catalog/versionName'
  * fait, même si trois autres versions y mènent.
  */
 export function versionLabel(
-  db: VersionDatabase, tier: number, code?: number | null
+  db: VersionDatabase, tr: Translator, tier: number, code?: number | null
 ): string {
   if (code !== undefined && code !== null) {
     const entry = db.index.versions.find((v) => v.tier === tier && v.code === code)
-    if (entry !== undefined) return plainLabel(entry.name)
+    if (entry !== undefined) return plainLabel(tr, entry.name)
   }
   const entry = db.tier(tier)
-  if (entry === undefined) return 'version inconnue'
-  return entry.releaseNames[0] ?? plainLabel(entry.firstName)
+  if (entry === undefined) return tr.t('versions.unknownVersion')
+  return entry.releaseNames[0] ?? plainLabel(tr, entry.firstName)
 }
 
 /** « 1.0.3-beta-5-gc036d8f2c » → « 1.0.3-beta (construction 5-gc036d8f2c) ». */
-function plainLabel(name: string): string {
+function plainLabel(tr: Translator, name: string): string {
   const { release, build } = splitVersionName(name)
-  return build === null ? release : `${release} (construction ${build})`
+  return build === null ? release : tr.t('versions.buildLabel', { release, build })
 }
 
 /**
@@ -627,7 +619,7 @@ function plainLabel(name: string): string {
  * lorsque deux entrées portent le même nom — sans quoi le pilote de l'AIR³ lirait
  * « 1.0.3-beta (construction 5-gc036d8f2c) » là où son appareil affiche « 1.0.3-beta ».
  */
-export function versionOptions(db: VersionDatabase): VersionOption[] {
+export function versionOptions(db: VersionDatabase, tr: Translator): VersionOption[] {
   interface Draft {
     codes: number[]
     release: string
@@ -676,7 +668,7 @@ export function versionOptions(db: VersionDatabase): VersionOption[] {
     .map((draft) => {
       const ambiguous = (shared.get(draft.release) ?? 0) > 1
       const label = ambiguous && draft.build !== null
-        ? `${draft.release} (construction ${draft.build})`
+        ? tr.t('versions.buildLabel', { release: draft.release, build: draft.build })
         : draft.release
       return {
         code: draft.codes[0] as number,
@@ -755,11 +747,18 @@ function tiersDeclaredBy(db: VersionDatabase, code: number, name: string | null)
  *   elle-même un voisin (`approximatedBy`) : il est dit au pilote au lieu d'être masqué ;
  * - **rien** — on ne choisit pas : deviner serait inventer.
  */
-export function suggestTier(db: VersionDatabase, document: JsonNode): VersionSuggestion {
+export function suggestTier(
+  db: VersionDatabase, tr: Translator, document: JsonNode
+): VersionSuggestion {
   const version = readDocumentVersion(document)
+  // Le numéro de version est un **identifiant** : il se passe en `string`, sans quoi il
+  // s'écrirait « 100 030 », qui ne se retrouve dans aucun fichier XCTrack.
   const declared = version.name === null
-    ? `la version ${String(version.code)}`
-    : `XCTrack ${splitVersionName(version.name).release} (numéro ${String(version.code)})`
+    ? tr.t('versions.declaredByCode', { code: String(version.code) })
+    : tr.t('versions.declaredByName', {
+      release: splitVersionName(version.name).release,
+      code: String(version.code)
+    })
 
   if (version.code === null) {
     return {
@@ -769,10 +768,7 @@ export function suggestTier(db: VersionDatabase, document: JsonNode): VersionSug
       selected: null,
       selectedCode: null,
       approximatedFrom: null,
-      message:
-        'Ce fichier ne dit pas de quelle version de XCTrack il vient : il ne porte pas son ' +
-        'numéro de version. Rien ne permet d’en proposer une — choisissez celle de ' +
-        'l’appareil sur lequel vous réimporterez ce fichier.'
+      message: tr.t('versions.messageUndeclared')
     }
   }
 
@@ -782,10 +778,6 @@ export function suggestTier(db: VersionDatabase, document: JsonNode): VersionSug
     const tier = direct[0] as number
     // Le nom a tranché là où le numéro ne pouvait pas : le dire, parce que c'est ce qui
     // rend la présélection sûre plutôt qu'arbitraire.
-    const pinned = byCode.length > 1
-      ? ` ${plural(VERSIONS_BEAR, byCode.length)} ce numéro ; le nom ` +
-        'que le fichier déclare n’en désigne qu’une.'
-      : ''
     return {
       version,
       basis: 'exact',
@@ -793,9 +785,9 @@ export function suggestTier(db: VersionDatabase, document: JsonNode): VersionSug
       selected: tier,
       selectedCode: version.code,
       approximatedFrom: null,
-      message:
-        `Ce fichier a été écrit par ${declared}.${pinned} C’est elle qui est visée ` +
-        'ci-dessous, et vous pouvez en choisir une autre.'
+      message: byCode.length > 1
+        ? tr.t('versions.messageExactPinned', { declared, count: byCode.length })
+        : tr.t('versions.messageExact', { declared })
     }
   }
   if (direct.length > 1) {
@@ -807,13 +799,11 @@ export function suggestTier(db: VersionDatabase, document: JsonNode): VersionSug
       selected,
       selectedCode: version.code,
       approximatedFrom: null,
-      message:
-        `Ce fichier a été écrit par ${declared}. ` +
-        `${plural(VERSIONS_BEAR, direct.length)} ce numéro sans ` +
-        'accepter les mêmes réglages, et le fichier ne dit pas laquelle l’a écrit. Nous ' +
-        `visons la plus récente, ${versionLabel(db, selected, version.code)} — un choix ` +
-        'arbitraire, assumé comme tel : chaque remarque qui changerait sous une des autres ' +
-        'est signalée ci-dessous.'
+      message: tr.t('versions.messageAmbiguous', {
+        declared,
+        count: direct.length,
+        version: versionLabel(db, tr, selected, version.code)
+      })
     }
   }
 
@@ -822,11 +812,6 @@ export function suggestTier(db: VersionDatabase, document: JsonNode): VersionSug
     const tiers = db.tiersOf(fallbackCode)
     if (tiers.length > 0) {
       const selected = Math.max(...tiers)
-      const several = tiers.length > 1
-        ? ` Ce numéro-là couvre lui-même ${plural(VERSION_COUNT, tiers.length)} ; ` +
-          `nous visons la plus récente, ${versionLabel(db, selected, fallbackCode)}, et ` +
-          'signalons ci-dessous toute remarque qui changerait sous une autre.'
-        : ` Nous visons ${versionLabel(db, selected, fallbackCode)}.`
       return {
         version,
         basis: 'approximated',
@@ -834,21 +819,24 @@ export function suggestTier(db: VersionDatabase, document: JsonNode): VersionSug
         selected,
         selectedCode: fallbackCode,
         approximatedFrom: fallbackCode,
-        message:
-          `Ce fichier a été écrit par ${declared}, qu’aucune version relevée ne porte. Nous ` +
-          `nous replions sur le numéro le plus proche, ${String(fallbackCode)} — ce n’est ` +
-          `pas la même version, c’est la plus proche que nous ayons pu lire.${several}`
+        message: tiers.length > 1
+          ? tr.t('versions.messageApproximatedSeveral', {
+            declared,
+            code: String(fallbackCode),
+            count: tiers.length,
+            version: versionLabel(db, tr, selected, fallbackCode)
+          })
+          : tr.t('versions.messageApproximated', {
+            declared,
+            code: String(fallbackCode),
+            version: versionLabel(db, tr, selected, fallbackCode)
+          })
       }
     }
   }
 
   const range = knownCodeRange(db)
-  const situate = range === null
-    ? ''
-    : ` Les numéros que nous connaissons vont de ${String(range.min)} à ` +
-      `${String(range.max)} ; celui-ci ${version.code > range.max
-        ? 'les dépasse tous'
-        : version.code < range.min ? 'est en deçà de tous' : 'tombe entre deux d’entre eux'}.`
+  const situate = range === null ? null : situateCode(tr, version.code, range)
   return {
     version,
     basis: 'unrecognized',
@@ -856,24 +844,35 @@ export function suggestTier(db: VersionDatabase, document: JsonNode): VersionSug
     selected: null,
     selectedCode: null,
     approximatedFrom: null,
-    message:
-      `Ce fichier a été écrit par ${declared}, que nous ne connaissons pas : nous avons pu ` +
-      `lire ${plural({
-        one: '{count} version de XCTrack',
-        other: '{count} versions de XCTrack'
-      }, db.index.versions.length)}, ` +
-      'et celle-ci n’en fait pas partie.' +
-      `${situate} Nous n’en proposons aucune — en désigner une au jugé reviendrait à ` +
-      'inventer. Choisissez celle de votre appareil.'
+    message: situate === null
+      ? tr.t('versions.messageUnrecognized', {
+        declared, count: db.index.versions.length
+      })
+      : tr.t('versions.messageUnrecognizedSituated', {
+        declared, count: db.index.versions.length, situate
+      })
   }
+}
+
+/** Où ce numéro tombe par rapport à ceux que nous connaissons — une phrase entière. */
+function situateCode(
+  tr: Translator, code: number, range: { min: number; max: number }
+): string {
+  const bounds = { min: String(range.min), max: String(range.max) }
+  if (code > range.max) return tr.t('versions.rangeAbove', bounds)
+  if (code < range.min) return tr.t('versions.rangeBelow', bounds)
+  return tr.t('versions.rangeBetween', bounds)
 }
 
 /* -------------------------------------------------------------------- le diagnostic */
 
 export interface DiagnoseOptions {
   tier: number
+  /** Notre prose : il ne sert ici qu'à nommer la version visée. Voir `src/i18n/axes.ts`. */
+  tr: Translator
   /** Les paliers que le `versionCode` désigne, pour éprouver la stabilité des constats. */
   candidateTiers?: number[]
+  /** La langue des **libellés de XCTrack** — l'autre axe : elle suit le fichier ouvert. */
   language?: string
 }
 
@@ -884,7 +883,7 @@ export interface DiagnoseOptions {
 export function diagnose(
   db: VersionDatabase, layout: Layout, options: DiagnoseOptions
 ): Diagnosis {
-  const { tier } = options
+  const { tier, tr } = options
   const language = options.language ?? 'fr'
   const candidateTiers = (options.candidateTiers ?? [tier]).filter((t) => db.tier(t) !== undefined)
   const others = candidateTiers.filter((t) => t !== tier)
@@ -943,7 +942,7 @@ export function diagnose(
 
   return {
     tier,
-    versionLabel: versionLabel(db, tier),
+    versionLabel: versionLabel(db, tr, tier),
     widgetCount,
     keyCount,
     recognizedCount: statusCounts.present,
@@ -960,19 +959,30 @@ export function diagnose(
  * Un constat qui diverge selon le palier candidat doit se lire comme tel : le membre de
  * phrase est fabriqué ici pour que l'écran et les tests disent la même chose.
  */
-export function divergenceSentence(db: VersionDatabase, finding: KeyFinding): string {
+export function divergenceSentence(
+  db: VersionDatabase, tr: Translator, finding: KeyFinding
+): string {
   if (finding.stable) return ''
-  const parts = finding.divergences.map((divergence) => {
-    const word = divergence.category === null ? 'reconnu' : CATEGORIES[divergence.category].badge
-    return `${versionLabel(db, divergence.tier)} : ${word}`
+  const parts = finding.divergences.map((divergence) => tr.t('versions.divergencePart', {
+    version: versionLabel(db, tr, divergence.tier),
+    word: divergence.category === null
+      ? tr.t('versions.badgeRecognized')
+      : categoryDescription(tr, divergence.category).badge
+  }))
+  // Une colonne « version : mot », pas une énumération : `format.list` y écrirait « et »
+  // entre deux couples déjà ponctués. Le séparateur, lui, est de la ponctuation de
+  // langue — le français pose une espace avant le point-virgule, pas l'anglais.
+  return tr.t('versions.unstableFinding', {
+    divergences: parts.join(tr.t('versions.divergenceJoin'))
   })
-  return `Remarque instable — sous ${parts.join(' ; ')}.`
 }
 
 /** « Portrait · page 2 · rang 1 · Carte de compétition » */
-export function placeLabel(place: WidgetPlace): string {
-  return `${ORIENTATION_LABELS[place.orientation]} · page ${place.page} · rang ${place.rank}` +
-    ` · ${place.label}`
+export function placeLabel(tr: Translator, place: WidgetPlace): string {
+  const where = { page: place.page, rank: place.rank, name: place.label }
+  return place.orientation === 'portrait'
+    ? tr.t('versions.placePortrait', where)
+    : tr.t('versions.placeLandscape', where)
 }
 
 /* ------------------------------------------------------------------------ affichage */
@@ -989,6 +999,18 @@ function el<K extends keyof HTMLElementTagNameMap>(
 export interface VersionPanelOptions {
   /** Le document ouvert. Il n'est jamais modifié. */
   document: JsonNode
+  /**
+   * Le traducteur de **notre prose**, tenu par `main.ts` et passé ici — aucun module ne
+   * va chercher la langue courante (`src/i18n/CLAUDE.md` § 5).
+   *
+   * ⚠️ Facultatif **le temps que `main.ts` ajoute la ligne** : sans lui, le panneau
+   * charge le catalogue de la langue d'écriture, le français. C'est un repli, pas une
+   * option — il rendrait un écran français à un pilote qui a demandé l'allemand. Le jour
+   * où l'appel de `main.ts` porte `tr`, ce paramètre devient obligatoire et le repli
+   * disparaît.
+   */
+  tr?: Translator
+  /** La langue des **libellés de XCTrack**, l'autre axe : elle suit le fichier ouvert. */
   language?: string
   /** Base déjà chargée ; sinon `loadVersionDatabase()` s'en charge à cet instant. */
   database?: VersionDatabase
@@ -1028,26 +1050,24 @@ export interface VersionPanel {
 /** Valeur d'option réservée : « aucune version choisie ». */
 const NO_VERSION = ''
 
-/** « a, b et c » — la liste française, celle qu'on lit à voix haute. */
-function frenchList(items: string[]): string {
-  if (items.length <= 1) return items[0] ?? ''
-  return `${items.slice(0, -1).join(', ')} et ${items[items.length - 1] as string}`
-}
-
 /**
  * Comment titrer le groupe de tête, celui qui porte la version du fichier. Il est
  * toujours au singulier quand une seule entrée y figure : « les versions que ce fichier
  * peut désigner » pour une seule ligne serait une bizarrerie de plus à déchiffrer.
+ *
+ * `count > 1` est ici une **condition d'affichage** — quel titre montrer — et non un
+ * accord : rien à reverser sur le pluriel du socle, qui choisit une forme et ne choisit
+ * pas une phrase.
  */
-function fileGroupLabel(basis: SuggestionBasis, count: number): string {
+function fileGroupLabel(tr: Translator, basis: SuggestionBasis, count: number): string {
   if (basis === 'approximated') {
     return count > 1
-      ? 'Les versions les plus proches de celle de ce fichier'
-      : 'La version la plus proche de celle de ce fichier'
+      ? tr.t('versions.groupNearestSeveral')
+      : tr.t('versions.groupNearestOne')
   }
   return count > 1
-    ? 'Les versions que ce fichier peut désigner'
-    : 'La version qui a écrit ce fichier'
+    ? tr.t('versions.groupCandidates')
+    : tr.t('versions.groupWriter')
 }
 
 /**
@@ -1060,12 +1080,15 @@ export async function buildVersionPanel(
   options: VersionPanelOptions
 ): Promise<VersionPanel> {
   const db = options.database ?? await loadVersionDatabase()
+  // Le repli le temps que `main.ts` passe `tr` — voir `VersionPanelOptions.tr`. Le
+  // catalogue français est un morceau à part : rien de français n'est embarqué ici.
+  const tr = options.tr ?? await loadTranslator(UI_FALLBACK_LANGUAGE)
   const language = options.language ?? 'fr'
-  const menu = versionOptions(db)
+  const menu = versionOptions(db, tr)
 
   let source = options.document
   let layout = readLayout(source)
-  let suggestion = suggestTier(db, source)
+  let suggestion = suggestTier(db, tr, source)
   let chosen: VersionOption | null = null
   let report: Diagnosis | null = null
   let cleanup: CleanupSection | undefined
@@ -1075,24 +1098,24 @@ export async function buildVersionPanel(
   function deltaAt(tier: number): TierDelta {
     const known = deltas.get(tier)
     if (known !== undefined) return known
-    const fresh = tierDelta(db, previousPublishedTier(db, tier), tier, language)
+    const fresh = tierDelta(db, tr, previousPublishedTier(db, tier), tier, language)
     deltas.set(tier, fresh)
     return fresh
   }
 
   const root = el('section', 'vdiag')
-  root.setAttribute('aria-label', 'Version visée et compatibilité')
+  root.setAttribute('aria-label', tr.t('versions.panelLabel'))
 
   const choice = el('div', 'vdiag__choice')
   const select = el('select', 'vdiag__select')
   select.id = 'vdiag-version'
-  const label = el('label', 'vdiag__label', 'La version de XCTrack que vous visez')
+  const label = el('label', 'vdiag__label', tr.t('versions.targetLabel'))
   label.htmlFor = select.id
   const basis = el('p', 'vdiag__basis')
   const same = el('p', 'vdiag__same')
   const delta = el('p', 'vdiag__delta')
   const deltaDetails = el('details', 'vdiag__details')
-  const deltaSummary = el('summary', undefined, 'Le détail de ces changements')
+  const deltaSummary = el('summary', undefined, tr.t('versions.deltaDetails'))
   const deltaBody = el('div', 'vdiag__details-body')
   deltaDetails.append(deltaSummary, deltaBody)
   choice.append(label, select, basis, same, delta, deltaDetails)
@@ -1125,7 +1148,7 @@ export async function buildVersionPanel(
 
   function fillOptions(): void {
     select.textContent = ''
-    const placeholder = el('option', undefined, '— aucune version choisie —')
+    const placeholder = el('option', undefined, tr.t('versions.noVersionOption'))
     placeholder.value = NO_VERSION
     select.append(placeholder)
 
@@ -1133,12 +1156,12 @@ export async function buildVersionPanel(
     const taken = new Set(mine.map((option) => option.value))
     const rest = menu.filter((option) => !taken.has(option.value))
 
-    group(fileGroupLabel(suggestion.basis, mine.length), mine)
-    group('Versions publiées, de la plus récente à la plus ancienne',
+    group(fileGroupLabel(tr, suggestion.basis, mine.length), mine)
+    group(tr.t('versions.groupPublished'),
       rest.filter((option) => option.published))
     // Les constructions intermédiaires viennent en dernier, et sous un titre qui dit
     // pourquoi leur nom est illisible : un pilote ordinaire n'en a jamais installé.
-    group('Versions de développement, jamais publiées',
+    group(tr.t('versions.groupDevelopment'),
       rest.filter((option) => !option.published))
 
     select.value = chosen === null ? NO_VERSION : chosen.value
@@ -1159,24 +1182,27 @@ export async function buildVersionPanel(
       (option) => option.tier === chosen?.tier && option.value !== chosen.value
     )
     if (others.length === 0) {
-      same.textContent =
-        `Aucune autre version relevée n’accepte exactement les mêmes réglages que ` +
-        `${chosen.label} : ce qui est dit ci-dessous ne vaut que pour elle.`
+      same.textContent = tr.t('versions.sameNone', { version: chosen.label })
       same.hidden = false
       return
     }
-    same.textContent =
-      `${frenchList(others.map((option) => option.label))} ` +
-      `${plural({ one: 'accepte', other: 'acceptent' }, others.length)} ` +
-      `exactement les mêmes réglages que ${chosen.label} : nous ne les distinguons pas, et ` +
-      `ce qui est dit ci-dessous vaut pour ${plural(VERSION_COUNT, others.length + 1)}.`
+    // L'énumération dans une phrase : `format.list` porte la virgule d'Oxford anglaise
+    // et l'alternance espagnole *y → e*, qu'un assemblage maison ne rendait pas.
+    //
+    // Deux messages et non un pluriel : ce qui change est l'accord du verbe avec le sujet
+    // énuméré — « accepte » pour une version, « acceptent » pour plusieurs — et les cinq
+    // langues accordent de même. Le nombre affiché, lui, est `{total}`, jamais celui-ci.
+    const sentence = { list: tr.format.list(others.map((option) => option.label)),
+      version: chosen.label, total: others.length + 1 }
+    same.textContent = others.length === 1
+      ? tr.t('versions.sameOtherOne', sentence)
+      : tr.t('versions.sameOtherSeveral', sentence)
     same.hidden = false
   }
 
   function renderDelta(): void {
     if (chosen === null) {
-      delta.textContent =
-        'Aucune version choisie : rien n’est comparé, et rien n’est diagnostiqué.'
+      delta.textContent = tr.t('versions.noVersionChosen')
       deltaDetails.hidden = true
       return
     }
@@ -1184,21 +1210,18 @@ export async function buildVersionPanel(
     delta.textContent = change.summary
 
     deltaBody.textContent = ''
+    // Les noms de réglages sont ce que XCTrack écrit : une colonne de données, jointe par
+    // « , » et non par `format.list`, qui en ferait une phrase.
+    const keyLine = (entry: { widget: string; keys: string[] }): string =>
+      tr.t('versions.detailLine', {
+        name: readableName(entry.widget, language),
+        keys: entry.keys.join(', ')
+      })
     const lists: Array<[string, string[]]> = [
-      ['Gadgets ajoutés', change.widgetsAdded],
-      ['Gadgets retirés', change.widgetsRemoved],
-      [
-        'Réglages ajoutés sur des gadgets existants',
-        change.keysAdded.map(
-          (entry) => `${readableName(entry.widget, language)} : ${entry.keys.join(', ')}`
-        )
-      ],
-      [
-        'Réglages retirés',
-        change.keysRemoved.map(
-          (entry) => `${readableName(entry.widget, language)} : ${entry.keys.join(', ')}`
-        )
-      ]
+      [tr.t('versions.detailWidgetsAdded'), change.widgetsAdded],
+      [tr.t('versions.detailWidgetsRemoved'), change.widgetsRemoved],
+      [tr.t('versions.detailSettingsAdded'), change.keysAdded.map(keyLine)],
+      [tr.t('versions.detailSettingsRemoved'), change.keysRemoved.map(keyLine)]
     ]
     let shown = 0
     for (const [title, items] of lists) {
@@ -1215,42 +1238,31 @@ export async function buildVersionPanel(
   function renderReport(): void {
     reportEl.textContent = ''
     if (chosen === null || report === null) {
-      reportEl.append(el('p', 'vdiag__tally',
-        'Choisissez une version pour obtenir le diagnostic de ce fichier.'))
+      reportEl.append(el('p', 'vdiag__tally', tr.t('versions.chooseVersion')))
       return
     }
 
     const tally = el('p', 'vdiag__tally')
-    tally.textContent =
-      `${plural({
-        one: '{count} réglage reconnu',
-        other: '{count} réglages reconnus'
-      }, report.recognizedCount)} sur ` +
-      `${proseFormat.number(report.keyCount)} examinés, répartis sur ` +
-      `${plural({ one: '{count} gadget', other: '{count} gadgets' }, report.widgetCount)}. `
+    tally.textContent = tr.t('versions.tally', {
+      count: report.recognizedCount,
+      examined: report.keyCount,
+      // Le repère se nomme `{instances}` : le diagnostic se raisonne par instance de
+      // gadget, et le catalogue français ne doit porter nulle part la chaîne « widget »,
+      // pas même dans un nom de repère — voir `versions.detailLine`.
+      instances: tr.t('common.widgetCount', { count: report.widgetCount })
+    })
     reportEl.append(tally)
 
     // Le mot dit UNE fois, en tête : plus bas, « nous », c'est ce relevé-là. Trois mots
     // pour la même chose — « notre relevé », « la base », « le corpus » — obligeaient le
     // pilote à deviner qu'il s'agissait du même « quelqu'un » à chaque paragraphe.
     const scope = el('p', 'vdiag__scope')
-    scope.textContent =
-      `Ce diagnostic repose sur notre relevé de ${proseFormat.number(db.index.versions.length)} ` +
-      'versions de XCTrack et sur de vrais fichiers écrits par elles : c’est ce que ' +
-      '« nous » désigne plus bas. Seuls les gadgets des pages y sont examinés — le reste ' +
-      'd’une sauvegarde (vario, unités, capteurs, espaces aériens) n’est pas diagnostiqué. ' +
-      'La position d’un gadget et son type ne sont pas des réglages et ne sont pas comptés.'
+    scope.textContent = tr.t('versions.scope', { count: db.index.versions.length })
     reportEl.append(scope)
 
     if (report.unstableCount > 0) {
       const unstable = el('p', 'vdiag__unstable')
-      unstable.textContent =
-        `${plural({
-          one: '{count} remarque change',
-          other: '{count} remarques changent'
-        }, report.unstableCount)} selon la ` +
-        'version retenue parmi celles que ce fichier peut désigner. Elles sont signalées ' +
-        'une à une.'
+      unstable.textContent = tr.t('versions.unstableNotice', { count: report.unstableCount })
       reportEl.append(unstable)
     }
 
@@ -1276,20 +1288,17 @@ export async function buildVersionPanel(
     }
 
     if (sections === 0) {
-      reportEl.append(el('p', 'vdiag__clean',
-        'Aucun écart : tous les réglages de ce fichier sont lus par la version visée, et ' +
-        'tous ses gadgets y existent. Rien à signaler — ce qui ne veut pas dire que le ' +
-        'fichier soit conforme, seulement que nous n’y trouvons rien à redire.'))
+      reportEl.append(el('p', 'vdiag__clean', tr.t('versions.noFindings')))
     }
   }
 
   function categorySection(category: FindingCategory, findings: KeyFinding[]): HTMLElement {
-    const description = CATEGORIES[category]
+    const description = categoryDescription(tr, category)
     const section = el('section', `vdiag__cat vdiag__cat--${description.removal}`)
     const heading = el('h3', 'vdiag__cat-title')
     heading.append(el('span', 'vdiag__badge', description.badge))
     heading.append(el('span', 'vdiag__cat-text', description.title))
-    heading.append(el('span', 'vdiag__count', proseFormat.number(findings.length)))
+    heading.append(el('span', 'vdiag__count', tr.format.number(findings.length)))
     section.append(heading)
     section.append(el('p', 'vdiag__evidence', description.evidence))
     section.append(el('p', 'vdiag__verdict', description.verdict))
@@ -1307,13 +1316,13 @@ export async function buildVersionPanel(
     const list = el('ul', 'vdiag__list vdiag__list--findings')
     for (const { place, entries } of grouped.values()) {
       const item = el('li')
-      item.append(el('span', 'vdiag__place', placeLabel(place)))
+      item.append(el('span', 'vdiag__place', placeLabel(tr, place)))
       const keys = el('span', 'vdiag__keys', entries.map((entry) => entry.key).join(', '))
       item.append(keys)
       const unstable = entries.filter((entry) => !entry.stable)
       for (const entry of unstable) {
         item.append(el('span', 'vdiag__divergence',
-          `${entry.key} — ${divergenceSentence(db, entry)}`))
+          `${entry.key} — ${divergenceSentence(db, tr, entry)}`))
       }
       list.append(item)
     }
@@ -1322,22 +1331,22 @@ export async function buildVersionPanel(
   }
 
   function widgetSection(findings: WidgetFinding[]): HTMLElement {
-    const description = CATEGORIES['unknown-widget']
+    const description = categoryDescription(tr, 'unknown-widget')
     const section = el('section', 'vdiag__cat vdiag__cat--undecided')
     const heading = el('h3', 'vdiag__cat-title')
     heading.append(el('span', 'vdiag__badge', description.badge))
     heading.append(el('span', 'vdiag__cat-text', description.title))
-    heading.append(el('span', 'vdiag__count', proseFormat.number(findings.length)))
+    heading.append(el('span', 'vdiag__count', tr.format.number(findings.length)))
     section.append(heading)
     section.append(el('p', 'vdiag__evidence', description.evidence))
     section.append(el('p', 'vdiag__verdict', description.verdict))
     const list = el('ul', 'vdiag__list vdiag__list--findings')
     for (const finding of findings) {
       const item = el('li')
-      item.append(el('span', 'vdiag__place', placeLabel(finding.place)))
+      item.append(el('span', 'vdiag__place', placeLabel(tr, finding.place)))
       item.append(el('span', 'vdiag__keys', finding.status === 'absent'
-        ? 'type que nous connaissons, mais pas dans cette version'
-        : 'type que nous n’avons vu dans aucune version'))
+        ? tr.t('versions.widgetKnownElsewhere')
+        : tr.t('versions.widgetNeverSeen')))
       list.append(item)
     }
     section.append(list)
@@ -1371,7 +1380,7 @@ export async function buildVersionPanel(
 
     report = tier === null
       ? null
-      : diagnose(db, layout, { tier, candidateTiers: candidates, language })
+      : diagnose(db, layout, { tier, tr, candidateTiers: candidates, language })
     renderBasis()
     renderSame()
     renderDelta()
@@ -1390,9 +1399,10 @@ export async function buildVersionPanel(
    */
   function renderBasis(): void {
     const elsewhere = chosen !== null && chosen.tier !== suggestion.selected
+    // Deux phrases entières mises bout à bout, jamais deux fragments : la seconde se
+    // traduit seule, et son ordre ne dépend pas de la première.
     basis.textContent = elsewhere && chosen !== null
-      ? `${suggestion.message} Vous visez une autre version que celle-là : le diagnostic ` +
-        `ci-dessous confronte ce fichier à ${chosen.label}.`
+      ? `${suggestion.message} ${tr.t('versions.aimingElsewhere', { version: chosen.label })}`
       : suggestion.message
   }
 
@@ -1403,7 +1413,7 @@ export async function buildVersionPanel(
 
   function reload(): void {
     layout = readLayout(source)
-    suggestion = suggestTier(db, source)
+    suggestion = suggestTier(db, tr, source)
     chosen = pickSuggested()
     fillOptions()
     recompute()
@@ -1428,6 +1438,7 @@ export async function buildVersionPanel(
     const notify = options.onCleanup
     cleanup = buildCleanupSection({
       db,
+      tr,
       layout,
       tier: -1,
       language,
@@ -1448,11 +1459,7 @@ export async function buildVersionPanel(
     // Hors édition, le constat parle de suppressions qui « se défendent » sans qu'aucun
     // bouton ne les permette : un pilote d'essai a cherché ce bouton et ne l'a pas trouvé.
     // Le diagnostic reste entier — c'est ce qu'on vient y lire — mais il dit où agir.
-    const elsewhere = el(
-      'p', 'vdiag__readonly-note',
-      'Vous consultez ce fichier sans le modifier : rien ne peut en être retiré d’ici. ' +
-      'Pour agir sur ce que vous lisez, fermez cette fenêtre et passez en modification.'
-    )
+    const elsewhere = el('p', 'vdiag__readonly-note', tr.t('versions.readonlyNote'))
     root.append(elsewhere)
   }
 

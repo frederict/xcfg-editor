@@ -8,6 +8,13 @@ import { readLayout } from '../../src/model/layout'
 import { buildCleanupSection, type CleanupEvent } from '../../src/ui/cleanupPanel'
 import { buildVersionPanel } from '../../src/ui/versionDiagnostic'
 import { BACKUP_2025, BACKUP_2026, GSON_2022 } from '../fixtures/paths'
+import { makeTranslator } from '../../src/i18n'
+import de from '../../src/i18n/messages/de'
+import en from '../../src/i18n/messages/en'
+import es from '../../src/i18n/messages/es'
+import fr from '../../src/i18n/messages/fr'
+import nl from '../../src/i18n/messages/nl'
+import type { UiLanguage } from '../../src/i18n'
 
 /**
  * L'écran de nettoyage : ce qu'il dit, ce qu'il exige avant d'agir, et ce qu'il permet de
@@ -18,6 +25,9 @@ import { BACKUP_2025, BACKUP_2026, GSON_2022 } from '../fixtures/paths'
  * alors que rien n'est cassé est un défaut, pas un détail de rédaction.
  */
 const db = await loadVersionDatabase()
+
+/** Le traducteur est passé, jamais lu — d'où l'épreuve dans les cinq langues plus bas. */
+const tr = makeTranslator('fr', fr)
 
 function documentOf(path: string): JsonNode {
   return parseJson(readFileSync(path, 'utf8'))
@@ -32,11 +42,12 @@ interface Harness {
   button: (label: RegExp) => HTMLButtonElement | undefined
 }
 
-function harnessOf(path: string, tier: number): Harness {
+function harnessOf(path: string, tier: number, translator = tr): Harness {
   const document = documentOf(path)
   const events: CleanupEvent[] = []
   const section = buildCleanupSection({
     db,
+    tr: translator,
     layout: readLayout(document),
     tier,
     onChange: (event) => events.push(event)
@@ -243,7 +254,7 @@ describe('le geste', () => {
 
 describe('dans le panneau de diagnostic', () => {
   it('ne propose rien tant que l’hôte n’ouvre pas le nettoyage', async () => {
-    const panel = await buildVersionPanel({ document: documentOf(BACKUP_2026), database: db })
+    const panel = await buildVersionPanel({ document: documentOf(BACKUP_2026), database: db, tr })
     expect(panel.cleanupPlan()).toBeNull()
     expect(panel.element.textContent).not.toContain('Enlever ce qu’une ancienne version')
   })
@@ -252,7 +263,7 @@ describe('dans le panneau de diagnostic', () => {
     const events: CleanupEvent[] = []
     const document = documentOf(BACKUP_2026)
     const panel = await buildVersionPanel({
-      document, database: db, onCleanup: (event) => events.push(event)
+      document, database: db, tr, onCleanup: (event) => events.push(event)
     })
     expect(panel.cleanupPlan()?.entries).toHaveLength(9)
 
@@ -268,7 +279,7 @@ describe('dans le panneau de diagnostic', () => {
     const events: CleanupEvent[] = []
     const document = parseJson(source)
     const panel = await buildVersionPanel({
-      document, database: db, onCleanup: (event) => events.push(event)
+      document, database: db, tr, onCleanup: (event) => events.push(event)
     })
     const act = [...panel.element.querySelectorAll('button')]
       .find((node) => /^Enlever/.test(node.textContent ?? ''))
@@ -290,6 +301,7 @@ describe('dans le panneau de diagnostic', () => {
     const panel = await buildVersionPanel({
       document: parseJson('{"info":{"versionCode":100400},"layout":{}}'),
       database: db,
+      tr,
       onCleanup: () => undefined
     })
     expect(panel.tier()).toBeNull()
@@ -298,7 +310,7 @@ describe('dans le panneau de diagnostic', () => {
 
   it('refait la proposition quand le pilote change de version visée', async () => {
     const panel = await buildVersionPanel({
-      document: documentOf(BACKUP_2026), database: db, onCleanup: () => undefined
+      document: documentOf(BACKUP_2026), database: db, tr, onCleanup: () => undefined
     })
     expect(panel.cleanupPlan()?.entries).toHaveLength(9)
     const older = [...panel.select.querySelectorAll('option')]
@@ -313,7 +325,7 @@ describe('dans le panneau de diagnostic', () => {
 
   it('suit un changement de document', async () => {
     const panel = await buildVersionPanel({
-      document: documentOf(BACKUP_2026), database: db, onCleanup: () => undefined
+      document: documentOf(BACKUP_2026), database: db, tr, onCleanup: () => undefined
     })
     panel.setDocument(documentOf(BACKUP_2025))
     expect(panel.cleanupPlan()?.entries).toHaveLength(4)
@@ -335,5 +347,57 @@ describe('le français des libellés', () => {
       box.dispatchEvent(new Event('change'))
     }
     expect(panel.button(/Enlever/)?.textContent).toBe('Enlever ce réglage')
+  })
+})
+
+/* ------------------------------------------------------ le même écran, cinq langues */
+
+/** Les cinq catalogues : cet écran ne lit pas la langue, il la reçoit. */
+const CATALOGS = { fr, de, en, es, nl }
+
+describe('le nettoyage dans les cinq langues', () => {
+  /** La sauvegarde de 2026 visée sur sa propre version : neuf réglages, quatre gadgets. */
+  function textIn(language: UiLanguage): string {
+    return harnessOf(BACKUP_2026, 20, makeTranslator(language, CATALOGS[language])).text()
+  }
+
+  it('emploie le mot que la chrome de XCTrack emploie dans chaque langue', () => {
+    // Mesuré sur 55 relevés : l'appareil dit « Gadget » en français et « Widget » dans
+    // les quatre autres. C'est le seul mot du lot qui ne se traduit pas par symétrie.
+    expect(textIn('fr')).toContain('4 gadgets')
+    expect(textIn('en')).toContain('4 widgets')
+    expect(textIn('nl')).toContain('4 widgets')
+    expect(textIn('de')).toContain('4 Widgets')
+    expect(textIn('es')).toContain('4 widgets')
+  })
+
+  it('nomme le geste dans la langue du pilote, nombre compris', () => {
+    const button = (language: UiLanguage): string =>
+      harnessOf(BACKUP_2026, 20, makeTranslator(language, CATALOGS[language]))
+        .button(/9/)?.textContent ?? ''
+    expect(button('fr')).toBe('Enlever ces 9 réglages')
+    expect(button('en')).toBe('Remove these 9 settings')
+    expect(button('nl')).toBe('Deze 9 instellingen weghalen')
+    expect(button('de')).toBe('Diese 9 Einstellungen entfernen')
+    expect(button('es')).toBe('Quitar estos 9 ajustes')
+  })
+
+  it('ne laisse aucun mot français dans les quatre autres langues', () => {
+    // Une traduction oubliée se verrait ici, et nulle part ailleurs : le compilateur ne
+    // voit qu'une chaîne, et une phrase française reste une phrase.
+    for (const language of ['en', 'nl', 'de', 'es'] as const) {
+      const text = textIn(language)
+      for (const word of ['réglage', 'gadget', 'Enlever', 'ancienne version', 'palier', 'clé']) {
+        expect(text, `${language} — ${word}`).not.toContain(word)
+      }
+    }
+  })
+
+  it('garde le nom du réglage tel que XCTrack l’écrit, dans les cinq', () => {
+    // Le nom technique n'est pas de la prose : il ne se traduit dans aucune langue, et
+    // c'est justement ce qui en fait un réglage que l'appareil ne montre plus.
+    for (const language of Object.keys(CATALOGS) as UiLanguage[]) {
+      expect(textIn(language), language).toContain('mapWidget_showTerrain')
+    }
   })
 })
