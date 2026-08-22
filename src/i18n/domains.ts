@@ -39,7 +39,7 @@ import type { FrenchWidgets } from './messages/fr/widgets'
  * peuvent vouloir toucher, donc le seul qui puisse redevenir un point de conflit. Un mot
  * n'y entre que s'il est déjà employé par deux domaines au moins, et jamais « au cas
  * où » : deux clés voisines dans deux domaines coûtent moins cher qu'un conflit sur ce
- * fichier-ci. Voir `docs/reference/extraction-des-messages.md`.
+ * fichier-ci. Voir `src/i18n/CLAUDE.md`.
  *
  * ## Ce que le découpage ne change pas
  *

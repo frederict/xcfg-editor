@@ -13,6 +13,7 @@
  *
  * | Fichier | Ce qu'il porte |
  * |---|---|
+ * | `CLAUDE.md` | **la marche à suivre pour verser un message** — à lire avant d'extraire de la prose |
  * | `axes.ts` | **les deux axes de langue** — le piège de conception central, à lire en premier |
  * | `languages.ts` | les cinq codes, leur détection, leurs noms dans leur propre langue |
  * | `plural.ts` | une seule règle de pluriel, `Intl.PluralRules`, pour remplacer les huit copies de `count > 1` |

@@ -50,6 +50,16 @@ version. Sa valeur tient à la **distinction entre ce qui est mesuré et ce qui 
 
 Une phrase qui gomme cette distinction fait perdre au projet ce qui le distingue.
 
+## L'extraction de la prose vers `src/i18n/`
+
+Le socle multilingue existe et les cinq langues sont en place ; ce sont les **phrases** des
+écrans qui restent à verser, et ce travail avance par lots parallèles.
+
+**`src/i18n/CLAUDE.md` est la marche à suivre** : dans quel fichier écrire, comment nommer
+une clé, comment le traducteur arrive dans un module, ce qui est déjà tranché (vocabulaire,
+pluriel, formateurs) et ce qu'il ne faut jamais faire. À lire **avant** de toucher un
+littéral de `src/ui/` ou d'ajouter de la prose sous l'interface.
+
 ## Le reste
 
 - **Fidélité à l'octet près** : un fichier ouvert puis réexporté sans modification ressort
