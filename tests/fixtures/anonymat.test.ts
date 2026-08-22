@@ -69,8 +69,21 @@ describe('les fixtures ne portent ni lieu, ni numéro, ni adresse', () => {
    * coordonnée réelle en a bien davantage. Le contrôle porte sur **toute** valeur à
    * décimales longues, quelle que soit sa clé : trier par nom de clé raterait
    * `altSmoothed`, ou la clé qu'une version future de XCTrack ajoutera.
+   *
+   * ⚠️ **Trois décimales, pas six**, et le seuil compte plus qu'il n'en a l'air. Le filet
+   * a commencé à `\d{6,}` et ne voyait donc rien en dessous : mesuré, un domicile réel
+   * écrit `"homeLat": 50.8467` — **quatre** décimales, environ onze mètres, le bâtiment —
+   * passait les vingt-deux tests de ce fichier sans un mot. C'est exactement la précision
+   * qui, dit `CLAUDE.md`, a déjà coûté une purge d'historique. Cinq décimales font un
+   * mètre.
+   *
+   * Le seuil descend donc à trois, et rien n'est perdu : c'est l'heuristique du dessous —
+   * `decimales.size > 2` — qui distingue une coordonnée fabriquée d'une vraie, pas la
+   * longueur. Aucune fixture ne portait de valeur à trois, quatre ou cinq décimales le
+   * jour de la correction ; le filet est resserré **avant** que quelqu'un en ajoute une,
+   * ce qui est le seul moment où cela ne coûte rien.
    */
-  const DECIMALES_LONGUES = /"([^"]+)": (-?\d+\.\d{6,})/g
+  const DECIMALES_LONGUES = /"([^"]+)": (-?\d+\.\d{3,})/g
 
   /**
    * Deux réglages du traitement du signal, relevés dans les fichiers réels et conservés
@@ -96,6 +109,29 @@ describe('les fixtures ne portent ni lieu, ni numéro, ni adresse', () => {
         if (decimales.size > 2) suspectes.push(`${cle} = ${brut}`)
       }
       expect(suspectes).toEqual([])
+    })
+
+    /**
+     * ⚠️ **Le témoin.** Les deux contrôles voisins sont des assertions négatives : sur un
+     * fichier propre, ils sont verts en ne regardant rien, et ils resteraient verts si le
+     * filet cessait de mordre. Celui-ci plante dans le texte un domicile réel à quatre
+     * décimales — la valeur exacte qui traversait le filet à six — et exige qu'il soit
+     * signalé. Il est refait sur **chaque** fixture : c'est le fichier qui est examiné, pas
+     * seulement la constante.
+     */
+    it(`${nom} : le filet mord bien sur un domicile à quatre décimales`, () => {
+      const pique = texte.replace('"preferences": {',
+        '"preferences": {\n    "homeLat": 50.8467,\n    "homeLon": 4.3524,')
+      // Sans point d'insertion — un fichier `pages` n'a pas de bloc `preferences` — on
+      // pique en tête : ce qui compte est le balayage du texte, pas sa structure.
+      const essai = pique === texte ? `"homeLat": 50.8467,\n${texte}` : pique
+
+      const suspectes: string[] = []
+      for (const [, cle, brut] of essai.matchAll(DECIMALES_LONGUES)) {
+        if (SANS_LIEU.has(cle!)) continue
+        if (new Set(brut!.split('.')[1]!).size > 2) suspectes.push(`${cle} = ${brut}`)
+      }
+      expect(suspectes).toContain('homeLat = 50.8467')
     })
 
     it(`${nom} : ni numéro de téléphone ni adresse électronique`, () => {
