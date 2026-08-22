@@ -177,8 +177,9 @@ const app: DomainCatalog<'app'> = {
   'landing.stepEditText': 'Verplaats een widget met uw vinger of de muis, verander het ' +
     'formaat, voeg er andere toe: de pagina wordt voor uw ogen op ware grootte hertekend.',
   'landing.stepKnowTitle': 'Goed om te weten',
-  'landing.stepKnowText': 'Het is de instelling ‘navigations’ van een pagina, en niet het ' +
-    'paginatype, die bepaalt wanneer het toestel ze toont.',
+  'landing.stepKnowText': 'Niet het paginatype bepaalt wanneer het toestel een pagina in ' +
+    'de vlucht toont, maar een aparte instelling — en deze editor schrijft die voluit uit, ' +
+    'pagina voor pagina.',
 
   'landing.returning': 'Al eens langs geweest? De configuraties die u bewaard hebt, staan in ' +
     'het menu ‘Bestand’ rechtsboven, onder ‘Bibliotheek’: ze zijn deze browser nooit uit geweest.',

@@ -175,8 +175,9 @@ const app: DomainCatalog<'app'> = {
   'landing.stepEditText': 'Mueva un widget con el dedo o con el ratón, cambie su tamaño, añada ' +
     'otros: la página se redibuja a tamaño real ante sus ojos.',
   'landing.stepKnowTitle': 'Conviene saberlo',
-  'landing.stepKnowText': 'Es el ajuste «navigations» de una página, y no su tipo, lo que ' +
-    'decide cuándo el aparato la muestra.',
+  'landing.stepKnowText': 'No es el tipo de una página lo que decide cuándo el aparato la ' +
+    'muestra en vuelo, sino un ajuste aparte, y este editor se lo dice página por página, ' +
+    'con todas sus letras.',
 
   'landing.returning': '¿Ya ha estado aquí? Las configuraciones que guardó están en el ' +
     'menú «Archivo», arriba a la derecha, en «Biblioteca»: nunca han salido de este navegador.',

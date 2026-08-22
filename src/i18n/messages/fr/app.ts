@@ -325,8 +325,23 @@ const app = {
   'landing.stepEditText': 'Déplacez un gadget au doigt ou à la souris, changez sa taille, ' +
     'ajoutez-en d’autres : la page se redessine à sa taille réelle sous vos yeux.',
   'landing.stepKnowTitle': 'À savoir',
-  'landing.stepKnowText': 'C’est le réglage « navigations » d’une page, et non son type, qui ' +
-    'décide des moments où l’appareil la montre.',
+  /**
+   * ⚠️ **Le nom du réglage tel qu'il s'écrit dans le fichier n'est pas ici.** La phrase
+   * a dit « le réglage « navigations » d'une page » jusqu'au 2026-08-22, et un
+   * pilote-testeur l'a arrêtée net : « avant d'avoir ouvert quoi que ce soit, cette
+   * phrase ne me dit rien — « navigations » n'est pas un mot que j'ai déjà vu dans
+   * XCTrack. » Il avait raison sur les deux bords : le mot ne se lit nulle part sur
+   * l'appareil, et l'accueil est l'écran de quelqu'un qui n'a encore rien vu.
+   *
+   * Le fait, lui, reste — c'est celui qui a démenti le badge « Masquée hors vol », et un
+   * pilote qui l'ignore croit lire dans le type d'une page ce qu'il n'y a pas. Il se dit
+   * donc sans son nom de fichier ; le mot exact, le pilote le rencontrera dans
+   * « Gérer les pages », où « Affichée pour toutes les navigations » le porte dans une
+   * phrase entière — que le même pilote a trouvée « parfaitement claire ».
+   */
+  'landing.stepKnowText': 'Ce n’est pas le type d’une page qui décide quand l’appareil ' +
+    'l’affiche en vol, mais un réglage à part — et cet éditeur vous le dit page par page, ' +
+    'en toutes lettres.',
 
   'landing.returning': 'Déjà venu ? Les configurations que vous avez rangées sont dans le ' +
     'menu « Fichier », en haut à droite, sous « Bibliothèque » : elles ne sont jamais ' +

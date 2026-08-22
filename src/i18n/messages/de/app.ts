@@ -181,8 +181,9 @@ const app: DomainCatalog<'app'> = {
     'seine Größe, fügen Sie weitere hinzu: die Seite wird vor Ihren Augen in Originalgröße neu ' +
     'gezeichnet.',
   'landing.stepKnowTitle': 'Gut zu wissen',
-  'landing.stepKnowText': 'Es ist die Einstellung „navigations“ einer Seite und nicht ihr Typ, ' +
-    'die darüber entscheidet, wann das Gerät sie zeigt.',
+  'landing.stepKnowText': 'Nicht der Typ einer Seite entscheidet, wann das Gerät sie im Flug ' +
+    'zeigt, sondern eine eigene Einstellung — und dieser Editor schreibt sie Ihnen Seite ' +
+    'für Seite aus.',
 
   'landing.returning': 'Schon einmal hier gewesen? Die Konfigurationen, die Sie abgelegt ' +
     'haben, stehen im Menü „Datei“ oben rechts unter „Bibliothek“: sie haben diesen Browser ' +
