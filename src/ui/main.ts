@@ -2637,6 +2637,7 @@ function openLibrary(): void {
         library: kit.library,
         current: currentForLibrary,
         language: session?.language ?? 'fr',
+        tr: translator(),
         estimateStorage: kit.core.estimateStorage,
         requestPersistence: kit.core.requestPersistence,
         onLoad: (entry, bytes) => {
