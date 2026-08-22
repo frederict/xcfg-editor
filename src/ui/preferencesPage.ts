@@ -22,12 +22,14 @@ import {
 } from '../catalog/preferenceDomains'
 import {
   collectPersonalData,
-  PERSONAL_BASIS_LABELS,
-  PERSONAL_CAVEAT,
-  PERSONAL_KIND_LABELS,
+  personalProse,
   SECURE_PERSONAL_KEYS,
-  type PersonalCounts
+  type PersonalCounts,
+  type PersonalProse
 } from '../model/personalData'
+// `import type` seulement : le traducteur est **passé** dans les options de la page, il
+// n'est jamais lu ici. Voir `src/i18n/CLAUDE.md` § « Comment le traducteur arrive ».
+import type { MessageKey, Translator } from '../i18n'
 
 /**
  * La page des **réglages généraux** de XCTrack : tout ce qui se règle hors des pages de
@@ -197,6 +199,35 @@ import {
  * Il **écrit** la valeur d'usine, il ne retire pas la clé : la ligne passe à l'état
  * `default`, d'où « Retirer » devient offert. Le pilote qui veut aller jusqu'à l'implicite
  * y va d'un second clic, et voit les deux effets séparément.
+ *
+ * ## Ce que cette page dit, et dans quelle langue
+ *
+ * Toute sa prose est versée au catalogue — `src/i18n/messages/<langue>/preferences.ts`,
+ * cinq langues — et lue par le traducteur que l'assembleur passe dans `options.tr`. Ce
+ * module ne va **jamais** chercher la langue courante : il la reçoit, comme
+ * `src/model/personalData.ts` reçoit la sienne.
+ *
+ * ⚠️ **Deux axes de langue se croisent ici, et les confondre casserait la promesse de
+ * l'outil** (voir `src/i18n/axes.ts`) :
+ *
+ * - `options.tr` porte **notre prose**, dans la langue que le pilote a choisie ;
+ * - `options.catalog` porte **les libellés de XCTrack** — noms de réglages, valeurs des
+ *   listes —, dans la langue du fichier ouvert. Ils ne se traduisent pas : un libellé
+ *   « traduit » serait un mot que le pilote ne trouverait nulle part sur son appareil.
+ *
+ * Trois textes affichés ne viennent **ni de l'un ni de l'autre** et restent en français
+ * dans les cinq langues, parce que ce sont des **données relevées** portées par
+ * `catalog/preferenceDomains.json` : le nom des touches physiques (« volume haut »,
+ * « marche/arrêt »), la méthode du relevé des unités et ses réserves. Les traduire
+ * demanderait de faire porter au fichier extrait une colonne par langue — décision qui
+ * appartient au lot qui reprendra l'extraction, pas à celui-ci. Les 44 raisons des clés
+ * personnelles sont dans le même cas, et `personalProse.reason()` le dit déjà.
+ *
+ * Le module portait deux fautes de mécanique, corrigées avec cette extraction : un
+ * `plural()` local codant `count > 1` — la règle française, fausse dans les quatre autres
+ * langues où zéro prend le pluriel — et un `formatCount()` figé à `toLocaleString('fr-FR')`.
+ * Les deux passent maintenant par le socle ; la sortie française est identique au
+ * caractère près, espace fine insécable des milliers comprise.
  */
 
 /**
@@ -222,11 +253,14 @@ import {
  * - le cas de l'**installation neuve** n'a pas été testé. La valeur d'usine s'y applique
  *   nécessairement, aucune valeur antérieure n'existant — mais c'est une déduction, et
  *   elle se dit comme telle : « un appareil qui n'y a jamais touché ».
+ *
+ * **Cette constante est désormais la clé du message**, pas la phrase : celle-ci vit dans
+ * `src/i18n/messages/<langue>/preferences.ts`, dans les cinq langues. Les quatre textes
+ * qui la reprennent la reçoivent par le repère `{absent}` — un repère nommé qui reçoit une
+ * **phrase entière**, de sorte que le fait et ses deux limites restent identiques partout
+ * où ils se disent, et dans toutes les langues.
  */
-export const ABSENT_KEY_ON_IMPORT =
-  'À l’import (« Remplacer tout »), votre appareil garde le réglage qu’il a déjà : ce ' +
-  'que le fichier ne dit pas n’est pas touché. Mesuré sur l’AIR³. Sur un appareil qui n’y ' +
-  'a jamais touché, c’est la valeur d’usine de XCTrack qui s’applique.'
+export const ABSENT_KEY_ON_IMPORT = 'preferences.absentKeyOnImport' satisfies MessageKey
 
 /* ------------------------------------------------------------------ le modèle de page */
 
@@ -470,35 +504,22 @@ const MENU_FAMILIES: Record<string, readonly string[]> = {
   _maps: ['Mapsforge']
 }
 
-const MENU_NOTES: Record<string, string> = {
-  _airspaces:
-    'XCTrack construit cet écran en code : le réglage y est posé loin de son libellé, et ' +
-    'l’application ne le nomme donc nulle part qu’on puisse lire. Les réglages qu’elle ' +
-    'écrit sont bien dans le fichier — ils sont rassemblés plus bas, sous « Réglages sans ' +
-    'libellé » et « Ce que l’application a mémorisé ».',
-  _maps:
-    'Écran construit en code, lui aussi sans libellé exploitable. Les lignes « Mapsforge » ' +
-    'du fichier sont rassemblées plus bas.',
-  _editPageSet:
-    'Cette ligne ouvre l’éditeur de pages et de gadgets — c’est le reste de cet éditeur ' +
-    'qui les montre, pas cette page.',
-  _eventMapping:
-    'Les actions automatiques sont enregistrées en bloc dans « EventMappingJs » : un ' +
-    'petit programme écrit d’une traite, et non une liste de réglages.',
-  _pro:
-    'L’abonnement se gère sur le compte XContest, pas dans le fichier de configuration.',
-  _sensors:
-    'Cet écran sert à apparier les capteurs. Ce qu’il enregistre tient en une seule ligne, ' +
-    '« Sensors.Configuration », rassemblée plus bas avec le reste de ce que ' +
-    'l’application a mémorisé.',
-  _shareconfig:
-    'Cet écran ne porte que deux commandes — exporter, importer une configuration. Il n’a ' +
-    'aucun réglage à retenir.',
-  _about:
-    'Cet écran n’affiche que des informations sur l’application : version, journal des ' +
-    'modifications, mentions. Rien qui se règle.',
-  '':
-    'Ligne d’information sans réglage.'
+/**
+ * Une **fonction** par note et non une clé : `t()` extrait les repères d'un message *par
+ * le type*, ce qu'il ne peut pas faire quand la clé lui arrive sous la forme de l'union
+ * entière. Refermer la clé dans une petite fonction rend l'appel exact et se lit aussi
+ * bien — c'est le prix, une ligne, de la vérification par le compilateur.
+ */
+const MENU_NOTES: Readonly<Record<string, (tr: Translator) => string>> = {
+  _airspaces: (tr) => tr.t('preferences.menuNoteAirspaces'),
+  _maps: (tr) => tr.t('preferences.menuNoteMaps'),
+  _editPageSet: (tr) => tr.t('preferences.menuNoteEditPageSet'),
+  _eventMapping: (tr) => tr.t('preferences.menuNoteEventMapping'),
+  _pro: (tr) => tr.t('preferences.menuNotePro'),
+  _sensors: (tr) => tr.t('preferences.menuNoteSensors'),
+  _shareconfig: (tr) => tr.t('preferences.menuNoteShareConfig'),
+  _about: (tr) => tr.t('preferences.menuNoteAbout'),
+  '': (tr) => tr.t('preferences.menuNoteInfoOnly')
 }
 
 /* ------------------------------------------------------------------ lecture du fichier */
@@ -559,14 +580,12 @@ function structuredSize(node: JsonNode): number {
   return serializeJson(node, PREFERENCE_INDENT).length
 }
 
-/**
- * Un nombre, à la française : l'espace fine insécable des milliers, celle que
- * `toLocaleString` pose et que la typographie française attend.
+/*
+ * `formatCount` a disparu : il posait `toLocaleString('fr-FR')`, donc la typographie
+ * française sur les cinq langues. `tr.format.number` la rend **identique au caractère
+ * près** en français — espace fine insécable comprise — et juste ailleurs : « 1,059 » en
+ * anglais, « 1.059 » en allemand. Voir `src/i18n/format.ts`.
  */
-function formatCount(value: number): string {
-  return value.toLocaleString('fr-FR')
-}
-
 
 /* ------------------------------------------------------- une liaison de touche, lisible */
 
@@ -606,19 +625,29 @@ export interface BindingParts {
  * prudence.
  */
 export function bindingParts(
-  binding: KeyBinding, hardware: HardwareKeySurvey | null | undefined
+  binding: KeyBinding, hardware: HardwareKeySurvey | null | undefined, tr: Translator
 ): BindingParts {
-  const press = binding.longPress ? 'appui long' : 'appui simple'
+  const press = tr.t(binding.longPress ? 'preferences.longPress' : 'preferences.shortPress')
+  // `code` part en **`string`** : c'est un code Android, pas un compte. « 16 777 240 » ne
+  // se retrouve dans aucun fichier XCTrack — voir `src/i18n/format.ts`.
+  const code = String(binding.code)
   const physical = hardware?.keys.find((one) => one.code === binding.code)
   if (physical !== undefined) {
-    return { key: physical.label, detail: `code ${binding.code}, ${physical.name}`, press }
+    // ⚠️ `physical.label` — « volume haut », « marche/arrêt » — vient de
+    // `preferenceDomains.json` et reste en français dans les cinq langues : c'est une
+    // **donnée relevée**, pas de la prose de code.
+    return {
+      key: physical.label,
+      detail: tr.t('preferences.codeAndName', { code, name: physical.name }),
+      press
+    }
   }
   if (binding.name !== null) {
-    return { key: binding.name, detail: `code ${binding.code}`, press }
+    return { key: binding.name, detail: tr.t('preferences.rawCode', { code }), press }
   }
   // Ni touche relevée ni nom Android : le code brut, et pas un mot de plus. Inventer un
   // nom pour un code que la table ne connaît pas serait le pire des services.
-  return { key: `code ${binding.code}`, press }
+  return { key: tr.t('preferences.rawCode', { code }), press }
 }
 
 /** Les trois morceaux en une phrase, pour le texte de la ligne et pour le filtre. */
@@ -660,20 +689,21 @@ export function unmatchedByHardware(
  */
 export function hardwareNote(
   bindings: readonly KeyBinding[], hardware: HardwareKeySurvey | null | undefined,
-  surveys: readonly HardwareKeySurvey[], device: string | undefined
+  surveys: readonly HardwareKeySurvey[], device: string | undefined, tr: Translator
 ): string | undefined {
   const assigned = bindings.filter((one) => !one.unset)
   if (assigned.length === 0) return undefined
 
   if (hardware === undefined || hardware === null) {
     if (surveys.length === 0) return undefined
+    // Une colonne de données — des noms de modèles — se joint par `', '` : `format.list`
+    // en ferait « l'AIR³ 7.2 et le … », une prose là où il y a une liste.
     const models = surveys.map((one) => one.label).join(', ')
-    const origin = device === undefined
-      ? 'ce fichier ne dit pas de quel appareil il vient'
-      : `ce fichier vient d’un autre appareil (${device})`
-    return `Nous n’avons mesuré les touches physiques que sur ${models}, et ${origin} : ` +
-      `ce boîtier-ci est un angle mort. Le code de chaque liaison est lu et nommé ` +
-      `ci-dessus, mais nous ne savons pas quelle touche l’émet.`
+    // Deux phrases entières et non un fragment interchangeable : l'origine du fichier est
+    // au milieu de la phrase, et rien ne garantit qu'elle y reste dans les cinq langues.
+    return device === undefined
+      ? tr.t('preferences.hardwareUnsurveyedUnknownDevice', { models })
+      : tr.t('preferences.hardwareUnsurveyedOtherDevice', { models, device })
   }
 
   const strangers = [...new Set(assigned
@@ -681,20 +711,28 @@ export function hardwareNote(
     .map((one) => one.code))].sort((a, b) => a - b)
   if (strangers.length === 0) return undefined
 
-  const listed = hardware.keys.map((one) => `${one.label} (${one.code})`).join(', ')
+  // ⚠️ `one.label` — « volume haut » — vient de `preferenceDomains.json` : une donnée
+  // relevée, française dans les cinq langues.
+  const listed = hardware.keys.map((one) => `${one.label} (${String(one.code)})`).join(', ')
+  const codes = strangers.join(', ')
   const missing = strangers.length === 1
-    ? `Le code ${strangers[0]} n’est aucune d’elles`
-    : `Les codes ${strangers.join(', ')} n’en sont aucune`
-  return `Sur ${hardware.label} — le modèle que ce fichier déclare — nous n’avons mesuré ` +
-    `que ${plural(hardware.keys.length, 'touche physique', 'touches physiques')} : ` +
-    `${listed}. ${missing}. La mesure a été faite sur un seul boîtier, et les modèles ` +
-    `plus récents en portent davantage.`
+    ? tr.t('preferences.hardwareStrangerOne', { codes })
+    : tr.t('preferences.hardwareStrangerMany', { codes })
+  return tr.t('preferences.hardwareSurveyed', {
+    model: hardware.label,
+    keys: tr.t('preferences.physicalKeyCount', { count: hardware.keys.length }),
+    listed,
+    missing
+  })
 }
 
 /** L'infobulle d'une liaison dont le code n'est aucune des touches relevées. */
-function unmatchedTitle(binding: KeyBinding, hardware: HardwareKeySurvey): string {
-  return `Aucune des touches mesurées sur ${hardware.label} n’émet le code ` +
-    `${binding.code}. La note sous ce bloc dit ce que cette mesure vaut.`
+function unmatchedTitle(
+  binding: KeyBinding, hardware: HardwareKeySurvey, tr: Translator
+): string {
+  return tr.t('preferences.unmatchedKeyTitle', {
+    model: hardware.label, code: String(binding.code)
+  })
 }
 
 /** Au-delà, une valeur scalaire est abrégée à l'affichage. */
@@ -709,18 +747,20 @@ const LONG_VALUE = 80
  */
 export function readableValue(
   node: JsonNode, entry: PreferenceEntry | undefined, catalog: PreferenceCatalog,
-  key: string, keys?: BindingContext
+  key: string, tr: Translator, keys?: BindingContext
 ): string {
+  const size = (count: number): string => tr.t('preferences.characterCount', { count })
+
   if (node.kind === 'object') {
     // « objet JSON » est le mot du format, pas celui du pilote : ce qu'il voit, c'est une
     // valeur qui en contient d'autres, et dont on lui dit la taille faute de la déplier.
-    return `valeur structurée, ${formatCount(structuredSize(node))} caractères`
+    return tr.t('preferences.structuredValue', { size: size(structuredSize(node)) })
   }
   if (node.kind === 'array') {
     const count = node.items.length
     return count === 0
-      ? 'liste vide'
-      : `liste de ${count} élément${count > 1 ? 's' : ''}, ${formatCount(structuredSize(node))} caractères`
+      ? tr.t('preferences.emptyList')
+      : tr.t('preferences.listValue', { count, size: size(structuredSize(node)) })
   }
 
   const text = scalarText(node) ?? node.raw
@@ -730,12 +770,12 @@ export function readableValue(
     return Number.isFinite(value) ? androidColorToHex(value) : text
   }
   if (entry?.valueKind === 'boolean' || entry?.control === 'checkbox') {
-    if (text === 'true') return 'Oui'
-    if (text === 'false') return 'Non'
+    if (text === 'true') return tr.t('preferences.yes')
+    if (text === 'false') return tr.t('preferences.no')
   }
   // Une touche non attribuée vaut -1 : « -1 » ne dit rien, « aucune touche » dit tout.
   if (entry?.family === 'Keys' && entry.control === 'action') {
-    if (text === '-1') return 'aucune touche'
+    if (text === '-1') return tr.t('preferences.noKeyAssigned')
     // Sans les domaines, on en reste au code brut : mieux vaut un entier nu qu'un nom
     // deviné. Avec eux, la touche et l'appui long se disent séparément.
     const raw = Number(text)
@@ -743,8 +783,8 @@ export function readableValue(
       ? undefined
       : keys.domains.decodeKeyBinding(raw)
     return binding === undefined
-      ? `code ${text}`
-      : bindingText(bindingParts(binding, keys?.hardware))
+      ? tr.t('preferences.rawCode', { code: text })
+      : bindingText(bindingParts(binding, keys?.hardware, tr))
   }
 
   const choices = entry === undefined ? [] : catalog.values(key)
@@ -752,30 +792,39 @@ export function readableValue(
   if (choice !== undefined) return choice.label
   if (choices.length > 0 && node.kind === 'string') {
     // Une valeur hors du domaine que l'écran propose : dite comme telle, jamais masquée.
-    return text === '' ? '(vide)' : `${text} (hors catalogue)`
+    return text === ''
+      ? tr.t('preferences.emptyValue')
+      : tr.t('preferences.offCatalogue', { value: text })
   }
 
-  if (node.kind === 'string' && text === '') return '(vide)'
+  if (node.kind === 'string' && text === '') return tr.t('preferences.emptyValue')
   // Une chaîne très longue — `EventMapping` d'une vieille version en fait 140 — mettrait
   // cinq lignes dans une colonne de valeurs. On en montre le début et la longueur ; le
   // texte entier reste dans `raw`, donc dans le document, intact.
   if (text.length > LONG_VALUE) {
-    return `${text.slice(0, LONG_VALUE - 20)}… (${formatCount(text.length)} caractères)`
+    return tr.t('preferences.truncatedValue', {
+      start: text.slice(0, LONG_VALUE - 20), size: size(text.length)
+    })
   }
   // `unit` vaut parfois la chaîne vide dans les ressources (`ActiveLook.Luma`) : coller
   // une unité vide laisserait une espace en fin de valeur, visible et fausse.
+  //
+  // La valeur et son unité se posent côte à côte sans passer par le catalogue : ce sont
+  // deux **données** — l'une du fichier, l'autre du catalogue de XCTrack —, pas une
+  // phrase, et aucune langue ne les sépare autrement que par une espace.
   const unit = entry?.unit === undefined ? '' : entry.unit.trim()
   return unit === '' ? text : `${text} ${unit}`
 }
 
 /** Le défaut du catalogue, dit exactement comme la valeur du fichier l'est. */
 function readableDefault(
-  value: boolean | number | string, entry: PreferenceEntry, catalog: PreferenceCatalog, key: string
+  value: boolean | number | string, entry: PreferenceEntry, catalog: PreferenceCatalog,
+  key: string, tr: Translator
 ): string {
   const node: JsonNode = typeof value === 'string'
     ? { kind: 'string', raw: JSON.stringify(value) }
     : { kind: 'literal', raw: String(value) }
-  return readableValue(node, entry, catalog, key)
+  return readableValue(node, entry, catalog, key, tr)
 }
 
 /** La forme canonique d'un défaut, pour la comparaison au texte du fichier. */
@@ -803,6 +852,8 @@ export function sameAsDefault(fileText: string, defaultValue: boolean | number |
 
 interface RowContext {
   catalog: PreferenceCatalog
+  /** Le traducteur de **notre prose** — jamais celui des libellés de XCTrack. */
+  tr: Translator
   file: Map<string, JsonNode>
   /** Les clés que XCTrack se contredit lui-même à défaillir — voir `meta.defaultConflicts`. */
   conflicts: Set<string>
@@ -818,7 +869,7 @@ interface RowContext {
 }
 
 function buildRow(key: string, ctx: RowContext): PreferenceRow {
-  const { catalog, file } = ctx
+  const { catalog, file, tr } = ctx
   const entry = catalog.preference(key)
   const node = file.get(key)
   const labelled = catalog.hasLabel(key)
@@ -843,15 +894,15 @@ function buildRow(key: string, ctx: RowContext): PreferenceRow {
     // cette page doit rendre, et elle a son propre état.
     row.state = entry !== undefined && entry.declared ? 'absent' : 'unwritten'
     if (entry?.default !== undefined && entry.defaultSource !== 'runtime') {
-      row.defaultText = readableDefault(entry.default, entry, catalog, key)
+      row.defaultText = readableDefault(entry.default, entry, catalog, key, tr)
     }
     if (entry?.defaultSource === 'runtime') {
-      row.undecidableReason = RUNTIME_DEFAULT_REASON
+      row.undecidableReason = tr.t(RUNTIME_DEFAULT_REASON)
     }
     return row
   }
 
-  row.value = readableValue(node, entry, catalog, key, ctx)
+  row.value = readableValue(node, entry, catalog, key, tr, ctx)
   if (entry?.family === 'Keys' && entry.control === 'action' && ctx.domains !== undefined) {
     const raw = Number(scalarText(node) ?? '')
     if (Number.isInteger(raw)) {
@@ -865,32 +916,32 @@ function buildRow(key: string, ctx: RowContext): PreferenceRow {
     : node.raw
 
   if (entry === undefined) {
-    row.undecidableReason = 'Cet éditeur ne connaît pas ce réglage : il n’en sait ni le rôle ni la valeur d’usine.'
+    row.undecidableReason = tr.t('preferences.unknownSettingReason')
     return row
   }
 
   if (ctx.conflicts.has(key) && entry.default !== undefined && entry.xmlDefault !== undefined) {
     row.state = 'conflict'
-    row.defaultText = readableDefault(entry.default, entry, catalog, key)
-    row.otherDefaultText = readableDefault(entry.xmlDefault, entry, catalog, key)
+    row.defaultText = readableDefault(entry.default, entry, catalog, key, tr)
+    row.otherDefaultText = readableDefault(entry.xmlDefault, entry, catalog, key, tr)
     return row
   }
 
   if (entry.defaultSource === 'runtime') {
-    row.undecidableReason = RUNTIME_DEFAULT_REASON
+    row.undecidableReason = tr.t(RUNTIME_DEFAULT_REASON)
     return row
   }
   if (entry.default === undefined) {
-    row.undecidableReason = 'Le catalogue ne relève aucune valeur d’usine pour ce réglage.'
+    row.undecidableReason = tr.t('preferences.noFactoryValueInCatalogue')
     return row
   }
 
-  row.defaultText = readableDefault(entry.default, entry, catalog, key)
+  row.defaultText = readableDefault(entry.default, entry, catalog, key, tr)
   const text = scalarText(node)
   if (text === undefined) {
     // Une valeur structurée face à un défaut scalaire : on ne compare pas des formes
     // différentes, on le dit.
-    row.undecidableReason = 'La valeur du fichier est une structure ; celle du catalogue des valeurs d’usine est une valeur simple.'
+    row.undecidableReason = tr.t('preferences.structuredVsScalar')
     return row
   }
   row.state = sameAsDefault(text, entry.default) ? 'default' : 'custom'
@@ -913,9 +964,8 @@ export function applyPattern(text: string, value: string | undefined): string {
   return text.replace(/%(\d+\$)?(\.\d+)?[dsf]/g, value ?? '…').replace(/%%/g, '%')
 }
 
-const RUNTIME_DEFAULT_REASON =
-  'XCTrack remplit cette liste en code et sa valeur d’usine dépend de la langue et du ' +
-  'pays de l’appareil : il n’y a rien à comparer.'
+/** La clé du message, pas la phrase : celle-ci vit dans le catalogue, en cinq langues. */
+const RUNTIME_DEFAULT_REASON = 'preferences.runtimeDefaultReason' satisfies MessageKey
 
 /**
  * Vrai si la page sait présenter cette clé sous son libellé, dans son écran.
@@ -955,37 +1005,23 @@ export const EDITABLE_CONTROLS: ReadonlySet<PreferenceControl> =
  * Rendre la **raison** plutôt qu'un booléen : la ligne reste affichée, et une ligne qui
  * ne se règle pas doit dire pourquoi — sans quoi le pilote croit à une panne.
  */
-export function editRefusal(row: PreferenceRow): string | undefined {
+export function editRefusal(row: PreferenceRow, tr: Translator): string | undefined {
   if (row.reason !== undefined) {
-    if (row.reason === 'unknown') {
-      return 'Cet éditeur ne sait pas ce que règle cette ligne du fichier : il ne propose ' +
-        'pas de la changer. Elle est conservée telle quelle.'
-    }
-    if (row.reason === 'state') {
-      return 'Cette ligne enregistre l’état de l’application, pas un réglage : elle ' +
-        'ressort intacte, jamais réécrite.'
-    }
-    return 'XCTrack ne nomme ce réglage nulle part qu’on puisse lire : sans son libellé, ' +
-      'cet éditeur ne propose pas de le changer.'
+    if (row.reason === 'unknown') return tr.t('preferences.refusalUnknown')
+    if (row.reason === 'state') return tr.t('preferences.refusalState')
+    return tr.t('preferences.refusalUnlabelled')
   }
-  if (row.structured) {
-    return 'Valeur composée : cette page la montre telle quelle, sans l’ouvrir, et ne la ' +
-      'réécrit jamais.'
-  }
+  if (row.structured) return tr.t('preferences.refusalStructured')
   if (row.control === null || !EDITABLE_CONTROLS.has(row.control)) {
-    if (row.control === 'action') {
-      // Formulé sans nombre : la même phrase sert d'infobulle sur une ligne et de note
-      // sous un bloc de quinze.
-      //
-      // Elle disait « dont cet éditeur ne relève pas le domaine ». Ce n'est plus vrai des
-      // touches : leur codage est relevé, et la ligne se lit. Ce qui manque est ailleurs,
-      // et c'est du matériel — une touche se règle en la pressant sur l'instrument, ce
-      // qu'un navigateur posé devant un autre appareil ne peut pas faire.
-      return 'Sur l’appareil, cela s’obtient par une boîte de dialogue — une touche à ' +
-        'presser sur l’instrument, une table à bâtir — que cette page ne peut pas tenir ' +
-        'à sa place. La valeur reste lue, et le document ressort intact.'
-    }
-    return 'Cela ne se saisit pas : la ligne commande, elle ne porte pas de valeur.'
+    // `preferences.refusalAction` est formulé **sans nombre** : la même phrase sert
+    // d'infobulle sur une ligne et de note sous un bloc de quinze.
+    //
+    // Elle disait « dont cet éditeur ne relève pas le domaine ». Ce n'est plus vrai des
+    // touches : leur codage est relevé, et la ligne se lit. Ce qui manque est ailleurs,
+    // et c'est du matériel — une touche se règle en la pressant sur l'instrument, ce
+    // qu'un navigateur posé devant un autre appareil ne peut pas faire.
+    if (row.control === 'action') return tr.t('preferences.refusalAction')
+    return tr.t('preferences.refusalNoValue')
   }
   return undefined
 }
@@ -1128,11 +1164,13 @@ export interface PreferenceEdit {
  * construire la page.
  */
 export function buildPreferenceInventory(
-  document: JsonNode, catalog: PreferenceCatalog, domains?: PreferenceDomainCatalog
+  document: JsonNode, catalog: PreferenceCatalog, tr: Translator,
+  domains?: PreferenceDomainCatalog
 ): PreferenceInventory {
   const file = readFilePreferences(document)
   const ctx: RowContext = {
     catalog,
+    tr,
     file,
     conflicts: new Set(catalog.meta.defaultConflicts),
     domains,
@@ -1209,7 +1247,7 @@ function buildMenu(
     const entry: PreferenceMenuEntry = { menuKey, title, screens }
     if (screens.length === 0) {
       const note = MENU_NOTES[menuKey]
-      if (note !== undefined) entry.note = note
+      if (note !== undefined) entry.note = note(ctx.tr)
       const tally = tallyFamilies(ctx, MENU_FAMILIES[menuKey])
       if (tally !== undefined) entry.tally = tally
     }
@@ -1344,6 +1382,15 @@ export interface PreferencesPageOptions {
   /** Le catalogue déjà chargé, dans la langue voulue. Voir `openPreferencesPage`. */
   catalog: PreferenceCatalog
   /**
+   * Le traducteur de **notre prose**, dans la langue que le pilote a choisie.
+   *
+   * ⚠️ Ce n'est **pas** l'axe de `catalog` : celui-ci porte les libellés de XCTrack, qui
+   * suivent le fichier ouvert. Les deux se règlent séparément et ne se confondent jamais
+   * — voir `src/i18n/axes.ts`. C'est l'assembleur qui détient le traducteur et le passe
+   * ici, comme à chaque écran ; ce module ne va jamais le chercher.
+   */
+  tr: Translator
+  /**
    * Les domaines relevés (unités, touches), s'ils ont pu être chargés.
    *
    * **Facultatif, et c'est délibéré** : sans eux la page reste exactement ce qu'elle
@@ -1400,53 +1447,56 @@ function normalize(value: string): string {
   return value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 }
 
-function plural(count: number, singular: string, many: string): string {
-  return `${formatCount(count)} ${count > 1 ? many : singular}`
-}
+/*
+ * `plural(count, singulier, pluriel)` a disparu, avec sa règle `count > 1` : c'est celle
+ * du français, et elle seule. À zéro, l'anglais, le néerlandais, l'allemand et l'espagnol
+ * mettent le pluriel. Chaque compte passe désormais par un message à deux formes, dont
+ * chacune est une **phrase entière** — voir `src/i18n/plural.ts`.
+ */
 
 /** Ce que la marque d'état dit, en toutes lettres. */
-export function stateLabel(row: PreferenceRow): string {
+export function stateLabel(row: PreferenceRow, tr: Translator): string {
   // Ni le mot « défaut », ni les signes = et ≠. Le premier se lit *anomalie* : « 46 au
   // défaut » annonçait 46 pannes, et « ≠ DÉFAUT (VIDE) » en capitales à côté du nom du
   // pilote lui désignait le sien. Les seconds sont des signes de mathématiques posés sur
   // ce nom. La valeur d'usine elle-même n'est pas perdue : `stateTitle` la dit en toutes
   // lettres, et l'infobulle a la place d'une phrase là où la marque n'a que trois mots.
-  if (row.state === 'custom') return 'réglé par vous'
-  if (row.state === 'default') return 'valeur d’usine'
-  if (row.state === 'conflict') return 'valeur d’usine incertaine'
-  if (row.state === 'absent') return 'absente du fichier'
-  if (row.state === 'unwritten') return 'jamais réglée'
-  return 'rien à comparer'
+  //
+  // ⚠️ La collision de « défaut » est **française** : elle n'existe pas dans les quatre
+  // autres langues, qui disent *factory value*, *Werkswert*, *fabriekswaarde*, *valor de
+  // fábrica* sans avoir à trancher quoi que ce soit.
+  if (row.state === 'custom') return tr.t('preferences.stateCustom')
+  if (row.state === 'default') return tr.t('preferences.stateDefault')
+  if (row.state === 'conflict') return tr.t('preferences.stateConflict')
+  if (row.state === 'absent') return tr.t('preferences.stateAbsent')
+  if (row.state === 'unwritten') return tr.t('preferences.stateUnwritten')
+  return tr.t('preferences.stateUndecidable')
 }
 
 /** L'infobulle de la marque d'état : la phrase entière, pas l'abrégé. */
-function stateTitle(row: PreferenceRow): string {
+function stateTitle(row: PreferenceRow, tr: Translator): string {
   if (row.state === 'custom') {
     return row.defaultText === undefined
-      ? 'Cette valeur diffère de la valeur d’usine de XCTrack.'
-      : `La valeur d’usine de XCTrack est « ${row.defaultText} ».`
+      ? tr.t('preferences.stateTitleCustomUnknown')
+      : tr.t('preferences.stateTitleCustom', { factory: row.defaultText })
   }
-  if (row.state === 'default') return 'Valeur inchangée : c’est la valeur d’usine de XCTrack.'
+  if (row.state === 'default') return tr.t('preferences.stateTitleDefault')
   if (row.state === 'conflict') {
     // Les deux valeurs restent dites, mais ici et non plus en capitales sur la ligne : ce
     // qui est incertain, c'est ce que XCTrack pose d'usine, jamais la valeur du pilote.
-    return `XCTrack annonce deux valeurs d’usine différentes pour ce réglage : ` +
-      `« ${row.defaultText ?? '?'} » dans son code et « ${row.otherDefaultText ?? '?'} » dans ` +
-      `son écran de réglages. Cet éditeur ne choisit pas à sa place. Votre valeur, elle, ` +
-      `est celle du fichier.`
+    return tr.t('preferences.stateTitleConflict', {
+      code: row.defaultText ?? '?', screen: row.otherDefaultText ?? '?'
+    })
   }
   if (row.state === 'absent') {
+    // Le fait mesuré arrive **entier**, par un repère nommé : `ABSENT_KEY_ON_IMPORT`.
+    const absent = tr.t(ABSENT_KEY_ON_IMPORT)
     return row.defaultText === undefined
-      ? `Ce réglage n’est pas dans le fichier : il n’en dit rien. ${ABSENT_KEY_ON_IMPORT}`
-      : `Ce réglage n’est pas dans le fichier : il n’en dit rien. ` +
-        `${ABSENT_KEY_ON_IMPORT} Elle vaut « ${row.defaultText} ».`
+      ? tr.t('preferences.stateTitleAbsent', { absent })
+      : tr.t('preferences.stateTitleAbsentWithValue', { absent, factory: row.defaultText })
   }
-  if (row.state === 'unwritten') {
-    return 'Ce réglage n’est pas dans le fichier, et XCTrack ne l’y écrit qu’une fois ' +
-      'réglé au moins une fois sur l’appareil : son absence ne dit rien — ni ce que votre ' +
-      'appareil applique, ni ce qu’il appliquerait neuf.'
-  }
-  return row.undecidableReason ?? 'Aucune valeur d’usine connue pour ce réglage.'
+  if (row.state === 'unwritten') return tr.t('preferences.stateTitleUnwritten')
+  return row.undecidableReason ?? tr.t('preferences.stateTitleNoFactoryValue')
 }
 
 /*
@@ -1457,9 +1507,13 @@ function stateTitle(row: PreferenceRow): string {
  */
 
 /** La marque discrète qui signale une donnée personnelle. Sobre : le pilote décide. */
-function personalMark(personal: PersonalData): HTMLElement {
-  const mark = el('span', 'prefs__personal', PERSONAL_KIND_LABELS[personal.kind])
-  mark.title = `Donnée personnelle — ${personal.reason} (${PERSONAL_BASIS_LABELS[personal.basis]}).`
+function personalMark(personal: PersonalData, ctx: PageContext): HTMLElement {
+  const mark = el('span', 'prefs__personal', ctx.personal.kind(personal.kind))
+  // ⚠️ `personal.reason` vient de `model/personalKeys.json`, **extrait de l'APK** : les
+  // 44 raisons des clés de préférences ne sont pas traduites, et `personalProse` le dit.
+  mark.title = ctx.tr.t('preferences.personalMarkTitle', {
+    reason: personal.reason, basis: ctx.personal.basis(personal.basis)
+  })
   return mark
 }
 
@@ -1475,6 +1529,13 @@ interface RenderedRow {
  */
 interface PageContext {
   collected: RenderedRow[]
+  tr: Translator
+  /**
+   * Les mots de l'inventaire des données personnelles, construits **une fois** pour la
+   * page entière : un écran qui affiche cinquante lignes n'a pas à repasser le traducteur
+   * cinquante fois. Voir `personalProse` dans `src/model/personalData.ts`.
+   */
+  personal: PersonalProse
   edit?: EditContext
   /**
    * Le relevé matériel du modèle de ce fichier, ou `null` s'il n'a pas été relevé.
@@ -1493,6 +1554,8 @@ interface PageContext {
 interface EditContext {
   document: JsonNode
   catalog: PreferenceCatalog
+  /** Le traducteur de notre prose, le même que celui de la page. */
+  tr: Translator
   conflicts: Set<string>
   /** Les domaines relevés, s'ils ont été chargés — voir l'en-tête. */
   domains?: PreferenceDomainCatalog
@@ -1541,13 +1604,14 @@ function readOnlyValue(row: PreferenceRow): HTMLElement {
  * première est précisément ce que l'entier du fichier faisait.
  */
 function bindingValue(
-  binding: KeyBinding, hardware: HardwareKeySurvey | null | undefined, unmatched: boolean
+  binding: KeyBinding, hardware: HardwareKeySurvey | null | undefined, unmatched: boolean,
+  tr: Translator
 ): HTMLElement {
-  const parts = bindingParts(binding, hardware)
+  const parts = bindingParts(binding, hardware, tr)
   const wrap = el('span', 'prefs__binding')
   // L'infobulle renvoie à la note du bloc ; elle ne la remplace pas. Un propos sur le
   // matériel doit rester lisible sans survol, et il l'est — trois lignes plus bas.
-  if (unmatched && hardware != null) wrap.title = unmatchedTitle(binding, hardware)
+  if (unmatched && hardware != null) wrap.title = unmatchedTitle(binding, hardware, tr)
   wrap.append(el('span', 'prefs__binding-key', parts.key))
   if (parts.detail !== undefined) {
     wrap.append(el('span', 'prefs__binding-detail', parts.detail))
@@ -1575,7 +1639,7 @@ function restate(
   const node: JsonNode = asString
     ? { kind: 'string', raw: encode(text) }
     : { kind: 'literal', raw: text }
-  row.value = readableValue(node, entry, ctx.catalog, row.key, ctx)
+  row.value = readableValue(node, entry, ctx.catalog, row.key, ctx.tr, ctx)
   row.raw = node.raw
   if (ctx.conflicts.has(row.key) && entry.default !== undefined && entry.xmlDefault !== undefined) {
     row.state = 'conflict'
@@ -1596,8 +1660,9 @@ function buildRowElement(row: PreferenceRow, ctx: PageContext): HTMLElement {
   if (!row.labelled) element.dataset.unlabelled = 'true'
   if (row.personal !== undefined) element.dataset.personal = row.personal.kind
 
+  const tr = ctx.tr
   const entry = ctx.edit?.catalog.preference(row.key)
-  const refusal = editRefusal(row)
+  const refusal = editRefusal(row, tr)
   const settable = ctx.edit !== undefined && refusal === undefined && entry !== undefined
   const id = `prefs-field-${String(++controlSeq)}`
 
@@ -1613,8 +1678,9 @@ function buildRowElement(row: PreferenceRow, ctx: PageContext): HTMLElement {
   // répéterait à chaque ligne pour redire ce que le titre du bloc dit déjà une fois. La
   // colonne reste, vide : l'alignement des lignes voisines ne bouge pas.
   const mute = row.reason === 'unknown' || row.reason === 'state'
-  const state = el('span', `prefs__state prefs__state--${row.state}`, mute ? '' : stateLabel(row))
-  if (!mute) state.title = stateTitle(row)
+  const state = el('span', `prefs__state prefs__state--${row.state}`,
+    mute ? '' : stateLabel(row, tr))
+  if (!mute) state.title = stateTitle(row, tr)
   element.append(state)
 
   // L'emplacement du troisième geste — voir `fillRestore`. Il n'existe que dans une page
@@ -1630,8 +1696,8 @@ function buildRowElement(row: PreferenceRow, ctx: PageContext): HTMLElement {
   function refreshState(): void {
     element.dataset.state = row.state
     state.className = `prefs__state prefs__state--${row.state}`
-    state.textContent = stateLabel(row)
-    state.title = stateTitle(row)
+    state.textContent = stateLabel(row, tr)
+    state.title = stateTitle(row, tr)
     rendered.haystack = normalize(`${row.label} ${row.key} ${row.value ?? ''}`)
     fillRestore()
   }
@@ -1660,9 +1726,9 @@ function buildRowElement(row: PreferenceRow, ctx: PageContext): HTMLElement {
       label: row.label,
       outcome,
       text,
-      description: description ?? (outcome === 'inserted'
-        ? `Écrire ${row.label} dans le fichier`
-        : `Régler ${row.label}`),
+      description: description ?? tr.t(outcome === 'inserted'
+        ? 'preferences.editInsertDescription'
+        : 'preferences.editSetDescription', { label: row.label }),
       continuous
     }
     if (row.personal !== undefined && text.trim() !== '') edit.personal = row.personal
@@ -1695,7 +1761,7 @@ function buildRowElement(row: PreferenceRow, ctx: PageContext): HTMLElement {
       label: row.label,
       outcome: 'removed',
       text: '',
-      description: `Retirer ${row.label} du fichier`,
+      description: tr.t('preferences.removeFromFile', { label: row.label }),
       continuous: false
     }
     context.onEdit(edit)
@@ -1716,7 +1782,7 @@ function buildRowElement(row: PreferenceRow, ctx: PageContext): HTMLElement {
     const context = ctx.edit
     if (context === undefined || entry?.default === undefined) return false
     return commit(defaultAsText(entry.default), false,
-      `Rétablir ${row.label} à sa valeur d’usine`)
+      tr.t('preferences.restoreToFactoryValue', { label: row.label }))
   }
 
   /**
@@ -1751,11 +1817,11 @@ function buildRowElement(row: PreferenceRow, ctx: PageContext): HTMLElement {
       // Sans touche affectée, rien à découper : « aucune touche » se dit comme une valeur.
       cell.append(row.binding === undefined || row.binding.unset
         ? readOnlyValue(row)
-        : bindingValue(row.binding, ctx.hardware, row.unmatchedKey === true))
+        : bindingValue(row.binding, ctx.hardware, row.unmatchedKey === true, tr))
       return
     }
     if (row.state === 'absent' || row.state === 'unwritten') {
-      cell.append(...buildImplicitCell(row, entry, () => {
+      cell.append(...buildImplicitCell(row, entry, tr, () => {
         // La clé vient d'entrer dans le fichier : la ligne devient une ligne comme les
         // autres, contrôle compris.
         fillCell()
@@ -1773,7 +1839,7 @@ function buildRowElement(row: PreferenceRow, ctx: PageContext): HTMLElement {
     // n'a de sens que là — sur une valeur réglée, retirer la clé changerait le
     // comportement de l'appareil, ce que ce bouton ne doit jamais faire en un clic.
     if (row.state === 'default') {
-      aside.append(buildDropButton(row, () => {
+      aside.append(buildDropButton(row, tr, () => {
         fillCell()
         cell.querySelector<HTMLElement>('button')?.focus()
       }, drop))
@@ -1783,7 +1849,7 @@ function buildRowElement(row: PreferenceRow, ctx: PageContext): HTMLElement {
 
   fillCell()
 
-  if (row.personal !== undefined) element.append(personalMark(row.personal))
+  if (row.personal !== undefined) element.append(personalMark(row.personal, ctx))
   // Sa place est **sous** la ligne, sur toute la largeur, et après la marque de donnée
   // personnelle : un élément qui occupe la grille entière renverrait à la ligne suivante
   // tout ce qui le suit. Masqué (`hidden`) il ne prend aucune place du tout — c'est
@@ -1841,33 +1907,27 @@ function buildRowElement(row: PreferenceRow, ctx: PageContext): HTMLElement {
  * et les clés qu'aucune source ne documente sont dans ce cas, et la ligne le dit.
  */
 function buildImplicitCell(
-  row: PreferenceRow, entry: PreferenceEntry,
+  row: PreferenceRow, entry: PreferenceEntry, tr: Translator,
   done: () => void, commit: (text: string, continuous: boolean) => boolean
 ): HTMLElement[] {
   const seed = entry.defaultSource === 'runtime' ? undefined : entry.default
   if (seed === undefined || row.defaultText === undefined) {
-    const note = el('span', 'prefs__value prefs__value--none', 'valeur d’usine inconnue')
-    note.title = row.undecidableReason ??
-      'Le catalogue ne relève aucune valeur d’usine inscriptible pour ce réglage : ' +
-      'cet éditeur n’a rien avec quoi la créer, et il n’en invente pas.'
+    const note = el('span', 'prefs__value prefs__value--none',
+      tr.t('preferences.factoryValueUnknown'))
+    note.title = row.undecidableReason ?? tr.t('preferences.factoryValueUnknownTitle')
     return [note]
   }
 
   const implicit = el('span', 'prefs__implicit', row.defaultText)
-  implicit.title =
-    `« ${row.defaultText} » est la valeur d’usine de XCTrack, pas une valeur réglée : ` +
-    `ce réglage n’est pas dans le fichier. ${ABSENT_KEY_ON_IMPORT}`
+  implicit.title = tr.t('preferences.implicitTitle', {
+    factory: row.defaultText, absent: tr.t(ABSENT_KEY_ON_IMPORT)
+  })
 
-  const button = el('button', 'btn prefs__adopt', 'Définir cette valeur')
+  const button = el('button', 'btn prefs__adopt', tr.t('preferences.adoptLabel'))
   button.type = 'button'
-  button.title =
-    `Écrit « ${row.key} » : ${row.defaultText} dans le fichier.\n\n` +
-    'Sur un appareil qui n’a jamais réglé cela, c’est déjà ce qu’il applique : l’écrire ne ' +
-    'change alors rien d’immédiat, et met le réglage à l’abri d’une mise à jour de XCTrack ' +
-    'qui changerait sa valeur d’usine.\n\n' +
-    'Sur un appareil qui l’a déjà réglé, l’import écrira cette valeur à la place de la ' +
-    'sienne : tant que le fichier n’en dit rien, il garde la sienne (mesuré sur l’AIR³, ' +
-    'import « Remplacer tout »).'
+  button.title = tr.t('preferences.adoptTitle', {
+    key: row.key, factory: row.defaultText
+  })
   button.addEventListener('click', () => {
     if (commit(typeof seed === 'string' ? seed : String(seed), false)) done()
   })
@@ -1887,17 +1947,14 @@ function buildImplicitCell(
  * que l'appareil reviendrait à sa valeur d'usine (`ABSENT_KEY_ON_IMPORT`).
  */
 function buildDropButton(
-  row: PreferenceRow, done: () => void, drop: () => boolean
+  row: PreferenceRow, tr: Translator, done: () => void, drop: () => boolean
 ): HTMLElement {
-  const button = el('button', 'btn btn--ghost prefs__drop', 'Retirer')
+  const button = el('button', 'btn btn--ghost prefs__drop', tr.t('preferences.dropLabel'))
   button.type = 'button'
-  button.setAttribute('aria-label', `Retirer ${row.label} du fichier`)
-  button.title =
-    `Retire « ${row.key} » du fichier : il ne dira plus rien de ce réglage.\n\n` +
-    `${ABSENT_KEY_ON_IMPORT}\n\n` +
-    'Ce que ça change pour l’appareil qui n’y a jamais touché : la valeur cesse d’être ' +
-    'figée et suivra les mises à jour de XCTrack. C’est l’inverse exact de « Définir ' +
-    'cette valeur ».'
+  button.setAttribute('aria-label', tr.t('preferences.removeFromFile', { label: row.label }))
+  button.title = tr.t('preferences.dropTitle', {
+    key: row.key, absent: tr.t(ABSENT_KEY_ON_IMPORT)
+  })
   button.addEventListener('click', () => { if (drop()) done() })
   return button
 }
@@ -1905,11 +1962,16 @@ function buildDropButton(
 /* ------------------------------------------------- le troisième geste : rétablir l'usine */
 
 /**
- * L'intitulé du troisième geste. **Le même mot à mot dans le panneau des gadgets**
- * (`ui/properties.ts`) : deux formulations pour un même geste, sur deux écrans du même
- * outil, seraient un défaut à elles seules — c'est déjà la règle des deux premiers.
+ * L'intitulé du troisième geste — **la clé du message**, depuis que la prose de cet écran
+ * est versée au catalogue ; le texte lui-même vit dans
+ * `src/i18n/messages/<langue>/preferences.ts`.
+ *
+ * **Le même mot à mot dans le panneau des gadgets** (`ui/properties.ts`) : deux
+ * formulations pour un même geste, sur deux écrans du même outil, seraient un défaut à
+ * elles seules — c'est déjà la règle des deux premiers. Le jour où ce panneau-là versera
+ * sa prose, il devra pointer sur ce même message.
  */
-export const RESTORE_LABEL = 'Rétablir la valeur d’usine'
+export const RESTORE_LABEL = 'preferences.restoreLabel' satisfies MessageKey
 
 /**
  * Vrai si « Rétablir la valeur d'usine » peut être offert sur cette ligne.
@@ -1961,23 +2023,22 @@ function restorable(row: PreferenceRow, entry: PreferenceEntry, ctx: EditContext
 function buildRestoreParts(
   row: PreferenceRow, ctx: EditContext, done: () => void, restore: () => boolean
 ): HTMLElement[] {
+  const tr = ctx.tr
   const factory = row.defaultText ?? '?'
   const current = row.value ?? '?'
   const caveat = restoreCaveat(ctx)
 
-  const button = el('button', 'btn prefs__restore-btn', RESTORE_LABEL)
+  const button = el('button', 'btn prefs__restore-btn', tr.t(RESTORE_LABEL))
   button.type = 'button'
-  button.setAttribute('aria-label', `Rétablir ${row.label} à sa valeur d’usine`)
-  button.title =
-    `Écrit « ${row.key} » : ${factory} dans le fichier, à la place de ${current}.\n\n` +
-    'Ce geste-ci n’est pas comme les deux autres de cette page : ils ne touchent qu’un ' +
-    'réglage que vous n’avez jamais choisi, celui-ci remplace le vôtre par celui que ' +
-    `XCTrack pose sur une installation neuve.${caveat}`
+  button.setAttribute('aria-label',
+    tr.t('preferences.restoreToFactoryValue', { label: row.label }))
+  button.title = tr.t('preferences.restoreTitle', {
+    key: row.key, factory, current, caveat
+  })
   button.addEventListener('click', () => { if (restore()) done() })
 
   const note = el('span', 'prefs__restore-note',
-    `« ${factory} » d’usine, « ${current} » dans ce fichier. ` +
-    `Rétablir change ce que fait l’appareil en vol.${caveat}`)
+    tr.t('preferences.restoreNote', { factory, current, caveat }))
   return [button, note]
 }
 
@@ -1989,13 +2050,12 @@ function buildRestoreParts(
  */
 function restoreCaveat(ctx: EditContext): string {
   if (ctx.trust === 'exact') return ''
+  // `version` part en `string` : c'est un nom de version — « 1.0.3-beta » —, pas un
+  // nombre à mettre en forme.
   const version = catalogVersionText(ctx.catalog)
-  if (ctx.trust === 'indicative') {
-    return ` Cette valeur d’usine vient du catalogue de XCTrack ${version}, qui n’est pas ` +
-      'la version d’où vient ce fichier : vérifiez que c’est bien celle à rétablir.'
-  }
-  return ` Cette valeur d’usine vient du catalogue de XCTrack ${version} et la version de ` +
-    'ce fichier n’est pas connue ici : vérifiez que c’est bien celle à rétablir.'
+  return ctx.tr.t(ctx.trust === 'indicative'
+    ? 'preferences.restoreCaveatIndicative'
+    : 'preferences.restoreCaveatUnstated', { version })
 }
 
 /** Le contrôle d'une ligne qui se règle, choisi sur le type que XCTrack affiche. */
@@ -2024,13 +2084,13 @@ function buildField(
           // ⚠️ `value` va dans le fichier, `label` à l'écran : l'appareil affiche
           // « m, km » et écrit « m,km ». Les confondre écrirait une valeur refusée.
           value: one.value, label: one.label
-        })), commit, unitListNote(ctx))
+        })), ctx.tr, commit, unitListNote(ctx))
       }
       // Les deux listes de voile n'ont ni ressource ni relevé : un champ libre reste la
       // seule chose honnête. Une liste vide serait un piège, une liste inventée pire.
       return buildTextField(id, text, row, ctx, commit, true)
     }
-    return buildSelect(id, text, choices, commit)
+    return buildSelect(id, text, choices, ctx.tr, commit)
   }
   return buildTextField(id, text, row, ctx, commit, false)
 }
@@ -2048,8 +2108,18 @@ function unitListNote(ctx: EditContext): string | undefined {
   // Les réserves sont des fragments de phrase dans la donnée : elles s'enchaînent après
   // deux points plutôt que collées bout à bout, où la première commencerait en minuscule
   // juste après un point.
-  return `Cette liste a été mesurée sur ${source.deviceLabel}, XCTrack ` +
-    `${source.versionName} : ${source.method}. À savoir : ${source.caveats.join(' ; ')}.`
+  //
+  // ⚠️ `method` et `caveats` viennent de `preferenceDomains.json` — un relevé fait à la
+  // main, **écrit en français à la source**. Ils traversent donc les cinq langues tels
+  // quels : ce sont des données, pas de la prose de code. Les traduire demanderait de
+  // faire porter au fichier extrait une colonne par langue, décision qui appartient au lot
+  // qui reprendra l'extraction.
+  return ctx.tr.t('preferences.unitListNote', {
+    device: source.deviceLabel,
+    version: source.versionName,
+    method: source.method,
+    caveats: source.caveats.join(' ; ')
+  })
 }
 
 function buildCheckbox(
@@ -2065,7 +2135,7 @@ function buildCheckbox(
 
 function buildSelect(
   id: string, text: string, choices: readonly { value: string; label: string }[],
-  commit: (text: string, continuous: boolean) => boolean, note?: string
+  tr: Translator, commit: (text: string, continuous: boolean) => boolean, note?: string
 ): HTMLElement {
   const select = el('select', 'prefs__select')
   select.id = id
@@ -2078,7 +2148,7 @@ function buildSelect(
   // Une valeur que le catalogue ne propose pas — vestige, ou version plus récente que
   // l'extraction — s'ajoute à la liste plutôt que de se faire remplacer en silence.
   if (!choices.some((choice) => choice.value === text)) {
-    const extra = el('option', undefined, `${text} (hors catalogue)`)
+    const extra = el('option', undefined, tr.t('preferences.offCatalogue', { value: text }))
     extra.value = text
     select.prepend(extra)
   }
@@ -2137,12 +2207,7 @@ function buildTextField(
   input.id = id
   input.value = text
   input.spellcheck = false
-  if (freeList) {
-    input.title =
-      'XCTrack remplit cette liste en code : notre relevé des versions n’en donne pas les ' +
-      'valeurs et elles n’ont pas été mesurées sur l’appareil. Cet éditeur ne propose donc ' +
-      'pas de choix, et la valeur est écrite telle que vous la saisissez.'
-  }
+  if (freeList) input.title = ctx.tr.t('preferences.freeListTitle')
   input.addEventListener('change', () => { commit(input.value, false) })
   if (row.personal !== undefined) {
     input.classList.add('prefs__text--secret')
@@ -2231,6 +2296,7 @@ function fillSummaryBox(
   box: HTMLElement, inventory: PreferenceInventory, options: PreferencesPageOptions
 ): void {
   const { summary } = inventory
+  const tr = options.tr
   box.textContent = ''
   box.dataset.custom = String(summary.customCount)
   box.dataset.presented = String(summary.presentedCount)
@@ -2240,54 +2306,51 @@ function fillSummaryBox(
   // pilote à la troisième personne — il consultait le dossier de quelqu'un d'autre — et
   // répétait le même mot deux fois. « 136 clés » est notre mot, pas le sien : ce que le
   // fichier porte, ce sont des lignes, dont 49 ne règlent rien.
-  box.append(el('p', 'prefs__summary-count',
-    `Vous avez réglé ${formatCount(summary.customCount)} des ` +
-    `${plural(summary.presentedCount, 'réglage', 'réglages')} que XCTrack propose.`))
+  box.append(el('p', 'prefs__summary-count', tr.t('preferences.summaryCount', {
+    custom: summary.customCount,
+    settings: tr.t('preferences.settingCount', { count: summary.presentedCount })
+  })))
 
+  // Une colonne de comptes, jointe par `', '` : `format.list` en ferait « a, b et c »,
+  // une prose là où il y a un relevé.
   const parts: string[] = []
   if (summary.defaultCount > 0) {
-    parts.push(`${formatCount(summary.defaultCount)} à la valeur d’usine`)
+    parts.push(tr.t('preferences.detailDefault', { count: summary.defaultCount }))
   }
   if (summary.absentCount > 0) {
-    parts.push(`${formatCount(summary.absentCount)} absente${summary.absentCount > 1 ? 's' : ''} du fichier`)
+    parts.push(tr.t('preferences.detailAbsent', { count: summary.absentCount }))
   }
   if (summary.unwrittenCount > 0) {
-    parts.push(`${formatCount(summary.unwrittenCount)} jamais réglée${summary.unwrittenCount > 1 ? 's' : ''}`)
+    parts.push(tr.t('preferences.detailUnwritten', { count: summary.unwrittenCount }))
   }
   if (summary.undecidableCount > 0) {
-    parts.push(`${formatCount(summary.undecidableCount)} sans valeur d’usine connue`)
+    parts.push(tr.t('preferences.detailUndecidable', { count: summary.undecidableCount }))
   }
   if (summary.conflictCount > 0) {
-    parts.push(`${formatCount(summary.conflictCount)} à la valeur d’usine incertaine`)
+    parts.push(tr.t('preferences.detailConflict', { count: summary.conflictCount }))
   }
   if (parts.length > 0) box.append(el('p', 'prefs__summary-detail', `${parts.join(', ')}.`))
 
   const rest: string[] = []
   if (summary.unlabelledCount > 0) {
-    rest.push(`${formatCount(summary.unlabelledCount)} sans libellé dans l’application`)
+    rest.push(tr.t('preferences.restUnlabelled', { count: summary.unlabelledCount }))
   }
   // Le même mot que le bloc de fin de page, faute de quoi l'écran se contredirait d'un
   // bloc à l'autre : ici « mémorisées par l'application », là « Ce que l'application a
   // mémorisé ».
   if (summary.stateCount > 0) {
-    rest.push(`${formatCount(summary.stateCount)} mémorisée${summary.stateCount > 1 ? 's' : ''} ` +
-      `par l’application`)
+    rest.push(tr.t('preferences.restState', { count: summary.stateCount }))
   }
   if (summary.unknownCount > 0) {
-    rest.push(`${formatCount(summary.unknownCount)} inconnue${summary.unknownCount > 1 ? 's' : ''} de ce catalogue`)
+    rest.push(tr.t('preferences.restUnknown', { count: summary.unknownCount }))
   }
   const unpresented = summary.unlabelledCount + summary.stateCount + summary.unknownCount
-  const carried = `Ce fichier contient ${plural(summary.fileKeyCount, 'ligne', 'lignes')} ` +
-    `en tout`
-  if (rest.length === 0) {
-    box.append(el('p', 'prefs__summary-detail', `${carried}.`))
-  } else {
-    box.append(el('p', 'prefs__summary-detail',
-      `${carried} : ${plural(unpresented, 'ne correspond', 'ne correspondent')} à aucun ` +
-      `réglage d’un écran de l’appareil — ${rest.join(', ')}. ` +
-      `${unpresented > 1 ? 'Elles sont' : 'Elle est'} listée${unpresented > 1 ? 's' : ''} ` +
-      `en fin de page.`))
-  }
+  const lines = tr.t('preferences.lineCount', { count: summary.fileKeyCount })
+  box.append(el('p', 'prefs__summary-detail', rest.length === 0
+    ? tr.t('preferences.fileCarries', { lines })
+    : tr.t('preferences.fileCarriesWithRest', {
+      lines, count: unpresented, rest: rest.join(', ')
+    })))
 
   box.append(el('p', 'prefs__summary-note', catalogNote(options)))
 }
@@ -2299,26 +2362,27 @@ function fillSummaryBox(
  * ne bougent pas d'une version à l'autre. On ne la donne pas non plus pour une preuve.
  */
 function catalogNote(options: PreferencesPageOptions): string {
-  const { catalog } = options
-  const reference = `Libellés et valeurs d’usine extraits de XCTrack ` +
-    `${catalogVersionText(catalog)} (versionCode ${String(catalog.meta.versionCode ?? 0)})`
+  const { catalog, tr } = options
+  // `version` et `code` partent en `string` : un nom de version et un `versionCode` sont
+  // des identifiants — « 100 030 » ne se retrouve dans aucun fichier XCTrack.
+  const reference = tr.t('preferences.catalogReference', {
+    version: catalogVersionText(catalog),
+    code: String(catalog.meta.versionCode ?? 0)
+  })
   const fallback = catalog.fallbackStringCount === 0
     ? ''
-    : ` ${formatCount(catalog.fallbackStringCount)} textes manquent dans cette langue et sont ` +
-      `affichés en anglais.`
+    : tr.t('preferences.catalogFallback', { count: catalog.fallbackStringCount })
 
   const trust = catalogTrust(options)
   if (trust === 'unstated') {
-    return `${reference}. Ce fichier ne dit pas de quelle version il vient : les libellés ` +
-      `et les valeurs d’usine changent d’une version à l’autre, la lecture est donc ` +
-      `indicative.${fallback}`
+    return tr.t('preferences.catalogNoteUnstated', { reference, fallback })
   }
   if (trust === 'exact') {
-    return `${reference} — la version même de ce fichier.${fallback}`
+    return tr.t('preferences.catalogNoteExact', { reference, fallback })
   }
-  return `${reference}. Ce fichier vient de ${fileVersionText(options)} : les libellés et ` +
-    `les valeurs d’usine changent d’une version à l’autre, la lecture est donc ` +
-    `indicative.${fallback}`
+  return tr.t('preferences.catalogNoteIndicative', {
+    reference, file: fileVersionText(options), fallback
+  })
 }
 
 /**
@@ -2346,9 +2410,10 @@ export function catalogTrust(options: PreferencesPageOptions): CatalogTrust {
 /** La version du fichier, nommée quand elle a un nom, chiffrée sinon. */
 function fileVersionText(options: PreferencesPageOptions): string {
   const name = options.fileVersionName
+  const code = String(options.fileVersionCode)
   return name === undefined
-    ? `la version ${String(options.fileVersionCode)}`
-    : `la version ${releaseName(name)} (versionCode ${String(options.fileVersionCode)})`
+    ? options.tr.t('preferences.fileVersionNumber', { code })
+    : options.tr.t('preferences.fileVersionNamed', { name: releaseName(name), code })
 }
 
 /**
@@ -2375,18 +2440,22 @@ function catalogVersionText(catalog: PreferenceCatalog): string {
  * rien d'autre ne dit, et dont deux ne se voient pas dans le fichier — ce qui est
  * précisément pourquoi il faut les écrire.
  */
-function buildPrivacyBox(inventory: PreferenceInventory, catalog: PreferenceCatalog): HTMLElement {
+function buildPrivacyBox(
+  inventory: PreferenceInventory, catalog: PreferenceCatalog, ctx: PageContext
+): HTMLElement {
+  const tr = ctx.tr
   const box = el('details', 'prefs__privacy')
   box.dataset.count = String(inventory.summary.personalCount)
 
   const counts = inventory.summary.personalCounts
 
   const head = el('summary', 'prefs__privacy-head')
+  const filled = counts.filled - counts.layout
   head.textContent = counts.preferences === 0
-    ? 'Aucune donnée personnelle repérée dans les préférences de ce fichier'
-    : `${plural(counts.preferences, 'réglage porte', 'réglages portent')} ` +
-      `une donnée personnelle · ${String(counts.filled - counts.layout)} renseignées, ` +
-      `${String(counts.preferences - (counts.filled - counts.layout))} vides`
+    ? tr.t('preferences.privacyNone')
+    : tr.t('preferences.privacyHead', {
+      count: counts.preferences, filled, empty: counts.preferences - filled
+    })
   box.append(head)
 
   const body = el('div', 'prefs__privacy-body')
@@ -2397,21 +2466,18 @@ function buildPrivacyBox(inventory: PreferenceInventory, catalog: PreferenceCata
   // export « pages » : c'est le chiffre qui décide de ce qu'on peut envoyer.
   body.append(el('p', 'prefs__privacy-note',
     counts.layout === 0
-      ? 'Cette page ne compte que les préférences. La disposition de ce fichier ne porte ' +
-        'aucun texte écrit par vous — c’est la boîte « Enregistrer » qui les inventorie, ' +
-        'et ce sont les seuls qui partiraient avec un export « pages ».'
-      : `Cette page ne compte que les préférences. La disposition en porte ` +
-        `${plural(counts.layout, 'de plus', 'de plus')} — des textes écrits par vous dans ` +
-        `les gadgets — et ce sont les seuls qui partent avec un export « pages ». La boîte ` +
-        `« Enregistrer » les montre un par un.`))
+      ? tr.t('preferences.privacyLayoutNone')
+      : tr.t('preferences.privacyLayoutSome', { count: counts.layout })))
 
   if (counts.preferences > 0) {
     const list = el('ul', 'prefs__privacy-list')
     for (const row of inventory.personal) {
       const item = el('li', 'prefs__privacy-item')
       item.append(el('span', 'prefs__privacy-key', row.key))
-      item.append(el('span', 'prefs__privacy-why',
-        `${PERSONAL_KIND_LABELS[row.personal?.kind ?? 'identity']} — ${row.personal?.reason ?? ''}`))
+      item.append(el('span', 'prefs__privacy-why', tr.t('preferences.privacyItemWhy', {
+        kind: ctx.personal.kind(row.personal?.kind ?? 'identity'),
+        reason: row.personal?.reason ?? ''
+      })))
       list.append(item)
     }
     body.append(list)
@@ -2419,26 +2485,20 @@ function buildPrivacyBox(inventory: PreferenceInventory, catalog: PreferenceCata
 
   const navigation = inventory.personal.find((row) => row.key === 'Navigation.State')
   if (navigation !== undefined) {
-    body.append(el('p', 'prefs__privacy-note',
-      `« Navigation.State » est une préférence publique de XCTrack : elle voyage avec le ` +
-      `fichier. Elle porte la tâche en cours — points de virage et coordonnées — soit ` +
-      `${navigation.value ?? 'une structure'} ici. Cette page n’en montre jamais le contenu ; ` +
-      `un fichier transmis, lui, l’emporte.`))
+    body.append(el('p', 'prefs__privacy-note', tr.t('preferences.privacyNavigationState', {
+      value: navigation.value ?? tr.t('preferences.someStructure')
+    })))
   }
 
   // Deux faits sur des clés qu'aucun fichier ne porte : leur absence est justement ce
   // qui mérite d'être dit, puisque rien à l'écran ne peut la faire deviner.
   if (catalog.knows('App.GuessLatitude')) {
-    body.append(el('p', 'prefs__privacy-note',
-      `XCTrack garde aussi une position présumée de l’appareil ` +
-      `(« App.GuessLatitude », « App.GuessLongitude ») — en pratique le domicile. Elles sont ` +
-      `internes à l’appareil : aucun export ne les porte, et ce fichier ne les porte pas.`))
+    body.append(el('p', 'prefs__privacy-note', tr.t('preferences.privacyGuessPosition')))
   }
   if (SECURE_PERSONAL_KEYS.length > 0) {
-    body.append(el('p', 'prefs__privacy-note',
-      `XCTrack chiffre les identifiants de compte (XContest, SkySight, SafeSky…) : les ` +
-      `${formatCount(SECURE_PERSONAL_KEYS.length)} réglages concernés ne sortent jamais de ` +
-      `l’appareil, et aucun export n’en porte.`))
+    body.append(el('p', 'prefs__privacy-note', tr.t('preferences.privacySecureKeys', {
+      count: SECURE_PERSONAL_KEYS.length
+    })))
   }
 
   // La conséquence, qui n'est pas une évidence : les seules clés dont XCTrack déclare
@@ -2447,37 +2507,30 @@ function buildPrivacyBox(inventory: PreferenceInventory, catalog: PreferenceCata
   // ligne ci-dessus porte le sien.
   if (counts.judged > 0 && counts.read === 0) {
     body.append(el('p', 'prefs__privacy-note',
-      `Aucune des ${formatCount(counts.total)} lignes de ce fichier n’est signalée par ` +
-      `XCTrack lui-même : les seuls réglages dont il déclare la sensibilité sont ceux qu’il ` +
-      `chiffre, et elles ne sont pas exportées. Cet inventaire est donc un jugement de cet ` +
-      `éditeur, et chaque ligne dit le sien.`))
+      tr.t('preferences.privacyJudged', { count: counts.total })))
   }
 
-  body.append(el('p', 'prefs__privacy-note', PERSONAL_CAVEAT))
+  body.append(el('p', 'prefs__privacy-note', ctx.personal.caveat()))
 
   box.append(body)
   return box
 }
 
-const LEFTOVER_TITLES: Record<LeftoverReason, string> = {
-  unlabelled: 'Réglages sans libellé',
-  state: 'Ce que l’application a mémorisé (pas des réglages)',
-  unknown: 'Lignes que ce catalogue ne connaît pas'
+/**
+ * ⚠️ Ces trois titres sont **cités mot à mot** par `preferences.menuNoteAirspaces` et par
+ * le bandeau de tête (`preferences.restState`) : une traduction qui s'en écarterait ferait
+ * se contredire l'écran d'un bloc à l'autre.
+ */
+const LEFTOVER_TITLES: Record<LeftoverReason, (tr: Translator) => string> = {
+  unlabelled: (tr) => tr.t('preferences.leftoverTitleUnlabelled'),
+  state: (tr) => tr.t('preferences.leftoverTitleState'),
+  unknown: (tr) => tr.t('preferences.leftoverTitleUnknown')
 }
 
-const LEFTOVER_LEADS: Record<LeftoverReason, string> = {
-  unlabelled:
-    'Ce sont bien des réglages, mais XCTrack les configure dans des écrans construits en ' +
-    'code, où la ligne du fichier n’est plus rattachée à son libellé : l’application ne ' +
-    'les nomme nulle part qu’on puisse lire. La valeur et la comparaison à la valeur ' +
-    'd’usine restent justes — c’est le nom qui manque, pas le sens.',
-  state:
-    'Ces lignes ne règlent rien : elles enregistrent l’état de l’application. Cette page en ' +
-    'donne la nature et la taille, jamais le contenu.',
-  unknown:
-    'Cet éditeur ne sait pas ce que ces lignes règlent : elles ont été écrites par une autre ' +
-    'version de XCTrack que celle dont le catalogue parle. Elles ne sont ni supprimables ni ' +
-    'négligeables — simplement inconnues, et conservées telles quelles.'
+const LEFTOVER_LEADS: Record<LeftoverReason, (tr: Translator) => string> = {
+  unlabelled: (tr) => tr.t('preferences.leftoverLeadUnlabelled'),
+  state: (tr) => tr.t('preferences.leftoverLeadState'),
+  unknown: (tr) => tr.t('preferences.leftoverLeadUnknown')
 }
 
 function buildLeftoverSection(
@@ -2486,12 +2539,13 @@ function buildLeftoverSection(
   const section = el('section', 'prefs__leftover')
   section.dataset.reason = reason
 
+  const tr = ctx.tr
   const heading = el('h3', 'prefs__screen-title')
   heading.append(
-    el('span', 'prefs__screen-name', LEFTOVER_TITLES[reason]),
-    el('span', 'prefs__screen-count', plural(rows.length, 'ligne', 'lignes'))
+    el('span', 'prefs__screen-name', LEFTOVER_TITLES[reason](tr)),
+    el('span', 'prefs__screen-count', tr.t('preferences.lineCount', { count: rows.length }))
   )
-  section.append(heading, el('p', 'prefs__lead', LEFTOVER_LEADS[reason]))
+  section.append(heading, el('p', 'prefs__lead', LEFTOVER_LEADS[reason](tr)))
 
   // Les familles, comptées : c'est ce qui rend visible qu'un fichier réel porte
   // 18 clés d'espaces aériens dont une seule est nommée.
@@ -2499,9 +2553,12 @@ function buildLeftoverSection(
   for (const row of rows) families.set(row.family, (families.get(row.family) ?? 0) + 1)
   const ranked = [...families].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))
   if (ranked.length > 1 || (ranked[0]?.[1] ?? 0) > 3) {
+    // Une colonne de données : un nom de famille de clés — `Airspace`, `Mapsforge` — et
+    // son compte. Rien à traduire hors du repli « (sans famille) ».
     section.append(el('p', 'prefs__families',
       ranked.map(([family, count]) =>
-        `${family === '' ? '(sans famille)' : family} : ${formatCount(count)}`).join(' · ')))
+        `${family === '' ? tr.t('preferences.noFamily') : family} : ` +
+        `${tr.format.number(count)}`).join(' · ')))
   }
 
   const list = el('div', 'prefs__list')
@@ -2517,25 +2574,17 @@ function buildLeftoverSection(
 function buildEmptyNote(
   options: PreferencesPageOptions, counts: PersonalCounts
 ): HTMLElement {
+  const tr = options.tr
   const box = el('div', 'prefs__empty')
-  box.append(el('p', 'prefs__empty-title', 'Ce fichier ne porte aucune préférence générale.'))
-  box.append(el('p', 'prefs__empty-text',
-    'Seuls les exports « backup » emportent les réglages de l’application. Un export ' +
-    '« pages » ne décrit que les pages et leurs gadgets : ouvrir une sauvegarde complète ' +
-    'de l’appareil est la seule façon de voir ces réglages-là.'))
-  box.append(el('p', 'prefs__empty-text',
-    `Rien n’est perdu pour autant : ce que cette page ne montre pas, ce fichier ne le ` +
-    `contient pas, et un réexport le laissera tel quel.`))
+  box.append(el('p', 'prefs__empty-title', tr.t('preferences.emptyTitle')))
+  box.append(el('p', 'prefs__empty-text', tr.t('preferences.emptyText')))
+  box.append(el('p', 'prefs__empty-text', tr.t('preferences.emptyIntact')))
   // ⚠️ « Pas de préférences » ne veut pas dire « rien de personnel ». Le nom et le numéro
   // d'un bouton d'appel vivent dans la disposition, et un export « pages » les emporte.
   // Laisser la page muette ici, c'est laisser croire le contraire.
   if (counts.layout > 0) {
     box.append(el('p', 'prefs__empty-text prefs__empty-text--warn',
-      `Attention : « aucune préférence » ne veut pas dire « rien de personnel ». La ` +
-      `disposition de ce fichier porte ${plural(counts.layout, 'texte écrit par vous',
-        'textes écrits par vous')} dans ses gadgets — un titre, un nom, un numéro de ` +
-      `téléphone —, et un export « pages » les emporte. La boîte « Enregistrer » les ` +
-      `montre un par un.`))
+      tr.t('preferences.emptyPersonalWarning', { count: counts.layout })))
   }
   if (options.fileVersionName !== undefined) {
     box.append(el('p', 'prefs__summary-note', catalogNote(options)))
@@ -2548,7 +2597,10 @@ function buildEmptyNote(
  * qui l'a chargé, ou l'appelant qui le fournit.
  */
 export function renderPreferencesPage(options: PreferencesPageOptions): PreferencesPage {
-  const inventory = buildPreferenceInventory(options.document, options.catalog, options.domains)
+  const tr = options.tr
+  const inventory = buildPreferenceInventory(
+    options.document, options.catalog, tr, options.domains
+  )
   const hardware = options.domains?.hardwareKeysFor(fileDevice(options.document)) ?? null
   const root = el('section', 'prefs')
   // Un fichier sans préférence n'a rien à régler : la page y reste ce qu'elle est, une
@@ -2563,10 +2615,10 @@ export function renderPreferencesPage(options: PreferencesPageOptions): Preferen
   const titles = el('div', 'prefs__titles')
   // Le menu « Fichier » nomme cette page « Réglages généraux » : un écran et la commande
   // qui l'ouvre doivent porter le même nom, sans quoi le pilote doute d'être au bon endroit.
-  titles.append(el('h2', 'prefs__title', 'Réglages généraux'))
+  titles.append(el('h2', 'prefs__title', tr.t('preferences.pageTitle')))
   const subtitle = options.fileName === undefined
-    ? 'Ce que XCTrack règle hors des pages de gadgets'
-    : `${options.fileName} — ce que XCTrack règle hors des pages de gadgets`
+    ? tr.t('preferences.pageSubtitle')
+    : tr.t('preferences.pageSubtitleNamed', { file: options.fileName })
   titles.append(el('p', 'prefs__subtitle', subtitle))
   head.append(titles)
 
@@ -2575,7 +2627,7 @@ export function renderPreferencesPage(options: PreferencesPageOptions): Preferen
   root.append(head)
 
   const ctx: PageContext = {
-    collected: [], hardware, domains: options.domains,
+    collected: [], tr, personal: personalProse(tr), hardware, domains: options.domains,
     device: fileDevice(options.document)
   }
 
@@ -2586,7 +2638,7 @@ export function renderPreferencesPage(options: PreferencesPageOptions): Preferen
 
   const summaryBox = buildSummaryBox(inventory, options)
   root.append(summaryBox)
-  let privacyBox = buildPrivacyBox(inventory, options.catalog)
+  let privacyBox = buildPrivacyBox(inventory, options.catalog, ctx)
   root.append(privacyBox)
 
   if (onEdit !== undefined) {
@@ -2601,6 +2653,7 @@ export function renderPreferencesPage(options: PreferencesPageOptions): Preferen
     ctx.edit = {
       document: options.document,
       catalog: options.catalog,
+      tr,
       conflicts: new Set(options.catalog.meta.defaultConflicts),
       domains: options.domains,
       hardware,
@@ -2617,8 +2670,8 @@ export function renderPreferencesPage(options: PreferencesPageOptions): Preferen
         fillSummaryBox(summaryBox, inventory, options)
         if (edit.personal !== undefined || edit.outcome !== 'set') {
           const open = privacyBox instanceof HTMLDetailsElement && privacyBox.open
-          refreshPersonal(inventory, options.document, options.catalog)
-          const fresh = buildPrivacyBox(inventory, options.catalog)
+          refreshPersonal(inventory, options.document, options.catalog, tr)
+          const fresh = buildPrivacyBox(inventory, options.catalog, ctx)
           if (open && fresh instanceof HTMLDetailsElement) fresh.open = true
           privacyBox.replaceWith(fresh)
           privacyBox = fresh
@@ -2626,22 +2679,19 @@ export function renderPreferencesPage(options: PreferencesPageOptions): Preferen
         if (edit.personal !== undefined && !written.includes(edit.key)) {
           written.push(edit.key)
           filled.hidden = false
-          filled.textContent =
-            `Vous venez de renseigner ${plural(written.length, 'donnée personnelle',
-              'données personnelles')} — ${written.join(', ')}. ` +
-            'Elle voyagera avec ce fichier : la boîte « Enregistrer » vous laisse choisir ' +
-            'ce qui part.'
+          // `keys` est une colonne de noms de réglages, jointe par `', '` : `format.list`
+          // en ferait une énumération de prose là où il y a une liste.
+          filled.textContent = tr.t('preferences.filledPersonal', {
+            count: written.length, keys: written.join(', ')
+          })
         }
       }
     }
   }
 
   const menuSection = el('section', 'prefs__menu')
-  menuSection.append(el('p', 'prefs__lead', editable
-    ? 'Les écrans sont ceux de l’appareil, dans l’ordre de son menu de réglages. Un ' +
-      'réglage modifié est écrit dans le document aussitôt ; « Annuler » le défait, et ' +
-      'rien ne part sur le disque avant « Enregistrer ».'
-    : 'Les écrans sont ceux de l’appareil, dans l’ordre de son menu de réglages.'))
+  menuSection.append(el('p', 'prefs__lead',
+    tr.t(editable ? 'preferences.menuLeadEditable' : 'preferences.menuLead')))
   for (const entry of inventory.menu) menuSection.append(buildMenuElement(entry, ctx))
   root.append(menuSection)
 
@@ -2670,11 +2720,12 @@ function recount(
 
 /** Refait le relevé des données personnelles depuis le document tel qu'il est maintenant. */
 function refreshPersonal(
-  inventory: PreferenceInventory, document: JsonNode, catalog: PreferenceCatalog
+  inventory: PreferenceInventory, document: JsonNode, catalog: PreferenceCatalog,
+  tr: Translator
 ): void {
   const file = readFilePreferences(document)
   const ctx: RowContext = {
-    catalog, file, conflicts: new Set(catalog.meta.defaultConflicts)
+    catalog, tr, file, conflicts: new Set(catalog.meta.defaultConflicts)
   }
   inventory.personal = []
   inventory.summary.personalCount = 0
@@ -2687,6 +2738,7 @@ function refreshPersonal(
 }
 
 function buildMenuElement(entry: PreferenceMenuEntry, ctx: PageContext): HTMLElement {
+  const tr = ctx.tr
   const section = el('section', 'prefs__entry')
   section.dataset.menu = entry.menuKey
 
@@ -2695,12 +2747,15 @@ function buildMenuElement(entry: PreferenceMenuEntry, ctx: PageContext): HTMLEle
     line.append(el('span', 'prefs__entry-name', entry.title))
     const note = el('span', 'prefs__entry-note')
     note.append(el('span', 'prefs__entry-why',
-      entry.note ?? 'Rien de cet écran n’apparaît dans ce fichier.'))
-    if (entry.tally !== undefined) note.append(el('span', 'prefs__entry-tally', tallyText(entry.tally)))
+      entry.note ?? tr.t('preferences.entryNothing')))
+    if (entry.tally !== undefined) {
+      note.append(el('span', 'prefs__entry-tally', tallyText(entry.tally, tr)))
+    }
     line.append(note)
     section.append(line)
     return section
   }
+
 
   for (const screen of entry.screens) {
     const block = el('section', 'prefs__screen')
@@ -2710,7 +2765,7 @@ function buildMenuElement(entry: PreferenceMenuEntry, ctx: PageContext): HTMLEle
     const heading = el('h3', 'prefs__screen-title')
     heading.append(
       el('span', 'prefs__screen-name', screen.title),
-      el('span', 'prefs__screen-count', plural(count, 'réglage', 'réglages'))
+      el('span', 'prefs__screen-count', tr.t('preferences.settingCount', { count }))
     )
     block.append(heading)
 
@@ -2720,7 +2775,7 @@ function buildMenuElement(entry: PreferenceMenuEntry, ctx: PageContext): HTMLEle
       for (const row of group.rows) list.append(buildRowElement(row, ctx))
       block.append(list)
       if (ctx.edit !== undefined) {
-        for (const note of refusalNotes(group.rows)) block.append(note)
+        for (const note of refusalNotes(group.rows, tr)) block.append(note)
       }
     }
 
@@ -2729,8 +2784,7 @@ function buildMenuElement(entry: PreferenceMenuEntry, ctx: PageContext): HTMLEle
 
     if (screen.neverExported > 0) {
       block.append(el('p', 'prefs__never',
-        `${plural(screen.neverExported, 'réglage de cet écran ne quitte', 'réglages de cet écran ne quittent')} ` +
-        `jamais l’appareil : XCTrack ne les exporte pas.`))
+        tr.t('preferences.neverExported', { count: screen.neverExported })))
     }
     section.append(block)
   }
@@ -2750,7 +2804,9 @@ function hardwareScopeNote(
     .flatMap((group) => group.rows)
     .map((row) => row.binding)
     .filter((one): one is KeyBinding => one !== undefined)
-  return hardwareNote(bindings, ctx.hardware, ctx.domains.hardwareKeySurveys(), ctx.device)
+  return hardwareNote(
+    bindings, ctx.hardware, ctx.domains.hardwareKeySurveys(), ctx.device, ctx.tr
+  )
 }
 
 /**
@@ -2760,35 +2816,31 @@ function hardwareScopeNote(
  * s'écrit une fois, sous le bloc, comme le fait déjà la note « ne quittent jamais
  * l'appareil ». Chaque ligne garde sa marque (`data-settable="false"`) et son infobulle.
  */
-function refusalNotes(rows: readonly PreferenceRow[]): HTMLElement[] {
+function refusalNotes(rows: readonly PreferenceRow[], tr: Translator): HTMLElement[] {
   const counts = new Map<string, number>()
   for (const row of rows) {
-    const refusal = editRefusal(row)
+    const refusal = editRefusal(row, tr)
     if (refusal === undefined) continue
     counts.set(refusal, (counts.get(refusal) ?? 0) + 1)
   }
   return [...counts].map(([reason, count]) =>
-    el('p', 'prefs__refusal',
-      `${plural(count, 'réglage de ce bloc ne se règle', 'réglages de ce bloc ne se règlent')} ` +
-      `pas ici. ${reason}`))
+    el('p', 'prefs__refusal', tr.t('preferences.refusalNote', { count, reason })))
 }
 
 /**
  * Le compte qui donne sa mesure au manque : combien de clés ce fichier porte sous cette
  * entrée, et combien d'entre elles la page sait nommer.
  */
-export function tallyText(tally: { total: number; labelled: number }): string {
-  const carried = `Ce fichier en porte ${plural(tally.total, 'ligne', 'lignes')}`
-  if (tally.labelled === 0) {
-    return `${carried} : aucune ne porte de libellé, toutes sont listées en fin de page ` +
-      `sous leur nom brut.`
-  }
-  const rest = tally.total - tally.labelled
-  const named = tally.labelled === 1
-    ? 'une seule porte un libellé et est affichée dans un autre écran'
-    : `${formatCount(tally.labelled)} portent un libellé et sont affichées dans un autre écran`
-  return `${carried}, dont ${named} ; ${plural(rest, 'est listée', 'sont listées')} en fin de ` +
-    `page sous leur nom brut.`
+export function tallyText(
+  tally: { total: number; labelled: number }, tr: Translator
+): string {
+  const lines = tr.t('preferences.lineCount', { count: tally.total })
+  if (tally.labelled === 0) return tr.t('preferences.tallyNone', { lines })
+  return tr.t('preferences.tallySome', {
+    lines,
+    named: tr.t('preferences.tallyNamed', { count: tally.labelled }),
+    listed: tr.t('preferences.tallyListed', { count: tally.total - tally.labelled })
+  })
 }
 
 /** Le seuil au-delà duquel un champ de filtrage rend service plutôt que d'encombrer. */
@@ -2798,6 +2850,7 @@ function finish(
   root: HTMLElement, inventory: PreferenceInventory, ctx: PageContext,
   options: PreferencesPageOptions, actions: HTMLElement, editable: boolean
 ): PreferencesPage {
+  const tr = options.tr
   const collected = ctx.collected
   let query = ''
   let onlyCustom = false
@@ -2820,8 +2873,10 @@ function finish(
 
     const search = el('input', 'prefs__filter')
     search.type = 'search'
-    search.placeholder = 'Filtrer les réglages'
-    search.setAttribute('aria-label', 'Filtrer les réglages')
+    // Le même mot pour le texte indicatif et pour le nom accessible : deux formulations
+    // pour un même champ se liraient comme deux champs.
+    search.placeholder = tr.t('preferences.filterPlaceholder')
+    search.setAttribute('aria-label', tr.t('preferences.filterPlaceholder'))
     search.addEventListener('input', () => { filter(search.value) })
     tools.append(search)
 
@@ -2829,13 +2884,13 @@ function finish(
       // Le pilote, c'est lui. Un bouton qui s'appelle « Seulement ce que le pilote a
       // réglé » donne l'impression de consulter le dossier de quelqu'un d'autre — et le
       // bandeau, juste au-dessus, lui dit déjà « Vous avez réglé… ».
-      const only = el('button', 'btn prefs__only', 'Seulement ce que j’ai réglé')
+      const only = el('button', 'btn prefs__only', tr.t('preferences.onlyMine'))
       only.type = 'button'
       only.setAttribute('aria-pressed', 'false')
       only.addEventListener('click', () => {
         onlyCustom = only.getAttribute('aria-pressed') !== 'true'
         only.setAttribute('aria-pressed', String(onlyCustom))
-        only.textContent = onlyCustom ? 'Tout afficher' : 'Seulement ce que j’ai réglé'
+        only.textContent = tr.t(onlyCustom ? 'preferences.showAll' : 'preferences.onlyMine')
         apply()
       })
       tools.append(only)
@@ -2844,13 +2899,15 @@ function finish(
     if (inventory.summary.personalCount > 0) {
       // Utile avant une capture d'écran ou un partage : la page se montre sans les
       // valeurs qui désignent quelqu'un. Rien n'est retiré du fichier, évidemment.
-      const mask = el('button', 'btn prefs__mask', 'Masquer les valeurs personnelles')
+      const mask = el('button', 'btn prefs__mask', tr.t('preferences.maskPersonal'))
       mask.type = 'button'
       mask.setAttribute('aria-pressed', 'false')
       mask.addEventListener('click', () => {
         const next = mask.getAttribute('aria-pressed') !== 'true'
         mask.setAttribute('aria-pressed', String(next))
-        mask.textContent = next ? 'Montrer les valeurs personnelles' : 'Masquer les valeurs personnelles'
+        mask.textContent = tr.t(next
+          ? 'preferences.showPersonal'
+          : 'preferences.maskPersonal')
         root.classList.toggle('prefs--masked', next)
         // Une règle de style ne couvre pas le contenu d'un champ de saisie : on bascule
         // le type, ce qui laisse la valeur intacte dans le DOM — comme le fait le
@@ -2872,7 +2929,7 @@ function finish(
   }
 
   if (options.onClose !== undefined) {
-    const button = el('button', 'btn prefs__close', 'Fermer')
+    const button = el('button', 'btn prefs__close', tr.t('preferences.close'))
     button.type = 'button'
     button.addEventListener('click', close)
     actions.append(button)
@@ -2923,20 +2980,27 @@ export async function openPreferencesPage(
  *
  * | morceau                   |  émis   |  gzip   |
  * |---------------------------|---------|---------|
- * | `preferencesPage-*.js`    | 45,0 Ko | 14,9 Ko |
- * | `preferencesPage-*.css`   |  9,7 Ko |  2,3 Ko |
+ * | `preferencesPage-*.js`    | 37,9 Ko | 11,5 Ko |
+ * | `preferencesPage-*.css`   |  9,6 Ko |  2,3 Ko |
  * | `preferenceDomains-*.js`  | 12,7 Ko |  4,3 Ko |
  * | `preferenceCatalog/base`  | 98,9 Ko | 14,8 Ko |
- * | `preferenceCatalog/<lg>`  | 24,4 Ko |  6,0 Ko |
+ * | `preferenceCatalog/<lg>`  | 17,0 Ko |  6,3 Ko |
  *
- * Soit **190 Ko émis, environ 42 Ko transférés** à la première ouverture, puis 24 Ko de
+ * Soit **176 Ko émis, environ 39 Ko transférés** à la première ouverture, puis 17 Ko de
  * plus par langue supplémentaire — la part invariante ne se retélécharge pas.
  *
  * Le module a pris 11,2 Ko en devenant modifiable : les contrôles, l'écriture, le couple
  * implicite / explicite et le recalcul des comptes. Puis 6,4 Ko de plus, et un cinquième
  * morceau de 12,7 Ko, en fermant les listes d'unités et en rendant les touches lisibles.
- * Tout part avec le reste, à la demande — un pilote qui n'ouvre jamais cette page ne
- * télécharge rien de tout cela.
+ * Il en a **rendu 7,1** en versant sa prose au catalogue : ces octets-là ne sont pas
+ * économisés, ils ont changé de morceau. Ils vivent maintenant dans le catalogue de la
+ * langue du pilote (`src/i18n/`), qui est **chargé au démarrage** et qui grossit de 1,5 Ko
+ * compressés en français à 2,2 Ko en néerlandais. Le bilan tient en une phrase : la page
+ * coûte moins cher à ouvrir, et l'amorçage un peu plus — mais d'une seule langue, jamais
+ * de cinq.
+ *
+ * Tout le reste part à la demande — un pilote qui n'ouvre jamais cette page ne télécharge
+ * rien de tout cela.
  *
  * ⚠️ Le chiffre du module est un **majorant** : il a été relevé sur un point d'entrée qui
  * n'importe rien d'autre, donc il emporte `core/access`, `core/serializeJson` et
@@ -2944,9 +3008,9 @@ export async function openPreferencesPage(
  */
 export const PREFERENCES_PAGE_WEIGHT = {
   /** Le module de page, une fois construit. */
-  moduleKb: 45,
+  moduleKb: 37.9,
   /** Sa feuille de style, émise à part par Vite. */
-  styleKb: 9.7,
+  styleKb: 9.6,
   /**
    * Les domaines relevés — vocabulaire des unités, 338 codes de touche, les huit listes
    * relevées à l'écran et les touches physiques d'un boîtier.
@@ -2955,7 +3019,7 @@ export const PREFERENCES_PAGE_WEIGHT = {
   /** La part invariante du catalogue : préférences, écrans, valeurs, défauts, portées. */
   catalogBaseKb: 98.9,
   /** Le fichier de textes d'une langue, repli anglais déjà fusionné. */
-  catalogLanguageKb: 24.4,
+  catalogLanguageKb: 17,
   /** Ce que le réseau transporte réellement à la première ouverture, en gzip. */
-  transferredKb: 42
+  transferredKb: 39
 } as const

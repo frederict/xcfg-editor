@@ -135,7 +135,15 @@ const IDENTICAL_ON_PURPOSE: ReadonlySet<string> = new Set<string>([
   'en/pages.portrait',
   'en/pages.portraitInline',
   'de/device.diagonalPlaceholder',
-  'en/pages.pageCount'
+  'en/pages.pageCount',
+  /*
+   * Domaine `preferences` (`preferencesPage.ts`). Deux gabarits **sans un seul mot** :
+   * une valeur abrégée suivie de sa longueur, et la nature d'une donnée personnelle
+   * suivie de sa raison. Repères, points de suspension, parenthèses et tiret cadratin :
+   * les cinq langues écrivent forcément la même chose.
+   */
+  ...UI_LANGUAGES.map((language) => `${language}/preferences.truncatedValue`),
+  ...UI_LANGUAGES.map((language) => `${language}/preferences.privacyItemWhy`)
 ])
 
 /**

@@ -37,6 +37,12 @@ import {
 import {
   BACKUP_2025, BACKUP_2026, FORMES_PRESERVEES, GSON_2022, PAGES_2026
 } from '../fixtures/paths'
+import { loadTranslator, type Translator } from '../../src/i18n'
+import frenchMessages from '../../src/i18n/messages/fr'
+// Le panneau des gadgets garde son intitulé en constante française, et son propre message
+// le double par un test d'égalité (`tests/ui/properties.test.ts`). En rattachant le nôtre
+// à la même constante, les trois sont tenus ensemble — voir le test tout en bas.
+import { RESTORE_LABEL as WIDGET_PANEL_RESTORE_LABEL } from '../../src/ui/properties'
 
 /**
  * Tout se joue sur les trois fichiers réels du dépôt : la sauvegarde de la version
@@ -52,10 +58,18 @@ let catalog: PreferenceCatalog
  * n'éprouverait que le repli. Ce repli a son propre test, et un seul.
  */
 let domains: PreferenceDomainCatalog
+/**
+ * Le traducteur de **notre prose**, en français : ces tests vérifient ce que la page dit,
+ * et la langue d'écriture du dépôt est le français. Il est **passé** à la page comme
+ * l'assembleur le passe, jamais lu par elle — voir `src/i18n/axes.ts` : ce n'est pas le
+ * même axe que le `'fr'` de `loadPreferenceCatalog`, qui est celui des libellés de
+ * XCTrack.
+ */
+let tr: Translator
 
 beforeAll(async () => {
-  [catalog, domains] = await Promise.all([
-    loadPreferenceCatalog('fr'), loadPreferenceDomains()
+  [catalog, domains, tr] = await Promise.all([
+    loadPreferenceCatalog('fr'), loadPreferenceDomains(), loadTranslator('fr')
   ])
 })
 
@@ -64,7 +78,7 @@ function documentOf(path: string): JsonNode {
 }
 
 function inventoryOf(path: string) {
-  return buildPreferenceInventory(documentOf(path), catalog, domains)
+  return buildPreferenceInventory(documentOf(path), catalog, tr, domains)
 }
 
 function allRows(path: string): PreferenceRow[] {
@@ -156,7 +170,7 @@ describe('« absente » et « réglée au défaut » sont deux choses différent
   it('dit ce que XCTrack appliquera à la place, sans le confondre avec une valeur', () => {
     const absent = allRows(BACKUP_2025).find((row) => row.state === 'absent')
     expect(absent).toBeDefined()
-    expect(stateLabel(absent!)).toBe('absente du fichier')
+    expect(stateLabel(absent!, tr)).toBe('absente du fichier')
     expect(absent!.value).toBeUndefined()
   })
 
@@ -165,7 +179,7 @@ describe('« absente » et « réglée au défaut » sont deux choses différent
     // même pas quel défaut s'appliquera.
     const row = rowFor(BACKUP_2026, '_ttsSpeed')
     expect(row.state).toBe('unwritten')
-    expect(stateLabel(row)).toBe('jamais réglée')
+    expect(stateLabel(row, tr)).toBe('jamais réglée')
   })
 
   it('ne compte jamais comme manquante une clé que l’export ne porte jamais', () => {
@@ -231,7 +245,7 @@ describe('les clés que la page ne sait pas présenter restent visibles', () => 
     expect(airspaces?.note).toContain('construit cet écran en code')
     // 18 clés `Airspace.*` et 3 `Obstacles.*`, dont une seule porte un libellé.
     expect(airspaces?.tally).toEqual({ total: 21, labelled: 1 })
-    expect(tallyText(airspaces!.tally!)).toContain('une seule porte un libellé')
+    expect(tallyText(airspaces!.tally!, tr)).toContain('une seule porte un libellé')
   })
 })
 
@@ -293,7 +307,7 @@ describe('la comparaison à la valeur d’usine dit ce qu’elle vaut', () => {
     // La marque ne porte plus les deux valeurs : en capitales et collées à la valeur du
     // pilote, elles se lisaient comme une alerte sur son QNH. L'infobulle les dit toutes
     // les deux, et dit à qui appartient laquelle.
-    expect(stateLabel(row)).toBe('valeur d’usine incertaine')
+    expect(stateLabel(row, tr)).toBe('valeur d’usine incertaine')
   })
 
   it('suspend la comparaison quand la valeur d’usine dépend de la locale', () => {
@@ -308,7 +322,7 @@ describe('la comparaison à la valeur d’usine dit ce qu’elle vaut', () => {
     const theme = rowFor(BACKUP_2026, 'Display.Theme')
     expect(theme.value).toBe('Haut contraste blanc')
     expect(theme.defaultText).toBe('Blanc')
-    expect(stateLabel(theme)).toBe('réglé par vous')
+    expect(stateLabel(theme, tr)).toBe('réglé par vous')
 
     const bool = rowFor(BACKUP_2026, 'Display.Fullscreen')
     expect(bool.value).toBe('Oui')
@@ -364,7 +378,7 @@ describe('un fichier sans préférence le dit', () => {
   })
 
   it('affiche une explication et non un écran vide', () => {
-    const page = renderPreferencesPage({ document: documentOf(PAGES_2026), catalog })
+    const page = renderPreferencesPage({ document: documentOf(PAGES_2026), catalog, tr })
     expect(page.element.textContent).toContain('ne porte aucune préférence générale')
     expect(page.element.querySelectorAll('.prefs__row')).toHaveLength(0)
   })
@@ -428,7 +442,7 @@ describe('le vocabulaire de la page est celui du pilote', () => {
 
 describe('la page est en lecture seule, et pas seulement grisée', () => {
   it('ne construit aucun contrôle de formulaire lié à une préférence', () => {
-    const page = renderPreferencesPage({ document: documentOf(BACKUP_2026), catalog })
+    const page = renderPreferencesPage({ document: documentOf(BACKUP_2026), catalog, tr })
     expect(page.element.querySelectorAll('select')).toHaveLength(0)
     expect(page.element.querySelectorAll('textarea')).toHaveLength(0)
     // Le seul `input` admis est le champ de filtrage, qui ne touche pas au document.
@@ -444,7 +458,7 @@ describe('la page est en lecture seule, et pas seulement grisée', () => {
   })
 
   it('masque les valeurs personnelles à l’écran sans les retirer de nulle part', () => {
-    const page = renderPreferencesPage({ document: documentOf(BACKUP_2026), catalog })
+    const page = renderPreferencesPage({ document: documentOf(BACKUP_2026), catalog, tr })
     const mask = page.element.querySelector<HTMLButtonElement>('.prefs__mask')
     expect(mask).not.toBeNull()
 
@@ -466,7 +480,7 @@ describe('la page est en lecture seule, et pas seulement grisée', () => {
   it('laisse le document intact, à l’octet près', () => {
     const source = readFileSync(BACKUP_2026, 'utf8')
     const document = parseJson(source)
-    const page = renderPreferencesPage({ document, catalog })
+    const page = renderPreferencesPage({ document, catalog, tr })
     page.filter('thème')
     page.close()
     expect(serializeJson(document)).toBe(source)
@@ -480,6 +494,7 @@ describe('l’interface offerte à l’assembleur', () => {
     const page = await openPreferencesPage({
       document: documentOf(BACKUP_2026),
       language: 'fr',
+      tr,
       fileName: 'essai.xcfg',
       fileVersionCode: 100030,
       fileVersionName: '1.0.3-beta'
@@ -489,12 +504,12 @@ describe('l’interface offerte à l’assembleur', () => {
   })
 
   it('ne construit un bouton de fermeture que si l’appelant en veut un', () => {
-    const plain = renderPreferencesPage({ document: documentOf(BACKUP_2026), catalog })
+    const plain = renderPreferencesPage({ document: documentOf(BACKUP_2026), catalog, tr })
     expect(plain.element.querySelector('.prefs__close')).toBeNull()
 
     let closed = 0
     const page = renderPreferencesPage({
-      document: documentOf(BACKUP_2026), catalog, onClose: () => { closed += 1 }
+      document: documentOf(BACKUP_2026), catalog, tr, onClose: () => { closed += 1 }
     })
     const button = page.element.querySelector<HTMLButtonElement>('.prefs__close')
     expect(button).not.toBeNull()
@@ -508,7 +523,7 @@ describe('l’interface offerte à l’assembleur', () => {
   })
 
   it('filtre sur le libellé comme sur la clé, accents compris', () => {
-    const page = renderPreferencesPage({ document: documentOf(BACKUP_2026), catalog })
+    const page = renderPreferencesPage({ document: documentOf(BACKUP_2026), catalog, tr })
     const visible = (): number =>
       [...page.element.querySelectorAll<HTMLElement>('.prefs__row')].filter((row) => !row.hidden).length
     const total = visible()
@@ -528,17 +543,17 @@ describe('l’interface offerte à l’assembleur', () => {
 
   it('situe le catalogue par rapport à la version du fichier', () => {
     const same = renderPreferencesPage({
-      document: documentOf(BACKUP_2026), catalog, fileVersionCode: 100030
+      document: documentOf(BACKUP_2026), catalog, tr, fileVersionCode: 100030
     })
     expect(same.element.textContent).toContain('la version même de ce fichier')
 
     const older = renderPreferencesPage({
-      document: documentOf(BACKUP_2025), catalog,
+      document: documentOf(BACKUP_2025), catalog, tr,
       fileVersionCode: 91230, fileVersionName: '0.9.12.3'
     })
     expect(older.element.textContent).toContain('la lecture est donc indicative')
 
-    const unstated = renderPreferencesPage({ document: documentOf(BACKUP_2025), catalog })
+    const unstated = renderPreferencesPage({ document: documentOf(BACKUP_2025), catalog, tr })
     expect(unstated.element.textContent).toContain('ne dit pas de quelle version il vient')
   })
 })
@@ -627,7 +642,7 @@ function editable(path: string): {
   const document = parseJson(source)
   const edits: PreferenceEdit[] = []
   const page = renderPreferencesPage({
-    document, catalog, domains, onEdit: (edit) => { edits.push(edit) }
+    document, catalog, tr, domains, onEdit: (edit) => { edits.push(edit) }
   })
   return { source, document, page, edits }
 }
@@ -673,7 +688,7 @@ function screenRows(path: string): PreferenceRow[] {
 
 describe('la page ne se modifie que si on le lui demande', () => {
   it('reste sans le moindre contrôle quand l’assembleur ne branche pas d’écriture', () => {
-    const page = renderPreferencesPage({ document: documentOf(BACKUP_2026), catalog })
+    const page = renderPreferencesPage({ document: documentOf(BACKUP_2026), catalog, tr })
     expect(page.editable).toBe(false)
     expect(page.element.dataset.mode).toBe('lecture')
     expect(page.element.querySelectorAll('select')).toHaveLength(0)
@@ -699,13 +714,13 @@ describe('la page ne se modifie que si on le lui demande', () => {
 describe('ce qui se règle, et ce qui ne se règle pas', () => {
   it('offre un contrôle aux 77 lignes présentables du fichier de référence', () => {
     const rows = screenRows(BACKUP_2026)
-    const settable = rows.filter((row) => editRefusal(row) === undefined)
+    const settable = rows.filter((row) => editRefusal(row, tr) === undefined)
     expect(rows).toHaveLength(93)
     expect(settable).toHaveLength(77)
   })
 
   it('refuse les seize lignes qui ouvrent une boîte sur l’appareil, et le dit', () => {
-    const refused = screenRows(BACKUP_2026).filter((row) => editRefusal(row) !== undefined)
+    const refused = screenRows(BACKUP_2026).filter((row) => editRefusal(row, tr) !== undefined)
     expect(refused).toHaveLength(16)
     // Toutes de contrôle `action` : quinze touches et la table du vario sonore.
     expect(new Set(refused.map((row) => row.control))).toEqual(new Set(['action']))
@@ -793,7 +808,7 @@ describe('ce qui se règle, et ce qui ne se règle pas', () => {
     // Le repli : les domaines sont facultatifs, et une page qui s'effondrerait faute
     // d'un fichier de données annexe serait moins utile qu'une page qui en sait moins.
     const page = renderPreferencesPage({
-      document: documentOf(BACKUP_2026), catalog, onEdit: () => {}
+      document: documentOf(BACKUP_2026), catalog, tr, onEdit: () => {}
     })
     for (const key of ['Unit.Altitude', 'Unit.Speed']) {
       expect(rowElement(page, key).querySelector('select'), key).toBeNull()
@@ -915,7 +930,7 @@ describe('ce que la page dit du matériel, et ce qu’elle ne dira jamais', () =
     const source = readFileSync(BACKUP_2026, 'utf8')
       .replace('AIR3 AIR3-7.2 8.1.0', 'AIR3 AIR3-7.3 11')
     const page = renderPreferencesPage({
-      document: parseJson(source), catalog, domains, onEdit: () => {}
+      document: parseJson(source), catalog, tr, domains, onEdit: () => {}
     })
     // Plus une seule phrase sur une ligne : nous ne savons rien de ce boîtier-là.
     expect(page.element.querySelectorAll('.prefs__row .prefs__hardware')).toHaveLength(0)
@@ -1186,7 +1201,7 @@ describe('une clé absente reste absente tant qu’on ne l’a pas demandée', (
     expect(absent).toHaveLength(76)
     expect(inventory.summary.absentCount + inventory.summary.unwrittenCount).toBe(76)
     // Sur ces 76, 60 portent un contrôle offrable et 52 une valeur de départ écrivable.
-    expect(absent.filter((row) => editRefusal(row) === undefined)).toHaveLength(60)
+    expect(absent.filter((row) => editRefusal(row, tr) === undefined)).toHaveLength(60)
   })
 })
 
@@ -1350,7 +1365,7 @@ describe('rendre un défaut explicite, et le rendre à l’implicite', () => {
       const relevé = entry?.default !== undefined && entry.defaultSource !== 'runtime'
       const bouton = rowElement(page, row.key).querySelector('button.prefs__adopt')
       // Un bouton qui écrirait une valeur devinée serait pire que pas de bouton.
-      expect(bouton !== null, row.key).toBe(relevé && editRefusal(row) === undefined)
+      expect(bouton !== null, row.key).toBe(relevé && editRefusal(row, tr) === undefined)
     }
 
     expect(page.element.querySelectorAll('button.prefs__adopt')).toHaveLength(52)
@@ -1422,7 +1437,7 @@ describe('rendre un défaut explicite, et le rendre à l’implicite', () => {
     // celui qui commence par écrire.
     const source = readFileSync(FORMES_PRESERVEES, 'utf8')
     const document = parseJson(source)
-    const page = renderPreferencesPage({ document, catalog, onEdit: () => {} })
+    const page = renderPreferencesPage({ document, catalog, tr, onEdit: () => {} })
 
     controlOf<HTMLButtonElement>(page, 'Tweak.VolumeUp', 'button.prefs__adopt').click()
     expect(serializeJson(document)).not.toBe(source)
@@ -1480,7 +1495,7 @@ describe('rendre un défaut explicite, et le rendre à l’implicite', () => {
   })
 
   it('ne retire jamais une clé dans une page en lecture seule', () => {
-    const page = renderPreferencesPage({ document: documentOf(BACKUP_2026), catalog })
+    const page = renderPreferencesPage({ document: documentOf(BACKUP_2026), catalog, tr })
     expect(page.element.querySelectorAll('.prefs__drop')).toHaveLength(0)
     expect(page.element.querySelectorAll('.prefs__implicit')).toHaveLength(0)
   })
@@ -1567,7 +1582,7 @@ describe('rétablir la valeur d’usine d’un réglage que le pilote a changé'
   it('l’offre sur toutes les lignes réglées, et sur celles-là seulement', () => {
     const { page } = editable(BACKUP_2026)
     for (const row of screenRows(BACKUP_2026)) {
-      const offered = row.state === 'custom' && editRefusal(row) === undefined
+      const offered = row.state === 'custom' && editRefusal(row, tr) === undefined
       expect(restoreLine(page, row.key) !== null, row.key).toBe(offered)
     }
     // Trente réglages du pilote dans ce fichier, dont six touches (`Keys.*`) que cette
@@ -1577,7 +1592,7 @@ describe('rétablir la valeur d’usine d’un réglage que le pilote a changé'
   })
 
   it('ne l’offre pas du tout dans une page en lecture seule', () => {
-    const page = renderPreferencesPage({ document: documentOf(BACKUP_2026), catalog })
+    const page = renderPreferencesPage({ document: documentOf(BACKUP_2026), catalog, tr })
     expect(page.element.querySelectorAll('.prefs__restore')).toHaveLength(0)
     expect(page.element.querySelectorAll('.prefs__restore-btn')).toHaveLength(0)
   })
@@ -1622,7 +1637,7 @@ describe('rétablir la valeur d’usine d’un réglage que le pilote a changé'
     // doublée. Rétablir un flottant voisin ne doit toucher à aucun des quatre.
     const source = readFileSync(FORMES_PRESERVEES, 'utf8')
     const document = parseJson(source)
-    const page = renderPreferencesPage({ document, catalog, onEdit: () => {} })
+    const page = renderPreferencesPage({ document, catalog, tr, onEdit: () => {} })
 
     restoreButton(page, 'Sensors.AcousticVario.BueeLimit').click()
     const after = serializeJson(document)
@@ -1664,7 +1679,7 @@ describe('rétablir la valeur d’usine d’un réglage que le pilote a changé'
     const document = parseJson(source)
     const history = createHistory(document)
     const page = renderPreferencesPage({
-      document: history.current(), catalog,
+      document: history.current(), catalog, tr,
       // Ce que `main.ts` branche : chaque écriture effective devient un pas d'historique.
       onEdit: (edit) => { history.record(edit.description) }
     })
@@ -1692,7 +1707,7 @@ describe('rétablir la valeur d’usine d’un réglage que le pilote a changé'
   it('dit d’où vient la valeur d’usine dès que le fichier ne vient pas de cette version', () => {
     const trustOf = (options: Record<string, unknown>): { trust: string; note: string } => {
       const page = renderPreferencesPage({
-        document: documentOf(BACKUP_2026), catalog, onEdit: () => {}, ...options
+        document: documentOf(BACKUP_2026), catalog, tr, onEdit: () => {}, ...options
       })
       const line = restoreLine(page, 'Display.Theme')!
       return {
@@ -1736,8 +1751,19 @@ describe('rétablir la valeur d’usine d’un réglage que le pilote a changé'
   it('emploie le même intitulé que le panneau des gadgets, mot pour mot', () => {
     // Deux formulations pour un même geste, sur deux écrans du même outil, seraient un
     // défaut à elles seules. C'est déjà la règle des deux premiers gestes.
-    expect(RESTORE_LABEL).toBe('Rétablir la valeur d’usine')
+    //
+    // Depuis que la prose est versée au catalogue, l'accord ne tient plus à ce que deux
+    // constantes portent la même chaîne : il tient à **ce test**. Le panneau des gadgets
+    // garde `RESTORE_LABEL` en français et double son propre message par une égalité ;
+    // le nôtre s'y rattache ici. Aucun des deux écrans ne peut donc dériver seul.
+    //
+    // ⚠️ Volontairement **pas** dans `common.ts` : ce geste n'est partagé qu'entre deux
+    // domaines, et y monter une clé ferait de ce fichier-là un point de conflit permanent
+    // pour économiser trois lignes.
+    expect(RESTORE_LABEL).toBe('preferences.restoreLabel')
+    expect(frenchMessages['preferences.restoreLabel']).toBe(WIDGET_PANEL_RESTORE_LABEL)
+    expect(tr.t(RESTORE_LABEL)).toBe('Rétablir la valeur d’usine')
     const { page } = editable(BACKUP_2026)
-    expect(restoreButton(page, 'Display.Theme').textContent).toBe(RESTORE_LABEL)
+    expect(restoreButton(page, 'Display.Theme').textContent).toBe(tr.t(RESTORE_LABEL))
   })
 })

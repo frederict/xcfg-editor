@@ -12,6 +12,7 @@ import { personalDataCount } from '../../src/ui/libraryPanel'
 import { planSharing } from '../../src/ui/sharingDialog'
 import { computeWarnings, warningsAt, REFERENCE_VERSION_CODE } from '../../src/ui/warnings'
 import { BACKUP_2026, FORMES_PRESERVEES, PAGES_2026 } from '../fixtures/paths'
+import { loadTranslator } from '../../src/i18n'
 
 /**
  * **Les quatre écrans, sur le même fichier.**
@@ -60,7 +61,7 @@ describe('les quatre vues d’un seul inventaire — le backup de référence', 
     // 1. Réglages généraux — compte les clés de préférences. Il les recompte par le
     // catalogue chargé, le modèle par le relevé embarqué : les deux chemins doivent
     // rendre le même nombre, sans quoi l'unification serait un vœu.
-    const preferences = buildPreferenceInventory(container.document, catalog)
+    const preferences = buildPreferenceInventory(container.document, catalog, await loadTranslator('fr'))
     expect(preferences.summary.personalCount).toBe(16)
     expect(preferences.summary.personalCounts.preferences).toBe(preferences.summary.personalCount)
 
@@ -97,7 +98,7 @@ describe('les quatre vues d’un seul inventaire — le fichier au bouton d’ap
 
     expect(inventory.counts).toMatchObject({ total: 8, layout: 5, preferences: 3, filled: 7 })
 
-    const preferences = buildPreferenceInventory(container.document, catalog)
+    const preferences = buildPreferenceInventory(container.document, catalog, await loadTranslator('fr'))
     expect(preferences.summary.personalCount).toBe(3)
     expect(preferences.summary.personalCounts.layout).toBe(5)
 
