@@ -2187,8 +2187,10 @@ function runPageOperation(
 
   // L'annonce se calcule sur l'état d'AVANT, et se garde : la reconstruction du
   // carrousel emporte la zone d'annonce que le module vient de remplir.
+  // Deux langues : notre prose suit le pilote, le type de page cité suit le fichier
+  // ouvert (`session.language`). Voir `src/i18n/axes.ts`.
   const text = operationAnnouncement(
-    session.layout[orientation], operation, orientation, translator()
+    session.layout[orientation], operation, orientation, translator(), session.language
   )
 
   try {

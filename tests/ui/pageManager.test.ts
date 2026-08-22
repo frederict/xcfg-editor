@@ -25,6 +25,8 @@ import {
   thermalAssistantRanks,
   type PageOperation
 } from '../../src/ui/pageManager'
+import { hasNavigationLabel, navigationLabel } from '../../src/catalog/navigationLabels'
+import { pageClassLabel } from '../../src/catalog/widgetNames'
 import type { ViewContext } from '../../src/ui/views'
 import { makeTranslator } from '../../src/i18n'
 import frenchMessages from '../../src/i18n/messages/fr'
@@ -35,6 +37,14 @@ import { BACKUP_2026, PAGES_2026 } from '../fixtures/paths'
  * celle dont les phrases sont vérifiables au caractère près dans ce fichier.
  */
 const tr = makeTranslator('fr', frenchMessages)
+
+/**
+ * La langue de l'**autre** axe : celle des libellés de XCTrack, c'est-à-dire du fichier
+ * ouvert. Les fichiers du corpus déclarent `Display.Language: "fr"`, d'où `'fr'` ici —
+ * mais c'est une valeur indépendante de `tr`, et plusieurs tests plus bas la font varier
+ * pour vérifier qu'elle l'est bien. Voir `src/i18n/axes.ts`.
+ */
+const LABELS = 'fr'
 
 /**
  * Deux fichiers réels, pas un cas fabriqué : `backup-00` porte cinq pages en paysage
@@ -82,12 +92,47 @@ describe('l’état du corpus', () => {
     // Les trois formes disent le sort de la page, pas un compte de navigations — et
     // elles reprennent la phrase de l'appareil, « les types de navigations pour
     // lesquelles la page sera affichée » (mesuré sur l'AIR³, § 5.4).
-    expect(navigationsLabel(landscape[0]!, tr)).toBe('Affichée pour toutes les navigations')
-    expect(navigationsLabel(landscape[1]!, tr)).toBe('Affichée pour aucune navigation')
-    // Portrait page 1 : liste explicite de quatre classes `navig.*`.
-    expect(navigationsLabel(pagesOf(document, 'portrait')[0]!, tr))
-      .toBe('Affichée pour : Retour au décollage, Fermeture de triangle, Vers une balise, ' +
-        'Vers un pilote en direct')
+    expect(navigationsLabel(landscape[0]!, tr, LABELS))
+      .toBe('Affichée pour toutes les navigations')
+    expect(navigationsLabel(landscape[1]!, tr, LABELS))
+      .toBe('Affichée pour aucune navigation')
+    // Portrait page 1 : liste explicite de quatre classes `navig.*`. Les quatre noms sont
+    // ceux de l'appareil, relevés dans ses ressources (`navTakeoff`, `navTriangleClosing`,
+    // `navWaypoint2`, `navLivePilot`) — et non les nôtres : cet outil écrivait
+    // « Fermeture de triangle », « Vers une balise » et « Vers un pilote en direct », que
+    // le pilote ne trouvait nulle part sur son instrument.
+    expect(navigationsLabel(pagesOf(document, 'portrait')[0]!, tr, LABELS))
+      .toBe('Affichée pour : Retour au décollage, Triangle achevant, Balises/Navigation XC, ' +
+        'Pilote Live')
+  })
+
+  it('donne les noms de navigation dans la langue du FICHIER, pas dans la nôtre', () => {
+    // Le cas qui décide (`src/i18n/axes.ts`) : un pilote francophone dont l'AIR³ est en
+    // anglais. La phrase reste française, les quatre noms passent à l'anglais.
+    const page = pagesOf(load(), 'portrait')[0]!
+    expect(navigationsLabel(page, tr, 'en'))
+      .toBe('Affichée pour : Back to takeoff, Triangle closing, Waypoints / XC Navigation, ' +
+        'Live pilot')
+    expect(navigationsLabel(page, tr, 'de'))
+      .toBe('Affichée pour : Zurück zum Start, Dreieck schliessen, Wegpunkte / XC Navigation, ' +
+        'Live Pilot')
+  })
+
+  it('replie sur l’anglais la navigation qu’une langue ne porte pas, et rien d’autre', () => {
+    // `navLivePilot` n'existe pas en néerlandais dans les ressources de XCTrack 1.0.3 :
+    // l'appareil d'un pilote néerlandais affiche donc l'anglais, et cet outil aussi. Ce
+    // qui n'est pas mesuré ne s'invente pas — surtout pas une traduction maison qui se
+    // ferait passer pour celle de l'appareil.
+    expect(hasNavigationLabel('TaskToLivePilot', 'nl')).toBe(false)
+    expect(navigationLabel('TaskToLivePilot', 'nl')).toBe('Live pilot')
+    // Le repli ne déborde pas : les trois autres sont bien traduites en néerlandais.
+    expect(hasNavigationLabel('TaskBackToTakeoff', 'nl')).toBe(true)
+    expect(navigationLabel('TaskBackToTakeoff', 'nl')).toBe('Terug naar start')
+    expect(navigationLabel('TaskTriangleClosing', 'nl')).toBe('Driehoek gesloten')
+    // Une navigation qu'aucune version relevée ne documente garde son nom court.
+    expect(navigationLabel('TaskToFuture', 'fr')).toBe('TaskToFuture')
+    // Une langue que le catalogue ne porte pas retombe sur l'anglais, comparaison exacte.
+    expect(navigationLabel('TaskCompetition', 'fr-FR')).toBe('Competition task')
   })
 })
 
@@ -483,7 +528,7 @@ describe('avertir du décalage des rangs', () => {
 describe('la description d’une opération', () => {
   const pages = pagesOf(load(), 'landscape')
   const describe1 = (operation: PageOperation): string =>
-    describeOperation(pages, operation, 'landscape', tr)
+    describeOperation(pages, operation, 'landscape', tr, LABELS)
 
   it('nomme le rang, pas un identifiant interne', () => {
     expect(describe1({ kind: 'remove', index: 2 })).toBe('Supprimer la page 3 (paysage)')
@@ -496,20 +541,33 @@ describe('la description d’une opération', () => {
   })
 
   it('distingue les deux orientations', () => {
-    expect(describeOperation(pages, { kind: 'remove', index: 0 }, 'portrait', tr))
+    expect(describeOperation(pages, { kind: 'remove', index: 0 }, 'portrait', tr, LABELS))
       .toBe('Supprimer la page 1 (portrait)')
   })
 
   it('reprend les libellés de l’appareil pour les quatre classes', () => {
-    expect(PAGE_CHOICES.map((choice) => choice.label))
+    expect(PAGE_CHOICES.map((className) => pageClassLabel(className, 'fr')))
       .toEqual(['Aide thermique', 'Aide XC', 'Compétition', 'Vide'])
-    expect(creationLabel('org.xcontest.XCTrack.widget.wp.WPEmpty')).toBe('Vide')
+    expect(creationLabel('org.xcontest.XCTrack.widget.wp.WPEmpty', 'fr')).toBe('Vide')
     // Une classe inconnue garde son nom court plutôt que d'être rangée de force.
-    expect(creationLabel('org.xcontest.XCTrack.widget.wp.WPFuture')).toBe('WPFuture')
+    expect(creationLabel('org.xcontest.XCTrack.widget.wp.WPFuture', 'fr')).toBe('WPFuture')
+  })
+
+  it('cite le type de page dans la langue du FICHIER, la phrase restant dans la nôtre', () => {
+    // Le pas d'historique revient derrière « Annuler : », hors de l'écran qui l'a produit.
+    // Il doit y porter le mot que le pilote a lu sur son instrument, pas notre traduction.
+    expect(describeOperation(
+      pages, { kind: 'insert', index: 2, className: 'WPThermalAssistant' }, 'landscape', tr, 'en'
+    )).toBe('Insérer une page « Thermal Assistant » au rang 3 (paysage)')
+    expect(describeOperation(
+      pages, { kind: 'setClass', index: 0, className: 'WPCompetition' }, 'landscape', tr, 'de'
+    )).toBe('Changer le type de la page 1 : « Leer » → « Wettbewerb » (paysage)')
   })
 
   it('joint la conséquence à l’annonce faite après coup', () => {
-    const message = operationAnnouncement(pages, { kind: 'remove', index: 0 }, 'landscape', tr)
+    const message = operationAnnouncement(
+      pages, { kind: 'remove', index: 0 }, 'landscape', tr, LABELS
+    )
     expect(message).toContain('Supprimer la page 1 (paysage)')
     expect(message).toContain('Les pages 2 à 5 deviennent 1 à 4')
   })
@@ -574,6 +632,34 @@ describe('le carrousel', () => {
     expect(captured).toHaveLength(1)
     expect(captured[0]!.operation).toEqual({ kind: 'insert', index: 2, className: 'WPEmpty' })
     expect(captured[0]!.description).toBe('Insérer une page « Vide » au rang 3 (paysage)')
+  })
+
+  it('titre chaque classe avec le mot de l’appareil, et la commente avec le nôtre', () => {
+    // Les deux axes, l'un sous l'autre dans le même bouton : le titre vient de
+    // `widgetLabels.json` (langue du fichier), la note du catalogue `pageKind.*Note`
+    // (langue du pilote). Ils ne se confondent jamais.
+    const { root } = build()
+    const choice = query<HTMLElement>(root, '.pages__gap')[0]!
+    choice.querySelector<HTMLButtonElement>('.pages__insert')!.click()
+
+    expect(query(choice, '.pages__choice-label').map((node) => node.textContent))
+      .toEqual(['Aide thermique', 'Aide XC', 'Compétition', 'Vide'])
+    expect(query(choice, '.pages__choice-note')[3]!.textContent)
+      .toBe('Créée vide sur l’instrument, prête pour vos propres gadgets.')
+  })
+
+  it('passe les quatre titres à l’anglais quand le FICHIER est en anglais', () => {
+    // Notre prose ne bouge pas d'un mot : c'est l'autre axe qui a changé.
+    const { root } = build({ ctx: { ...context(load()), language: 'en' } })
+    const choice = query<HTMLElement>(root, '.pages__gap')[0]!
+    choice.querySelector<HTMLButtonElement>('.pages__insert')!.click()
+
+    expect(query(choice, '.pages__choice-label').map((node) => node.textContent))
+      .toEqual(['Thermal Assistant', 'XC Assistant', 'Competition', 'Empty'])
+    expect(query(choice, '.pages__choice-note')[3]!.textContent)
+      .toBe('Créée vide sur l’instrument, prête pour vos propres gadgets.')
+    // La ligne « Affichée pour : … » de chaque vignette suit le même axe.
+    expect(root.textContent).toContain('Affichée pour toutes les navigations')
   })
 
   it('prévient dans la boîte d’insertion qu’une seconde aide thermique déplace la cible', () => {

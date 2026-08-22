@@ -137,13 +137,12 @@ const pages: DomainCatalog<'pages'> = {
 
   'pages.shownForAllNavigations': 'Mostrada para todas las navegaciones',
   'pages.shownForNoNavigation': 'Mostrada para ninguna navegación',
-  'pages.shownForNavigations': 'Mostrada para: {list}',
+  'pages.shownForNavigations': 'Mostrada para: {list}'
 
-  'navigation.backToTakeoff': 'Vuelta al despegue',
-  'navigation.triangleClosing': 'Cierre de triángulo',
-  'navigation.toWaypoint': 'Hacia una baliza',
-  'navigation.competition': 'Competición',
-  'navigation.toLivePilot': 'Hacia un piloto en directo'
+  /*
+   * Las cinco navegaciones salieron de aquí el 22-08-2026: son las palabras de XCTrack, no
+   * las nuestras, y siguen el eje `labels`. Véase `src/catalog/navigationLabels.json`.
+   */
 }
 
 export default pages

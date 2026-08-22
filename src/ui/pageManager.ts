@@ -1,3 +1,5 @@
+import { navigationLabel } from '../catalog/navigationLabels'
+import { pageClassLabel } from '../catalog/widgetNames'
 import type { JsonNode } from '../core/jsonDocument'
 import { isShownForNoNavigation } from '../model/inspection'
 import type { Page } from '../model/layout'
@@ -70,76 +72,35 @@ const NEW_PAGE_NAVIGATIONS = { kind: 'all' } as const
  */
 export const THERMAL_ASSISTANT_CLASS = 'WPThermalAssistant'
 
-export interface PageChoice {
-  className: string
-  label: string
-  description: string
-}
-
 /**
- * Les quatre entrées de « Choisissez une nouvelle page », dans l'ordre et avec les mots
- * de l'appareil (§ 5.2) — un pilote qui a vu cet écran doit retrouver la même liste.
+ * Les quatre entrées de « Choisissez une nouvelle page », **dans l'ordre de l'appareil**
+ * (§ 5.2) — un pilote qui a vu cet écran doit retrouver la même liste.
  *
- * Les descriptions sont celles de l'instrument, et rien de plus. Deux d'entre elles
- * ajoutaient « Masquée hors contexte de vol », ce qui était faux : la classe d'une page
- * ne décide pas du moment où l'appareil la montre, c'est sa clé `navigations` qui le
- * fait — mesuré le 22 août 2026, voir `PAGE_KINDS` dans `src/ui/views.ts`.
+ * Ne restent ici que les quatre noms de classe. Ce que la liste affiche se compose de
+ * deux textes qui ne suivent **pas le même axe de langue** (`src/i18n/axes.ts`) :
  *
- * ⚠️ **Ces huit chaînes ne sont pas versées au catalogue de `src/i18n/`, et c'est
- * délibéré.** Ce sont des **libellés de XCTrack**, relevés dans ses ressources sous
- * `wpThermalAssistantTitle`, `wpXCAssistantTitle`, `wpCompetitionTitle`, `wpEmptyTitle`
- * et leurs `…Description`. Ils suivent donc l'axe `labels` — la langue du fichier
- * ouvert — et non l'axe de notre prose (`src/i18n/axes.ts`). Les traduire ici les ferait
- * suivre le mauvais axe, et un libellé « traduit » est un mot que le pilote ne trouve
- * nulle part sur son appareil (`src/i18n/CLAUDE.md` § 7.1).
+ * | À l'écran | Axe | D'où il vient |
+ * |---|---|---|
+ * | le **titre** — *Aide thermique*, *Thermal Assistant*, … | `labels` | `pageClassLabel`, c'est-à-dire `src/catalog/widgetLabels.json`, relevé sous `wpThermalAssistantTitle` et ses trois voisines |
+ * | la **note** en dessous | `ui` | `pageKind(…, tr).note` — notre prose, dans la langue du pilote |
  *
- * La mesure existe pourtant dans les cinq langues : `src/catalog/widgetLabels.json`
- * porte `WPThermalAssistant`, `WPXCAssistant`, `WPCompetition` et `WPEmpty` en 31
- * langues. Les brancher sur `ctx.language`, comme `renderPage` le fait déjà pour les
- * noms de gadgets, est le geste juste — mais c'est un changement de comportement, pas
- * une extraction, et `describeOperation` ne reçoit aujourd'hui aucun axe de libellés.
+ * ⚠️ **Le titre ne se traduit pas dans nos catalogues.** Jusqu'au 2026-08-22, ces quatre
+ * mots étaient écrits en dur, en français, dans ce fichier : un pilote belge dont l'AIR³
+ * est en anglais lisait « Aide thermique » là où son instrument dit *Thermal Assistant*.
+ * Ils suivent maintenant la langue du fichier ouvert, comme les noms de gadgets que
+ * `renderPage` dessine depuis toujours.
+ *
+ * La note, elle, est bien la nôtre, et le reste : elle dit ce que la classe **fait** — le
+ * jeu de gadgets posé à la création, et pour l'assistant de thermique le fait d'être la
+ * cible du basculement automatique. Elle ne dit rien du moment où l'appareil montre la
+ * page : c'est la clé `navigations` qui en décide, mesuré le 22 août 2026.
  */
-export const PAGE_CHOICES: readonly PageChoice[] = [
-  {
-    className: 'WPThermalAssistant',
-    label: 'Aide thermique',
-    description: 'Aide thermique. C’est la classe que vise le basculement automatique.'
-  },
-  {
-    className: 'WPXCAssistant',
-    label: 'Aide XC',
-    description: 'Aide FAI et routes.'
-  },
-  {
-    className: 'WPCompetition',
-    label: 'Compétition',
-    description: 'Navigation en compétition.'
-  },
-  {
-    className: 'WPEmpty',
-    label: 'Vide',
-    description: 'Page vide, prête pour vos propres gadgets.'
-  }
+export const PAGE_CHOICES: readonly string[] = [
+  'WPThermalAssistant',
+  'WPXCAssistant',
+  'WPCompetition',
+  'WPEmpty'
 ]
-
-/**
- * Les cinq navigations de la boîte de visibilité (§ 5.4), pour l'affichage seul.
- *
- * La table ne porte plus le texte mais la **clé** : ce sont nos mots, traduits dans les
- * cinq langues, et non ceux de l'appareil — sa chrome française dit « Triangle
- * achevant », « Balises/Navigation XC », « Manche de compétition » et « Pilote Live ».
- * Voir `navigation.*` dans `src/i18n/messages/fr/pages.ts`.
- *
- * Une navigation qu'aucune version connue ne documente reste affichée sous son nom court,
- * plutôt que de disparaître de la liste.
- */
-const NAVIGATION_KEYS = {
-  TaskBackToTakeoff: 'navigation.backToTakeoff',
-  TaskTriangleClosing: 'navigation.triangleClosing',
-  TaskToWaypoint: 'navigation.toWaypoint',
-  TaskCompetition: 'navigation.competition',
-  TaskToLivePilot: 'navigation.toLivePilot'
-} as const
 
 export type PageOperation =
   | { kind: 'insert'; index: number; className: string }
@@ -153,10 +114,16 @@ export function shortClassName(className: string): string {
   return className.split('.').pop() ?? ''
 }
 
-/** Le libellé de création d'une classe — celui de l'appareil, sinon le nom court. */
-export function creationLabel(className: string): string {
-  const short = shortClassName(className)
-  return PAGE_CHOICES.find((choice) => choice.className === short)?.label ?? short
+/**
+ * Le libellé de création d'une classe de page — celui de l'appareil, dans la langue du
+ * **fichier ouvert**, sinon le nom court tel qu'il y est écrit.
+ *
+ * `labels` est la langue de l'axe des libellés (`ViewContext.language`, `session.language`,
+ * à défaut celle du navigateur). Le passer est obligatoire : c'est ce qui empêche qu'un
+ * appelant retombe sans le vouloir sur la langue de notre interface.
+ */
+export function creationLabel(className: string, labels: string): string {
+  return pageClassLabel(shortClassName(className), labels)
 }
 
 /**
@@ -188,15 +155,25 @@ function rangeLabel(tr: Translator, firstRank: number, lastRank: number): string
  * et rappellent l'orientation : les deux carrousels partagent un seul historique. La
  * contrainte vaut dans les cinq langues, et `src/i18n/messages/fr/pages.ts` la redit au
  * traducteur.
+ *
+ * ⚠️ **Deux langues entrent ici, et elles sont indépendantes.** La phrase est de notre
+ * prose (`tr`, langue du pilote) ; le **type de page** qu'elle cite entre guillemets est
+ * un mot de XCTrack (`labels`, langue du fichier ouvert). « Insérer une page “Thermal
+ * Assistant” au rang 3 (paysage) » est la forme juste pour un pilote francophone dont
+ * l'appareil est en anglais : il retrouve dans l'historique le mot qu'il a lu sur son
+ * instrument. Voir `src/i18n/axes.ts`.
  */
 export function describeOperation(
-  pages: readonly Page[], operation: PageOperation, orientation: Orientation, tr: Translator
+  pages: readonly Page[], operation: PageOperation, orientation: Orientation, tr: Translator,
+  labels: string
 ): string {
   const where = orientationInline(tr, orientation)
   switch (operation.kind) {
     case 'insert':
       return tr.t('pages.describeInsert', {
-        type: creationLabel(operation.className), rank: operation.index + 1, orientation: where
+        type: creationLabel(operation.className, labels),
+        rank: operation.index + 1,
+        orientation: where
       })
     case 'duplicate':
       return tr.t('pages.describeDuplicate', {
@@ -211,8 +188,8 @@ export function describeOperation(
     case 'setClass':
       return tr.t('pages.describeSetClass', {
         rank: operation.index + 1,
-        before: creationLabel(pages[operation.index]?.className ?? ''),
-        after: creationLabel(operation.className),
+        before: creationLabel(pages[operation.index]?.className ?? '', labels),
+        after: creationLabel(operation.className, labels),
         orientation: where
       })
   }
@@ -220,9 +197,10 @@ export function describeOperation(
 
 /** Ce que l'interface annonce une fois l'opération faite, `pages` étant l'état d'AVANT. */
 export function operationAnnouncement(
-  pages: readonly Page[], operation: PageOperation, orientation: Orientation, tr: Translator
+  pages: readonly Page[], operation: PageOperation, orientation: Orientation, tr: Translator,
+  labels: string
 ): string {
-  const done = describeOperation(pages, operation, orientation, tr)
+  const done = describeOperation(pages, operation, orientation, tr, labels)
   const shift = shiftAdvice(pages, operation, tr)
   return shift === undefined
     ? tr.t('pages.announcement', { done })
@@ -539,21 +517,28 @@ function button(className: string, text: string, label?: string): HTMLButtonElem
  * (`docs/reference/2026-08-22-essai-pilote.md` § 2). C'est cette phrase-ci que le pilote
  * d'essai a retrouvée juste, quand le badge « Masquée hors vol » posé à côté d'elle
  * disait le contraire — le badge est parti, elle est restée.
+ *
+ * ⚠️ **La phrase est de nous, les cinq noms de navigation sont de XCTrack.** Ils suivent
+ * donc `labels`, la langue du fichier ouvert, et se lisent dans `navigationLabels.json`.
+ * Ils furent, jusqu'au 2026-08-22, de notre prose traduite en cinq langues — et quatre des
+ * cinq ne disaient pas ce que l'appareil dit : *Fermeture de triangle* pour « Triangle
+ * achevant », *Vers une balise* pour « Balises/Navigation XC », *Compétition* pour
+ * « Manche de compétition », *Vers un pilote en direct* pour « Pilote Live ». Le pilote
+ * cherchait dans cet outil un réglage qu'il ne pouvait pas reconnaître.
+ *
+ * Une navigation qu'aucune version relevée ne documente reste affichée sous son nom court,
+ * plutôt que de disparaître de la liste.
  */
-export function navigationsLabel(page: Page, tr: Translator): string {
+export function navigationsLabel(page: Page, tr: Translator, labels: string): string {
   const navigations = page.navigations
   if (navigations.kind === 'all') return tr.t('pages.shownForAllNavigations')
   if (navigations.kind === 'none') return tr.t('pages.shownForNoNavigation')
   if (navigations.classNames.length === 0) return tr.t('pages.shownForNoNavigation')
   return tr.t('pages.shownForNavigations', {
     // Une colonne de libellés, jointe par `', '` : `format.list` en ferait une phrase
-    // — « … et Vers une balise » — là où l'appareil énumère un réglage.
+    // — « … et Balises/Navigation XC » — là où l'appareil énumère un réglage.
     list: navigations.classNames
-      .map((name) => {
-        const short = shortClassName(name)
-        const key = NAVIGATION_KEYS[short as keyof typeof NAVIGATION_KEYS]
-        return key === undefined ? short : tr.t(key)
-      })
+      .map((name) => navigationLabel(shortClassName(name), labels))
       .join(', ')
   })
 }
@@ -614,8 +599,8 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
   const announce = (message: string): void => { live.textContent = message }
 
   const request = (operation: PageOperation): void => {
-    const description = describeOperation(pages, operation, orientation, tr)
-    announce(operationAnnouncement(pages, operation, orientation, tr))
+    const description = describeOperation(pages, operation, orientation, tr, ctx.language)
+    announce(operationAnnouncement(pages, operation, orientation, tr, ctx.language))
     options.onOperation(operation, description)
   }
 
@@ -660,15 +645,17 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
 
     choice.append(el('p', 'pages__choice-title', tr.t('pages.newPageAtRank', { rank: at + 1 })))
     const list = el('ul', 'pages__choice-list')
-    for (const entry of PAGE_CHOICES) {
+    for (const className of PAGE_CHOICES) {
       const item = el('li')
       const pick = button('pages__choice-item', '')
       pick.append(
-        el('span', 'pages__choice-label', entry.label),
-        el('span', 'pages__choice-note', entry.description)
+        // Le titre est celui de l'appareil (axe `labels`), la note est la nôtre (axe
+        // `ui`) : les deux se lisent l'une sous l'autre sans jamais se mélanger.
+        el('span', 'pages__choice-label', pageClassLabel(className, ctx.language)),
+        el('span', 'pages__choice-note', pageKind(className, tr).note)
       )
       pick.addEventListener('click', () => {
-        request({ kind: 'insert', index: at, className: entry.className })
+        request({ kind: 'insert', index: at, className })
       })
       item.append(pick)
       list.append(item)
@@ -729,7 +716,7 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
       el('span', 'pagecard__widgets', tr.t('common.widgetCount', { count: page.widgets.length }))
     )
     card.append(meta)
-    card.append(el('p', 'pagecard__nav', navigationsLabel(page, tr)))
+    card.append(el('p', 'pagecard__nav', navigationsLabel(page, tr, ctx.language)))
 
     // La cible du basculement automatique se dit sur la page concernée, là où le pilote
     // la cherche — et non seulement dans le bandeau du haut.
@@ -809,7 +796,7 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
       const label = el('label', 'pagecard__class-label', tr.t('pages.pageTypeLabel'))
       label.htmlFor = select.id
 
-      const known = PAGE_CHOICES.some((choice) => choice.className === kind.shortName)
+      const known = PAGE_CHOICES.includes(kind.shortName)
       if (!known) {
         // Une classe qu'aucune version connue ne documente reste proposée telle quelle :
         // la choisir de nouveau ne change rien, mais la faire disparaître de la liste
@@ -820,9 +807,9 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
         current.value = kind.shortName
         select.append(current)
       }
-      for (const choice of PAGE_CHOICES) {
-        const option = el('option', undefined, choice.label)
-        option.value = choice.className
+      for (const className of PAGE_CHOICES) {
+        const option = el('option', undefined, pageClassLabel(className, ctx.language))
+        option.value = className
         select.append(option)
       }
       select.value = kind.shortName

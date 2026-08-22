@@ -131,7 +131,11 @@ export const DOMAIN_PREFIXES: Readonly<Record<Domain, readonly string[]>> = {
   widgets: ['palette', 'properties', 'widgets'],
   versions: ['cleanup', 'versions'],
   sharing: ['sharing', 'warnings'],
-  pages: ['device', 'navigation', 'pages'],
+  // ⚠️ Pas de préfixe `navigation` ici, et il ne doit pas y revenir : les cinq noms de
+  // navigation sont des **libellés de XCTrack**, ils suivent l'axe `labels` et vivent
+  // dans `src/catalog/navigationLabels.json`. Ils ont été déclarés sous `navigation.*`
+  // jusqu'au 2026-08-22, et quatre des cinq ne disaient pas ce que l'appareil dit.
+  pages: ['device', 'pages'],
   model: [
     'model', 'personal', 'personalBasis', 'personalHome', 'personalKind', 'personalReason',
     'sharingReason', 'suspectClue', 'ruleTitle', 'ruleSummary', 'inspection', 'libraryError'

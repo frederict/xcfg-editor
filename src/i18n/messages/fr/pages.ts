@@ -39,11 +39,20 @@
  *
  * ## Ce qui n'entre pas ici, et pourquoi
  *
- * Les quatre entrées de « Choisissez une nouvelle page » — *Aide thermique*, *Aide XC*,
- * *Compétition*, *Vide* — restent écrites en dur dans `src/ui/pageManager.ts`. Ce sont
- * des **libellés de XCTrack**, pas notre prose : ils suivent l'axe `labels`, celui du
- * fichier ouvert, et non celui du pilote (`src/i18n/axes.ts`). Les traduire ici les
- * ferait suivre le mauvais axe. Voir le commentaire de `PAGE_CHOICES`.
+ * **Aucun mot de XCTrack.** Deux familles sont dans ce cas, et aucune des deux ne se
+ * traduit ici :
+ *
+ * - les quatre titres de « Choisissez une nouvelle page » — *Aide thermique*, *Aide XC*,
+ *   *Compétition*, *Vide* — se lisent dans `src/catalog/widgetLabels.json`
+ *   (`pageClassLabel`). Seule la **note** affichée sous chaque titre est de nous, et elle
+ *   est déjà au catalogue, sous `pageKind.*Note` dans le domaine `app` ;
+ * - les cinq noms de navigation se lisent dans `src/catalog/navigationLabels.json`
+ *   (`navigationLabel`). Ils étaient ici jusqu'au 2026-08-22 ; voir la trace laissée en
+ *   fin de fichier.
+ *
+ * Les deux suivent l'axe `labels`, celui du fichier ouvert, et non celui du pilote
+ * (`src/i18n/axes.ts`). Les traduire ici les ferait suivre le mauvais axe, et un libellé
+ * « traduit » est un mot que le pilote ne trouve nulle part sur son appareil.
  */
 const pages = {
   /* ==================================================== `deviceSelector.ts` — le gabarit */
@@ -255,24 +264,22 @@ const pages = {
    */
   'pages.shownForAllNavigations': 'Affichée pour toutes les navigations',
   'pages.shownForNoNavigation': 'Affichée pour aucune navigation',
-  'pages.shownForNavigations': 'Affichée pour : {list}',
+  'pages.shownForNavigations': 'Affichée pour : {list}'
 
-  /**
-   * Les cinq navigations de la boîte de visibilité, **pour l'affichage seul** : rien ici
-   * n'est écrit dans le fichier, et cet éditeur ne modifie pas `navigations`.
+  /*
+   * Les cinq navigations de la boîte de visibilité **ne sont plus ici**, et ne doivent pas
+   * y revenir. Elles y étaient sous `navigation.*`, écrites par nous puis traduites en
+   * cinq langues — et quatre des cinq ne disaient pas ce que l'appareil dit : « Fermeture
+   * de triangle » pour *Triangle achevant*, « Vers une balise » pour *Balises/Navigation
+   * XC*, « Compétition » pour *Manche de compétition*, « Vers un pilote en direct » pour
+   * *Pilote Live*. Seul « Retour au décollage » coïncidait.
    *
-   * Famille de valeurs fermée, donc préfixe à elle — comme `factoryValue` et `provenance`.
-   *
-   * ⚠️ Ce sont **nos mots**, pas ceux de l'appareil : la chrome française de XCTrack dit
-   * *Triangle achevant*, *Balises/Navigation XC*, *Manche de compétition* et *Pilote Live*
-   * là où nous écrivons ci-dessous. Seul « Retour au décollage » coïncide. Les quatre
-   * autres langues traduisent donc **notre** formulation, pas celle de l'appareil.
+   * Ce sont des **libellés de XCTrack** : ils suivent l'axe `labels`, la langue du fichier
+   * ouvert, et non celle du pilote (`src/i18n/axes.ts`). Ils vivent depuis le 2026-08-22
+   * dans `src/catalog/navigationLabels.json`, relevés dans les ressources de l'APK sous
+   * `navTakeoff`, `navTriangleClosing`, `navWaypoint2`, `navCompetition` et `navLivePilot`.
+   * Le préfixe `navigation` a été retiré de `DOMAIN_PREFIXES` pour la même raison.
    */
-  'navigation.backToTakeoff': 'Retour au décollage',
-  'navigation.triangleClosing': 'Fermeture de triangle',
-  'navigation.toWaypoint': 'Vers une balise',
-  'navigation.competition': 'Compétition',
-  'navigation.toLivePilot': 'Vers un pilote en direct'
 } as const
 
 export default pages

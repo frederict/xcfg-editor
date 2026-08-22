@@ -137,13 +137,13 @@ const pages: DomainCatalog<'pages'> = {
 
   'pages.shownForAllNavigations': 'Getoond voor alle navigaties',
   'pages.shownForNoNavigation': 'Voor geen enkele navigatie getoond',
-  'pages.shownForNavigations': 'Getoond voor: {list}',
+  'pages.shownForNavigations': 'Getoond voor: {list}'
 
-  'navigation.backToTakeoff': 'Terug naar de start',
-  'navigation.triangleClosing': 'Sluiting van de driehoek',
-  'navigation.toWaypoint': 'Naar een waypoint',
-  'navigation.competition': 'Competitie',
-  'navigation.toLivePilot': 'Naar een live piloot'
+  /*
+   * De vijf navigaties zijn hier op 22-08-2026 vertrokken — het zijn XCTracks eigen
+   * woorden, niet de onze, en ze volgen de as `labels`. Zie
+   * `src/catalog/navigationLabels.json`.
+   */
 }
 
 export default pages
