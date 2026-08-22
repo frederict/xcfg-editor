@@ -831,16 +831,33 @@ function landing(): HTMLElement {
   }
   panel.append(steps)
 
+  /*
+   * Le manuel, et pourquoi il n'est plus un bouton fantôme en bas de page.
+   *
+   * L'accueil est l'écran de quelqu'un qui **n'a rien ouvert** : ou bien il sait quoi
+   * faire et dépose son fichier, ou bien il ne sait pas — et le manuel est alors la seule
+   * chose dont il ait besoin. Il portait jusqu'ici le style le plus effacé du projet
+   * (`.btn--ghost`, fait pour une commande secondaire dans un bandeau), sous une note qui
+   * parle de la bibliothèque : le dernier élément d'un écran, pour ce qui répond à la
+   * seule question que ce visiteur-là se pose.
+   *
+   * Il remonte donc AVANT cette note, et devient un encadré du carnet — filet d'ambre à
+   * gauche, une phrase qui dit ce qu'on y trouve, un vrai bouton bordé.
+   *
+   * ⚠ Il reste **secondaire devant le dépôt d'un fichier**, qui est ce que cette page
+   * existe pour provoquer : pas d'aplat encré, pas de bouton principal. Deux appels de
+   * même poids sur un écran vide, c'est aucun appel.
+   */
+  const manual = el('aside', 'landing__manual')
+  const help = el('button', 'btn landing__manual-btn', tr.t('landing.readManual'))
+  help.type = 'button'
+  help.addEventListener('click', () => openManual())
+  manual.append(el('p', 'landing__manual-text', tr.t('landing.manualLead')), help)
+  panel.append(manual)
+
   // Sans cette phrase, un pilote revenu le lendemain ne voit qu'une invitation à ouvrir un
   // fichier et ne devine pas que ses configurations rangées l'attendent dans la barre.
   panel.append(el('p', 'landing__note', tr.t('landing.returning')))
-  // Un second chemin vers le manuel, ici et pas seulement dans le menu : celui qui
-  // découvre l'outil n'a rien à ouvrir, et il ne pense pas à chercher de l'aide dans un
-  // menu appelé « Fichier ».
-  const help = el('button', 'btn btn--ghost', tr.t('landing.readManual'))
-  help.type = 'button'
-  help.addEventListener('click', () => openManual())
-  panel.append(help)
   return panel
 }
 

@@ -2882,12 +2882,45 @@ body.is-dragging .veil {
  * réglages généraux — est une **vue**, qui ne montre aucune page.
  */
 
+/*
+ * L'appel au manuel, sur l'écran de celui qui n'a encore rien ouvert.
+ *
+ * Un encadré du carnet — filet d'ambre à gauche, comme tout ce qui renseigne dans cette
+ * feuille —, et un vrai bouton bordé plutôt que le fantôme d'avant. Le poids s'arrête là :
+ * ni aplat encré ni bouton principal, parce que **le geste de la page reste le dépôt du
+ * fichier**. Deux appels de même poids sur un écran vide, c'est aucun appel.
+ */
+.landing__manual {
+  display: flex;
+  align-items: center;
+  gap: 1rem 1.4rem;
+  flex-wrap: wrap;
+  margin: 2.25rem 0 0;
+  padding: 0.9rem 1.1rem;
+  background: var(--app-panel);
+  border: 1px solid var(--app-line);
+  border-left: 3px solid var(--app-flag-line);
+  border-radius: 0 6px 6px 0;
+}
+
+/* La phrase passe avant le bouton et prend la place qu'elle veut ; le bouton se colle à
+   droite quand il en reste, et se range dessous quand la fenêtre se resserre. */
+.landing__manual-text {
+  flex: 1 1 24rem;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--app-ink-soft);
+}
+
+.landing__manual-btn { flex: none; font-size: 14px; padding: 0.45rem 1rem; }
+
 /* La phrase de rappel de la page d'accueil : la bibliothèque existe sans fichier ouvert. */
 .landing__note {
   margin: 1.6rem 0 0;
   max-width: 62ch;
-  color: var(--app-ink-soft);
-  font-size: 14px;
+  color: var(--app-ink-quiet);
+  font-size: 13.5px;
 }
 
 /* ---------------------------------------------------- la vue des réglages généraux */

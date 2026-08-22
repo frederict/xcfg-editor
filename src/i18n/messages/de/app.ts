@@ -187,6 +187,7 @@ const app: DomainCatalog<'app'> = {
   'landing.returning': 'Schon einmal hier gewesen? Die Konfigurationen, die Sie abgelegt ' +
     'haben, stehen im Menü „Datei“ oben rechts unter „Bibliothek“: sie haben diesen Browser ' +
     'nie verlassen.',
+  'landing.manualLead': 'Zum ersten Mal hier? Das Handbuch sagt, was dieses Werkzeug tut, was am Gerät gemessen wurde und was eine Konfigurationsdatei über Sie verrät.',
   'landing.readManual': 'Das Handbuch lesen',
 
   'app.uiLanguage': 'Sprache der Oberfläche',

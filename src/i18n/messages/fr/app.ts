@@ -331,6 +331,14 @@ const app = {
   'landing.returning': 'Déjà venu ? Les configurations que vous avez rangées sont dans le ' +
     'menu « Fichier », en haut à droite, sous « Bibliothèque » : elles ne sont jamais ' +
     'parties de ce navigateur.',
+  /**
+   * L'accueil est l'écran de quelqu'un qui n'a rien ouvert : soit il sait quoi faire et
+   * dépose son fichier, soit il ne sait pas — et le manuel est alors la seule chose dont
+   * il ait besoin. Une phrase dit ce qu'on y trouve ; l'intitulé seul ne le disait pas,
+   * et un pilote-testeur a découvert par le manuel qu'un export « pages » n'était pas
+   * anonyme, ce qu'il croyait exactement l'inverse.
+   */
+  'landing.manualLead': 'Première fois ici ? Le manuel dit ce que fait cet outil, ce qui a été mesuré sur l’appareil, et ce qu’un fichier de configuration révèle de vous.',
   'landing.readManual': 'Lire le manuel d’utilisation',
 
   /* --------------------------------------- le sélecteur de langue de l’interface */

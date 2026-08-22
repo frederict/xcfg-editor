@@ -182,6 +182,7 @@ const app: DomainCatalog<'app'> = {
 
   'landing.returning': 'Al eens langs geweest? De configuraties die je bewaard hebt, staan in ' +
     'het menu ‘Bestand’ rechtsboven, onder ‘Bibliotheek’: ze zijn deze browser nooit uit geweest.',
+  'landing.manualLead': 'Voor het eerst hier? De handleiding zegt wat dit gereedschap doet, wat op het toestel gemeten is, en wat een configuratiebestand over jou prijsgeeft.',
   'landing.readManual': 'De handleiding lezen',
 
   'app.uiLanguage': 'Taal van de interface',

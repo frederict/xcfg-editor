@@ -179,6 +179,7 @@ const app: DomainCatalog<'app'> = {
 
   'landing.returning': 'Been here before? The configurations you kept are in the “File” menu, ' +
     'top right, under “Library”: they have never left this browser.',
+  'landing.manualLead': 'First time here? The manual says what this tool does, what has been measured on the device, and what a configuration file reveals about you.',
   'landing.readManual': 'Read the user manual',
 
   'app.uiLanguage': 'Interface language',
