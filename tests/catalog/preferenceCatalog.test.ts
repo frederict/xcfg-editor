@@ -11,6 +11,7 @@ import {
   type PreferenceCatalog
 } from '../../src/catalog/preferenceCatalog'
 import { BACKUP_2025, BACKUP_2026 } from '../fixtures/paths'
+import frenchMessages from '../../src/i18n/messages/fr'
 
 /** Racine du dépôt, pour atteindre `tools/` sans dépendre du répertoire courant. */
 const PROJECT_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
@@ -410,11 +411,14 @@ describe('catalogue des préférences', () => {
 
     it("dit sur quelle base : lue dans l'APK, ou déclarée", () => {
       // Portée `SECURE` : lu dans le bytecode.
+      // La raison est une **clé** : le catalogue est extrait de l'APK et ne peut pas
+      // porter de prose, l'éditeur parlant cinq langues.
       expect(fr.preference('XContest.AuthToken')?.personal).toEqual({
         kind: 'credential',
         basis: 'scope',
-        reason: expect.stringContaining('SECURE')
+        reasonKey: 'personalReason.secureScope'
       })
+      expect(frenchMessages['personalReason.secureScope']).toContain('SECURE')
       // Contenu d'une clé : personne ne peut le lire dans l'APK, c'est une affirmation.
       expect(fr.preference('Pilot.Name')?.personal?.basis).toBe('declared')
     })

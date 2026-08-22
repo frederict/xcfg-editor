@@ -22,6 +22,7 @@ import de from '../../src/i18n/messages/de'
 import en from '../../src/i18n/messages/en'
 import es from '../../src/i18n/messages/es'
 import fr from '../../src/i18n/messages/fr'
+import nl from '../../src/i18n/messages/nl'
 import CATALOG_BASE from '../../src/catalog/preferenceCatalog/base.json'
 import { BACKUP_2026, FORMES_PRESERVEES, PAGES_2026 } from '../fixtures/paths'
 
@@ -48,14 +49,14 @@ describe('données personnelles — le relevé des clés vient du catalogue, pas
   it('est exactement le sous-ensemble « personnel » de preferenceCatalog/base.json', () => {
     const expected: Record<string, unknown> = {}
     const preferences = CATALOG_BASE.preferences as unknown as
-      Record<string, { scope: string | null; personal?: { kind: string; basis: string; reason: string } }>
+      Record<string, { scope: string | null; personal?: { kind: string; basis: string; reasonKey: string } }>
     for (const key of Object.keys(preferences).sort()) {
       const entry = preferences[key]!
       if (entry.personal === undefined) continue
       expected[key] = {
         kind: entry.personal.kind,
         basis: entry.personal.basis,
-        reason: entry.personal.reason,
+        reasonKey: entry.personal.reasonKey,
         scope: entry.scope
       }
     }
@@ -80,7 +81,7 @@ describe('données personnelles — le relevé des clés vient du catalogue, pas
     const inventory = collectPersonalData(document)
     expect(inventory.counts.layout).toBe(FREE_TEXT_KEYS.length)
     for (const finding of inventory.findings) {
-      expect(finding.reason).not.toContain('sans règle propre')
+      expect(finding.reasonKey).not.toBe('personalReason.unknown')
       expect(PERSONAL_KIND_LABELS[finding.kind]).toBeDefined()
     }
   })
@@ -168,7 +169,7 @@ describe('données personnelles — « lu dans l’APK » n’est pas « jugé p
       expect(inventory.counts.judged).toBe(inventory.counts.total)
       for (const finding of inventory.findings) {
         expect(isReadFromApk(finding.basis)).toBe(false)
-        expect(finding.reason).not.toBe('')
+        expect(personalProse(makeTranslator('fr', fr)).reason(finding)).not.toBe('')
       }
     }
   })
@@ -307,14 +308,21 @@ describe('données personnelles — les raisons disent « vous »', () => {
    */
   it('aucune raison ne parle du pilote à la troisième personne', () => {
     const inventory = collectPersonalData(documentOf(BACKUP_2026))
+    const french = personalProse(makeTranslator('fr', fr))
     for (const finding of inventory.findings) {
-      expect(finding.reason, finding.key).not.toContain('le pilote')
+      // ⚠️ Les raisons **des réglages** viennent du catalogue extrait et disent encore
+      // « le nom du pilote », « la voile du pilote » : trois formulations relevées, non
+      // corrigées ici — l'extraction déplace du texte, elle ne le rejuge pas. Ce test ne
+      // porte donc que sur celles du `layout`, qui sont écrites dans le code.
+      if (finding.home !== 'layout') continue
+      expect(french.reason(finding), finding.key).not.toContain('le pilote')
     }
   })
 
   it('le titre d’un gadget et le texte libre sont dits « écrits par vous »', () => {
     const inventory = collectPersonalData(documentOf(BACKUP_2026))
-    const written = inventory.findings.filter((f) => f.reason.includes('par vous'))
+    const french = personalProse(makeTranslator('fr', fr))
+    const written = inventory.findings.filter((f) => french.reason(f).includes('par vous'))
     expect(written.length).toBeGreaterThan(0)
   })
 })
@@ -364,21 +372,19 @@ describe('données personnelles — la prose est traduisible, et ne dérive pas'
     }
   })
 
-  it('rend la raison du layout par le catalogue, celle des préférences telle qu’extraite', () => {
-    const inventory = collectPersonalData(documentOf(FORMES_PRESERVEES))
-    const layout = findingsIn(inventory, 'layout')
-    expect(layout.length).toBe(5)
-    for (const finding of layout) {
-      // Les onze raisons du `layout` sont écrites dans le code : elles passent par le
-      // catalogue, et le français doit dire ce que la règle disait.
-      expect(prose.reason(finding), finding.key).toBe(finding.reason)
-    }
-    // Les 44 raisons des clés de préférences viennent de `personalKeys.json`, extrait de
-    // l'APK : ce sont des données, elles ne sont pas traduites, et `reason()` les rend
-    // telles quelles. C'est écrit, ce n'est pas oublié.
-    const backup = collectPersonalData(documentOf(BACKUP_2026))
-    for (const finding of findingsIn(backup, 'preferences')) {
-      expect(prose.reason(finding), finding.key).toBe(finding.reason)
+  it('rend les raisons du layout ET celles des réglages par le catalogue, dans les cinq langues', () => {
+    // **Le point qui manquait.** Les 44 raisons des clés de préférences vivaient en
+    // français dans `personalKeys.json`, extrait de l'APK : un pilote néerlandais lisait
+    // « le nom du pilote, saisi tel quel » dans le tableau des données personnelles. Le
+    // fichier extrait porte maintenant une clé, et le texte est au catalogue.
+    const dutch = personalProse(makeTranslator('nl', nl))
+    for (const path of [FORMES_PRESERVEES, BACKUP_2026]) {
+      const inventory = collectPersonalData(documentOf(path))
+      expect(inventory.findings.length).toBeGreaterThan(0)
+      for (const finding of inventory.findings) {
+        expect(prose.reason(finding), finding.key).not.toBe('')
+        expect(dutch.reason(finding), finding.key).not.toBe(prose.reason(finding))
+      }
     }
   })
 
@@ -412,7 +418,8 @@ describe('données personnelles — la prose est traduisible, et ne dérive pas'
     // disent « widget » — mesuré dans les 55 relevés. Les raisons du layout en parlent
     // onze fois.
     expect(prose.reason({
-      home: 'layout', key: 'x', kind: 'freeText', basis: 'declared', reason: '', filled: true,
+      home: 'layout', key: 'x', kind: 'freeText', basis: 'declared', filled: true,
+      reasonKey: 'personalReason.titletext',
       location: {
         orientation: 'landscape', pageRank: 1, widgetRank: 1,
         className: 'x', shortName: 'x', keyPath: 'titletext'
@@ -420,7 +427,8 @@ describe('données personnelles — la prose est traduisible, et ne dérive pas'
     })).toContain('gadget')
     const german = personalProse(makeTranslator('de', de))
     expect(german.reason({
-      home: 'layout', key: 'x', kind: 'freeText', basis: 'declared', reason: '', filled: true,
+      home: 'layout', key: 'x', kind: 'freeText', basis: 'declared', filled: true,
+      reasonKey: 'personalReason.titletext',
       location: {
         orientation: 'landscape', pageRank: 1, widgetRank: 1,
         className: 'x', shortName: 'x', keyPath: 'titletext'

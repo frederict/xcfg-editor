@@ -10,265 +10,265 @@
   "ActiveLook.Device": {
    "kind": "device",
    "basis": "declared",
-   "reason": "les lunettes appairées",
+   "reasonKey": "personalReason.glasses",
    "scope": "PUBLIC"
   },
   "ActiveLook.Name": {
    "kind": "device",
    "basis": "declared",
-   "reason": "le nom des lunettes appairées",
+   "reasonKey": "personalReason.glassesName",
    "scope": "PUBLIC"
   },
   "Airspace.Files": {
    "kind": "file",
    "basis": "declared",
-   "reason": "fichiers d'espaces aériens que vous avez chargés",
+   "reasonKey": "personalReason.airspaceFiles",
    "scope": "PUBLIC"
   },
   "App.GuessLatitude": {
    "kind": "location",
    "basis": "declared",
-   "reason": "la position présumée de l'appareil — le domicile, en pratique",
+   "reasonKey": "personalReason.guessedPosition",
    "scope": "INTERNAL"
   },
   "App.GuessLongitude": {
    "kind": "location",
    "basis": "declared",
-   "reason": "la position présumée de l'appareil — le domicile, en pratique",
+   "reasonKey": "personalReason.guessedPosition",
    "scope": "INTERNAL"
   },
   "Devel.TTS": {
    "kind": "freeText",
    "basis": "declared",
-   "reason": "texte que vous avez saisi",
+   "reasonKey": "personalReason.speechText",
    "scope": null
   },
   "Devel.TTSAbbr": {
    "kind": "freeText",
    "basis": "declared",
-   "reason": "texte que vous avez saisi",
+   "reasonKey": "personalReason.speechText",
    "scope": null
   },
   "Glider.Ctg": {
    "kind": "equipment",
    "basis": "declared",
-   "reason": "catégorie de la voile",
+   "reasonKey": "personalReason.gliderCategory",
    "scope": "PUBLIC"
   },
   "Glider.CtgHG": {
    "kind": "equipment",
    "basis": "declared",
-   "reason": "catégorie de l'aile delta",
+   "reasonKey": "personalReason.hangGliderCategory",
    "scope": "PUBLIC"
   },
   "Glider.Name": {
    "kind": "identity",
    "basis": "declared",
-   "reason": "la voile du pilote — modèle et taille identifient un pilote dans un club",
+   "reasonKey": "personalReason.gliderName",
    "scope": "PUBLIC"
   },
   "Glider._model": {
    "kind": "equipment",
    "basis": "declared",
-   "reason": "modèle de la voile",
+   "reasonKey": "personalReason.gliderModel",
    "scope": "INTERNAL"
   },
   "Glider._producer": {
    "kind": "equipment",
    "basis": "declared",
-   "reason": "constructeur de la voile",
+   "reasonKey": "personalReason.gliderProducer",
    "scope": "INTERNAL"
   },
   "Internal.ProcessedBootstraps": {
    "kind": "credential",
    "basis": "scope",
-   "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées",
+   "reasonKey": "personalReason.secureScope",
    "scope": "SECURE"
   },
   "Livetrack.ClaimContest": {
    "kind": "sharing",
    "basis": "declared",
-   "reason": "un choix de diffusion que vous avez fait, pas une donnée en soi",
+   "reasonKey": "personalReason.broadcastChoice",
    "scope": "PUBLIC"
   },
   "Livetrack.DeviceId": {
    "kind": "credential",
    "basis": "scope",
-   "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées",
+   "reasonKey": "personalReason.secureScope",
    "scope": "SECURE"
   },
   "Livetrack.Enabled": {
    "kind": "sharing",
    "basis": "declared",
-   "reason": "un choix de diffusion que vous avez fait, pas une donnée en soi",
+   "reasonKey": "personalReason.broadcastChoice",
    "scope": "PUBLIC"
   },
   "Livetrack.FlightPublic": {
    "kind": "sharing",
    "basis": "declared",
-   "reason": "un choix de diffusion que vous avez fait, pas une donnée en soi",
+   "reasonKey": "personalReason.broadcastChoice",
    "scope": "PUBLIC"
   },
   "Livetrack.QuickMessages": {
    "kind": "freeText",
    "basis": "declared",
-   "reason": "messages écrits par vous",
+   "reasonKey": "personalReason.quickMessages",
    "scope": "PUBLIC"
   },
   "Livetrack.ShowPublic": {
    "kind": "sharing",
    "basis": "declared",
-   "reason": "un choix de diffusion que vous avez fait, pas une donnée en soi",
+   "reasonKey": "personalReason.broadcastChoice",
    "scope": "PUBLIC"
   },
   "Mapsforge.MapFiles": {
    "kind": "file",
    "basis": "declared",
-   "reason": "cartes hors-ligne téléchargées",
+   "reasonKey": "personalReason.offlineMaps",
    "scope": "INTERNAL"
   },
   "Mapsforge.ThemeFile": {
    "kind": "file",
    "basis": "declared",
-   "reason": "thème de carte que vous avez installé",
+   "reasonKey": "personalReason.mapTheme",
    "scope": "PUBLIC"
   },
   "Maverick.SdkKey": {
    "kind": "credential",
    "basis": "scope",
-   "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées",
+   "reasonKey": "personalReason.secureScope",
    "scope": "SECURE"
   },
   "Navigation.State": {
    "kind": "location",
    "basis": "declared",
-   "reason": "la tâche en cours, points de virage et coordonnées compris",
+   "reasonKey": "personalReason.navigationState",
    "scope": "PUBLIC"
   },
   "Navigation.WaypointFiles": {
    "kind": "file",
    "basis": "declared",
-   "reason": "fichiers de waypoints — le nom désigne souvent la compétition",
+   "reasonKey": "personalReason.waypointFiles",
    "scope": "PUBLIC"
   },
   "Pilot.Name": {
    "kind": "identity",
    "basis": "declared",
-   "reason": "le nom du pilote, saisi tel quel",
+   "reasonKey": "personalReason.pilotName",
    "scope": "PUBLIC"
   },
   "SafeSky.Address": {
    "kind": "credential",
    "basis": "scope",
-   "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées",
+   "reasonKey": "personalReason.secureScope",
    "scope": "SECURE"
   },
   "SafeSky.Amt": {
    "kind": "credential",
    "basis": "scope",
-   "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées",
+   "reasonKey": "personalReason.secureScope",
    "scope": "SECURE"
   },
   "SafeSky.AnonymousUUID": {
    "kind": "credential",
    "basis": "scope",
-   "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées",
+   "reasonKey": "personalReason.secureScope",
    "scope": "SECURE"
   },
   "SafeSky.AutoIcao": {
    "kind": "identity",
    "basis": "declared",
-   "reason": "immatriculation déduite",
+   "reasonKey": "personalReason.derivedRegistration",
    "scope": "INTERNAL"
   },
   "SafeSky.Icao": {
    "kind": "identity",
    "basis": "declared",
-   "reason": "immatriculation de l'aéronef",
+   "reasonKey": "personalReason.registration",
    "scope": "INTERNAL"
   },
   "SafeSky.Salt": {
    "kind": "credential",
    "basis": "scope",
-   "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées",
+   "reasonKey": "personalReason.secureScope",
    "scope": "SECURE"
   },
   "Sec.GpsTimeOffset": {
    "kind": "credential",
    "basis": "scope",
-   "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées",
+   "reasonKey": "personalReason.secureScope",
    "scope": "SECURE"
   },
   "Sec.ProToTimestamp": {
    "kind": "credential",
    "basis": "scope",
-   "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées",
+   "reasonKey": "personalReason.secureScope",
    "scope": "SECURE"
   },
   "Sec.ProUid": {
    "kind": "credential",
    "basis": "scope",
-   "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées",
+   "reasonKey": "personalReason.secureScope",
    "scope": "SECURE"
   },
   "Sec.Xcontest.Uid": {
    "kind": "credential",
    "basis": "scope",
-   "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées",
+   "reasonKey": "personalReason.secureScope",
    "scope": "SECURE"
   },
   "Sec.test": {
    "kind": "credential",
    "basis": "scope",
-   "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées",
+   "reasonKey": "personalReason.secureScope",
    "scope": "SECURE"
   },
   "Sensors.Configuration": {
    "kind": "device",
    "basis": "declared",
-   "reason": "les capteurs appairés, adresses Bluetooth comprises",
+   "reasonKey": "personalReason.sensors",
    "scope": "PUBLIC"
   },
   "Sensors.LastNetLocation": {
    "kind": "location",
    "basis": "declared",
-   "reason": "la dernière position ayant servi à interroger le QNH",
+   "reasonKey": "personalReason.lastNetLocation",
    "scope": "INTERNAL"
   },
   "SkySight.Password": {
    "kind": "credential",
    "basis": "scope",
-   "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées",
+   "reasonKey": "personalReason.secureScope",
    "scope": "SECURE"
   },
   "SkySight.Username": {
    "kind": "credential",
    "basis": "scope",
-   "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées",
+   "reasonKey": "personalReason.secureScope",
    "scope": "SECURE"
   },
   "Testing.IGCReplayFilename": {
    "kind": "file",
    "basis": "declared",
-   "reason": "un fichier de trace du pilote",
+   "reasonKey": "personalReason.replayFile",
    "scope": "INTERNAL"
   },
   "XContest.AuthToken": {
    "kind": "credential",
    "basis": "scope",
-   "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées",
+   "reasonKey": "personalReason.secureScope",
    "scope": "SECURE"
   },
   "XContest.Password": {
    "kind": "credential",
    "basis": "scope",
-   "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées",
+   "reasonKey": "personalReason.secureScope",
    "scope": "SECURE"
   },
   "XContest.Username": {
    "kind": "credential",
    "basis": "scope",
-   "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées",
+   "reasonKey": "personalReason.secureScope",
    "scope": "SECURE"
   }
  }

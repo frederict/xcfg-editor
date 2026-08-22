@@ -1,5 +1,9 @@
 import PERSONAL_KEYS from './personalKeys.json'
-import type { PersonalData as CatalogPersonalData, PreferenceScope } from '../catalog/preferenceCatalog'
+import type {
+  PersonalData as CatalogPersonalData,
+  PersonalReasonKey,
+  PreferenceScope
+} from '../catalog/preferenceCatalog'
 import { decode, getMember } from '../core/access'
 import type { JsonNode } from '../core/jsonDocument'
 import { readLayout, type Layout } from './layout'
@@ -7,7 +11,7 @@ import { findFreeTextSlots, type FreeText } from './scope'
 import type { Orientation } from './mutations'
 // `import type` : effacé à la compilation. Ce module **ne dépend pas** de `src/i18n/` à
 // l'exécution — il reçoit un traducteur en argument. Voir « La prose de ce module ».
-import type { MessageKey, Translator } from '../i18n'
+import type { Translator } from '../i18n'
 
 /**
  * **La seule réponse de cet outil à la question « qu'y a-t-il de personnel dans ce
@@ -85,8 +89,8 @@ import type { MessageKey, Translator } from '../i18n'
  *
  * ## Le poids
  *
- * `personalKeys.json` — 7,3 Ko, les 44 clés marquées du catalogue avec leur nature, leur
- * base et leur raison — est importé **statiquement**, parce que trois des quatre appelants
+ * `personalKeys.json` — les 44 clés marquées du catalogue avec leur nature, leur base et
+ * la **clé de message** de leur raison — est importé **statiquement**, parce que trois des quatre appelants
  * (l'avertissement d'import, la bibliothèque, la boîte de partage) n'ont pas le catalogue
  * sous la main et ne doivent pas le charger : `preferenceCatalog/base.json` pèse 96 Ko et
  * reste chargé à la demande. Le fichier est **extrait du catalogue** par
@@ -193,8 +197,18 @@ export interface PersonalFinding {
   key: string
   kind: PersonalKind
   basis: PersonalBasis
-  /** Pourquoi cette clé est dite personnelle. Destiné à être montré au pilote. */
-  reason: string
+  /**
+   * Pourquoi cette clé est dite personnelle — une **clé de message**, jamais une phrase.
+   * `personalProse(tr).reason()` en rend le texte, dans la langue du pilote.
+   */
+  reasonKey: PersonalReasonKey
+  /**
+   * ⚠️ **Hérité.** La raison en français, telle que la portaient les enregistrements de
+   * bibliothèque écrits avant que la prose passe au catalogue. Une entrée rechargée n'en
+   * porte plus — l'inventaire est recalculé depuis les octets. Voir `personalInventoryOf`
+   * dans `library/identity.ts`.
+   */
+  legacyReason?: string
   /**
    * Vrai si la clé porte effectivement quelque chose. Faux pour une chaîne vide, une
    * liste vide, une structure sans entrée : l'emplacement existe, il n'est pas rempli.
@@ -253,23 +267,10 @@ export interface PersonalInventory {
 
 /* ------------------------------------------------- les clés du layout, et leur nature */
 
-/**
- * Les clés de raison du `layout`, et elles seules. `MessageKey` tout entier serait trop
- * large : `t()` exigerait alors les repères de la plus exigeante des 21 phrases du
- * catalogue. Restreindre au préfixe rend le type juste — ces douze-là n'attendent rien.
- */
-type LayoutReasonKey = Extract<MessageKey, `personalReason.${string}`>
-
 interface LayoutKeyRule {
   kind: PersonalKind
-  /**
-   * ⚠️ Hérité, en français : la raison telle que `PersonalFinding.reason` la porte encore
-   * pour les quatre écrans qui n'ont pas de traducteur. `personalProse(tr).reason()`
-   * emploie `reasonKey`, et un test vérifie que les deux disent la même chose en français.
-   */
-  reason: string
-  /** La même raison, traduisible. C'est celle-ci qui reste quand la précédente partira. */
-  reasonKey: LayoutReasonKey
+  /** Pourquoi c'est personnel — la clé de catalogue, jamais une phrase. */
+  reasonKey: PersonalReasonKey
 }
 
 /**
@@ -287,67 +288,22 @@ interface LayoutKeyRule {
  * `sharing.ts`.
  */
 const LAYOUT_KEY_RULES: Record<string, LayoutKeyRule> = {
-  titletext: {
-    kind: 'freeText',
-    reason: 'titre personnalisé d’un gadget, écrit par vous',
-    reasonKey: 'personalReason.titletext'
-  },
-  text: {
-    kind: 'freeText',
-    reason: 'contenu entier d’un gadget de texte libre, écrit par vous',
-    reasonKey: 'personalReason.text'
-  },
-  fullName: {
-    kind: 'contact',
-    reason: 'nom d’une personne enregistrée sur un bouton d’appel',
-    reasonKey: 'personalReason.fullName'
-  },
-  phoneNumber: {
-    kind: 'contact',
-    reason: 'numéro de téléphone enregistré sur un bouton d’appel',
-    reasonKey: 'personalReason.phoneNumber'
-  },
-  url: {
-    kind: 'freeText',
-    reason: 'adresse web saisie, qui peut porter un jeton ou un identifiant',
-    reasonKey: 'personalReason.url'
-  },
-  title: {
-    kind: 'freeText',
-    reason: 'libellé d’un bouton de lancement, écrit par vous',
-    reasonKey: 'personalReason.title'
-  },
-  name: {
-    kind: 'freeText',
-    reason: 'nom de l’application visée par un bouton de lancement',
-    reasonKey: 'personalReason.name'
-  },
-  action: {
-    kind: 'freeText',
-    reason: 'action Android d’un bouton de lancement, qui peut être un URI complet',
-    reasonKey: 'personalReason.action'
-  },
-  filter: {
-    kind: 'freeText',
-    reason: 'filtre de journal que vous avez saisi',
-    reasonKey: 'personalReason.filter'
-  },
-  suffix: {
-    kind: 'freeText',
-    reason: 'texte placé après la valeur affichée, écrit par vous',
-    reasonKey: 'personalReason.suffix'
-  },
-  event: {
-    kind: 'freeText',
-    reason: 'nom d’événement que vous avez saisi',
-    reasonKey: 'personalReason.event'
-  }
+  titletext: { kind: 'freeText', reasonKey: 'personalReason.titletext' },
+  text: { kind: 'freeText', reasonKey: 'personalReason.text' },
+  fullName: { kind: 'contact', reasonKey: 'personalReason.fullName' },
+  phoneNumber: { kind: 'contact', reasonKey: 'personalReason.phoneNumber' },
+  url: { kind: 'freeText', reasonKey: 'personalReason.url' },
+  title: { kind: 'freeText', reasonKey: 'personalReason.title' },
+  name: { kind: 'freeText', reasonKey: 'personalReason.name' },
+  action: { kind: 'freeText', reasonKey: 'personalReason.action' },
+  filter: { kind: 'freeText', reasonKey: 'personalReason.filter' },
+  suffix: { kind: 'freeText', reasonKey: 'personalReason.suffix' },
+  event: { kind: 'freeText', reasonKey: 'personalReason.event' }
 }
 
 /** Le repli d'une clé de texte libre qu'une version future ajouterait sans nous. */
 const UNKNOWN_LAYOUT_KEY: LayoutKeyRule = {
   kind: 'freeText',
-  reason: 'texte libre sans règle propre : traité comme personnel, par précaution',
   reasonKey: 'personalReason.unknown'
 }
 
@@ -370,7 +326,8 @@ function reportsEmptySlot(rule: LayoutKeyRule): boolean {
 interface RawPersonalKey {
   kind: string
   basis: string
-  reason: string
+  /** Une clé de `personalReason.*` — voir `PersonalData.reasonKey` et le script d'extraction. */
+  reasonKey: string
   scope: string | null
 }
 
@@ -425,7 +382,7 @@ function readPreferenceFinding(key: string, node: JsonNode): PersonalFinding {
     key,
     kind: known.kind as PersonalKind,
     basis: known.basis as PersonalBasis,
-    reason: known.reason,
+    reasonKey: known.reasonKey as PersonalReasonKey,
     filled: isFilled(node),
     scope: known.scope as PreferenceScope | null
   }
@@ -467,7 +424,7 @@ function layoutFinding(slot: FreeText, rule: LayoutKeyRule): PersonalFinding {
     // Le `layout` n'a pas de portée déclarée : ce qui suit est notre jugement, et il
     // porte sa raison. Rien de ce fichier n'est lu dans l'APK au sens de `basis`.
     basis: 'declared',
-    reason: rule.reason,
+    reasonKey: rule.reasonKey,
     filled: slot.text.trim() !== '',
     location: {
       orientation: slot.orientation,
@@ -612,7 +569,7 @@ export interface PersonalProse {
   basis(basis: PersonalBasis): string
   /** Où la donnée vit, avec sa conséquence : c'est la conséquence qui compte. */
   home(home: PersonalHome): string
-  /** Pourquoi cette donnée est dite personnelle. Voir la remarque sur les 44 raisons. */
+  /** Pourquoi cette donnée est dite personnelle — layout et réglages, dans les cinq langues. */
   reason(finding: PersonalFinding): string
   /** Ce que la donnée porte — **jamais le contenu d'une structure**. */
   value(finding: PersonalFinding): string
@@ -621,12 +578,11 @@ export interface PersonalProse {
 }
 
 /**
- * ⚠️ **Les 44 raisons des clés de préférences ne sont pas traduites**, et `reason()` le
- * laisse voir : elles viennent de `personalKeys.json`, **extrait de l'APK** par
- * `tools/extract-preferences.py`. Ce sont des données, pas de la prose de code ; les
- * traduire demande de décider si le fichier extrait porte cinq colonnes ou des clés, et
- * cette décision appartient au lot qui reprendra l'extraction. Les onze raisons du
- * `layout`, elles, sont écrites ici et passent par le catalogue.
+ * Les 44 raisons des clés de préférences **sont traduites**, comme les onze du `layout` :
+ * `personalKeys.json` et `preferenceCatalog/base.json` portent une clé `reasonKey`, jamais
+ * une phrase. La décision et son alternative écartée — une colonne par langue dans
+ * l'extraction — sont écrites au-dessus de `DECLARED_PERSONAL`, dans
+ * `tools/extract-preferences.py`.
  */
 export function personalProse(tr: Translator): PersonalProse {
   return {
@@ -639,11 +595,10 @@ export function personalProse(tr: Translator): PersonalProse {
 
     home: (home) => tr.t(`personalHome.${home}`),
 
-    reason: (finding) => {
-      const keyPath = finding.location?.keyPath
-      if (keyPath === undefined) return finding.reason
-      return tr.t(layoutRule(keyPath).reasonKey)
-    },
+    // Un enregistrement de bibliothèque écrit avant la bascule ne porte pas de clé : sa
+    // raison française est rendue telle quelle, et disparaît dès que l'entrée est
+    // rechargée — l'inventaire est alors recalculé depuis les octets.
+    reason: (finding) => finding.legacyReason ?? tr.t(finding.reasonKey),
 
     value: (finding) => {
       if (!finding.filled) return tr.t('personal.emptySlot')

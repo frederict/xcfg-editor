@@ -40,6 +40,42 @@ const model: DomainCatalog<'model'> = {
   'personalReason.event': 'gebeurtenisnaam die u hebt ingevoerd',
   'personalReason.unknown': 'vrije tekst zonder eigen regel: uit voorzorg als persoonlijk behandeld',
 
+  /* ---- waarom een **instelling** persoonlijk heet — zie `fr/model.ts` */
+
+  'personalReason.pilotName': 'de naam van de piloot, precies zoals ingevoerd',
+  'personalReason.gliderName': 'het scherm van de piloot — model en maat herkennen een piloot in een club',
+  'personalReason.gliderProducer': 'fabrikant van het scherm',
+  'personalReason.gliderModel': 'model van het scherm',
+  'personalReason.gliderCategory': 'klasse van het scherm',
+  'personalReason.hangGliderCategory': 'klasse van de deltavlieger',
+  'personalReason.xcontestAccount': 'identificatie van het XContest-account',
+  'personalReason.skysightAccount': 'identificatie van het SkySight-account',
+  'personalReason.safeSkyAddress': 'adres van het SafeSky-account',
+  'personalReason.registration': 'registratie van het luchtvaartuig',
+  'personalReason.derivedRegistration': 'afgeleide registratie',
+  'personalReason.stableDeviceId': 'toestelidentificatie, gelijkblijvend tussen vluchten',
+  'personalReason.trackingDeviceId': 'toestelidentificatie van de volgdienst',
+  'personalReason.quickMessages': 'door u geschreven berichten',
+  'personalReason.sensors': 'de gekoppelde sensoren, met Bluetooth-adressen',
+  'personalReason.glasses': 'de gekoppelde bril',
+  'personalReason.glassesName': 'de naam van de gekoppelde bril',
+  'personalReason.everysightKey': 'toegangssleutel voor de Everysight-SDK',
+  'personalReason.waypointFiles': 'waypointbestanden — de naam duidt vaak de wedstrijd aan',
+  'personalReason.navigationState': 'de lopende taak, met keerpunten en coördinaten',
+  'personalReason.airspaceFiles': 'luchtruimbestanden die u hebt geladen',
+  'personalReason.offlineMaps': 'gedownloade offlinekaarten',
+  'personalReason.mapTheme': 'kaartthema dat u hebt geïnstalleerd',
+  'personalReason.guessedPosition': 'de vermoede positie van het toestel — in de praktijk het thuisadres',
+  'personalReason.lastNetLocation': 'de laatste positie waarmee het QNH is opgevraagd',
+  'personalReason.replayFile': 'een van de spoorbestanden van de piloot',
+  'personalReason.speechText': 'tekst die u hebt ingevoerd',
+  'personalReason.secureScope': 'bereik SECURE: XCTrack bewaart ze bij zijn versleutelde voorkeuren',
+  'personalReason.maskedField': 'verborgen invoerveld (`textPassword`)',
+  'personalReason.broadcastChoice': 'een uitzendkeuze die u hebt gemaakt, geen gegeven op zich',
+  'personalReason.legacyRecord': 'opgemerkt door een eerdere versie van deze editor, ' +
+    'die de aard ervan niet vermeldde. Laad deze vermelding opnieuw voor de volledige ' +
+    'inventaris.',
+
   /* -------------------------------------------------- ce que la donnée porte */
 
   'personal.emptySlot': 'plek aanwezig, maar leeg',
@@ -274,9 +310,6 @@ const model: DomainCatalog<'model'> = {
     one: 'onleesbaar veld: {fields}',
     other: 'onleesbare velden: {fields}'
   },
-  'libraryError.legacyPersonalDatum': 'opgemerkt door een eerdere versie van deze editor, ' +
-    'die de aard ervan niet vermeldde. Laad deze vermelding opnieuw voor de volledige ' +
-    'inventaris.',
 
   'libraryError.manifestUnreadable': 'De inhoudsopgave van het archief is onleesbaar.',
   'libraryError.manifestEmpty': 'De inhoudsopgave van het archief is leeg.',

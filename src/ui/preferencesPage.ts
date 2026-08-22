@@ -218,10 +218,11 @@ import type { MessageKey, Translator } from '../i18n'
  * Trois textes affichés ne viennent **ni de l'un ni de l'autre** et restent en français
  * dans les cinq langues, parce que ce sont des **données relevées** portées par
  * `catalog/preferenceDomains.json` : le nom des touches physiques (« volume haut »,
- * « marche/arrêt »), la méthode du relevé des unités et ses réserves. Les traduire
- * demanderait de faire porter au fichier extrait une colonne par langue — décision qui
- * appartient au lot qui reprendra l'extraction, pas à celui-ci. Les 44 raisons des clés
- * personnelles sont dans le même cas, et `personalProse.reason()` le dit déjà.
+ * « marche/arrêt »), la méthode du relevé des unités et ses réserves. La parade est
+ * connue — le fichier extrait porte une **clé** au lieu d'une phrase, comme l'a fait le
+ * champ `reason` des 44 clés personnelles (voir `DECLARED_PERSONAL` dans
+ * `tools/extract-preferences.py`) — mais elle appartient au lot qui reprendra
+ * `build-preference-domains.py`.
  *
  * Le module portait deux fautes de mécanique, corrigées avec cette extraction : un
  * `plural()` local codant `count > 1` — la règle française, fausse dans les quatre autres
@@ -1509,10 +1510,10 @@ function stateTitle(row: PreferenceRow, tr: Translator): string {
 /** La marque discrète qui signale une donnée personnelle. Sobre : le pilote décide. */
 function personalMark(personal: PersonalData, ctx: PageContext): HTMLElement {
   const mark = el('span', 'prefs__personal', ctx.personal.kind(personal.kind))
-  // ⚠️ `personal.reason` vient de `model/personalKeys.json`, **extrait de l'APK** : les
-  // 44 raisons des clés de préférences ne sont pas traduites, et `personalProse` le dit.
+  // `personal.reasonKey` vient du catalogue extrait de l'APK, qui porte une **clé** et
+  // non une phrase : la raison se dit donc dans la langue du pilote comme le reste.
   mark.title = ctx.tr.t('preferences.personalMarkTitle', {
-    reason: personal.reason, basis: ctx.personal.basis(personal.basis)
+    reason: ctx.tr.t(personal.reasonKey), basis: ctx.personal.basis(personal.basis)
   })
   return mark
 }
@@ -2476,7 +2477,7 @@ function buildPrivacyBox(
       item.append(el('span', 'prefs__privacy-key', row.key))
       item.append(el('span', 'prefs__privacy-why', tr.t('preferences.privacyItemWhy', {
         kind: ctx.personal.kind(row.personal?.kind ?? 'identity'),
-        reason: row.personal?.reason ?? ''
+        reason: row.personal === undefined ? '' : tr.t(row.personal.reasonKey)
       })))
       list.append(item)
     }

@@ -40,6 +40,42 @@ const model: DomainCatalog<'model'> = {
   'personalReason.event': 'nombre de evento que usted ha introducido',
   'personalReason.unknown': 'texto libre sin regla propia: tratado como personal, por precaución',
 
+  /* ---- por qué un **ajuste** se considera personal — véase `fr/model.ts` */
+
+  'personalReason.pilotName': 'el nombre del piloto, tal cual lo escribió',
+  'personalReason.gliderName': 'la vela del piloto — modelo y talla identifican a un piloto en un club',
+  'personalReason.gliderProducer': 'fabricante de la vela',
+  'personalReason.gliderModel': 'modelo de la vela',
+  'personalReason.gliderCategory': 'categoría de la vela',
+  'personalReason.hangGliderCategory': 'categoría del ala delta',
+  'personalReason.xcontestAccount': 'identificador de la cuenta XContest',
+  'personalReason.skysightAccount': 'identificador de la cuenta SkySight',
+  'personalReason.safeSkyAddress': 'dirección de la cuenta SafeSky',
+  'personalReason.registration': 'matrícula de la aeronave',
+  'personalReason.derivedRegistration': 'matrícula deducida',
+  'personalReason.stableDeviceId': 'identificador de dispositivo, estable entre vuelos',
+  'personalReason.trackingDeviceId': 'identificador de dispositivo del servicio de seguimiento',
+  'personalReason.quickMessages': 'mensajes escritos por usted',
+  'personalReason.sensors': 'los sensores emparejados, con las direcciones Bluetooth incluidas',
+  'personalReason.glasses': 'las gafas emparejadas',
+  'personalReason.glassesName': 'el nombre de las gafas emparejadas',
+  'personalReason.everysightKey': 'clave de acceso al SDK de Everysight',
+  'personalReason.waypointFiles': 'archivos de balizas — el nombre designa a menudo la competición',
+  'personalReason.navigationState': 'la tarea en curso, con balizas y coordenadas incluidas',
+  'personalReason.airspaceFiles': 'archivos de espacios aéreos que usted ha cargado',
+  'personalReason.offlineMaps': 'mapas sin conexión descargados',
+  'personalReason.mapTheme': 'tema de mapa que usted instaló',
+  'personalReason.guessedPosition': 'la posición supuesta del dispositivo — en la práctica, el domicilio',
+  'personalReason.lastNetLocation': 'la última posición usada para consultar el QNH',
+  'personalReason.replayFile': 'uno de los archivos de traza del piloto',
+  'personalReason.speechText': 'texto que usted escribió',
+  'personalReason.secureScope': 'ámbito SECURE: XCTrack lo guarda entre sus preferencias cifradas',
+  'personalReason.maskedField': 'campo de entrada oculto (`textPassword`)',
+  'personalReason.broadcastChoice': 'una decisión de difusión que usted tomó, no un dato en sí',
+  'personalReason.legacyRecord': 'detectado por una versión anterior de este editor, ' +
+    'que no decía de qué naturaleza era. Vuelva a cargar esta entrada para obtener el ' +
+    'inventario completo.',
+
   /* -------------------------------------------------- ce que la donnée porte */
 
   'personal.emptySlot': 'espacio presente, pero vacío',
@@ -265,9 +301,6 @@ const model: DomainCatalog<'model'> = {
     one: 'campo ilegible: {fields}',
     other: 'campos ilegibles: {fields}'
   },
-  'libraryError.legacyPersonalDatum': 'detectado por una versión anterior de este editor, ' +
-    'que no decía de qué naturaleza era. Vuelva a cargar esta entrada para obtener el ' +
-    'inventario completo.',
 
   'libraryError.manifestUnreadable': 'La ficha del archivo comprimido es ilegible.',
   'libraryError.manifestEmpty': 'La ficha del archivo comprimido está vacía.',

@@ -1052,36 +1052,54 @@ INPUT_TYPE_PASSWORD = 0x81
 # déclarée, pas extraite** : elle affirme quelque chose sur le *contenu*, et le contenu
 # ne se lit pas dans l'APK. Chaque entrée porte donc sa raison, et le catalogue publie
 # `basis: "declared"` pour que l'interface sache que c'est un jugement, pas une lecture.
+#
+# ⚠️ **La raison est une clé de message, jamais une phrase.** C'est de la prose que le
+# pilote lit — dans le tableau des données personnelles de l'écran des réglages — et cet
+# éditeur parle cinq langues. Elle ne peut donc pas vivre dans un fichier de données : le
+# catalogue en porte la clé, `src/i18n/messages/<langue>/model.ts` en porte le texte.
+#
+# Deux voies étaient possibles, et celle-ci a été retenue :
+#
+# 1. **une colonne par langue dans l'extraction** — il faudrait alors traduire ici, dans
+#    un script Python que personne ne relit pour sa prose, et la relecture d'une
+#    traduction se ferait cinq fois dans un fichier de données de 96 Ko ;
+# 2. **une clé** — la prose rejoint le catalogue, où le compilateur exige les cinq
+#    langues, où les tests vérifient les repères et le vocabulaire, et où la relecture se
+#    fait à l'endroit prévu pour elle.
+#
+# Le coût de la seconde est qu'ajouter une clé personnelle demande **deux** gestes : la
+# ligne ici, et la phrase dans les cinq catalogues. Le compilateur le rappelle — une clé
+# absente du catalogue ne compile pas côté TypeScript.
 DECLARED_PERSONAL = {
-    "Pilot.Name": ("identity", "le nom du pilote, saisi tel quel"),
-    "Glider.Name": ("identity", "la voile du pilote — modèle et taille identifient un pilote dans un club"),
-    "Glider._producer": ("equipment", "constructeur de la voile"),
-    "Glider._model": ("equipment", "modèle de la voile"),
-    "Glider.Ctg": ("equipment", "catégorie de la voile"),
-    "Glider.CtgHG": ("equipment", "catégorie de l'aile delta"),
-    "XContest.Username": ("credential", "identifiant du compte XContest"),
-    "SkySight.Username": ("credential", "identifiant du compte SkySight"),
-    "SafeSky.Address": ("contact", "adresse du compte SafeSky"),
-    "SafeSky.Icao": ("identity", "immatriculation de l'aéronef"),
-    "SafeSky.AutoIcao": ("identity", "immatriculation déduite"),
-    "SafeSky.AnonymousUUID": ("device", "identifiant d'appareil, stable entre les vols"),
-    "Livetrack.DeviceId": ("device", "identifiant d'appareil du service de suivi"),
-    "Livetrack.QuickMessages": ("freeText", "messages écrits par vous"),
-    "Sensors.Configuration": ("device", "les capteurs appairés, adresses Bluetooth comprises"),
-    "ActiveLook.Device": ("device", "les lunettes appairées"),
-    "ActiveLook.Name": ("device", "le nom des lunettes appairées"),
-    "Maverick.SdkKey": ("credential", "clé d'accès au SDK Everysight"),
-    "Navigation.WaypointFiles": ("file", "fichiers de waypoints — le nom désigne souvent la compétition"),
-    "Navigation.State": ("location", "la tâche en cours, points de virage et coordonnées compris"),
-    "Airspace.Files": ("file", "fichiers d'espaces aériens que vous avez chargés"),
-    "Mapsforge.MapFiles": ("file", "cartes hors-ligne téléchargées"),
-    "Mapsforge.ThemeFile": ("file", "thème de carte que vous avez installé"),
-    "App.GuessLatitude": ("location", "la position présumée de l'appareil — le domicile, en pratique"),
-    "App.GuessLongitude": ("location", "la position présumée de l'appareil — le domicile, en pratique"),
-    "Sensors.LastNetLocation": ("location", "la dernière position ayant servi à interroger le QNH"),
-    "Testing.IGCReplayFilename": ("file", "un fichier de trace du pilote"),
-    "Devel.TTS": ("freeText", "texte que vous avez saisi"),
-    "Devel.TTSAbbr": ("freeText", "texte que vous avez saisi"),
+    "Pilot.Name": ("identity", "personalReason.pilotName"),
+    "Glider.Name": ("identity", "personalReason.gliderName"),
+    "Glider._producer": ("equipment", "personalReason.gliderProducer"),
+    "Glider._model": ("equipment", "personalReason.gliderModel"),
+    "Glider.Ctg": ("equipment", "personalReason.gliderCategory"),
+    "Glider.CtgHG": ("equipment", "personalReason.hangGliderCategory"),
+    "XContest.Username": ("credential", "personalReason.xcontestAccount"),
+    "SkySight.Username": ("credential", "personalReason.skysightAccount"),
+    "SafeSky.Address": ("contact", "personalReason.safeSkyAddress"),
+    "SafeSky.Icao": ("identity", "personalReason.registration"),
+    "SafeSky.AutoIcao": ("identity", "personalReason.derivedRegistration"),
+    "SafeSky.AnonymousUUID": ("device", "personalReason.stableDeviceId"),
+    "Livetrack.DeviceId": ("device", "personalReason.trackingDeviceId"),
+    "Livetrack.QuickMessages": ("freeText", "personalReason.quickMessages"),
+    "Sensors.Configuration": ("device", "personalReason.sensors"),
+    "ActiveLook.Device": ("device", "personalReason.glasses"),
+    "ActiveLook.Name": ("device", "personalReason.glassesName"),
+    "Maverick.SdkKey": ("credential", "personalReason.everysightKey"),
+    "Navigation.WaypointFiles": ("file", "personalReason.waypointFiles"),
+    "Navigation.State": ("location", "personalReason.navigationState"),
+    "Airspace.Files": ("file", "personalReason.airspaceFiles"),
+    "Mapsforge.MapFiles": ("file", "personalReason.offlineMaps"),
+    "Mapsforge.ThemeFile": ("file", "personalReason.mapTheme"),
+    "App.GuessLatitude": ("location", "personalReason.guessedPosition"),
+    "App.GuessLongitude": ("location", "personalReason.guessedPosition"),
+    "Sensors.LastNetLocation": ("location", "personalReason.lastNetLocation"),
+    "Testing.IGCReplayFilename": ("file", "personalReason.replayFile"),
+    "Devel.TTS": ("freeText", "personalReason.speechText"),
+    "Devel.TTSAbbr": ("freeText", "personalReason.speechText"),
 }
 
 # Les préférences de diffusion : pas des données personnelles, mais des **choix** sur
@@ -1101,19 +1119,23 @@ def family_of(key: str) -> str:
 
 
 def personal_of(key: str, scope: str | None, input_type) -> dict | None:
-    """Ce que la clé porte de personnel, et **sur quelle base** on l'affirme."""
+    """Ce que la clé porte de personnel, et **sur quelle base** on l'affirme.
+
+    `reasonKey` désigne une entrée de `src/i18n/messages/<langue>/model.ts` — voir la
+    remarque au-dessus de `DECLARED_PERSONAL`.
+    """
     if scope == "SECURE":
         return {"kind": "credential", "basis": "scope",
-                "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"}
+                "reasonKey": "personalReason.secureScope"}
     if input_type is not None and (input_type & 0xFF) == INPUT_TYPE_PASSWORD:
         return {"kind": "credential", "basis": "inputType",
-                "reason": "champ de saisie masqué (`textPassword`)"}
+                "reasonKey": "personalReason.maskedField"}
     declared = DECLARED_PERSONAL.get(key)
     if declared is not None:
-        return {"kind": declared[0], "basis": "declared", "reason": declared[1]}
+        return {"kind": declared[0], "basis": "declared", "reasonKey": declared[1]}
     if key.startswith(SHARING_PREFIX):
         return {"kind": "sharing", "basis": "declared",
-                "reason": "un choix de diffusion que vous avez fait, pas une donnée en soi"}
+                "reasonKey": "personalReason.broadcastChoice"}
     return None
 
 
@@ -1578,7 +1600,7 @@ def main() -> None:
         key: {
             "kind": entry["personal"]["kind"],
             "basis": entry["personal"]["basis"],
-            "reason": entry["personal"]["reason"],
+            "reasonKey": entry["personal"]["reasonKey"],
             "scope": entry["scope"],
         }
         for key, entry in sorted(catalog.preferences.items())

@@ -40,6 +40,41 @@ const model: DomainCatalog<'model'> = {
   'personalReason.event': 'event name you typed',
   'personalReason.unknown': 'free text with no rule of its own: treated as personal, as a precaution',
 
+  /* ---- why a **setting** is called personal — see `fr/model.ts` */
+
+  'personalReason.pilotName': 'the pilot’s name, exactly as typed',
+  'personalReason.gliderName': 'the pilot’s glider — model and size identify a pilot in a club',
+  'personalReason.gliderProducer': 'glider manufacturer',
+  'personalReason.gliderModel': 'glider model',
+  'personalReason.gliderCategory': 'glider category',
+  'personalReason.hangGliderCategory': 'hang glider category',
+  'personalReason.xcontestAccount': 'XContest account login',
+  'personalReason.skysightAccount': 'SkySight account login',
+  'personalReason.safeSkyAddress': 'SafeSky account address',
+  'personalReason.registration': 'aircraft registration',
+  'personalReason.derivedRegistration': 'inferred registration',
+  'personalReason.stableDeviceId': 'device identifier, stable across flights',
+  'personalReason.trackingDeviceId': 'device identifier of the tracking service',
+  'personalReason.quickMessages': 'messages written by you',
+  'personalReason.sensors': 'the paired sensors, Bluetooth addresses included',
+  'personalReason.glasses': 'the paired glasses',
+  'personalReason.glassesName': 'the name of the paired glasses',
+  'personalReason.everysightKey': 'Everysight SDK access key',
+  'personalReason.waypointFiles': 'waypoint files — the name often names the competition',
+  'personalReason.navigationState': 'the current task, turnpoints and coordinates included',
+  'personalReason.airspaceFiles': 'airspace files you have loaded',
+  'personalReason.offlineMaps': 'downloaded offline maps',
+  'personalReason.mapTheme': 'map theme you installed',
+  'personalReason.guessedPosition': 'the device’s presumed position — home, in practice',
+  'personalReason.lastNetLocation': 'the last position used to ask for the QNH',
+  'personalReason.replayFile': 'one of the pilot’s track files',
+  'personalReason.speechText': 'text you typed',
+  'personalReason.secureScope': 'SECURE scope: XCTrack keeps it among its encrypted preferences',
+  'personalReason.maskedField': 'masked input field (`textPassword`)',
+  'personalReason.broadcastChoice': 'a broadcasting choice you made, not data in itself',
+  'personalReason.legacyRecord': 'spotted by an earlier version of this editor, which ' +
+    'did not say what kind it was. Reload this entry for the full inventory.',
+
   /* -------------------------------------------------- ce que la donnée porte */
 
   'personal.emptySlot': 'slot present, but empty',
@@ -255,8 +290,6 @@ const model: DomainCatalog<'model'> = {
     one: 'unreadable field: {fields}',
     other: 'unreadable fields: {fields}'
   },
-  'libraryError.legacyPersonalDatum': 'spotted by an earlier version of this editor, which ' +
-    'did not say what kind it was. Reload this entry for the full inventory.',
 
   'libraryError.manifestUnreadable': 'The archive’s index cannot be read.',
   'libraryError.manifestEmpty': 'The archive’s index is empty.',

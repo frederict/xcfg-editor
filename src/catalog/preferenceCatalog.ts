@@ -1,4 +1,6 @@
 import PREFERENCE_LANGUAGE_LIST from './preferenceCatalogLanguages.json'
+// `import type` : effacé à la compilation. Ce module ne dépend pas de `src/i18n/`.
+import type { MessageKey } from '../i18n'
 
 /**
  * Le catalogue des **préférences générales** de XCTrack : celles qui vivent hors des
@@ -96,6 +98,13 @@ export type DefaultSource =
   /** Calculée au démarrage — les huit `Unit.*` dépendent de la locale de l'appareil. */
   | 'runtime'
 
+/**
+ * Les clés de raison — celles du `layout` comme celles des réglages. Aucune n'attend de
+ * repère, ce qui permet à `t()` de les accepter telles quelles. Même motif que
+ * `SharingReasonKey` dans `model/sharing.ts`.
+ */
+export type PersonalReasonKey = Extract<MessageKey, `personalReason.${string}`>
+
 /** Ce que porte une clé de personnel, et sur quelle base on l'affirme. */
 export interface PersonalData {
   kind: 'identity' | 'credential' | 'contact' | 'device' | 'location' | 'file'
@@ -106,7 +115,14 @@ export interface PersonalData {
    * raison : le contenu d'une clé ne se lit nulle part.
    */
   basis: 'scope' | 'inputType' | 'declared'
-  reason: string
+  /**
+   * Pourquoi cette clé est dite personnelle — une **clé de message**, pas une phrase.
+   *
+   * Le jugement est déclaré dans `tools/extract-preferences.py` ; sa prose, elle, ne peut
+   * pas vivre dans un fichier de données extrait de l'APK, parce que cet éditeur parle
+   * cinq langues. `personalProse(tr).reason()` en rend le texte.
+   */
+  reasonKey: PersonalReasonKey
 }
 
 /** Ce que le catalogue sait d'une clé de préférence. */

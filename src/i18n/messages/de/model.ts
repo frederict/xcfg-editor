@@ -40,6 +40,42 @@ const model: DomainCatalog<'model'> = {
   'personalReason.event': 'Ereignisname, den Sie eingegeben haben',
   'personalReason.unknown': 'freier Text ohne eigene Regel: vorsorglich als persönlich behandelt',
 
+  /* ---- warum eine **Einstellung** persönlich genannt wird — siehe `fr/model.ts` */
+
+  'personalReason.pilotName': 'der Name des Piloten, genau wie eingegeben',
+  'personalReason.gliderName': 'der Schirm des Piloten — Modell und Größe erkennen einen Piloten im Verein',
+  'personalReason.gliderProducer': 'Hersteller des Schirms',
+  'personalReason.gliderModel': 'Modell des Schirms',
+  'personalReason.gliderCategory': 'Klasse des Schirms',
+  'personalReason.hangGliderCategory': 'Klasse des Drachens',
+  'personalReason.xcontestAccount': 'Kennung des XContest-Kontos',
+  'personalReason.skysightAccount': 'Kennung des SkySight-Kontos',
+  'personalReason.safeSkyAddress': 'Adresse des SafeSky-Kontos',
+  'personalReason.registration': 'Kennzeichen des Luftfahrzeugs',
+  'personalReason.derivedRegistration': 'abgeleitetes Kennzeichen',
+  'personalReason.stableDeviceId': 'Gerätekennung, über die Flüge hinweg gleichbleibend',
+  'personalReason.trackingDeviceId': 'Gerätekennung des Verfolgungsdienstes',
+  'personalReason.quickMessages': 'von Ihnen geschriebene Nachrichten',
+  'personalReason.sensors': 'die gekoppelten Sensoren, samt Bluetooth-Adressen',
+  'personalReason.glasses': 'die gekoppelte Brille',
+  'personalReason.glassesName': 'der Name der gekoppelten Brille',
+  'personalReason.everysightKey': 'Zugangsschlüssel zum Everysight-SDK',
+  'personalReason.waypointFiles': 'Wegpunktdateien — der Name benennt oft den Wettbewerb',
+  'personalReason.navigationState': 'die laufende Aufgabe, samt Wendepunkten und Koordinaten',
+  'personalReason.airspaceFiles': 'Luftraumdateien, die Sie geladen haben',
+  'personalReason.offlineMaps': 'heruntergeladene Offline-Karten',
+  'personalReason.mapTheme': 'Kartenthema, das Sie installiert haben',
+  'personalReason.guessedPosition': 'die vermutete Position des Geräts — in der Praxis das Zuhause',
+  'personalReason.lastNetLocation': 'die letzte Position, mit der das QNH abgefragt wurde',
+  'personalReason.replayFile': 'eine der Track-Dateien des Piloten',
+  'personalReason.speechText': 'Text, den Sie eingegeben haben',
+  'personalReason.secureScope': 'Bereich SECURE: XCTrack legt sie zu den verschlüsselten Einstellungen',
+  'personalReason.maskedField': 'verdecktes Eingabefeld (`textPassword`)',
+  'personalReason.broadcastChoice': 'eine Übertragungsentscheidung von Ihnen, keine Angabe an sich',
+  'personalReason.legacyRecord': 'von einer früheren Fassung dieses Editors erkannt, ' +
+    'die ihre Art nicht angab. Laden Sie diesen Eintrag neu, um die vollständige ' +
+    'Bestandsaufnahme zu erhalten.',
+
   /* -------------------------------------------------- ce que la donnée porte */
 
   'personal.emptySlot': 'Feld vorhanden, aber leer',
@@ -273,9 +309,6 @@ const model: DomainCatalog<'model'> = {
     one: 'unlesbares Feld: {fields}',
     other: 'unlesbare Felder: {fields}'
   },
-  'libraryError.legacyPersonalDatum': 'von einer früheren Fassung dieses Editors erkannt, ' +
-    'die ihre Art nicht angab. Laden Sie diesen Eintrag neu, um die vollständige ' +
-    'Bestandsaufnahme zu erhalten.',
 
   'libraryError.manifestUnreadable': 'Das Verzeichnis des Archivs ist nicht lesbar.',
   'libraryError.manifestEmpty': 'Das Verzeichnis des Archivs ist leer.',

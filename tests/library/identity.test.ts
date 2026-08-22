@@ -9,6 +9,9 @@ import {
   type EntryIdentity
 } from '../../src/library/identity'
 import { REFERENCE_VERSION_CODE } from '../../src/ui/warnings'
+import { personalProse } from '../../src/model/personalData'
+import { makeTranslator } from '../../src/i18n/translate'
+import frenchMessages from '../../src/i18n/messages/fr'
 import { ARCHIVE, EXPORTS, FORMES_PRESERVEES, GSON_2022 } from '../fixtures/paths'
 
 /**
@@ -190,7 +193,9 @@ describe('carte d’identité — relire une entrée rangée par une version ant
     // On ne devine pas la nature d'une ligne dont l'ancienne forme ne disait rien : elle
     // porte une raison qui dit d'où elle vient.
     expect(findings[0]).toMatchObject({ home: 'layout', basis: 'declared', filled: true })
-    expect(findings[0]?.reason).toContain('version antérieure')
+    expect(findings[0]?.reasonKey).toBe('personalReason.legacyRecord')
+    expect(personalProse(makeTranslator('fr', frenchMessages)).reason(findings[0]!))
+      .toContain('version antérieure')
     expect(findings[2]?.filled).toBe(false)
   })
 

@@ -232,7 +232,8 @@ describe('libraryPanel — la mise en français', () => {
 
   it('l’emplacement d’une donnée personnelle dit si elle voyage', () => {
     const datum = {
-      key: 'a', kind: 'freeText', basis: 'declared', reason: 'r', filled: true, value: 'b'
+      key: 'a', kind: 'freeText', basis: 'declared', filled: true, value: 'b',
+      reasonKey: 'personalReason.text'
     } as const
     expect(personalDatumWhere(tr, { ...datum, home: 'layout' }))
       .toContain('part avec les pages')

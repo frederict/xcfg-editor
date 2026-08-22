@@ -371,7 +371,7 @@
    "personal": {
     "kind": "device",
     "basis": "declared",
-    "reason": "les lunettes appairées"
+    "reasonKey": "personalReason.glasses"
    }
   },
   "ActiveLook.HShift": {
@@ -432,7 +432,7 @@
    "personal": {
     "kind": "device",
     "basis": "declared",
-    "reason": "le nom des lunettes appairées"
+    "reasonKey": "personalReason.glassesName"
    }
   },
   "ActiveLook.VShift": {
@@ -522,7 +522,7 @@
    "personal": {
     "kind": "file",
     "basis": "declared",
-    "reason": "fichiers d'espaces aériens que vous avez chargés"
+    "reasonKey": "personalReason.airspaceFiles"
    }
   },
   "Airspace.Filling": {
@@ -708,7 +708,7 @@
    "personal": {
     "kind": "location",
     "basis": "declared",
-    "reason": "la position présumée de l'appareil — le domicile, en pratique"
+    "reasonKey": "personalReason.guessedPosition"
    }
   },
   "App.GuessLongitude": {
@@ -725,7 +725,7 @@
    "personal": {
     "kind": "location",
     "basis": "declared",
-    "reason": "la position présumée de l'appareil — le domicile, en pratique"
+    "reasonKey": "personalReason.guessedPosition"
    }
   },
   "App.ScreenOccupation.X": {
@@ -1138,7 +1138,7 @@
    "personal": {
     "kind": "freeText",
     "basis": "declared",
-    "reason": "texte que vous avez saisi"
+    "reasonKey": "personalReason.speechText"
    }
   },
   "Devel.TTSAbbr": {
@@ -1156,7 +1156,7 @@
    "personal": {
     "kind": "freeText",
     "basis": "declared",
-    "reason": "texte que vous avez saisi"
+    "reasonKey": "personalReason.speechText"
    }
   },
   "Devel.XContestAPIDev": {
@@ -1456,7 +1456,7 @@
    "personal": {
     "kind": "equipment",
     "basis": "declared",
-    "reason": "catégorie de la voile"
+    "reasonKey": "personalReason.gliderCategory"
    }
   },
   "Glider.CtgHG": {
@@ -1473,7 +1473,7 @@
    "personal": {
     "kind": "equipment",
     "basis": "declared",
-    "reason": "catégorie de l'aile delta"
+    "reasonKey": "personalReason.hangGliderCategory"
    }
   },
   "Glider.EngineType": {
@@ -1555,7 +1555,7 @@
    "personal": {
     "kind": "identity",
     "basis": "declared",
-    "reason": "la voile du pilote — modèle et taille identifient un pilote dans un club"
+    "reasonKey": "personalReason.gliderName"
    }
   },
   "Glider.TrimSpeed": {
@@ -1633,7 +1633,7 @@
    "personal": {
     "kind": "equipment",
     "basis": "declared",
-    "reason": "modèle de la voile"
+    "reasonKey": "personalReason.gliderModel"
    }
   },
   "Glider._producer": {
@@ -1652,7 +1652,7 @@
    "personal": {
     "kind": "equipment",
     "basis": "declared",
-    "reason": "constructeur de la voile"
+    "reasonKey": "personalReason.gliderProducer"
    }
   },
   "Glider._tandem": {
@@ -1781,7 +1781,7 @@
    "personal": {
     "kind": "credential",
     "basis": "scope",
-    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+    "reasonKey": "personalReason.secureScope"
    }
   },
   "Internal.SntpVsGpsOffset": {
@@ -2149,7 +2149,7 @@
    "personal": {
     "kind": "sharing",
     "basis": "declared",
-    "reason": "un choix de diffusion que vous avez fait, pas une donnée en soi"
+    "reasonKey": "personalReason.broadcastChoice"
    }
   },
   "Livetrack.DeviceId": {
@@ -2166,7 +2166,7 @@
    "personal": {
     "kind": "credential",
     "basis": "scope",
-    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+    "reasonKey": "personalReason.secureScope"
    }
   },
   "Livetrack.Enabled": {
@@ -2186,7 +2186,7 @@
    "personal": {
     "kind": "sharing",
     "basis": "declared",
-    "reason": "un choix de diffusion que vous avez fait, pas une donnée en soi"
+    "reasonKey": "personalReason.broadcastChoice"
    }
   },
   "Livetrack.FlightPublic": {
@@ -2203,7 +2203,7 @@
    "personal": {
     "kind": "sharing",
     "basis": "declared",
-    "reason": "un choix de diffusion que vous avez fait, pas une donnée en soi"
+    "reasonKey": "personalReason.broadcastChoice"
    }
   },
   "Livetrack.QuickMessages": {
@@ -2218,7 +2218,7 @@
    "personal": {
     "kind": "freeText",
     "basis": "declared",
-    "reason": "messages écrits par vous"
+    "reasonKey": "personalReason.quickMessages"
    }
   },
   "Livetrack.ShowPublic": {
@@ -2235,7 +2235,7 @@
    "personal": {
     "kind": "sharing",
     "basis": "declared",
-    "reason": "un choix de diffusion que vous avez fait, pas une donnée en soi"
+    "reasonKey": "personalReason.broadcastChoice"
    }
   },
   "Mapsforge.MapFiles": {
@@ -2250,7 +2250,7 @@
    "personal": {
     "kind": "file",
     "basis": "declared",
-    "reason": "cartes hors-ligne téléchargées"
+    "reasonKey": "personalReason.offlineMaps"
    }
   },
   "Mapsforge.Terrain": {
@@ -2277,7 +2277,7 @@
    "personal": {
     "kind": "file",
     "basis": "declared",
-    "reason": "thème de carte que vous avez installé"
+    "reasonKey": "personalReason.mapTheme"
    }
   },
   "Maverick.AutoBrightness": {
@@ -2345,7 +2345,7 @@
    "personal": {
     "kind": "credential",
     "basis": "scope",
-    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+    "reasonKey": "personalReason.secureScope"
    }
   },
   "Navigation.State": {
@@ -2360,7 +2360,7 @@
    "personal": {
     "kind": "location",
     "basis": "declared",
-    "reason": "la tâche en cours, points de virage et coordonnées compris"
+    "reasonKey": "personalReason.navigationState"
    }
   },
   "Navigation.WaypointFiles": {
@@ -2375,7 +2375,7 @@
    "personal": {
     "kind": "file",
     "basis": "declared",
-    "reason": "fichiers de waypoints — le nom désigne souvent la compétition"
+    "reasonKey": "personalReason.waypointFiles"
    }
   },
   "Obstacles.SafeAltMargin": {
@@ -2430,7 +2430,7 @@
    "personal": {
     "kind": "identity",
     "basis": "declared",
-    "reason": "le nom du pilote, saisi tel quel"
+    "reasonKey": "personalReason.pilotName"
    }
   },
   "SafeSky.Address": {
@@ -2448,7 +2448,7 @@
    "personal": {
     "kind": "credential",
     "basis": "scope",
-    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+    "reasonKey": "personalReason.secureScope"
    }
   },
   "SafeSky.Amt": {
@@ -2465,7 +2465,7 @@
    "personal": {
     "kind": "credential",
     "basis": "scope",
-    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+    "reasonKey": "personalReason.secureScope"
    }
   },
   "SafeSky.Anonymous": {
@@ -2495,7 +2495,7 @@
    "personal": {
     "kind": "credential",
     "basis": "scope",
-    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+    "reasonKey": "personalReason.secureScope"
    }
   },
   "SafeSky.AutoIcao": {
@@ -2510,7 +2510,7 @@
    "personal": {
     "kind": "identity",
     "basis": "declared",
-    "reason": "immatriculation déduite"
+    "reasonKey": "personalReason.derivedRegistration"
    }
   },
   "SafeSky.Enabled": {
@@ -2543,7 +2543,7 @@
    "personal": {
     "kind": "identity",
     "basis": "declared",
-    "reason": "immatriculation de l'aéronef"
+    "reasonKey": "personalReason.registration"
    }
   },
   "SafeSky.Interval": {
@@ -2579,7 +2579,7 @@
    "personal": {
     "kind": "credential",
     "basis": "scope",
-    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+    "reasonKey": "personalReason.secureScope"
    }
   },
   "SafeSky.Sandbox": {
@@ -2625,7 +2625,7 @@
    "personal": {
     "kind": "credential",
     "basis": "scope",
-    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+    "reasonKey": "personalReason.secureScope"
    }
   },
   "Sec.ProToTimestamp": {
@@ -2640,7 +2640,7 @@
    "personal": {
     "kind": "credential",
     "basis": "scope",
-    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+    "reasonKey": "personalReason.secureScope"
    }
   },
   "Sec.ProUid": {
@@ -2655,7 +2655,7 @@
    "personal": {
     "kind": "credential",
     "basis": "scope",
-    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+    "reasonKey": "personalReason.secureScope"
    }
   },
   "Sec.Xcontest.Uid": {
@@ -2670,7 +2670,7 @@
    "personal": {
     "kind": "credential",
     "basis": "scope",
-    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+    "reasonKey": "personalReason.secureScope"
    }
   },
   "Sec.test": {
@@ -2687,7 +2687,7 @@
    "personal": {
     "kind": "credential",
     "basis": "scope",
-    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+    "reasonKey": "personalReason.secureScope"
    }
   },
   "Sensor.AcousticVario.DynamicFreq": {
@@ -2898,7 +2898,7 @@
    "personal": {
     "kind": "device",
     "basis": "declared",
-    "reason": "les capteurs appairés, adresses Bluetooth comprises"
+    "reasonKey": "personalReason.sensors"
    }
   },
   "Sensors.LastNetLocation": {
@@ -2915,7 +2915,7 @@
    "personal": {
     "kind": "location",
     "basis": "declared",
-    "reason": "la dernière position ayant servi à interroger le QNH"
+    "reasonKey": "personalReason.lastNetLocation"
    }
   },
   "Sensors.LastNetTime": {
@@ -3015,7 +3015,7 @@
    "personal": {
     "kind": "credential",
     "basis": "scope",
-    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+    "reasonKey": "personalReason.secureScope"
    }
   },
   "SkySight.Username": {
@@ -3035,7 +3035,7 @@
    "personal": {
     "kind": "credential",
     "basis": "scope",
-    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+    "reasonKey": "personalReason.secureScope"
    }
   },
   "Sound.AcousticVario.CustomProfile": {
@@ -3138,7 +3138,7 @@
    "personal": {
     "kind": "file",
     "basis": "declared",
-    "reason": "un fichier de trace du pilote"
+    "reasonKey": "personalReason.replayFile"
    }
   },
   "Testing.InternalSensorLog": {
@@ -3531,7 +3531,7 @@
    "personal": {
     "kind": "credential",
     "basis": "scope",
-    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+    "reasonKey": "personalReason.secureScope"
    }
   },
   "XContest.Password": {
@@ -3551,7 +3551,7 @@
    "personal": {
     "kind": "credential",
     "basis": "scope",
-    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+    "reasonKey": "personalReason.secureScope"
    }
   },
   "XContest.Username": {
@@ -3571,7 +3571,7 @@
    "personal": {
     "kind": "credential",
     "basis": "scope",
-    "reason": "portée SECURE : XCTrack la range dans ses préférences chiffrées"
+    "reasonKey": "personalReason.secureScope"
    }
   },
   "_CrashDetect.DontAskAgain": {

@@ -14,15 +14,20 @@
  * et `provenance.*` dans `common.ts`. C'est la convention du dépôt pour un jeu de valeurs
  * fermé, et elle rend le `grep` immédiat.
  *
- * ## Ce qui n'est PAS ici, et pourquoi
+ * ## La prose qui vivait dans un fichier de données
  *
- * Les **44 raisons des clés de préférences** vivent dans `src/model/personalKeys.json`,
- * qui est **extrait de l'APK** par `tools/extract-preferences.py` et vérifié à chaque
- * exécution des tests. Ce sont des **données**, pas de la prose de code : les traduire
- * demande de faire porter au fichier extrait cinq colonnes, ou de leur donner à chacune
- * une clé — décision qui appartient au lot qui reprendra l'extraction, pas à celui-ci.
- * En attendant, `personalProse.reason()` rend la raison française telle que le fichier la
- * porte, et le dit.
+ * Les **44 raisons des clés de préférences** vivaient dans `src/model/personalKeys.json`
+ * et `src/catalog/preferenceCatalog/base.json`, tous deux **extraits de l'APK** par
+ * `tools/extract-preferences.py` : le champ `reason` y portait du français, et un pilote
+ * néerlandais lisait « le nom du pilote, saisi tel quel » dans le tableau des données
+ * personnelles. Les deux fichiers portent maintenant une clé `reasonKey`, et le texte est
+ * ici, dans `personalReason.*`.
+ *
+ * L'alternative — une colonne par langue dans l'extraction — est écartée, et le pourquoi
+ * est écrit au-dessus de `DECLARED_PERSONAL`, dans le script : traduire dans un script
+ * Python que personne ne relit pour sa prose, puis relire cinq langues dans un fichier de
+ * données de 96 Ko, coûte plus cher que les deux gestes qu'une clé demande — la ligne
+ * dans le script, la phrase dans les cinq catalogues. Le compilateur rappelle le second.
  */
 const model = {
   /* --------------------------------------------- la nature d'une donnée personnelle */
@@ -62,6 +67,52 @@ const model = {
   'personalReason.suffix': 'texte placé après la valeur affichée, écrit par vous',
   'personalReason.event': 'nom d’événement que vous avez saisi',
   'personalReason.unknown': 'texte libre sans règle propre : traité comme personnel, par précaution',
+
+  /* ---- pourquoi un **réglage** est dit personnel : la prose des 44 clés du catalogue ==
+   *
+   * ⚠️ **Elle vivait dans un fichier de données**, `src/model/personalKeys.json` et
+   * `src/catalog/preferenceCatalog/base.json`, tous deux extraits de l'APK par
+   * `tools/extract-preferences.py`. Le champ `reason` y portait du français ; il porte
+   * maintenant une **clé**, et le texte est ici. Voir la remarque au-dessus de
+   * `DECLARED_PERSONAL`, dans le script, pour l'alternative écartée — une colonne par
+   * langue dans l'extraction.
+   *
+   * Ces raisons-là ne se confondent pas avec `sharingReason.*` : celles-ci disent
+   * **pourquoi c'est personnel**, celles-là **ce qu'on en fait** au moment du partage.
+   * =============================================================================== */
+
+  'personalReason.pilotName': 'le nom du pilote, saisi tel quel',
+  'personalReason.gliderName': 'la voile du pilote — modèle et taille identifient un pilote dans un club',
+  'personalReason.gliderProducer': 'constructeur de la voile',
+  'personalReason.gliderModel': 'modèle de la voile',
+  'personalReason.gliderCategory': 'catégorie de la voile',
+  'personalReason.hangGliderCategory': 'catégorie de l’aile delta',
+  'personalReason.xcontestAccount': 'identifiant du compte XContest',
+  'personalReason.skysightAccount': 'identifiant du compte SkySight',
+  'personalReason.safeSkyAddress': 'adresse du compte SafeSky',
+  'personalReason.registration': 'immatriculation de l’aéronef',
+  'personalReason.derivedRegistration': 'immatriculation déduite',
+  'personalReason.stableDeviceId': 'identifiant d’appareil, stable entre les vols',
+  'personalReason.trackingDeviceId': 'identifiant d’appareil du service de suivi',
+  'personalReason.quickMessages': 'messages écrits par vous',
+  'personalReason.sensors': 'les capteurs appairés, adresses Bluetooth comprises',
+  'personalReason.glasses': 'les lunettes appairées',
+  'personalReason.glassesName': 'le nom des lunettes appairées',
+  'personalReason.everysightKey': 'clé d’accès au SDK Everysight',
+  'personalReason.waypointFiles': 'fichiers de waypoints — le nom désigne souvent la compétition',
+  'personalReason.navigationState': 'la tâche en cours, points de virage et coordonnées compris',
+  'personalReason.airspaceFiles': 'fichiers d’espaces aériens que vous avez chargés',
+  'personalReason.offlineMaps': 'cartes hors-ligne téléchargées',
+  'personalReason.mapTheme': 'thème de carte que vous avez installé',
+  'personalReason.guessedPosition': 'la position présumée de l’appareil — le domicile, en pratique',
+  'personalReason.lastNetLocation': 'la dernière position ayant servi à interroger le QNH',
+  'personalReason.replayFile': 'un fichier de trace du pilote',
+  'personalReason.speechText': 'texte que vous avez saisi',
+  'personalReason.secureScope': 'portée SECURE : XCTrack la range dans ses préférences chiffrées',
+  'personalReason.maskedField': 'champ de saisie masqué (`textPassword`)',
+  'personalReason.broadcastChoice': 'un choix de diffusion que vous avez fait, pas une donnée en soi',
+  'personalReason.legacyRecord': 'repéré par une version antérieure de cet éditeur, ' +
+    'qui n’en disait pas la nature. Rechargez cette entrée pour obtenir l’inventaire complet.',
 
   /* -------------------------------------------------- ce que la donnée porte */
 
@@ -345,8 +396,6 @@ const model = {
     one: 'champ illisible : {fields}',
     other: 'champs illisibles : {fields}'
   },
-  'libraryError.legacyPersonalDatum': 'repéré par une version antérieure de cet éditeur, ' +
-    'qui n’en disait pas la nature. Rechargez cette entrée pour obtenir l’inventaire complet.',
 
   /* --------------------------------------------- l'archive proposée à l'import */
 

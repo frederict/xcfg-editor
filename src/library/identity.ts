@@ -173,6 +173,18 @@ interface LegacyPersonalDatum {
 }
 
 /**
+ * Ce qu'un enregistrement porte réellement : un `PersonalFinding` dont la raison peut
+ * encore être la **phrase française** d'avant la bascule au catalogue, ou manquer.
+ */
+type StoredPersonalDatum = Omit<PersonalFinding, 'reasonKey'> & {
+  reasonKey?: PersonalFinding['reasonKey']
+  reason?: string
+}
+
+/** Le nom rendu pour une ligne ancienne qui n'en portait pas — un repli, pas une clé réelle. */
+const UNKNOWN_PERSONAL_KEY = '?'
+
+/**
  * L'inventaire d'une entrée, **y compris quand elle a été rangée par une version
  * antérieure de l'éditeur**.
  *
@@ -190,18 +202,27 @@ export function personalInventoryOf(identity: EntryIdentity): {
   findings: PersonalFinding[]
   counts: PersonalCounts
 } {
-  const raw = identity.read.personalData as Array<PersonalFinding | LegacyPersonalDatum>
+  const raw = identity.read.personalData as Array<StoredPersonalDatum | LegacyPersonalDatum>
   const findings: PersonalFinding[] = raw.map((datum) => {
-    if ('home' in datum && datum.home !== undefined) return datum
+    if ('home' in datum && datum.home !== undefined) {
+      const stored = datum
+      if (stored.reasonKey !== undefined) return stored as PersonalFinding
+      // Rangée par la version qui portait encore la raison en français : on la garde
+      // telle quelle plutôt que d'en inventer une, et elle disparaît au rechargement.
+      return {
+        ...stored,
+        reasonKey: 'personalReason.legacyRecord',
+        ...(stored.reason === undefined ? {} : { legacyReason: stored.reason })
+      } as PersonalFinding
+    }
     const legacy = datum as LegacyPersonalDatum
     const value = legacy.value ?? ''
     return {
       home: legacy.where ?? 'preferences',
-      key: legacy.key ?? '(clé inconnue)',
+      key: legacy.key ?? UNKNOWN_PERSONAL_KEY,
       kind: 'freeText',
       basis: 'declared',
-      reason: 'repéré par une version antérieure de cet éditeur, qui n’en disait pas la '
-        + 'nature. Rechargez cette entrée pour obtenir l’inventaire complet.',
+      reasonKey: 'personalReason.legacyRecord',
       filled: value.trim() !== '',
       ...(value === '' ? {} : { value })
     }
