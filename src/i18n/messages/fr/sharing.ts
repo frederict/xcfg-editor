@@ -46,11 +46,12 @@
  *
  * ## Ce qui n'est PAS ici, et pourquoi
  *
- * Les **44 raisons de `PREFERENCE_RULES`** et les **7 indices de `SUSPECT_SHAPES`** vivent
- * dans `src/model/sharing.ts` : c'est de la prose **sous** l'interface, donc du domaine
- * `model`, exactement comme les onze raisons du `layout` de `personalData.ts`. Les écrans
- * de ce domaine-ci les **affichent** (`PreferenceOutcome.reason`, `PersonalSuspect.clue`)
- * sans jamais les écrire.
+ * Les **raisons de `PREFERENCE_RULES`** et les **7 indices de `SUSPECT_SHAPES`** sont
+ * versées au domaine `model` (`messages/<langue>/model.ts`, préfixes `sharingReason.*` et
+ * `suspectClue.*`) : c'est de la prose **sous** l'interface, exactement comme les onze
+ * raisons du `layout` de `personalData.ts`. `src/model/sharing.ts` n'en porte que les
+ * **clés** (`PreferenceOutcome.reasonKey`, `PersonalSuspect.clueKey`) ; les écrans de ce
+ * domaine-ci les affichent par `sharingProse(tr)`, sans jamais les écrire.
  */
 const sharing = {
   /* ==================================================================================

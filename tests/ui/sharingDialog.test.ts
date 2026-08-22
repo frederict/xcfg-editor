@@ -7,7 +7,7 @@ import { serializeJson } from '../../src/core/serializeJson'
 import { exportContainer, openContainer } from '../../src/core/container'
 import { sha256Hex } from '../../src/library/digest'
 import { PAGES_EXPORT_TYPE } from '../../src/model/scope'
-import { NEUTRAL_PHONE_NUMBER } from '../../src/model/sharing'
+import { NEUTRAL_PHONE_NUMBER, sharingProse } from '../../src/model/sharing'
 import { readLayout } from '../../src/model/layout'
 import { moveWidgetBy } from '../../src/model/mutations'
 import {
@@ -180,10 +180,15 @@ describe('l’inventaire montre ce qui part — formes-preservees.xcfg', () => {
     expect(last.text).toBe('Sol')
   })
 
-  it('chaque entrée porte une raison en français, prête à afficher', () => {
+  it('chaque entrée porte une raison, dite dans la langue du pilote', () => {
+    const french = sharingProse(tr)
+    const dutch = sharingProse(makeTranslator('nl', dutchMessages))
     for (const entry of plan.pages.replacements) {
-      expect(entry.reason.length).toBeGreaterThan(30)
-      expect(entry.reason).toMatch(/remplacé|remise|remis/)
+      expect(french.reason(entry).length).toBeGreaterThan(30)
+      expect(french.reason(entry)).toMatch(/remplacé|remise|remis/)
+      // Le pilote néerlandais lit du néerlandais, pas une phrase française au milieu de
+      // sa boîte : c'est précisément ce que le sélecteur de langue a révélé.
+      expect(dutch.reason(entry)).not.toBe(french.reason(entry))
     }
   })
 

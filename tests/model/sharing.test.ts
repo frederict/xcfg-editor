@@ -25,12 +25,16 @@ import {
   NEUTRAL_URL,
   replaceFreeTexts,
   RULED_PREFERENCE_KEYS,
+  sharingProse,
   SUSPECT_VALUE_LIMIT,
   tallyPreferences,
   UNKNOWN_FORMAT
 } from '../../src/model/sharing'
 import PERSONAL_KEYS from '../../src/model/personalKeys.json'
 import { collectPersonalData } from '../../src/model/personalData'
+import { makeTranslator } from '../../src/i18n/translate'
+import fr from '../../src/i18n/messages/fr'
+import nl from '../../src/i18n/messages/nl'
 import {
   ARCHIVE,
   BACKUP_2025,
@@ -258,6 +262,14 @@ const shortName = (path: string): string => path.split('/').pop() ?? path
 
 /* ============================================================== nom du fichier exporté */
 
+/**
+ * Les raisons et les indices de ce module sont des **clés de message** : c'est le
+ * traducteur qui en fait des phrases. Les tests passent donc par `sharingProse`, ce qui
+ * vérifie du même coup que chaque clé existe bien au catalogue.
+ */
+const FRENCH = sharingProse(makeTranslator('fr', fr))
+const DUTCH = sharingProse(makeTranslator('nl', nl))
+
 describe('buildExportFileName — la forme retenue', () => {
   const WHEN = new Date(2026, 7, 21, 15, 32, 7)
 
@@ -448,7 +460,7 @@ describe('anonymizeDocument — l’inventaire annonce ce qui va changer', () =>
       text: 'Vol du 8 février avec Amélie 🤘',
       replacement: 'Texte 1'
     })
-    expect(first.reason.length).toBeGreaterThan(20)
+    expect(FRENCH.reason(first).length).toBeGreaterThan(20)
   })
 
   it('couvre les quatorze textes du document, doublon compris', () => {
@@ -502,10 +514,12 @@ describe('anonymizeDocument — l’inventaire annonce ce qui va changer', () =>
 
   it('chaque remplacement porte sa raison, pour que rien ne soit décidé en silence', () => {
     for (const replacement of replacements) {
-      expect(replacement.reason.length).toBeGreaterThan(20)
+      expect(FRENCH.reason(replacement).length).toBeGreaterThan(20)
+      // La même raison existe dans les cinq langues, et elle n'est pas le français.
+      expect(DUTCH.reason(replacement)).not.toBe(FRENCH.reason(replacement))
     }
     // Aucune clé ne tombe sur la règle de repli : chacune a la sienne.
-    expect(replacements.some((r) => r.reason.includes('par précaution'))).toBe(false)
+    expect(replacements.some((r) => r.reasonKey === 'sharingReason.unknownFreeText')).toBe(false)
   })
 })
 
@@ -775,9 +789,9 @@ describe('anonymizeBackup — les réglages traversent, le pilote non', () => {
     expect(result.preferences.map((one) => one.key))
       .toEqual(['Pilot.Name', 'Glider.Name', 'Navigation.WaypointFiles'])
     for (const outcome of result.preferences) {
-      expect(outcome.reason.length).toBeGreaterThan(30)
+      expect(FRENCH.reason(outcome).length).toBeGreaterThan(30)
       // Aucun réglage ne tombe sur la règle de repli : chacun a la sienne.
-      expect(outcome.reason).not.toContain('par précaution')
+      expect(outcome.reasonKey).not.toBe('sharingReason.unknownPreference')
     }
     expect(result.preferences[0]).toMatchObject({
       key: 'Pilot.Name', treatment: 'replace', before: 'Amélie Exemple', after: 'Pilote'
@@ -919,6 +933,41 @@ describe('la table des règles couvre exactement les réglages déclarés person
     expect([...RULED_PREFERENCE_KEYS].sort()).toEqual(declared)
     expect(declared).toHaveLength(PERSONAL_KEYS.meta.keyCount)
   })
+
+  /**
+   * **La liste que le manuel demande de relire avant de télécharger, dans les cinq
+   * langues.** Un pilote néerlandais qui lit « Votre nom, saisi tel quel » au milieu de sa
+   * boîte ne relit rien du tout : c'est ce que le sélecteur de langue a mis au jour, et
+   * c'est ce que ce test empêche de revenir.
+   */
+  it('dit chacun des 44 traitements dans les cinq langues, sans repli sur le français', () => {
+    const backup = anonymizeBackup(parseJson(readFileSync(BACKUP_2026, 'utf8')))
+    expect(backup.preferences.length).toBeGreaterThan(0)
+    for (const outcome of backup.preferences) {
+      const french = FRENCH.reason(outcome)
+      expect(french.length, outcome.key).toBeGreaterThan(30)
+      expect(DUTCH.reason(outcome), outcome.key).not.toBe(french)
+    }
+  })
+
+  /**
+   * **Le regroupement « une raison commune se dit une fois » tient à l'unicité de la
+   * clé.** `sharingDialog.ts` compare les `reasonKey` d'un groupe : si les dix-sept
+   * réglages à identifiant portaient chacun leur clé, la même phrase reparaîtrait
+   * dix-sept fois de suite dans une boîte qui s'ouvre à chaque enregistrement.
+   */
+  it('ne donne qu’une clé aux dix-sept identifiants, et qu’une aux quatre choix Livetrack', () => {
+    const keyOf = (key: string): string => {
+      const outcome = anonymizeBackup(parseJson(`{"preferences":{"${key}":"x"}}`)).preferences[0]
+      return outcome?.reasonKey ?? '(absent)'
+    }
+    const credentials = ['XContest.Password', 'SkySight.Username', 'Sec.ProUid', 'SafeSky.Salt']
+    expect(new Set(credentials.map(keyOf)).size).toBe(1)
+    const livetrack = ['Livetrack.Enabled', 'Livetrack.ShowPublic', 'Livetrack.FlightPublic']
+    expect(new Set(livetrack.map(keyOf)).size).toBe(1)
+    // Deux raisons voisines mais distinctes ne se confondent pas pour autant.
+    expect(keyOf('SafeSky.Icao')).not.toBe(keyOf('SafeSky.AutoIcao'))
+  })
 })
 
 /* ================== ce qui a l'air d'une donnée personnelle sans être déclaré */
@@ -982,8 +1031,10 @@ describe('findPersonalSuspects — muet sur le corpus, parlant sur ce qui a ét�
   ].join('\n')
 
   const suspects = findPersonalSuspects(parseJson(PLANTED))
-  const at = (path: string): string | undefined =>
-    suspects.find((one) => one.path === path)?.clue
+  const at = (path: string): string | undefined => {
+    const found = suspects.find((one) => one.path === path)
+    return found === undefined ? undefined : FRENCH.clue(found)
+  }
 
   it('le document d’essai fait l’aller-retour à l’octet près', () => {
     expect(serializeJson(parseJson(PLANTED))).toBe(PLANTED)
@@ -1001,7 +1052,7 @@ describe('findPersonalSuspects — muet sur le corpus, parlant sur ce qui a ét�
     const found = suspects.find((one) => one.path.endsWith('reglageFutur'))!
     expect(found.value).toBe('Ma page à moi')
     expect(found.home).toBe('layout')
-    expect(found.clue).toMatch(/espace|accentuées/)
+    expect(FRENCH.clue(found)).toMatch(/espace|accentuées/)
   })
 
   it('ne crie ni sur une énumération, ni sur un nombre, ni sur la carte d’identité', () => {

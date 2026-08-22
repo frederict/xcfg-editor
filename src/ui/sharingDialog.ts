@@ -9,11 +9,13 @@ import {
   carriesPreferences,
   changedPreferenceCount,
   documentExportType,
+  sharingProse,
   tallyPreferences,
   type FreeTextReplacement,
   type PersonalSuspect,
   type PreferenceOutcome,
-  type PreferenceTally
+  type PreferenceTally,
+  type SharingProse
 } from '../model/sharing'
 import {
   collectPersonalData,
@@ -538,7 +540,7 @@ export interface SharingDialogHandle {
 }
 
 function replacementItem(
-  entry: FreeTextReplacement, language: string, tr: Translator
+  entry: FreeTextReplacement, language: string, tr: Translator, why: SharingProse
 ): HTMLElement {
   const item = el('li', 'sharing__item')
   item.append(el('p', 'sharing__where', describeLocation(entry, language, tr)))
@@ -550,9 +552,9 @@ function replacementItem(
     el('span', 'sharing__arrow', '→'),
     el('span', 'sharing__to', displayedReplacement(entry.replacement, tr))
   )
-  // `entry.reason` vient de `model/sharing.ts` : c'est la prose du domaine `model`, et ce
-  // module ne fait que l'afficher.
-  item.append(swap, el('p', 'sharing__why', entry.reason))
+  // `entry.reasonKey` vient de `model/sharing.ts` : c'est la prose du domaine `model`, et
+  // ce module ne fait que l'afficher, dans la langue du pilote.
+  item.append(swap, el('p', 'sharing__why', why.reason(entry)))
   return item
 }
 
@@ -589,7 +591,8 @@ function replacementsSection(
   options: { remindPreferences: boolean; caveat: string },
   language: string,
   tr: Translator,
-  prose: PersonalProse
+  prose: PersonalProse,
+  why: SharingProse
 ): HTMLElement {
   const section = el('section', 'sharing__section')
   section.append(el('h3', 'sharing__heading', tr.t('sharing.freeTextHeading')))
@@ -610,7 +613,7 @@ function replacementsSection(
   ))
 
   const list = el('ol', 'sharing__list')
-  for (const entry of replacements) list.append(replacementItem(entry, language, tr))
+  for (const entry of replacements) list.append(replacementItem(entry, language, tr, why))
   section.append(list)
   const reminder = options.remindPreferences ? preferencesReminder(personal, tr) : undefined
   if (reminder) section.append(reminder)
@@ -644,7 +647,8 @@ const TREATMENT_HEADINGS = {
  * longue finit par ne plus être lue du tout.
  */
 function preferenceItem(
-  outcome: PreferenceOutcome, withReason: boolean, tr: Translator, prose: PersonalProse
+  outcome: PreferenceOutcome, withReason: boolean, tr: Translator, prose: PersonalProse,
+  why: SharingProse
 ): HTMLElement {
   // Le modificateur porte le traitement : c'est lui qui décide si la valeur d'origine se
   // barre. Barrer une valeur conservée dirait le contraire de ce qui se passe.
@@ -669,7 +673,7 @@ function preferenceItem(
   }
 
   item.append(swap)
-  if (withReason) item.append(el('p', 'sharing__why', outcome.reason))
+  if (withReason) item.append(el('p', 'sharing__why', why.reason(outcome)))
   return item
 }
 
@@ -682,7 +686,7 @@ function preferenceItem(
  * taire, « conservés tels quels ».
  */
 function preferencesSection(
-  plan: BackupPlan, tr: Translator, prose: PersonalProse
+  plan: BackupPlan, tr: Translator, prose: PersonalProse, why: SharingProse
 ): HTMLElement {
   const section = el('section', 'sharing__section')
   section.append(el('h3', 'sharing__heading', tr.t('sharing.preferencesHeading')))
@@ -718,14 +722,17 @@ function preferencesSection(
     // Une raison commune se dit une fois. Les cinq emplacements vides d'un backup réel, et
     // les quatre choix de diffusion Livetrack, portent chacun la même phrase : la répéter
     // n'ajoute rien et fait quatre écrans de défilement.
-    const shared = entries.length > 1 && entries.every((one) => one.reason === entries[0]!.reason)
-      ? entries[0]!.reason
+    // La comparaison porte sur la **clé**, non sur la phrase : c'est ce qui fait qu'une
+    // raison partagée par dix-sept réglages reste une seule clé, donc un seul paragraphe.
+    const first = entries[0]!
+    const shared = entries.length > 1 && entries.every((one) => one.reasonKey === first.reasonKey)
+      ? why.reason(first)
       : undefined
     if (shared !== undefined) group.append(el('p', 'sharing__note', shared))
 
     const list = el('ul', 'sharing__list sharing__list--plain')
     for (const entry of entries) {
-      list.append(preferenceItem(entry, shared === undefined, tr, prose))
+      list.append(preferenceItem(entry, shared === undefined, tr, prose, why))
     }
     group.append(list)
     section.append(group)
@@ -747,7 +754,8 @@ function preferencesSection(
 const SUSPECTS_SHOWN = 12
 
 function suspectsSection(
-  suspects: readonly PersonalSuspect[], tr: Translator, prose: PersonalProse
+  suspects: readonly PersonalSuspect[], tr: Translator, prose: PersonalProse,
+  why: SharingProse
 ): HTMLElement {
   const section = el('section', 'sharing__section')
   section.append(el('h3', 'sharing__heading', tr.t('sharing.suspectsHeading')))
@@ -768,9 +776,9 @@ function suspectsSection(
     item.append(
       el('code', 'sharing__key', suspect.path),
       el('span', 'sharing__from', suspect.value),
-      // `suspect.clue` est l'un des sept indices de `model/sharing.ts` : prose du domaine
-      // `model`, affichée ici sans être réécrite.
-      el('span', 'sharing__why', `${prose.home(suspect.home)} — ${suspect.clue}`)
+      // `suspect.clueKey` désigne l'un des sept indices de `model/sharing.ts` : prose du
+      // domaine `model`, affichée ici sans être réécrite.
+      el('span', 'sharing__why', `${prose.home(suspect.home)} — ${why.clue(suspect)}`)
     )
     list.append(item)
   }
@@ -915,6 +923,7 @@ function annexesSection(
 export function renderSharingDialog(options: SharingDialogOptions): SharingDialogHandle {
   const tr = options.tr
   const prose = personalProse(tr)
+  const why = sharingProse(tr)
   const language = options.language ?? 'fr'
   const when = (options.now ?? (() => new Date()))()
   const plan = planSharing(options.source, when)
@@ -1047,15 +1056,15 @@ export function renderSharingDialog(options: SharingDialogOptions): SharingDialo
   const residual = tr.t('sharing.residualNote')
 
   if (backupPanel !== undefined) {
-    backupPanel.append(preferencesSection(plan.backup, tr, prose))
+    backupPanel.append(preferencesSection(plan.backup, tr, prose, why))
     backupPanel.append(replacementsSection(
       plan.backup.replacements, plan.personal,
-      { remindPreferences: false, caveat: residual }, language, tr, prose
+      { remindPreferences: false, caveat: residual }, language, tr, prose, why
     ))
     backupPanel.append(backupCostSection(tr))
     const backupAnnexes = annexesSection(plan.backup, tr)
     if (backupAnnexes) backupPanel.append(backupAnnexes)
-    backupPanel.append(suspectsSection(plan.backup.suspects, tr, prose))
+    backupPanel.append(suspectsSection(plan.backup.suspects, tr, prose, why))
   }
 
   pagesPanel.append(droppedSection(plan.pages, tr))
@@ -1063,9 +1072,9 @@ export function renderSharingDialog(options: SharingDialogOptions): SharingDialo
   if (pagesAnnexes) pagesPanel.append(pagesAnnexes)
   pagesPanel.append(replacementsSection(
     plan.pages.replacements, plan.personal,
-    { remindPreferences: true, caveat: residual }, language, tr, prose
+    { remindPreferences: true, caveat: residual }, language, tr, prose, why
   ))
-  pagesPanel.append(suspectsSection(plan.pages.suspects, tr, prose))
+  pagesPanel.append(suspectsSection(plan.pages.suspects, tr, prose, why))
 
   const inventory = personalSection(plan.personal, tr, prose)
   if (inventory) box.append(inventory)

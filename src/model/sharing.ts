@@ -16,6 +16,10 @@ import {
   type PersonalHome,
   type PersonalKind
 } from './personalData'
+// `import type` : effacé à la compilation. Ce module **ne dépend pas** de `src/i18n/` à
+// l'exécution — il rend des clés de message, et `sharingProse(tr)` les traduit pour qui
+// tient un traducteur. Voir « La prose de ce module », plus bas.
+import type { MessageKey, Translator } from '../i18n'
 
 /**
  * Le socle d'un export **partageable** : un nom de fichier qui ne dit rien du pilote, et
@@ -54,11 +58,16 @@ import {
  * ce qui ressemble à une donnée personnelle sans être déclaré — il avertit, il ne remplace
  * pas.
  *
- * ## Ce module n'affiche rien
+ * ## Ce module n'affiche rien, et ne connaît aucune langue
  *
- * Il rend des fonctions et des données. Les textes portés par `reason` sont destinés à
- * être montrés au pilote — ils sont en français, comme le reste de l'interface — mais
- * c'est l'interface qui décide où et comment.
+ * Il rend des fonctions et des données. Ce qui est destiné au pilote — la raison de
+ * chaque remplacement, l'indice de chaque soupçon — est porté par une **clé de message**
+ * (`reasonKey`, `clueKey`), jamais par une phrase : c'est l'interface qui décide où et
+ * comment l'afficher, et `sharingProse(tr)` qui la dit dans la langue du pilote.
+ *
+ * Le traducteur est **passé**, jamais importé : de `src/i18n/` ce fichier ne prend que des
+ * types, effacés à la compilation. Même motif que `personalProse(tr)` dans
+ * `personalData.ts` — voir `src/i18n/CLAUDE.md` § 5.
  */
 
 /* ------------------------------------------------------------------ nom du fichier */
@@ -234,6 +243,17 @@ export function documentExportType(document: JsonNode): string | undefined {
 
 /* --------------------------------------------------------------- remplacement des textes */
 
+/**
+ * Les clés de raison de ce module, et elles seules. `MessageKey` tout entier serait trop
+ * large : `t()` exigerait alors les repères de la plus exigeante des phrases du catalogue.
+ * Restreindre au préfixe rend le type juste — aucune de ces raisons n'attend de repère.
+ * Même motif que `LayoutReasonKey` dans `personalData.ts`.
+ */
+export type SharingReasonKey = Extract<MessageKey, `sharingReason.${string}`>
+
+/** Les sept indices de `SUSPECT_SHAPES`, même raisonnement. */
+export type SuspectClueKey = Extract<MessageKey, `suspectClue.${string}`>
+
 /** Un numéro qu'aucun réseau ne peut joindre — voir `FREE_TEXT_RULES`. */
 export const NEUTRAL_PHONE_NUMBER = '+00 000 00 00 00'
 
@@ -252,8 +272,12 @@ interface FreeTextRule {
    * partir de 1 : deux titres différents restent deux titres différents.
    */
   replacement: (rank: number) => string
-  /** Ce que l'interface dira au pilote pour justifier ce remplacement. */
-  reason: string
+  /**
+   * Ce que l'interface dira au pilote pour justifier ce remplacement — une **clé de
+   * message**, pas une phrase : cette liste est celle que le manuel demande de relire
+   * avant de télécharger, et elle se lit dans la langue du pilote.
+   */
+  reasonKey: SharingReasonKey
 }
 
 /**
@@ -304,57 +328,47 @@ interface FreeTextRule {
 const FREE_TEXT_RULES: Record<string, FreeTextRule> = {
   titletext: {
     replacement: (rank) => `Titre ${rank}`,
-    reason: 'Titre personnalisé du gadget : remplacé par un titre neutre, numéroté, pour '
-      + 'que la mise en page et la distinction entre gadgets soient conservées.'
+    reasonKey: 'sharingReason.titletext'
   },
   text: {
     replacement: (rank) => `Texte ${rank}`,
-    reason: 'Contenu entier d’un gadget de texte libre : remplacé par un texte court, '
-      + 'pour que le cadre reste rempli sans déborder.'
+    reasonKey: 'sharingReason.text'
   },
   fullName: {
     replacement: (rank) => `Contact ${rank}`,
-    reason: 'Nom d’une personne enregistrée sur un bouton d’appel : remplacé par un '
-      + 'libellé neutre.'
+    reasonKey: 'sharingReason.fullName'
   },
   phoneNumber: {
     replacement: () => NEUTRAL_PHONE_NUMBER,
-    reason: 'Numéro de téléphone : remplacé par un numéro au même gabarit mais non '
-      + 'composable — « 00 » n’est pas un indicatif de pays.'
+    reasonKey: 'sharingReason.phoneNumber'
   },
   url: {
     replacement: () => NEUTRAL_URL,
-    reason: 'Adresse web saisie, qui peut porter un jeton ou un identifiant : remplacée '
-      + 'par une adresse du domaine réservé « .invalid », qui ne résout jamais.'
+    reasonKey: 'sharingReason.url'
   },
   title: {
     replacement: (rank) => `Bouton ${rank}`,
-    reason: 'Libellé d’un bouton de lancement : remplacé par un libellé neutre, numéroté.'
+    reasonKey: 'sharingReason.title'
   },
   name: {
     replacement: (rank) => `Application ${rank}`,
-    reason: 'Nom de l’application visée par un bouton de lancement : remplacé par un '
-      + 'libellé neutre, numéroté.'
+    reasonKey: 'sharingReason.name'
   },
   action: {
     replacement: () => NEUTRAL_INTENT_ACTION,
-    reason: 'Action Android d’un bouton de lancement, qui peut être un URI complet : '
-      + 'remplacée par l’action de test interne que XCTrack pose sur un bouton neuf.'
+    reasonKey: 'sharingReason.action'
   },
   filter: {
     replacement: () => '',
-    reason: 'Filtre de journal saisi : remis à vide, c’est-à-dire « pas de filtre », la '
-      + 'valeur neutre du réglage.'
+    reasonKey: 'sharingReason.filter'
   },
   suffix: {
     replacement: () => '',
-    reason: 'Texte placé après la valeur affichée : remis à vide, c’est-à-dire « pas de '
-      + 'suffixe », la valeur neutre du réglage.'
+    reasonKey: 'sharingReason.suffix'
   },
   event: {
     replacement: () => NEUTRAL_TEST_EVENT,
-    reason: 'Nom d’événement saisi : remplacé par l’événement de test que XCTrack pose '
-      + 'sur un gadget neuf.'
+    reasonKey: 'sharingReason.event'
   }
 }
 
@@ -368,15 +382,18 @@ const FREE_TEXT_RULES: Record<string, FreeTextRule> = {
  */
 const UNKNOWN_KEY_RULE: FreeTextRule = {
   replacement: (rank) => `Texte ${rank}`,
-  reason: 'Texte libre sans règle propre : remplacé par un texte neutre, par précaution.'
+  reasonKey: 'sharingReason.unknownFreeText'
 }
 
 /** Un texte remplacé, son emplacement, sa valeur d'origine, et ce qui a pris sa place. */
 export interface FreeTextReplacement extends FreeText {
   /** Le texte posé à la place. Vide quand la valeur neutre du réglage est la chaîne vide. */
   replacement: string
-  /** Pourquoi cette clé est remplacée, et par quoi. Destiné à être montré au pilote. */
-  reason: string
+  /**
+   * Pourquoi cette clé est remplacée, et par quoi. Destiné à être montré au pilote —
+   * `sharingProse(tr).reason()` en rend la phrase.
+   */
+  reasonKey: SharingReasonKey
 }
 
 /** Le dernier segment d'un chemin de clé : `'contact/phoneNumber'` → `'phoneNumber'`. */
@@ -404,7 +421,7 @@ function replaceFreeTextsInPlace(document: JsonNode): FreeTextReplacement[] {
     const replacement = rule.replacement(rank)
     // `encode` échappe ce qui doit l'être : on n'écrit jamais dans `raw` un texte brut.
     node.raw = encode(replacement)
-    replacements.push({ ...location, replacement, reason: rule.reason })
+    replacements.push({ ...location, replacement, reasonKey: rule.reasonKey })
   }
 
   return replacements
@@ -518,8 +535,8 @@ interface PreferenceRule {
    * si la ligne en porte effectivement une — voir `applyPreferenceRule`.
    */
   replacement?: string
-  /** Ce que l'interface dira au pilote pour justifier ce traitement. */
-  reason: string
+  /** Ce que l'interface dira au pilote pour justifier ce traitement — une clé de message. */
+  reasonKey: SharingReasonKey
 }
 
 /**
@@ -530,10 +547,7 @@ interface PreferenceRule {
  * Elle est écrite quand même : le jour où une version en exporte une, le geste doit être
  * déjà décidé, et il ne doit pas être « poser un faux jeton ».
  */
-const CREDENTIAL_REASON =
-  'Identifiant ou mot de passe. La ligne entière est retirée : un identifiant n’a pas de '
-  + 'valeur neutre, et en fabriquer une ferait échouer la connexion du destinataire au '
-  + 'lieu de la laisser simplement vide.'
+const CREDENTIAL_REASON: SharingReasonKey = 'sharingReason.credential'
 
 /**
  * **Ce qu'on fait de chacun des 44 réglages personnels, et pourquoi.**
@@ -578,174 +592,93 @@ const PREFERENCE_RULES: Record<string, PreferenceRule> = {
   'ActiveLook.Device': {
     treatment: 'replace',
     replacement: '',
-    reason: 'Les lunettes ActiveLook appairées à votre appareil. Remises à la valeur '
-      + 'd’usine relevée dans XCTrack — la chaîne vide, c’est-à-dire « aucunes lunettes ».'
+    reasonKey: 'sharingReason.activeLookDevice'
   },
   'ActiveLook.Name': {
     treatment: 'replace',
     replacement: '',
-    reason: 'Le nom de vos lunettes ActiveLook. Remis à la valeur d’usine relevée dans '
-      + 'XCTrack — la chaîne vide, c’est-à-dire « aucunes lunettes ».'
+    reasonKey: 'sharingReason.activeLookName'
   },
-  'Airspace.Files': {
-    treatment: 'drop',
-    reason: 'Les fichiers d’espaces aériens que vous avez chargés. La ligne entière est '
-      + 'retirée : ce sont des fichiers de votre appareil, que le destinataire n’a pas.'
-  },
-  'App.GuessLatitude': {
-    treatment: 'drop',
-    reason: 'La position présumée de votre appareil — votre domicile, en pratique. La '
-      + 'ligne entière est retirée : aucune coordonnée de remplacement ne serait honnête.'
-  },
-  'App.GuessLongitude': {
-    treatment: 'drop',
-    reason: 'La position présumée de votre appareil — votre domicile, en pratique. La '
-      + 'ligne entière est retirée : aucune coordonnée de remplacement ne serait honnête.'
-  },
+  'Airspace.Files': { treatment: 'drop', reasonKey: 'sharingReason.airspaceFiles' },
+  // Les deux coordonnées du domicile présumé partagent leur raison : la boîte de partage
+  // la dit **une fois** pour le groupe, et cela ne tient qu'à l'unicité de la clé.
+  'App.GuessLatitude': { treatment: 'drop', reasonKey: 'sharingReason.guessedPosition' },
+  'App.GuessLongitude': { treatment: 'drop', reasonKey: 'sharingReason.guessedPosition' },
   'Devel.TTS': {
     treatment: 'replace',
     replacement: 'Texte',
-    reason: 'Un texte que vous avez saisi pour la synthèse vocale. Remplacé par un texte '
-      + 'court et neutre, pour que le réglage reste renseigné.'
+    reasonKey: 'sharingReason.speechText'
   },
   'Devel.TTSAbbr': {
     treatment: 'replace',
     replacement: 'Texte',
-    reason: 'Un texte que vous avez saisi pour la synthèse vocale. Remplacé par un texte '
-      + 'court et neutre, pour que le réglage reste renseigné.'
+    reasonKey: 'sharingReason.speechText'
   },
-  'Glider.Ctg': {
-    treatment: 'keep',
-    reason: 'La catégorie de votre voile. Conservée : c’est un réglage de vol, elle ne '
-      + 'porte ni nom, ni numéro, ni adresse, et c’est souvent elle qu’on veut partager.'
-  },
-  'Glider.CtgHG': {
-    treatment: 'keep',
-    reason: 'La catégorie de votre aile delta. Conservée : c’est un réglage de vol, elle '
-      + 'ne porte ni nom, ni numéro, ni adresse, et c’est souvent elle qu’on veut partager.'
-  },
+  'Glider.Ctg': { treatment: 'keep', reasonKey: 'sharingReason.gliderCategory' },
+  'Glider.CtgHG': { treatment: 'keep', reasonKey: 'sharingReason.hangGliderCategory' },
   'Glider.Name': {
     treatment: 'replace',
     replacement: 'Voile',
-    reason: 'Le nom de votre voile — modèle et taille suffisent à vous reconnaître dans un '
-      + 'club. Remplacé par un mot neutre, pour que le réglage reste renseigné.'
+    reasonKey: 'sharingReason.gliderName'
   },
   'Glider._model': {
     treatment: 'replace',
     replacement: '',
-    reason: 'Le modèle de votre voile. Remis à la valeur d’usine relevée dans XCTrack — la '
-      + 'chaîne vide, c’est-à-dire « aucun modèle choisi ».'
+    reasonKey: 'sharingReason.gliderModel'
   },
   'Glider._producer': {
     treatment: 'replace',
     replacement: '',
-    reason: 'Le constructeur de votre voile. Remis à la valeur d’usine relevée dans '
-      + 'XCTrack — la chaîne vide, c’est-à-dire « aucun constructeur choisi ».'
+    reasonKey: 'sharingReason.gliderProducer'
   },
-  'Internal.ProcessedBootstraps': { treatment: 'drop', reason: CREDENTIAL_REASON },
-  'Livetrack.ClaimContest': {
-    treatment: 'keep',
-    reason: 'Un choix de diffusion Livetrack que vous avez fait. Conservé : c’est un '
-      + 'réglage, pas une donnée — il ne porte ni nom, ni identifiant de compte.'
-  },
-  'Livetrack.DeviceId': { treatment: 'drop', reason: CREDENTIAL_REASON },
-  'Livetrack.Enabled': {
-    treatment: 'keep',
-    reason: 'Un choix de diffusion Livetrack que vous avez fait. Conservé : c’est un '
-      + 'réglage, pas une donnée — il ne porte ni nom, ni identifiant de compte.'
-  },
-  'Livetrack.FlightPublic': {
-    treatment: 'keep',
-    reason: 'Un choix de diffusion Livetrack que vous avez fait. Conservé : c’est un '
-      + 'réglage, pas une donnée — il ne porte ni nom, ni identifiant de compte.'
-  },
-  'Livetrack.QuickMessages': {
-    treatment: 'drop',
-    reason: 'Les messages rapides que vous avez écrits pour le Livetracking. La ligne '
-      + 'entière est retirée : c’est une liste de vos phrases, et le destinataire écrira '
-      + 'les siennes.'
-  },
-  'Livetrack.ShowPublic': {
-    treatment: 'keep',
-    reason: 'Un choix de diffusion Livetrack que vous avez fait. Conservé : c’est un '
-      + 'réglage, pas une donnée — il ne porte ni nom, ni identifiant de compte.'
-  },
-  'Mapsforge.MapFiles': {
-    treatment: 'drop',
-    reason: 'Les cartes hors-ligne installées sur votre appareil. La ligne entière est '
-      + 'retirée : ce sont des fichiers de votre appareil, que le destinataire n’a pas.'
-  },
+  'Internal.ProcessedBootstraps': { treatment: 'drop', reasonKey: CREDENTIAL_REASON },
+  'Livetrack.ClaimContest': { treatment: 'keep', reasonKey: 'sharingReason.livetrackChoice' },
+  'Livetrack.DeviceId': { treatment: 'drop', reasonKey: CREDENTIAL_REASON },
+  'Livetrack.Enabled': { treatment: 'keep', reasonKey: 'sharingReason.livetrackChoice' },
+  'Livetrack.FlightPublic': { treatment: 'keep', reasonKey: 'sharingReason.livetrackChoice' },
+  'Livetrack.QuickMessages': { treatment: 'drop', reasonKey: 'sharingReason.quickMessages' },
+  'Livetrack.ShowPublic': { treatment: 'keep', reasonKey: 'sharingReason.livetrackChoice' },
+  'Mapsforge.MapFiles': { treatment: 'drop', reasonKey: 'sharingReason.offlineMaps' },
   'Mapsforge.ThemeFile': {
     treatment: 'replace',
     replacement: 'DEFAULT',
-    reason: 'Le thème de carte que vous avez installé, désigné par son chemin. Remis à la '
-      + 'valeur d’usine relevée dans XCTrack, « DEFAULT » : la carte du destinataire '
-      + 's’affiche, au lieu de chercher un fichier qu’il n’a pas.'
+    reasonKey: 'sharingReason.mapTheme'
   },
-  'Maverick.SdkKey': { treatment: 'drop', reason: CREDENTIAL_REASON },
-  'Navigation.State': {
-    treatment: 'drop',
-    reason: 'Votre tâche en cours, points de virage et coordonnées compris. La ligne '
-      + 'entière est retirée : son schéma change à chaque version de XCTrack, et une '
-      + 'structure de remplacement serait une forme que l’application n’écrit jamais.'
-  },
-  'Navigation.WaypointFiles': {
-    treatment: 'drop',
-    reason: 'Vos fichiers de waypoints — leur nom désigne souvent la compétition à '
-      + 'laquelle vous participez. La ligne entière est retirée : ce sont des fichiers de '
-      + 'votre appareil, que le destinataire n’a pas.'
-  },
+  'Maverick.SdkKey': { treatment: 'drop', reasonKey: CREDENTIAL_REASON },
+  'Navigation.State': { treatment: 'drop', reasonKey: 'sharingReason.navigationState' },
+  'Navigation.WaypointFiles': { treatment: 'drop', reasonKey: 'sharingReason.waypointFiles' },
   'Pilot.Name': {
     treatment: 'replace',
     replacement: 'Pilote',
-    reason: 'Votre nom, saisi tel quel. Remplacé par un mot neutre plutôt que vidé : '
-      + 'XCTrack l’affiche et l’envoie avec le Livetracking, et un nom vide n’est pas une '
-      + 'situation qu’on lui connaît.'
+    reasonKey: 'sharingReason.pilotName'
   },
-  'SafeSky.Address': { treatment: 'drop', reason: CREDENTIAL_REASON },
-  'SafeSky.Amt': { treatment: 'drop', reason: CREDENTIAL_REASON },
-  'SafeSky.AnonymousUUID': { treatment: 'drop', reason: CREDENTIAL_REASON },
-  'SafeSky.AutoIcao': {
-    treatment: 'drop',
-    reason: 'L’immatriculation déduite de votre aéronef. La ligne entière est retirée : '
-      + 'une immatriculation désigne un appareil et son propriétaire, et en inventer une '
-      + 'reviendrait à en désigner un autre.'
-  },
-  'SafeSky.Icao': {
-    treatment: 'drop',
-    reason: 'L’immatriculation de votre aéronef. La ligne entière est retirée : une '
-      + 'immatriculation désigne un appareil et son propriétaire, et en inventer une '
-      + 'reviendrait à en désigner un autre.'
-  },
-  'SafeSky.Salt': { treatment: 'drop', reason: CREDENTIAL_REASON },
-  'Sec.GpsTimeOffset': { treatment: 'drop', reason: CREDENTIAL_REASON },
-  'Sec.ProToTimestamp': { treatment: 'drop', reason: CREDENTIAL_REASON },
-  'Sec.ProUid': { treatment: 'drop', reason: CREDENTIAL_REASON },
-  'Sec.Xcontest.Uid': { treatment: 'drop', reason: CREDENTIAL_REASON },
-  'Sec.test': { treatment: 'drop', reason: CREDENTIAL_REASON },
-  'Sensors.Configuration': {
-    treatment: 'drop',
-    reason: 'Vos capteurs appairés, adresses Bluetooth comprises. La ligne entière est '
-      + 'retirée : le destinataire appaire les siens, qui sont de toute façon les seuls '
-      + 'qu’il puisse utiliser.'
-  },
+  'SafeSky.Address': { treatment: 'drop', reasonKey: CREDENTIAL_REASON },
+  'SafeSky.Amt': { treatment: 'drop', reasonKey: CREDENTIAL_REASON },
+  'SafeSky.AnonymousUUID': { treatment: 'drop', reasonKey: CREDENTIAL_REASON },
+  'SafeSky.AutoIcao': { treatment: 'drop', reasonKey: 'sharingReason.derivedRegistration' },
+  'SafeSky.Icao': { treatment: 'drop', reasonKey: 'sharingReason.registration' },
+  'SafeSky.Salt': { treatment: 'drop', reasonKey: CREDENTIAL_REASON },
+  'Sec.GpsTimeOffset': { treatment: 'drop', reasonKey: CREDENTIAL_REASON },
+  'Sec.ProToTimestamp': { treatment: 'drop', reasonKey: CREDENTIAL_REASON },
+  'Sec.ProUid': { treatment: 'drop', reasonKey: CREDENTIAL_REASON },
+  'Sec.Xcontest.Uid': { treatment: 'drop', reasonKey: CREDENTIAL_REASON },
+  'Sec.test': { treatment: 'drop', reasonKey: CREDENTIAL_REASON },
+  'Sensors.Configuration': { treatment: 'drop', reasonKey: 'sharingReason.sensors' },
   'Sensors.LastNetLocation': {
     treatment: 'replace',
     replacement: '',
-    reason: 'La dernière position ayant servi à interroger le QNH. Remise à la valeur '
-      + 'd’usine relevée dans XCTrack — la chaîne vide, c’est-à-dire « aucune position ».'
+    reasonKey: 'sharingReason.lastNetLocation'
   },
-  'SkySight.Password': { treatment: 'drop', reason: CREDENTIAL_REASON },
-  'SkySight.Username': { treatment: 'drop', reason: CREDENTIAL_REASON },
+  'SkySight.Password': { treatment: 'drop', reasonKey: CREDENTIAL_REASON },
+  'SkySight.Username': { treatment: 'drop', reasonKey: CREDENTIAL_REASON },
   'Testing.IGCReplayFilename': {
     treatment: 'replace',
     replacement: '',
-    reason: 'Un de vos fichiers de trace. Remis à la valeur d’usine relevée dans '
-      + 'XCTrack — la chaîne vide, c’est-à-dire « aucune trace à rejouer ».'
+    reasonKey: 'sharingReason.replayFile'
   },
-  'XContest.AuthToken': { treatment: 'drop', reason: CREDENTIAL_REASON },
-  'XContest.Password': { treatment: 'drop', reason: CREDENTIAL_REASON },
-  'XContest.Username': { treatment: 'drop', reason: CREDENTIAL_REASON }
+  'XContest.AuthToken': { treatment: 'drop', reasonKey: CREDENTIAL_REASON },
+  'XContest.Password': { treatment: 'drop', reasonKey: CREDENTIAL_REASON },
+  'XContest.Username': { treatment: 'drop', reasonKey: CREDENTIAL_REASON }
 }
 
 /**
@@ -758,8 +691,7 @@ const PREFERENCE_RULES: Record<string, PreferenceRule> = {
  */
 const UNKNOWN_PREFERENCE_RULE: PreferenceRule = {
   treatment: 'drop',
-  reason: 'Réglage personnel sans règle propre : la ligne entière est retirée, par '
-    + 'précaution.'
+  reasonKey: 'sharingReason.unknownPreference'
 }
 
 /**
@@ -767,10 +699,7 @@ const UNKNOWN_PREFERENCE_RULE: PreferenceRule = {
  * l'on comptait poser une chaîne, par exemple, parce qu'une version de XCTrack a changé la
  * forme du réglage. On retire alors la ligne au lieu d'écraser une structure par un mot.
  */
-const SHAPE_MISMATCH_REASON =
-  'Ce réglage ne porte pas le texte que sa règle attendait — sa forme a changé depuis le '
-  + 'relevé. La ligne entière est retirée : écrire un mot à la place d’une structure '
-  + 'produirait un fichier que XCTrack refuserait.'
+const SHAPE_MISMATCH_REASON: SharingReasonKey = 'sharingReason.shapeMismatch'
 
 /** Ce qu'il est advenu d'un réglage personnel des préférences, prêt à être montré. */
 export interface PreferenceOutcome {
@@ -786,7 +715,8 @@ export interface PreferenceOutcome {
   before: string
   /** Le texte posé à la place. Présent pour `replace` seulement, vide compris. */
   after?: string
-  reason: string
+  /** Pourquoi ce traitement — `sharingProse(tr).reason()` en rend la phrase. */
+  reasonKey: SharingReasonKey
 }
 
 /** Les quatre chiffres d'un traitement des préférences, **nommés**, jamais additionnés. */
@@ -830,33 +760,28 @@ function applyPreferenceRule(
   if (!finding.filled) {
     return {
       kept: value,
-      outcome: {
-        ...base,
-        treatment: 'empty',
-        reason: 'L’emplacement est présent dans le fichier, mais il ne porte rien : il n’y '
-          + 'a rien à remplacer, et la ligne reste telle quelle.'
-      }
+      outcome: { ...base, treatment: 'empty', reasonKey: 'sharingReason.emptySlot' }
     }
   }
 
   const rule = PREFERENCE_RULES[key] ?? UNKNOWN_PREFERENCE_RULE
 
   if (rule.treatment === 'keep') {
-    return { kept: value, outcome: { ...base, treatment: 'keep', reason: rule.reason } }
+    return { kept: value, outcome: { ...base, treatment: 'keep', reasonKey: rule.reasonKey } }
   }
 
   if (rule.treatment === 'replace' && rule.replacement !== undefined) {
     if (value.kind !== 'string') {
-      return { outcome: { ...base, treatment: 'drop', reason: SHAPE_MISMATCH_REASON } }
+      return { outcome: { ...base, treatment: 'drop', reasonKey: SHAPE_MISMATCH_REASON } }
     }
     return {
       // `encode` échappe ce qui doit l'être : on n'écrit jamais un texte brut dans `raw`.
       kept: { kind: 'string', raw: encode(rule.replacement) },
-      outcome: { ...base, treatment: 'replace', after: rule.replacement, reason: rule.reason }
+      outcome: { ...base, treatment: 'replace', after: rule.replacement, reasonKey: rule.reasonKey }
     }
   }
 
-  return { outcome: { ...base, treatment: 'drop', reason: rule.reason } }
+  return { outcome: { ...base, treatment: 'drop', reasonKey: rule.reasonKey } }
 }
 
 /**
@@ -983,29 +908,25 @@ export interface PersonalSuspect {
   home: PersonalHome
   /** Le chemin de la ligne : `Devel.Truc`, ou `landscape[0]/widgets[2]/monChamp`. */
   path: string
-  /** Ce qui a mis la puce à l'oreille, dit au pilote. */
-  clue: string
+  /** Ce qui a mis la puce à l'oreille — `sharingProse(tr).clue()` en rend la phrase. */
+  clueKey: SuspectClueKey
   /** La valeur telle qu'elle est écrite, tronquée à `SUSPECT_VALUE_LIMIT`. */
   value: string
 }
 
-const CLUE_URL = 'Ce texte a la forme d’une adresse web, qui peut porter un jeton ou un identifiant.'
-const CLUE_MAIL = 'Ce texte a la forme d’une adresse électronique.'
-const CLUE_PATH = 'Ce texte a la forme d’un chemin de fichier sur votre appareil.'
-const CLUE_HARDWARE = 'Ce texte a la forme d’une adresse d’appareil Bluetooth ou réseau.'
-const CLUE_PHONE = 'Ce texte a la forme d’un numéro de téléphone.'
-const CLUE_LETTERS =
-  'Ce texte porte des lettres accentuées ou des signes hors de l’alphabet latin simple : '
-  + 'il a été écrit, pas choisi dans une liste.'
-const CLUE_SENTENCE =
-  'Ce texte porte une espace : il se lit comme une phrase, pas comme une valeur à choisir '
-  + 'dans une liste.'
+const CLUE_URL: SuspectClueKey = 'suspectClue.url'
+const CLUE_MAIL: SuspectClueKey = 'suspectClue.mail'
+const CLUE_PATH: SuspectClueKey = 'suspectClue.path'
+const CLUE_HARDWARE: SuspectClueKey = 'suspectClue.hardware'
+const CLUE_PHONE: SuspectClueKey = 'suspectClue.phone'
+const CLUE_LETTERS: SuspectClueKey = 'suspectClue.letters'
+const CLUE_SENTENCE: SuspectClueKey = 'suspectClue.sentence'
 
 /**
  * Les formes qui trahissent une donnée personnelle, dans l'ordre où on les essaie — de la
  * plus précise à la plus large, pour que le motif annoncé soit le plus parlant des deux.
  */
-const SUSPECT_SHAPES: ReadonlyArray<{ shape: RegExp; clue: string }> = [
+const SUSPECT_SHAPES: ReadonlyArray<{ shape: RegExp; clue: SuspectClueKey }> = [
   { shape: /^[A-Za-z][A-Za-z0-9+.-]*:\/\//, clue: CLUE_URL },
   { shape: /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/, clue: CLUE_MAIL },
   { shape: /^(\/|[A-Za-z]:\\)/, clue: CLUE_PATH },
@@ -1037,7 +958,7 @@ const SUSPECT_SHAPES: ReadonlyArray<{ shape: RegExp; clue: string }> = [
  * remplacer en silence ce dont on n'est pas sûr abîmerait des réglages, et le pilote est
  * le seul à savoir s'il a écrit ce texte.
  */
-function personalClue(value: string): string | undefined {
+function personalClue(value: string): SuspectClueKey | undefined {
   if (value.trim() === '') return undefined
   for (const { shape, clue } of SUSPECT_SHAPES) {
     if (shape.test(value)) return clue
@@ -1054,7 +975,7 @@ function considerString(
 ): void {
   const value = decode(raw)
   const clue = personalClue(value)
-  if (clue !== undefined) found.push({ home, path, clue, value: truncate(value) })
+  if (clue !== undefined) found.push({ home, path, clueKey: clue, value: truncate(value) })
 }
 
 /**
@@ -1138,3 +1059,36 @@ export function findPersonalSuspects(document: JsonNode): PersonalSuspect[] {
 
 /** Les clés que `PREFERENCE_RULES` couvre — pour que les tests le vérifient sans exporter la table. */
 export const RULED_PREFERENCE_KEYS: readonly string[] = Object.keys(PREFERENCE_RULES)
+
+/* ---------------------------------------------------------------- la prose, traduite */
+
+/**
+ * Les phrases de ce module, dans la langue du pilote.
+ *
+ * ```ts
+ * const prose = sharingProse(tr)
+ * prose.reason(outcome)   // « Votre nom, saisi tel quel. Remplacé par un mot neutre… »
+ * prose.clue(suspect)     // « Ce texte a la forme d’une adresse électronique. »
+ * ```
+ *
+ * Un objet plutôt que deux fonctions à qui passer `tr` : la boîte de partage affiche
+ * quarante-quatre lignes et le construit une fois. Même forme que `personalProse(tr)`.
+ *
+ * ⚠️ **Une raison partagée reste une clé unique.** Dix-sept réglages portent
+ * `sharingReason.credential`, quatre `sharingReason.livetrackChoice` : la boîte groupe
+ * par traitement et **dit une fois** la raison commune à tout un groupe, en comparant les
+ * clés. Donner à chacun sa propre clé ferait réapparaître dix-sept fois la même phrase.
+ */
+export interface SharingProse {
+  /** Pourquoi ce texte ou ce réglage est traité ainsi, et par quoi il est remplacé. */
+  reason(entry: { reasonKey: SharingReasonKey }): string
+  /** Ce qui fait qu'un texte non déclaré a l'air d'une donnée personnelle. */
+  clue(suspect: { clueKey: SuspectClueKey }): string
+}
+
+export function sharingProse(tr: Translator): SharingProse {
+  return {
+    reason: (entry) => tr.t(entry.reasonKey),
+    clue: (suspect) => tr.t(suspect.clueKey)
+  }
+}
