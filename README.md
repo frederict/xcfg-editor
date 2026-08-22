@@ -769,29 +769,47 @@ python3 tools/build-preference-domains.py --surveys relevés/ \
 ```
 
 - **Les huit `Unit.*`** : XCTrack remplit ces listes en code, et les 55 relevés le
-  confirment — aucune version, dans aucune langue, ne les déclare en ressources. Ce qui
-  est publié est le **vocabulaire** des dix-huit codes d'unité (`m`, `km/h`, `FL`,
-  `100ft/min`…), lu dans l'énumération d'unités du bytecode, plus les valeurs vues dans
-  des fichiers réels. Le **domaine par clé reste `null`** : `Unit.Distance` vaut `m,km`
-  — une échelle de deux codes — quand `Unit.Altitude` vaut `m`, et rien ne dit quelles
-  combinaisons l'application propose. Une liste fermée serait un mensonge ; une liste de
-  suggestions à côté d'un champ libre ne l'est pas.
+  confirment — aucune version, dans aucune langue, ne les déclare en ressources. Sont
+  publiés le **vocabulaire** des dix-huit codes d'unité (`m`, `km/h`, `FL`, `100ft/min`…),
+  lu dans l'énumération d'unités du bytecode, les valeurs vues dans des fichiers réels, et
+  — depuis qu'il existe — le **domaine de chaque clé, relevé à la main sur l'appareil** :
+  l'écran natif des unités a été déplié liste par liste, chaque choix vérifié par un
+  export. `Unit.Distance` en propose quatre (`m,km`, `mi`, `yd,mi`, `nm`), `Unit.Altitude`
+  deux (`m`, `ft`). Deux réserves voyagent avec ce relevé et aucun écran n'a le droit de
+  les gommer : il ne vient que d'**un modèle et d'une version** (AIR³ 7.2, 1.0.3-beta), ce
+  que `units.domainSource` dit et que la page répète au pilote ; et **ce que le fichier
+  porte n'est pas ce que l'écran affiche** — l'appareil montre « m, km » et écrit `m,km`.
+  Fermer la liste reste donc légitime, à condition de laisser la porte ouverte à une
+  valeur du fichier qui n'y serait pas.
 - **Les quinze `Keys.*`** portent un code de touche Android nu. La table `KEYCODE_*` est
   lue dans l'`android.jar` du SDK installé — 338 constantes, sans JDK ni réseau, en
   analysant le fichier de classe — et le niveau d'API est consigné : un code plus récent
   que la table rend `null`, jamais un nom inventé. « 266 » devient donc
   `KEYCODE_STEM_2`.
 
-⚠️ Le bit `0x01000000` que portent quatre valeurs du corpus **se lit comme un appui long,
-et ce n'est qu'une déduction** : ôté, il laisse à chaque fois le code d'une touche que le
-même fichier affecte par ailleurs sans le bit (volume haut zoome, volume haut long change
-de page), et deux textes de XCTrack disent « Long press: ». Ce n'est pas lu dans le
-bytecode, le corpus ne vient que d'un appareil, et le fichier le déclare
-`longPressBitBasis: "inferred"`. Une interface doit le dire au pilote plutôt que de
-présenter la lecture comme un constat.
+⚠️ Le bit `0x01000000` que portent quatre valeurs du corpus vaut **appui long**. Ce fut
+longtemps une déduction, et le README l'a écrit comme telle ; l'écran natif de réglage des
+touches la confirme désormais en toutes lettres — la ligne portant `16777240`
+(= 24 | 0x1000000) y affiche l'appui long suivi du nom de la touche. Le fichier déclare
+donc `longPressBitBasis: "measured"`, et range à côté ce qui l'établit : cette ligne
+relevée à l'écran, les quatre valeurs du corpus qui rendent un code Android valide une
+fois le bit ôté, le fait que ces quatre codes soient exactement ceux que d'autres liaisons
+du même fichier portent sans le bit, et les textes de XCTrack qui disent « Long press: ».
+La dernière pièce consignée est celle qui **manque** : le relevé ne vient que d'un
+appareil et d'une version, et ce que le bit vaudrait sur une touche que cet appareil ne
+porte pas n'est pas vérifié.
 
-Ces deux bases sont **lues mais pas encore branchées** : ni le diagnostic « Version et
-compatibilité », ni l'écran des réglages ne s'en servent à ce jour.
+**L'écran des réglages s'en sert.** Les huit `Unit.*` y reçoivent leur liste relevée à la
+place du champ libre où le pilote pouvait écrire une valeur que son instrument refuserait,
+avec la mention de l'appareil, de la version et de la méthode d'où elle vient ; les quinze
+`Keys.*` cessent d'afficher l'entier du fichier et le séparent en deux — la touche d'un
+côté, avec son nom Android quand la table le donne, l'appui long de l'autre. Quand le
+`.xcfg` déclare un appareil qu'un relevé couvre, la page dit aussi quelles touches
+physiques ce modèle-là porte — trois sur l'AIR³ 7.2 — sans jamais écrire qu'une touche
+n'existe pas : le parc n'est pas homogène et le relevé ne couvre qu'un boîtier.
+
+Le diagnostic « Version et compatibilité », lui, ne consulte toujours ni l'une ni l'autre
+de ces deux bases.
 
 ### Les cinq noms de navigation — le seul catalogue sans script
 
