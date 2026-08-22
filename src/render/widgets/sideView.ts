@@ -4,13 +4,18 @@ import type { RenderSettings } from '../../model/preferences'
 /**
  * `WSideView` — coupe verticale du terrain (rendu-observe.md, « Vue de profil »).
  *
- * **Capture fiable, mais mal étiquetée sur le disque** : le fichier `widget-WCompass.png`
- * de la planche de diagnostic montre en réalité `WSideView` — son propre bandeau
- * l'indique sans ambiguïté (« PAGE 4 — WSideView »). C'est la seule capture plein écran
- * de ce widget disponible ; `widget-WSideView.png`, lui, re-montre `WVerticalGraph`
- * (bandeau « PAGE 5 — WVerticalGraph ») — voir compass.ts pour le même constat sur la
- * paire WCompass/WVarioColumn. Les couleurs et éléments ci-dessous sont mesurés dessus,
- * pixel par pixel.
+ * **Capture de référence** : `captures-air3/widget-WSideView-pleinecran.png`, dont le
+ * bandeau porte « PAGE 4 — WSideView ». Les couleurs et les éléments ci-dessous y sont
+ * mesurés pixel par pixel.
+ *
+ * ⚠ **Ce commentaire a porté jusqu'au 2026-08-22 une histoire d'étiquetage qui n'est plus
+ * vraie** : il disait mesurer sur `widget-WCompass.png`, « mal étiquetée », et renvoyait à
+ * un `widget-WSideView.png` qui aurait montré `WVerticalGraph`. Ni l'un ni l'autre de ces
+ * deux fichiers n'existe dans le dépôt de relevés ; les deux captures plein écran qui s'y
+ * trouvent — `widget-WCompass-pleinecran.png` et `widget-WSideView-pleinecran.png` — portent
+ * chacune le bandeau de son propre widget. Les mesures, elles, sont bonnes : elles ont été
+ * revérifiées sur la capture nommée ci-dessus (terrain beige, « NAMUR AREA » en beige
+ * clair, « TSA36 FLAWIN » en rose, repère « 500m », pictogramme en forme d'œil).
  *
  * Relevé : profil du terrain en aplat beige (`#e2cfaa` mesuré), un volume d'espace aérien
  * « normal » en beige plus clair (`#f9f0d7`, étiquette « NAMUR AREA »), un volume plus

@@ -6,7 +6,7 @@ import { measuredWidthEm, valueWidthEm } from '../textMetrics'
 
 /**
  * `WAirspaceProximity` — proximité d'espace aérien (rendu-observe.md, « Proximité
- * d'espace aérien », et `docs/reference/captures-air3/ecran-non-identifie-4.png` :
+ * d'espace aérien », et `docs/reference/captures-brutes/ecran-non-identifie-4.png` :
  * colonne de gauche, deux zones empilées « BEAUVECHAIN » puis « Charleroi », fond bleu
  * très clair, filet rouge entre les deux). C'est le seul des trois types de la tâche 18
  * qui soit bien documenté par une capture réelle — voir liveMessage.ts et
