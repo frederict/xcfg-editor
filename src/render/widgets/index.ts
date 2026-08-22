@@ -26,6 +26,7 @@ import { drawCompassDigital } from './compassDigital'
 import { drawEmitTestEvent, drawFreeText } from './freeText'
 import { drawAltitudeDataGraph } from './altitudeDataGraph'
 import { drawLogPeek, drawWebView } from './logPeek'
+import { drawLocation } from './location'
 
 /**
  * Les types « titre + valeur + unité » : les 23 du corpus, puis les 19 que la revue des
@@ -164,3 +165,10 @@ register('WAltitudeDataGraph', drawAltitudeDataGraph)
 // se dessine pas du tout, seule l'adresse qui sera chargée s'affiche (logPeek.ts).
 register('WLogPeek', drawLogPeek)
 register('WWebView', drawWebView)
+
+// Réserve n° 1 levée par le rejeu du 2026-08-22 : `WLocation` retombait sur le repli
+// générique faute d'une capture non caviardée — l'appareil y écrit les coordonnées
+// réelles du pilote. La position relevée en plein vol au-dessus de l'Espagne donne le
+// format sans exposer de domicile ; le dessin, lui, montre un exemple manifestement
+// fictif (location.ts).
+register('WLocation', drawLocation)

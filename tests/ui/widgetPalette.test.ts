@@ -584,10 +584,14 @@ describe('la vignette', () => {
     // Trois sortes, trois phrases — voir `previewNote`.
     expect(previewKind('WCompass')).toBe('drawn')
     expect(previewKind('WLiveMessage')).toBe('blank')
-    // Cinq types seulement retombent encore sur le repli générique, et ce sont ceux que
-    // l'appareil laisse vides lui aussi (plus `WLocation`, dont la seule capture est
-    // caviardée) — voir la revue des 75 visuels, § 2.12.
-    expect(previewKind('WLocation')).toBe('generic')
+    // Les types qui retombent encore sur le repli générique sont ceux que l'appareil
+    // laisse vides lui aussi — voir la revue des 75 visuels, § 2.12.
+    expect(previewKind('WCompPercentage')).toBe('generic')
+    // `WLocation` n'en fait plus partie : sa seule capture était caviardée (elle affiche
+    // des coordonnées réelles), et le rejeu du 2026-08-22 a donné le format sur une
+    // position de croisière au-dessus de l'Espagne. Il est dessiné, avec un exemple
+    // manifestement fictif — voir `render/widgets/location.ts`.
+    expect(previewKind('WLocation')).toBe('drawn')
 
     const view = palette(EMPTY)
     for (const row of view.element.querySelectorAll<HTMLElement>('.palette__entry')) {
