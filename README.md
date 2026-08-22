@@ -45,14 +45,21 @@ la plaque qui la porte — est identique dans toutes.*
   l'image reprise : plaque jusqu'à 1 039,4 px, bandeau à partir de 1 069,9 — 30 px, comme
   la dernière ligne de cette recette l'annonce.
 
-  PÉREMPTION SIGNALÉE le 2026-08-22 au soir, NON RÉPARÉE — un autre chantier tenait les
-  captures au moment où le code a changé, et une image reprise à mi-course aurait figé un
-  travail en cours. Ce qui a bougé : la pastille du nom de classe (« WPEmpty », qui ferme
-  la plaque de faits) porte désormais un FILET POINTILLÉ sous le mot, et le curseur d'aide.
-  C'est le troisième filet de la famille — plein pour ce qui se clique, tireté pour les
-  pastilles inertes, pointillé pour ce qui cache une bulle : sans lui, la bulle posée le
-  matin même ne s'annonçait pas, et un pilote-testeur l'a trouvée « par curiosité, en
-  survolant ». Voir `.glossed` dans `src/ui/app.css`.
+  DETTE PAYÉE, tard le 2026-08-22, dans la reprise en bloc. Ce qui avait bougé : la
+  pastille du nom de classe (« WPEmpty », qui ferme la plaque de faits) porte un FILET
+  POINTILLÉ sous le mot, et le curseur d'aide. C'est le troisième filet de la famille —
+  plein pour ce qui se clique, tireté pour les pastilles inertes, pointillé pour ce qui
+  cache une bulle. Voir `.glossed` dans `src/ui/app.css`. Vérifié sur l'image reprise :
+  `text-decoration: underline 1px dotted`, `cursor: help`, pastille à 199 px du haut.
+
+  ET UNE SECONDE PÉREMPTION, QU'AUCUNE LIGNE N'AVAIT SIGNALÉE, trouvée en comparant la
+  reprise à l'ancienne image : le NOM DE FICHIER de la barre de tête se coupe désormais en
+  TROIS et non en deux. Sur cette fixture, « 2026-08-…_backup-00.xcfg » est devenu
+  « 2026-08… _backup-00.xcfg ». Le rang et l'extension ne cèdent plus jamais — voir
+  `src/ui/fileNameParts.ts`. La barre de tête entre dans SIX des sept cadres : toute
+  capture qui la montre était périmée par ce seul changement, et deux recettes ne le
+  disaient que pour elles-mêmes. Diff mesuré entre l'ancienne et la neuve : 202 pixels
+  seulement, dans deux zones — l'en-tête (y 20-35) et la pastille (y 210-218).
 
   VÉRIFIÉE ET GARDÉE le 2026-08-22, au soir, sur un point précis. La phrase du cadrage —
   celle qui dit que la page entière ne tient pas ici — porte désormais un bouton qui pose
@@ -469,18 +476,32 @@ qu'on a réglé, ou figer ce que le fichier ne dit pas.*
      navigateur : 352 px, gouttière 32 px, deux colonnes à 971 px), et le point de coupure
      suit la HAUTEUR du contenu. L'ordre des réglages ne bouge pas, la coupure oui. Voir le
      commentaire de `.dock .props__list` dans `src/ui/app.css`.
-  PÉREMPTION SIGNALÉE le 2026-08-22 au soir, NON RÉPARÉE — même raison que ci-dessus. Le
-  NOM DE CLASSE en tête du panneau (« WSpeed ») porte désormais un filet pointillé sous le
-  mot, et le curseur d'aide : c'est ce qui annonce la bulle qui dit ce qu'est ce nom. Voir
-  `.glossed` dans `src/ui/app.css`.
+  ⚠ PÉREMPTION SIGNALÉE À TORT le 2026-08-22 au soir, ET DÉMENTIE À LA REPRISE. Elle
+  disait : « le NOM DE CLASSE en tête du panneau (« WSpeed ») porte désormais un filet
+  pointillé ». Ce filet existe bien — `.props__class` est `.glossed` — mais
+  `.props__class` N'EST PAS RENDU DANS CE CADRE : `app.css` porte
+  `.dock .props__head { display: none }`, et le bandeau affiche à la place `.dock__class`,
+  qui n'a ni gloss ni curseur d'aide. Mesuré sur la page : `.props__class` rend un
+  rectangle de 0 × 0, `.dock__class` rend « WAirspaceProximity » avec
+  `text-decoration: none`. Le diff des cinq images le confirme : rien ne bouge à la hauteur
+  du bandeau. Cette bulle ne s'annonce donc QUE HORS DU BANDEAU — c'est un vrai écart
+  d'interface, mais il ne se voit sur aucune des sept captures, et aucune reprise d'image
+  ne le répare.
 
-  SECONDE PÉREMPTION SIGNALÉE le 2026-08-22 au soir, NON RÉPARÉE : la pastille « Édition »
-  en tête de la barre d'édition portait un FILET PLEIN et porte un filet TIRETÉ — c'est un
-  état, pas un interrupteur. L'ambre avait été jugée suffisante pour la distinguer des deux
-  boutons de la même barre ; la mesure l'a démentie, le même aplat `rgb(247, 234, 205)`
-  habille la ligne de gadget sélectionnée de la liste — visible dans cette image même, au
-  rang 12 — et celle-là répond au clic. Voir `.editbar__badge` dans `src/ui/app.css`.
-  Le cadrage ne bouge pas : la largeur du filet est inchangée.
+  DETTE PAYÉE, tard le 2026-08-22, POUR TROIS AUTRES RAISONS :
+  1. la pastille « Édition » en tête de la barre d'édition portait un FILET PLEIN et porte
+     un filet TIRETÉ — c'est un état, pas un interrupteur. L'ambre avait été jugée
+     suffisante pour la distinguer des deux boutons de la même barre ; la mesure l'a
+     démentie, le même aplat `rgb(247, 234, 205)` habille la ligne de gadget sélectionnée
+     de la liste — visible dans cette image même, au rang 12 — et celle-là répond au clic.
+     Vérifié sur les reprises : `1px dashed rgb(207, 156, 44)`. Voir `.editbar__badge` ;
+  2. la pastille du NOM DE CLASSE DE LA PAGE (« WPThermalAssistant », qui ferme la plaque
+     de faits) a pris le filet pointillé et le curseur d'aide — c'est CELLE-LÀ que la
+     péremption démentie ci-dessus visait sans la nommer ;
+  3. le nom de fichier de la barre de tête se coupe en trois (voir la recette
+     d'`editeur-paysage`).
+  Le cadrage ne bouge pas : aucune des trois n'a de largeur. Diff mesuré, les cinq
+  langues : 375 à 458 pixels, dans trois bandes seulement — y 20-35, y 210-245, y 310-325.
 
   VÉRIFIÉE ET GARDÉE le 2026-08-22, au soir, pour la même raison, et celle-ci demandait
   d'aller regarder : un gadget EST sélectionné ici, la phrase du cadrage pourrait donc
@@ -629,6 +650,29 @@ réglages restent français dans les cinq captures — seule notre prose change.
      grille, il ne dépend donc pas de la fenêtre —, et un seul bord droit pour toutes les
      lignes.
 
+  DETTE PAYÉE, tard le 2026-08-22, POUR UNE SEULE RAISON, et elle n'était écrite nulle
+  part : le nom de fichier de la barre de tête se coupe en TROIS (voir la recette
+  d'`editeur-paysage`). Sur cette fixture, « 2025-07-…_backup-00.xcfg » est devenu
+  « 2025-07… _backup-00.xcfg ». Rien d'autre n'a bougé dans ce cadre — toutes les mesures
+  de la recette se sont reproduites au dixième : bloc 957,1 (fr/es), 994,1 (en/de), 1 010,0
+  (nl) ; bouton de retrait 109,3 / 114,0 / 130,7 / 146,0 / 166,6 ; titre suivant et ligne
+  « journalisation » aux hauteurs annoncées plus bas.
+
+  ⚠ LE CALAGE À 72 px NE TOMBE PAS SUR 72, ET C'EST NORMAL. Le défilement de cette page
+  avance par crans d'un demi-pixel : le cran le plus proche pose le haut du bloc à
+  71,8, jamais à 72,0 — mesuré, `scrollY` vaut 7 979,5 et un `scrollBy` de 0,22 ne bouge
+  plus. Les cinq reprises sont donc calées à 71,8, soit un pixel plus haut que les images
+  de midi ; c'est toute la différence des diffs, qui touchent l'image entière sans qu'un
+  seul élément ait changé. Viser 71,8 et s'y arrêter : 72,0 n'existe pas.
+
+  VÉRIFIÉE UNE SECONDE FOIS, tard le 2026-08-22, sur le point que la journée avait laissé
+  ouvert : « l'écran des réglages dit d'où viennent ses noms quand les libellés suivent le
+  fichier ». Il le dit — mais PAS ICI. Les deux phrases qui nomment la source d'un libellé
+  vivent sous `[data-screen="preferences_keybindings"]`, mesuré à 328 px AU-DESSUS du haut
+  de ce cadre, et la mention des libellés extraits de XCTrack 1.0.3-beta est dans le chapeau
+  de la page, à 7 613 px au-dessus. Le cadre est intact, et le paragraphe
+  « AUCUNE LIGNE DE CET ÉCRAN N'EXPLIQUE… » plus bas reste vrai.
+
   Écran ...... la page « Réglages généraux », mode édition.
   Langues .... CINQ exemplaires : .fr, .en, .nl, .de, .es.
                ⚠ Cette fixture DÉCLARE le français (`Display.Language: "fr"`). Les noms
@@ -764,16 +808,19 @@ place.](captures/version-et-nettoyage.fr.png)
 et cinq laissés en place, sur quatre gadgets.*
 
 <!--
-  REFAIRE CETTE CAPTURE — captures/version-et-nettoyage.<langue>.png (1200 × 1960)
+  REFAIRE CETTE CAPTURE — captures/version-et-nettoyage.<langue>.png (1200 × 2340)
 
-  PÉREMPTION SIGNALÉE le 2026-08-22 au soir, NON RÉPARÉE — la reprise en bloc des captures
-  part juste après ce chantier, et une image prise à mi-course aurait figé un travail en
-  cours. Ce qui a bougé : la pastille « périmé », en tête du bloc ambré, portait un FILET
-  PLEIN et porte un filet TIRETÉ. Elle ne se clique pas, et elle écrivait la même
-  déclaration que « Enlever ces 6 réglages », qui est un bouton — mesuré au navigateur,
-  1 px solid rgb(122, 84, 16) des deux côtés — tout en partageant la forme en pastille du
-  « Fermer » de la tête. Voir `.vdiag__badge` dans `src/ui/versionDiagnostic.css`. Le
-  cadrage ne bouge pas : seule la couleur du trait change, pas sa largeur.
+  DETTE PAYÉE, tard le 2026-08-22, et c'est la reprise la plus lourde des sept : les cinq
+  images ont changé de contenu ET de cadre. Les trois dettes ouvertes plus bas sont toutes
+  soldées d'un coup. Ce que montrent les images neuves :
+    · la pastille « périmé » porte un filet TIRETÉ et non plein — vérifié sur les reprises,
+      `1px dashed rgb(122, 84, 16)`. Elle ne se clique pas, et elle écrivait la même
+      déclaration que le bouton d'à côté ;
+    · la section s'ouvre sur QUATRE cases, et le bloc du dessous nomme CINQ réglages
+      laissés en place — les deux `mapWidget_showOpenStreet` sont passés de proposés à
+      laissés ;
+    · chaque réglage porte deux lignes : la raison en français, puis la mesure dessous ;
+    · le bouton dit « Enlever ces 4 réglages », et le compte à côté « 4 réglages cochés ».
   Écran ...... la modale « Version visée et compatibilité », nettoyage déplié.
   Langues .... CINQ exemplaires : .fr, .en, .nl, .de, .es.
   Fichier .... tests/fixtures/exports/2026-08-20_backup-00.xcfg
@@ -785,10 +832,23 @@ et cinq laissés en place, sur quatre gadgets.*
                (le nettoyage ne s'offre qu'en édition), menu « Fichier » puis
                « Version et compatibilité… », enfin déplier « Voir ces 4 réglages, et
                décocher ce que vous préférez garder ».
-  Cadrage .... viewport de 1200 × 1960 points CSS, émulation comme ci-dessus. La boîte
+  Cadrage .... viewport de 1200 × 2340 points CSS, émulation comme ci-dessus. La boîte
                ne défile alors dans aucune des cinq langues.
 
-               CADRAGE CORRIGÉ le 2026-08-22 : 1 720 → 1 960 points. Le bloc des
+               CADRAGE CORRIGÉ, tard le 2026-08-22 : 1 960 → 2 340 points. Les deux
+               lignes par réglage et le bloc des cinq laissés en place ont rallongé la
+               boîte de trois cents pixels. Même calcul qu'avant — hauteur du contenu
+               ÷ 0,88, jamais hauteur + une marge. Contenus REMESURÉS, largeur 1200,
+               nettoyage déplié, sur un viewport de 3 000 points où rien ne défile :
+                   fr / nl / es  1 976,6 px
+                   en            1 996,9 px
+                   de            2 037,9 px  ← c'est encore lui qui commande
+               2 037,9 ÷ 0,88 = 2 315,8 : 2 340 passe (plafond de 88 vh à 2 059,2, soit
+               21,3 px de marge sur l'allemand) et laisse 151 px de fond de part et
+               d'autre en allemand, 182 en français. Vérifié langue par langue sur les
+               cinq reprises : `scrollHeight === clientHeight`, la boîte ne défile pas.
+
+               CADRAGE PRÉCÉDENT, gardé pour la méthode : 1 720 → 1 960 points. Le bloc des
                réglages laissés en place a rallongé la boîte de deux cents pixels. Et le
                calcul est moins direct qu'il n'y paraît : `.modal__box` est plafonnée à
                **88 vh** — mesuré, `max-height` rend 1 513,6 px à 1 720 de viewport et
@@ -807,9 +867,9 @@ et cinq laissés en place, sur quatre gadgets.*
                    http://localhost:5178/src/ui/versionDiagnostic.demo.html
 
   DETTE PAYÉE le 2026-08-22, en fin de journée : les cinq exemplaires montraient NEUF
-  cases à cocher. Le nettoyage n'en propose plus que six sur cette fixture, et affiche en
-  dessous un bloc « 3 réglages trouvés, et laissés en place » qui les nomme. Les cinq
-  images ont été reprises ; le cadrage, lui, a dû changer — voir « Cadrage » ci-dessus.
+  cases à cocher. Le nettoyage n'en propose plus que QUATRE sur cette fixture, et nomme en
+  dessous les CINQ laissés en place. Les cinq images ont été reprises ; le cadrage, lui, a
+  dû changer deux fois — voir « Cadrage » ci-dessus.
 
   RECETTE CORRIGÉE — trois points :
   1. La recette d'origine passait par le banc d'essai en expliquant que « le nettoyage
@@ -825,9 +885,9 @@ et cinq laissés en place, sur quatre gadgets.*
      « périmé » en bas de casse, sous le titre « Réglages périmés ». Les légendes citaient
      « PÉRIMÉ » ; elles citent maintenant le titre, qui est ce que le lecteur cherchera.
 
-  DETTE OUVERTE le 2026-08-22, après l'essai pilote nº 5 : LES CINQ IMAGES SONT PÉRIMÉES,
-  et elles n'ont pas été refaites — un autre travail tenait les captures au même moment.
-  Ce qui a changé dans le cadre, et rien d'autre :
+  DETTE SOLDÉE — ce qui suit a été écrit après l'essai pilote nº 5 et décrivait des images
+  périmées ; les cinq ont été reprises tard le 2026-08-22. Le relevé reste ici parce qu'il
+  dit ce qu'il fallait retrouver à l'image :
     · chaque réglage porte maintenant DEUX lignes au lieu d'une. Sous le nom vient la
       raison en français (« la flèche de vent disparaîtrait de ce compas ») et, sous elle,
       la mesure qui la prouve (« sans lui, windStyle passe de ARROW à NONE »). Les six
@@ -842,13 +902,13 @@ et cinq laissés en place, sur quatre gadgets.*
   à la boîte et 1 960 points ne suffiront pas. Reprendre la méthode ci-dessus — mesurer le
   contenu dans les cinq langues, diviser par 0,88, l'allemand commande.
 
-  LA DETTE S'AGGRAVE, le 2026-08-22 en soirée, et le compte a encore changé : la table des
+  DERNIER ÉTAT DE LA DETTE avant qu'elle soit soldée, et le compte avait encore changé : la table des
   réglages périmés porte maintenant le VOISINAGE de chaque mesure, et les deux
   `mapWidget_showOpenStreet` de cette fixture sont passés de PROPOSÉS à LAISSÉS EN PLACE —
   mesuré sur l'appareil, les retirer éteint l'ombrage du relief. La section s'ouvre donc
   sur QUATRE cases et non six, et le bloc du dessous en nomme CINQ et non trois. Deux
-  lignes de plus dans la boîte, deux de moins dans la liste : le cadrage est toujours à
-  remesurer, et c'est le même calcul.
+  lignes de plus dans la boîte, deux de moins dans la liste. C'est bien l'état qu'on lit
+  sur les cinq images neuves, et le cadrage a été remesuré comme dit plus haut.
 -->
 
 
@@ -860,7 +920,27 @@ nouvelle, et la raison du remplacement.](captures/enregistrer-et-partager.fr.png
 montré avant le téléchargement, pas après.*
 
 <!--
-  REFAIRE CETTE CAPTURE — captures/enregistrer-et-partager.<langue>.png (920 × 2480)
+  REFAIRE CETTE CAPTURE — captures/enregistrer-et-partager.<langue>.png (920 × 3260)
+
+  DETTE PAYÉE, tard le 2026-08-22 : les trois péremptions signalées plus bas sont soldées
+  d'un coup, et le cadre a changé. Ce que montrent les images neuves : le choix des pages
+  en tête du volet de la troisième issue (« Quelles pages partent », une case par page,
+  « Tout cocher » / « Tout décocher », le compte de ce qui part), la section
+  « Ce que le destinataire en fera » et ses quatre paragraphes, la phrase de plus sur
+  l'heure de l'export remise à zéro, et le nom de fichier de la barre de tête coupé en
+  trois — l'extension entière, cette fois.
+
+  CADRAGE CORRIGÉ, tard le 2026-08-22 : 2 480 → 3 260 points. Contenus REMESURÉS,
+  largeur 920, troisième issue cochée, sur un viewport de 3 600 points où rien ne défile :
+      en  2 675,0 px
+      fr  2 732,0 px
+      es  2 751,5 px
+      de  2 844,5 px
+      nl  2 846,0 px  ← c'est le NÉERLANDAIS qui commande, et de 1,5 px sur l'allemand
+  2 846,0 ÷ 0,88 = 3 234,1 : 3 260 passe, plafond de 88 vh à 2 868,8, soit 22,8 px de
+  marge. ⚠ Le néerlandais avait déjà pris la tête à la mesure précédente ; il la garde, et
+  l'écart avec l'allemand est trop mince pour qu'on suppose l'un ou l'autre. Mesurer.
+  Vérifié langue par langue sur les cinq reprises : la boîte ne défile pas.
 
   VÉRIFIÉE ET GARDÉE le 2026-08-22, au soir : le chantier du reçu d'enregistrement — la
                boîte du système qui laisse le pilote poser lui-même son fichier — ne touche
@@ -879,27 +959,23 @@ montré avant le téléchargement, pas après.*
                passé devant l'allemand depuis la mesure d'origine, et il ne reste que
                6 px sous le plafond : ne pas raccourcir ce cadre sans remesurer.
 
-  PÉREMPTION SIGNALÉE le 2026-08-22, NON RÉPARÉE — celle-ci PÉRIME LE CADRAGE, pas
-  seulement un détail. La troisième issue porte maintenant, EN TÊTE de son volet, le choix
+  PÉREMPTION SOLDÉE — elle PÉRIMAIT LE CADRAGE, pas seulement un détail. La troisième issue porte maintenant, EN TÊTE de son volet, le choix
   des pages : le titre « Quelles pages partent », une phrase, UNE CASE PAR PAGE de la
   fixture, deux boutons (« Tout cocher », « Tout décocher »), le compte de ce qui part, puis
   une section « Ce que le destinataire en fera » de quatre paragraphes. Sur
   formes-preservees.xcfg cela fait 2 pages cochées + ~8 lignes de texte AVANT tout ce que
   la capture montrait déjà.
-  ⚠ LES CINQ IMAGES SONT À REPRENDRE, et la HAUTEUR EST À REMESURER dans les cinq langues
-  avant de fixer le cadre : la mesure de 2 480 px datait de la boîte sans choix de pages,
-  et le NÉERLANDAIS n'avait plus que 6 px de marge sous le plafond. Reprendre la méthode
-  ci-dessus — mesurer le contenu dans les cinq langues, diviser par 0,88.
+  Les cinq images ont été reprises et la hauteur remesurée dans les cinq langues — voir
+  « CADRAGE CORRIGÉ » en tête de cette recette.
 
-  PÉREMPTION SIGNALÉE le 2026-08-22 au soir, NON RÉPARÉE. Les deux paragraphes « Ce que le
-  destinataire n'aura pas » — celui de la deuxième issue et celui de la troisième —
+  PÉREMPTION SOLDÉE. Les deux paragraphes « Ce que le
+  destinataire n'aura pas » — celui de la deuxième issue et celui de la troisième —
   portent maintenant UNE PHRASE DE PLUS, dans les cinq langues : l'heure de l'export est
   remise à zéro parce qu'elle emportait le fuseau horaire du pilote. Trois lignes de plus
-  environ sur l'issue 2, une sur l'issue 3, à 920 px de large. ⚠ Cela s'AJOUTE à la
-  reprise déjà demandée ci-dessus, et la hauteur est donc à remesurer une seule fois, à
-  la fin : le néerlandais n'avait plus que 6 px sous le plafond avant ces deux ajouts.
+  environ sur l'issue 2, une sur l'issue 3, à 920 px de large. Cela s'ajoutait à la reprise demandée ci-dessus, et la hauteur a été remesurée une seule
+  fois, à la fin — c'est ce que dit « CADRAGE CORRIGÉ ».
 
-  PÉREMPTION SIGNALÉE le 2026-08-22 au soir, NON RÉPARÉE. Le NOM DE FICHIER de la barre de
+  PÉREMPTION SOLDÉE. Le NOM DE FICHIER de la barre de
   tête se coupe maintenant en TROIS et non en deux : le rang et l'extension ne cèdent plus
   jamais. Mesuré à 920 px sur cette fixture — « f…-preservees.xcfg » devient
   « …-preservees.xcfg » : un caractère de tête en moins, et c'est tout ce qui change ici.
@@ -928,11 +1004,12 @@ montré avant le téléchargement, pas après.*
                    npm run dev -- --port 5176
                    http://localhost:5176/src/ui/sharingDialog.demo.html
                bouton « formes préservées (téléphone + contact) ».
-  Cadrage .... viewport de 920 × 2480 points CSS, émulation comme ci-dessus. La boîte
+  Cadrage .... viewport de 920 × 3260 points CSS, émulation comme ci-dessus. La boîte
                est large de 830 px quoi qu'on fasse : 920 points de large lui laissent
                45 px de marge de chaque côté au lieu de 185, et l'image pèse d'autant
-               moins. 2 480 de haut : c'est l'allemand qui commande (2 174 px de contenu
-               contre 2 080 en français).
+               moins. 3 260 de haut : c'est le NÉERLANDAIS qui commande, et non
+               l'allemand — voir « CADRAGE CORRIGÉ » en tête de recette pour les cinq
+               mesures.
   À vérifier . les seuls noms et numéros qui figurent sur cette capture — « Jean
                Exemple », « +32 470 00 00 00 » — sont les valeurs anonymisées écrites
                dans la fixture, et l'écran les montre barrées, remplacées. Aucune donnée
@@ -966,22 +1043,29 @@ textes par des barres grises, parce qu'une image échappe à l'anonymisation. Et
   la plaque de 977 px : quatre boutons néerlandais demandent 840 px contre 776 à l'allemand,
   et le titre en prend 144 — 1 000 px pour 977. Même famille que « l'allemand déborde » :
   une langue plus longue, une image qui le montre. Ne PAS retoucher.
-  PÉREMPTION SIGNALÉE le 2026-08-22 au soir, NON RÉPARÉE. Même cause que pour
-  « enregistrer-et-partager » : le nom de fichier de la barre de tête se coupe en trois, et
-  le rang et l'extension ne cèdent plus. Mesuré à 1 100 px : « f…-preservees.xcfg » devient
-  « …-preservees.xcfg ». ⚠ Le pilote-testeur du 2026-08-22 a relevé que CETTE image
-  montrait elle-même le défaut — « on y lit f…-preservees.xc… » : l'extension coupée sur
-  la capture qui sert d'exemple. Voir `src/ui/fileNameParts.ts`.
+  DETTE PAYÉE, tard le 2026-08-22. Même cause que pour
+  « enregistrer-et-partager » : le nom de fichier de la barre de tête se coupe en trois, et
+  le rang et l'extension ne cèdent plus. ⚠ Le pilote-testeur du 2026-08-22 avait relevé que
+  CETTE image montrait elle-même le défaut — « on y lit f…-preservees.xc… » : l'extension
+  coupée sur la capture qui sert d'exemple. Les cinq reprises lisent
+  « f…-preservees.xcfg », extension entière. Voir `src/ui/fileNameParts.ts`.
 
-  SECONDE PÉREMPTION SIGNALÉE le 2026-08-22 au soir, NON RÉPARÉE. Les trois gestes que rien
+  SECONDE DETTE PAYÉE au même moment. Les trois gestes que rien
   ne rattrape portent désormais une marque que les autres n'ont pas — filet ambre, bord
   gauche à 3 px : sur cette image, « Supprimer » de chaque entrée et
   « Effacer toute la bibliothèque » au pied. C'est exactement ce que la recette
   cadre, et c'est la réponse au relevé du pilote-testeur : « les deux commencent par la même idée ; l'une protège, l'autre détruit ; rien ne les distingue à l'œil ».
   « Empêcher le navigateur d'effacer ma bibliothèque », juste à côté, ne prend
   RIEN — c'est la moitié qui porte le contraste. Ni le cadrage, ni les fixtures, ni l'état
-  ne bougent : seule la couleur de deux filets change. Voir `.library__final` dans
-  `src/ui/libraryPanel.css`.
+  n'ont bougé : seule la couleur de deux filets change. Voir `.library__final` dans
+  `src/ui/libraryPanel.css`. Boîte remesurée sur les cinq reprises : 1 022 × 572,2 px, et
+  607,3 en néerlandais — les mêmes qu'avant.
+
+  ⚠ UN PIÈGE DE FABRICATION, MESURÉ À LA REPRISE : après « Ranger », la boîte porte en tête
+  un bandeau de confirmation (`.library__flash`) qui la rallonge de 39 px et n'était sur
+  AUCUNE des images précédentes. Il ne s'efface pas tout seul dans le temps d'une capture :
+  il faut FERMER la boîte et la ROUVRIR. Sans cela la boîte fait 611,3 px au lieu de 572,2,
+  et rien ne le signale.
 
   Écran ...... la boîte « Bibliothèque de configurations », sur sa liste, deux entrées.
   Langues .... CINQ exemplaires : .fr, .en, .nl, .de, .es. Le texte est le sujet — les
@@ -1003,11 +1087,16 @@ textes par des barres grises, parce qu'une image échappe à l'anonymisation. Et
                l'estimation d'espace, et « Effacer toute la bibliothèque ».
   Refaire .... npm run dev -- --port 5179, déposer la 1re fixture, menu « Fichier » puis
                « Bibliothèque… », « Ranger la configuration ouverte », donner le nom,
-               « Ranger ». Fermer, déposer la 2e fixture, recommencer. Rouvrir la
-               bibliothèque : c'est l'état de la capture.
+               « Ranger ». Fermer, déposer la 2e fixture, recommencer. Fermer et ROUVRIR
+               la bibliothèque — voir le piège du bandeau de confirmation ci-dessus :
+               c'est l'état de la capture.
                Pour les quatre autres langues, la bibliothèque SURVIT au changement de
-               langue — elle vit dans l'IndexedDB de l'origine. Il suffit de recharger
-               dans la langue voulue et de rouvrir la boîte.
+               langue — elle vit dans l'IndexedDB de l'origine. Recharger dans la langue
+               voulue, PUIS REDÉPOSER formes-preservees.xcfg, puis rouvrir la boîte : la
+               barre de tête porte le nom du fichier ouvert, et sans lui les cinq images
+               ne diffèrent plus seulement par la langue. Le globe seul ne suffit pas
+               ici — mesuré : une boîte DÉJÀ OUVERTE ne se retraduit pas au changement de
+               langue, il faut la fermer et la rouvrir.
                Pour repartir de zéro : effacer la base `xcfg-editor` de l'IndexedDB.
   Cadrage .... viewport de 1100 × 700 points CSS, émulation comme ci-dessus. La boîte
                fait 1 022 × 572 px (607 en néerlandais) et se centre : 700 points de
