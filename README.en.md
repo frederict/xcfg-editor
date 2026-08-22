@@ -262,7 +262,18 @@ author can check is worth nothing.
      one that lets you ask for help with your vario settings without publishing your
      name;
   3. **“Shareable version, no personal data”** — a `pages` export, with no preference at
-     all.
+     all. It is also the one that lets you **send a single page**: under “Which pages
+     travel”, every page carries a tick box, all ticked to begin with. Untick the ones
+     that stay with you. The file is still a `pages` export, expurgated in exactly the
+     same way — one path, therefore one guarantee to keep, and no fourth outcome to read
+     in the menu.
+
+     ⚠ **Tell your recipient which option to pick at import.** Measured on an AIR³ 7.2 on
+     21 and 22 August 2026: “Add pages only” puts your pages after theirs without touching
+     any of them, whereas “Replace pages only” replaces **all** of theirs, in both
+     orientations. Their settings are out of reach either way: faced with a `pages` export
+     the instrument greys out “Replace everything”. *Not measured:* no file cut down to
+     part of its pages has ever been imported on an instrument.
 
   Each outcome carries its inventory: every line touched, where it sits and why, shown
   *before* the download. The name of the file produced is timestamped and **keeps nothing

@@ -277,7 +277,19 @@ een belofte van getrouwheid die alleen de auteur kan nagaan, is niets waard.
      zodanig benoemd. Dat is de uitweg waarmee u hulp kunt vragen over uw vario-instellingen
      zonder uw naam te publiceren;
   3. **‘Deelbare versie, zonder persoonlijke gegevens’** — een `pages`-export, zonder ook maar
-     één voorkeur.
+     één voorkeur. Het is ook de uitweg om **één enkele pagina te versturen**: onder
+     ‘Welke pagina’s vertrekken’ draagt elke pagina een vakje, aan het begin allemaal
+     aangevinkt. Vink af wat bij u blijft. Het bestand blijft een `pages`-export, op
+     precies dezelfde manier geschoond — één weg, dus één belofte om waar te maken, en
+     geen vierde uitweg om in het menu te lezen.
+
+     ⚠ **Zeg uw ontvanger welke keuze hij bij het inlezen moet maken.** Gemeten op een
+     AIR³ 7.2 op 21 en 22 augustus 2026: ‘Alleen pagina’s toevoegen’ zet uw pagina’s
+     achter de zijne zonder er één aan te raken, terwijl ‘Alleen pagina’s vervangen’
+     **al** de zijne vervangt, in beide oriëntaties. Zijn instellingen blijven hoe dan ook
+     buiten bereik: tegenover een `pages`-export maakt het instrument ‘Alles vervangen’
+     grijs. *Niet gemeten:* nooit is een bestand dat tot een deel van zijn pagina’s is
+     teruggebracht op een instrument ingelezen.
 
   Elke uitweg draagt haar inventaris: elke aangeraakte regel, haar plaats en haar reden,
   getoond *vóór* de download. De naam van het gemaakte bestand draagt een tijdstempel en

@@ -270,7 +270,19 @@ de fidelidad que solo el autor puede comprobar no vale nada.
      tales. Es la que permite pedir ayuda sobre los ajustes del vario sin publicar su
      nombre;
   3. **«Versión compartible, sin datos personales»** — una exportación `pages`, sin ninguna
-     preferencia.
+     preferencia. Es también la que permite **enviar una sola página**: bajo «Qué páginas
+     salen», cada página lleva una casilla, todas marcadas al principio. Desmarque las que
+     se quedan con usted. El archivo sigue siendo una exportación `pages`, depurada de la
+     misma manera — un solo camino, por tanto una sola garantía que sostener, y ninguna
+     cuarta salida que leer en el menú.
+
+     ⚠ **Diga a su destinatario qué opción elegir al importar.** Medido en un AIR³ 7.2 el
+     21 y el 22 de agosto de 2026: «Añadir solo páginas» pone las suyas de usted a
+     continuación de las de él sin tocar ninguna, mientras que «Reemplazar solo las
+     páginas» reemplaza **todas** las suyas, en ambas orientaciones. Sus ajustes quedan
+     fuera de alcance en cualquier caso: ante una exportación `pages` el instrumento
+     atenúa «Reemplazar todo». *No medido:* nunca se ha importado en un instrumento un
+     archivo reducido a una parte de sus páginas.
 
   Cada salida lleva su inventario: cada línea tocada, su sitio y su razón, mostrados *antes*
   de la descarga. El nombre del archivo producido lleva marca de tiempo y **no retoma nada

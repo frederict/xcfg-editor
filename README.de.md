@@ -285,7 +285,18 @@ Absicht — ein Treueversprechen, das nur der Autor nachprüfen kann, ist nichts
      solche benannt werden. Mit dieser lässt sich zu den eigenen Vario-Einstellungen um
      Hilfe bitten, ohne den eigenen Namen zu veröffentlichen;
   3. **„Teilbare Fassung, ohne persönliche Daten“** — ein `pages`-Export, ohne jede
-     Einstellung.
+     Einstellung. Sie ist auch der Weg, um **nur eine Seite zu verschicken**: unter
+     „Welche Seiten mitgehen“ trägt jede Seite ein Kästchen, anfangs alle angekreuzt.
+     Haken Sie ab, was bei Ihnen bleibt. Die Datei bleibt ein `pages`-Export und wird
+     genau gleich bereinigt — ein Pfad, also eine Zusage, und kein vierter Weg im Menü.
+
+     ⚠ **Sagen Sie der empfangenden Person, was sie beim Import wählen soll.** Gemessen
+     auf einem AIR³ 7.2 am 21. und 22. August 2026: „Nur Seiten hinzufügen“ setzt Ihre
+     Seiten hinter ihre, ohne eine einzige anzurühren, während „Nur Seiten ersetzen“
+     **alle** ihre ersetzt, in beiden Ausrichtungen. Ihre Einstellungen sind so oder so
+     außer Reichweite: vor einem `pages`-Export blendet das Gerät „Alles ersetzen“ aus.
+     *Nicht gemessen:* keine auf einen Teil ihrer Seiten gekürzte Datei wurde je auf einem
+     Gerät importiert.
 
   Jeder Weg trägt sein Verzeichnis: jede angerührte Zeile, ihr Ort und ihr Grund, gezeigt
   *vor* dem Herunterladen. Der Name der erzeugten Datei trägt einen Zeitstempel und
