@@ -82,6 +82,25 @@ Le compilateur refuse une clé inconnue, un repère manquant, un argument inutil
 `count` qui n'est pas un nombre. Il ne voit pas un repère **oublié dans une traduction** :
 c'est `tests/i18n/catalog.test.ts` qui l'attrape.
 
+### ⚠ Un message à repère nommé doit tenir en UN seul littéral
+
+Ce mur coûte une demi-heure à qui le découvre seul — il a arrêté un lot sur 17 messages.
+TypeScript **ne replie pas** `'a' + 'b'` en type littéral : dès qu'un message est écrit
+sur plusieurs lignes avec `+`, `Placeholders<S>` vaut `never` et `t()` refuse **tout**
+argument, avec un message d'erreur qui ne dit pas pourquoi.
+
+```ts
+// ✗ le repère est invisible au compilateur
+'properties.widgetTitle': 'Gadget : {name} — ' +
+  'les réglages ci-dessous sont les siens'
+
+// ✓ un seul littéral, même long
+'properties.widgetTitle': 'Gadget : {name} — les réglages ci-dessous sont les siens'
+```
+
+Un message **sans** repère peut rester concaténé : c'est ce que fait `fr/app.ts` pour ses
+phrases longues, et rien ne s'y oppose.
+
 ## 4. Les formateurs — rien à la main
 
 `tr.format` : `number`, `decimal`, `percent`, `millimeters`, `inches`, `byteSize`,
