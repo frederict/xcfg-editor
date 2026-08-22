@@ -966,6 +966,35 @@ describe('barre d’outils de la sélection', () => {
     expect(tool(instance, 'front').title).toContain('Ctrl + Maj + Flèche haut')
   })
 
+  /**
+   * Les quatre flèches sont le seul endroit de l'outil où un geste tient dans un
+   * pictogramme. Un pilote-testeur l'a dit le 2026-08-22 : « les quatre petites flèches —
+   * j'ai deviné, je n'ai pas su. » Elles restent des symboles pour une raison de place —
+   * la barre est posée SUR le gadget qu'elle sert —, mais alors chacune doit se nommer
+   * pour qui ne devine pas : à la synthèse vocale, et au survol.
+   *
+   * ⚠️ Le test voisin n'en couvrait qu'une sur quatre. Trois pouvaient perdre leur nom
+   * sans que rien ne le dise, et un pictogramme muet n'est pas seulement obscur : c'est un
+   * bouton qui n'existe pas pour un lecteur d'écran.
+   */
+  it('nomme les quatre flèches d’empilement, et donne le raccourci de chacune', () => {
+    const { instance } = editor()
+    instance.select(3)
+    const named: ReadonlyArray<readonly [string, string, string]> = [
+      ['back', 'Envoyer à l’arrière-plan', 'Ctrl + Maj + Flèche bas'],
+      ['lower', 'Reculer d’un rang', 'Ctrl + Flèche bas'],
+      ['raise', 'Avancer d’un rang', 'Ctrl + Flèche haut'],
+      ['front', 'Mettre au premier plan', 'Ctrl + Maj + Flèche haut']
+    ]
+    for (const [name, label, keys] of named) {
+      const button = tool(instance, name)
+      // Le glyphe seul dans le texte : c'est bien un pictogramme qu'on épingle.
+      expect(button.textContent?.length, name).toBe(1)
+      expect(button.getAttribute('aria-label'), name).toBe(label)
+      expect(button.title, name).toBe(`${label} (${keys})`)
+    }
+  })
+
   it('supprime au bouton, et ne laisse rien de sélectionné', () => {
     const { page, instance, structure, selections } = editor()
     instance.select(3)

@@ -922,9 +922,23 @@ export function createEditor(options: EditorOptions): Editor {
    * - les boutons d'empilement **sans effet sont désactivés** plutôt que muets — c'est la
    *   même information, lue avant d'appuyer plutôt qu'après ;
    * - « Supprimer » et « Dupliquer » sont écrits en toutes lettres, les quatre mouvements
-   *   d'empilement portent une flèche. Un symbole pour « envoyer à l'arrière-plan » se
-   *   devine ; un symbole pour « supprimer » se confond avec « fermer », et l'action est
-   *   la seule des six qui fasse disparaître quelque chose.
+   *   d'empilement portent une flèche. Un symbole pour « supprimer » se confondrait avec
+   *   « fermer », et l'action est la seule des six qui fasse disparaître quelque chose.
+   *
+   *   ⚠️ **Ce qui était supposé ici a été mesuré, et démenti.** Cette phrase disait « un
+   *   symbole pour "envoyer à l'arrière-plan" se devine ». Un pilote-testeur, le
+   *   2026-08-22 : « les quatre petites flèches — j'ai deviné, je n'ai pas su. » Le
+   *   symbole ne se devine donc pas ; ce qui le rattrape est le **nom accessible** que
+   *   chacun des quatre porte, et l'infobulle qui y ajoute le raccourci clavier — voir
+   *   `toolButton`, et le test qui les épingle tous les quatre.
+   *
+   *   Les quatre restent des symboles pour une raison de place, pas de goût : cette barre
+   *   est un calque **posé sur le gadget qu'elle sert**, et « Envoyer à l'arrière-plan »
+   *   écrit en toutes lettres la rendrait plus large que la plupart des gadgets d'une
+   *   page — elle masquerait ce que `toolbarPlacement` existe précisément pour dégager.
+   *   Le vocabulaire, lui, est enseigné ailleurs et en toutes lettres : la liste des
+   *   gadgets écrit « Rang 1 · au fond » et « Rang 14 · au premier plan » à ses deux
+   *   bouts, et le rang chiffré de cette barre-ci dit lequel des deux on approche.
    *
    * Elle est le seul élément du calque qui **intercepte le pointeur**, d'où le garde-fou
    * en tête de `onPointerDown` et de `onHover` : un clic sur un bouton ne doit jamais
