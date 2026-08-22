@@ -1787,6 +1787,11 @@ body.is-dragging .veil {
   /* Repli de sécurité : `main.ts` repose cette valeur en pixels à chaque construction du
      bandeau, plafonnée à la fenêtre courante — voir `DOCK_HEIGHT_DEFAULT` dans `views.ts`. */
   --dock-body-height: 18rem;
+  /* Ce que le bandeau déplié laisse à la page, sur une fenêtre courte : barre de tête
+     collante (56 px), enveloppe du bandeau autour de son corps (62 px) et plaque paysage
+     à 100 % de zoom sur l'AIR³ 7.2 (361 px) — 479 px mesurés, arrondis au demi-rem
+     supérieur. Voir `.dock__body`. */
+  --dock-page-room: 30.5rem;
   position: sticky;
   bottom: 0;
   /* Au-dessus de la plaque et de ses marques d'édition, sous la barre de tête (20). */
@@ -1901,7 +1906,39 @@ body.is-dragging .veil {
  * de défiler en hauteur.
  */
 .dock__body {
-  max-height: var(--dock-body-height);
+  /*
+   * ## Sur une fenêtre courte, la moitié ne suffit plus
+   *
+   * `dockHeightCeiling` promet « jamais plus de la moitié de ce que la barre de tête
+   * laisse ». Cette promesse a été mesurée sur une fenêtre de 913 px utiles, où la moitié
+   * laissait encore 429 px — davantage qu'une page paysage. Elle ne dit plus rien sur une
+   * fenêtre courte : à 640 px, elle plafonne le corps à 232 px, le bandeau entier fait
+   * alors 294 px, et il ne reste que 290 px sous la barre de tête pour une plaque paysage
+   * qui en demande 361. **Aucune position de défilement ne dégage la page**, et le pilote
+   * d'essai du 22 août l'a dit ainsi : « en 1024 × 640 je ne vois rien de ma page ».
+   *
+   * Ce qu'il faut borner n'est donc pas une fraction de fenêtre mais **ce que le bandeau
+   * laisse**. Mesuré en fenêtre de 1024 px de large : barre de tête collante 56 px,
+   * enveloppe du bandeau autour de son corps 62 px, plaque paysage à 100 % de zoom
+   * 361 px sur l'AIR³ 7.2 — l'appareil de référence, et celui du pilote. Il reste donc
+   * `100dvh − 30.5rem` au corps ; c'est le sens de `--dock-page-room`. À 640 px de
+   * fenêtre : 152 px de corps, 214 px de bandeau, et les 370 px qui restent tiennent la
+   * plaque entière — vérifié au navigateur, la page est dégagée en entier à 406 px de
+   * défilement. Au-dessus de 792 px de fenêtre, la moitié redevient la plus basse des deux
+   * bornes et **rien ne change** — 913 px de fenêtre donnent toujours 368 px de corps.
+   *
+   * Le plancher de 7 rem est `DOCK_HEIGHT_MIN` : sous une fenêtre de 592 px, plus rien ne
+   * sauve la page, et écraser le bandeau au-delà ne ferait que perdre les deux.
+   *
+   * ⚠ **Ce plafond-ci ne s'applique qu'au défaut**, jamais à une hauteur réglée à la
+   * poignée (`.dock--sized`, plus bas) : c'est le pilote qui arbitre entre voir sa page et
+   * voir ses réglages, et une préférence de l'outil ne discute pas avec un geste de
+   * l'utilisateur — la règle même que `dockSetByPilot` applique au repli.
+   */
+  max-height: min(
+    var(--dock-body-height),
+    max(7rem, calc(100dvh - var(--dock-page-room)))
+  );
   /*
    * Deux zones côte à côte — la liste des widgets, puis les réglages —, qui **partagent la
    * hauteur bornée** au lieu de s'ajouter. Chacune défile pour son compte ; le corps, lui,
@@ -1937,7 +1974,13 @@ body.is-dragging .veil {
  * remplir la place, quand bien même les réglages du widget choisi tiendraient en trois
  * lignes.
  */
-.dock--sized .dock__body { height: var(--dock-body-height); }
+.dock--sized .dock__body {
+  height: var(--dock-body-height);
+  /* La poignée a parlé : le plafond de fenêtre du défaut se retire, sans quoi le geste
+     buterait dans le vide et la poignée cesserait de répondre. Reste la borne de
+     `dockHeightCeiling`, appliquée en amont sur la valeur elle-même. */
+  max-height: var(--dock-body-height);
+}
 
 /* `hidden` ne peut rien contre `display: flex` : il faut le lui redire — pour la liste
    masquée seule comme pour le corps entier, que le repli du bandeau escamote. */

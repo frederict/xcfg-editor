@@ -276,3 +276,82 @@ describe('rien de cette page ne vient d’un autre hôte', () => {
     }
   })
 })
+
+/**
+ * # Le bandeau de réglages laisse voir la page sur une fenêtre courte
+ *
+ * Défaut du second essai pilote (22 août 2026), sa gêne n° 2 : « en 1024 × 640 je ne vois
+ * **rien** de ma page ; […] même sur grand écran il cache la moitié basse pendant que je
+ * redimensionne ». Reproduit au navigateur sur `2026-08-20_backup-00.xcfg`, page paysage 1,
+ * zoom 100 %, fenêtre 1024 × 640 : au premier gadget choisi, le bandeau se déployait à
+ * 294 px et il ne restait que 290 px sous la barre de tête pour une plaque qui en demande
+ * 361. **Aucune position de défilement ne dégageait la page** — le balayage des 601 px de
+ * défilement n'en a trouvé aucune.
+ *
+ * La cause n'est ni la place du bandeau — il est sous la page, et c'est le troisième
+ * principe du projet — ni son état d'ouverture, réglé la veille (`dockCollapsed`,
+ * `dockSetByPilot`). C'est son **plafond** : `dockHeightCeiling` promet « jamais plus de la
+ * moitié de ce que la barre de tête laisse », et cette moitié a été mesurée sur une fenêtre
+ * de 913 px, où elle laissait encore 429 px à la page. Sur une fenêtre courte, la même
+ * fraction ne laisse plus rien.
+ *
+ * Ce que la correction borne n'est donc pas une fraction, mais **ce que le bandeau laisse**.
+ * Après correction, même relevé : corps de 152 px, bandeau de 214 px, et la plaque entière
+ * dégagée à 406 px de défilement.
+ */
+describe('app.css — le bandeau laisse la page visible sur une fenêtre courte', () => {
+  /** Ce que le bandeau ajoute autour de son corps, mesuré : poignée, barre de tête, bords. */
+  const DOCK_CHROME_PX = 62
+  /** La barre de tête collante, mesurée à 1024 px de large. */
+  const HEAD_BAR_PX = 56
+  /** La plaque d'une page paysage à 100 % de zoom sur l'AIR³ 7.2, mesurée. */
+  const LANDSCAPE_BED_PX = 361
+
+  /** La valeur en pixels d'une longueur en rem écrite dans la feuille. */
+  function rem(value: string): number {
+    const match = /^([\d.]+)rem$/.exec(value)
+    expect(match, `longueur en rem attendue : ${value}`).not.toBeNull()
+    return Number(match![1]) * 16
+  }
+
+  function pageRoom(): string {
+    const match = /--dock-page-room:\s*([^;]+);/.exec(rule('.dock'))
+    expect(match, 'jeton `--dock-page-room` absent de `.dock`').not.toBeNull()
+    return match![1]!.trim()
+  }
+
+  it('le corps du bandeau est plafonné par ce qu’il laisse, pas seulement par sa hauteur', () => {
+    const body = rule('.dock__body')
+    // `min` : la plus basse des deux bornes gagne — la hauteur demandée sur une fenêtre
+    // haute, la place qui reste sur une fenêtre courte.
+    expect(body).toMatch(/max-height:\s*min\(/)
+    expect(body).toContain('var(--dock-body-height)')
+    expect(body).toContain('calc(100dvh - var(--dock-page-room))')
+  })
+
+  it('un plancher garde le bandeau utilisable quand plus rien ne sauve la page', () => {
+    // 7 rem, c'est `DOCK_HEIGHT_MIN` : sous cette fenêtre-là, écraser le bandeau
+    // davantage ferait perdre les deux au lieu d'un.
+    expect(rule('.dock__body')).toMatch(/max\(\s*7rem\s*,/)
+  })
+
+  it('ce qui est réservé à la page suffit à une plaque paysage entière', () => {
+    // Le calcul que la mesure au navigateur a confirmé : sur une fenêtre de 640 px, ce que
+    // le bandeau laisse doit encore tenir la plaque. Changer `--dock-page-room` sans
+    // refaire la mesure fait échouer ce test plutôt que de rendre la page invisible.
+    const windowPx = 640
+    const bodyCap = windowPx - rem(pageRoom())
+    const leftToPage = windowPx - HEAD_BAR_PX - (bodyCap + DOCK_CHROME_PX)
+    expect(bodyCap).toBeGreaterThanOrEqual(112)
+    expect(leftToPage).toBeGreaterThanOrEqual(LANDSCAPE_BED_PX)
+  })
+
+  it('la hauteur réglée à la poignée échappe à ce plafond', () => {
+    // Une préférence de l'outil ne discute pas avec un geste du pilote — la règle même que
+    // `dockSetByPilot` applique au repli. Sans cette ligne, la poignée cesserait de
+    // répondre au-delà du plafond, ce qui est pire que le défaut corrigé.
+    const sized = rule('.dock--sized .dock__body')
+    expect(sized).toContain('height: var(--dock-body-height);')
+    expect(sized).toContain('max-height: var(--dock-body-height);')
+  })
+})
