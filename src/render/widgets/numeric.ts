@@ -42,7 +42,10 @@ const SPECS: Record<string, NumericSpec> = {
   WAltitudeAboveGround: { quantity: 'altitude', unit: 'm', example: '850' },
   WFL: { quantity: 'none', unit: 'FL', example: '045' },
   WSpeed: { quantity: 'speed', unit: 'km/h', example: '38' },
-  WVerticalSpeed: { quantity: 'verticalSpeed', unit: 'm/s', example: '+2.1' },
+  // `vol-numeriques-boussole-variocolumn` : « +3,5 m/s » en vert cerné. La MÊME image
+  // porte la colonne de vario à 17 barres roses — les deux exemples sont donc lus au même
+  // instant, et une page qui montre les deux gadgets reste cohérente (varioColumn.ts).
+  WVerticalSpeed: { quantity: 'verticalSpeed', unit: 'm/s', example: '+3.5' },
   WGlide: { quantity: 'glide', unit: '', example: '8.3' },
   WAirTime: { quantity: 'duration', unit: '', example: '2:47' },
   WTime: { quantity: 'time', unit: '', example: '14:32' },
@@ -420,9 +423,27 @@ function bracketed(widget: Widget, valueText: string): string {
  * concernés — `WGlide`, `WNextTurnpointGlideTo`, `WCompGlideToGoal`,
  * `WCompGlideToESS` — portent pourtant `_unit: true` dans le relevé des défauts : sur
  * l'appareil comme ici, ce booléen n'invente pas une unité à un widget qui n'en a pas.
+ *
+ * ## `headless` — la clé qui décide de la tête « 1: », mesurée le 2026-08-22
+ *
+ * Le constat ci-dessus était juste mais **incomplet** : l'appareil rend les DEUX formes,
+ * sur le même jeu de pages et au même instant du rejeu de `2026-07-09-XCT-FTE-01.igc`.
+ *
+ * | page | `headless` | affichage |
+ * |---|---|---|
+ * | 4 | `true` | **`4,6`** — le nombre nu |
+ * | 1, 2, 5 | `false` | **`1:2,2`** — avec la tête |
+ *
+ * Nous ignorions la clé et écrivions toujours la tête. Elle vaut `false` par défaut
+ * (relevé des 75 gadgets), et c'est `widgetBoolean` qui va le chercher : une finesse sans
+ * clé garde donc sa tête, comme sur les trois pages qui ne l'écrivent pas. Les quatre
+ * types la portent — le catalogue extrait de l'APK donne `headless@WGlide`,
+ * `headless@WNextTurnpointGlideTo`, `headless@WCompGlideToGoal`, `headless@WCompGlideToESS`
+ * — mais **seul `WGlide` a été observé dans les deux états**.
  */
-function glideRatio(example: string, language: string): string {
-  return `1:${formatDecimal(example, language)}`
+function glideText(widget: Widget, example: string, language: string): string {
+  const number = formatDecimal(example, language)
+  return widgetBoolean(widget, 'headless') === true ? number : `1:${number}`
 }
 
 /**
@@ -490,7 +511,7 @@ export function drawNumeric(widget: Widget, settings: RenderSettings, language: 
     ? ''
     : bracketed(
       widget,
-      spec.quantity === 'glide' ? glideRatio(spec.example, language) : formatDecimal(spec.example, language)
+      spec.quantity === 'glide' ? glideText(widget, spec.example, language) : formatDecimal(spec.example, language)
     )
 
   const element = document.createElement('div')

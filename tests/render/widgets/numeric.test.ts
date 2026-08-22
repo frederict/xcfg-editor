@@ -251,7 +251,7 @@ describe('widgets numériques', () => {
   // Écart n°3 — fond coloré selon le signe, limité au vario et au gain thermique
   // (rendu-observe.md, ligne 47-49).
   describe('fond coloré selon le signe', () => {
-    it('colore la zone de valeur en vert pour un vario positif (exemple statique +2.1)', () => {
+    it('colore la zone de valeur en vert pour un vario positif (exemple statique +3.5)', () => {
       const el = drawNumeric(widget('WVerticalSpeed', {}), settings, language)
       expect(el.querySelector('.xc-num__row')?.classList.contains('xc-num__row--positive')).toBe(true)
     })
@@ -384,7 +384,7 @@ describe('widgets numériques', () => {
       const colore = drawNumeric(widget('WVerticalSpeed', { _unit: 'true' }), settings, language)
       const neutre = drawNumeric(widget('WAltitude', { _unit: 'true' }), settings, language)
       expect(colore.querySelector('.xc-num__row--positive')).not.toBeNull()
-      expect(valueEm(colore)).toBeCloseTo(valueWidthEm('+2,1') + 0.1, 6)
+      expect(valueEm(colore)).toBeCloseTo(valueWidthEm('+3,5') + 0.1, 6)
       expect(valueEm(neutre)).toBeCloseTo(valueWidthEm('1234'), 6)
     })
 
@@ -427,7 +427,7 @@ describe('widgets numériques', () => {
    * Relevé sur `captures-air3/2026-08-21_planche-competition-4-widgets-de-manche.png`
    * (« finesse au but » et « Finesse pour l'ESS » : un « 1: » en gros chiffres noirs,
    * aucune unité à droite) et sur `captures-air3/vol-thermalassistant-boutonsnavig.png`
-   * (« Finesse Pt suivant »). Voir le commentaire de `glideRatio` dans numeric.ts.
+   * (« Finesse Pt suivant »). Voir le commentaire de `glideText` dans numeric.ts.
    */
   describe('la finesse s’écrit en rapport, le 1 devant (écart 2.8)', () => {
     for (const [type, attendu] of [
@@ -446,6 +446,29 @@ describe('widgets numériques', () => {
         const el = drawNumeric(widget(type, {}), settings, 'fr')
         expect(el.querySelector('.xc-num__unit')).toBeNull()
       }
+    })
+
+    /**
+     * `headless` — mesurée le 2026-08-22, sur le même jeu de pages et au même instant du
+     * rejeu : page 4 (`headless: true`) affiche « 4,6 », pages 1, 2 et 5 (`false`)
+     * affichent « 1:2,2 ». L'appareil rend les DEUX formes ; nous écrivions toujours la
+     * tête.
+     */
+    it('`headless: true` retire la tête « 1: » et ne laisse que le nombre', () => {
+      const el = drawNumeric(widget('WGlide', { headless: 'true' }), settings, 'fr')
+      expect(el.querySelector('.xc-num__value')?.textContent).toBe('8,3')
+    })
+
+    it('`headless: false` garde la tête, comme la clé absente — son défaut est `false`', () => {
+      const ecrit = drawNumeric(widget('WGlide', { headless: 'false' }), settings, 'fr')
+      const absent = drawNumeric(widget('WGlide', {}), settings, 'fr')
+      expect(ecrit.querySelector('.xc-num__value')?.textContent).toBe('1:8,3')
+      expect(absent.querySelector('.xc-num__value')?.textContent).toBe('1:8,3')
+    })
+
+    it('la clé vaut pour les quatre types de finesse, crochets compris', () => {
+      const el = drawNumeric(widget('WNextTurnpointGlideTo', { headless: 'true' }), settings, 'fr')
+      expect(el.querySelector('.xc-num__value')?.textContent).toBe('[6,2]')
     })
   })
 
@@ -560,7 +583,7 @@ describe('widgets numériques', () => {
       // quel (« fr-FR ») quand le fichier ne précise rien — pas seulement le code court
       // du catalogue de libellés (« fr »).
       const el = drawNumeric(widget('WVerticalSpeed', {}), settings, 'fr-FR')
-      expect(el.querySelector('.xc-num__value')?.textContent).toBe('+2,1')
+      expect(el.querySelector('.xc-num__value')?.textContent).toBe('+3,5')
     })
 
     it('ne touche pas une valeur sans décimale', () => {
