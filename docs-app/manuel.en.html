@@ -713,7 +713,7 @@
   <h3>Physical keys, and why some of them have no name</h3>
 
   <p>The <span class="manual__ui">Key bindings</span> screen shows, for each command,
-  the code your device sends. Two origins meet there, and they are not worth the same:</p>
+  the code your device sends. Two origins of name meet there, and they are not worth the same:</p>
 
   <ul>
     <li><strong>a name in plain words</strong> — “volume haut”, “marche/arrêt” — was
@@ -730,6 +730,27 @@
   would not exist. The fleet is not uniform: newer AIR³ units carry more physical keys
   than the 7.2, and a code with no echo on one may drive a real button on the other. We
   invent no names.</p>
+
+  <p>What we know about a code sits on one of <strong>three rungs</strong>, and the editor
+  tells you which one applies:</p>
+
+  <ol>
+    <li><strong>a key pressed by hand</strong>, the incoming code read. This is the only
+    rung that proves a button exists;</li>
+    <li><strong>a code declared by the device’s kernel</strong>, surveyed on 22 August 2026
+    on the AIR³ 7.2. That unit’s keyboard controller declares, among others, code 27 and
+    four directional-pad codes, while only three keys were ever pressed. A declared code is
+    <em>possible</em> on this hardware; it is not proved, because a keyboard chip often
+    declares more codes than the case has buttons;</li>
+    <li><strong>nothing</strong> — the code is declared nowhere on this model. That is
+    ignorance, not absence.</li>
+  </ol>
+
+  <p>Code 266 belongs to that third case, and it is the one many pilots press most in
+  competition. None of the AIR³ 7.2’s four input devices can produce it. The simplest
+  explanation — <strong>a hypothesis, and nothing has verified it</strong> — is that an app
+  installed on the device injects it, and the add-on <code>air3.air3xctaddon</code> is
+  present there. We write it down as a lead, not as an answer.</p>
 
   <p>To find out which key sends a given code there is only one sure way, and it is on the
   instrument: put the <span class="manual__ui">Last key pressed</span> widget on a page,

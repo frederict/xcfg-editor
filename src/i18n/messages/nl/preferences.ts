@@ -68,25 +68,48 @@ const preferences: DomainCatalog<'preferences'> = {
     'ander toestel ({device}): dit kastje is een blinde vlek. De code van elke koppeling ' +
     'wordt hierboven gelezen en benoemd, maar wij weten niet welke toets hem uitzendt.',
   'preferences.hardwareSurveyed':
-    'Op {model} — het model dat dit bestand aangeeft — hebben wij maar {keys} gemeten: ' +
+    'Op {model} — het model dat dit bestand aangeeft — hebben wij maar {keys} ingedrukt: ' +
     '{listed}. {missing} De meting is op één enkel kastje gedaan, en recentere modellen ' +
     'dragen er meer.',
-  'preferences.hardwareStrangerOne': 'Code {codes} is geen van deze.',
-  'preferences.hardwareStrangerMany': 'De codes {codes} zijn geen van deze.',
-  'preferences.unmatchedKeyTitle':
-    'Geen van de op {model} gemeten toetsen zendt code {code} uit. De opmerking onder dit ' +
-    'blok zegt wat die meting waard is.',
+  'preferences.hardwareDeclaredOne':
+    'Code {codes} is geen van deze; de kernel van het kastje geeft hem toch op, wat hem ' +
+    'op dit materiaal mogelijk maakt zonder dat een druk het bewezen heeft.',
+  'preferences.hardwareDeclaredMany':
+    'De codes {codes} zijn geen van deze; de kernel van het kastje geeft ze toch op, wat ' +
+    'ze op dit materiaal mogelijk maakt zonder dat een druk het bewezen heeft.',
+  'preferences.hardwareStrangerOne':
+    'Code {codes} is geen van deze, en de kernel van het kastje geeft hem op geen van ' +
+    'zijn invoerapparaten op: wij weten niet welke toets hem uitzendt.',
+  'preferences.hardwareStrangerMany':
+    'De codes {codes} zijn geen van deze, en de kernel van het kastje geeft ze op geen ' +
+    'van zijn invoerapparaten op: wij weten niet welke toetsen ze uitzenden.',
+  'preferences.keyNoteBelow':
+    'De opmerking onder dit blok zegt wat deze metingen waard zijn.',
   'preferences.keyFromSurvey':
     '‘{label}’ is de naam van deze toets op de behuizing, met de hand gemeten op {model}. {name} is de naam die Android aan code {code} geeft.',
+  'preferences.keyFromKernel':
+    '{name} is de naam die de toetsentabel van Android aan code {code} geeft. Wij hebben ' +
+    'op {model} geen toets ingedrukt die hem uitzendt, maar de kernel van het kastje ' +
+    'geeft hem op {devices} op. De code is dus mogelijk op dit materiaal, wat niet ' +
+    'bewijst dat er een knop voor gesoldeerd is.',
+  'preferences.keyFromNeither':
+    '{name} is de naam die de toetsentabel van Android aan code {code} geeft. Wij hebben ' +
+    'op {model} geen toets ingedrukt die hem uitzendt, en de kernel van het kastje geeft ' +
+    'hem op geen van zijn invoerapparaten op: wij weten niet waar hij vandaan komt.',
   'preferences.keyFromAndroid':
     '{name} is de naam die de toetsentabel van Android aan code {code} geeft. Die tabel benoemt een code, geen knop: zij zegt niet welke van uw toetsen hem uitzendt, en deze hebben wij niet met de hand gemeten.',
   'preferences.keyFromNowhere':
     'Code {code} staat in geen enkele toetsentabel die wij gelezen hebben. Er wordt hier geen naam aan gegeven: er een verzinnen zou de slechtste dienst zijn.',
+  'preferences.keyInjectionHypothesis':
+    'Een hypothese, niet geverifieerd: een op het toestel geïnstalleerde toepassing kan ' +
+    'een code injecteren zonder dat een toets hem uitzendt, en het pakket {addon} is op ' +
+    'dit kastje aanwezig. Niets bewijst het — alleen een druk, of het lezen van die ' +
+    'toepassing, zou uitsluitsel geven.',
   'preferences.intentGloss':
     'Een ‘intent’ is het bericht waarmee de ene Android-toepassing een andere laat reageren. Deze toets bestuurt dus niet XCTrack: zij zendt een signaal uit, en het is een andere toepassing, op het toestel ingesteld, die daarop antwoordt.',
 
   'preferences.keyNamingOrigin':
-    'Een naam in gewone woorden is die welke de toets op de behuizing draagt, met de hand gemeten: die bestaat alleen voor de modellen die wij in handen hebben gehad. Een naam met KEYCODE_ komt uit de toetsentabel van Android, die de code benoemt en niet de knop. Een ontbrekende naam is dus een ontbrekende meting, nooit een toets die niet zou bestaan.',
+    'Een naam in gewone woorden is die welke de toets op de behuizing draagt, opgenomen door hem met de hand in te drukken: die bestaat alleen voor de modellen die wij in handen hebben gehad. Een naam met KEYCODE_ komt uit de toetsentabel van Android, die de code benoemt en niet de knop. Daartussen ligt een derde trap: de kernel van het kastje geeft codes op die wij nooit hebben ingedrukt, en een opgegeven code is mogelijk op dit materiaal zonder dat een knop hem daarom uitzendt. Een ontbrekende naam is dus een ontbrekende meting, nooit een toets die niet zou bestaan.',
 
   'preferences.runtimeDefaultReason':
     'XCTrack vult deze lijst in code en de fabriekswaarde ervan hangt af van de taal en ' +

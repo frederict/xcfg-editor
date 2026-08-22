@@ -752,7 +752,7 @@
   <h3>Die physischen Tasten, und warum manche keinen Namen haben</h3>
 
   <p>Der Bildschirm <span class="manual__ui">Tastenzuordnungen</span> zeigt für
-  jeden Befehl den Code, den Ihr Gerät sendet. Zwei Herkünfte treffen dort aufeinander,
+  jeden Befehl den Code, den Ihr Gerät sendet. Zwei Namensherkünfte treffen dort aufeinander,
   und sie sind nicht dasselbe wert:</p>
 
   <ul>
@@ -770,6 +770,28 @@
   die es nicht gäbe. Der Gerätepark ist nicht einheitlich: neuere AIR³ tragen mehr
   physische Tasten als das 7.2, und ein Code ohne Echo am einen kann am anderen eine
   echte Taste steuern. Wir erfinden keine Namen.</p>
+
+  <p>Was wir über einen Code wissen, liegt auf einer von <strong>drei Stufen</strong>, und
+  der Editor sagt Ihnen, welche gilt:</p>
+
+  <ol>
+    <li><strong>eine von Hand gedrückte Taste</strong>, deren ankommender Code gelesen
+    wurde. Nur diese Stufe beweist, dass eine Taste vorhanden ist;</li>
+    <li><strong>ein vom Kernel des Geräts angegebener Code</strong>, am 22. August 2026 am
+    AIR³ 7.2 erhoben. Der Tastatur-Controller dieses Gehäuses gibt unter anderem den Code
+    27 und vier Codes des Steuerkreuzes an, obwohl nur drei Tasten je gedrückt wurden. Ein
+    angegebener Code ist auf dieser Hardware <em>möglich</em>; bewiesen ist er nicht, denn
+    ein Tastatur-Chip gibt oft mehr Codes an, als das Gehäuse Tasten hat;</li>
+    <li><strong>nichts</strong> — der Code wird auf diesem Modell nirgends angegeben. Das
+    ist Unwissen, kein Fehlen.</li>
+  </ol>
+
+  <p>Der Code 266 gehört zu diesem dritten Fall, und es ist der, den viele Piloten im
+  Wettkampf am häufigsten drücken. Keines der vier Eingabegeräte des AIR³ 7.2 kann ihn
+  erzeugen. Die einfachste Erklärung — <strong>eine Hypothese, die nichts geprüft
+  hat</strong> — ist, dass eine auf dem Gerät installierte Anwendung ihn einspeist, und das
+  Add-on <code>air3.air3xctaddon</code> ist dort vorhanden. Wir schreiben es als Spur auf,
+  nicht als Antwort.</p>
 
   <p>Um zu erfahren, welche Taste einen bestimmten Code sendet, gibt es nur einen sicheren
   Weg, und er führt über das Gerät: das Widget

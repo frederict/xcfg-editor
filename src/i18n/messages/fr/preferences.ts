@@ -138,33 +138,62 @@ const preferences = {
   'preferences.hardwareUnsurveyedOtherDevice':
     'Nous n’avons mesuré les touches physiques que sur {models}, et ce fichier vient d’un autre appareil ({device}) : ce boîtier-ci est un angle mort. Le code de chaque liaison est lu et nommé ci-dessus, mais nous ne savons pas quelle touche l’émet.',
   'preferences.hardwareSurveyed':
-    'Sur {model} — le modèle que ce fichier déclare — nous n’avons mesuré que {keys} : {listed}. {missing} La mesure a été faite sur un seul boîtier, et les modèles plus récents en portent davantage.',
+    'Sur {model} — le modèle que ce fichier déclare — nous n’avons pressé que {keys} : {listed}. {missing} La mesure a été faite sur un seul boîtier, et les modèles plus récents en portent davantage.',
   /**
-   * Deux phrases entières plutôt qu'un pluriel : le compte des codes étrangers n'apparaît
-   * nulle part dans la phrase — c'est la liste des codes qui s'y écrit, pas leur nombre.
+   * ⚠️ **Deux crans, deux phrases**, et jamais une seule qui les mélangerait. Un code que
+   * le noyau du boîtier déclare est possible sur ce matériel ; un code qu'il ne déclare
+   * nulle part n'est attesté par rien. Le 2026-08-22, l'écran disait des deux la même
+   * chose — et le disait du code 27, que le contrôleur de clavier déclare.
+   *
+   * Quatre phrases entières plutôt qu'un pluriel : le compte des codes n'apparaît nulle
+   * part dans la phrase — c'est la liste des codes qui s'y écrit, pas leur nombre.
    */
-  'preferences.hardwareStrangerOne': 'Le code {codes} n’est aucune d’elles.',
-  'preferences.hardwareStrangerMany': 'Les codes {codes} n’en sont aucune.',
-  'preferences.unmatchedKeyTitle':
-    'Aucune des touches mesurées sur {model} n’émet le code {code}. La note sous ce bloc dit ce que cette mesure vaut.',
+  'preferences.hardwareDeclaredOne':
+    'Le code {codes} n’est aucune d’elles ; le noyau du boîtier le déclare tout de même, ce qui le rend possible sur ce matériel sans qu’un appui l’ait prouvé.',
+  'preferences.hardwareDeclaredMany':
+    'Les codes {codes} n’en sont aucune ; le noyau du boîtier les déclare tout de même, ce qui les rend possibles sur ce matériel sans qu’un appui les ait prouvés.',
+  'preferences.hardwareStrangerOne':
+    'Le code {codes} n’est aucune d’elles, et le noyau du boîtier ne le déclare sur aucun de ses périphériques d’entrée : nous ne savons pas quelle touche l’émet.',
+  'preferences.hardwareStrangerMany':
+    'Les codes {codes} n’en sont aucune, et le noyau du boîtier ne les déclare sur aucun de ses périphériques d’entrée : nous ne savons pas quelles touches les émettent.',
+  /** Le renvoi de l'infobulle vers la note du bloc, qui dit ce que chaque relevé vaut. */
+  'preferences.keyNoteBelow': 'La note sous ce bloc dit ce que ces relevés valent.',
 
   /* ------------------------------------------- d'où vient le nom qu'on lit sur la ligne */
 
   /**
-   * ⚠️ **Trois provenances, et elles ne se mélangent pas.** L'écran des touches met côte à
-   * côte un nom relevé à la main sur un boîtier (« volume haut ») et un nom lu dans la
-   * table des touches d'Android (`KEYCODE_STEM_2`). Un pilote-testeur y a vu, le
+   * ⚠️ **Trois crans de connaissance, et ils ne se mélangent pas.** L'écran des touches
+   * met côte à côte un nom relevé en pressant la touche (« volume haut ») et un nom lu
+   * dans la table des touches d'Android (`KEYCODE_STEM_2`). Un pilote-testeur y a vu, le
    * 2026-08-22, une traduction oubliée. Ce n'en est pas une : c'est une mesure qui manque,
    * et ces phrases le disent plutôt que de laisser croire à une négligence.
+   *
+   * Le même jour, `getevent -pl` a fait apparaître le cran du milieu : le **noyau du
+   * boîtier** déclare des codes que personne n'a pressés — `CAMERA` en 27, quatre codes
+   * de croix directionnelle. Un code déclaré est possible sur ce matériel ; il n'est pas
+   * prouvé. Le confondre avec un code inconnu du matériel, c'était contredire l'appareil.
    *
    * Aucune ne doit faire dire qu'une touche n'existe pas : le parc n'est pas homogène.
    */
   'preferences.keyFromSurvey':
     '« {label} » est le nom de cette touche sur le boîtier, relevé à la main sur {model}. {name} est le nom qu’Android donne au code {code}.',
+  'preferences.keyFromKernel':
+    '{name} est le nom que la table des touches d’Android donne au code {code}. Nous n’avons pressé aucune touche qui l’émette sur {model}, mais le noyau du boîtier le déclare sur {devices}. Ce code est donc possible sur ce matériel, ce qui ne prouve pas qu’un bouton lui soit soudé.',
+  'preferences.keyFromNeither':
+    '{name} est le nom que la table des touches d’Android donne au code {code}. Nous n’avons pressé aucune touche qui l’émette sur {model}, et le noyau du boîtier ne le déclare sur aucun de ses périphériques d’entrée : nous ne savons pas d’où il vient.',
   'preferences.keyFromAndroid':
     '{name} est le nom que la table des touches d’Android donne au code {code}. Cette table nomme un code, pas un bouton : elle ne dit pas laquelle de vos touches l’émet, et nous n’avons pas relevé celle-ci à la main.',
   'preferences.keyFromNowhere':
     'Le code {code} ne figure dans aucune table de touches que nous ayons lue. Aucun nom ne lui est donné ici : en inventer un serait le pire des services.',
+  /**
+   * ⚠️ **Une hypothèse, et la phrase le dit avant toute chose.** Le code 266 est celui
+   * que le pilote presse le plus en compétition, et aucun des quatre périphériques
+   * d'entrée du boîtier ne peut le produire. Le laisser nu serait pire que de le dire
+   * mal ; l'expliquer serait pire encore. Ce qui est écrit ici est ce qui est su : un
+   * fait, une piste, et ce qui manquerait pour trancher.
+   */
+  'preferences.keyInjectionHypothesis':
+    'Hypothèse, non vérifiée : une application installée sur l’appareil peut injecter un code sans qu’aucune touche l’émette, et le paquet {addon} est présent sur ce boîtier. Rien ne le prouve — seul un appui, ou la lecture de cette application, trancherait.',
   /**
    * ⚠️ **Notre glose, jamais un libellé réécrit.** « Lance une intention Android » est ce
    * que XCTrack affiche en français, extrait de l'APK — c'est le mot que le pilote
@@ -175,7 +204,7 @@ const preferences = {
     'Une « intention » (intent, en anglais) est le message par lequel une application Android en fait réagir une autre. Cette touche ne pilote donc pas XCTrack : elle envoie un signal, et c’est une autre application, réglée sur l’appareil, qui y répond.',
 
   'preferences.keyNamingOrigin':
-    'Un nom en toutes lettres est celui que porte la touche sur le boîtier, relevé à la main : il n’y en a que pour les modèles que nous avons eus entre les mains. Un nom en KEYCODE_ vient de la table des touches d’Android, qui nomme le code et non le bouton. Un nom qui manque est donc une mesure qui manque, jamais une touche qui n’existerait pas.',
+    'Un nom en toutes lettres est celui que porte la touche sur le boîtier, relevé en la pressant à la main : il n’y en a que pour les modèles que nous avons eus entre les mains. Un nom en KEYCODE_ vient de la table des touches d’Android, qui nomme le code et non le bouton. Entre les deux se glisse un troisième cran : le noyau du boîtier déclare des codes que nous n’avons jamais pressés, et un code déclaré est possible sur ce matériel sans qu’un bouton l’émette pour autant. Un nom qui manque est donc une mesure qui manque, jamais une touche qui n’existerait pas.',
 
   /* ================================================== pourquoi il n'y a rien à comparer */
 

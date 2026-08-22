@@ -319,6 +319,58 @@ describe('catalogues de messages', () => {
   })
 
   /**
+   * ⚠️ **Les trois crans de connaissance sur une touche physique ne se confondent pas**,
+   * et dans aucune des cinq langues : pressée à la main, déclarée par le noyau du
+   * boîtier, attestée par rien. Le 2026-08-22, l'écran écrasait les deux derniers dans la
+   * même phrase — et le faisait du code 27, que le contrôleur de clavier de l'AIR³ 7.2
+   * déclare. Une traduction qui les rapprocherait referait le même défaut, sans que
+   * personne ne le voie hors du français.
+   *
+   * Le test ne juge pas les mots ; il exige qu'ils soient **trois fois différents**, et
+   * qu'aucun ne prétende qu'une touche existe ou n'existe pas.
+   */
+  it('nomment les trois crans d’une touche physique par trois phrases distinctes', () => {
+    for (const language of UI_LANGUAGES) {
+      const catalog = CATALOGS[language]
+      const three = new Set([
+        catalog['preferences.keyFromSurvey'],
+        catalog['preferences.keyFromKernel'],
+        catalog['preferences.keyFromNeither']
+      ])
+      expect(three.size, `${language}`).toBe(3)
+      // Le cran du milieu porte le périphérique qui déclare le code : sans lui, la
+      // phrase affirmerait sans montrer d'où elle tient ce qu'elle dit.
+      expect(catalog['preferences.keyFromKernel'], `${language}`).toContain('{devices}')
+      // Les deux derniers nomment le modèle : rien ne vaut hors de ce boîtier-là.
+      expect(catalog['preferences.keyFromKernel'], `${language}`).toContain('{model}')
+      expect(catalog['preferences.keyFromNeither'], `${language}`).toContain('{model}')
+      // Et la note du bloc les distingue aussi, en deux phrases et non une.
+      const declared = catalog['preferences.hardwareDeclaredOne']
+      const stranger = catalog['preferences.hardwareStrangerOne']
+      expect(declared, `${language}`).not.toBe(stranger)
+    }
+  })
+
+  /**
+   * ⚠️ **L'hypothèse sur 266 se dit comme une hypothèse, dans les cinq langues.** C'est
+   * la touche que le pilote presse le plus en compétition, et rien ne l'explique : ni un
+   * appui, ni le noyau. Une traduction qui la présenterait comme une explication ferait
+   * perdre au projet ce qu'il a de plus précieux.
+   */
+  it('présentent l’hypothèse d’injection comme une hypothèse, pas une explication', () => {
+    const hypothesis: Record<UiLanguage, string> = {
+      fr: 'Hypothèse', en: 'hypothesis', de: 'Hypothese', es: 'Hipótesis', nl: 'hypothese'
+    }
+    for (const language of UI_LANGUAGES) {
+      const said = CATALOGS[language]['preferences.keyInjectionHypothesis']
+      expect(said.toLowerCase(), `${language}`).toContain(hypothesis[language].toLowerCase())
+      // Le paquet soupçonné est passé, jamais écrit en dur dans la phrase.
+      expect(said, `${language}`).toContain('{addon}')
+      expect(said, `${language}`).not.toContain('air3.air3xctaddon')
+    }
+  })
+
+  /**
    * Le même geste, deux écrans, deux clés — c'est la règle du socle : un mot n'entre dans
    * le vocabulaire partagé que s'il y est déjà nécessaire, et deux clés voisines coûtent
    * moins cher qu'un conflit sur `common.ts`. Le prix de cette règle est la dérive

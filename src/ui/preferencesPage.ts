@@ -15,6 +15,8 @@ import {
   type PreferenceScope
 } from '../catalog/preferenceCatalog'
 import {
+  declaringDevices,
+  keyCodeEvidence,
   loadPreferenceDomains,
   type HardwareKeySurvey,
   type KeyBinding,
@@ -130,19 +132,23 @@ import type { MessageKey, Translator } from '../i18n'
  *
  * Un code de touche n'est pas une touche. `Keys.PrevWaypoint = 266` est une ligne
  * parfaitement valide ; encore faut-il que le boîtier porte une touche qui émette 266.
- * Le relevé des touches physiques ne couvre **qu'un modèle**, l'AIR³ 7.2, et le parc
- * n'est pas homogène — les AIR³ plus récents en portent davantage.
+ * Les relevés ne couvrent **qu'un modèle**, l'AIR³ 7.2, et le parc n'est pas homogène —
+ * les AIR³ plus récents portent davantage de touches.
  *
  * La page ne doit donc **jamais** écrire « cette touche n'existe pas » ni « ce réglage
  * est inerte ». Elle dit au plus ce qu'elle a relevé, en nommant le modèle du relevé, et
- * laisse le pilote conclure. Deux choses le lui permettent :
+ * laisse le pilote conclure. Trois choses le lui permettent :
  *
  * - le fichier **déclare son appareil** (`info.device`), ce qui conditionne le propos au
  *   modèle : `hardwareKeysFor()` rend `null` dès qu'il ne le reconnaît pas, et la page se
  *   contente alors de dire qu'elle ne sait pas ;
- * - ⚠️ le fichier de disposition du contrôleur de clavier **ne fait pas relevé** :
- *   `sn7326-key` déclare des touches que le boîtier n'a pas. Un fichier de configuration
- *   Android décrit ce que la puce sait faire, pas ce que le fabricant a soudé.
+ * - ⚠️ **trois crans, et non deux** : une touche pressée à la main, un code que le noyau
+ *   du boîtier déclare, rien du tout. `keyCodeEvidence()` répond lequel, et chacun a ses
+ *   propres mots. Le 2026-08-22, la page disait des deux derniers « aucune touche mesurée
+ *   n'émet ce code » — et le disait du code 27, que `sn7326-key` déclare ;
+ * - ⚠️ le fichier de disposition **ne fait pas relevé pour autant** : il décrit ce que la
+ *   puce sait faire, pas ce que le fabricant a soudé. Un code déclaré est possible sur ce
+ *   matériel, jamais prouvé — seul un appui le prouverait.
  *
  * ## Une clé absente ne dit rien — et surtout pas « valeur d'usine »
  *
@@ -338,14 +344,16 @@ export interface PreferenceRow {
    */
   binding?: KeyBinding
   /**
-   * Vrai quand notre relevé matériel **couvre** le modèle de ce fichier et que ce code-là
-   * n'est aucune des touches relevées.
+   * Ce que nos relevés attestent de ce code-là, quand ils couvrent le modèle de ce
+   * fichier : `'declared'` — le noyau du boîtier le déclare, personne ne l'a pressé —,
+   * `'unattested'` — ni l'un ni l'autre —, ou `undefined` quand la touche a été pressée
+   * ou qu'il n'y a aucun relevé pour ce modèle.
    *
-   * ⚠️ Ce n'est pas « cette touche n'existe pas » : le relevé ne couvre qu'un modèle et
-   * le parc n'est pas homogène. C'est la marque qui renvoie à la note du bloc, laquelle
-   * dit ce que le relevé vaut — voir `hardwareNote`.
+   * ⚠️ `'unattested'` n'est **pas** « cette touche n'existe pas » : les relevés ne
+   * couvrent qu'un modèle et le parc n'est pas homogène. C'est la marque qui renvoie à
+   * la note du bloc, laquelle dit ce que chaque relevé vaut — voir `hardwareNote`.
    */
-  unmatchedKey?: boolean
+  keyEvidence?: 'declared' | 'unattested'
   /** Vrai si la valeur est un objet ou un tableau : on n'en montre que la taille. */
   structured: boolean
   /** Défini pour une ligne du bloc de fin — voir `LeftoverReason`. */
@@ -657,11 +665,12 @@ export function bindingParts(
 }
 
 /**
- * **D'où vient le nom affiché** sur cette ligne-là, en une phrase.
+ * **D'où vient le nom affiché** sur cette ligne-là, en une phrase — et **lequel des trois
+ * crans** de connaissance s'applique à ce code.
  *
  * ## Pourquoi cette phrase existe
  *
- * L'écran des touches met côte à côte deux provenances qui ne se ressemblent pas :
+ * L'écran des touches met côte à côte des provenances qui ne se ressemblent pas :
  *
  * - « volume haut », « marche/arrêt » — un nom **relevé à la main sur un boîtier**, rangé
  *   dans `preferenceDomains.json` sous `keyCodes.hardwareKeys[].label`. C'est une donnée
@@ -676,44 +685,101 @@ export function bindingParts(
  * touche qu'il presse le plus en compétition. La réponse n'est pas une traduction
  * manquante : c'est une mesure manquante.
  *
- * ⚠️ **Elle ne nomme donc aucune touche que nous n'ayons pas relevée**, et ne dit jamais
- * qu'une touche n'existe pas : le parc n'est pas homogène, et un code sans écho sur
- * l'AIR³ 7.2 peut commander un vrai bouton sur un modèle plus récent.
+ * ## ⚠️ Trois crans, et non deux
+ *
+ * Le même jour, `getevent -pl` a montré que la phrase écrasait deux situations très
+ * différentes. Entre « pressée à la main » et « rien », il y a **le code que le noyau du
+ * boîtier déclare** : `sn7326-key` déclare `CAMERA` en 27, et 27 est justement ce que
+ * `Keys.PrevWaypoint` porte dans le corpus du propriétaire. Dire de 27 « aucune touche
+ * mesurée ne l'émet » contredisait l'appareil.
+ *
+ * Un code déclaré est **possible sur ce matériel** ; il n'est pas prouvé. Un contrôleur
+ * de clavier déclare souvent plus de codes que le boîtier n'a de boutons, et seul un
+ * appui ferait foi. Les trois crans se disent donc chacun dans leurs propres mots — voir
+ * `keyCodeEvidence()` dans `src/catalog/preferenceDomains.ts`.
+ *
+ * ⚠️ **Aucune de ces phrases ne nomme une touche que nous n'ayons pas relevée**, et
+ * aucune ne dit qu'une touche n'existe pas : le parc n'est pas homogène, et un code sans
+ * écho sur l'AIR³ 7.2 peut commander un vrai bouton sur un modèle plus récent.
  */
 export function bindingOrigin(
-  binding: KeyBinding, hardware: HardwareKeySurvey | null | undefined, tr: Translator
+  binding: KeyBinding, keys: BindingContext | undefined, tr: Translator
 ): string | undefined {
   if (binding.unset) return undefined
+  const hardware = keys?.hardware
   // `code` et `name` partent en **`string`** : ce sont des identifiants, pas des comptes.
   const code = String(binding.code)
+  const evidence = keyCodeEvidence(hardware, binding.code)
   const physical = hardware?.keys.find((one) => one.code === binding.code)
-  if (physical !== undefined) {
+  if (evidence === 'pressed' && physical !== undefined && hardware != null) {
     return tr.t('preferences.keyFromSurvey', {
-      label: physical.label, model: hardware?.label ?? '', name: physical.name, code
+      label: physical.label, model: hardware.label, name: physical.name, code
     })
   }
-  if (binding.name !== null) {
-    return tr.t('preferences.keyFromAndroid', { name: binding.name, code })
+  // Sans nom Android, il n'y a rien à dire de plus que le code : les trois crans parlent
+  // du matériel, et nommer le code est le préalable de chacun.
+  if (binding.name === null) return tr.t('preferences.keyFromNowhere', { code })
+  // Deuxième cran : le noyau déclare le code, personne ne l'a pressé. `what` — « le
+  // contrôleur de clavier sn7326 » — vient du relevé : une donnée, française partout.
+  if (evidence === 'declared' && hardware != null) {
+    const devices = declaringDevices(hardware, binding.code).map((one) => one.what).join(', ')
+    return tr.t('preferences.keyFromKernel', {
+      name: binding.name, code, model: hardware.label, devices
+    })
   }
-  return tr.t('preferences.keyFromNowhere', { code })
+  // Troisième cran, mais seulement quand nous avons lu **ce** boîtier : sans relevé, nous
+  // ne savons rien de son matériel, et le dire autrement serait mentir par omission.
+  if (evidence === 'unattested' && hardware != null && hardware.kernelDeclaration !== undefined) {
+    return tr.t('preferences.keyFromNeither', {
+      name: binding.name, code, model: hardware.label
+    })
+  }
+  return tr.t('preferences.keyFromAndroid', { name: binding.name, code })
 }
 
 /**
- * L'infobulle entière d'une liaison : d'où vient le nom, puis — si notre relevé couvre ce
- * modèle et ignore ce code-là — ce que ce relevé en dit.
+ * L'infobulle entière d'une liaison : d'où vient le nom, l'hypothèse quand il y en a
+ * une, puis le renvoi à la note du bloc quand notre relevé n'a pas pressé ce code-là.
  *
  * Une seule infobulle, sur l'élément entier, plutôt qu'une par morceau : deux `title`
  * imbriqués ne se lisent jamais tous les deux, et le survol ne dirait alors qu'une moitié
  * de ce qu'il y a à savoir.
  */
 export function bindingTitle(
-  binding: KeyBinding, hardware: HardwareKeySurvey | null | undefined,
-  unmatched: boolean, tr: Translator
+  binding: KeyBinding, keys: BindingContext | undefined, tr: Translator
 ): string | undefined {
-  const origin = bindingOrigin(binding, hardware, tr)
-  if (!unmatched || hardware === undefined || hardware === null) return origin
-  const note = unmatchedTitle(binding, hardware, tr)
-  return origin === undefined ? note : `${origin} ${note}`
+  const parts = [bindingOrigin(binding, keys, tr), hypothesisNote(binding, keys, tr)]
+  const hardware = keys?.hardware
+  if (!binding.unset && hardware != null && keyCodeEvidence(hardware, binding.code) !== 'pressed') {
+    parts.push(tr.t('preferences.keyNoteBelow'))
+  }
+  const said = parts.filter((one): one is string => one !== undefined).join(' ')
+  return said === '' ? undefined : said
+}
+
+/**
+ * L'hypothèse que porte un code que **ni** l'appui **ni** le noyau n'expliquent, ou
+ * `undefined`.
+ *
+ * ⚠️ **C'est une hypothèse, et la phrase le dit avant toute chose.** 266 est le code que
+ * le pilote presse le plus en compétition : le laisser nu serait pire que de le dire mal,
+ * mais l'expliquer serait pire encore. Ce qu'on sait tient en un fait — aucun périphérique
+ * d'entrée du boîtier ne peut le produire — et une piste : une application installée peut
+ * injecter un événement sans qu'aucune touche l'émette.
+ *
+ * Elle ne s'écrit que sur le modèle où le constat a été fait : d'un autre boîtier, nous ne
+ * savons pas quelles applications y sont posées.
+ */
+function hypothesisNote(
+  binding: KeyBinding, keys: BindingContext | undefined, tr: Translator
+): string | undefined {
+  const hardware = keys?.hardware
+  if (binding.unset || hardware == null || keys?.domains === undefined) return undefined
+  if (keyCodeEvidence(hardware, binding.code) !== 'unattested') return undefined
+  const unexplained = keys.domains.unexplainedCode(binding.code)
+  if (unexplained === null || unexplained.deviceId !== hardware.deviceId) return undefined
+  if (unexplained.suspectPackage === undefined) return undefined
+  return tr.t('preferences.keyInjectionHypothesis', { addon: unexplained.suspectPackage })
 }
 
 /** Les trois morceaux en une phrase, pour le texte de la ligne et pour le filtre. */
@@ -722,13 +788,21 @@ export function bindingText(parts: BindingParts): string {
   return `${named}, ${parts.press}`
 }
 
-/** Vrai si notre relevé matériel couvre le modèle du fichier **et** ignore ce code-là. */
-export function unmatchedByHardware(
+/**
+ * Lequel des trois crans s'applique à cette liaison, ou `undefined` quand il n'y a rien
+ * à marquer — pas de touche affectée, ou pas de relevé pour ce modèle.
+ *
+ * ⚠️ `'pressed'` ne se marque pas : c'est le cas ordinaire. Ce que la ligne signale, ce
+ * sont les deux autres — et elle les distingue, parce qu'un code que le noyau déclare
+ * n'est pas un code inconnu du matériel.
+ */
+export function bindingEvidence(
   binding: KeyBinding | undefined, hardware: HardwareKeySurvey | null | undefined
-): boolean {
-  if (binding === undefined || binding.unset) return false
-  if (hardware === undefined || hardware === null) return false
-  return !hardware.keys.some((one) => one.code === binding.code)
+): 'declared' | 'unattested' | undefined {
+  if (binding === undefined || binding.unset) return undefined
+  if (hardware === undefined || hardware === null) return undefined
+  const evidence = keyCodeEvidence(hardware, binding.code)
+  return evidence === 'pressed' ? undefined : evidence
 }
 
 /**
@@ -772,18 +846,32 @@ export function hardwareNote(
       : tr.t('preferences.hardwareUnsurveyedOtherDevice', { models, device })
   }
 
-  const strangers = [...new Set(assigned
-    .filter((one) => !hardware.keys.some((key) => key.code === one.code))
-    .map((one) => one.code))].sort((a, b) => a - b)
-  if (strangers.length === 0) return undefined
+  const codesOf = (evidence: 'declared' | 'unattested'): number[] =>
+    [...new Set(assigned
+      .filter((one) => keyCodeEvidence(hardware, one.code) === evidence)
+      .map((one) => one.code))].sort((a, b) => a - b)
+  const declared = codesOf('declared')
+  const unattested = codesOf('unattested')
+  if (declared.length === 0 && unattested.length === 0) return undefined
 
   // ⚠️ `one.label` — « volume haut » — vient de `preferenceDomains.json` : une donnée
   // relevée, française dans les cinq langues.
   const listed = hardware.keys.map((one) => `${one.label} (${String(one.code)})`).join(', ')
-  const codes = strangers.join(', ')
-  const missing = strangers.length === 1
-    ? tr.t('preferences.hardwareStrangerOne', { codes })
-    : tr.t('preferences.hardwareStrangerMany', { codes })
+  // Deux phrases séparées, et non une seule qui mélangerait les deux crans : un code que
+  // le noyau déclare est possible sur ce matériel, un code qu'il ignore ne l'est pas —
+  // et rien de ce qu'on peut dire du second ne vaut pour le premier.
+  const missing = [
+    declared.length === 0
+      ? undefined
+      : tr.t(declared.length === 1
+        ? 'preferences.hardwareDeclaredOne'
+        : 'preferences.hardwareDeclaredMany', { codes: declared.join(', ') }),
+    unattested.length === 0
+      ? undefined
+      : tr.t(unattested.length === 1
+        ? 'preferences.hardwareStrangerOne'
+        : 'preferences.hardwareStrangerMany', { codes: unattested.join(', ') })
+  ].filter((one): one is string => one !== undefined).join(' ')
   return tr.t('preferences.hardwareSurveyed', {
     model: hardware.label,
     keys: tr.t('preferences.physicalKeyCount', { count: hardware.keys.length }),
@@ -800,6 +888,11 @@ export function hardwareNote(
  * `KEYCODE_STEM_2` et en a conclu à une traduction oubliée. Ce n'en est pas une : c'est
  * une mesure qui manque, et le dire vaut mieux que laisser croire à une négligence.
  *
+ * ⚠️ Elle dit **trois** crans depuis le 2026-08-22 et non deux : pressée à la main,
+ * déclarée par le noyau du boîtier, attestée nulle part. Le cran du milieu existe parce
+ * que `getevent -pl` a montré que `sn7326-key` déclare 27 — le code que
+ * `Keys.PrevWaypoint` porte dans le corpus.
+ *
  * Elle ne s'écrit que quand les deux provenances sont **effectivement** à l'écran, ou
  * qu'un `KEYCODE_*` y est seul : sur un bloc où tout est nommé par le relevé, elle
  * expliquerait une asymétrie qui n'apparaît pas.
@@ -814,15 +907,6 @@ export function keyNamingNote(
     hardware?.keys.some((key) => key.code === one.code) === true
   if (assigned.every(named)) return undefined
   return tr.t('preferences.keyNamingOrigin')
-}
-
-/** L'infobulle d'une liaison dont le code n'est aucune des touches relevées. */
-function unmatchedTitle(
-  binding: KeyBinding, hardware: HardwareKeySurvey, tr: Translator
-): string {
-  return tr.t('preferences.unmatchedKeyTitle', {
-    model: hardware.label, code: String(binding.code)
-  })
 }
 
 /** Au-delà, une valeur scalaire est abrégée à l'affichage. */
@@ -1016,7 +1100,7 @@ function buildRow(key: string, ctx: RowContext): PreferenceRow {
     const raw = Number(scalarText(node) ?? '')
     if (Number.isInteger(raw)) {
       row.binding = ctx.domains.decodeKeyBinding(raw)
-      if (unmatchedByHardware(row.binding, ctx.hardware)) row.unmatchedKey = true
+      row.keyEvidence = bindingEvidence(row.binding, ctx.hardware)
     }
   }
   if (help !== undefined) row.help = applyPattern(help, row.value)
@@ -1713,16 +1797,15 @@ function readOnlyValue(row: PreferenceRow): HTMLElement {
  * première est précisément ce que l'entier du fichier faisait.
  */
 function bindingValue(
-  binding: KeyBinding, hardware: HardwareKeySurvey | null | undefined, unmatched: boolean,
-  tr: Translator
+  binding: KeyBinding, keys: BindingContext, tr: Translator
 ): HTMLElement {
-  const parts = bindingParts(binding, hardware, tr)
+  const parts = bindingParts(binding, keys.hardware, tr)
   const wrap = el('span', 'prefs__binding')
-  // L'infobulle dit **d'où vient le nom affiché** — relevé sur un boîtier, ou lu dans la
-  // table des touches d'Android — et renvoie à la note du bloc quand notre relevé ignore
-  // ce code-là ; elle ne la remplace pas. Un propos sur le matériel doit rester lisible
-  // sans survol, et il l'est — trois lignes plus bas.
-  const title = bindingTitle(binding, hardware, unmatched, tr)
+  // L'infobulle dit **d'où vient le nom affiché**, et lequel des trois crans s'applique —
+  // pressé à la main, déclaré par le noyau du boîtier, attesté nulle part —, puis renvoie
+  // à la note du bloc. Elle ne la remplace pas : un propos sur le matériel doit rester
+  // lisible sans survol, et il l'est — trois lignes plus bas.
+  const title = bindingTitle(binding, keys, tr)
   if (title !== undefined) wrap.title = title
   wrap.append(el('span', 'prefs__binding-key', parts.key))
   if (parts.detail !== undefined) {
@@ -1964,7 +2047,7 @@ function buildRowElement(row: PreferenceRow, ctx: PageContext): HTMLElement {
       // Sans touche affectée, rien à découper : « aucune touche » se dit comme une valeur.
       cell.append(row.binding === undefined || row.binding.unset
         ? readOnlyValue(row)
-        : bindingValue(row.binding, ctx.hardware, row.unmatchedKey === true, tr))
+        : bindingValue(row.binding, { domains: ctx.domains, hardware: ctx.hardware }, tr))
       return
     }
     if (row.state === 'absent' || row.state === 'unwritten') {
@@ -1998,7 +2081,7 @@ function buildRowElement(row: PreferenceRow, ctx: PageContext): HTMLElement {
   // ⚠️ La **marque** seulement, jamais la phrase : celle-ci s’écrit une fois par bloc
   // (`hardwareNote`), comme la phrase de refus juste à côté. Deux lignes de suite portant
   // le même paragraphe le font lire zéro fois.
-  if (row.unmatchedKey === true) element.dataset.hardware = 'unmatched'
+  if (row.keyEvidence !== undefined) element.dataset.hardware = row.keyEvidence
 
   // Une ligne qui ne se règle pas dans une page qui se règle doit dire pourquoi — mais
   // **une fois par bloc**, pas quinze fois de suite : l'écran des touches en compte

@@ -711,7 +711,7 @@
   <h3>Las teclas físicas, y por qué algunas no tienen nombre</h3>
 
   <p>La pantalla <span class="manual__ui">Asignación de teclas</span> muestra, para
-  cada orden, el código que envía su aparato. Allí se cruzan dos procedencias, y no valen
+  cada orden, el código que envía su aparato. Allí se cruzan dos procedencias de nombre, y no valen
   lo mismo:</p>
 
   <ul>
@@ -728,6 +728,28 @@
   que no existiría. El parque no es homogéneo: los AIR³ más recientes llevan más teclas
   físicas que el 7.2, y un código sin eco en uno puede mandar un botón real en el otro. No
   inventamos ningún nombre.</p>
+
+  <p>Lo que sabemos de un código se ordena en <strong>tres niveles</strong>, y el editor le
+  dice cuál se aplica:</p>
+
+  <ol>
+    <li><strong>una tecla pulsada a mano</strong>, con el código leído a la llegada. Es el
+    único nivel que prueba que existe un botón;</li>
+    <li><strong>un código declarado por el núcleo del aparato</strong>, medido el 22 de
+    agosto de 2026 en el AIR³ 7.2. El controlador de teclado de esa carcasa declara, entre
+    otros, el código 27 y cuatro códigos de cruceta, cuando solo se pulsaron tres teclas.
+    Un código declarado es <em>posible</em> en este material; no está probado, porque un
+    chip de teclado declara a menudo más códigos que botones tiene la carcasa;</li>
+    <li><strong>nada</strong> — el código no se declara en ninguna parte en este modelo. Es
+    ignorancia, no ausencia.</li>
+  </ol>
+
+  <p>El código 266 pertenece a ese tercer caso, y es el que muchos pilotos pulsan más en
+  competición. Ninguno de los cuatro dispositivos de entrada del AIR³ 7.2 puede
+  producirlo. La explicación más sencilla — <strong>una hipótesis, que nada ha
+  verificado</strong> — es que una aplicación instalada en el aparato lo inyecta, y el
+  complemento <code>air3.air3xctaddon</code> está presente allí. Lo escribimos como una
+  pista, no como una respuesta.</p>
 
   <p>Para saber qué tecla envía un código dado solo hay un modo seguro, y está en el
   instrumento: poner el widget

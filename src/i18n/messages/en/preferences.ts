@@ -77,25 +77,47 @@ const preferences: DomainCatalog<'preferences'> = {
     'another device ({device}): this unit is a blind spot. Every binding’s code is read ' +
     'and named above, but we do not know which key emits it.',
   'preferences.hardwareSurveyed':
-    'On {model} — the model this file declares — we have measured only {keys}: {listed}. ' +
+    'On {model} — the model this file declares — we have only pressed {keys}: {listed}. ' +
     '{missing} The measurement was made on a single unit, and more recent models carry ' +
     'more keys.',
-  'preferences.hardwareStrangerOne': 'Code {codes} is none of them.',
-  'preferences.hardwareStrangerMany': 'Codes {codes} are none of them.',
-  'preferences.unmatchedKeyTitle':
-    'None of the keys measured on {model} emits code {code}. The note below this block ' +
-    'says what that measurement is worth.',
+  'preferences.hardwareDeclaredOne':
+    'Code {codes} is none of them; the unit’s kernel declares it all the same, which ' +
+    'makes it possible on this hardware without a key press having proved it.',
+  'preferences.hardwareDeclaredMany':
+    'Codes {codes} are none of them; the unit’s kernel declares them all the same, which ' +
+    'makes them possible on this hardware without a key press having proved it.',
+  'preferences.hardwareStrangerOne':
+    'Code {codes} is none of them, and the unit’s kernel declares it on none of its ' +
+    'input devices: we do not know which key emits it.',
+  'preferences.hardwareStrangerMany':
+    'Codes {codes} are none of them, and the unit’s kernel declares them on none of its ' +
+    'input devices: we do not know which keys emit them.',
+  'preferences.keyNoteBelow':
+    'The note below this block says what these surveys are worth.',
   'preferences.keyFromSurvey':
     '“{label}” is what this key is called on the case, measured by hand on {model}. {name} is the name Android gives code {code}.',
+  'preferences.keyFromKernel':
+    '{name} is the name Android’s key table gives code {code}. We have not pressed any ' +
+    'key emitting it on {model}, but the unit’s kernel declares it on {devices}. The ' +
+    'code is therefore possible on this hardware, which does not prove that a button is ' +
+    'wired to it.',
+  'preferences.keyFromNeither':
+    '{name} is the name Android’s key table gives code {code}. We have not pressed any ' +
+    'key emitting it on {model}, and the unit’s kernel declares it on none of its input ' +
+    'devices: we do not know where it comes from.',
   'preferences.keyFromAndroid':
     '{name} is the name Android’s key table gives code {code}. That table names a code, not a button: it does not say which of your keys emits it, and we have not measured this one by hand.',
   'preferences.keyFromNowhere':
     'Code {code} appears in no key table we have read. No name is given to it here: inventing one would be the worst of services.',
+  'preferences.keyInjectionHypothesis':
+    'A hypothesis, unverified: an app installed on the device can inject a code without ' +
+    'any key emitting it, and the package {addon} is present on this unit. Nothing ' +
+    'proves it — only a key press, or reading that app, would settle it.',
   'preferences.intentGloss':
     'An “intent” is the message by which one Android application makes another react. This key therefore does not drive XCTrack: it sends a signal, and it is another application, set up on the device, that answers it.',
 
   'preferences.keyNamingOrigin':
-    'A name in plain words is what the key is called on the case, measured by hand: there are such names only for the models we have had in our hands. A name in KEYCODE_ comes from Android’s key table, which names the code and not the button. A missing name is therefore a missing measurement, never a key that would not exist.',
+    'A name in plain words is what the key is called on the case, recorded by pressing it by hand: there are such names only for the models we have had in our hands. A name in KEYCODE_ comes from Android’s key table, which names the code and not the button. A third rung sits between the two: the unit’s kernel declares codes we have never pressed, and a declared code is possible on this hardware without a button necessarily emitting it. A missing name is therefore a missing measurement, never a key that would not exist.',
 
   'preferences.runtimeDefaultReason':
     'XCTrack fills this list in code and its factory value depends on the language and ' +

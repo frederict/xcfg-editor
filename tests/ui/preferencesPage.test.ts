@@ -646,6 +646,24 @@ function editable(path: string): {
   return { source, document, page, edits }
 }
 
+/**
+ * Le fichier du corpus, avec un autre code sur `Keys.PrevWaypoint`.
+ *
+ * ⚠️ Le corpus du propriétaire porte 27 **et** 266 sur cette liaison, mais les fixtures
+ * anonymisées n'ont gardé que 266. 27 est justement le code que le noyau du boîtier
+ * déclare — c'est donc le seul moyen d'éprouver le cran du milieu sans inventer un
+ * fichier de toutes pièces.
+ */
+function withPrevWaypoint(code: number): JsonNode {
+  const source = readFileSync(BACKUP_2026, 'utf8')
+    .replace('"Keys.PrevWaypoint": 266', `"Keys.PrevWaypoint": ${String(code)}`)
+  return parseJson(source)
+}
+
+function pageOf(document: JsonNode): ReturnType<typeof renderPreferencesPage> {
+  return renderPreferencesPage({ document, catalog, tr, domains, onEdit: () => {} })
+}
+
 function rowElement(page: ReturnType<typeof renderPreferencesPage>, key: string): HTMLElement {
   const found = page.element.querySelector<HTMLElement>(`.prefs__row[data-key="${key}"]`)
   if (found === null) throw new Error(`ligne absente de la page : ${key}`)
@@ -875,12 +893,60 @@ describe('une liaison de touche se lit, et en trois morceaux', () => {
     expect(measured).toContain('relevé à la main sur AIR³ 7.2')
     expect(measured).toContain('KEYCODE_VOLUME_UP')
 
+    // 266 : ni pressé, ni déclaré par le noyau. Le troisième cran, et il se dit comme
+    // une ignorance, jamais comme l'absence d'une touche.
     const android = rowElement(page, 'Keys.PrevWaypoint')
       .querySelector<HTMLElement>('.prefs__binding')?.title ?? ''
     expect(android).toContain('table des touches d’Android')
-    expect(android).toContain('nomme un code, pas un bouton')
+    expect(android).toContain('Nous n’avons pressé aucune touche qui l’émette sur AIR³ 7.2')
+    expect(android).toContain('ne le déclare sur aucun de ses périphériques d’entrée')
+    expect(android).toContain('nous ne savons pas d’où il vient')
     // Et la note de matériel n'a pas disparu de l'infobulle : les deux s'y suivent.
-    expect(android).toContain('n’émet le code 266')
+    expect(android).toContain('La note sous ce bloc')
+  })
+
+  /**
+   * ⚠️ **Le cran du milieu**, celui que l'écran ne connaissait pas avant le 2026-08-22.
+   * `getevent -pl` a montré que `sn7326-key` déclare `CAMERA` en 27 — le code que
+   * `Keys.PrevWaypoint` porte dans le corpus du propriétaire. L'écran en disait
+   * « aucune touche mesurée n'émet le code 27 », d'un code que le noyau déclare.
+   *
+   * Ce qu'il en dit maintenant ne va pas plus loin que la mesure : le code est
+   * **possible** sur ce matériel, et rien ne prouve qu'un bouton l'émette.
+   */
+  it('distingue un code que le noyau déclare d’un code attesté par rien', () => {
+    const page = pageOf(withPrevWaypoint(27))
+    const row = rowElement(page, 'Keys.PrevWaypoint')
+    // Le nom Android reste le meilleur qu'on sache dire : le noyau déclare un code, il
+    // ne nomme pas un bouton.
+    expect(row.querySelector('.prefs__binding-key')?.textContent).toBe('KEYCODE_CAMERA')
+    const title = row.querySelector<HTMLElement>('.prefs__binding')?.title ?? ''
+    expect(title).toContain('Nous n’avons pressé aucune touche qui l’émette sur AIR³ 7.2')
+    expect(title).toContain('le noyau du boîtier le déclare sur le contrôleur de clavier sn7326')
+    expect(title).toContain('ne prouve pas qu’un bouton lui soit soudé')
+    // Et surtout pas la phrase du troisième cran, qui vaut pour 266 et non pour 27.
+    expect(title).not.toContain('nous ne savons pas d’où il vient')
+    // La marque de la ligne distingue les deux crans, elle aussi.
+    expect(row.dataset.hardware).toBe('declared')
+  })
+
+  /**
+   * 266 est le code que le pilote presse le plus en compétition, et aucun des quatre
+   * périphériques d'entrée du boîtier ne peut le produire. Le laisser nu serait pire que
+   * de le dire mal ; l'expliquer serait pire encore.
+   */
+  it('dit l’hypothèse sur 266 comme une hypothèse, jamais comme une explication', () => {
+    const { page } = editable(BACKUP_2026)
+    const title = rowElement(page, 'Keys.PrevWaypoint')
+      .querySelector<HTMLElement>('.prefs__binding')?.title ?? ''
+    expect(title).toContain('Hypothèse, non vérifiée')
+    expect(title).toContain('air3.air3xctaddon')
+    // Ce qui manquerait pour trancher voyage avec elle.
+    expect(title).toContain('Rien ne le prouve')
+    // Et elle ne s'écrit pas sur un code que le noyau explique.
+    const declared = rowElement(pageOf(withPrevWaypoint(27)), 'Keys.PrevWaypoint')
+      .querySelector<HTMLElement>('.prefs__binding')?.title ?? ''
+    expect(declared).not.toContain('Hypothèse')
   })
 
   it('explique sous le bloc pourquoi une touche est nommée et l’autre non', () => {
@@ -891,8 +957,12 @@ describe('une liaison de touche se lit, et en trois morceaux', () => {
     // Une fois sous le bloc, comme les autres phrases de portée — pas quinze fois.
     expect(origin).toHaveLength(1)
     const said = origin[0]?.textContent ?? ''
-    expect(said).toContain('relevé à la main')
+    // Les trois crans, et dans cet ordre : pressé à la main, nommé par Android, déclaré
+    // par le noyau du boîtier. Deux n'y suffisaient pas — voir `keyCodeEvidence`.
+    expect(said).toContain('en la pressant à la main')
     expect(said).toContain('KEYCODE_')
+    expect(said).toContain('le noyau du boîtier déclare des codes que nous n’avons jamais pressés')
+    expect(said).toContain('possible sur ce matériel')
     // Ce que la phrase ne doit jamais laisser croire : le parc n'est pas homogène.
     expect(said).toContain('jamais une touche qui n’existerait pas')
   })
@@ -936,18 +1006,41 @@ describe('ce que la page dit du matériel, et ce qu’elle ne dira jamais', () =
     expect(said).toContain('le modèle que ce fichier déclare')
     expect(said).toContain('volume haut (24)')
     expect(said).toContain('Le code 266 n’est aucune d’elles')
+    expect(said).toContain('ne le déclare sur aucun de ses périphériques d’entrée')
     // Et la réserve part avec l'affirmation, pas ailleurs.
     expect(said).toContain('un seul boîtier')
     expect(said).toContain('modèles plus récents en portent davantage')
   })
 
+  /**
+   * ⚠️ **Deux crans, deux phrases.** Un code que le noyau déclare est possible sur ce
+   * matériel ; un code qu'il ne déclare nulle part n'est attesté par rien. Les mélanger
+   * dans une seule phrase, c'est ce que faisait l'écran avant le 2026-08-22 — et il le
+   * faisait du code 27, que `sn7326-key` déclare.
+   */
+  it('sépare, sous le bloc, ce que le noyau déclare de ce qu’il ignore', () => {
+    // 27 déclaré par le contrôleur, 266 par personne : les deux à l'écran en même temps.
+    const page = pageOf(withPrevWaypoint(27))
+    const bloc = page.element
+      .querySelector('.prefs__screen[data-screen="preferences_keybindings"]')
+    const notes = bloc?.querySelectorAll('.prefs__hardware:not(.prefs__hardware--origin)') ?? []
+    expect(notes).toHaveLength(1)
+    const said = notes[0]?.textContent ?? ''
+    expect(said).toContain('Le code 27 n’est aucune d’elles')
+    expect(said).toContain('le noyau du boîtier le déclare tout de même')
+    expect(said).toContain('sans qu’un appui l’ait prouvé')
+    // Et le 266 de `Keys.NextWaypoint` garde sa propre phrase, celle de l'ignorance.
+    expect(said).toContain('Le code 266 n’est aucune d’elles')
+    expect(said).toContain('nous ne savons pas quelle touche l’émet')
+  })
+
   it('marque les lignes concernées, et elles seules', () => {
     const { page } = editable(BACKUP_2026)
     for (const key of ['Keys.PrevWaypoint', 'Keys.NextWaypoint']) {
-      expect(rowElement(page, key).dataset.hardware, key).toBe('unmatched')
+      expect(rowElement(page, key).dataset.hardware, key).toBe('unattested')
       // L'infobulle renvoie à la note du bloc ; elle ne la remplace pas.
       const title = rowElement(page, key).querySelector<HTMLElement>('.prefs__binding')?.title
-      expect(title, key).toContain('n’émet le code 266')
+      expect(title, key).toContain('La note sous ce bloc')
     }
     for (const key of ['Keys.ZoomIn', 'Keys.ZoomOut', 'Keys.PreviousPage', 'Keys.Menu']) {
       expect(rowElement(page, key).dataset.hardware, key).toBeUndefined()
@@ -958,15 +1051,26 @@ describe('ce que la page dit du matériel, et ce qu’elle ne dira jamais', () =
     // Le propriétaire l'a signalé : son 7.2 n'a que trois touches, mais le parc n'est
     // pas homogène. Sur un modèle plus récent, `Keys.PrevWaypoint` peut être vivant.
     // Une page qui trancherait ferait retirer un réglage qui marche.
-    for (const path of [BACKUP_2026, BACKUP_2025]) {
-      const { page } = editable(path)
+    // ⚠️ Les documents à 27 sont là pour que le **nouveau** texte, celui du cran du
+    // milieu, passe le même contrôle : « le noyau le déclare » ne doit pas devenir
+    // « la touche existe », et son complément ne doit pas devenir « elle n'existe pas ».
+    const documents: Array<[string, JsonNode]> = [
+      [BACKUP_2026, documentOf(BACKUP_2026)],
+      [BACKUP_2025, documentOf(BACKUP_2025)],
+      ['code 27 déclaré par le noyau', withPrevWaypoint(27)],
+      ['code 3 déclaré par la dalle', withPrevWaypoint(3)]
+    ]
+    for (const [path, document] of documents) {
+      const page = pageOf(document)
       const said = [
         page.element.textContent ?? '',
         ...[...page.element.querySelectorAll<HTMLElement>('[title]')].map((one) => one.title)
       ].join('\n')
       for (const forbidden of [
         'n’existe pas', 'inerte', 'sans effet', 'ne fait rien', 'ne sert à rien',
-        'ne répond à rien', 'inutile'
+        'ne répond à rien', 'inutile',
+        // Le revers du cran du milieu : une capacité déclarée n'est pas un bouton.
+        'cette touche existe', 'votre boîtier porte'
       ]) {
         expect(said, `${path} — ${forbidden}`).not.toContain(forbidden)
       }

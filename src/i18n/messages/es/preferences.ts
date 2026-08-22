@@ -69,24 +69,48 @@ const preferences: DomainCatalog<'preferences'> = {
     'dispositivo ({device}): esta caja es un punto ciego. El código de cada asignación se ' +
     'lee y se nombra más arriba, pero no sabemos qué tecla lo emite.',
   'preferences.hardwareSurveyed':
-    'En {model} — el modelo que declara este archivo — solo hemos medido {keys}: {listed}. ' +
+    'En {model} — el modelo que declara este archivo — solo hemos pulsado {keys}: {listed}. ' +
     '{missing} La medición se hizo en una sola caja, y los modelos más recientes llevan más.',
-  'preferences.hardwareStrangerOne': 'El código {codes} no es ninguna de ellas.',
-  'preferences.hardwareStrangerMany': 'Los códigos {codes} no son ninguna de ellas.',
-  'preferences.unmatchedKeyTitle':
-    'Ninguna de las teclas medidas en {model} emite el código {code}. La nota bajo este ' +
-    'bloque dice lo que vale esa medición.',
+  'preferences.hardwareDeclaredOne':
+    'El código {codes} no es ninguna de ellas; el núcleo de la caja lo declara de todos ' +
+    'modos, lo que lo hace posible en este material sin que una pulsación lo haya probado.',
+  'preferences.hardwareDeclaredMany':
+    'Los códigos {codes} no son ninguna de ellas; el núcleo de la caja los declara de ' +
+    'todos modos, lo que los hace posibles en este material sin que una pulsación lo ' +
+    'haya probado.',
+  'preferences.hardwareStrangerOne':
+    'El código {codes} no es ninguna de ellas, y el núcleo de la caja no lo declara en ' +
+    'ninguno de sus dispositivos de entrada: no sabemos qué tecla lo emite.',
+  'preferences.hardwareStrangerMany':
+    'Los códigos {codes} no son ninguna de ellas, y el núcleo de la caja no los declara ' +
+    'en ninguno de sus dispositivos de entrada: no sabemos qué teclas los emiten.',
+  'preferences.keyNoteBelow':
+    'La nota bajo este bloque dice lo que valen estas mediciones.',
   'preferences.keyFromSurvey':
     '«{label}» es el nombre de esta tecla en la carcasa, medido a mano en {model}. {name} es el nombre que Android da al código {code}.',
+  'preferences.keyFromKernel':
+    '{name} es el nombre que la tabla de teclas de Android da al código {code}. No hemos ' +
+    'pulsado ninguna tecla que lo emita en {model}, pero el núcleo de la caja lo declara ' +
+    'en {devices}. El código es pues posible en este material, lo que no prueba que haya ' +
+    'un botón soldado para él.',
+  'preferences.keyFromNeither':
+    '{name} es el nombre que la tabla de teclas de Android da al código {code}. No hemos ' +
+    'pulsado ninguna tecla que lo emita en {model}, y el núcleo de la caja no lo declara ' +
+    'en ninguno de sus dispositivos de entrada: no sabemos de dónde viene.',
   'preferences.keyFromAndroid':
     '{name} es el nombre que la tabla de teclas de Android da al código {code}. Esa tabla nombra un código, no un botón: no dice cuál de sus teclas lo emite, y esta no la hemos medido a mano.',
   'preferences.keyFromNowhere':
     'El código {code} no figura en ninguna tabla de teclas que hayamos leído. Aquí no se le da ningún nombre: inventarlo sería el peor de los servicios.',
+  'preferences.keyInjectionHypothesis':
+    'Hipótesis, no verificada: una aplicación instalada en el dispositivo puede inyectar ' +
+    'un código sin que ninguna tecla lo emita, y el paquete {addon} está presente en ' +
+    'esta caja. Nada lo prueba: solo una pulsación, o la lectura de esa aplicación, lo ' +
+    'zanjaría.',
   'preferences.intentGloss':
     'Una «intención» (intent, en inglés) es el mensaje con el que una aplicación de Android hace reaccionar a otra. Esta tecla no gobierna pues XCTrack: envía una señal, y es otra aplicación, configurada en el aparato, la que responde.',
 
   'preferences.keyNamingOrigin':
-    'Un nombre en palabras es el que lleva la tecla en la carcasa, medido a mano: solo existe para los modelos que hemos tenido entre las manos. Un nombre en KEYCODE_ viene de la tabla de teclas de Android, que nombra el código y no el botón. Un nombre que falta es pues una medición que falta, nunca una tecla que no existiría.',
+    'Un nombre en palabras es el que lleva la tecla en la carcasa, recogido al pulsarla a mano: solo existe para los modelos que hemos tenido entre las manos. Un nombre en KEYCODE_ viene de la tabla de teclas de Android, que nombra el código y no el botón. Entre ambos se cuela un tercer nivel: el núcleo de la caja declara códigos que nunca hemos pulsado, y un código declarado es posible en este material sin que un botón lo emita por ello. Un nombre que falta es pues una medición que falta, nunca una tecla que no existiría.',
 
   'preferences.runtimeDefaultReason':
     'XCTrack rellena esta lista en el código y su valor de fábrica depende del idioma y ' +

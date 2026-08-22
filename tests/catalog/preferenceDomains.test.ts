@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
   LONG_PRESS_BIT_BASIS,
+  declaringDevices,
+  keyCodeEvidence,
   loadPreferenceDomains,
   type PreferenceDomainCatalog,
 } from '../../src/catalog/preferenceDomains'
@@ -184,7 +186,73 @@ describe('les touches que le boîtier porte vraiment', () => {
     // Le nom Android vient de la table lue, jamais de la saisie à la main.
     expect(survey?.keys.map((one) => one.name))
       .toEqual(['KEYCODE_VOLUME_UP', 'KEYCODE_VOLUME_DOWN', 'KEYCODE_POWER'])
-    expect(survey?.caveats.join('\n')).toContain('sn7326-key')
+    // Le relevé du premier cran ne parle plus du contrôleur de clavier : ce que la puce
+    // déclare est un relevé à part, et le mélanger revenait à trancher pour l'un ce qui
+    // n'était vrai que de l'autre.
+    expect(survey?.caveats.join('\n')).toContain('kernelDeclaration')
+  })
+
+  /**
+   * ⚠️ **Le deuxième cran.** Le 2026-08-22, `getevent -pl` sur l'AIR³ 7.2 a montré que le
+   * boîtier déclare bien plus que les trois touches pressées : `sn7326-key` déclare
+   * `CAMERA` en 27 — le code que `Keys.PrevWaypoint` porte dans le corpus du
+   * propriétaire. L'éditeur en disait « aucune touche mesurée n'émet le code 27 », d'un
+   * code que le noyau déclare.
+   *
+   * Ce relevé **élargit le champ des possibles ; il ne prouve pas qu'un bouton existe.**
+   */
+  it('range à part ce que le noyau du boîtier déclare, et ne le confond pas', () => {
+    const survey = domains.hardwareKeysFor('AIR3 AIR3-7.2 8.1.0')
+    const declaration = survey?.kernelDeclaration
+    expect(declaration?.basis).toBe('kernelDeclared')
+    expect(declaration?.surveyedOn).toBe('2026-08-22')
+    expect(declaration?.devices.map((one) => one.name))
+      .toEqual(['mtk-kpd', 'sn7326-key', 'mtk-tpd', 'ACCDET'])
+
+    const controller = declaration?.devices.find((one) => one.name === 'sn7326-key')
+    expect(controller?.codes).toContain(27)
+    expect(controller?.codes).toEqual(expect.arrayContaining([19, 20, 21, 22]))
+    // Le détail qui rend le relevé refaisable : le fichier de disposition propre au
+    // contrôleur n'existe pas, c'est Generic.kl qui traduit 212 en 27.
+    expect(controller?.keyLayoutIsFallback).toBe(true)
+    expect(controller?.keyLayoutFile).toBe('/system/usr/keylayout/Generic.kl')
+    // Et le clavier du boîtier, lui, a bien le sien.
+    const keypad = declaration?.devices.find((one) => one.name === 'mtk-kpd')
+    expect(keypad?.keyLayoutIsFallback).toBe(false)
+    // Un code déclaré est nommé par la même table que les autres, jamais à la main.
+    expect(controller?.keys.find((one) => one.code === 27)?.name).toBe('KEYCODE_CAMERA')
+  })
+
+  it('répond lequel des trois crans s’applique à un code', () => {
+    const survey = domains.hardwareKeysFor('AIR3 AIR3-7.2 8.1.0')
+    // Pressée à la main : le seul cran qui prouve qu'un bouton existe.
+    expect(keyCodeEvidence(survey, 24)).toBe('pressed')
+    // Déclarée par le noyau : possible sur ce matériel, jamais prouvée.
+    expect(keyCodeEvidence(survey, 27)).toBe('declared')
+    expect(declaringDevices(survey, 27).map((one) => one.name)).toEqual(['sn7326-key'])
+    // Attestée par rien — ce qui ne veut pas dire que la touche n'existe pas.
+    expect(keyCodeEvidence(survey, 266)).toBe('unattested')
+    expect(declaringDevices(survey, 266)).toEqual([])
+    // Sans relevé, aucun des deux crans : nous ne savons rien de ce boîtier-là.
+    expect(keyCodeEvidence(null, 24)).toBe('unattested')
+  })
+
+  /**
+   * ⚠️ **Une hypothèse, et rien de plus.** 266 est le code que le pilote presse le plus
+   * en compétition, et aucun des quatre périphériques d'entrée ne peut le produire. Ce
+   * que le catalogue en dit doit rester une piste, avec ce qui manquerait pour trancher.
+   */
+  it('range 266 comme inexpliqué, avec une hypothèse qui se dit telle', () => {
+    const unexplained = domains.unexplainedCode(266)
+    expect(unexplained?.name).toBe('KEYCODE_STEM_2')
+    expect(unexplained?.hypothesis).toBe('injectedByApp')
+    expect(unexplained?.suspectPackage).toBe('air3.air3xctaddon')
+    // Ce qui manque pour la vérifier voyage avec elle : c'est le renseignement le plus
+    // utile à la personne suivante.
+    expect(unexplained?.evidence.join('\n')).toContain('rien de tout cela ne prouve')
+    // Et les codes que le noyau explique n'y figurent pas.
+    expect(domains.unexplainedCode(27)).toBeNull()
+    expect(domains.unexplainedCode(24)).toBeNull()
   })
 
   it('rend `null` sur un modèle qui n’a pas été relevé, jamais un voisin', () => {

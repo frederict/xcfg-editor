@@ -1094,6 +1094,38 @@ côté, avec son nom Android quand la table le donne, l'appui long de l'autre. Q
 physiques ce modèle-là porte — trois sur l'AIR³ 7.2 — sans jamais écrire qu'une touche
 n'existe pas : le parc n'est pas homogène et le relevé ne couvre qu'un boîtier.
 
+⚠️ **Sur les touches physiques, il y a trois crans de connaissance et non deux**, et
+l'écran dit lequel s'applique à chaque code :
+
+1. **une touche pressée à la main**, son code lu à l'arrivée — `keyCodes.hardwareKeys[].keys`,
+   `basis: "measured"`. Le seul cran qui prouve qu'un bouton existe. Trois touches sur
+   l'AIR³ 7.2 : volume haut (24), volume bas (25), marche/arrêt (26) ;
+2. **un code déclaré par le noyau du boîtier** — `keyCodes.hardwareKeys[].kernelDeclaration`,
+   relevé le 2026-08-22 par `getevent -pl`, `dumpsys input` pour savoir quel fichier de
+   disposition Android applique réellement à chaque périphérique, puis lecture de ce
+   fichier. Quatre périphériques d'entrée sur ce boîtier : le clavier (`mtk-kpd`, sur sa
+   propre disposition, 24/25/26), le contrôleur de clavier (`sn7326-key`, dont le fichier
+   de disposition propre **n'existe pas** — c'est `Generic.kl` qui s'applique, et qui
+   traduit `CAMERA` 212 en **27** plus quatre codes de croix directionnelle), la dalle
+   tactile (`mtk-tpd`, 3/4/82/84) et la prise casque (`ACCDET`). Un code déclaré est
+   **possible** sur ce matériel ; il n'est pas prouvé, une puce de clavier déclarant
+   souvent plus de codes que le boîtier n'a de boutons ;
+3. **rien** — le code n'est déclaré nulle part sur ce modèle. C'est une ignorance, pas une
+   absence.
+
+Ce troisième cran a un habitant notable : **266 (`KEYCODE_STEM_2`)**, que le corpus porte
+sur `Keys.PrevWaypoint` et `Keys.NextWaypoint`, et qu'aucun des quatre périphériques ne
+peut produire — le seul fichier de disposition du boîtier qui porte des entrées `STEM`
+n'est appliqué à aucun d'eux. L'explication la plus simple, **et c'est une hypothèse que
+rien n'a vérifiée**, est qu'une application installée l'injecte ; l'add-on
+`air3.air3xctaddon` est présent sur l'appareil, et un événement injecté ne passe par
+aucune disposition. `keyCodes.unexplainedCodes` range l'hypothèse, ce qui la rend
+plausible, et ce qui manquerait pour trancher — un appui, ou la lecture de l'add-on.
+
+Jusqu'au 2026-08-22, l'écran écrasait les crans 2 et 3 dans la même phrase, qui déclarait
+qu'aucune touche mesurée sur l'AIR³ 7.2 n'émettait le code 27 — d'un code que le noyau du
+même boîtier déclare.
+
 Le diagnostic « Version et compatibilité », lui, ne consulte toujours ni l'une ni l'autre
 de ces deux bases.
 

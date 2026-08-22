@@ -83,10 +83,31 @@ l'autre. Le fichier `.xcfg` déclarant son appareil (`info.device`), l'interface
 et doit conditionner son propos au modèle — et ne jamais écrire « cette touche
 n'existe pas ».
 
-⚠️ **Le fichier de disposition du contrôleur de clavier ne fait pas relevé.**
-`sn7326-key` déclare des touches que le boîtier n'a pas (`DPAD_*`, `BACK`, `CAMERA`
-en 27) : un fichier de configuration Android décrit ce que la puce sait faire, pas ce
-que le fabricant a soudé. Seul l'appui d'un doigt sur le boîtier fait foi.
+## Trois crans de connaissance, et non deux
+
+Ce que nous savons d'un code de touche se range sur **trois** crans, et les confondre
+est la faute que ce fichier existe pour éviter :
+
+1. **Touche pressée à la main, code lu à l'arrivée** — `MEASURED_HARDWARE_KEYS`, et
+   c'est le seul cran qui prouve qu'un bouton existe. Trois touches sur l'AIR³ 7.2.
+2. **Code déclaré par le noyau du boîtier** — `KERNEL_KEY_DECLARATIONS`, relevé par
+   `getevent -pl` et le fichier de disposition qu'Android applique réellement. Il
+   prouve que le code est **possible sur ce matériel** ; il ne prouve pas qu'un bouton
+   l'émette. Un contrôleur de clavier déclare souvent plus de codes que le boîtier n'a
+   de boutons.
+3. **Rien** — le code n'est déclaré nulle part sur ce modèle.
+
+⚠️ **Le fichier de disposition ne fait donc pas relevé, mais il ne fait pas silence
+non plus.** `sn7326-key` déclare `CAMERA` en 27 et quatre codes de croix
+directionnelle ; 27 est justement ce que `Keys.PrevWaypoint` porte dans le corpus. Un
+texte qui dirait de 27 « aucune touche mesurée ne l'émet », sans plus, contredirait le
+noyau. Un texte qui dirait « cette touche existe » irait au-delà de la mesure. Le
+premier cran seul fait foi ; le second élargit le champ des possibles.
+
+⚠️ **266 (`KEYCODE_STEM_2`) n'est expliqué par aucun des deux crans** :
+`UNEXPLAINED_KEY_CODES` range ce qu'on en sait et l'hypothèse — **non vérifiée** —
+d'une injection par une application installée. C'est une hypothèse, jamais une
+explication.
 """
 from __future__ import annotations
 
@@ -190,9 +211,118 @@ MEASURED_HARDWARE_KEYS = [
         "caveats": [
             "relevé sur ce modèle seul ; les AIR³ plus récents portent davantage de "
             "touches physiques",
-            "le fichier de disposition du contrôleur de clavier « sn7326-key » "
-            "déclare des touches que le boîtier n'a pas (DPAD_*, BACK, CAMERA en "
-            "27) : il décrit ce que la puce sait faire, pas ce qui est soudé",
+            "trois touches pressées ne font pas trois touches soudées : c'est ce que "
+            "nous avons pressé, pas ce que le boîtier porte",
+            "le noyau du même boîtier déclare d'autres codes — voir "
+            "kernelDeclaration : un code déclaré est possible sur ce matériel, sans "
+            "qu'un appui l'ait prouvé",
+        ],
+    },
+]
+
+# Ce que le **noyau** du boîtier déclare : le deuxième cran, entre l'appui sous le
+# doigt et le silence complet.
+#
+# ⚠️ **Une capacité déclarée n'est pas une touche sous le doigt.** Un contrôleur de
+# clavier déclare souvent plus de codes que le boîtier n'a de boutons : cette mesure
+# élargit le champ des possibles, elle ne prouve pas qu'un bouton existe. Seul un
+# appui physique le ferait.
+#
+# Recette, à refaire sans deviner :
+#   adb shell getevent -pl                        → les codes Linux de chaque
+#                                                   périphérique d'entrée
+#   adb shell dumpsys input                       → le fichier de disposition
+#                                                   qu'Android applique à chacun
+#   adb shell cat /system/usr/keylayout/<nom>.kl  → la traduction Linux → Android
+KERNEL_KEY_DECLARATIONS = {
+    "air3-7.2": {
+        "basis": "kernelDeclared",
+        "device": "AIR3 AIR3-7.2 8.1.0",
+        "surveyedOn": "2026-08-22",
+        "method": "adb shell getevent -pl pour les codes Linux que déclare chaque "
+                  "périphérique d'entrée, adb shell dumpsys input pour le fichier de "
+                  "disposition qu'Android applique réellement à chacun, puis lecture "
+                  "de ce fichier dans /system/usr/keylayout/",
+        "devices": [
+            {
+                "name": "mtk-kpd",
+                "what": "le clavier du boîtier",
+                "keyLayoutFile": "/system/usr/keylayout/mtk-kpd.kl",
+                "keyLayoutIsFallback": False,
+                "linuxCodes": [114, 115, 116, 408],
+                "codes": [24, 25, 26],
+                "unmappedLinuxCodes": [408],
+            },
+            {
+                "name": "sn7326-key",
+                "what": "le contrôleur de clavier sn7326",
+                # Le fichier propre au périphérique n'existe pas : Android se rabat
+                # sur Generic.kl, et c'est lui qui traduit 212 en CAMERA (27).
+                "keyLayoutFile": "/system/usr/keylayout/Generic.kl",
+                "keyLayoutIsFallback": True,
+                "linuxCodes": [103, 105, 106, 108, 114, 158, 212, 251],
+                "codes": [4, 19, 20, 21, 22, 25, 27],
+                "unmappedLinuxCodes": [251],
+            },
+            {
+                "name": "mtk-tpd",
+                "what": "la dalle tactile",
+                "keyLayoutFile": "/system/usr/keylayout/Generic.kl",
+                "keyLayoutIsFallback": True,
+                "linuxCodes": [139, 158, 172, 217, 330],
+                "codes": [3, 4, 82, 84],
+                "unmappedLinuxCodes": [330],
+            },
+            {
+                "name": "ACCDET",
+                "what": "la prise casque",
+                "keyLayoutFile": "/system/usr/keylayout/ACCDET.kl",
+                "keyLayoutIsFallback": False,
+                "linuxCodes": [87, 88, 114, 115, 164, 582],
+                "codes": [24, 25, 79, 141, 142, 231],
+                "unmappedLinuxCodes": [],
+            },
+        ],
+        "caveats": [
+            "une capacité déclarée n'est pas une touche sous le doigt : un contrôleur "
+            "de clavier déclare souvent plus de codes que le boîtier n'a de boutons",
+            "ce relevé élargit le champ des possibles ; seul un appui physique prouve "
+            "qu'un bouton existe",
+            "le fichier /system/usr/keylayout/sn7326-key.kl n'existe pas : c'est "
+            "Generic.kl qui s'applique, et c'est lui qui traduit CAMERA 212 en 27",
+            "Android déclare un cinquième périphérique, « Virtual », qui ne déclare "
+            "aucun code au noyau : c'est par lui qu'arrivent les événements qu'une "
+            "application injecte",
+            "relevé sur ce boîtier seul, sous Android 8.1.0 : un autre AIR³ peut "
+            "déclarer autre chose",
+        ],
+    },
+}
+
+# Les codes que le corpus porte et que **ni** l'appui **ni** le noyau n'expliquent.
+#
+# ⚠️ `hypothesis` est une hypothèse : elle se dit comme telle partout, et jamais comme
+# une explication. `evidence` range ce qui la rend plausible — et ce qui manquerait
+# pour la vérifier.
+UNEXPLAINED_KEY_CODES = [
+    {
+        "code": 266,
+        "hypothesis": "injectedByApp",
+        "suspectPackage": "air3.air3xctaddon",
+        "deviceId": "air3-7.2",
+        "surveyedOn": "2026-08-22",
+        "evidence": [
+            "aucun des quatre périphériques d'entrée du boîtier ne déclare un code "
+            "Linux que sa disposition traduirait en 266",
+            "le seul fichier de disposition du boîtier qui porte des entrées STEM, "
+            "/system/usr/keylayout/qwerty.kl (583 → STEM_2), n'est appliqué à aucun "
+            "des périphériques : dumpsys input les donne sur Generic.kl, ACCDET.kl et "
+            "mtk-kpd.kl",
+            "le paquet air3.air3xctaddon est installé sur l'appareil, et un add-on qui "
+            "injecte des événements les fait passer par le périphérique « Virtual », "
+            "qui n'a pas de disposition à respecter",
+            "rien de tout cela ne prouve l'injection : ni le code de l'add-on ni un "
+            "appui n'ont été observés — c'est ce qu'il faudrait pour trancher",
         ],
     },
 ]
@@ -402,21 +532,58 @@ def unit_domains(vocabulary: list[str], unit_keys: list[str],
 
 
 def hardware_keys(table: dict[int, str]) -> list[dict]:
-    """`MEASURED_HARDWARE_KEYS`, chaque code confronté à la table d'Android.
+    """`MEASURED_HARDWARE_KEYS`, chaque code confronté à la table d'Android, et le
+    relevé du noyau accroché au modèle qu'il concerne.
 
     Un code relevé au doigt qu'Android ne nomme pas serait une faute de frappe, pas
-    une touche."""
+    une touche. Un code déclaré par le noyau qu'Android ne nomme pas non plus : les
+    deux crans passent le même contrôle, et se rangent côte à côte sans se mélanger."""
     for device in MEASURED_HARDWARE_KEYS:
         for key in device["keys"]:
             if key["code"] not in table:
                 raise SystemExit(f"{device['deviceId']} : le code {key['code']} n'est "
                                  "dans aucune table de touches Android lue ici — "
                                  "rien n'est écrit.")
+    for device_id, declaration in KERNEL_KEY_DECLARATIONS.items():
+        for source in declaration["devices"]:
+            for code in source["codes"]:
+                if code not in table:
+                    raise SystemExit(
+                        f"{device_id} / {source['name']} : le code déclaré {code} "
+                        "n'est dans aucune table de touches Android lue ici — rien "
+                        "n'est écrit.")
     return [
         {**device,
-         "keys": [{**key, "name": table[key["code"]]} for key in device["keys"]]}
+         "keys": [{**key, "name": table[key["code"]]} for key in device["keys"]],
+         # Le deuxième cran voyage avec le premier, et sous son propre nom : un texte
+         # qui les confondrait dirait d'un code déclaré ce qu'un appui seul prouve.
+         **({"kernelDeclaration": kernel_declaration(device["deviceId"], table)}
+            if device["deviceId"] in KERNEL_KEY_DECLARATIONS else {})}
         for device in MEASURED_HARDWARE_KEYS
     ]
+
+
+def kernel_declaration(device_id: str, table: dict[int, str]) -> dict:
+    """Le relevé du noyau d'un modèle, chaque code déclaré nommé par la table."""
+    declaration = KERNEL_KEY_DECLARATIONS[device_id]
+    return {
+        **{key: value for key, value in declaration.items() if key != "devices"},
+        "devices": [
+            {**source,
+             "keys": [{"code": code, "name": table[code]}
+                      for code in source["codes"]]}
+            for source in declaration["devices"]
+        ],
+    }
+
+
+def unexplained_codes(table: dict[int, str]) -> list[dict]:
+    """`UNEXPLAINED_KEY_CODES`, chaque code nommé par la table d'Android."""
+    for entry in UNEXPLAINED_KEY_CODES:
+        if entry["code"] not in table:
+            raise SystemExit(f"le code inexpliqué {entry['code']} n'est dans aucune "
+                             "table de touches Android lue ici — rien n'est écrit.")
+    return [{**entry, "name": table[entry["code"]]} for entry in UNEXPLAINED_KEY_CODES]
 
 
 # --------------------------------------------------------------------------
@@ -543,6 +710,9 @@ def main() -> None:
             # Les touches physiques relevées, par modèle d'appareil. Le `.xcfg` déclare
             # le sien : c'est ce qui autorise l'interface à parler du matériel.
             "hardwareKeys": devices,
+            # Ce que ni l'appui ni le noyau n'expliquent, avec l'hypothèse qui tient
+            # lieu de piste — et qui se dit comme une hypothèse, jamais autrement.
+            "unexplainedCodes": unexplained_codes(table),
             "keys": {key: {"observed": key_values.get(key, [])}
                      for key in key_keys
                      if latest[key].get("control") == "action"},

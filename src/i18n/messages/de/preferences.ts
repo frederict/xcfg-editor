@@ -71,25 +71,48 @@ const preferences: DomainCatalog<'preferences'> = {
     'Belegung wird oben gelesen und benannt, aber wir wissen nicht, welche Taste ihn ' +
     'aussendet.',
   'preferences.hardwareSurveyed':
-    'Auf {model} — dem Modell, das diese Datei angibt — haben wir nur {keys} gemessen: ' +
+    'Auf {model} — dem Modell, das diese Datei angibt — haben wir nur {keys} gedrückt: ' +
     '{listed}. {missing} Die Messung erfolgte an einem einzigen Gehäuse, und neuere ' +
     'Modelle tragen mehr davon.',
-  'preferences.hardwareStrangerOne': 'Der Code {codes} ist keine von ihnen.',
-  'preferences.hardwareStrangerMany': 'Die Codes {codes} sind keine von ihnen.',
-  'preferences.unmatchedKeyTitle':
-    'Keine der auf {model} gemessenen Tasten sendet den Code {code}. Die Anmerkung unter ' +
-    'diesem Block sagt, was diese Messung wert ist.',
+  'preferences.hardwareDeclaredOne':
+    'Der Code {codes} ist keine von ihnen; der Kernel des Gehäuses gibt ihn dennoch an, ' +
+    'was ihn auf dieser Hardware möglich macht, ohne dass ein Druck es bewiesen hätte.',
+  'preferences.hardwareDeclaredMany':
+    'Die Codes {codes} sind keine von ihnen; der Kernel des Gehäuses gibt sie dennoch ' +
+    'an, was sie auf dieser Hardware möglich macht, ohne dass ein Druck es bewiesen hätte.',
+  'preferences.hardwareStrangerOne':
+    'Der Code {codes} ist keine von ihnen, und der Kernel des Gehäuses gibt ihn an ' +
+    'keinem seiner Eingabegeräte an: wir wissen nicht, welche Taste ihn sendet.',
+  'preferences.hardwareStrangerMany':
+    'Die Codes {codes} sind keine von ihnen, und der Kernel des Gehäuses gibt sie an ' +
+    'keinem seiner Eingabegeräte an: wir wissen nicht, welche Tasten sie senden.',
+  'preferences.keyNoteBelow':
+    'Die Anmerkung unter diesem Block sagt, was diese Erhebungen wert sind.',
   'preferences.keyFromSurvey':
     '„{label}“ ist der Name dieser Taste am Gehäuse, von Hand auf {model} gemessen. {name} ist der Name, den Android dem Code {code} gibt.',
+  'preferences.keyFromKernel':
+    '{name} ist der Name, den die Tastentabelle von Android dem Code {code} gibt. Wir ' +
+    'haben auf {model} keine Taste gedrückt, die ihn sendet, aber der Kernel des ' +
+    'Gehäuses gibt ihn an {devices} an. Der Code ist auf dieser Hardware also möglich, ' +
+    'was nicht beweist, dass eine Taste dafür verbaut ist.',
+  'preferences.keyFromNeither':
+    '{name} ist der Name, den die Tastentabelle von Android dem Code {code} gibt. Wir ' +
+    'haben auf {model} keine Taste gedrückt, die ihn sendet, und der Kernel des Gehäuses ' +
+    'gibt ihn an keinem seiner Eingabegeräte an: wir wissen nicht, woher er kommt.',
   'preferences.keyFromAndroid':
     '{name} ist der Name, den die Tastentabelle von Android dem Code {code} gibt. Diese Tabelle benennt einen Code, keine Taste: sie sagt nicht, welche Ihrer Tasten ihn sendet, und wir haben diese hier nicht von Hand gemessen.',
   'preferences.keyFromNowhere':
     'Der Code {code} steht in keiner Tastentabelle, die wir gelesen haben. Hier wird ihm kein Name gegeben: einen zu erfinden wäre der schlechteste Dienst.',
+  'preferences.keyInjectionHypothesis':
+    'Eine Hypothese, ungeprüft: eine auf dem Gerät installierte Anwendung kann einen ' +
+    'Code einspeisen, ohne dass eine Taste ihn sendet, und das Paket {addon} ist auf ' +
+    'diesem Gehäuse vorhanden. Nichts beweist es — nur ein Tastendruck oder das Lesen ' +
+    'dieser Anwendung würde es klären.',
   'preferences.intentGloss':
     'Ein „Intent“ ist die Nachricht, mit der eine Android-Anwendung eine andere reagieren lässt. Diese Taste steuert also nicht XCTrack: sie sendet ein Signal, und es ist eine andere, auf dem Gerät eingerichtete Anwendung, die darauf antwortet.',
 
   'preferences.keyNamingOrigin':
-    'Ein ausgeschriebener Name ist der, den die Taste am Gehäuse trägt, von Hand gemessen: solche Namen gibt es nur für die Modelle, die wir in der Hand hatten. Ein Name mit KEYCODE_ stammt aus der Tastentabelle von Android, die den Code benennt und nicht die Taste. Ein fehlender Name ist also eine fehlende Messung, nie eine Taste, die es nicht gäbe.',
+    'Ein ausgeschriebener Name ist der, den die Taste am Gehäuse trägt, durch Drücken von Hand erhoben: solche Namen gibt es nur für die Modelle, die wir in der Hand hatten. Ein Name mit KEYCODE_ stammt aus der Tastentabelle von Android, die den Code benennt und nicht die Taste. Dazwischen liegt eine dritte Stufe: der Kernel des Gehäuses gibt Codes an, die wir nie gedrückt haben, und ein angegebener Code ist auf dieser Hardware möglich, ohne dass eine Taste ihn deshalb sendet. Ein fehlender Name ist also eine fehlende Messung, nie eine Taste, die es nicht gäbe.',
 
   'preferences.runtimeDefaultReason':
     'XCTrack füllt diese Liste im Code, und ihr Werkswert hängt von Sprache und Land des ' +
