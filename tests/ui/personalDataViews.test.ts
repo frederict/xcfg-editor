@@ -11,6 +11,8 @@ import { buildPreferenceInventory } from '../../src/ui/preferencesPage'
 import { personalDataCount } from '../../src/ui/libraryPanel'
 import { planSharing } from '../../src/ui/sharingDialog'
 import { computeWarnings, warningsAt, REFERENCE_VERSION_CODE } from '../../src/ui/warnings'
+import { makeTranslator } from '../../src/i18n'
+import frenchMessages from '../../src/i18n/messages/fr'
 import { BACKUP_2026, FORMES_PRESERVEES, PAGES_2026 } from '../fixtures/paths'
 import { loadTranslator } from '../../src/i18n'
 
@@ -43,7 +45,8 @@ function warningsOf(path: string) {
     document,
     layout,
     settings: readRenderSettings(document),
-    language: 'fr'
+    language: 'fr',
+    tr: makeTranslator('fr', frenchMessages)
   })
 }
 

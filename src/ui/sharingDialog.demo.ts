@@ -1,6 +1,7 @@
 import './style.css'
 import './app.css'
 import { openContainer } from '../core/container'
+import { initialUiLanguage, loadTranslator } from '../i18n'
 import { renderSharingDialog, sharingBytes, type SharingSource } from './sharingDialog'
 
 /**
@@ -13,6 +14,10 @@ import { renderSharingDialog, sharingBytes, type SharingSource } from './sharing
  * Rien n'est téléchargé : le choix du pilote est écrit dans la page, octets compris quand
  * il y en a. Un export ordinaire n'en produit aucun — c'est précisément ce qu'on veut
  * voir, puisque c'est ce qui tient la fidélité à l'octet près.
+ *
+ * La boîte reçoit un traducteur comme tout écran de `src/ui/` : le banc le charge
+ * lui-même, dans la langue du navigateur, ce qui permet aussi d'y relire les cinq
+ * traductions en changeant la langue mémorisée.
  */
 
 const FIXTURES: Array<{ label: string; path: string }> = [
@@ -53,8 +58,11 @@ async function openOn(path: string, withExtras: boolean): Promise<void> {
       : container.extras.map((e) => ({ name: e.name, byteLength: e.data.byteLength }))
   }
 
+  const tr = await loadTranslator(initialUiLanguage(window.localStorage, [...navigator.languages]))
+
   renderSharingDialog({
     source,
+    tr,
     onCancel: () => say('Annulé : rien n’est produit, le document est intact.'),
     onConfirm: (result) => {
       const produced = sharingBytes(result)

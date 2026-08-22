@@ -20,7 +20,18 @@ import {
   type Warning,
   type WarningKind
 } from '../../src/ui/warnings'
+import { makeTranslator } from '../../src/i18n'
+import frenchMessages from '../../src/i18n/messages/fr'
+import germanMessages from '../../src/i18n/messages/de'
 import { EXPORTS } from '../fixtures/paths'
+
+/**
+ * Le traducteur de **notre prose**, en français : c'est la langue d'écriture, et donc la
+ * seule dont les phrases se vérifient au caractère près ici. Il ne se confond pas avec le
+ * `language` passé plus bas, qui est l'axe des **libellés de XCTrack** et suit le fichier
+ * ouvert — voir `src/i18n/axes.ts`.
+ */
+const tr = makeTranslator('fr', frenchMessages)
 
 const CORPUS = [
   '2026-08-20_backup-00.xcfg',
@@ -39,7 +50,8 @@ function warningsOf(document: JsonNode, language = 'fr'): Warning[] {
     document,
     layout: readLayout(document),
     settings: readRenderSettings(document),
-    language
+    language,
+    tr
   })
 }
 
@@ -649,6 +661,7 @@ describe('contrôle avant vol — le raccord avec les neuf familles', () => {
       language: 'fr',
       device: deviceFor(readString(getMember(document, 'info')!, 'device')),
       isProWidget,
+      tr,
       ...options
     })
   }
@@ -776,7 +789,8 @@ describe('contrôle avant vol — le ton des quatre doutes assumés', () => {
     layout: readLayout(ALL_SEVEN),
     language: 'fr',
     device: DEVICES[0]!,
-    isProWidget
+    isProWidget,
+    tr
   })
 
   it('les sept règles se déclenchent bien sur ce document', () => {
@@ -858,5 +872,100 @@ describe('contrôle avant vol — le ton des quatre doutes assumés', () => {
   it('se dit à l’import, avec le reste', () => {
     expect(warningsAt(SEVEN, 'export')).toEqual([])
     expect(warningsAt(SEVEN, 'import')).toHaveLength(SEVEN.length)
+  })
+})
+
+/* ===================== les avertissements dans la langue du pilote, pas dans la nôtre */
+
+/**
+ * **Deux propriétés que le français seul ne peut pas garder.**
+ *
+ * 1. **Le `versionCode` reste un identifiant.** C'est la règle du socle — un `number` se
+ *    met en forme, une `string` se recopie — et elle se voit dans une langue à séparateur
+ *    de milliers : « 100.030 » en allemand ne se retrouve dans aucun fichier XCTrack, et
+ *    le pilote qui le chercherait ne le trouverait pas.
+ * 2. **Aucune phrase n'est restée dans le code.** Une phrase oubliée resterait française
+ *    quelle que soit la langue, et ne se verrait pas en relisant le catalogue — puisqu'elle
+ *    n'y serait pas.
+ */
+describe('les avertissements suivent la langue du pilote', () => {
+  const german = makeTranslator('de', germanMessages)
+
+  function germanWarningsOf(name: string): Warning[] {
+    const document = parseJson(readFileSync(EXPORTS + name, 'utf8'))
+    return computeWarnings({
+      document,
+      layout: readLayout(document),
+      settings: readRenderSettings(document),
+      language: 'fr',
+      tr: german
+    })
+  }
+
+  it('le versionCode se recopie, il ne se met jamais en forme', () => {
+    const document = parseJson(`{
+      "info": { "exportType": "backup", "versionCode": 99000, "versionName": "0.9.9" },
+      "layout": { "landscape": [], "portrait": [] }
+    }`)
+    const warning = pick(computeWarnings({
+      document,
+      layout: readLayout(document),
+      settings: readRenderSettings(document),
+      language: 'fr',
+      tr: german
+    }), 'version-gap')
+
+    const text = textOf(warning)
+    expect(text).toContain('99000')
+    expect(text).toContain(String(REFERENCE_VERSION_CODE))
+    // Ce que la mise en forme allemande produirait, et qui serait faux.
+    expect(text).not.toContain('99.000')
+    expect(text).not.toContain('100.030')
+  })
+
+  it('les titres viennent du catalogue allemand, pas d’une phrase restée dans le code', () => {
+    const warnings = germanWarningsOf('2026-08-20_backup-00.xcfg')
+    expect(pick(warnings, 'export-type')?.title)
+      .toBe(german.t('warnings.exportBackupTitle'))
+    expect(pick(warnings, 'personal-data')?.title)
+      .toBe(german.t('warnings.personalTitle'))
+
+    const all = warnings.map(textOf).join('\n')
+    for (const french of [
+      'Ce fichier vous nomme',
+      'Fichiers extérieurs référencés',
+      'Structure inattendue',
+      'Thème de carte',
+      'Waypoints :'
+    ]) {
+      expect(all, french).not.toContain(french)
+    }
+  })
+
+  it('le mot du gadget suit la langue, dans les deux sens', () => {
+    // La seule règle de vocabulaire que le dépôt ait mesurée sur 55 versions : « Gadget »
+    // en français, *Widget* partout ailleurs. Un avertissement qui dirait « gadget » à un
+    // germanophone nommerait une chose qu'il ne trouvera nulle part sur son appareil.
+    const document = parseJson(`{
+      "info": { "exportType": "backup", "versionCode": ${REFERENCE_VERSION_CODE} },
+      "layout": {
+        "landscape": [
+          { "CLASS": "org.xcontest.XCTrack.page.WPEmpty", "widgets": [{ "CLASS": "x.WAltitude" }] }
+        ],
+        "portrait": []
+      }
+    }`)
+    const structure = (translator: typeof german): string => textOf(pick(computeWarnings({
+      document,
+      layout: readLayout(document),
+      settings: readRenderSettings(document),
+      language: 'fr',
+      tr: translator
+    }), 'structure')).toLowerCase()
+
+    expect(structure(makeTranslator('fr', frenchMessages))).toContain('gadget')
+    expect(structure(makeTranslator('fr', frenchMessages))).not.toContain('widget')
+    expect(structure(german)).toContain('widget')
+    expect(structure(german)).not.toContain('gadget')
   })
 })

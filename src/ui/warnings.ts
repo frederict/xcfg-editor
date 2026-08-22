@@ -16,13 +16,12 @@ import {
 import type { Layout, Page } from '../model/layout'
 import {
   collectPersonalData,
-  personalValueText,
-  PERSONAL_KIND_LABELS,
+  personalProse,
   type PersonalInventory
 } from '../model/personalData'
 import type { RenderSettings } from '../model/preferences'
 import type { Widget } from '../model/widget'
-import { plural } from './prose'
+import type { Translator } from '../i18n'
 
 /**
  * Ce que l'interface doit dire au pilote, et rien de plus. Neuf familles sur le
@@ -101,9 +100,26 @@ export interface WarningInput {
   settings: RenderSettings
   /** Langue effectivement employée pour les libellés — voir `resolveLanguage`. */
   language: string
+  /**
+   * Notre prose, dans la langue du pilote. **Passé, jamais lu** : ce module ne va pas
+   * chercher la langue courante — voir `src/i18n/CLAUDE.md` § 5.
+   *
+   * ⚠️ C'est l'**autre** axe que `language` ci-dessus, qui suit le fichier ouvert et nomme
+   * les gadgets. Les confondre casserait la promesse de l'outil (`src/i18n/axes.ts`).
+   */
+  tr: Translator
 }
 
-const ORIENTATION_LABELS = { landscape: 'Paysage', portrait: 'Portrait' } as const
+/**
+ * L'orientation dans les mots du pilote. Les deux mots vivent dans le domaine `sharing`
+ * plutôt que dans `common.ts` : ils ne servent qu'ici et dans `sharingDialog.ts`, et un
+ * mot n'entre dans le vocabulaire partagé que lorsque **deux domaines** l'emploient.
+ */
+function orientationLabel(orientation: Orientation, tr: Translator): string {
+  return orientation === 'landscape'
+    ? tr.t('sharing.orientationLandscape')
+    : tr.t('sharing.orientationPortrait')
+}
 
 /** Les huit clés présentes sur tous les widgets observés — voir `readWidget`. */
 const UNIVERSAL_KEYS = ['CLASS', 'X1', 'Y1', 'X2', 'Y2', '_border', '_bg', '_theme']
@@ -135,18 +151,15 @@ function waypointFiles(preferences: JsonNode | undefined): string[] {
 
 /* --------------------------------------------------------------- 1. type d'export */
 
-function exportTypeWarning(info: JsonNode | undefined): Warning {
+function exportTypeWarning(info: JsonNode | undefined, tr: Translator): Warning {
   const type = info ? readString(info, 'exportType') : undefined
 
   if (type === 'pages') {
     return {
       kind: 'export-type',
       moment: 'import',
-      title: 'Export « pages » : seuls les écrans',
-      detail:
-        'Ce fichier ne porte que les pages de gadgets. Réimporté dans XCTrack, il remplace ' +
-        'les écrans et ne touche à rien d’autre : réglages du vario, unités, fichiers ' +
-        'd’espace aérien et configuration des capteurs restent ceux de l’appareil.',
+      title: tr.t('warnings.exportPagesTitle'),
+      detail: tr.t('warnings.exportPagesDetail'),
       items: []
     }
   }
@@ -155,11 +168,8 @@ function exportTypeWarning(info: JsonNode | undefined): Warning {
     return {
       kind: 'export-type',
       moment: 'import',
-      title: 'Export « backup » : la configuration entière',
-      detail:
-        'Ce fichier porte toute la configuration. Réimporté dans XCTrack, il écrase non ' +
-        'seulement les écrans, mais aussi les réglages du vario, les unités, les fichiers ' +
-        'd’espace aérien et la configuration des capteurs de l’appareil.',
+      title: tr.t('warnings.exportBackupTitle'),
+      detail: tr.t('warnings.exportBackupDetail'),
       items: []
     }
   }
@@ -167,34 +177,38 @@ function exportTypeWarning(info: JsonNode | undefined): Warning {
   return {
     kind: 'export-type',
     moment: 'import',
-    title: 'Type d’export indéterminé',
-    detail:
-      'Ce fichier ne dit pas s’il ne contient que des pages ou toute la configuration ' +
-      '(`info.exportType` absent ou inconnu). Ce qu’il écrasera à la réimportation ne peut ' +
-      'donc pas être annoncé ici.',
-    items: type === undefined ? [] : [`info.exportType : « ${type} »`]
+    title: tr.t('warnings.exportUnknownTitle'),
+    detail: tr.t('warnings.exportUnknownDetail'),
+    // Le type lu dans le fichier est recopié tel quel : c'est un identifiant, pas un
+    // nombre ni un mot à mettre en forme.
+    items: type === undefined ? [] : [tr.t('warnings.exportUnknownItem', { type })]
   }
 }
 
 /* ------------------------------------------------------------- 2. valeurs supposées */
 
-function assumedValueWarnings(settings: RenderSettings, language: string): Warning[] {
+function assumedValueWarnings(
+  settings: RenderSettings, language: string, tr: Translator
+): Warning[] {
   const warnings: Warning[] = []
 
   if (settings.fromDefaults) {
     warnings.push({
       kind: 'assumed-values',
       moment: 'import',
-      title: 'Thème, unités et typographie supposés',
-      detail:
-        'Ce fichier ne porte aucune préférence : le thème, les unités et la taille des ' +
-        'titres employés pour dessiner ces pages sont des valeurs d’usine relevées ' +
-        'ailleurs, pas celles de votre appareil. La géométrie, elle, vient bien du fichier.',
+      title: tr.t('warnings.assumedValuesTitle'),
+      detail: tr.t('warnings.assumedValuesDetail'),
       items: [
-        `Thème : ${settings.theme}`,
-        `Altitude : ${settings.altitudeUnit} · Vitesse : ${settings.speedUnit} · ` +
-        `Vario : ${settings.verticalSpeedUnit}`,
-        `Titres : ${settings.titleSizePercent} %, ${settings.titleFont}`
+        tr.t('warnings.assumedTheme', { theme: settings.theme }),
+        tr.t('warnings.assumedUnits', {
+          altitude: settings.altitudeUnit,
+          speed: settings.speedUnit,
+          vario: settings.verticalSpeedUnit
+        }),
+        tr.t('warnings.assumedTitles', {
+          percent: settings.titleSizePercent,
+          font: settings.titleFont
+        })
       ]
     })
   }
@@ -203,12 +217,9 @@ function assumedValueWarnings(settings: RenderSettings, language: string): Warni
     warnings.push({
       kind: 'assumed-language',
       moment: 'import',
-      title: 'Langue des libellés indéterminée',
-      detail:
-        'Ce fichier ne déclare aucune langue d’affichage (`Display.Language` vide ou ' +
-        'section `preferences` absente) : sur l’appareil, XCTrack suit alors la langue du ' +
-        'système Android — jamais l’anglais par défaut. Faute de mieux, les libellés sont ' +
-        `affichés ici dans la langue de votre navigateur (${language}).`,
+      title: tr.t('warnings.assumedLanguageTitle'),
+      // Le code de langue est un identifiant : il se recopie, il ne se met pas en forme.
+      detail: tr.t('warnings.assumedLanguageDetail', { language }),
       items: []
     })
   }
@@ -236,73 +247,72 @@ function assumedValueWarnings(settings: RenderSettings, language: string): Warni
  *   gadgets » ne se contredisent plus dès qu'ils portent leur nom — et le second est le
  *   seul qui parte avec un export « pages ».
  */
-function personalDataWarning(inventory: PersonalInventory): Warning | undefined {
+function personalDataWarning(
+  inventory: PersonalInventory, tr: Translator
+): Warning | undefined {
   const filled = inventory.findings.filter((finding) => finding.filled)
   if (filled.length === 0) return undefined
 
+  const prose = personalProse(tr)
   const inLayout = filled.filter((finding) => finding.home === 'layout').length
   const inPreferences = filled.length - inLayout
 
-  const items = filled.map((finding) =>
-    `${finding.key} — ${PERSONAL_KIND_LABELS[finding.kind]} : ${personalValueText(finding)}`)
+  const items = filled.map((finding) => tr.t('warnings.personalItem', {
+    key: finding.key,
+    kind: prose.kind(finding.kind),
+    value: prose.value(finding)
+  }))
 
+  // Le détail est assemblé de phrases entières, jamais de fragments : deux d'entre elles
+  // n'apparaissent que si elles ont quelque chose à dire, et une phrase absente ne laisse
+  // pas d'espace derrière elle.
+  //
   // Le fait le plus contre-intuitif du format, et celui qu'il ne faut jamais réénoncer à
   // l'envers : le `layout` voyage avec un export « pages ». Un nom et un numéro de
   // téléphone y vivent (`WButtonPhone`), et la dérivation ne les retire pas.
-  const travels = inLayout === 0
-    ? ''
-    : ` ${plural({
-      one: '{count} texte écrit dans un gadget part',
-      other: '{count} textes écrits dans les gadgets partent'
-    }, inLayout)} ` +
-      'même avec un export « pages » : ce format est un tri de gros grain, pas un nettoyage.'
-
-  const empty = inventory.counts.empty === 0
-    ? ''
-    : ` ${plural({
-      one: '{count} emplacement personnel est présent mais vide',
-      other: '{count} emplacements personnels sont présents mais vides'
-    }, inventory.counts.empty)} — ils ne sont pas listés ici.`
+  const sentences = [
+    tr.t('warnings.personalDetailLead', {
+      preferences: tr.t('warnings.personalPreferenceCount', { count: inPreferences }),
+      layout: tr.t('warnings.personalLayoutCount', { count: inLayout })
+    })
+  ]
+  if (inLayout > 0) {
+    sentences.push(tr.t('warnings.personalTravels', { count: inLayout }))
+  }
+  if (inventory.counts.empty > 0) {
+    sentences.push(tr.t('warnings.personalEmptySlots', { count: inventory.counts.empty }))
+  }
+  sentences.push(tr.t('warnings.personalDetailTail'))
 
   return {
     kind: 'personal-data',
     moment: 'export',
     title: inLayout > 0 && inPreferences === 0
-      ? 'Vos pages portent des textes de vous'
-      : 'Ce fichier vous nomme',
-    detail:
-      `Ce fichier porte ${plural({
-        one: '{count} réglage personnel renseigné',
-        other: '{count} réglages personnels renseignés'
-      }, inPreferences)} et ` +
-      `${plural({
-        one: '{count} texte écrit dans un gadget',
-        other: '{count} textes écrits dans les gadgets'
-      }, inLayout)} ` +
-      'qui vous désignent : votre nom, votre matériel, vos choix de diffusion, votre tâche ' +
-      'en cours avec ses coordonnées, et jusqu’à la compétition à laquelle vous participez ' +
-      `— les noms des fichiers de waypoints la désignent.${travels}${empty} Cet outil ne ` +
-      'dépouille rien en silence : le fichier sort tel qu’il est entré. À vous de voir.',
+      ? tr.t('warnings.personalLayoutTitle')
+      : tr.t('warnings.personalTitle'),
+    detail: sentences.join(' '),
     items
   }
 }
 
 /* -------------------------------------------------------------- 4. ressources externes */
 
-function externalResourceWarning(preferences: JsonNode | undefined): Warning | undefined {
+function externalResourceWarning(
+  preferences: JsonNode | undefined, tr: Translator
+): Warning | undefined {
   if (!preferences) return undefined
   const items: string[] = []
 
   const theme = nonEmptyString(preferences, 'Mapsforge.ThemeFile')
-  if (theme !== undefined) items.push(`Thème de carte : ${theme} (Mapsforge.ThemeFile)`)
+  if (theme !== undefined) items.push(tr.t('warnings.externalMapTheme', { file: theme }))
 
   for (const file of waypointFiles(preferences)) {
-    items.push(`Waypoints : ${file} (Navigation.WaypointFiles)`)
+    items.push(tr.t('warnings.externalWaypoints', { file }))
   }
 
   // `Airspace.Files` est vide dans presque tout le corpus : pas d'avertissement creux.
   for (const file of stringsOf(getMember(preferences, 'Airspace.Files'))) {
-    items.push(`Espace aérien : ${file} (Airspace.Files)`)
+    items.push(tr.t('warnings.externalAirspace', { file }))
   }
 
   if (items.length === 0) return undefined
@@ -310,31 +320,29 @@ function externalResourceWarning(preferences: JsonNode | undefined): Warning | u
   return {
     kind: 'external-resources',
     moment: 'import',
-    title: 'Fichiers extérieurs référencés',
-    detail:
-      'Ces noms désignent des fichiers présents sur l’appareil d’origine, pas dans cette ' +
-      'configuration. Une configuration reçue d’un autre pilote pointe des fichiers qu’il ' +
-      'est seul à avoir : XCTrack les cherchera sur votre carte SD et ne les trouvera pas. ' +
-      'Cet outil les liste, il ne les corrige pas.',
+    title: tr.t('warnings.externalTitle'),
+    detail: tr.t('warnings.externalDetail'),
     items
   }
 }
 
 /* -------------------------------------------------------------- 5. écart de version */
 
-function versionWarning(info: JsonNode | undefined): Warning | undefined {
+function versionWarning(info: JsonNode | undefined, tr: Translator): Warning | undefined {
   const code = info ? readNumber(info, 'versionCode') : undefined
   const name = info ? readString(info, 'versionName') : undefined
+
+  // ⚠️ `versionCode` et `versionName` passent en **`string`**, jamais en `number` : ce
+  // sont des identifiants. « 100 030 » ne se retrouve dans aucun fichier XCTrack, et le
+  // pilote doit pouvoir chercher le nombre qu'il a sous les yeux.
+  const reference = String(REFERENCE_VERSION_CODE)
 
   if (code === undefined) {
     return {
       kind: 'version-gap',
       moment: 'import',
-      title: 'Version de XCTrack inconnue',
-      detail:
-        'Ce fichier ne dit pas de quelle version de XCTrack il vient (`info.versionCode` ' +
-        `absent). L’écart avec la version de référence de cet outil (${REFERENCE_VERSION_CODE}) ` +
-        'ne peut donc pas être mesuré ; ce qui est affiché peut avoir changé de sens depuis.',
+      title: tr.t('warnings.versionUnknownTitle'),
+      detail: tr.t('warnings.versionUnknownDetail', { reference }),
       items: []
     }
   }
@@ -345,13 +353,14 @@ function versionWarning(info: JsonNode | undefined): Warning | undefined {
   return {
     kind: 'version-gap',
     moment: 'import',
-    title: older ? 'Fichier plus ancien que l’outil' : 'Fichier plus récent que l’outil',
-    detail:
-      `Ce fichier vient de la version ${name ?? 'inconnue'} (versionCode ${code}), alors que ` +
-      `cet éditeur se règle sur la version ${REFERENCE_VERSION_CODE} pour le dessiner. Le ` +
-      'format change à chaque version : des réglages peuvent être dessinés autrement ' +
-      'qu’ils ne le seront sur l’appareil. Le fichier n’est pas modifié pour autant — il ' +
-      'ressort tel qu’il est entré, sans une virgule réécrite.',
+    title: older
+      ? tr.t('warnings.versionOlderTitle')
+      : tr.t('warnings.versionNewerTitle'),
+    detail: tr.t('warnings.versionGapDetail', {
+      name: name ?? tr.t('warnings.versionNameUnknown'),
+      code: String(code),
+      reference
+    }),
     items: []
   }
 }
@@ -359,13 +368,17 @@ function versionWarning(info: JsonNode | undefined): Warning | undefined {
 /* ------------------------------------------------------------ 6. structure inattendue */
 
 function structureWarning(input: WarningInput): Warning | undefined {
+  const tr = input.tr
   const items: string[] = []
 
   for (const orientation of ['landscape', 'portrait'] as const) {
     input.layout[orientation].forEach((page, index) => {
-      const where = `${ORIENTATION_LABELS[orientation]}, page ${index + 1}`
+      const where = tr.t('warnings.where', {
+        orientation: orientationLabel(orientation, tr),
+        page: index + 1
+      })
 
-      if (page.className === '') items.push(`${where} : cette page ne dit pas son type`)
+      if (page.className === '') items.push(tr.t('warnings.structureNoClass', { where }))
 
       const navigations = getMember(page.node, 'navigations')
       const unknownNavigations =
@@ -375,16 +388,17 @@ function structureWarning(input: WarningInput): Warning | undefined {
       if (unknownNavigations) {
         // Le type JavaScript de la valeur ne disait rien à personne. Ce qui compte est
         // la conséquence : cet outil ne sait pas dire quand cette page s'affiche.
-        items.push(
-          `${where} : cet outil ne sait pas dire quand cette page s’affiche — la valeur ` +
-          `« navigations » n’est ni « all », ni « none », ni une liste`
-        )
+        items.push(tr.t('warnings.structureNavigations', { where }))
       }
 
       page.widgets.forEach((widget, position) => {
         const missing = UNIVERSAL_KEYS.filter((key) => getMember(widget.node, key) === undefined)
         if (missing.length > 0) {
-          items.push(`${where}, gadget ${position + 1} : clé ${missing.join(', ')} absente`)
+          // `join(', ')` et non `format.list` : ce sont des **noms de clés alignés**, pas
+          // une énumération dans une phrase — « CLASS et X1 » ferait lire une prose.
+          items.push(tr.t('warnings.structureMissingKeys', {
+            where, rank: position + 1, keys: missing.join(', ')
+          }))
         }
       })
     })
@@ -393,7 +407,7 @@ function structureWarning(input: WarningInput): Warning | undefined {
   // `JSON.parse` écraserait une clé dupliquée en silence ; le document les garde toutes,
   // mais le pilote doit savoir que son fichier en contient — XCTrack en lira une seule.
   for (const path of findDuplicateKeys(input.document)) {
-    items.push(`Ligne en double : ${path}`)
+    items.push(tr.t('warnings.structureDuplicate', { path }))
   }
 
   if (items.length === 0) return undefined
@@ -401,19 +415,26 @@ function structureWarning(input: WarningInput): Warning | undefined {
   return {
     kind: 'structure',
     moment: 'import',
-    title: 'Structure inattendue',
-    detail:
-      'Cet éditeur n’a pas reconnu une partie de ce fichier. Le rendu est dégradé là où ' +
-      'l’information manque, mais rien n’est perdu : le document est conservé intact et ' +
-      'ressort tel quel.',
+    title: tr.t('warnings.structureTitle'),
+    detail: tr.t('warnings.structureDetail'),
     items
   }
 }
 
 /* ------------------------------------ 7. géométrie : défauts, et montages volontaires */
 
-function box(widget: Widget): string {
-  return `X1 ${widget.x1}, Y1 ${widget.y1}, X2 ${widget.x2}, Y2 ${widget.y2}`
+/**
+ * Les quatre coordonnées, telles qu'elles sont écrites dans le fichier. Elles passent en
+ * **`string`** : ce sont des valeurs qu'on retrouve au `grep` dans le `.xcfg`, et
+ * « 10 000 » ne s'y trouve nulle part.
+ */
+function box(widget: Widget, tr: Translator): string {
+  return tr.t('warnings.box', {
+    x1: String(widget.x1),
+    y1: String(widget.y1),
+    x2: String(widget.x2),
+    y2: String(widget.y2)
+  })
 }
 
 /**
@@ -509,28 +530,32 @@ interface GeometryFindings {
   coveredButtons: string[]
 }
 
-function scanPage(page: Page, where: string, language: string, found: GeometryFindings): void {
+function scanPage(
+  page: Page, where: string, language: string, found: GeometryFindings, tr: Translator
+): void {
   page.widgets.forEach((widget, position) => {
     const name = readableName(widget.shortName, language)
-    const who = `${where}, gadget ${position + 1} (${name})`
+    const who = tr.t('warnings.who', { where, rank: position + 1, name })
 
     // La conséquence, en français, puis les coordonnées entre parenthèses. « X2 n'est
     // pas au-delà de X1 — X1 3000, Y1 0, X2 3000, Y2 5000 » ne disait rien à un pilote,
     // alors que l'intitulé du bloc, trois lignes plus haut, le dit déjà très bien :
     // « boîte de largeur ou de hauteur nulle, coordonnées hors des bornes ».
     if (widget.x2 <= widget.x1) {
-      found.defects.push(`${who} : largeur nulle, il n’a aucune surface — ${box(widget)}`)
+      found.defects.push(tr.t('warnings.geometryZeroWidth', { who, box: box(widget, tr) }))
     }
     if (widget.y2 <= widget.y1) {
-      found.defects.push(`${who} : hauteur nulle, il n’a aucune surface — ${box(widget)}`)
+      found.defects.push(tr.t('warnings.geometryZeroHeight', { who, box: box(widget, tr) }))
     }
 
     const outside = ([
-      ['son bord gauche', widget.x1], ['son bord haut', widget.y1],
-      ['son bord droit', widget.x2], ['son bord bas', widget.y2]
+      ['warnings.edgeLeft', widget.x1], ['warnings.edgeTop', widget.y1],
+      ['warnings.edgeRight', widget.x2], ['warnings.edgeBottom', widget.y2]
     ] as const).filter(([, value]) => value < 0 || value > SCALE)
     for (const [edge, value] of outside) {
-      found.defects.push(`${who} : sort de la page, ${edge} est à ${value} — ${box(widget)}`)
+      found.defects.push(tr.t('warnings.geometryOutside', {
+        who, edge: tr.t(edge), value: String(value), box: box(widget, tr)
+      }))
     }
 
     // Plus haut dans la pile = plus loin dans le tableau : c'est l'ordre de dessin, et
@@ -550,42 +575,45 @@ function scanPage(page: Page, where: string, language: string, found: GeometryFi
     const hider = opaqueCoverIndex(page, position)
     if (hider === -1) return
 
-    const cover = `gadget ${hider + 1} (${readableName(page.widgets[hider]!.shortName, language)})`
+    const cover = tr.t('warnings.cover', {
+      rank: hider + 1,
+      name: readableName(page.widgets[hider]!.shortName, language)
+    })
 
     // Le même fait géométrique, deux conséquences opposées pour le pilote. Un bouton
     // caché garde son utilité — c'est même la raison d'être du montage ; une altitude
     // cachée est une valeur que personne ne lira jamais.
     if (isActionButton(widget.shortName)) {
-      found.coveredButtons.push(`${who} : caché par le ${cover}, mais toujours actif au doigt`)
+      found.coveredButtons.push(tr.t('warnings.geometryCoveredButton', { who, cover }))
     } else {
-      found.defects.push(`${who} : caché par le ${cover}, et n’affichera donc rien`)
+      found.defects.push(tr.t('warnings.geometryCovered', { who, cover }))
     }
   })
 }
 
 function scanGeometry(input: WarningInput): GeometryFindings {
   const found: GeometryFindings = { defects: [], coveredButtons: [] }
+  const tr = input.tr
   for (const orientation of ['landscape', 'portrait'] as const) {
     input.layout[orientation].forEach((page, index) => {
-      scanPage(page, `${ORIENTATION_LABELS[orientation]}, page ${index + 1}`, input.language, found)
+      const where = tr.t('warnings.where', {
+        orientation: orientationLabel(orientation, tr),
+        page: index + 1
+      })
+      scanPage(page, where, input.language, found, tr)
     })
   }
   return found
 }
 
-function geometryWarning(items: string[]): Warning | undefined {
+function geometryWarning(items: string[], tr: Translator): Warning | undefined {
   if (items.length === 0) return undefined
 
   return {
     kind: 'geometry',
     moment: 'import',
-    title: 'Défauts de géométrie',
-    detail:
-      'Ces gadgets ne peuvent pas s’afficher comme leur auteur l’espérait : boîte de ' +
-      'largeur ou de hauteur nulle, coordonnées hors des bornes, ou gadget entièrement ' +
-      'caché sous un autre, dont il ne montrera jamais la valeur. Les simples ' +
-      'chevauchements ne sont pas signalés : ils sont normaux sur une carte ou un ' +
-      'assistant de thermique.',
+    title: tr.t('warnings.geometryTitle'),
+    detail: tr.t('warnings.geometryDetail'),
     items
   }
 }
@@ -602,20 +630,14 @@ function geometryWarning(items: string[]): Warning | undefined {
  * part de `geometry` — il n'est pas dans les `ATTENTION_KINDS` de `main.ts`, donc pas
  * de liséré d'alerte — et rédigé pour rassurer plutôt que pour alerter.
  */
-function coveredButtonWarning(items: string[]): Warning | undefined {
+function coveredButtonWarning(items: string[], tr: Translator): Warning | undefined {
   if (items.length === 0) return undefined
 
   return {
     kind: 'covered-buttons',
     moment: 'import',
-    title: 'Boutons d’action cachés, et c’est sans doute voulu',
-    detail:
-      'Un autre gadget est posé par-dessus ces boutons et les recouvre entièrement : sur ' +
-      'l’instrument, vous ne les verrez pas. Ils répondent pourtant toujours au doigt — ' +
-      'appuyer à cet endroit déclenche leur action, même si c’est la carte ou l’assistant ' +
-      'de thermique que vous y voyez. C’est un montage courant et non un défaut : il ' +
-      'donne une commande là où l’écran est déjà occupé. Rien à corriger, sauf si la ' +
-      'superposition vous surprend.',
+    title: tr.t('warnings.coveredButtonsTitle'),
+    detail: tr.t('warnings.coveredButtonsDetail'),
     items
   }
 }
@@ -650,6 +672,7 @@ const DRAWN_THEME = 'WhiteHCTheme'
  * protocole est au point 11 de `docs/plans/2026-08-20-feuille-de-route.md`.
  */
 function themeWarning(input: WarningInput): Warning | undefined {
+  const tr = input.tr
   const declared = input.settings.theme
   const items: string[] = []
 
@@ -678,44 +701,43 @@ function themeWarning(input: WarningInput): Warning | undefined {
   if (!documentDiffers && perWidget.size === 0) return undefined
 
   if (documentDiffers) {
-    const known = KNOWN_THEMES.includes(declared) ? '' : ' (thème inconnu de cet outil)'
-    items.push(`Thème du fichier : ${declared}${known}`)
+    // Le nom du thème est un identifiant lu dans le fichier : il se recopie tel quel.
+    items.push(KNOWN_THEMES.includes(declared)
+      ? tr.t('warnings.themeFileKnown', { theme: declared })
+      : tr.t('warnings.themeFileUnknown', { theme: declared }))
   }
   for (const [theme, count] of perWidget) {
-    items.push(`${plural({ one: '{count} gadget', other: '{count} gadgets' }, count)} en ${theme}`)
+    items.push(tr.t('warnings.themePerWidget', { count, theme }))
   }
 
   return {
     kind: 'theme-not-drawn',
     moment: 'import',
-    title: 'Thème dessiné différent du thème déclaré',
-    detail:
-      `Ces pages sont dessinées ici avec le thème ${DRAWN_THEME}, le seul qui ait été ` +
-      'observé sur l’instrument. Le fichier en demande un autre : les couleurs et les ' +
-      'contrastes que vous voyez ne sont donc pas ceux de votre appareil. La géométrie, ' +
-      'elle, est juste — et le fichier n’est pas modifié pour autant.',
+    title: tr.t('warnings.themeTitle'),
+    detail: tr.t('warnings.themeDetail', { theme: DRAWN_THEME }),
     items
   }
 }
 
 export function computeWarnings(input: WarningInput): Warning[] {
+  const tr = input.tr
   const info = getMember(input.document, 'info')
   const preferences = getMember(input.document, 'preferences')
 
-  const warnings: Warning[] = [exportTypeWarning(info)]
-  warnings.push(...assumedValueWarnings(input.settings, input.language))
+  const warnings: Warning[] = [exportTypeWarning(info, tr)]
+  warnings.push(...assumedValueWarnings(input.settings, input.language, tr))
 
   // Un seul balayage des rectangles : les deux avertissements qui en sortent disent le
   // même fait géométrique, et rien ne justifierait de le calculer deux fois.
   const geometry = scanGeometry(input)
 
   const optional = [
-    personalDataWarning(collectPersonalData(input.document, input.layout)),
-    externalResourceWarning(preferences),
-    versionWarning(info),
+    personalDataWarning(collectPersonalData(input.document, input.layout), tr),
+    externalResourceWarning(preferences, tr),
+    versionWarning(info, tr),
     structureWarning(input),
-    geometryWarning(geometry.defects),
-    coveredButtonWarning(geometry.coveredButtons),
+    geometryWarning(geometry.defects, tr),
+    coveredButtonWarning(geometry.coveredButtons, tr),
     themeWarning(input)
   ]
   for (const warning of optional) {
@@ -807,24 +829,16 @@ export interface PreflightInput {
   isProWidget?: (shortName: string) => boolean
   /** Distance œil–instrument, en millimètres, quand le pilote l'a dite. */
   readingDistanceMm?: number
+  /**
+   * Notre prose, dans la langue du pilote — le même axe que celui de `WarningInput.tr`,
+   * et jamais celui de `language`, qui suit le fichier ouvert.
+   *
+   * ⚠️ Les titres et les résumés des sept règles (`RULE_TITLES`, `RULE_SUMMARIES`) et le
+   * `message` de chaque constat viennent de `src/model/inspection.ts` : ce sont la prose
+   * du domaine `model`, et ce module ne fait que les habiller.
+   */
+  tr: Translator
 }
-
-/**
- * Ce qui ouvre l'explication d'une règle qui repose sur une hypothèse. Le `toVerify` du
- * modèle suit immédiatement : il dit ce qui lèverait le doute, et c'est le seul
- * renseignement qui vaille tant qu'il n'est pas levé.
- */
-const HYPOTHESIS_LEAD = 'Ce n’est pas un constat mesuré mais une question, et voici ce qui la trancherait.'
-
-/**
- * Ce que le titre gagne quand la règle repose sur une hypothèse. Il se lit aussi sur la
- * ligne repliée des remarques, qui n'affiche que les titres : sans lui, une supposition
- * et une mesure y seraient indiscernables.
- *
- * « à confirmer sur l'instrument » et non « à vérifier » : le panneau déplié s'intitule
- * déjà « À vérifier dans ce fichier », et ces deux-là ne veulent pas dire la même chose.
- */
-const HYPOTHESIS_MARK = ' — à confirmer sur l’instrument'
 
 /** Vrai si la règle mérite le panneau déplié : grave, et établie. Voir l'en-tête. */
 export function isAttentionFinding(finding: Finding): boolean {
@@ -847,6 +861,7 @@ export function preflightWarnings(input: PreflightInput): Warning[] {
     else groups.set(finding.ruleId, [finding])
   }
 
+  const tr = input.tr
   const warnings: Warning[] = []
   for (const [ruleId, group] of groups) {
     // La certitude et la gravité sont des propriétés de la règle, pas du gadget : tous
@@ -858,11 +873,16 @@ export function preflightWarnings(input: PreflightInput): Warning[] {
       // Le contrôle porte sur la configuration ouverte, pas sur ce qu'on s'apprête à
       // donner à quelqu'un : il se lit à l'import, avec le reste.
       moment: 'import',
-      title: doubt ? `${RULE_TITLES[ruleId]}${HYPOTHESIS_MARK}` : RULE_TITLES[ruleId],
+      title: doubt
+        ? tr.t('warnings.hypothesisTitle', { title: RULE_TITLES[ruleId] })
+        : RULE_TITLES[ruleId],
       detail: doubt
-        ? `${RULE_SUMMARIES[ruleId]} ${HYPOTHESIS_LEAD} ${first.toVerify ?? ''}`.trim()
+        ? `${RULE_SUMMARIES[ruleId]} ${tr.t('warnings.hypothesisLead')} ${first.toVerify ?? ''}`.trim()
         : RULE_SUMMARIES[ruleId],
-      items: group.map((finding) => `${describeLocation(finding.location)} : ${finding.message}`)
+      items: group.map((finding) => tr.t('warnings.preflightItem', {
+        where: describeLocation(finding.location),
+        message: finding.message
+      }))
     })
   }
   return warnings

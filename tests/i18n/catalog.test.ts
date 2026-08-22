@@ -143,7 +143,22 @@ const IDENTICAL_ON_PURPOSE: ReadonlySet<string> = new Set<string>([
    * les cinq langues écrivent forcément la même chose.
    */
   ...UI_LANGUAGES.map((language) => `${language}/preferences.truncatedValue`),
-  ...UI_LANGUAGES.map((language) => `${language}/preferences.privacyItemWhy`)
+  ...UI_LANGUAGES.map((language) => `${language}/preferences.privacyItemWhy`),
+  /*
+   * Domaine `sharing` (`sharingDialog.ts`, `warnings.ts`). Quatre cas, deux causes :
+   *
+   * - deux gabarits **sans un seul mot** — le nom accessible d'une carte de choix (un
+   *   titre, un point, une note) et les quatre coordonnées d'un rectangle, qui portent
+   *   les noms `X1`…`Y2` que le fichier écrit ;
+   * - « Portrait » et « page » : le mot que l'anglais emploie réellement se trouve être
+   *   celui du français. L'allemand dit « Hochformat » et « Seite », le néerlandais
+   *   « Staand » et « pagina », l'espagnol « Vertical » et « página » — la coïncidence
+   *   n'est donc pas générale, d'où l'exception nominative.
+   */
+  ...UI_LANGUAGES.map((language) => `${language}/sharing.choiceLabel`),
+  ...UI_LANGUAGES.map((language) => `${language}/warnings.box`),
+  'en/sharing.orientationPortrait',
+  'en/warnings.where'
 ])
 
 /**
@@ -160,11 +175,19 @@ const IDENTICAL_ON_PURPOSE: ReadonlySet<string> = new Set<string>([
  *   pages d'assistant de thermique et s'affiche, tandis que `count` accorde la dernière
  *   phrase sur les pages **autres** que la cible supposée. Le pluriel ne peut donc pas
  *   suivre celui qui s'écrit.
+ *
+ * Le quatrième vient du domaine `sharing` :
+ *
+ * - `sharing.droppedIntro` — « Cette section entière reste chez vous » / « Ces sections
+ *   entières restent chez vous ». Les sections écartées sont **listées juste en dessous**,
+ *   avec leur nom et ce qu'elles emportent : réécrire leur nombre dans la phrase qui
+ *   ouvre la liste ne renseignerait pas, il ferait compter deux fois.
  */
 const PLURAL_WITHOUT_VISIBLE_COUNT: ReadonlySet<string> = new Set<string>([
   'pages.rankShift',
   'pages.thermalAlreadyPresent',
-  'pages.thermalMultiple'
+  'pages.thermalMultiple',
+  'sharing.droppedIntro'
 ])
 
 describe('catalogues de messages', () => {

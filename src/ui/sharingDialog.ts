@@ -17,13 +17,11 @@ import {
 } from '../model/sharing'
 import {
   collectPersonalData,
-  personalHomeLabel,
-  personalValueText,
-  PERSONAL_CAVEAT,
-  PERSONAL_KIND_LABELS,
-  type PersonalInventory
+  personalProse,
+  type PersonalInventory,
+  type PersonalProse
 } from '../model/personalData'
-import { plural, proseFormat } from './prose'
+import type { Translator } from '../i18n'
 
 /**
  * L'interface d'**export partageable** : choisir ce qu'on donne, voir ce qui est remplacé,
@@ -310,16 +308,15 @@ export function sharingBytes(result: SharingResult): Uint8Array | undefined {
  * (`scope.ts`). Une troisième, apparue dans une version à venir, tomberait sur le repli —
  * qui la nomme sans prétendre savoir ce qu'elle contient.
  */
-const DROPPED_ROOT_KEY_LABELS: Record<string, string> = {
-  preferences: 'Toutes vos préférences : nom du pilote, voile, unités, thème, réglages du '
-    + 'vario et de ses sons, seuils d’espaces aériens, Livetracking, capteurs Bluetooth '
-    + 'appairés, fichiers de waypoints.',
-  airspaceSelectedChannels: 'Les canaux d’espaces aériens que vous avez sélectionnés.'
+const DROPPED_ROOT_KEY_MESSAGES: Record<string, 'sharing.droppedPreferences' | 'sharing.droppedAirspaceChannels'> = {
+  preferences: 'sharing.droppedPreferences',
+  airspaceSelectedChannels: 'sharing.droppedAirspaceChannels'
 }
 
-export function droppedRootKeyLabel(key: string): string {
-  return DROPPED_ROOT_KEY_LABELS[key]
-    ?? `La section « ${key} », qu’un export « pages » ne transporte pas.`
+export function droppedRootKeyLabel(key: string, tr: Translator): string {
+  const known = DROPPED_ROOT_KEY_MESSAGES[key]
+  // La clé du fichier est un identifiant : elle se recopie telle quelle dans le repli.
+  return known === undefined ? tr.t('sharing.droppedUnknownSection', { key }) : tr.t(known)
 }
 
 /**
@@ -330,14 +327,16 @@ export function droppedRootKeyLabel(key: string): string {
  * dérive un export `pages`, et un `pages` ne porte que `info` et `layout`. Le destinataire
  * reçoit **la disposition, pas les préférences**.
  */
-export const ANONYMOUS_COSTS: readonly string[] = [
-  'les unités — altitudes, distances, vitesses : il gardera les siennes ;',
-  'le thème d’affichage, la taille et la couleur des titres de gadgets ;',
-  'les réglages du vario et de ses sons ;',
-  'les seuils et les canaux d’espaces aériens ;',
-  'le Livetracking et ses identifiants ;',
-  'les capteurs Bluetooth appairés.'
-]
+export function anonymousCosts(tr: Translator): readonly string[] {
+  return [
+    tr.t('sharing.anonymousCostUnits'),
+    tr.t('sharing.anonymousCostTheme'),
+    tr.t('sharing.anonymousCostVario'),
+    tr.t('sharing.anonymousCostAirspace'),
+    tr.t('sharing.anonymousCostLivetracking'),
+    tr.t('sharing.anonymousCostSensors')
+  ]
+}
 
 /**
  * Ce que la **sauvegarde entière** coûte au destinataire, et c'est bien moins.
@@ -347,45 +346,15 @@ export const ANONYMOUS_COSTS: readonly string[] = [
  * vario et ses sons, les unités, le thème, les seuils d'espaces aériens, les touches — et
  * c'est précisément à quoi sert cette issue.
  */
-export const BACKUP_COSTS: readonly string[] = [
-  'vos capteurs appairés : il appaire les siens, qui sont les seuls qu’il puisse utiliser ;',
-  'votre tâche en cours, ses points de virage et leurs coordonnées ;',
-  'vos fichiers de waypoints et d’espaces aériens, et le thème de carte que vous avez '
-    + 'installé — des fichiers de votre appareil ;',
-  'vos cartes hors-ligne, pour la même raison ;',
-  'vos messages rapides de Livetracking, qui sont vos phrases.'
-]
-
-/**
- * Ce que la sauvegarde entière **ne** protège **pas**, dit à l'endroit où l'on pourrait le
- * croire protégé.
- *
- * `PREFERENCE_RULES` est une liste noire — l'inverse de la liste blanche `PAGES_ROOT_KEYS`
- * dont `scope.ts` tire sa solidité — et une liste noire est fausse le jour où XCTrack
- * ajoute un réglage. C'est le prix de cette issue-là, et il se dit avant le clic, pas
- * après.
- */
-export const BACKUP_RESIDUAL_NOTE =
-  'Cette issue traite les 44 réglages personnels connus de XCTrack et les onze champs de '
-  + 'texte des gadgets. Le format change à chaque version : un réglage personnel apparu '
-  + 'depuis ne serait pas dans la liste, et partirait en clair. La version partageable, '
-  + 'plus bas, ne dépend d’aucune liste — elle ne transporte aucun réglage du tout.'
-
-/** Ce que l'inventaire des soupçons annonce, avant de dérouler la liste. */
-export const SUSPECTS_NOTE =
-  'Ces textes ne figurent dans aucune de nos listes, et ils ressemblent pourtant à quelque '
-  + 'chose que vous auriez écrit. Ils partent tels quels : nous ne remplaçons pas ce dont '
-  + 'nous ne sommes pas sûrs, parce que nous abîmerions des réglages. Vous seul savez si '
-  + 'vous les avez écrits.'
-
-/** Ce qu'on dit quand rien ne ressemble à une donnée personnelle non déclarée. */
-export const SUSPECTS_NONE_NOTE =
-  'Aucun texte inattendu dans ce qui part : tout ce qui n’est pas traité ci-dessus a la '
-  + 'forme d’un réglage — un mot choisi dans une liste, un nombre — et non celle d’un '
-  + 'texte écrit.'
-
-/** Ce qu'on écrit à la place de la valeur posée, quand la ligne entière est retirée. */
-export const DROPPED_LINE = 'la ligne entière est retirée'
+export function backupCosts(tr: Translator): readonly string[] {
+  return [
+    tr.t('sharing.backupCostSensors'),
+    tr.t('sharing.backupCostTask'),
+    tr.t('sharing.backupCostFiles'),
+    tr.t('sharing.backupCostOfflineMaps'),
+    tr.t('sharing.backupCostQuickMessages')
+  ]
+}
 
 /**
  * Pourquoi un export anonymisé sort en `.xcfg` nu, même depuis une archive.
@@ -420,13 +389,9 @@ export const DROPPED_LINE = 'la ligne entière est retirée'
  * Les annexes ne sont pas passées sous silence pour autant : elles sont **listées**, avec
  * leur taille, sous l'option d'anonymisation. Le pilote qui en a besoin exporte le fichier
  * complet, ou les envoie séparément en connaissance de cause.
+ *
+ * La phrase elle-même est `sharing.annexesNote`.
  */
-export const ANNEXES_NOTE =
-  'Une archive .xczfg transporte des fichiers annexes que cet éditeur n’inspecte pas — '
-  + 'ni leur contenu, ni les métadonnées d’une image, où une photo porte souvent les '
-  + 'coordonnées du lieu de prise de vue. La version partageable est donc écrite en .xcfg '
-  + 'nu, sans eux. Rien d’utile n’y est perdu : les ressources extérieures d’une '
-  + 'configuration sont désignées depuis les préférences, qui ne partent pas non plus.'
 
 /**
  * Ce qui reste malgré tout. Dit **à côté de l'inventaire**, jamais replié dans un volet
@@ -441,9 +406,7 @@ export const ANNEXES_NOTE =
  * des octets **identiques**, donc la même empreinte SHA-256. Le pilote peut le vérifier
  * lui-même, et c'est pour cela qu'on le lui dit.
  */
-export const FIDELITY_UNCHANGED =
-  'Vous n’avez rien modifié : le fichier ressort exactement tel qu’il est entré, sans une '
-  + 'virgule réécrite.'
+export const FIDELITY_UNCHANGED = 'sharing.fidelityUnchanged' as const
 
 /**
  * La même chose, dite en technicien — et **repliée**.
@@ -452,9 +415,7 @@ export const FIDELITY_UNCHANGED =
  * titre qu'elle reste dite. Mais pour qui ne sait pas ce qu'est une empreinte, elle ne
  * prouve rien : elle inquiète. Elle est donc en second rang, derrière un triangle.
  */
-export const FIDELITY_UNCHANGED_DETAIL =
-  'Les octets que vous avez ouverts sont réémis sans être réécrits : l’empreinte SHA-256 '
-  + 'du fichier produit est celle du fichier d’origine — vous pouvez le vérifier.'
+export const FIDELITY_UNCHANGED_DETAIL = 'sharing.fidelityUnchangedDetail' as const
 
 /**
  * Ce que la boîte promet quand le pilote **a modifié** son document.
@@ -470,9 +431,7 @@ export const FIDELITY_UNCHANGED_DETAIL =
  * coordonnées écrites — sur les 78 639 du fichier ; tout le reste sort identique, `3.0` et
  * `1.0E7` compris.
  */
-export const FIDELITY_MODIFIED =
-  'Tout ce que vous n’avez pas touché est recopié à l’identique — jusqu’aux nombres et à '
-  + 'l’espacement d’origine. Seul ce que vous avez changé change.'
+export const FIDELITY_MODIFIED = 'sharing.fidelityModified' as const
 
 /**
  * La conséquence technique, **repliée** — et présentée pour ce qu'elle est.
@@ -487,37 +446,44 @@ export const FIDELITY_MODIFIED =
  * rien d'autre n'a bougé. Elle passe donc derrière le triangle, avec sa contrepartie —
  * sur un document non modifié, elle est identique.
  */
-export const FIDELITY_MODIFIED_DETAIL =
-  'Le fichier étant réécrit, son empreinte SHA-256 diffère de celle du fichier d’origine ; '
-  + 'sur un document non modifié, elle est identique.'
+export const FIDELITY_MODIFIED_DETAIL = 'sharing.fidelityModifiedDetail' as const
 
-export const RESIDUAL_NOTE =
-  'La liste des onze champs de texte traités est fixe, et le format de XCTrack change à '
-  + 'chaque version : un champ de texte apparu depuis partirait en clair. Relisez '
-  + 'l’inventaire ci-dessus avant d’envoyer le fichier — c’est lui la vérification, pas '
-  + 'la promesse de cet outil.'
-
-const ORIENTATION_LABELS: Record<string, string> = {
-  landscape: 'Paysage',
-  portrait: 'Portrait'
+/**
+ * L'orientation dans les mots du pilote. Elle vit dans le domaine `sharing` plutôt que
+ * dans `common.ts` : elle ne sert qu'ici et dans `warnings.ts`, et un mot n'entre dans le
+ * vocabulaire partagé que lorsque **deux domaines** l'emploient.
+ *
+ * Une orientation inconnue se recopie telle quelle : c'est un identifiant lu dans le
+ * fichier, et l'inventer serait pire que le montrer.
+ */
+function orientationLabel(orientation: string, tr: Translator): string {
+  if (orientation === 'landscape') return tr.t('sharing.orientationLandscape')
+  if (orientation === 'portrait') return tr.t('sharing.orientationPortrait')
+  return orientation
 }
 
 /**
  * L'emplacement d'un texte remplacé, dans les mots du pilote : l'orientation, le rang de
  * la page, le rang du gadget et son nom lisible.
  *
- * Le mot affiché est **gadget** — c'est celui de l'interface francophone de XCTrack, et
- * c'est celui que le reste de cette application emploie.
+ * Le mot affiché est **gadget** en français — c'est celui de l'interface francophone de
+ * XCTrack — et *widget* dans les quatre autres langues. C'est le message qui le porte,
+ * pas ce code : voir `sharing.location`.
  */
-export function describeLocation(entry: FreeTextReplacement, language: string): string {
-  const orientation = ORIENTATION_LABELS[entry.orientation] ?? entry.orientation
-  return `${orientation} · page ${entry.pageRank} · gadget ${entry.widgetRank}`
-    + ` · ${readableName(entry.shortName, language)}`
+export function describeLocation(
+  entry: FreeTextReplacement, language: string, tr: Translator
+): string {
+  return tr.t('sharing.location', {
+    orientation: orientationLabel(entry.orientation, tr),
+    page: entry.pageRank,
+    rank: entry.widgetRank,
+    name: readableName(entry.shortName, language)
+  })
 }
 
 /** La valeur posée, telle qu'on l'écrit quand c'est la chaîne vide. */
-export function displayedReplacement(replacement: string): string {
-  return replacement === '' ? '(vide)' : replacement
+export function displayedReplacement(replacement: string, tr: Translator): string {
+  return replacement === '' ? tr.t('sharing.emptyValue') : replacement
 }
 
 /* ============================================================================ la boîte */
@@ -533,6 +499,13 @@ function el<K extends keyof HTMLElementTagNameMap>(
 
 export interface SharingDialogOptions {
   source: SharingSource
+  /**
+   * Notre prose, dans la langue du pilote. **Passé, jamais lu.**
+   *
+   * ⚠️ C'est l'**autre** axe que `language` ci-dessous : celui-ci suit le choix du pilote,
+   * celui-là suit le fichier ouvert et nomme les gadgets. Voir `src/i18n/axes.ts`.
+   */
+  tr: Translator
   /** Langue déjà résolue par l'appelant, pour nommer les gadgets. Défaut : `'fr'`. */
   language?: string
   /**
@@ -564,17 +537,21 @@ export interface SharingDialogHandle {
   close: () => void
 }
 
-function replacementItem(entry: FreeTextReplacement, language: string): HTMLElement {
+function replacementItem(
+  entry: FreeTextReplacement, language: string, tr: Translator
+): HTMLElement {
   const item = el('li', 'sharing__item')
-  item.append(el('p', 'sharing__where', describeLocation(entry, language)))
+  item.append(el('p', 'sharing__where', describeLocation(entry, language, tr)))
 
   const swap = el('p', 'sharing__swap')
   swap.append(
     el('code', 'sharing__key', entry.keyPath),
     el('span', 'sharing__from', entry.text),
     el('span', 'sharing__arrow', '→'),
-    el('span', 'sharing__to', displayedReplacement(entry.replacement))
+    el('span', 'sharing__to', displayedReplacement(entry.replacement, tr))
   )
+  // `entry.reason` vient de `model/sharing.ts` : c'est la prose du domaine `model`, et ce
+  // module ne fait que l'afficher.
   item.append(swap, el('p', 'sharing__why', entry.reason))
   return item
 }
@@ -589,18 +566,13 @@ function replacementItem(entry: FreeTextReplacement, language: string): HTMLElem
  * dérivant un « pages ». Les deux gestes sont bons, mais ils ne portent pas sur la même
  * chose, et le pilote doit lire les deux chiffres pour le savoir.
  */
-function preferencesReminder(personal: PersonalInventory): HTMLElement | undefined {
+function preferencesReminder(
+  personal: PersonalInventory, tr: Translator
+): HTMLElement | undefined {
   if (personal.counts.preferences === 0) return undefined
-  return el(
-    'p', 'sharing__caveat',
-    `Ce fichier porte par ailleurs ${plural({
-      one: '{count} donnée personnelle dans ses préférences',
-      other: '{count} données personnelles dans ses préférences'
-    }, personal.counts.preferences)} ` +
-    '— nom, matériel, capteurs appairés, tâche en cours. Elles ne sont pas remplacées : ' +
-    'la version partageable ci-dessus n’emporte que les pages, et laisse en bloc toute la ' +
-    'section « preferences ».'
-  )
+  return el('p', 'sharing__caveat', tr.t('sharing.otherPersonalInPreferences', {
+    count: personal.counts.preferences
+  }))
 }
 
 /**
@@ -615,36 +587,32 @@ function replacementsSection(
   replacements: readonly FreeTextReplacement[],
   personal: PersonalInventory,
   options: { remindPreferences: boolean; caveat: string },
-  language: string
+  language: string,
+  tr: Translator,
+  prose: PersonalProse
 ): HTMLElement {
   const section = el('section', 'sharing__section')
-  section.append(el('h3', 'sharing__heading', 'Vos textes dans les gadgets'))
+  section.append(el('h3', 'sharing__heading', tr.t('sharing.freeTextHeading')))
 
   if (replacements.length === 0) {
-    section.append(el(
-      'p', 'sharing__note',
-      'Aucun texte personnalisé dans les gadgets de ce fichier : rien à remplacer ici.'
-    ))
-    const reminder = options.remindPreferences ? preferencesReminder(personal) : undefined
+    section.append(el('p', 'sharing__note', tr.t('sharing.freeTextNone')))
+    const reminder = options.remindPreferences
+      ? preferencesReminder(personal, tr)
+      : undefined
     if (reminder) section.append(reminder)
-    section.append(el('p', 'sharing__caveat', PERSONAL_CAVEAT))
+    section.append(el('p', 'sharing__caveat', prose.caveat()))
     return section
   }
 
   section.append(el(
     'p', 'sharing__note',
-    `${plural({
-      one: '{count} texte écrit par vous est remplacé',
-      other: '{count} textes écrits par vous sont remplacés'
-    }, replacements.length)}. Voici lesquels, et où ils se trouvent. ` +
-    'Ils vivent dans la disposition des pages, et non dans les préférences : ils partent ' +
-    'donc quel que soit le format du fichier.'
+    tr.t('sharing.freeTextCount', { count: replacements.length })
   ))
 
   const list = el('ol', 'sharing__list')
-  for (const entry of replacements) list.append(replacementItem(entry, language))
+  for (const entry of replacements) list.append(replacementItem(entry, language, tr))
   section.append(list)
-  const reminder = options.remindPreferences ? preferencesReminder(personal) : undefined
+  const reminder = options.remindPreferences ? preferencesReminder(personal, tr) : undefined
   if (reminder) section.append(reminder)
   section.append(el('p', 'sharing__caveat', options.caveat))
   return section
@@ -652,13 +620,20 @@ function replacementsSection(
 
 /* ------------------------------------ les réglages personnels, traités ligne par ligne */
 
-/** L'intitulé de chacun des quatre traitements, dans les mots du pilote. */
-const TREATMENT_HEADINGS: Record<string, string> = {
-  replace: 'Remplacés par une valeur neutre',
-  drop: 'Retirés du fichier',
-  keep: 'Conservés tels quels, et voici pourquoi',
-  empty: 'Présents dans le fichier, mais vides'
-}
+/**
+ * L'intitulé de chacun des quatre traitements, dans les mots du pilote.
+ *
+ * **`keep` est le refus assumé**, et il s'affiche aussi visiblement que les trois autres :
+ * un booléen de diffusion Livetrack ou une catégorie de voile est un **réglage**, pas une
+ * donnée, et c'est souvent de lui qu'on vient parler sur un forum. Le taire ferait passer
+ * une décision pour une négligence.
+ */
+const TREATMENT_HEADINGS = {
+  replace: 'sharing.treatmentReplace',
+  drop: 'sharing.treatmentDrop',
+  keep: 'sharing.treatmentKeep',
+  empty: 'sharing.treatmentEmpty'
+} as const
 
 /**
  * Une ligne de réglage : la clé, sa nature, ce qu'elle portait, ce qu'elle porte.
@@ -668,14 +643,16 @@ const TREATMENT_HEADINGS: Record<string, string> = {
  * davantage : ça allonge une boîte qui s'ouvre à chaque enregistrement, et une boîte trop
  * longue finit par ne plus être lue du tout.
  */
-function preferenceItem(outcome: PreferenceOutcome, withReason: boolean): HTMLElement {
+function preferenceItem(
+  outcome: PreferenceOutcome, withReason: boolean, tr: Translator, prose: PersonalProse
+): HTMLElement {
   // Le modificateur porte le traitement : c'est lui qui décide si la valeur d'origine se
   // barre. Barrer une valeur conservée dirait le contraire de ce qui se passe.
   const item = el('li', `sharing__item sharing__item--${outcome.treatment}`)
   const swap = el('p', 'sharing__swap')
   swap.append(
     el('code', 'sharing__key', outcome.key),
-    el('span', 'sharing__kind', PERSONAL_KIND_LABELS[outcome.kind])
+    el('span', 'sharing__kind', prose.kind(outcome.kind))
   )
 
   if (outcome.treatment === 'replace' || outcome.treatment === 'drop') {
@@ -683,8 +660,8 @@ function preferenceItem(outcome: PreferenceOutcome, withReason: boolean): HTMLEl
       el('span', 'sharing__from', outcome.before),
       el('span', 'sharing__arrow', '→'),
       el('span', 'sharing__to', outcome.treatment === 'drop'
-        ? DROPPED_LINE
-        : displayedReplacement(outcome.after ?? ''))
+        ? tr.t('sharing.droppedLine')
+        : displayedReplacement(outcome.after ?? '', tr))
     )
   } else {
     // Rien ne change : pas de flèche, et la valeur ne se barre pas — le style s'en charge.
@@ -704,36 +681,31 @@ function preferenceItem(outcome: PreferenceOutcome, withReason: boolean): HTMLEl
  * son intitulé, donc son verdict, avant la liste — y compris celui qu'on serait tenté de
  * taire, « conservés tels quels ».
  */
-function preferencesSection(plan: BackupPlan): HTMLElement {
+function preferencesSection(
+  plan: BackupPlan, tr: Translator, prose: PersonalProse
+): HTMLElement {
   const section = el('section', 'sharing__section')
-  section.append(el('h3', 'sharing__heading', 'Vos réglages personnels, ligne par ligne'))
+  section.append(el('h3', 'sharing__heading', tr.t('sharing.preferencesHeading')))
 
   if (plan.preferences.length === 0) {
-    section.append(el(
-      'p', 'sharing__note',
-      'Ce fichier ne porte aucun des 44 réglages que XCTrack range parmi les données ' +
-      'personnelles : il n’y a rien à y traiter.'
-    ))
-    section.append(el('p', 'sharing__caveat', BACKUP_RESIDUAL_NOTE))
+    section.append(el('p', 'sharing__note', tr.t('sharing.preferencesNone')))
+    section.append(el('p', 'sharing__caveat', tr.t('sharing.backupResidualNote')))
     return section
   }
 
+  // Les quatre chiffres se joignent par `', '` et non par `format.list` : c'est une
+  // **colonne de données**, pas une énumération dans une phrase — « 3 remplacés, 4 retirés
+  // et 4 conservés » ferait lire une prose là où il y a un tableau.
   const tally = plan.tally
-  section.append(el(
-    'p', 'sharing__note',
-    `${plural({
-      one: '{count} réglage personnel a été trouvé dans ce fichier',
-      other: '{count} réglages personnels ont été trouvés dans ce fichier'
-    }, plan.preferences.length)} : ` +
-    `${plural({
-      one: '{count} remplacé', other: '{count} remplacés'
-    }, tally.replaced)}, ` +
-    `${plural({ one: '{count} retiré', other: '{count} retirés' }, tally.dropped)}, ` +
-    `${plural({ one: '{count} conservé', other: '{count} conservés' }, tally.kept)}, ` +
-    `${plural({
-      one: '{count} vide', other: '{count} vides'
-    }, tally.empty)}. Chaque ligne dit ce qui lui arrive et pourquoi.`
-  ))
+  section.append(el('p', 'sharing__note', tr.t('sharing.preferencesFound', {
+    count: plan.preferences.length,
+    tally: [
+      tr.t('sharing.preferencesReplaced', { count: tally.replaced }),
+      tr.t('sharing.preferencesDropped', { count: tally.dropped }),
+      tr.t('sharing.preferencesKept', { count: tally.kept }),
+      tr.t('sharing.preferencesEmpty', { count: tally.empty })
+    ].join(', ')
+  })))
 
   const groups: ReadonlyArray<PreferenceOutcome['treatment']> =
     ['replace', 'drop', 'keep', 'empty']
@@ -741,7 +713,7 @@ function preferencesSection(plan: BackupPlan): HTMLElement {
     const entries = plan.preferences.filter((one) => one.treatment === treatment)
     if (entries.length === 0) continue
     const group = el('div', `sharing__group sharing__group--${treatment}`)
-    group.append(el('h4', 'sharing__groupHead', TREATMENT_HEADINGS[treatment] ?? treatment))
+    group.append(el('h4', 'sharing__groupHead', tr.t(TREATMENT_HEADINGS[treatment])))
 
     // Une raison commune se dit une fois. Les cinq emplacements vides d'un backup réel, et
     // les quatre choix de diffusion Livetrack, portent chacun la même phrase : la répéter
@@ -752,12 +724,14 @@ function preferencesSection(plan: BackupPlan): HTMLElement {
     if (shared !== undefined) group.append(el('p', 'sharing__note', shared))
 
     const list = el('ul', 'sharing__list sharing__list--plain')
-    for (const entry of entries) list.append(preferenceItem(entry, shared === undefined))
+    for (const entry of entries) {
+      list.append(preferenceItem(entry, shared === undefined, tr, prose))
+    }
     group.append(list)
     section.append(group)
   }
 
-  section.append(el('p', 'sharing__caveat', BACKUP_RESIDUAL_NOTE))
+  section.append(el('p', 'sharing__caveat', tr.t('sharing.backupResidualNote')))
   return section
 }
 
@@ -772,21 +746,20 @@ function preferencesSection(plan: BackupPlan): HTMLElement {
  */
 const SUSPECTS_SHOWN = 12
 
-function suspectsSection(suspects: readonly PersonalSuspect[]): HTMLElement {
+function suspectsSection(
+  suspects: readonly PersonalSuspect[], tr: Translator, prose: PersonalProse
+): HTMLElement {
   const section = el('section', 'sharing__section')
-  section.append(el('h3', 'sharing__heading', 'Ce qui a l’air d’un texte que vous auriez écrit'))
+  section.append(el('h3', 'sharing__heading', tr.t('sharing.suspectsHeading')))
 
   if (suspects.length === 0) {
-    section.append(el('p', 'sharing__note', SUSPECTS_NONE_NOTE))
+    section.append(el('p', 'sharing__note', tr.t('sharing.suspectsNoneNote')))
     return section
   }
 
   section.append(el(
     'p', 'sharing__note',
-    `${plural({
-      one: '{count} texte n’est pas dans nos listes et en a pourtant l’air',
-      other: '{count} textes ne sont pas dans nos listes et en ont pourtant l’air'
-    }, suspects.length)}. ${SUSPECTS_NOTE}`
+    `${tr.t('sharing.suspectsCount', { count: suspects.length })} ${tr.t('sharing.suspectsNote')}`
   ))
 
   const list = el('ul', 'sharing__list sharing__list--plain')
@@ -795,20 +768,18 @@ function suspectsSection(suspects: readonly PersonalSuspect[]): HTMLElement {
     item.append(
       el('code', 'sharing__key', suspect.path),
       el('span', 'sharing__from', suspect.value),
-      el('span', 'sharing__why', `${personalHomeLabel(suspect.home)} — ${suspect.clue}`)
+      // `suspect.clue` est l'un des sept indices de `model/sharing.ts` : prose du domaine
+      // `model`, affichée ici sans être réécrite.
+      el('span', 'sharing__why', `${prose.home(suspect.home)} — ${suspect.clue}`)
     )
     list.append(item)
   }
   section.append(list)
 
   if (suspects.length > SUSPECTS_SHOWN) {
-    section.append(el(
-      'p', 'sharing__caveat',
-      `${plural({
-        one: '{count} autre texte du même genre n’est pas montré ici, faute de place',
-        other: '{count} autres textes du même genre ne sont pas montrés ici, faute de place'
-      }, suspects.length - SUSPECTS_SHOWN)}. Relisez le fichier produit avant de l’envoyer.`
-    ))
+    section.append(el('p', 'sharing__caveat', tr.t('sharing.suspectsMore', {
+      count: suspects.length - SUSPECTS_SHOWN
+    })))
   }
   return section
 }
@@ -823,15 +794,13 @@ function costBlock(intro: string, costs: readonly string[], outro: string): HTML
   return cost
 }
 
-function backupCostSection(): HTMLElement {
+function backupCostSection(tr: Translator): HTMLElement {
   const section = el('section', 'sharing__section')
-  section.append(el('h3', 'sharing__heading', 'Ce que le destinataire n’aura pas'))
+  section.append(el('h3', 'sharing__heading', tr.t('sharing.backupCostHeading')))
   section.append(costBlock(
-    'Vos réglages traversent tous — vario et ses sons, unités, thème, seuils d’espaces '
-    + 'aériens, touches. Ce qu’il n’aura pas, ce sont vos ressources à vous :',
-    BACKUP_COSTS,
-    'Aucune de ces lignes n’est un réglage : ce sont des fichiers et des appareils qui '
-    + 'vivent chez vous, et dont il n’aurait rien pu faire.'
+    tr.t('sharing.backupCostIntro'),
+    backupCosts(tr),
+    tr.t('sharing.backupCostOutro')
   ))
   return section
 }
@@ -843,25 +812,23 @@ function backupCostSection(): HTMLElement {
  * moitié. Replié, parce que le geste de la boîte reste « choisir ce qu'on donne » : le
  * détail est disponible, il ne s'impose pas.
  */
-function personalSection(personal: PersonalInventory): HTMLElement | undefined {
+function personalSection(
+  personal: PersonalInventory, tr: Translator, prose: PersonalProse
+): HTMLElement | undefined {
   if (personal.counts.total === 0) return undefined
 
   const section = el('details', 'sharing__section sharing__personal')
   const counts = personal.counts
-  section.append(el('summary', 'sharing__heading',
-    `Tout ce que ce fichier porte de personnel : ${String(counts.total)} — ` +
-    `${String(counts.layout)} dans la disposition, ${String(counts.preferences)} dans les préférences`))
+  section.append(el('summary', 'sharing__heading', tr.t('sharing.personalHeading', {
+    total: counts.total,
+    layout: counts.layout,
+    preferences: counts.preferences
+  })))
 
   section.append(el('p', 'sharing__note',
-    `${plural({
-      one: '{count} est renseignée',
-      other: '{count} sont renseignées'
-    }, counts.filled)}, ` +
-    `${plural({
-      one: '{count} est un emplacement présent mais vide',
-      other: '{count} sont des emplacements présents mais vides'
-    }, counts.empty)}. ` +
-    'Seules celles de la disposition partent avec un export « pages ».'))
+    `${tr.t('sharing.personalFilled', { count: counts.filled })}, ` +
+    `${tr.t('sharing.personalEmpty', { count: counts.empty })}. ` +
+    tr.t('sharing.personalTravelsNote')))
 
   const list = el('ul', 'sharing__list sharing__list--plain')
   for (const finding of personal.findings) {
@@ -870,8 +837,8 @@ function personalSection(personal: PersonalInventory): HTMLElement | undefined {
       : 'sharing__datum')
     item.append(
       el('code', 'sharing__key', finding.key),
-      el('span', 'sharing__from', personalValueText(finding)),
-      el('span', 'sharing__why', `${PERSONAL_KIND_LABELS[finding.kind]} — ${finding.reason}`)
+      el('span', 'sharing__from', prose.value(finding)),
+      el('span', 'sharing__why', `${prose.kind(finding.kind)} — ${prose.reason(finding)}`)
     )
     list.append(item)
   }
@@ -879,62 +846,54 @@ function personalSection(personal: PersonalInventory): HTMLElement | undefined {
   return section
 }
 
-function droppedSection(plan: PagesPlan): HTMLElement {
+function droppedSection(plan: PagesPlan, tr: Translator): HTMLElement {
   const section = el('section', 'sharing__section')
-  section.append(el('h3', 'sharing__heading', 'Ce qui ne partira pas'))
+  section.append(el('h3', 'sharing__heading', tr.t('sharing.droppedHeading')))
 
   if (plan.droppedRootKeys.length === 0) {
-    section.append(el(
-      'p', 'sharing__note',
-      'Ce fichier est déjà un export « pages » : il ne porte aucune préférence, il n’y a '
-      + 'donc rien à en retirer.'
-    ))
+    section.append(el('p', 'sharing__note', tr.t('sharing.droppedNothing')))
     return section
   }
 
-  section.append(el(
-    'p', 'sharing__note',
-    'Le fichier partagé est un export « pages » : il ne porte que vos pages. '
-    + `${plural({
-      one: 'Cette section entière reste',
-      other: 'Ces sections entières restent'
-    }, plan.droppedRootKeys.length)} chez vous.`
-  ))
+  section.append(el('p', 'sharing__note', tr.t('sharing.droppedIntro', {
+    count: plan.droppedRootKeys.length
+  })))
 
   const list = el('ul', 'sharing__list sharing__list--plain')
   for (const key of plan.droppedRootKeys) {
     const item = el('li', 'sharing__dropped')
     item.append(
       el('code', 'sharing__key', key),
-      el('span', 'sharing__why', droppedRootKeyLabel(key))
+      el('span', 'sharing__why', droppedRootKeyLabel(key, tr))
     )
     list.append(item)
   }
   section.append(list)
 
   section.append(costBlock(
-    'Ce que le destinataire n’aura donc pas, et qu’il devra régler lui-même :',
-    ANONYMOUS_COSTS,
-    'Il reçoit la disposition de vos pages, pas vos préférences. C’est le plus souvent ce '
-    + 'qu’on veut — ses unités ne sont pas forcément les vôtres — mais il faut le savoir '
-    + 'avant d’envoyer.'
+    tr.t('sharing.anonymousCostIntro'),
+    anonymousCosts(tr),
+    tr.t('sharing.anonymousCostOutro')
   ))
   return section
 }
 
-function annexesSection(plan: { droppedExtras: readonly SharingExtra[] }): HTMLElement | undefined {
+function annexesSection(
+  plan: { droppedExtras: readonly SharingExtra[] }, tr: Translator
+): HTMLElement | undefined {
   if (plan.droppedExtras.length === 0) return undefined
 
   const section = el('section', 'sharing__section')
-  section.append(el('h3', 'sharing__heading', 'Les annexes de l’archive'))
-  section.append(el('p', 'sharing__note', ANNEXES_NOTE))
+  section.append(el('h3', 'sharing__heading', tr.t('sharing.annexesHeading')))
+  section.append(el('p', 'sharing__note', tr.t('sharing.annexesNote')))
 
   const list = el('ul', 'sharing__list sharing__list--plain')
   for (const extra of plan.droppedExtras) {
     const item = el('li', 'sharing__dropped')
     item.append(
       el('code', 'sharing__key', extra.name),
-      el('span', 'sharing__why', proseFormat.byteSize(extra.byteLength))
+      // La taille se met en forme dans la langue du pilote : « 1,4 Mo », « 1.4 MB ».
+      el('span', 'sharing__why', tr.format.byteSize(extra.byteLength))
     )
     list.append(item)
   }
@@ -954,35 +913,32 @@ function annexesSection(plan: { droppedExtras: readonly SharingExtra[] }): HTMLE
  * pas celui du clic. C'est ce qui fait que le nom montré est exactement le nom produit.
  */
 export function renderSharingDialog(options: SharingDialogOptions): SharingDialogHandle {
+  const tr = options.tr
+  const prose = personalProse(tr)
   const language = options.language ?? 'fr'
   const when = (options.now ?? (() => new Date()))()
   const plan = planSharing(options.source, when)
 
   const dialog = el('dialog', 'modal modal--sharing')
-  dialog.setAttribute('aria-label', 'Enregistrer cette configuration')
+  dialog.setAttribute('aria-label', tr.t('sharing.dialogTitle'))
 
   const box = el('div', 'modal__box')
 
   const head = el('div', 'modal__head')
-  head.append(el('h2', 'modal__title', 'Enregistrer cette configuration'))
-  const dismiss = el('button', 'btn btn--ghost', 'Fermer')
+  head.append(el('h2', 'modal__title', tr.t('sharing.dialogTitle')))
+  const dismiss = el('button', 'btn btn--ghost', tr.t('sharing.close'))
   dismiss.type = 'button'
   head.append(dismiss)
   box.append(head)
 
-  box.append(el(
-    'p', 'modal__lead',
-    'Le fichier produit porte un nom horodaté qui ne reprend rien du nom d’origine — '
-    + 'celui-ci contient souvent un prénom. Le nom est donc réglé ; reste à choisir ce '
-    + 'que le fichier contient.'
-  ))
+  box.append(el('p', 'modal__lead', tr.t('sharing.lead')))
   if (options.notice) box.append(options.notice)
 
   /* --- les trois issues, chacune suivie de son inventaire --- */
 
   const choices = el('fieldset', 'sharing__choices')
   const legend = el('legend', 'sr-only')
-  legend.textContent = 'Que faut-il enregistrer ?'
+  legend.textContent = tr.t('sharing.legend')
   choices.append(legend)
 
   const name = `sharing-choice-${Math.random().toString(36).slice(2, 8)}`
@@ -1011,7 +967,7 @@ export function renderSharingDialog(options: SharingDialogOptions): SharingDialo
     // sans ce nom explicite, le « Pour les curieux » imbriqué se lirait à chaque passage
     // sur ce bouton radio — et son détail technique une fois déplié. Un nom posé ici
     // l'emporte sur celui que le navigateur aurait tiré du contenu de l'étiquette.
-    input.setAttribute('aria-label', `${title}. ${note}`)
+    input.setAttribute('aria-label', tr.t('sharing.choiceLabel', { title, note }))
     const body = el('span', 'sharing__choiceBody')
     body.append(
       el('span', 'sharing__choiceTitle', title),
@@ -1019,7 +975,7 @@ export function renderSharingDialog(options: SharingDialogOptions): SharingDialo
     )
     if (detail !== undefined) {
       const curious = el('details', 'sharing__curious')
-      curious.append(el('summary', 'sharing__curiousHead', 'Pour les curieux'))
+      curious.append(el('summary', 'sharing__curiousHead', tr.t('sharing.curiousHead')))
       curious.append(el('span', 'sharing__choiceNote', detail))
       body.append(curious)
     }
@@ -1037,31 +993,35 @@ export function renderSharingDialog(options: SharingDialogOptions): SharingDialo
   }
 
   const counts = plan.personal.counts
-  const contentNote = plan.exportType === 'pages'
-    ? ' Un export « pages » ne porte pas de préférences, mais les textes que vous avez '
-      + 'écrits dans les gadgets, si.'
-    : ' Il porte vos préférences : nom du pilote, voile, capteurs appairés, fichiers de '
-      + 'waypoints.'
-  const plainNote = (plan.modified ? FIDELITY_MODIFIED : FIDELITY_UNCHANGED) + contentNote
-  const plainDetail = plan.modified ? FIDELITY_MODIFIED_DETAIL : FIDELITY_UNCHANGED_DETAIL
+
+  // Trois phrases entières, assemblées et non taillées : la garantie sur les octets, ce
+  // que le fichier contient, et les deux chiffres. Une phrase absente ne laisse pas
+  // d'espace derrière elle.
+  const plainNote = [
+    plan.modified ? tr.t(FIDELITY_MODIFIED) : tr.t(FIDELITY_UNCHANGED),
+    plan.exportType === 'pages'
+      ? tr.t('sharing.plainContentPages')
+      : tr.t('sharing.plainContentBackup')
+  ]
 
   // Les deux chiffres, nommés, et jamais additionnés : ils ne répondent pas à la même
   // question. Celui de la disposition est le seul qui survive à un export « pages ».
-  const tally = counts.total === 0
-    ? ''
-    : ` Il porte ${plural({
-      one: '{count} donnée personnelle dans la disposition',
-      other: '{count} données personnelles dans la disposition'
-    }, counts.layout)} et ${plural({
-      one: '{count} dans les préférences',
-      other: '{count} dans les préférences'
-    }, counts.preferences)} ; toutes partiraient en clair.`
+  if (counts.total > 0) {
+    plainNote.push(tr.t('sharing.plainTally', {
+      layout: tr.t('sharing.personalInLayout', { count: counts.layout }),
+      preferences: tr.t('sharing.personalInPreferences', { count: counts.preferences })
+    }))
+  }
+
+  const plainDetail = plan.modified
+    ? tr.t(FIDELITY_MODIFIED_DETAIL)
+    : tr.t(FIDELITY_UNCHANGED_DETAIL)
 
   // « Fichier complet » n'était juste pour aucun des deux formats : un export « pages »
   // n'a rien de complet, il ne porte pas les préférences. Ce que le mot opposait en
   // réalité, c'est « tel qu'il est » à « expurgé ».
   buildChoice(
-    'plain', 'Votre configuration, telle qu’elle est', `${plainNote}${tally}`, true, plainDetail
+    'plain', tr.t('sharing.plainTitle'), plainNote.join(' '), true, plainDetail
   )
 
   const offers = (form: SharingForm): boolean => plan.forms.includes(form)
@@ -1069,55 +1029,45 @@ export function renderSharingDialog(options: SharingDialogOptions): SharingDialo
   // Le chiffre est dans la carte, avant le volet : c'est ce qui permet de choisir sans
   // dérouler l'inventaire, et l'inventaire reste là pour qui veut vérifier.
   const backupNote = plan.backup.changed === 0
-    ? 'Le fichier reste une sauvegarde entière — vario et ses sons, unités, thème, seuils '
-      + 'd’espaces aériens, touches. Ce fichier-ci ne porte rien qui vous désigne : il n’y '
-      + 'a donc rien à y remplacer.'
-    : 'Le fichier reste une sauvegarde entière — vario et ses sons, unités, thème, seuils '
-      + 'd’espaces aériens, touches. '
-      + `${plural({
-        one: '{count} ligne qui vous désigne est remplacée par une valeur neutre ou retirée',
-        other: '{count} lignes qui vous désignent sont remplacées par des valeurs neutres '
-          + 'ou retirées'
-      }, plan.backup.changed)}.`
+    ? tr.t('sharing.backupNoteUnchanged')
+    : tr.t('sharing.backupNoteChanged', { count: plan.backup.changed })
 
   const backupPanel = offers('backup')
-    ? buildChoice('backup', 'Tous vos réglages, sans ce qui vous désigne', backupNote, false)
+    ? buildChoice('backup', tr.t('sharing.backupTitle'), backupNote, false)
     : undefined
 
   const pagesPanel = buildChoice(
-    'pages',
-    'Version partageable, sans données personnelles',
-    'Un export « pages » dont les textes que vous avez écrits sont remplacés par des '
-    + 'textes neutres. La disposition est conservée ; les préférences ne partent pas.',
-    false
+    'pages', tr.t('sharing.pagesTitle'), tr.t('sharing.pagesNote'), false
   )
 
   box.append(choices)
 
   /* --- ce que chaque issue fait, montré avant de le faire --- */
 
+  const residual = tr.t('sharing.residualNote')
+
   if (backupPanel !== undefined) {
-    backupPanel.append(preferencesSection(plan.backup))
+    backupPanel.append(preferencesSection(plan.backup, tr, prose))
     backupPanel.append(replacementsSection(
       plan.backup.replacements, plan.personal,
-      { remindPreferences: false, caveat: RESIDUAL_NOTE }, language
+      { remindPreferences: false, caveat: residual }, language, tr, prose
     ))
-    backupPanel.append(backupCostSection())
-    const backupAnnexes = annexesSection(plan.backup)
+    backupPanel.append(backupCostSection(tr))
+    const backupAnnexes = annexesSection(plan.backup, tr)
     if (backupAnnexes) backupPanel.append(backupAnnexes)
-    backupPanel.append(suspectsSection(plan.backup.suspects))
+    backupPanel.append(suspectsSection(plan.backup.suspects, tr, prose))
   }
 
-  pagesPanel.append(droppedSection(plan.pages))
-  const pagesAnnexes = annexesSection(plan.pages)
+  pagesPanel.append(droppedSection(plan.pages, tr))
+  const pagesAnnexes = annexesSection(plan.pages, tr)
   if (pagesAnnexes) pagesPanel.append(pagesAnnexes)
   pagesPanel.append(replacementsSection(
     plan.pages.replacements, plan.personal,
-    { remindPreferences: true, caveat: RESIDUAL_NOTE }, language
+    { remindPreferences: true, caveat: residual }, language, tr, prose
   ))
-  pagesPanel.append(suspectsSection(plan.pages.suspects))
+  pagesPanel.append(suspectsSection(plan.pages.suspects, tr, prose))
 
-  const inventory = personalSection(plan.personal)
+  const inventory = personalSection(plan.personal, tr, prose)
   if (inventory) box.append(inventory)
 
   /* --- le nom produit --- */
@@ -1137,7 +1087,7 @@ export function renderSharingDialog(options: SharingDialogOptions): SharingDialo
   const refresh = (): void => {
     const form = chosenForm()
     for (const one of panels) one.panel.hidden = one.form !== form
-    fileNameLine.textContent = `Nom du fichier produit : ${FILE_NAMES[form]()}`
+    fileNameLine.textContent = tr.t('sharing.producedFileName', { name: FILE_NAMES[form]() })
   }
   for (const one of inputs) one.input.addEventListener('change', refresh)
   refresh()
@@ -1145,9 +1095,9 @@ export function renderSharingDialog(options: SharingDialogOptions): SharingDialo
   /* --- confirmer ou renoncer --- */
 
   const actions = el('div', 'modal__actions')
-  const cancel = el('button', 'btn', 'Annuler')
+  const cancel = el('button', 'btn', tr.t('sharing.cancel'))
   cancel.type = 'button'
-  const confirm = el('button', 'btn btn--primary', 'Enregistrer')
+  const confirm = el('button', 'btn btn--primary', tr.t('sharing.confirm'))
   confirm.type = 'button'
   actions.append(cancel, confirm)
   box.append(actions)

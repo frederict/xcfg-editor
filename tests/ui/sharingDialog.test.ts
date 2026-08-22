@@ -11,10 +11,8 @@ import { NEUTRAL_PHONE_NUMBER } from '../../src/model/sharing'
 import { readLayout } from '../../src/model/layout'
 import { moveWidgetBy } from '../../src/model/mutations'
 import {
-  ANNEXES_NOTE,
-  ANONYMOUS_COSTS,
-  BACKUP_COSTS,
-  BACKUP_RESIDUAL_NOTE,
+  anonymousCosts,
+  backupCosts,
   describeLocation,
   displayedReplacement,
   droppedRootKeyLabel,
@@ -24,15 +22,18 @@ import {
   FIDELITY_UNCHANGED_DETAIL,
   planSharing,
   renderSharingDialog,
-  RESIDUAL_NOTE,
   sharingBytes,
-  SUSPECTS_NONE_NOTE,
-  SUSPECTS_NOTE,
   type SharingExtra,
   type SharingForm,
   type SharingResult,
   type SharingSource
 } from '../../src/ui/sharingDialog'
+import { makeTranslator } from '../../src/i18n'
+import frenchMessages from '../../src/i18n/messages/fr'
+import germanMessages from '../../src/i18n/messages/de'
+import englishMessages from '../../src/i18n/messages/en'
+import spanishMessages from '../../src/i18n/messages/es'
+import dutchMessages from '../../src/i18n/messages/nl'
 import { ARCHIVE, BACKUP_2026, FORMES_PRESERVEES, PAGES_2026 } from '../fixtures/paths'
 
 /**
@@ -58,6 +59,22 @@ import { ARCHIVE, BACKUP_2026, FORMES_PRESERVEES, PAGES_2026 } from '../fixtures
 
 /** Le moment que porteront tous les noms de ce fichier : figé, sans quoi rien n'est stable. */
 const WHEN = new Date(2026, 7, 21, 15, 32, 7)
+
+/**
+ * Le traducteur de **notre prose**, en français : c'est la langue d'écriture, et donc la
+ * seule dont les phrases se vérifient au caractère près ici. Les quatre autres sont
+ * gardées par `tests/i18n/catalog.test.ts` — repères, formes, coïncidences, vocabulaire.
+ */
+const tr = makeTranslator('fr', frenchMessages)
+
+/** Les phrases qui étaient des constantes exportées, et qui sont maintenant des messages. */
+const ANNEXES_NOTE = tr.t('sharing.annexesNote')
+const BACKUP_RESIDUAL_NOTE = tr.t('sharing.backupResidualNote')
+const RESIDUAL_NOTE = tr.t('sharing.residualNote')
+const SUSPECTS_NOTE = tr.t('sharing.suspectsNote')
+const SUSPECTS_NONE_NOTE = tr.t('sharing.suspectsNoneNote')
+const ANONYMOUS_COSTS = anonymousCosts(tr)
+const BACKUP_COSTS = backupCosts(tr)
 
 function readSource(file: string): ReturnType<typeof parseJson> {
   return parseJson(readFileSync(file, 'utf8'))
@@ -115,10 +132,10 @@ describe('planSharing — trois issues, trois noms', () => {
     )
     expect(plan.pages.droppedRootKeys).toEqual(['airspaceSelectedChannels', 'preferences'])
     for (const key of plan.pages.droppedRootKeys) {
-      expect(droppedRootKeyLabel(key).length).toBeGreaterThan(20)
+      expect(droppedRootKeyLabel(key, tr).length).toBeGreaterThan(20)
     }
     // Le repli nomme une clé inconnue sans prétendre savoir ce qu'elle contient.
-    expect(droppedRootKeyLabel('cléFuture')).toContain('cléFuture')
+    expect(droppedRootKeyLabel('cléFuture', tr)).toContain('cléFuture')
   })
 
   it('la source n’est pas touchée par le calcul du plan', () => {
@@ -145,7 +162,8 @@ describe('l’inventaire montre ce qui part — formes-preservees.xcfg', () => {
     expect(phone!.orientation).toBe('landscape')
     expect(phone!.pageRank).toBe(1)
     expect(phone!.widgetRank).toBe(2)
-    expect(describeLocation(phone!, 'fr')).toBe('Paysage · page 1 · gadget 2 · Bouton téléphone')
+    expect(describeLocation(phone!, 'fr', tr))
+      .toBe('Paysage · page 1 · gadget 2 · Bouton téléphone')
 
     const contact = plan.pages.replacements.find((r) => r.keyPath === 'contact/fullName')
     expect(contact!.text).toBe('Jean Exemple')
@@ -182,8 +200,8 @@ describe('l’inventaire montre ce qui part — formes-preservees.xcfg', () => {
   })
 
   it('la chaîne vide posée se dit « (vide) » plutôt que de disparaître', () => {
-    expect(displayedReplacement('')).toBe('(vide)')
-    expect(displayedReplacement('Titre 1')).toBe('Titre 1')
+    expect(displayedReplacement('', tr)).toBe('(vide)')
+    expect(displayedReplacement('Titre 1', tr)).toBe('Titre 1')
   })
 })
 
@@ -255,7 +273,7 @@ function open(
   onConfirm: (r: SharingResult) => void,
   onCancel?: () => void
 ): ReturnType<typeof renderSharingDialog> {
-  const handle = renderSharingDialog({ source, now: () => WHEN, onConfirm, onCancel })
+  const handle = renderSharingDialog({ source, tr, now: () => WHEN, onConfirm, onCancel })
   handle.open()
   return handle
 }
@@ -554,9 +572,9 @@ describe('sharingDialog — les octets, dits juste dans les deux cas', () => {
     expect(plan.modified).toBe(false)
     // « à l'octet près » a quitté l'interface : il a deux sens, tous deux vrais, et le
     // pilote n'a pas à trancher lequel. La promesse se dit en clair, la preuve se replie.
-    expect(FIDELITY_UNCHANGED).toContain('sans une virgule réécrite')
-    expect(FIDELITY_UNCHANGED).not.toContain('SHA-256')
-    expect(FIDELITY_UNCHANGED_DETAIL).toContain('celle du fichier d’origine')
+    expect(tr.t(FIDELITY_UNCHANGED)).toContain('sans une virgule réécrite')
+    expect(tr.t(FIDELITY_UNCHANGED)).not.toContain('SHA-256')
+    expect(tr.t(FIDELITY_UNCHANGED_DETAIL)).toContain('celle du fichier d’origine')
   })
 
   it('document modifié : les octets changent, et la boîte ne prétend plus le contraire', async () => {
@@ -589,11 +607,12 @@ describe('sharingDialog — les octets, dits juste dans les deux cas', () => {
     // La boîte ouvrait sur trois négations d'affilée — « réécrit », « changent », « ne
     // sera plus » — avant de rassurer. Elle ouvre maintenant sur ce que le pilote vient
     // chercher ; l'empreinte, qui est une garantie et non un aveu, est repliée.
-    expect(FIDELITY_MODIFIED).not.toContain('à l’octet près')
-    expect(FIDELITY_MODIFIED).not.toContain('SHA-256')
-    expect(FIDELITY_MODIFIED).toContain('Seul ce que vous avez changé change')
-    expect(FIDELITY_MODIFIED_DETAIL).toContain('diffère de celle du fichier d’origine')
-    expect(FIDELITY_MODIFIED_DETAIL).toContain('sur un document non modifié, elle est identique')
+    expect(tr.t(FIDELITY_MODIFIED)).not.toContain('à l’octet près')
+    expect(tr.t(FIDELITY_MODIFIED)).not.toContain('SHA-256')
+    expect(tr.t(FIDELITY_MODIFIED)).toContain('Seul ce que vous avez changé change')
+    expect(tr.t(FIDELITY_MODIFIED_DETAIL)).toContain('diffère de celle du fichier d’origine')
+    expect(tr.t(FIDELITY_MODIFIED_DETAIL))
+      .toContain('sur un document non modifié, elle est identique')
   })
 
   it('sans information, on suppose modifié : la garantie forte ne s’affirme jamais à vide', () => {
@@ -607,6 +626,7 @@ describe('sharingDialog — les octets, dits juste dans les deux cas', () => {
     const document = parseJson(readFileSync(BACKUP_2026, 'utf-8'))
     const handle = renderSharingDialog({
       source: { document, fileName: 'b.xcfg', kind: 'xcfg', modified: true },
+      tr,
       now: () => WHEN,
       onConfirm: () => {}
     })
@@ -633,13 +653,14 @@ describe('sharingDialog — les octets, dits juste dans les deux cas', () => {
     for (const modified of [false, true]) {
       const handle = renderSharingDialog({
         source: { document, fileName: 'b.xcfg', kind: 'xcfg', modified },
+        tr,
         now: () => WHEN,
         onConfirm: () => {}
       })
       handle.open()
       const texte = handle.element.textContent ?? ''
-      expect(texte).toContain(modified ? FIDELITY_MODIFIED : FIDELITY_UNCHANGED)
-      expect(texte).not.toContain(modified ? FIDELITY_UNCHANGED : FIDELITY_MODIFIED)
+      expect(texte).toContain(tr.t(modified ? FIDELITY_MODIFIED : FIDELITY_UNCHANGED))
+      expect(texte).not.toContain(tr.t(modified ? FIDELITY_UNCHANGED : FIDELITY_MODIFIED))
       handle.close()
     }
   })
@@ -963,5 +984,103 @@ describe('un export « pages » ne se voit pas proposer trois fois la même chos
     )
     expect(plan.forms).toEqual(['plain', 'backup', 'pages'])
     expect(serializeJson(plan.backup.document)).not.toBe(serializeJson(plan.pages.document))
+  })
+})
+
+/* ================== les cinq langues : la gradation des trois issues, et le vocabulaire */
+
+/**
+ * **Ce que ces contrôles gardent, et qu'aucun autre ne garde.**
+ *
+ * La boîte de partage est le seul écran où une traduction fautive ne gêne pas mais fait
+ * **fuiter** : le pilote y décide ce qu'il envoie à quelqu'un d'autre. Deux propriétés
+ * doivent donc tenir dans les cinq langues, pas seulement en français :
+ *
+ * 1. **les trois issues restent trois**, dans l'ordre de ce qui part. Deux titres qui se
+ *    confondraient dans une langue y rendraient le choix illisible ;
+ * 2. **le mot du gadget suit la langue** — « gadget » en français, *widget* ailleurs —,
+ *    parce que c'est le mot que le pilote a sous les yeux sur son appareil.
+ */
+describe('la boîte dans les cinq langues', () => {
+  const TRANSLATORS = {
+    fr: makeTranslator('fr', frenchMessages),
+    de: makeTranslator('de', germanMessages),
+    en: makeTranslator('en', englishMessages),
+    es: makeTranslator('es', spanishMessages),
+    nl: makeTranslator('nl', dutchMessages)
+  }
+
+  for (const [code, translator] of Object.entries(TRANSLATORS)) {
+    it(`${code} : trois titres distincts, dans l’ordre de ce qui part`, () => {
+      const handle = renderSharingDialog({
+        source: {
+          document: readSource(BACKUP_2026),
+          fileName: shortName(BACKUP_2026),
+          kind: 'xcfg'
+        },
+        tr: translator,
+        now: () => WHEN,
+        onConfirm: () => {}
+      })
+      handle.open()
+      const titles = [...handle.element.querySelectorAll('.sharing__choiceTitle')]
+        .map((one) => one.textContent ?? '')
+
+      expect(titles).toEqual([
+        translator.t('sharing.plainTitle'),
+        translator.t('sharing.backupTitle'),
+        translator.t('sharing.pagesTitle')
+      ])
+      // Trois crans, donc trois titres qu'on ne peut pas confondre. Un pilote qui ne
+      // distingue pas le deuxième du troisième choisit au hasard ce qu'il donne.
+      expect(new Set(titles).size).toBe(3)
+      for (const title of titles) expect(title.length).toBeGreaterThan(10)
+      handle.close()
+    })
+
+    it(`${code} : le mot du gadget est celui de la chrome de cette langue`, () => {
+      const phone = planSharing(
+        {
+          document: readSource(FORMES_PRESERVEES),
+          fileName: 'formes-preservees.xcfg',
+          kind: 'xcfg'
+        },
+        WHEN
+      ).pages.replacements.find((one) => one.keyPath === 'contact/phoneNumber')!
+
+      const shown = describeLocation(phone, 'fr', translator).toLowerCase()
+      expect(shown).toContain(code === 'fr' ? 'gadget' : 'widget')
+      expect(shown).not.toContain(code === 'fr' ? 'widget' : 'gadget')
+    })
+  }
+
+  it('aucune phrase française ne survit dans la boîte allemande', () => {
+    // Le vrai risque d'une extraction : une phrase oubliée dans le code, qui reste
+    // française quelle que soit la langue choisie — et que personne ne voit en relisant
+    // le catalogue, puisqu'elle n'y est pas.
+    const handle = renderSharingDialog({
+      source: {
+        document: readSource(FORMES_PRESERVEES),
+        fileName: 'formes-preservees.xcfg',
+        kind: 'xcfg'
+      },
+      tr: TRANSLATORS.de,
+      now: () => WHEN,
+      onConfirm: () => {}
+    })
+    handle.open()
+    choose(handle, 'pages')
+    const shown = handle.element.textContent ?? ''
+    for (const french of [
+      'Enregistrer cette configuration',
+      'Ce qui ne partira pas',
+      'Vos textes dans les gadgets',
+      'Nom du fichier produit',
+      'Pour les curieux'
+    ]) {
+      expect(shown, french).not.toContain(french)
+    }
+    expect(shown).toContain(TRANSLATORS.de.t('sharing.dialogTitle'))
+    handle.close()
   })
 })
