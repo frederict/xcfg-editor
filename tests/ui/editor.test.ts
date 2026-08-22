@@ -9,6 +9,8 @@ import { serializeJson } from '../../src/core/serializeJson'
 import { gridFor } from '../../src/model/grid'
 import { readLayout, type Page } from '../../src/model/layout'
 import { pageWidgets, readWidgetBounds, setWidgetBounds, type Bounds } from '../../src/model/mutations'
+import { makeTranslator } from '../../src/i18n'
+import frenchMessages from '../../src/i18n/messages/fr'
 import {
   applyStructureEdit,
   applyWidgetEdit,
@@ -49,6 +51,9 @@ import {
   type WidgetEdit,
   type WidgetStructureEdit
 } from '../../src/ui/editor'
+
+/** Le traducteur de **notre prose**, en français : la langue d'écriture du dépôt. */
+const tr = makeTranslator('fr', frenchMessages)
 import { BACKUP_2026 } from '../fixtures/paths'
 
 const source = readFileSync(BACKUP_2026, 'utf8')
@@ -304,7 +309,7 @@ describe('geste nul', () => {
     const before = serializeJson(document)
 
     const box = currentBoxes(page)[6]!
-    const edit = commitGesture(page, 6, 'move', gestureRect(box, 'move', NO_DELTA, grid), 'fr')
+    const edit = commitGesture(page, 6, 'move', gestureRect(box, 'move', NO_DELTA, grid), 'fr', tr)
 
     expect(edit).toBeUndefined()
     expect(serializeJson(document)).toBe(before)
@@ -316,7 +321,7 @@ describe('geste nul', () => {
 
     // Deux unités : bien en deçà d'une demi-cellule (104 en X), l'aimantation les efface.
     const box = currentBoxes(page)[6]!
-    const edit = commitGesture(page, 6, 'move', gestureRect(box, 'move', { x: 2, y: 2 }, grid), 'fr')
+    const edit = commitGesture(page, 6, 'move', gestureRect(box, 'move', { x: 2, y: 2 }, grid), 'fr', tr)
 
     expect(edit).toBeUndefined()
     expect(serializeJson(document)).toBe(before)
@@ -327,8 +332,8 @@ describe('geste nul', () => {
 
 describe('modification', () => {
   it('décrit le geste en clair', () => {
-    expect(gestureDescription('move', 'WAltitude', 'fr')).toBe('Déplacer Altitude GPS')
-    expect(gestureDescription('se', 'WAltitude', 'fr')).toBe('Redimensionner Altitude GPS')
+    expect(gestureDescription('move', 'WAltitude', 'fr', tr)).toBe('Déplacer Altitude GPS')
+    expect(gestureDescription('se', 'WAltitude', 'fr', tr)).toBe('Redimensionner Altitude GPS')
   })
 
   it('écrit les nouvelles coordonnées et rend de quoi les annuler', () => {
@@ -336,7 +341,7 @@ describe('modification', () => {
     const box = currentBoxes(page)[6]!
     const target = gestureRect(box, 'move', { x: 1000, y: 0 }, grid)
 
-    const edit = commitGesture(page, 6, 'move', target, 'fr')
+    const edit = commitGesture(page, 6, 'move', target, 'fr', tr)
     expect(edit).toBeDefined()
     expect(edit!.widgetIndex).toBe(6)
     expect(edit!.before).toEqual(box)
@@ -350,7 +355,7 @@ describe('modification', () => {
     const before = serializeJson(document)
 
     const box = currentBoxes(page)[6]!
-    const edit = commitGesture(page, 6, 'se', resizedRect(box, 'se', { x: 600, y: 600 }, grid), 'fr')!
+    const edit = commitGesture(page, 6, 'se', resizedRect(box, 'se', { x: 600, y: 600 }, grid), 'fr', tr)!
     const after = serializeJson(document)
     expect(after).not.toBe(before)
 
@@ -366,7 +371,7 @@ describe('modification', () => {
     const before = serializeJson(document)
 
     const box = currentBoxes(page)[3]!
-    commitGesture(page, 3, 'move', gestureRect(box, 'move', { x: -1500, y: 0 }, grid), 'fr')
+    commitGesture(page, 3, 'move', gestureRect(box, 'move', { x: -1500, y: 0 }, grid), 'fr', tr)
 
     // Le nombre de lignes et de clés est intact : seule une valeur numérique a changé.
     expect(serializeJson(document).split('\n').length).toBe(before.split('\n').length)
@@ -398,7 +403,7 @@ describe('conversion des pixels', () => {
     // `\u202f` : l'espace fine insécable qu'`Intl` pose devant l'unité en français, écrite
     // en échappement pour qu'on la voie. C'est elle qui empêche le navigateur de couper la
     // ligne entre le nombre et son unité.
-    expect(sizeLabel(rect(0, 0, 10000, 10000), air3, 'landscape')).toBe('155,0 × 87,2\u202fmm')
+    expect(sizeLabel(rect(0, 0, 10000, 10000), air3, 'landscape', tr)).toBe('155,0 × 87,2\u202fmm')
   })
 })
 
@@ -441,6 +446,7 @@ describe('calque d’édition', () => {
       device: air3,
       orientation: 'landscape',
       language: 'fr',
+      tr,
       viewport: () => viewport,
       onEdit: (edit) => { edits.push(edit) }
     })
@@ -640,20 +646,20 @@ describe('rang d’empilement', () => {
   })
 
   it('dit le rang en clair, les deux extrémités nommées', () => {
-    expect(stackLabel(0, 8)).toBe('Rang 1 sur 8, arrière-plan')
-    expect(stackLabel(7, 8)).toBe('Rang 8 sur 8, premier plan')
-    expect(stackLabel(3, 8)).toBe('Rang 4 sur 8')
-    expect(stackLabel(0, 1)).toBe('Seul gadget de la page')
+    expect(stackLabel(0, 8, tr)).toBe('Rang 1 sur 8, arrière-plan')
+    expect(stackLabel(7, 8, tr)).toBe('Rang 8 sur 8, premier plan')
+    expect(stackLabel(3, 8, tr)).toBe('Rang 4 sur 8')
+    expect(stackLabel(0, 1, tr)).toBe('Seul gadget de la page')
   })
 
   it('libelle chaque action pour le menu « Annuler … »', () => {
     const name = readableName('WAltitude', 'fr')
-    expect(structureDescription('delete', 'WAltitude', 'fr')).toBe(`Supprimer ${name}`)
-    expect(structureDescription('duplicate', 'WAltitude', 'fr')).toBe(`Dupliquer ${name}`)
-    expect(structureDescription('raise', 'WAltitude', 'fr')).toBe(`Avancer ${name}`)
-    expect(structureDescription('lower', 'WAltitude', 'fr')).toBe(`Reculer ${name}`)
-    expect(structureDescription('front', 'WAltitude', 'fr')).toBe(`Mettre ${name} au premier plan`)
-    expect(structureDescription('back', 'WAltitude', 'fr')).toBe(`Envoyer ${name} à l’arrière-plan`)
+    expect(structureDescription('delete', 'WAltitude', 'fr', tr)).toBe(`Supprimer ${name}`)
+    expect(structureDescription('duplicate', 'WAltitude', 'fr', tr)).toBe(`Dupliquer ${name}`)
+    expect(structureDescription('raise', 'WAltitude', 'fr', tr)).toBe(`Avancer ${name}`)
+    expect(structureDescription('lower', 'WAltitude', 'fr', tr)).toBe(`Reculer ${name}`)
+    expect(structureDescription('front', 'WAltitude', 'fr', tr)).toBe(`Mettre ${name} au premier plan`)
+    expect(structureDescription('back', 'WAltitude', 'fr', tr)).toBe(`Envoyer ${name} à l’arrière-plan`)
   })
 })
 
@@ -723,7 +729,7 @@ describe('suppression d’un widget', () => {
     expect(page.widgets[0]!.shortName).toBe('WXCAssistant')
     expect(entryCount(page.widgets[0]!.node)).toBe(62)
 
-    const edit = removeWidgetAt(page, 0, 'fr')
+    const edit = removeWidgetAt(page, 0, 'fr', tr)
     expect(page.widgets).toHaveLength(7)
     expect(serializeJson(document)).not.toBe(before)
 
@@ -737,7 +743,7 @@ describe('suppression d’un widget', () => {
   it('se refait à l’identique', () => {
     const { page, document } = loadPage(2)
     const before = serializeJson(document)
-    const edit = removeWidgetAt(page, 0, 'fr')
+    const edit = removeWidgetAt(page, 0, 'fr', tr)
     const after = serializeJson(document)
 
     revertStructureEdit(page, edit)
@@ -749,7 +755,7 @@ describe('suppression d’un widget', () => {
   it('remet le widget à son rang d’origine, pas à la fin de la pile', () => {
     const { page } = loadPage(0)
     const order = page.widgets.map((widget) => widget.shortName)
-    const edit = removeWidgetAt(page, 5, 'fr')
+    const edit = removeWidgetAt(page, 5, 'fr', tr)
     expect(page.widgets.map((widget) => widget.shortName)).not.toEqual(order)
     revertStructureEdit(page, edit)
     expect(page.widgets.map((widget) => widget.shortName)).toEqual(order)
@@ -757,17 +763,17 @@ describe('suppression d’un widget', () => {
 
   it('dit où va la sélection : nulle part si c’était elle, un cran plus bas sinon', () => {
     const { page } = loadPage(2)
-    expect(removeWidgetAt(page, 3, 'fr').selection).toBeUndefined()
+    expect(removeWidgetAt(page, 3, 'fr', tr).selection).toBeUndefined()
 
     const { page: other } = loadPage(2)
-    const edit = removeWidgetAt(other, 2, 'fr', 5)
+    const edit = removeWidgetAt(other, 2, 'fr', tr, 5)
     expect(edit.selection).toBe(4)
     expect(edit.selectionBefore).toBe(5)
   })
 
   it('garde la photographie de la page et le document en phase', () => {
     const { page } = loadPage(0)
-    removeWidgetAt(page, 5, 'fr')
+    removeWidgetAt(page, 5, 'fr', tr)
     expectInSync(page)
   })
 })
@@ -776,7 +782,7 @@ describe('duplication d’un widget', () => {
   it('pose la copie juste devant l’original, décalée', () => {
     const { page } = loadPage(0)
     const before = currentBounds(page, 3)
-    const edit = duplicateWidgetAt(page, 3, grid, 'fr')
+    const edit = duplicateWidgetAt(page, 3, grid, 'fr', tr)
 
     expect(edit.index).toBe(4)
     expect(edit.selection).toBe(4)
@@ -792,7 +798,7 @@ describe('duplication d’un widget', () => {
 
   it('copie toutes les clés, y compris celles que l’outil ne lit jamais', () => {
     const { page } = loadPage(2)
-    const edit = duplicateWidgetAt(page, 0, grid, 'fr')
+    const edit = duplicateWidgetAt(page, 0, grid, 'fr', tr)
     expect(entryCount(edit.node)).toBe(entryCount(page.widgets[0]!.node))
     expect(entryCount(edit.node)).toBe(62)
   })
@@ -800,7 +806,7 @@ describe('duplication d’un widget', () => {
   it('produit un widget indépendant : modifier la copie ne touche pas l’original', () => {
     const { page } = loadPage(2)
     const original = page.widgets[0]!.node
-    const edit = duplicateWidgetAt(page, 0, grid, 'fr')
+    const edit = duplicateWidgetAt(page, 0, grid, 'fr', tr)
     expect(edit.node).not.toBe(original)
 
     // Une clé qu'aucune partie de l'outil ne connaît : si la copie partageait un nœud
@@ -820,7 +826,7 @@ describe('duplication d’un widget', () => {
   it('s’annule en retirant exactement la copie', () => {
     const { page, document } = loadPage(2)
     const before = serializeJson(document)
-    const edit = duplicateWidgetAt(page, 0, grid, 'fr')
+    const edit = duplicateWidgetAt(page, 0, grid, 'fr', tr)
     expect(serializeJson(document)).not.toBe(before)
     revertStructureEdit(page, edit)
     expect(serializeJson(document)).toBe(before)
@@ -833,12 +839,12 @@ describe('empilement d’un widget', () => {
     const { page, document } = loadPage(2)
     const before = serializeJson(document)
 
-    const up = restackWidget(page, 3, 'raise', 'fr')!
+    const up = restackWidget(page, 3, 'raise', 'fr', tr)!
     expect(up.to).toBe(4)
     expect(up.selection).toBe(4)
     expect(serializeJson(document)).not.toBe(before)
 
-    const down = restackWidget(page, 4, 'lower', 'fr')!
+    const down = restackWidget(page, 4, 'lower', 'fr', tr)!
     expect(down.to).toBe(3)
     expect(serializeJson(document)).toBe(before)
     expectInSync(page)
@@ -848,10 +854,10 @@ describe('empilement d’un widget', () => {
     const { page, document } = loadPage(2)
     const before = serializeJson(document)
 
-    expect(restackWidget(page, 7, 'front', 'fr')).toBeUndefined()
-    expect(restackWidget(page, 7, 'raise', 'fr')).toBeUndefined()
-    expect(restackWidget(page, 0, 'back', 'fr')).toBeUndefined()
-    expect(restackWidget(page, 0, 'lower', 'fr')).toBeUndefined()
+    expect(restackWidget(page, 7, 'front', 'fr', tr)).toBeUndefined()
+    expect(restackWidget(page, 7, 'raise', 'fr', tr)).toBeUndefined()
+    expect(restackWidget(page, 0, 'back', 'fr', tr)).toBeUndefined()
+    expect(restackWidget(page, 0, 'lower', 'fr', tr)).toBeUndefined()
 
     // Pas un octet réécrit : un historique qui enregistrerait ces quatre appels ferait
     // de « Annuler » quatre pressions sans effet visible.
@@ -862,7 +868,7 @@ describe('empilement d’un widget', () => {
     for (const action of ['front', 'back'] as const) {
       const { page, document } = loadPage(2)
       const before = serializeJson(document)
-      const edit = restackWidget(page, 1, action, 'fr')!
+      const edit = restackWidget(page, 1, action, 'fr', tr)!
       expect(edit.to).toBe(action === 'front' ? 7 : 0)
       expect(serializeJson(document)).not.toBe(before)
       revertStructureEdit(page, edit)
@@ -878,7 +884,7 @@ describe('empilement d’un widget', () => {
     expect(page.widgets[widgetAtPoint(currentBoxes(page), point)!]!.shortName)
       .toBe('WThermalAssistant')
 
-    restackWidget(page, 2, 'back', 'fr')
+    restackWidget(page, 2, 'back', 'fr', tr)
     expect(page.widgets[0]!.shortName).toBe('WThermalAssistant')
     expect(page.widgets[widgetAtPoint(currentBoxes(page), point)!]!.shortName)
       .not.toBe('WThermalAssistant')
@@ -901,6 +907,7 @@ describe('barre d’outils de la sélection', () => {
       device: air3,
       orientation: 'landscape',
       language: 'fr',
+      tr,
       viewport: () => viewport,
       onEdit: (edit) => { edits.push(edit) },
       onStructureEdit: (edit) => { structure.push(edit) },

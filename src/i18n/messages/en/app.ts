@@ -62,7 +62,57 @@ const app: DomainCatalog<'app'> = {
 
   'view.scaleAdvice': 'The page is drawn at the size it has on the instrument. Your screen ' +
     'may not have the pixel density the browser assumes: adjust the zoom until a real ruler ' +
-    'held against the screen matches the scale.'
+    'held against the screen matches the scale.',
+
+  'editor.moveNamed': 'Move {name}',
+  'editor.resizeNamed': 'Resize {name}',
+  'editor.deleteNamed': 'Delete {name}',
+  'editor.duplicateNamed': 'Duplicate {name}',
+  'editor.raiseNamed': 'Bring {name} forward',
+  'editor.lowerNamed': 'Send {name} backward',
+  'editor.frontNamed': 'Bring {name} to the front',
+  'editor.backNamed': 'Send {name} to the back',
+
+  'editor.onlyWidget': 'Only widget on the page',
+  'editor.rank': 'Layer {index} of {total}',
+  'editor.rankFront': 'Layer {index} of {total}, frontmost',
+  'editor.rankBack': 'Layer {index} of {total}, backmost',
+
+  'editor.layerLabel': 'Page editing: arrow keys to move, Shift + arrows to resize, ' +
+    'Ctrl + up/down arrows to change layer, Ctrl + D to duplicate, Delete to remove',
+  'editor.toolbarLabel': 'Actions on the selected widget',
+
+  'editor.toolTitle': '{label} ({keys})',
+
+  'editor.sendToBack': 'Send to the back',
+  'editor.sendToBackKeys': 'Ctrl + Shift + Down arrow',
+  'editor.lowerOne': 'Send back one layer',
+  'editor.lowerOneKeys': 'Ctrl + Down arrow',
+  'editor.raiseOne': 'Bring forward one layer',
+  'editor.raiseOneKeys': 'Ctrl + Up arrow',
+  'editor.bringToFront': 'Bring to the front',
+  'editor.bringToFrontKeys': 'Ctrl + Shift + Up arrow',
+  'editor.duplicate': 'Duplicate',
+  'editor.duplicateWidget': 'Duplicate the widget',
+  'editor.duplicateKeys': 'Ctrl + D',
+  'editor.delete': 'Delete',
+  'editor.deleteWidget': 'Delete the widget',
+  'editor.deleteKeys': 'Delete',
+
+  'editor.noSelection': 'No widget selected.',
+  'editor.selected': '{name} selected, {size}.',
+
+  'editor.emptyPage': 'Empty page',
+  'editor.pageTally': {
+    one: '{count} widget on the page',
+    other: '{count} widgets on the page'
+  },
+
+  'editor.doneWithTally': '{what}. {tally}.',
+  'editor.doneWithRank': '{what}. {rank}.',
+  'editor.doneWithSize': '{what}: {size}.',
+
+  'editor.nothingToChange': '{rank}, nothing to change.'
 }
 
 export default app

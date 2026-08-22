@@ -10,7 +10,7 @@ import {
 } from '../model/mutations'
 import { readWidget } from '../model/widget'
 import { formatSizeMm, widgetSizeMm } from './views'
-import { plural } from './prose'
+import type { Translator } from '../i18n'
 
 /**
  * L'interaction d'édition : choisir un widget, le déplacer, le redimensionner.
@@ -340,10 +340,20 @@ export interface WidgetEdit {
   after: Bounds
 }
 
-/** Le libellé d'un geste, tel qu'il s'écrit dans un menu « Annuler … ». */
-export function gestureDescription(handle: Handle, shortName: string, language: string): string {
-  const verb = handle === 'move' ? 'Déplacer' : 'Redimensionner'
-  return `${verb} ${readableName(shortName, language)}`
+/**
+ * Le libellé d'un geste, tel qu'il s'écrit dans un menu « Annuler … ».
+ *
+ * Deux langues, et elles ne se confondent pas : `language` est celle du **fichier ouvert**,
+ * qui donne le nom du gadget, `tr` celle du **pilote**, qui donne le verbe. Voir
+ * `src/i18n/axes.ts`.
+ */
+export function gestureDescription(
+  handle: Handle, shortName: string, language: string, tr: Translator
+): string {
+  const name = readableName(shortName, language)
+  return handle === 'move'
+    ? tr.t('editor.moveNamed', { name })
+    : tr.t('editor.resizeNamed', { name })
 }
 
 function widgetAt(page: Page, index: number): Page['widgets'][number] {
@@ -393,14 +403,14 @@ export function revertWidgetEdit(page: Page, edit: WidgetEdit): void {
  * et l'historique n'a rien à enregistrer.
  */
 export function commitGesture(
-  page: Page, index: number, handle: Handle, rect: Rect, language: string
+  page: Page, index: number, handle: Handle, rect: Rect, language: string, tr: Translator
 ): WidgetEdit | undefined {
   const widget = widgetAt(page, index)
   const before = readWidgetBounds(widget.node)
   if (sameRect(before, rect)) return undefined
   setWidgetBounds(widget.node, rect)
   return {
-    description: gestureDescription(handle, widget.shortName, language),
+    description: gestureDescription(handle, widget.shortName, language, tr),
     widgetIndex: index,
     before,
     after: { ...rect }
@@ -408,8 +418,10 @@ export function commitGesture(
 }
 
 /** « 12,3 × 4,5 mm » : la taille réelle du widget sur la dalle choisie. */
-export function sizeLabel(rect: Rect, device: Device, orientation: Orientation): string {
-  return formatSizeMm(widgetSizeMm(rect, device, orientation))
+export function sizeLabel(
+  rect: Rect, device: Device, orientation: Orientation, tr: Translator
+): string {
+  return formatSizeMm(widgetSizeMm(rect, device, orientation), tr.format)
 }
 
 /* ============================================== actions sur le widget sélectionné */
@@ -459,11 +471,12 @@ export function stackTarget(action: StackAction, index: number, count: number): 
  * `edition-widget-envoye-en-arriere-plan.png`). Une pile qu'on ne voit pas se lit au
  * moins en toutes lettres.
  */
-export function stackLabel(index: number, count: number): string {
-  if (count <= 1) return 'Seul gadget de la page'
-  if (index === count - 1) return `Rang ${index + 1} sur ${count}, premier plan`
-  if (index === 0) return `Rang 1 sur ${count}, arrière-plan`
-  return `Rang ${index + 1} sur ${count}`
+export function stackLabel(index: number, count: number, tr: Translator): string {
+  if (count <= 1) return tr.t('editor.onlyWidget')
+  const place = { index: index + 1, total: count }
+  if (index === count - 1) return tr.t('editor.rankFront', place)
+  if (index === 0) return tr.t('editor.rankBack', place)
+  return tr.t('editor.rank', place)
 }
 
 /**
@@ -516,16 +529,16 @@ export function duplicateRect(rect: Rect, grid: Grid): Rect {
 
 /** Le libellé d'une action, tel qu'il s'écrit dans un menu « Annuler … ». */
 export function structureDescription(
-  action: SelectionAction, shortName: string, language: string
+  action: SelectionAction, shortName: string, language: string, tr: Translator
 ): string {
   const name = readableName(shortName, language)
   switch (action) {
-    case 'delete': return `Supprimer ${name}`
-    case 'duplicate': return `Dupliquer ${name}`
-    case 'raise': return `Avancer ${name}`
-    case 'lower': return `Reculer ${name}`
-    case 'front': return `Mettre ${name} au premier plan`
-    default: return `Envoyer ${name} à l’arrière-plan`
+    case 'delete': return tr.t('editor.deleteNamed', { name })
+    case 'duplicate': return tr.t('editor.duplicateNamed', { name })
+    case 'raise': return tr.t('editor.raiseNamed', { name })
+    case 'lower': return tr.t('editor.lowerNamed', { name })
+    case 'front': return tr.t('editor.frontNamed', { name })
+    default: return tr.t('editor.backNamed', { name })
   }
 }
 
@@ -634,10 +647,11 @@ export function revertStructureEdit(page: Page, edit: WidgetStructureEdit): void
  * rien n'est perdu : le nœud voyage dans la modification rendue.
  */
 export function removeWidgetAt(
-  page: Page, index: number, language: string, selected: number | undefined = index
+  page: Page, index: number, language: string, tr: Translator,
+  selected: number | undefined = index
 ): WidgetRemoval {
   const widget = widgetAt(page, index)
-  const description = structureDescription('delete', widget.shortName, language)
+  const description = structureDescription('delete', widget.shortName, language, tr)
   const countBefore = page.widgets.length
   const node = removeFromPage(page, index)
   return {
@@ -661,7 +675,7 @@ export function removeWidgetAt(
  * dispose : les valeurs par défaut d'un type de widget ne sont pas connues.
  */
 export function duplicateWidgetAt(
-  page: Page, index: number, grid: Grid, language: string
+  page: Page, index: number, grid: Grid, language: string, tr: Translator
 ): WidgetInsertion {
   const widget = widgetAt(page, index)
   const copy = duplicateWidget(widget.node, duplicateRect(currentBounds(page, index), grid))
@@ -669,7 +683,7 @@ export function duplicateWidgetAt(
   insertIntoPage(page, copy, at)
   return {
     kind: 'insert',
-    description: structureDescription('duplicate', widget.shortName, language),
+    description: structureDescription('duplicate', widget.shortName, language, tr),
     index: at,
     node: copy,
     selection: at,
@@ -684,7 +698,7 @@ export function duplicateWidgetAt(
  * historique qui accumulerait des pas sans effet ferait de « Annuler » une loterie.
  */
 export function restackWidget(
-  page: Page, index: number, action: StackAction, language: string
+  page: Page, index: number, action: StackAction, language: string, tr: Translator
 ): WidgetReorder | undefined {
   const widget = widgetAt(page, index)
   const to = stackTarget(action, index, page.widgets.length)
@@ -692,7 +706,7 @@ export function restackWidget(
   reorderInPage(page, index, to)
   return {
     kind: 'reorder',
-    description: structureDescription(action, widget.shortName, language),
+    description: structureDescription(action, widget.shortName, language, tr),
     from: index,
     to,
     selection: to,
@@ -706,7 +720,10 @@ export interface EditorOptions {
   page: Page
   device: Device
   orientation: Orientation
+  /** La langue des **libellés de XCTrack** — celle du fichier ouvert, jamais notre prose. */
   language: string
+  /** Le traducteur de **notre prose**, dans la langue du pilote. Voir `src/i18n/axes.ts`. */
+  tr: Translator
   /**
    * Les dimensions du rendu, en pixels de la fenêtre, relues à chaque geste : la page est
    * zoomable, et sa taille change sous le calque sans que celui-ci en soit averti.
@@ -871,15 +888,12 @@ export function toolbarLeftPercent(
  */
 export function createEditor(options: EditorOptions): Editor {
   const grid = gridFor(options.device, options.orientation)
+  const tr = options.tr
 
   const root = el('div', 'editor')
   root.tabIndex = 0
   root.setAttribute('role', 'application')
-  root.setAttribute(
-    'aria-label',
-    'Édition de la page : flèches pour déplacer, Maj + flèches pour redimensionner, ' +
-    'Ctrl + flèches haut/bas pour changer de rang, Ctrl + D pour dupliquer, Suppr pour supprimer'
-  )
+  root.setAttribute('aria-label', tr.t('editor.layerLabel'))
 
   /* Les marques du widget sélectionné, relevées sur l'appareil (§ 2.3). */
   const marks = el('div', 'editor__marks')
@@ -919,23 +933,23 @@ export function createEditor(options: EditorOptions): Editor {
   const toolbar = el('div', 'editor__toolbar')
   toolbar.hidden = true
   toolbar.setAttribute('role', 'toolbar')
-  toolbar.setAttribute('aria-label', 'Actions sur le gadget sélectionné')
+  toolbar.setAttribute('aria-label', tr.t('editor.toolbarLabel'))
 
   const toolButton = (
     modifier: string, text: string, label: string, keys: string
   ): HTMLButtonElement => {
     const button = el('button', `editor__tool editor__tool--${modifier}`, text)
     button.type = 'button'
-    button.title = `${label} (${keys})`
+    button.title = tr.t('editor.toolTitle', { label, keys })
     button.setAttribute('aria-label', label)
     return button
   }
 
   const STACK_TOOLS: ReadonlyArray<readonly [StackAction, string, string, string]> = [
-    ['back', '⤓', 'Envoyer à l’arrière-plan', 'Ctrl + Maj + Flèche bas'],
-    ['lower', '↓', 'Reculer d’un rang', 'Ctrl + Flèche bas'],
-    ['raise', '↑', 'Avancer d’un rang', 'Ctrl + Flèche haut'],
-    ['front', '⤒', 'Mettre au premier plan', 'Ctrl + Maj + Flèche haut']
+    ['back', '⤓', tr.t('editor.sendToBack'), tr.t('editor.sendToBackKeys')],
+    ['lower', '↓', tr.t('editor.lowerOne'), tr.t('editor.lowerOneKeys')],
+    ['raise', '↑', tr.t('editor.raiseOne'), tr.t('editor.raiseOneKeys')],
+    ['front', '⤒', tr.t('editor.bringToFront'), tr.t('editor.bringToFrontKeys')]
   ]
 
   const stackButtons = new Map<StackAction, HTMLButtonElement>()
@@ -947,9 +961,14 @@ export function createEditor(options: EditorOptions): Editor {
   }
 
   const rank = el('span', 'editor__rank')
-  const duplicateTool = toolButton('duplicate', 'Dupliquer', 'Dupliquer le gadget', 'Ctrl + D')
+  const duplicateTool = toolButton(
+    'duplicate', tr.t('editor.duplicate'), tr.t('editor.duplicateWidget'),
+    tr.t('editor.duplicateKeys')
+  )
   duplicateTool.addEventListener('click', () => { runDuplicate(); root.focus() })
-  const deleteTool = toolButton('delete', 'Supprimer', 'Supprimer le gadget', 'Suppr')
+  const deleteTool = toolButton(
+    'delete', tr.t('editor.delete'), tr.t('editor.deleteWidget'), tr.t('editor.deleteKeys')
+  )
   deleteTool.addEventListener('click', () => { runRemove(); root.focus() })
   toolbar.append(rank, duplicateTool, deleteTool)
 
@@ -987,7 +1006,7 @@ export function createEditor(options: EditorOptions): Editor {
     // La barre s'accroche aux bords DESSINÉS du gadget — voir `drawnRect`.
     const rect = drawnRect(currentBounds(options.page, selected), options.orientation)
     toolbar.hidden = false
-    rank.textContent = stackLabel(selected, count)
+    rank.textContent = stackLabel(selected, count, tr)
     for (const [action, button] of stackButtons) {
       button.disabled = stackTarget(action, selected, count) === selected
     }
@@ -1040,7 +1059,7 @@ export function createEditor(options: EditorOptions): Editor {
       return
     }
     badge.hidden = false
-    badge.textContent = sizeLabel(gesture.rect, options.device, options.orientation)
+    badge.textContent = sizeLabel(gesture.rect, options.device, options.orientation, tr)
     // La cote reste celle du rectangle ÉCRIT (c'est elle que le pilote emporte), mais elle
     // se pose au coin DESSINÉ, sous l'aperçu qu'elle légende.
     const coin = drawnRect(gesture.rect, options.orientation)
@@ -1054,14 +1073,16 @@ export function createEditor(options: EditorOptions): Editor {
     drawMarks()
     options.onSelectionChange?.(index)
     if (index === undefined) {
-      announce('Aucun gadget sélectionné.')
+      announce(tr.t('editor.noSelection'))
       return
     }
     const widget = widgetAt(options.page, index)
-    announce(
-      `${readableName(widget.shortName, options.language)} sélectionné, ` +
-      `${sizeLabel(currentBounds(options.page, index), options.device, options.orientation)}.`
-    )
+    announce(tr.t('editor.selected', {
+      name: readableName(widget.shortName, options.language),
+      size: sizeLabel(
+        currentBounds(options.page, index), options.device, options.orientation, tr
+      )
+    }))
   }
 
   /* ------------------------------------------------- actions sur la sélection */
@@ -1087,35 +1108,40 @@ export function createEditor(options: EditorOptions): Editor {
   }
 
   const pageTally = (count: number): string =>
-    count === 0
-      ? 'Page vide'
-      : plural({ one: '{count} gadget sur la page', other: '{count} gadgets sur la page' }, count)
+    count === 0 ? tr.t('editor.emptyPage') : tr.t('editor.pageTally', { count })
 
   const runRemove = (): WidgetStructureEdit | undefined => {
     if (!alive || selected === undefined || gesture !== undefined) return undefined
-    const edit = removeWidgetAt(options.page, selected, options.language, selected)
-    return finishStructure(edit, `${edit.description}. ${pageTally(options.page.widgets.length)}.`)
+    const edit = removeWidgetAt(options.page, selected, options.language, tr, selected)
+    return finishStructure(edit, tr.t('editor.doneWithTally', {
+      what: edit.description,
+      tally: pageTally(options.page.widgets.length)
+    }))
   }
 
   const runDuplicate = (): WidgetStructureEdit | undefined => {
     if (!alive || selected === undefined || gesture !== undefined) return undefined
-    const edit = duplicateWidgetAt(options.page, selected, grid, options.language)
-    return finishStructure(
-      edit, `${edit.description}. ${stackLabel(edit.index, options.page.widgets.length)}.`
-    )
+    const edit = duplicateWidgetAt(options.page, selected, grid, options.language, tr)
+    return finishStructure(edit, tr.t('editor.doneWithRank', {
+      what: edit.description,
+      rank: stackLabel(edit.index, options.page.widgets.length, tr)
+    }))
   }
 
   const runRestack = (action: StackAction): WidgetStructureEdit | undefined => {
     if (!alive || selected === undefined || gesture !== undefined) return undefined
     const count = options.page.widgets.length
-    const edit = restackWidget(options.page, selected, action, options.language)
+    const edit = restackWidget(options.page, selected, action, options.language, tr)
     // Rang déjà atteint : rien n'a été écrit et rien n'est enregistré, mais le silence
     // total laisserait croire à un bouton cassé — on redit où en est le widget.
     if (edit === undefined) {
-      announce(`${stackLabel(selected, count)}, rien à changer.`)
+      announce(tr.t('editor.nothingToChange', { rank: stackLabel(selected, count, tr) }))
       return undefined
     }
-    return finishStructure(edit, `${edit.description}. ${stackLabel(edit.to, count)}.`)
+    return finishStructure(edit, tr.t('editor.doneWithRank', {
+      what: edit.description,
+      rank: stackLabel(edit.to, count, tr)
+    }))
   }
 
   /* ------------------------------------------------------------------ pointeur */
@@ -1143,11 +1169,14 @@ export function createEditor(options: EditorOptions): Editor {
 
     if (commit) {
       const edit = commitGesture(
-        options.page, finished.index, finished.handle, finished.rect, options.language
+        options.page, finished.index, finished.handle, finished.rect, options.language, tr
       )
       if (edit !== undefined) {
         options.onEdit?.(edit)
-        announce(`${edit.description} : ${sizeLabel(edit.after, options.device, options.orientation)}.`)
+        announce(tr.t('editor.doneWithSize', {
+          what: edit.description,
+          size: sizeLabel(edit.after, options.device, options.orientation, tr)
+        }))
       }
     }
     drawGesture()
@@ -1291,12 +1320,16 @@ export function createEditor(options: EditorOptions): Editor {
     const rect = currentBounds(options.page, selected)
     const delta = { x: step.x * (NORMALIZED_MAX / grid.cols), y: step.y * (NORMALIZED_MAX / grid.rows) }
     const edit = commitGesture(
-      options.page, selected, handle, gestureRect(rect, handle, delta, grid), options.language
+      options.page, selected, handle, gestureRect(rect, handle, delta, grid),
+      options.language, tr
     )
     drawMarks()
     if (edit === undefined) return
     options.onEdit?.(edit)
-    announce(`${edit.description} : ${sizeLabel(edit.after, options.device, options.orientation)}.`)
+    announce(tr.t('editor.doneWithSize', {
+      what: edit.description,
+      size: sizeLabel(edit.after, options.device, options.orientation, tr)
+    }))
   }
 
   root.addEventListener('pointerdown', onPointerDown as EventListener)

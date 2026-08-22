@@ -2012,6 +2012,7 @@ function buildEditing(current: Session, page: Page, orientation: Orientation): D
     device: current.device,
     orientation,
     language: current.language,
+    tr: translator(),
     viewport: editorViewport,
     onEdit: onWidgetEdit,
     onStructureEdit,

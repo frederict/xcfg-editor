@@ -129,7 +129,87 @@ const app = {
 
   'view.scaleAdvice': 'La page est dessinée à sa taille réelle sur l’appareil. Votre écran ' +
     'n’a pas forcément la densité que le navigateur suppose : réglez le zoom jusqu’à ce ' +
-    'qu’une règle posée sur l’écran coïncide avec les graduations.'
+    'qu’une règle posée sur l’écran coïncide avec les graduations.',
+
+  /* ================================ `editor.ts` — les gestes, nommés pour l'annulation */
+
+  /**
+   * Le nom d'un geste, tel qu'il s'écrit dans « Annuler … ». Chaque forme est une **phrase
+   * entière** : l'allemand renvoie son verbe à la fin — « Höhe GPS verschieben » — et un
+   * verbe collé devant un nom ne s'y transpose pas.
+   */
+  'editor.moveNamed': 'Déplacer {name}',
+  'editor.resizeNamed': 'Redimensionner {name}',
+  'editor.deleteNamed': 'Supprimer {name}',
+  'editor.duplicateNamed': 'Dupliquer {name}',
+  'editor.raiseNamed': 'Avancer {name}',
+  'editor.lowerNamed': 'Reculer {name}',
+  'editor.frontNamed': 'Mettre {name} au premier plan',
+  'editor.backNamed': 'Envoyer {name} à l’arrière-plan',
+
+  /* ------------------------------------------------- le rang dans la pile, dit en clair */
+
+  /**
+   * L'appareil ne donne **aucun** retour sur l'empilement : un gadget envoyé sous une carte
+   * disparaît de l'écran sans que rien n'indique où il est passé. Une pile qu'on ne voit pas
+   * se lit au moins en toutes lettres.
+   */
+  'editor.onlyWidget': 'Seul gadget de la page',
+  'editor.rank': 'Rang {index} sur {total}',
+  'editor.rankFront': 'Rang {index} sur {total}, premier plan',
+  'editor.rankBack': 'Rang {index} sur {total}, arrière-plan',
+
+  /* -------------------------------------------------- le calque et sa barre d'outils */
+
+  'editor.layerLabel': 'Édition de la page : flèches pour déplacer, Maj + flèches pour ' +
+    'redimensionner, Ctrl + flèches haut/bas pour changer de rang, Ctrl + D pour dupliquer, ' +
+    'Suppr pour supprimer',
+  'editor.toolbarLabel': 'Actions sur le gadget sélectionné',
+
+  /** L'infobulle d'un bouton : ce qu'il fait, puis le raccourci qui fait la même chose. */
+  'editor.toolTitle': '{label} ({keys})',
+
+  /**
+   * Les noms de touches suivent le **clavier du pilote**, pas le nôtre : l'allemand écrit
+   * *Strg* et *Entf*, l'espagnol *Mayús* et *Supr*.
+   */
+  'editor.sendToBack': 'Envoyer à l’arrière-plan',
+  'editor.sendToBackKeys': 'Ctrl + Maj + Flèche bas',
+  'editor.lowerOne': 'Reculer d’un rang',
+  'editor.lowerOneKeys': 'Ctrl + Flèche bas',
+  'editor.raiseOne': 'Avancer d’un rang',
+  'editor.raiseOneKeys': 'Ctrl + Flèche haut',
+  'editor.bringToFront': 'Mettre au premier plan',
+  'editor.bringToFrontKeys': 'Ctrl + Maj + Flèche haut',
+  'editor.duplicate': 'Dupliquer',
+  'editor.duplicateWidget': 'Dupliquer le gadget',
+  'editor.duplicateKeys': 'Ctrl + D',
+  'editor.delete': 'Supprimer',
+  'editor.deleteWidget': 'Supprimer le gadget',
+  'editor.deleteKeys': 'Suppr',
+
+  /* ------------------------------------------------ ce que le calque annonce à voix haute */
+
+  'editor.noSelection': 'Aucun gadget sélectionné.',
+  'editor.selected': '{name} sélectionné, {size}.',
+
+  'editor.emptyPage': 'Page vide',
+  'editor.pageTally': {
+    one: '{count} gadget sur la page',
+    other: '{count} gadgets sur la page'
+  },
+
+  /**
+   * Les trois annonces d'après-action. `{what}` reçoit le nom du geste (`editor.deleteNamed`
+   * et ses voisins) et `{tally}` / `{rank}` une phrase déjà accordée : un message n'en
+   * imbrique pas un autre, l'appelant les assemble.
+   */
+  'editor.doneWithTally': '{what}. {tally}.',
+  'editor.doneWithRank': '{what}. {rank}.',
+  'editor.doneWithSize': '{what} : {size}.',
+
+  /** Le rang est déjà atteint : rien n'a été écrit, mais le silence ferait douter du bouton. */
+  'editor.nothingToChange': '{rank}, rien à changer.'
 } as const
 
 export default app

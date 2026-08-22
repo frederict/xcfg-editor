@@ -78,9 +78,17 @@ const IDENTICAL_ON_PURPOSE: ReadonlySet<string> = new Set<string>([
   ...UI_LANGUAGES.map((language) => `${language}/view.rulerCentimeters`),
   ...UI_LANGUAGES.map((language) => `${language}/zoom.label`),
   ...UI_LANGUAGES.map((language) => `${language}/app.name`),
+  ...UI_LANGUAGES.map((language) => `${language}/editor.toolTitle`),
+  ...UI_LANGUAGES.map((language) => `${language}/editor.doneWithTally`),
+  ...UI_LANGUAGES.map((language) => `${language}/editor.doneWithRank`),
   'en/view.portrait',
   'en/view.pageCard',
-  'en/view.pageCount'
+  'en/view.pageCount',
+  'en/editor.duplicateKeys',
+  'nl/editor.duplicateKeys',
+  'es/editor.duplicateKeys',
+  'en/editor.deleteKeys',
+  'nl/editor.deleteKeys'
 ])
 
 describe('catalogues de messages', () => {
