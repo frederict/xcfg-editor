@@ -1162,7 +1162,7 @@ describe('une clé absente reste absente tant qu’on ne l’a pas demandée', (
     expect(implicite.title).toContain('votre appareil garde le réglage qu’il a déjà')
     expect(implicite.title).toContain('Mesuré sur l’AIR³')
     // Les deux limites de la mesure, jamais gommées.
-    expect(implicite.title).toContain('« Remplacer tout »')
+    expect(implicite.title).toContain('« Remplacer tout »')
     expect(implicite.title).toContain('Sur un appareil qui n’y a jamais touché')
   })
 
@@ -1607,8 +1607,8 @@ describe('rétablir la valeur d’usine d’un réglage que le pilote a changé'
 
     const note = restoreLine(page, 'Display.Theme')!
       .querySelector('.prefs__restore-note')!.textContent!
-    expect(note).toContain('« Blanc » d’usine')
-    expect(note).toContain('« Haut contraste blanc » dans ce fichier')
+    expect(note).toContain('« Blanc » d’usine')
+    expect(note).toContain('« Haut contraste blanc » dans ce fichier')
     expect(note).toContain('change ce que fait l’appareil en vol')
   })
 
@@ -1743,7 +1743,7 @@ describe('rétablir la valeur d’usine d’un réglage que le pilote a changé'
   it('l’infobulle dit ce qui sépare ce geste des deux autres', () => {
     const { page } = editable(BACKUP_2026)
     const title = restoreButton(page, 'Display.Theme').title
-    expect(title).toContain('Écrit « Display.Theme » : Blanc dans le fichier, à la place de Haut contraste blanc.')
+    expect(title).toContain('Écrit « Display.Theme » : Blanc dans le fichier, à la place de Haut contraste blanc.')
     expect(title).toContain('ils ne touchent qu’un réglage que vous n’avez jamais choisi, celui-ci remplace le vôtre')
   })
 

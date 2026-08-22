@@ -46,7 +46,7 @@ const preferences = {
    * se déduit pour un appareil neuf. Aucune traduction ne doit en perdre une.
    */
   'preferences.absentKeyOnImport':
-    'À l’import (« Remplacer tout »), votre appareil garde le réglage qu’il a déjà : ce que le fichier ne dit pas n’est pas touché. Mesuré sur l’AIR³. Sur un appareil qui n’y a jamais touché, c’est la valeur d’usine de XCTrack qui s’applique.',
+    'À l’import (« Remplacer tout »), votre appareil garde le réglage qu’il a déjà : ce que le fichier ne dit pas n’est pas touché. Mesuré sur l’AIR³. Sur un appareil qui n’y a jamais touché, c’est la valeur d’usine de XCTrack qui s’applique.',
 
   /* ==================================================== les comptes, et donc les pluriels */
 
@@ -199,14 +199,14 @@ const preferences = {
   /* ------------------------------------------------ l'infobulle de la marque, en entier */
 
   'preferences.stateTitleCustomUnknown': 'Cette valeur diffère de la valeur d’usine de XCTrack.',
-  'preferences.stateTitleCustom': 'La valeur d’usine de XCTrack est « {factory} ».',
+  'preferences.stateTitleCustom': 'La valeur d’usine de XCTrack est « {factory} ».',
   'preferences.stateTitleDefault': 'Valeur inchangée : c’est la valeur d’usine de XCTrack.',
   'preferences.stateTitleConflict':
-    'XCTrack annonce deux valeurs d’usine différentes pour ce réglage : « {code} » dans son code et « {screen} » dans son écran de réglages. Cet éditeur ne choisit pas à sa place. Votre valeur, elle, est celle du fichier.',
+    'XCTrack annonce deux valeurs d’usine différentes pour ce réglage : « {code} » dans son code et « {screen} » dans son écran de réglages. Cet éditeur ne choisit pas à sa place. Votre valeur, elle, est celle du fichier.',
   'preferences.stateTitleAbsent':
     'Ce réglage n’est pas dans le fichier : il n’en dit rien. {absent}',
   'preferences.stateTitleAbsentWithValue':
-    'Ce réglage n’est pas dans le fichier : il n’en dit rien. {absent} Elle vaut « {factory} ».',
+    'Ce réglage n’est pas dans le fichier : il n’en dit rien. {absent} Elle vaut « {factory} ».',
   'preferences.stateTitleUnwritten':
     'Ce réglage n’est pas dans le fichier, et XCTrack ne l’y écrit qu’une fois réglé au moins une fois sur l’appareil : son absence ne dit rien — ni ce que votre appareil applique, ni ce qu’il appliquerait neuf.',
   'preferences.stateTitleNoFactoryValue': 'Aucune valeur d’usine connue pour ce réglage.',
@@ -226,16 +226,16 @@ const preferences = {
   'preferences.factoryValueUnknownTitle':
     'Le catalogue ne relève aucune valeur d’usine inscriptible pour ce réglage : cet éditeur n’a rien avec quoi la créer, et il n’en invente pas.',
   'preferences.implicitTitle':
-    '« {factory} » est la valeur d’usine de XCTrack, pas une valeur réglée : ce réglage n’est pas dans le fichier. {absent}',
+    '« {factory} » est la valeur d’usine de XCTrack, pas une valeur réglée : ce réglage n’est pas dans le fichier. {absent}',
   'preferences.adoptLabel': 'Définir cette valeur',
   'preferences.adoptTitle':
-    'Écrit « {key} » : {factory} dans le fichier.\n\nSur un appareil qui n’a jamais réglé cela, c’est déjà ce qu’il applique : l’écrire ne change alors rien d’immédiat, et met le réglage à l’abri d’une mise à jour de XCTrack qui changerait sa valeur d’usine.\n\nSur un appareil qui l’a déjà réglé, l’import écrira cette valeur à la place de la sienne : tant que le fichier n’en dit rien, il garde la sienne (mesuré sur l’AIR³, import « Remplacer tout »).',
+    'Écrit « {key} » : {factory} dans le fichier.\n\nSur un appareil qui n’a jamais réglé cela, c’est déjà ce qu’il applique : l’écrire ne change alors rien d’immédiat, et met le réglage à l’abri d’une mise à jour de XCTrack qui changerait sa valeur d’usine.\n\nSur un appareil qui l’a déjà réglé, l’import écrira cette valeur à la place de la sienne : tant que le fichier n’en dit rien, il garde la sienne (mesuré sur l’AIR³, import « Remplacer tout »).',
 
   /* ------------------------------------------- 2. retirer une valeur égale à celle d'usine */
 
   'preferences.dropLabel': 'Retirer',
   'preferences.dropTitle':
-    'Retire « {key} » du fichier : il ne dira plus rien de ce réglage.\n\n{absent}\n\nCe que ça change pour l’appareil qui n’y a jamais touché : la valeur cesse d’être figée et suivra les mises à jour de XCTrack. C’est l’inverse exact de « Définir cette valeur ».',
+    'Retire « {key} » du fichier : il ne dira plus rien de ce réglage.\n\n{absent}\n\nCe que ça change pour l’appareil qui n’y a jamais touché : la valeur cesse d’être figée et suivra les mises à jour de XCTrack. C’est l’inverse exact de « Définir cette valeur ».',
 
   /* ---------------------------------- 3. remplacer une valeur réglée — le seul qui agit */
 
@@ -246,9 +246,9 @@ const preferences = {
    */
   'preferences.restoreLabel': 'Rétablir la valeur d’usine',
   'preferences.restoreTitle':
-    'Écrit « {key} » : {factory} dans le fichier, à la place de {current}.\n\nCe geste-ci n’est pas comme les deux autres de cette page : ils ne touchent qu’un réglage que vous n’avez jamais choisi, celui-ci remplace le vôtre par celui que XCTrack pose sur une installation neuve.{caveat}',
+    'Écrit « {key} » : {factory} dans le fichier, à la place de {current}.\n\nCe geste-ci n’est pas comme les deux autres de cette page : ils ne touchent qu’un réglage que vous n’avez jamais choisi, celui-ci remplace le vôtre par celui que XCTrack pose sur une installation neuve.{caveat}',
   'preferences.restoreNote':
-    '« {factory} » d’usine, « {current} » dans ce fichier. Rétablir change ce que fait l’appareil en vol.{caveat}',
+    '« {factory} » d’usine, « {current} » dans ce fichier. Rétablir change ce que fait l’appareil en vol.{caveat}',
   /**
    * ⚠️ Ces deux-là commencent par une **espace** : elles s'ajoutent à la fin d'une phrase
    * qui se suffit sans elles, et rien à dire quand la version coïncide — une phrase de
@@ -353,16 +353,16 @@ const preferences = {
    * export « pages ».
    */
   'preferences.privacyLayoutNone':
-    'Cette page ne compte que les préférences. La disposition de ce fichier ne porte aucun texte écrit par vous — c’est la boîte « Enregistrer » qui les inventorie, et ce sont les seuls qui partiraient avec un export « pages ».',
+    'Cette page ne compte que les préférences. La disposition de ce fichier ne porte aucun texte écrit par vous — c’est la boîte « Enregistrer » qui les inventorie, et ce sont les seuls qui partiraient avec un export « pages ».',
   'preferences.privacyLayoutSome': {
-    one: 'Cette page ne compte que les préférences. La disposition en porte {count} de plus — des textes écrits par vous dans les gadgets — et ce sont les seuls qui partent avec un export « pages ». La boîte « Enregistrer » les montre un par un.',
-    other: 'Cette page ne compte que les préférences. La disposition en porte {count} de plus — des textes écrits par vous dans les gadgets — et ce sont les seuls qui partent avec un export « pages ». La boîte « Enregistrer » les montre un par un.'
+    one: 'Cette page ne compte que les préférences. La disposition en porte {count} de plus — des textes écrits par vous dans les gadgets — et ce sont les seuls qui partent avec un export « pages ». La boîte « Enregistrer » les montre un par un.',
+    other: 'Cette page ne compte que les préférences. La disposition en porte {count} de plus — des textes écrits par vous dans les gadgets — et ce sont les seuls qui partent avec un export « pages ». La boîte « Enregistrer » les montre un par un.'
   },
   'preferences.privacyItemWhy': '{kind} — {reason}',
   'preferences.privacyNavigationState':
-    '« Navigation.State » est une préférence publique de XCTrack : elle voyage avec le fichier. Elle porte la tâche en cours — points de virage et coordonnées — soit {value} ici. Cette page n’en montre jamais le contenu ; un fichier transmis, lui, l’emporte.',
+    '« Navigation.State » est une préférence publique de XCTrack : elle voyage avec le fichier. Elle porte la tâche en cours — points de virage et coordonnées — soit {value} ici. Cette page n’en montre jamais le contenu ; un fichier transmis, lui, l’emporte.',
   'preferences.privacyGuessPosition':
-    'XCTrack garde aussi une position présumée de l’appareil (« App.GuessLatitude », « App.GuessLongitude ») — en pratique le domicile. Elles sont internes à l’appareil : aucun export ne les porte, et ce fichier ne les porte pas.',
+    'XCTrack garde aussi une position présumée de l’appareil (« App.GuessLatitude », « App.GuessLongitude ») — en pratique le domicile. Elles sont internes à l’appareil : aucun export ne les porte, et ce fichier ne les porte pas.',
   'preferences.privacySecureKeys': {
     one: 'XCTrack chiffre les identifiants de compte (XContest, SkySight, SafeSky…) : le {count} réglage concerné ne sort jamais de l’appareil, et aucun export n’en porte.',
     other: 'XCTrack chiffre les identifiants de compte (XContest, SkySight, SafeSky…) : les {count} réglages concernés ne sortent jamais de l’appareil, et aucun export n’en porte.'
@@ -376,8 +376,8 @@ const preferences = {
     other: 'Aucune des {count} lignes de ce fichier n’est signalée par XCTrack lui-même : les seuls réglages dont il déclare la sensibilité sont ceux qu’il chiffre, et elles ne sont pas exportées. Cet inventaire est donc un jugement de cet éditeur, et chaque ligne dit le sien.'
   },
   'preferences.filledPersonal': {
-    one: 'Vous venez de renseigner {count} donnée personnelle — {keys}. Elle voyagera avec ce fichier : la boîte « Enregistrer » vous laisse choisir ce qui part.',
-    other: 'Vous venez de renseigner {count} données personnelles — {keys}. Elles voyageront avec ce fichier : la boîte « Enregistrer » vous laisse choisir ce qui part.'
+    one: 'Vous venez de renseigner {count} donnée personnelle — {keys}. Elle voyagera avec ce fichier : la boîte « Enregistrer » vous laisse choisir ce qui part.',
+    other: 'Vous venez de renseigner {count} données personnelles — {keys}. Elles voyageront avec ce fichier : la boîte « Enregistrer » vous laisse choisir ce qui part.'
   },
 
   /* ========================================== ce que le fichier porte et qu'aucun écran ne montre */
@@ -397,13 +397,13 @@ const preferences = {
 
   'preferences.emptyTitle': 'Ce fichier ne porte aucune préférence générale.',
   'preferences.emptyText':
-    'Seuls les exports « backup » emportent les réglages de l’application. Un export « pages » ne décrit que les pages et leurs gadgets : ouvrir une sauvegarde complète de l’appareil est la seule façon de voir ces réglages-là.',
+    'Seuls les exports « backup » emportent les réglages de l’application. Un export « pages » ne décrit que les pages et leurs gadgets : ouvrir une sauvegarde complète de l’appareil est la seule façon de voir ces réglages-là.',
   'preferences.emptyIntact':
     'Rien n’est perdu pour autant : ce que cette page ne montre pas, ce fichier ne le contient pas, et un réexport le laissera tel quel.',
   /** ⚠️ « Pas de préférences » ne veut pas dire « rien de personnel ». */
   'preferences.emptyPersonalWarning': {
-    one: 'Attention : « aucune préférence » ne veut pas dire « rien de personnel ». La disposition de ce fichier porte {count} texte écrit par vous dans ses gadgets — un titre, un nom, un numéro de téléphone —, et un export « pages » les emporte. La boîte « Enregistrer » les montre un par un.',
-    other: 'Attention : « aucune préférence » ne veut pas dire « rien de personnel ». La disposition de ce fichier porte {count} textes écrits par vous dans ses gadgets — un titre, un nom, un numéro de téléphone —, et un export « pages » les emporte. La boîte « Enregistrer » les montre un par un.'
+    one: 'Attention : « aucune préférence » ne veut pas dire « rien de personnel ». La disposition de ce fichier porte {count} texte écrit par vous dans ses gadgets — un titre, un nom, un numéro de téléphone —, et un export « pages » les emporte. La boîte « Enregistrer » les montre un par un.',
+    other: 'Attention : « aucune préférence » ne veut pas dire « rien de personnel ». La disposition de ce fichier porte {count} textes écrits par vous dans ses gadgets — un titre, un nom, un numéro de téléphone —, et un export « pages » les emporte. La boîte « Enregistrer » les montre un par un.'
   },
 
   /* ================================================================= la page, et sa tête */
@@ -415,7 +415,7 @@ const preferences = {
   'preferences.menuLead':
     'Les écrans sont ceux de l’appareil, dans l’ordre de son menu de réglages.',
   'preferences.menuLeadEditable':
-    'Les écrans sont ceux de l’appareil, dans l’ordre de son menu de réglages. Un réglage modifié est écrit dans le document aussitôt ; « Annuler » le défait, et rien ne part sur le disque avant « Enregistrer ».',
+    'Les écrans sont ceux de l’appareil, dans l’ordre de son menu de réglages. Un réglage modifié est écrit dans le document aussitôt ; « Annuler » le défait, et rien ne part sur le disque avant « Enregistrer ».',
   'preferences.entryNothing': 'Rien de cet écran n’apparaît dans ce fichier.',
   'preferences.neverExported': {
     one: '{count} réglage de cet écran ne quitte jamais l’appareil : XCTrack ne les exporte pas.',
@@ -445,17 +445,17 @@ const preferences = {
    * **exactement** ces titres, sans quoi l'écran se contredirait d'un bloc à l'autre.
    */
   'preferences.menuNoteAirspaces':
-    'XCTrack construit cet écran en code : le réglage y est posé loin de son libellé, et l’application ne le nomme donc nulle part qu’on puisse lire. Les réglages qu’elle écrit sont bien dans le fichier — ils sont rassemblés plus bas, sous « Réglages sans libellé » et « Ce que l’application a mémorisé ».',
+    'XCTrack construit cet écran en code : le réglage y est posé loin de son libellé, et l’application ne le nomme donc nulle part qu’on puisse lire. Les réglages qu’elle écrit sont bien dans le fichier — ils sont rassemblés plus bas, sous « Réglages sans libellé » et « Ce que l’application a mémorisé ».',
   'preferences.menuNoteMaps':
-    'Écran construit en code, lui aussi sans libellé exploitable. Les lignes « Mapsforge » du fichier sont rassemblées plus bas.',
+    'Écran construit en code, lui aussi sans libellé exploitable. Les lignes « Mapsforge » du fichier sont rassemblées plus bas.',
   'preferences.menuNoteEditPageSet':
     'Cette ligne ouvre l’éditeur de pages et de gadgets — c’est le reste de cet éditeur qui les montre, pas cette page.',
   'preferences.menuNoteEventMapping':
-    'Les actions automatiques sont enregistrées en bloc dans « EventMappingJs » : un petit programme écrit d’une traite, et non une liste de réglages.',
+    'Les actions automatiques sont enregistrées en bloc dans « EventMappingJs » : un petit programme écrit d’une traite, et non une liste de réglages.',
   'preferences.menuNotePro':
     'L’abonnement se gère sur le compte XContest, pas dans le fichier de configuration.',
   'preferences.menuNoteSensors':
-    'Cet écran sert à apparier les capteurs. Ce qu’il enregistre tient en une seule ligne, « Sensors.Configuration », rassemblée plus bas avec le reste de ce que l’application a mémorisé.',
+    'Cet écran sert à apparier les capteurs. Ce qu’il enregistre tient en une seule ligne, « Sensors.Configuration », rassemblée plus bas avec le reste de ce que l’application a mémorisé.',
   'preferences.menuNoteShareConfig':
     'Cet écran ne porte que deux commandes — exporter, importer une configuration. Il n’a aucun réglage à retenir.',
   'preferences.menuNoteAbout':

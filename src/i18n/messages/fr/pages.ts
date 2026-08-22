@@ -124,11 +124,11 @@ const pages = {
    * ponctuation : « … » en français, “ … ” en anglais, „ … “ en allemand, ‘ … ’ en
    * néerlandais, « … » en espagnol.
    */
-  'pages.describeInsert': 'Insérer une page « {type} » au rang {rank} ({orientation})',
+  'pages.describeInsert': 'Insérer une page « {type} » au rang {rank} ({orientation})',
   'pages.describeDuplicate': 'Dupliquer la page {rank} au rang {target} ({orientation})',
   'pages.describeRemove': 'Supprimer la page {rank} ({orientation})',
   'pages.describeReorder': 'Déplacer la page {rank} au rang {target} ({orientation})',
-  'pages.describeSetClass': 'Changer le type de la page {rank} : « {before} » → « {after} » ({orientation})',
+  'pages.describeSetClass': 'Changer le type de la page {rank} : « {before} » → « {after} » ({orientation})',
 
   /**
    * Ce que la zone d'annonce dit une fois le geste fait : le pas d'historique, puis la
@@ -203,8 +203,8 @@ const pages = {
    * suivre celui qui s'écrit.
    */
   'pages.thermalMultiple': {
-    one: '{total} pages d’assistant de thermique (pages {ranks}). XCTrack n’en vise qu’une quand il bascule tout seul en spirale ; cet éditeur suppose la dernière, la page {target}, sans l’avoir vérifié sur l’appareil. La page {others} reste de toute façon atteignable par « page suivante ».',
-    other: '{total} pages d’assistant de thermique (pages {ranks}). XCTrack n’en vise qu’une quand il bascule tout seul en spirale ; cet éditeur suppose la dernière, la page {target}, sans l’avoir vérifié sur l’appareil. Les pages {others} restent de toute façon atteignables par « page suivante ».'
+    one: '{total} pages d’assistant de thermique (pages {ranks}). XCTrack n’en vise qu’une quand il bascule tout seul en spirale ; cet éditeur suppose la dernière, la page {target}, sans l’avoir vérifié sur l’appareil. La page {others} reste de toute façon atteignable par « page suivante ».',
+    other: '{total} pages d’assistant de thermique (pages {ranks}). XCTrack n’en vise qu’une quand il bascule tout seul en spirale ; cet éditeur suppose la dernière, la page {target}, sans l’avoir vérifié sur l’appareil. Les pages {others} restent de toute façon atteignables par « page suivante ».'
   },
 
   'pages.allPagesWithoutNavigation': 'Toutes les pages de cette orientation sont activées ' +

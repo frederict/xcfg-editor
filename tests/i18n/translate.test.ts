@@ -45,9 +45,10 @@ describe('lecture d’un message', () => {
     expect(de.t('pages.describeSetClass', values)).toBe(
       'Typ von Seite 3 ändern: „Vide“ → „Compétition“ (Querformat)'
     )
-    // …le français garde le verbe en tête et met ses guillemets à espaces…
+    // …le français garde le verbe en tête et écarte les siens d'une espace fine
+    // insécable (U+202F), celle qui retient le chevron fermant en bout de ligne…
     expect(fr5.t('pages.describeSetClass', { ...values, orientation: 'paysage' }))
-      .toBe('Changer le type de la page 3 : « Vide » → « Compétition » (paysage)')
+      .toBe('Changer le type de la page 3 : « Vide » → « Compétition » (paysage)')
     // …et l'espagnol colle les siens au mot.
     expect(es.t('pages.describeSetClass', { ...values, orientation: 'horizontal' }))
       .toBe('Cambiar el tipo de la página 3: «Vide» → «Compétition» (horizontal)')

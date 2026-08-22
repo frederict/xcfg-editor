@@ -357,3 +357,115 @@ describe('catalogues de messages', () => {
     }
   })
 })
+
+/**
+ * # Les guillemets, et l'espace qui tient dedans
+ *
+ * Défaut vu en photographiant l'accueil, jamais par un test : `landing.returning` cite
+ * « Fichier » avec des espaces ordinaires, et à la largeur naturelle du bloc — 512 px,
+ * fenêtre de 1 380 — le `»` tombait **seul** au début de la ligne suivante. Ce n'est pas
+ * un défaut de style : le catalogue portait 102 messages français dans ce cas, et le
+ * navigateur n'a aucune raison de refuser une coupure là où on a écrit une espace
+ * sécable.
+ *
+ * Le remède est typographique et vit dans le message : une **espace insécable** à
+ * l'intérieur des chevrons. Le catalogue emploie l'espace **fine** insécable (U+202F),
+ * celle qu'`Intl` pose déjà devant les unités françaises — « 512 o », « 155,0 mm ». Elle
+ * rend le rendu que le français attend et ne se coupe pas. L'espace insécable ordinaire
+ * (U+00A0) resterait correcte, et le contrôle l'accepte.
+ *
+ * ⚠ Les cinq langues ne partagent **pas** cette règle, et l'appliquer partout serait une
+ * faute :
+ *
+ * | Langue | Guillemets | Espace intérieure |
+ * |---|---|---|
+ * | `fr` | « … » | insécable, obligatoire |
+ * | `de` | „ … “ | aucune |
+ * | `en` | “ … ” | aucune |
+ * | `nl` | ‘ … ’ | aucune |
+ * | `es` | « … » | aucune |
+ *
+ * Chaque langue est donc vérifiée pour ce qu'elle doit porter **et** pour ce qu'elle ne
+ * doit pas : un `«` dans une phrase allemande serait un guillemet français égaré, une
+ * espace dans un `« … »` espagnol une règle française appliquée de travers.
+ */
+describe('les guillemets ne se coupent pas en fin de ligne', () => {
+  /** U+202F, l'espace fine insécable — celle qu'`Intl` emploie en français. */
+  const FINE = '\u202f'
+  /** U+00A0, l'espace insécable ordinaire. */
+  const NBSP = '\u00a0'
+
+  /** Toutes les valeurs d'une langue, aplaties, avec la clé qui les porte. */
+  function valuesOf(language: UiLanguage): Array<[MessageKey, string]> {
+    const catalog = CATALOGS[language]
+    return KEYS.flatMap(
+      key => textsOf(catalog[key]).map(text => [key, text] as [MessageKey, string])
+    )
+  }
+
+  it('le français écrit une espace insécable dans ses chevrons', () => {
+    for (const [key, text] of valuesOf('fr')) {
+      // Parcours par unité de code : `[...text]` rendrait un index de point de code, qui
+      // ne serait plus celui de `text[index + 1]` dès qu'un émoji traverse le message.
+      for (let index = 0; index < text.length; index += 1) {
+        const char = text[index]
+        if (char === '«') {
+          const after = text[index + 1]
+          expect(
+            after === FINE || after === NBSP,
+            `fr / ${key} : « doit être suivi d’une espace insécable, pas de ${JSON.stringify(after)}`
+          ).toBe(true)
+        }
+        if (char === '»') {
+          const before = text[index - 1]
+          expect(
+            before === FINE || before === NBSP,
+            `fr / ${key} : » doit être précédé d’une espace insécable, pas de ${JSON.stringify(before)}`
+          ).toBe(true)
+        }
+      }
+    }
+  })
+
+  it('le catalogue français s’en tient à la fine, celle des unités', () => {
+    // Les deux espaces insécables sont correctes ; un catalogue qui les mélange rendrait
+    // deux largeurs différentes dans la même phrase. Une seule est écrite partout.
+    const quoted = valuesOf('fr').filter(([, text]) => text.includes('«'))
+    expect(quoted.length).toBeGreaterThan(50)
+    for (const [key, text] of quoted) {
+      expect(text, `fr / ${key}`).not.toContain(NBSP + '»')
+      expect(text, `fr / ${key}`).not.toContain('«' + NBSP)
+    }
+  })
+
+  it('l’espagnol garde ses chevrons collés au mot', () => {
+    for (const [key, text] of valuesOf('es')) {
+      expect(text, `es / ${key}`).not.toMatch(/«[\s  ]/u)
+      expect(text, `es / ${key}`).not.toMatch(/[\s  ]»/u)
+    }
+  })
+
+  it('les trois langues sans chevrons n’en portent aucun', () => {
+    for (const language of ['de', 'en', 'nl'] as const) {
+      for (const [key, text] of valuesOf(language)) {
+        expect(text, `${language} / ${key}`).not.toContain('«')
+        expect(text, `${language} / ${key}`).not.toContain('»')
+      }
+    }
+  })
+
+  it('aucune langue ne colle une espace à l’intérieur de ses propres guillemets', () => {
+    // „ … “ en allemand, “ … ” en anglais, ‘ … ’ en néerlandais : l'ouvrant colle au mot
+    // qui suit, le fermant au mot qui précède.
+    const pairs: Readonly<Record<'de' | 'en' | 'nl', readonly [string, string]>> = {
+      de: ['„', '“'], en: ['“', '”'], nl: ['‘', '’']
+    }
+    for (const language of ['de', 'en', 'nl'] as const) {
+      const [open, close] = pairs[language]
+      for (const [key, text] of valuesOf(language)) {
+        expect(text, `${language} / ${key}`).not.toContain(open + ' ')
+        expect(text, `${language} / ${key}`).not.toContain(' ' + close)
+      }
+    }
+  })
+})

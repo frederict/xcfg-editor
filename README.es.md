@@ -41,9 +41,9 @@ tendrá una página antes de estar en el aire.
 Existen editores externos. La primera objeción que un piloto les opone, por escrito en el
 foro en julio de 2026, es esta:
 
-> « will my specific widget settings still be there after I use the editor? Most of my
+> «will my specific widget settings still be there after I use the editor? Most of my
 > widgets use specific styles and settings, so having to re-enter these would cost more
-> than I could gain from a more convenient interface for layouting. »
+> than I could gain from a more convenient interface for layouting.»
 
 En español: «¿seguirán ahí mis ajustes concretos de widget después de usar el editor? La
 mayoría de mis widgets usan estilos y ajustes concretos, así que tener que volver a

@@ -51,7 +51,7 @@ const model = {
   /* ------------------- où la donnée vit, donc si elle part avec un export « pages » */
 
   'personalHome.layout': 'Disposition — part avec les pages',
-  'personalHome.preferences': 'Préférences — reste chez vous dans un export « pages »',
+  'personalHome.preferences': 'Préférences — reste chez vous dans un export « pages »',
 
   /* ---------------------- pourquoi une clé du layout est dite personnelle */
 
@@ -152,19 +152,19 @@ const model = {
   'sharingReason.fullName': 'Nom d’une personne enregistrée sur un bouton d’appel : ' +
     'remplacé par un libellé neutre.',
   'sharingReason.phoneNumber': 'Numéro de téléphone : remplacé par un numéro au même ' +
-    'gabarit mais non composable — « 00 » n’est pas un indicatif de pays.',
+    'gabarit mais non composable — « 00 » n’est pas un indicatif de pays.',
   'sharingReason.url': 'Adresse web saisie, qui peut porter un jeton ou un identifiant : ' +
-    'remplacée par une adresse du domaine réservé « .invalid », qui ne résout jamais.',
+    'remplacée par une adresse du domaine réservé « .invalid », qui ne résout jamais.',
   'sharingReason.title': 'Libellé d’un bouton de lancement : remplacé par un libellé ' +
     'neutre, numéroté.',
   'sharingReason.name': 'Nom de l’application visée par un bouton de lancement : remplacé ' +
     'par un libellé neutre, numéroté.',
   'sharingReason.action': 'Action Android d’un bouton de lancement, qui peut être un URI ' +
     'complet : remplacée par l’action de test interne que XCTrack pose sur un bouton neuf.',
-  'sharingReason.filter': 'Filtre de journal saisi : remis à vide, c’est-à-dire « pas de ' +
-    'filtre », la valeur neutre du réglage.',
+  'sharingReason.filter': 'Filtre de journal saisi : remis à vide, c’est-à-dire « pas de ' +
+    'filtre », la valeur neutre du réglage.',
   'sharingReason.suffix': 'Texte placé après la valeur affichée : remis à vide, ' +
-    'c’est-à-dire « pas de suffixe », la valeur neutre du réglage.',
+    'c’est-à-dire « pas de suffixe », la valeur neutre du réglage.',
   'sharingReason.event': 'Nom d’événement saisi : remplacé par l’événement de test que ' +
     'XCTrack pose sur un gadget neuf.',
   'sharingReason.unknownFreeText': 'Texte libre sans règle propre : remplacé par un texte ' +
@@ -177,9 +177,9 @@ const model = {
     'connexion du destinataire au lieu de la laisser simplement vide.',
   'sharingReason.activeLookDevice': 'Les lunettes ActiveLook appairées à votre appareil. ' +
     'Remises à la valeur d’usine relevée dans XCTrack — la chaîne vide, c’est-à-dire ' +
-    '« aucunes lunettes ».',
+    '« aucunes lunettes ».',
   'sharingReason.activeLookName': 'Le nom de vos lunettes ActiveLook. Remis à la valeur ' +
-    'd’usine relevée dans XCTrack — la chaîne vide, c’est-à-dire « aucunes lunettes ».',
+    'd’usine relevée dans XCTrack — la chaîne vide, c’est-à-dire « aucunes lunettes ».',
   'sharingReason.airspaceFiles': 'Les fichiers d’espaces aériens que vous avez chargés. La ' +
     'ligne entière est retirée : ce sont des fichiers de votre appareil, que le ' +
     'destinataire n’a pas.',
@@ -198,10 +198,10 @@ const model = {
     'reconnaître dans un club. Remplacé par un mot neutre, pour que le réglage reste ' +
     'renseigné.',
   'sharingReason.gliderModel': 'Le modèle de votre voile. Remis à la valeur d’usine relevée ' +
-    'dans XCTrack — la chaîne vide, c’est-à-dire « aucun modèle choisi ».',
+    'dans XCTrack — la chaîne vide, c’est-à-dire « aucun modèle choisi ».',
   'sharingReason.gliderProducer': 'Le constructeur de votre voile. Remis à la valeur ' +
-    'd’usine relevée dans XCTrack — la chaîne vide, c’est-à-dire « aucun constructeur ' +
-    'choisi ».',
+    'd’usine relevée dans XCTrack — la chaîne vide, c’est-à-dire « aucun constructeur ' +
+    'choisi ».',
   'sharingReason.livetrackChoice': 'Un choix de diffusion Livetrack que vous avez fait. ' +
     'Conservé : c’est un réglage, pas une donnée — il ne porte ni nom, ni identifiant de ' +
     'compte.',
@@ -212,7 +212,7 @@ const model = {
     'ligne entière est retirée : ce sont des fichiers de votre appareil, que le ' +
     'destinataire n’a pas.',
   'sharingReason.mapTheme': 'Le thème de carte que vous avez installé, désigné par son ' +
-    'chemin. Remis à la valeur d’usine relevée dans XCTrack, « DEFAULT » : la carte du ' +
+    'chemin. Remis à la valeur d’usine relevée dans XCTrack, « DEFAULT » : la carte du ' +
     'destinataire s’affiche, au lieu de chercher un fichier qu’il n’a pas.',
   'sharingReason.navigationState': 'Votre tâche en cours, points de virage et coordonnées ' +
     'compris. La ligne entière est retirée : son schéma change à chaque version de ' +
@@ -235,9 +235,9 @@ const model = {
     'seuls qu’il puisse utiliser.',
   'sharingReason.lastNetLocation': 'La dernière position ayant servi à interroger le QNH. ' +
     'Remise à la valeur d’usine relevée dans XCTrack — la chaîne vide, c’est-à-dire ' +
-    '« aucune position ».',
+    '« aucune position ».',
   'sharingReason.replayFile': 'Un de vos fichiers de trace. Remis à la valeur d’usine ' +
-    'relevée dans XCTrack — la chaîne vide, c’est-à-dire « aucune trace à rejouer ».',
+    'relevée dans XCTrack — la chaîne vide, c’est-à-dire « aucune trace à rejouer ».',
   'sharingReason.unknownPreference': 'Réglage personnel sans règle propre : la ligne ' +
     'entière est retirée, par précaution.',
   'sharingReason.shapeMismatch': 'Ce réglage ne porte pas le texte que sa règle attendait ' +
@@ -297,54 +297,54 @@ const model = {
     'appuis tout autant qu’un gadget opaque.',
   'ruleSummary.pageNeverShown': 'XCTrack le dit dans sa propre boîte de réglage : une page ' +
     'dont aucun type de navigation n’est coché n’est affichée dans aucun contexte de vol.',
-  'ruleSummary.thermalPages': 'Le relevé de l’instrument dit que la classe « assistant de ' +
-    'thermique » est celle que vise le basculement automatique. Il ne dit pas laquelle est ' +
+  'ruleSummary.thermalPages': 'Le relevé de l’instrument dit que la classe « assistant de ' +
+    'thermique » est celle que vise le basculement automatique. Il ne dit pas laquelle est ' +
     'visée quand une orientation en porte plusieurs : cet éditeur suppose la dernière, et ' +
     'cette supposition n’a jamais été vérifiée.',
   'ruleSummary.widgetTooSmall': 'Le seuil vient de l’ISO 9241-303 et s’applique à la taille ' +
     'physique réelle de la dalle du gabarit d’écran choisi, pas à des pixels : changer de ' +
     'gabarit change ces millimètres.',
-  'ruleSummary.proWidget': 'Ce fichier déclare « proUpTo: 0 » et porte des gadgets réservés ' +
+  'ruleSummary.proWidget': 'Ce fichier déclare « proUpTo: 0 » et porte des gadgets réservés ' +
     'à la licence Pro.',
   'ruleSummary.roadMaps': 'XCTrack prévient dans ses propres réglages qu’une seule carte ' +
     'routière est possible par page, à cause d’une limitation de sa bibliothèque de cartes.',
   'ruleSummary.obsoleteKey': 'Ces gadgets portent des réglages qu’une version antérieure de ' +
     'XCTrack a écrits. Il n’y a rien à y faire avant de voler ; pour savoir ce qu’une ' +
-    'version donnée en fait, et éventuellement les enlever, voir « Version et ' +
-    'compatibilité » dans le menu « Fichier ».',
+    'version donnée en fait, et éventuellement les enlever, voir « Version et ' +
+    'compatibilité » dans le menu « Fichier ».',
 
   /* ------------------------------ ce que chaque constat dit du gadget concerné */
 
-  'inspection.unreachable': '« {name} » est entièrement recouvert par des gadgets placés après lui. Aucun clic ne peut donc l’atteindre, ni ici ni dans l’écran d’édition de XCTrack, qui donne lui aussi la main au gadget le plus en avant. Il peut rester parfaitement visible — un gadget qui ne peint rien vole les appuis tout autant qu’un gadget opaque. Pour le régler, passez par la liste des gadgets de la page.',
+  'inspection.unreachable': '« {name} » est entièrement recouvert par des gadgets placés après lui. Aucun clic ne peut donc l’atteindre, ni ici ni dans l’écran d’édition de XCTrack, qui donne lui aussi la main au gadget le plus en avant. Il peut rester parfaitement visible — un gadget qui ne peint rien vole les appuis tout autant qu’un gadget opaque. Pour le régler, passez par la liste des gadgets de la page.',
   'inspection.unreachableToVerify': 'Ce qu’il advient de ce gadget en vol n’a pas été ' +
     'observé : XCTrack route peut-être l’appui autrement qu’en édition. La question compte ' +
     'surtout pour les boutons d’action, qui n’existent que pour être touchés en vol.',
 
   'inspection.pageNeverShown': {
-    one: 'Cette page n’est activée pour aucun type de navigation : XCTrack ne l’affichera dans aucun contexte de vol, et son {count} gadget ne servira jamais. C’est le réglage « Désactivé » de l’instrument — volontaire, ou oublié. À distinguer d’une page seulement restreinte à certaines navigations, qui est un réglage normal.',
-    other: 'Cette page n’est activée pour aucun type de navigation : XCTrack ne l’affichera dans aucun contexte de vol, et ses {count} gadgets ne serviront jamais. C’est le réglage « Désactivé » de l’instrument — volontaire, ou oublié. À distinguer d’une page seulement restreinte à certaines navigations, qui est un réglage normal.'
+    one: 'Cette page n’est activée pour aucun type de navigation : XCTrack ne l’affichera dans aucun contexte de vol, et son {count} gadget ne servira jamais. C’est le réglage « Désactivé » de l’instrument — volontaire, ou oublié. À distinguer d’une page seulement restreinte à certaines navigations, qui est un réglage normal.',
+    other: 'Cette page n’est activée pour aucun type de navigation : XCTrack ne l’affichera dans aucun contexte de vol, et ses {count} gadgets ne serviront jamais. C’est le réglage « Désactivé » de l’instrument — volontaire, ou oublié. À distinguer d’une page seulement restreinte à certaines navigations, qui est un réglage normal.'
   },
 
-  'inspection.thermalPages': 'Cette orientation porte plusieurs pages d’assistant de thermique, et XCTrack n’en vise qu’une lorsqu’il bascule tout seul en spirale. Laquelle ? Cet éditeur suppose la dernière, ici la page {target} — sans l’avoir vérifié. Celle-ci reste en tout cas atteignable par « page suivante ».',
+  'inspection.thermalPages': 'Cette orientation porte plusieurs pages d’assistant de thermique, et XCTrack n’en vise qu’une lorsqu’il bascule tout seul en spirale. Laquelle ? Cet éditeur suppose la dernière, ici la page {target} — sans l’avoir vérifié. Celle-ci reste en tout cas atteignable par « page suivante ».',
   'inspection.thermalPagesToVerify': 'Rien n’a été observé de ce que fait XCTrack quand ' +
     'plusieurs pages d’assistant de thermique coexistent : aucun fichier du corpus n’en ' +
     'porte deux. En dupliquer une sur l’instrument, entrer en spirale et regarder quelle ' +
     'page arrive trancherait la question en un vol.',
 
-  'inspection.tooSmall': '« {name} » ne fait que {height} de haut sur cet appareil. Si le texte qu’il affiche en occupe la moitié, il mesurera environ {value} — sous les {minimum} que l’ISO 9241-303 donne pour minimum absolu à {distance} cm. Sera-t-il encore lisible à bout de bras, en plein soleil, avec des gants ? À vérifier sur l’instrument.',
+  'inspection.tooSmall': '« {name} » ne fait que {height} de haut sur cet appareil. Si le texte qu’il affiche en occupe la moitié, il mesurera environ {value} — sous les {minimum} que l’ISO 9241-303 donne pour minimum absolu à {distance} cm. Sera-t-il encore lisible à bout de bras, en plein soleil, avec des gants ? À vérifier sur l’instrument.',
   'inspection.tooSmallToVerify': 'La part de la hauteur du gadget qu’occupe réellement le glyphe de la valeur (ici supposée {ratio}) n’a été mesurée que sur un seul gadget, une seule capture. Les captures de la planche des 75 gadgets suffiraient à la mesurer type par type, sans toucher à l’appareil.',
 
-  'inspection.proWidget': '« {name} » est un gadget Pro, et ce fichier déclare « proUpTo: 0 ». Que fera XCTrack de ce gadget sur un appareil sans licence Pro : le remplacer par un cadre « gadget Pro », l’afficher normalement, ou ne rien y changer ? Nous ne le savons pas.',
+  'inspection.proWidget': '« {name} » est un gadget Pro, et ce fichier déclare « proUpTo: 0 ». Que fera XCTrack de ce gadget sur un appareil sans licence Pro : le remplacer par un cadre « gadget Pro », l’afficher normalement, ou ne rien y changer ? Nous ne le savons pas.',
   'inspection.proWidgetToVerify': 'Le sens de `info.proUpTo` n’est pas établi : 0 vaut ' +
-    'peut-être « pas de licence », peut-être une date de fin en secondes. Les 21 fichiers ' +
+    'peut-être « pas de licence », peut-être une date de fin en secondes. Les 21 fichiers ' +
     'du corpus portent tous 0, sur deux installations — aucune autre valeur n’a jamais été ' +
     'observée. Un essai sur l’AIR³ avec un gadget Pro trancherait.',
 
-  'inspection.roadMaps': '« {name} » demande lui aussi une carte routière, et le gadget {first} de cette page en demande déjà une. XCTrack prévient dans ses propres réglages qu’une seule carte routière est possible par page, à cause d’une limitation de sa bibliothèque de cartes. Ce qui s’affichera à la place n’est pas prévisible.',
+  'inspection.roadMaps': '« {name} » demande lui aussi une carte routière, et le gadget {first} de cette page en demande déjà une. XCTrack prévient dans ses propres réglages qu’une seule carte routière est possible par page, à cause d’une limitation de sa bibliothèque de cartes. Ce qui s’affichera à la place n’est pas prévisible.',
 
   'inspection.obsoleteKey': {
-    one: '« {name} » porte un réglage écrit par une version antérieure de XCTrack ({detail}). Rien n’est perdu : XCTrack 1.0.3 le convertit à la lecture — c’est vérifié sur l’instrument — et le réécrira sous son nouveau nom la première fois que ce gadget sera réglé.',
-    other: '« {name} » porte des réglages écrits par une version antérieure de XCTrack ({detail}). Rien n’est perdu : XCTrack 1.0.3 les convertit à la lecture — c’est vérifié sur l’instrument — et les réécrira sous leur nouveau nom la première fois que ce gadget sera réglé.'
+    one: '« {name} » porte un réglage écrit par une version antérieure de XCTrack ({detail}). Rien n’est perdu : XCTrack 1.0.3 le convertit à la lecture — c’est vérifié sur l’instrument — et le réécrira sous son nouveau nom la première fois que ce gadget sera réglé.',
+    other: '« {name} » porte des réglages écrits par une version antérieure de XCTrack ({detail}). Rien n’est perdu : XCTrack 1.0.3 les convertit à la lecture — c’est vérifié sur l’instrument — et les réécrira sous leur nouveau nom la première fois que ce gadget sera réglé.'
   },
 
   /* ============================ les pannes de la bibliothèque et du détail technique ===
@@ -384,9 +384,9 @@ const model = {
   'libraryError.corrupt': 'L’entrée {id} est illisible : {reason}.',
   'libraryError.duplicateId': 'Une entrée porte déjà l’identifiant {id}.',
   'libraryError.changedElsewhere': 'L’entrée {id} a changé depuis sa lecture — un autre onglet l’a modifiée ou supprimée. Rechargez la bibliothèque avant de réessayer.',
-  'libraryError.notReadable': '« {name} » n’a pas pu être ouvert : ce n’est pas une configuration XCTrack lisible. {detail}',
-  'libraryError.bytesMissing': 'Les octets de « {name} » sont introuvables : l’entrée est incomplète.',
-  'libraryError.digestChanged': '« {name} » ne rend plus son empreinte d’origine : les octets rangés ont été altérés. L’entrée n’est pas restituée.',
+  'libraryError.notReadable': '« {name} » n’a pas pu être ouvert : ce n’est pas une configuration XCTrack lisible. {detail}',
+  'libraryError.bytesMissing': 'Les octets de « {name} » sont introuvables : l’entrée est incomplète.',
+  'libraryError.digestChanged': '« {name} » ne rend plus son empreinte d’origine : les octets rangés ont été altérés. L’entrée n’est pas restituée.',
 
   /* ------------------ un enregistrement que la bibliothèque ne sait pas relire */
 

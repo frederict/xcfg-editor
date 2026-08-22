@@ -92,7 +92,7 @@ const sharing = {
   'sharing.backupTitle': 'Tous vos réglages, sans ce qui vous désigne',
   'sharing.pagesTitle': 'Version partageable, sans données personnelles',
 
-  'sharing.plainContentPages': 'Un export « pages » ne porte pas de préférences, mais les ' +
+  'sharing.plainContentPages': 'Un export « pages » ne porte pas de préférences, mais les ' +
     'textes que vous avez écrits dans les gadgets, si.',
   'sharing.plainContentBackup': 'Il porte vos préférences : nom du pilote, voile, capteurs ' +
     'appairés, fichiers de waypoints.',
@@ -118,7 +118,7 @@ const sharing = {
     one: 'Le fichier reste une sauvegarde entière — vario et ses sons, unités, thème, seuils d’espaces aériens, touches. {count} ligne qui vous désigne est remplacée par une valeur neutre ou retirée.',
     other: 'Le fichier reste une sauvegarde entière — vario et ses sons, unités, thème, seuils d’espaces aériens, touches. {count} lignes qui vous désignent sont remplacées par des valeurs neutres ou retirées.'
   },
-  'sharing.pagesNote': 'Un export « pages » dont les textes que vous avez écrits sont ' +
+  'sharing.pagesNote': 'Un export « pages » dont les textes que vous avez écrits sont ' +
     'remplacés par des textes neutres. La disposition est conservée ; les préférences ne ' +
     'partent pas.',
 
@@ -174,8 +174,8 @@ const sharing = {
    * dans ce fichier », ce qui est faux d'un `backup`.
    */
   'sharing.otherPersonalInPreferences': {
-    one: 'Ce fichier porte par ailleurs {count} donnée personnelle dans ses préférences — nom, matériel, capteurs appairés, tâche en cours. Elle n’est pas remplacée : la version partageable ci-dessus n’emporte que les pages, et laisse en bloc toute la section « preferences ».',
-    other: 'Ce fichier porte par ailleurs {count} données personnelles dans ses préférences — nom, matériel, capteurs appairés, tâche en cours. Elles ne sont pas remplacées : la version partageable ci-dessus n’emporte que les pages, et laisse en bloc toute la section « preferences ».'
+    one: 'Ce fichier porte par ailleurs {count} donnée personnelle dans ses préférences — nom, matériel, capteurs appairés, tâche en cours. Elle n’est pas remplacée : la version partageable ci-dessus n’emporte que les pages, et laisse en bloc toute la section « preferences ».',
+    other: 'Ce fichier porte par ailleurs {count} données personnelles dans ses préférences — nom, matériel, capteurs appairés, tâche en cours. Elles ne sont pas remplacées : la version partageable ci-dessus n’emporte que les pages, et laisse en bloc toute la section « preferences ».'
   },
 
   /* --------------------------------- les réglages personnels, traités ligne par ligne */
@@ -287,12 +287,12 @@ const sharing = {
   /* -------------------------------------------------------- ce qui ne partira pas */
 
   'sharing.droppedHeading': 'Ce qui ne partira pas',
-  'sharing.droppedNothing': 'Ce fichier est déjà un export « pages » : il ne porte aucune ' +
+  'sharing.droppedNothing': 'Ce fichier est déjà un export « pages » : il ne porte aucune ' +
     'préférence, il n’y a donc rien à en retirer.',
   'sharing.droppedIntro': {
-    one: 'Le fichier partagé est un export « pages » : il ne porte que vos pages. Cette ' +
+    one: 'Le fichier partagé est un export « pages » : il ne porte que vos pages. Cette ' +
       'section entière reste chez vous.',
-    other: 'Le fichier partagé est un export « pages » : il ne porte que vos pages. Ces ' +
+    other: 'Le fichier partagé est un export « pages » : il ne porte que vos pages. Ces ' +
       'sections entières restent chez vous.'
   },
 
@@ -306,7 +306,7 @@ const sharing = {
     'thème, réglages du vario et de ses sons, seuils d’espaces aériens, Livetracking, ' +
     'capteurs Bluetooth appairés, fichiers de waypoints.',
   'sharing.droppedAirspaceChannels': 'Les canaux d’espaces aériens que vous avez sélectionnés.',
-  'sharing.droppedUnknownSection': 'La section « {key} », qu’un export « pages » ne transporte pas.',
+  'sharing.droppedUnknownSection': 'La section « {key} », qu’un export « pages » ne transporte pas.',
 
   /* --------------------------------------------------- les annexes d'une archive */
 
@@ -339,7 +339,7 @@ const sharing = {
     other: '{count} sont des emplacements présents mais vides'
   },
   'sharing.personalTravelsNote': 'Seules celles de la disposition partent avec un export ' +
-    '« pages ».',
+    '« pages ».',
 
   /* ==================================================================================
    * warnings.ts — ce qu'il faut savoir de ce fichier
@@ -347,12 +347,12 @@ const sharing = {
 
   /* -------------------------------------------------------------- 1. type d'export */
 
-  'warnings.exportPagesTitle': 'Export « pages » : seuls les écrans',
+  'warnings.exportPagesTitle': 'Export « pages » : seuls les écrans',
   'warnings.exportPagesDetail': 'Ce fichier ne porte que les pages de gadgets. Réimporté ' +
     'dans XCTrack, il remplace les écrans et ne touche à rien d’autre : réglages du vario, ' +
     'unités, fichiers d’espace aérien et configuration des capteurs restent ceux de ' +
     'l’appareil.',
-  'warnings.exportBackupTitle': 'Export « backup » : la configuration entière',
+  'warnings.exportBackupTitle': 'Export « backup » : la configuration entière',
   'warnings.exportBackupDetail': 'Ce fichier porte toute la configuration. Réimporté dans ' +
     'XCTrack, il écrase non seulement les écrans, mais aussi les réglages du vario, les ' +
     'unités, les fichiers d’espace aérien et la configuration des capteurs de l’appareil.',
@@ -360,7 +360,7 @@ const sharing = {
   'warnings.exportUnknownDetail': 'Ce fichier ne dit pas s’il ne contient que des pages ou ' +
     'toute la configuration (`info.exportType` absent ou inconnu). Ce qu’il écrasera à la ' +
     'réimportation ne peut donc pas être annoncé ici.',
-  'warnings.exportUnknownItem': 'info.exportType : « {type} »',
+  'warnings.exportUnknownItem': 'info.exportType : « {type} »',
 
   /* ----------------------------------------------------------- 2. valeurs supposées */
 
@@ -400,8 +400,8 @@ const sharing = {
    * l'envers : le `layout` voyage avec un export « pages ».
    */
   'warnings.personalTravels': {
-    one: '{count} texte écrit dans un gadget part même avec un export « pages » : ce format est un tri de gros grain, pas un nettoyage.',
-    other: '{count} textes écrits dans les gadgets partent même avec un export « pages » : ce format est un tri de gros grain, pas un nettoyage.'
+    one: '{count} texte écrit dans un gadget part même avec un export « pages » : ce format est un tri de gros grain, pas un nettoyage.',
+    other: '{count} textes écrits dans les gadgets partent même avec un export « pages » : ce format est un tri de gros grain, pas un nettoyage.'
   },
   'warnings.personalEmptySlots': {
     one: '{count} emplacement personnel est présent mais vide — il n’est pas listé ici.',
@@ -439,7 +439,7 @@ const sharing = {
     'conservé intact et ressort tel quel.',
   'warnings.where': '{orientation}, page {page}',
   'warnings.structureNoClass': '{where} : cette page ne dit pas son type',
-  'warnings.structureNavigations': '{where} : cet outil ne sait pas dire quand cette page s’affiche — la valeur « navigations » n’est ni « all », ni « none », ni une liste',
+  'warnings.structureNavigations': '{where} : cet outil ne sait pas dire quand cette page s’affiche — la valeur « navigations » n’est ni « all », ni « none », ni une liste',
   /**
    * Le pluriel réel — « CLASS, X1 » — accordait au singulier, et « clé » est le mot du
    * format, pas celui du pilote : ce que le fichier porte, ce sont des lignes. Le nombre

@@ -214,7 +214,7 @@ const library = {
   'library.factScreenNote':
     'La résolution vient de la table d’appareils de cet éditeur, pas du fichier.',
 
-  'library.factPro': 'Gadgets « Pro »',
+  'library.factPro': 'Gadgets « Pro »',
   'library.proUnknown': 'Inconnu — aucun catalogue de gadgets n’a été fourni',
   'library.proNone': 'Aucun',
   'library.proUnknownNote':
@@ -238,7 +238,7 @@ const library = {
   'library.personalTravelsYes': 'Oui — la disposition porte au moins un texte écrit par vous',
   'library.personalTravelsNo': 'Non — aucun texte libre trouvé dans la disposition',
   'library.personalTravelsYesNote':
-    'Un export « pages » n’est donc pas anonyme par construction : le nom et le numéro d’un bouton d’appel sont dans la disposition, pas dans les préférences.',
+    'Un export « pages » n’est donc pas anonyme par construction : le nom et le numéro d’un bouton d’appel sont dans la disposition, pas dans les préférences.',
   'library.personalTravelsNoNote':
     'La liste des champs de texte libre est fixe et se périmera : elle ne prouve pas une absence.',
 
@@ -272,7 +272,7 @@ const library = {
    * la découper en fragments n'aurait pas d'équivalent en allemand.
    */
   'library.personalSummary':
-    '{total} dans cette entrée : {layout} dans la disposition, qui part avec les pages, et {preferences} dans les préférences, qui restent chez vous dans un export « pages ». {filled}, {empty}. Elles sont montrées, jamais retirées : c’est vous qui décidez.',
+    '{total} dans cette entrée : {layout} dans la disposition, qui part avec les pages, et {preferences} dans les préférences, qui restent chez vous dans un export « pages ». {filled}, {empty}. Elles sont montrées, jamais retirées : c’est vous qui décidez.',
   'library.personalTotal': {
     one: '{count} donnée personnelle est présente',
     other: '{count} données personnelles sont présentes'
@@ -288,7 +288,7 @@ const library = {
   'library.basisReadInApp': 'lu dans l’application',
   'library.basisJudgedHere': 'jugé par cet éditeur',
   'library.travelsCaveat':
-    'Les lignes marquées « part avec les pages » sont dans la disposition : elles voyagent même dans un export « pages ». Dériver un « pages » est un tri de gros grain, ce n’est pas un nettoyage.',
+    'Les lignes marquées « part avec les pages » sont dans la disposition : elles voyagent même dans un export « pages ». Dériver un « pages » est un tri de gros grain, ce n’est pas un nettoyage.',
 
   /* -------------------------------------------------------------------------- l'aperçu */
 
@@ -309,12 +309,12 @@ const library = {
   /* --------------------------------------------------------------------------- ranger */
 
   'library.storeLead':
-    'Donnez-lui un nom que vous reconnaîtrez dans six mois — « Comp Annecy », « Vol-biv Alpes », « École ». Ce qui est rangé, c’est votre fichier lui-même, sans une virgule réécrite.',
+    'Donnez-lui un nom que vous reconnaîtrez dans six mois — « Comp Annecy », « Vol-biv Alpes », « École ». Ce qui est rangé, c’est votre fichier lui-même, sans une virgule réécrite.',
   'library.fieldNoteOptional': 'Note (facultative)',
   'library.noteHint':
     'Ce que vous voudrez : le site, la voile, le réglage du vario. Jamais interprétée.',
   /** `{digest}` part en `string` : c'est une empreinte, elle ne se met pas en forme. */
-  'library.stored': '« {name} » est rangée — {size}, empreinte {digest}…',
+  'library.stored': '« {name} » est rangée — {size}, empreinte {digest}…',
   'library.noOpenFile':
     'Aucun fichier n’est ouvert : ouvrez une configuration, ou rangez un fichier depuis le disque.',
 
@@ -322,14 +322,14 @@ const library = {
    * Le message modèle du socle — les guillemets et le formateur de dates dans une même
    * phrase. Voir `src/i18n/CLAUDE.md`.
    */
-  'library.storedLine': '« {name} » est rangée — {size}, {when}.',
+  'library.storedLine': '« {name} » est rangée — {size}, {when}.',
 
   /* -------------------------------------------------------------------------- charger */
 
-  'library.loaded': '« {name} » est chargée — {size}, octets vérifiés contre leur empreinte.',
+  'library.loaded': '« {name} » est chargée — {size}, octets vérifiés contre leur empreinte.',
   'library.unsavedTitle': 'Des modifications ne sont pas enregistrées',
   'library.unsavedBody':
-    'Le document ouvert — « {file} » — porte des modifications que vous n’avez pas enregistrées. Charger « {name} » les remplace dans l’éditeur.',
+    'Le document ouvert — « {file} » — porte des modifications que vous n’avez pas enregistrées. Charger « {name} » les remplace dans l’éditeur.',
   'library.storeFirstCaveat':
     'Ranger d’abord ne coûte rien : la configuration ouverte prend un nom dans la bibliothèque, et vous y reviendrez d’un clic.',
   'library.storeThenLoad': 'Ranger d’abord, puis charger',
@@ -338,8 +338,8 @@ const library = {
   /* ------------------------------------------------------------------------ ressortir */
 
   'library.extracted': {
-    one: '« {name} » ressort telle qu’elle est entrée : {count} octet, empreinte vérifiée.',
-    other: '« {name} » ressort telle qu’elle est entrée : {count} octets, empreinte vérifiée.'
+    one: '« {name} » ressort telle qu’elle est entrée : {count} octet, empreinte vérifiée.',
+    other: '« {name} » ressort telle qu’elle est entrée : {count} octets, empreinte vérifiée.'
   },
 
   /* ------------------------------------------------------------------------ l'empreinte */
@@ -361,12 +361,12 @@ const library = {
 
   /* ------------------------------------------------------------------------- supprimer */
 
-  'library.removeTitle': 'Supprimer « {name} » ?',
+  'library.removeTitle': 'Supprimer « {name} » ?',
   'library.removeBody':
-    '« {name} » et ses {size} seront retirés de ce navigateur. Cette bibliothèque n’a pas de corbeille.',
+    '« {name} » et ses {size} seront retirés de ce navigateur. Cette bibliothèque n’a pas de corbeille.',
   'library.removeCaveat':
     'Si vous n’en êtes pas sûr : ressortez d’abord le fichier, ou exportez la bibliothèque entière.',
-  'library.removed': '« {name} » a été supprimée.',
+  'library.removed': '« {name} » a été supprimée.',
 
   /* -------------------------------------------------- effacer toute la bibliothèque */
 
@@ -484,15 +484,15 @@ const library = {
 
   /* -------------------------------------------------------------------------- renommer */
 
-  'library.renameTitle': 'Renommer « {name} »',
+  'library.renameTitle': 'Renommer « {name} »',
   'library.renameLead': 'Le nom est à vous ; les octets rangés ne bougent pas.',
   'library.fieldNote': 'Note',
-  'library.renamed': '« {name} » est à jour — {times}.',
+  'library.renamed': '« {name} » est à jour — {times}.',
 
   /* --------------------------------------------- « replacée », le troisième « rétablir » */
 
-  'library.entryRestored': '« {name} » est replacée.',
-  'library.entryRestoredBeside': '« {name} » est replacée à côté : son identifiant était déjà pris.',
+  'library.entryRestored': '« {name} » est replacée.',
+  'library.entryRestoredBeside': '« {name} » est replacée à côté : son identifiant était déjà pris.',
 
   'library.entryCount': {
     one: '{count} configuration rangée',

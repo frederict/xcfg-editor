@@ -295,3 +295,87 @@ describe('ce que l’application expose vraiment', () => {
     expect(reachableModules().size).toBeGreaterThan(100)
   })
 })
+
+/**
+ * # Les guillemets de la documentation suivent la même règle que le catalogue
+ *
+ * `tests/i18n/catalog.test.ts` garde les 102 messages ; la même prose vit deux fois de
+ * plus — dans les cinq README et dans les cinq manuels, dont **le français est affiché
+ * dans l'application** par `manualPage.ts`. Quatre chevrons y tombaient seuls en bout de
+ * ligne, mesurés au navigateur à 1 380 px de fenêtre, exactement comme sur l'accueil.
+ *
+ * La règle est celle du catalogue, langue par langue : espace **insécable** à l'intérieur
+ * des chevrons français, rien à l'intérieur des chevrons espagnols, aucun chevron dans
+ * les trois autres langues.
+ *
+ * Les **commentaires HTML sont retirés** avant lecture : les recettes de capture du
+ * `README.md` français citent côte à côte les guillemets des cinq langues pour dire au
+ * photographe ce qu'il doit lire à l'écran — « … », “ … ”, ‘ … ’, „ … “, «…» — et ce
+ * passage-là n'est pas de la prose, il n'est rendu nulle part.
+ */
+describe('les guillemets de la documentation ne se coupent pas en fin de ligne', () => {
+  const FINE = '\u202f'
+  const NBSP = '\u00a0'
+
+  /** Le texte rendu d'un fichier : sans ses commentaires HTML. */
+  function prose(source: string): string {
+    return source.replaceAll(/<!--[\s\S]*?-->/g, ' ')
+  }
+
+  /** Les dix fichiers de prose, nommés pour que l'échec dise lequel. */
+  function documents(language: UiLanguage): Array<[string, string]> {
+    const manualPath = `../../docs-app/manuel.${language}.html`
+    const manual = MANUALS[manualPath]
+    if (manual === undefined) throw new Error(`${manualPath.slice(6)} manque`)
+    return [
+      [readmeName(language), prose(readme(language))],
+      [`docs-app/manuel.${language}.html`, prose(manual)]
+    ]
+  }
+
+  it('le français écrit une espace insécable dans ses chevrons', () => {
+    for (const [name, text] of documents('fr')) {
+      // Parcours par unité de code, jamais par point de code : `[...text]` découperait
+      // les émojis du README en un index qui ne serait plus celui de `text[i]`.
+      for (let index = 0; index < text.length; index += 1) {
+        const char = text[index]
+        const around = text.slice(Math.max(0, index - 30), index + 30).replaceAll('\n', ' ')
+        if (char === '«') {
+          const after = text[index + 1]
+          expect(after === FINE || after === NBSP, `${name} : …${around}…`).toBe(true)
+        }
+        if (char === '»') {
+          const before = text[index - 1]
+          expect(before === FINE || before === NBSP, `${name} : …${around}…`).toBe(true)
+        }
+      }
+    }
+  })
+
+  it('l’espagnol garde ses chevrons collés au mot', () => {
+    for (const [name, text] of documents('es')) {
+      expect(text, name).not.toMatch(/«\s/u)
+      expect(text, name).not.toMatch(/\s»/u)
+    }
+  })
+
+  it('les trois langues sans chevrons n’en portent aucun', () => {
+    for (const language of ['de', 'en', 'nl'] as const) {
+      for (const [name, text] of documents(language)) {
+        expect(text, name).not.toContain('«')
+        expect(text, name).not.toContain('»')
+      }
+    }
+  })
+
+  it('lit bien quelque chose — sinon ce contrôle ne prouve rien', () => {
+    // Un `glob` qui rendrait des chaînes vides, ou un retrait de commentaires trop large,
+    // ferait passer les trois tests ci-dessus sans rien avoir lu. Le compte du jour est de
+    // 100 chevrons ouvrants dans la prose française — 55 dans le README, dont les recettes
+    // de capture, en commentaire, en portent 86 de plus, et 45 dans le manuel.
+    const chevrons = documents('fr')
+      .map(([, text]) => (text.match(/«/g) ?? []).length)
+      .reduce((a, b) => a + b, 0)
+    expect(chevrons).toBeGreaterThan(80)
+  })
+})

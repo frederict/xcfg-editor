@@ -225,8 +225,8 @@ const versions = {
 
   /** Le mot dit UNE fois : plus bas, « nous », c'est ce relevé-là. */
   'versions.scope': {
-    one: 'Ce diagnostic repose sur notre relevé de {count} version de XCTrack et sur de vrais fichiers écrits par elle : c’est ce que « nous » désigne plus bas. Seuls les gadgets des pages y sont examinés — le reste d’une sauvegarde (vario, unités, capteurs, espaces aériens) n’est pas diagnostiqué. La position d’un gadget et son type ne sont pas des réglages et ne sont pas comptés.',
-    other: 'Ce diagnostic repose sur notre relevé de {count} versions de XCTrack et sur de vrais fichiers écrits par elles : c’est ce que « nous » désigne plus bas. Seuls les gadgets des pages y sont examinés — le reste d’une sauvegarde (vario, unités, capteurs, espaces aériens) n’est pas diagnostiqué. La position d’un gadget et son type ne sont pas des réglages et ne sont pas comptés.'
+    one: 'Ce diagnostic repose sur notre relevé de {count} version de XCTrack et sur de vrais fichiers écrits par elle : c’est ce que « nous » désigne plus bas. Seuls les gadgets des pages y sont examinés — le reste d’une sauvegarde (vario, unités, capteurs, espaces aériens) n’est pas diagnostiqué. La position d’un gadget et son type ne sont pas des réglages et ne sont pas comptés.',
+    other: 'Ce diagnostic repose sur notre relevé de {count} versions de XCTrack et sur de vrais fichiers écrits par elles : c’est ce que « nous » désigne plus bas. Seuls les gadgets des pages y sont examinés — le reste d’une sauvegarde (vario, unités, capteurs, espaces aériens) n’est pas diagnostiqué. La position d’un gadget et son type ne sont pas des réglages et ne sont pas comptés.'
   },
 
   'versions.unstableNotice': {

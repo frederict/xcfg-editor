@@ -535,9 +535,9 @@ describe('la description d’une opération', () => {
     expect(describe1({ kind: 'duplicate', index: 1 })).toBe('Dupliquer la page 2 au rang 3 (paysage)')
     expect(describe1({ kind: 'reorder', from: 3, to: 1 })).toBe('Déplacer la page 4 au rang 2 (paysage)')
     expect(describe1({ kind: 'insert', index: 2, className: 'WPThermalAssistant' }))
-      .toBe('Insérer une page « Aide thermique » au rang 3 (paysage)')
+      .toBe('Insérer une page « Aide thermique » au rang 3 (paysage)')
     expect(describe1({ kind: 'setClass', index: 0, className: 'WPCompetition' }))
-      .toBe('Changer le type de la page 1 : « Vide » → « Compétition » (paysage)')
+      .toBe('Changer le type de la page 1 : « Vide » → « Compétition » (paysage)')
   })
 
   it('distingue les deux orientations', () => {
@@ -558,10 +558,10 @@ describe('la description d’une opération', () => {
     // Il doit y porter le mot que le pilote a lu sur son instrument, pas notre traduction.
     expect(describeOperation(
       pages, { kind: 'insert', index: 2, className: 'WPThermalAssistant' }, 'landscape', tr, 'en'
-    )).toBe('Insérer une page « Thermal Assistant » au rang 3 (paysage)')
+    )).toBe('Insérer une page « Thermal Assistant » au rang 3 (paysage)')
     expect(describeOperation(
       pages, { kind: 'setClass', index: 0, className: 'WPCompetition' }, 'landscape', tr, 'de'
-    )).toBe('Changer le type de la page 1 : « Leer » → « Wettbewerb » (paysage)')
+    )).toBe('Changer le type de la page 1 : « Leer » → « Wettbewerb » (paysage)')
   })
 
   it('joint la conséquence à l’annonce faite après coup', () => {
@@ -631,7 +631,7 @@ describe('le carrousel', () => {
     items[3]!.click()
     expect(captured).toHaveLength(1)
     expect(captured[0]!.operation).toEqual({ kind: 'insert', index: 2, className: 'WPEmpty' })
-    expect(captured[0]!.description).toBe('Insérer une page « Vide » au rang 3 (paysage)')
+    expect(captured[0]!.description).toBe('Insérer une page « Vide » au rang 3 (paysage)')
   })
 
   it('titre chaque classe avec le mot de l’appareil, et la commente avec le nôtre', () => {

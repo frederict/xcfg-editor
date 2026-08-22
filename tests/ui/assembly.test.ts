@@ -519,11 +519,11 @@ describe('assemblage — la barre de tête garde le fréquent et range le reste'
     // sans la phrase, il ne resterait rien à quoi se raccrocher.
     expect(main).toContain("tr.t('app.openFailedHint')")
     expect(app['app.openFailedHint']).toContain('n’importe où sur cette page')
-    expect(app['app.openFailedHint']).toContain('« Fichier »')
+    expect(app['app.openFailedHint']).toContain('« Fichier »')
   })
 
   it('l’accueil dit où sont rangées les configurations, et il dit vrai', () => {
-    expect(app['landing.returning']).toContain('dans le menu « Fichier »')
+    expect(app['landing.returning']).toContain('dans le menu « Fichier »')
   })
 })
 
@@ -685,7 +685,7 @@ describe('assemblage — un document modifié ne se fait pas remplacer sans un m
     // L'historique nomme ses pas (« Régler Volume — Vario ») ; le pilote a cité ces
     // libellés comme un point fort. C'est ce nom-là qu'il faut lui remettre sous les yeux.
     expect(main).toContain("tr.t('app.lastChange', { change: work.lastChange })")
-    expect(app['app.lastChange']).toBe('Dernier changement en date : « {change} ».')
+    expect(app['app.lastChange']).toBe('Dernier changement en date : « {change} ».')
     expect(app['app.unsavedTitle']).toBe('Vos modifications ne sont pas enregistrées')
   })
 

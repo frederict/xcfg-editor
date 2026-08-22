@@ -815,7 +815,7 @@ describe('la consultation sépare ce que le pilote a réglé de ce que XCTrack a
     // la constante du fichier reste dans l'infobulle, pour qui compare deux sauvegardes.
     const none = fieldAt(panel.form, 'windStyle').choices.find((one) => one.value === 'NONE')!
     expect(mark.textContent).toBe(`réglé par vous · d’usine : ${none.label}`)
-    expect(mark.title).toContain('XCTrack écrit « NONE »')
+    expect(mark.title).toContain('XCTrack écrit « NONE »')
 
     const bool = panel.element.querySelector<HTMLElement>('[data-key="showBearing"] .props__origin')!
     expect(bool.textContent).toBe('réglé par vous · d’usine : Non')
@@ -1349,8 +1349,8 @@ describe('rétablir la valeur d’usine d’un réglage que le pilote a changé'
 
     // Les deux valeurs en présence, à l'écran et dans la langue du pilote.
     const note = line.querySelector('.props__restore-note')!.textContent!
-    expect(note).toContain('« Aucun » d’usine')
-    expect(note).toContain('« Arc » dans ce fichier')
+    expect(note).toContain('« Aucun » d’usine')
+    expect(note).toContain('« Arc » dans ce fichier')
     expect(note).toContain('change ce que fait l’appareil en vol')
   })
 
@@ -1441,7 +1441,7 @@ describe('rétablir la valeur d’usine d’un réglage que le pilote a changé'
   it('l’infobulle dit ce qui sépare ce geste de « Définir cette valeur »', () => {
     const panel = renderProperties({ form: buildPropertyForm(compass(document())) })
     const title = restoreButton(panel, 'windStyle').title
-    expect(title).toContain('Écrit « windStyle » : Aucun dans le fichier, à la place de Arc.')
+    expect(title).toContain('Écrit « windStyle » : Aucun dans le fichier, à la place de Arc.')
     expect(title).toContain('celui-là laisse l’appareil se comporter exactement comme aujourd’hui, celui-ci non')
   })
 })

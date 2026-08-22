@@ -316,20 +316,20 @@ const app = {
    * d'erreur ne se dit pas à voix haute et ne se cherche pas ; les deux noms de menu, eux,
    * se lisent sur l'appareil.
    */
-  'landing.stepDeviceText': '« Réglages », puis « Exporter la configuration ». Le fichier ' +
+  'landing.stepDeviceText': '« Réglages », puis « Exporter la configuration ». Le fichier ' +
     'atterrit sur la carte SD.',
   'landing.stepHereTitle': 'Ici',
-  'landing.stepHereText': 'Les pages apparaissent numérotées dans l’ordre où « page ' +
-    'suivante » les fait défiler en vol.',
+  'landing.stepHereText': 'Les pages apparaissent numérotées dans l’ordre où « page ' +
+    'suivante » les fait défiler en vol.',
   'landing.stepEditTitle': 'Modifier',
   'landing.stepEditText': 'Déplacez un gadget au doigt ou à la souris, changez sa taille, ' +
     'ajoutez-en d’autres : la page se redessine à sa taille réelle sous vos yeux.',
   'landing.stepKnowTitle': 'À savoir',
-  'landing.stepKnowText': 'C’est le réglage « navigations » d’une page, et non son type, qui ' +
+  'landing.stepKnowText': 'C’est le réglage « navigations » d’une page, et non son type, qui ' +
     'décide des moments où l’appareil la montre.',
 
   'landing.returning': 'Déjà venu ? Les configurations que vous avez rangées sont dans le ' +
-    'menu « Fichier », en haut à droite, sous « Bibliothèque » : elles ne sont jamais ' +
+    'menu « Fichier », en haut à droite, sous « Bibliothèque » : elles ne sont jamais ' +
     'parties de ce navigateur.',
   /**
    * L'accueil est l'écran de quelqu'un qui n'a rien ouvert : soit il sait quoi faire et
@@ -458,7 +458,7 @@ const app = {
     'peut pas en créer un : il n’invente rien que le fichier ne porte déjà.',
 
   'app.managePagesLead': 'Insérer, dupliquer, supprimer, réordonner. Chaque opération est ' +
-    'enregistrée : « Annuler » la défait comme le reste. La classe d’une page, elle, n’est ' +
+    'enregistrée : « Annuler » la défait comme le reste. La classe d’une page, elle, n’est ' +
     'pas proposée à la modification — XCTrack la fixe à la création, et l’effet d’un ' +
     'changement après coup n’a pas été vérifié sur l’appareil.',
 
@@ -525,14 +525,14 @@ const app = {
   'app.openFailedMessage': 'Cet outil n’a rien su en tirer. Le fichier, lui, n’a pas été modifié.',
   'app.openFailedHint': 'Vérifiez qu’il s’agit bien d’un export XCTrack (.xcfg ou .xczfg). ' +
     'Vous pouvez déposer un autre fichier n’importe où sur cette page, ou le choisir dans le ' +
-    'menu « Fichier », en haut à droite.',
+    'menu « Fichier », en haut à droite.',
 
   'app.unreadableTitle': 'Ce fichier n’a pas pu être lu',
   'app.unreadableMessage': 'Vérifiez que c’est bien le fichier .xcfg ou .xczfg produit sur ' +
-    'l’instrument par « Réglages », puis « Exporter la configuration », et qu’il est entier.',
-  'app.unreadableHint': 'Ses octets sont conservés intacts : « Enregistrer une copie » vous ' +
+    'l’instrument par « Réglages », puis « Exporter la configuration », et qu’il est entier.',
+  'app.unreadableHint': 'Ses octets sont conservés intacts : « Enregistrer une copie » vous ' +
     'le rend tel qu’il est entré, sans la moindre réécriture.',
-  'app.unreadableIncoming': '« {incoming} » n’a rien donné d’exploitable. « {kept} » reste ouvert, et tout ce que vous y avez changé est toujours là.',
+  'app.unreadableIncoming': '« {incoming} » n’a rien donné d’exploitable. « {kept} » reste ouvert, et tout ce que vous y avez changé est toujours là.',
 
   /* ------------------------------------------ remplacer un document non enregistré */
 
@@ -543,12 +543,12 @@ const app = {
    * „ … “ en allemand, ‘ … ’ en néerlandais, « … » en espagnol.
    */
   'app.unsavedTitle': 'Vos modifications ne sont pas enregistrées',
-  'app.replaceMessage': 'Ouvrir « {incoming} » referme « {kept} » et tout ce que vous venez d’y changer. Cet outil ne garde rien de lui-même : ce qui n’est pas enregistré est perdu.',
-  'app.lastChange': 'Dernier changement en date : « {change} ».',
-  'app.replaceHint': 'Pour ne rien perdre : gardez vos modifications, puis « Enregistrer les ' +
-    'modifications » en haut de la page — ou rangez cette configuration dans la bibliothèque.',
+  'app.replaceMessage': 'Ouvrir « {incoming} » referme « {kept} » et tout ce que vous venez d’y changer. Cet outil ne garde rien de lui-même : ce qui n’est pas enregistré est perdu.',
+  'app.lastChange': 'Dernier changement en date : « {change} ».',
+  'app.replaceHint': 'Pour ne rien perdre : gardez vos modifications, puis « Enregistrer les ' +
+    'modifications » en haut de la page — ou rangez cette configuration dans la bibliothèque.',
   /** Nommé pour ce qu'il fait : « Ouvrir quand même » cacherait la perte derrière une concession. */
-  'app.replaceAndLose': 'Ouvrir « {incoming} » et les perdre',
+  'app.replaceAndLose': 'Ouvrir « {incoming} » et les perdre',
   'app.keepChanges': 'Garder mes modifications'
 } as const
 

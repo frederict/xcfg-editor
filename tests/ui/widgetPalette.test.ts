@@ -893,8 +893,8 @@ describe('les deux chemins sont distingués', () => {
     const duplicated = buildWidget(entryFor(list, 'WCompass'), bounds)
     const created = buildWidget(entryFor(list, 'WAirHumidity'), bounds)
 
-    expect(duplicated.description).toBe('Ajouter « Boussole et vent » — copie d’un gadget de cette page')
-    expect(created.description).toBe("Ajouter « Humidité de l'air » — gadget neuf, réglages laissés à XCTrack")
+    expect(duplicated.description).toBe('Ajouter « Boussole et vent » — copie d’un gadget de cette page')
+    expect(created.description).toBe("Ajouter « Humidité de l'air » — gadget neuf, réglages laissés à XCTrack")
     expect(duplicated.description).not.toBe(created.description)
   })
 

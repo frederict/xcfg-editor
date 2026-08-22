@@ -124,7 +124,7 @@ const widgets = {
     'qui ne bougera plus le jour où une mise à jour de XCTrack changera cette valeur d’usine.',
 
   'properties.appliedValue':
-    'Ce réglage n’est pas dans le fichier : XCTrack appliquera « {value} », sa valeur d’usine. Ce n’est pas la même chose qu’une valeur réglée à cette valeur.',
+    'Ce réglage n’est pas dans le fichier : XCTrack appliquera « {value} », sa valeur d’usine. Ce n’est pas la même chose qu’une valeur réglée à cette valeur.',
 
   'properties.compositeFactoryValue': 'valeur d’usine composée',
   'properties.compositeFactoryValueHelp':
@@ -138,7 +138,7 @@ const widgets = {
   /** `{label}` est le libellé de XCTrack, jamais traduit. */
   'properties.setValueAria': 'Définir {label} dans le fichier',
   'properties.setValueHelp':
-    'Écrit « {key} » : {value} dans le fichier.\n\nVotre appareil se comporte déjà ainsi aujourd’hui — écrire la valeur ne change donc rien à ce qu’il fait maintenant. Ce que ça change est pour plus tard : tant que la ligne est absente, l’appareil suit la valeur d’usine de la version de XCTrack installée, et une mise à jour qui la change changera votre réglage sans rien vous demander. Une fois écrite, la valeur est figée : elle restera celle-là.',
+    'Écrit « {key} » : {value} dans le fichier.\n\nVotre appareil se comporte déjà ainsi aujourd’hui — écrire la valeur ne change donc rien à ce qu’il fait maintenant. Ce que ça change est pour plus tard : tant que la ligne est absente, l’appareil suit la valeur d’usine de la version de XCTrack installée, et une mise à jour qui la change changera votre réglage sans rien vous demander. Une fois écrite, la valeur est figée : elle restera celle-là.',
   'properties.setCaveatOtherVersion':
     'Cette valeur d’usine a été relevée sur XCTrack {version}, qui n’est pas la version d’où vient ce fichier : vérifiez que c’est bien la valeur à figer.',
   'properties.setCaveatUnknownVersion':
@@ -161,7 +161,7 @@ const widgets = {
     'Cette valeur diffère de ce que XCTrack écrit sur un gadget neuf de ce type.',
   /** `{value}` est ici la valeur **telle qu'elle s'écrit dans le fichier**. */
   'properties.setByYouHelpValue':
-    'Sur un gadget neuf de ce type, XCTrack écrit « {value} ».',
+    'Sur un gadget neuf de ce type, XCTrack écrit « {value} ».',
 
   'properties.factoryValue': 'valeur d’usine',
   'properties.factoryValueHelp':
@@ -182,9 +182,9 @@ const widgets = {
   'properties.restoreFactoryValue': 'Rétablir la valeur d’usine',
   'properties.restoreAria': 'Rétablir {label} à sa valeur d’usine',
   'properties.restoreHelp':
-    'Écrit « {path} » : {factory} dans le fichier, à la place de {current}.\n\nCe geste-ci n’est pas comme « Définir cette valeur » en fin de panneau : celui-là laisse l’appareil se comporter exactement comme aujourd’hui, celui-ci non. Il remplace un réglage que vous avez choisi par celui que XCTrack pose sur un gadget neuf de ce type.',
+    'Écrit « {path} » : {factory} dans le fichier, à la place de {current}.\n\nCe geste-ci n’est pas comme « Définir cette valeur » en fin de panneau : celui-là laisse l’appareil se comporter exactement comme aujourd’hui, celui-ci non. Il remplace un réglage que vous avez choisi par celui que XCTrack pose sur un gadget neuf de ce type.',
   'properties.restoreNote':
-    '« {factory} » d’usine, « {current} » dans ce fichier. Rétablir change ce que fait l’appareil en vol.',
+    '« {factory} » d’usine, « {current} » dans ce fichier. Rétablir change ce que fait l’appareil en vol.',
   'properties.restoreCaveatOtherVersion':
     'Cette valeur d’usine a été relevée sur XCTrack {version}, qui n’est pas la version d’où vient ce fichier : vérifiez que c’est bien celle à rétablir.',
   'properties.restoreCaveatUnknownVersion':
@@ -198,7 +198,7 @@ const widgets = {
    * avait été faite. C'est la **commande** — case, menu, champ — qui a été devinée.
    */
   'properties.outOfCatalogSettingHelp':
-    '« {path} » n’est pas décrit par le catalogue : cet outil devine la commande d’après le type de la valeur.',
+    '« {path} » n’est pas décrit par le catalogue : cet outil devine la commande d’après le type de la valeur.',
   'properties.helpAria': 'Aide sur ce réglage',
   'properties.readOnlyValue': 'Valeur non modifiable ici ; elle est conservée telle quelle.',
 
@@ -317,9 +317,9 @@ const widgets = {
   /* ------------------------------------------ la phrase de l'historique d'annulation */
 
   /** `{name}` est le libellé de XCTrack : il suit l'axe `labels`. */
-  'palette.addCopyFromPage': 'Ajouter « {name} » — copie d’un gadget de cette page',
-  'palette.addCopyFromElsewhere': 'Ajouter « {name} » — copie d’un gadget d’une autre page',
-  'palette.addNew': 'Ajouter « {name} » — gadget neuf, réglages laissés à XCTrack',
+  'palette.addCopyFromPage': 'Ajouter « {name} » — copie d’un gadget de cette page',
+  'palette.addCopyFromElsewhere': 'Ajouter « {name} » — copie d’un gadget d’une autre page',
+  'palette.addNew': 'Ajouter « {name} » — gadget neuf, réglages laissés à XCTrack',
 
   /* ============================================ widgetList.ts — les gadgets de la page */
 

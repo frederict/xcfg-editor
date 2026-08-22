@@ -60,8 +60,15 @@ français, puis traduit. C'est la règle du dépôt, sans exception.
   **phrase entière** : l'allemand y change le verbe, l'espagnol met le verbe en tête.
 - **Les repères sont nommés** — `{count}`, `{name}`, `{total}` — jamais positionnels,
   jamais concaténés. L'ordre des mots change d'une langue à l'autre.
-- **La ponctuation appartient au message**, guillemets compris : « … » en français,
-  “ … ” en anglais, „ … “ en allemand, ‘ … ’ en néerlandais, « … » en espagnol.
+- **La ponctuation appartient au message**, guillemets compris : « … » en français,
+  “…” en anglais, „…“ en allemand, ‘…’ en néerlandais, «…» en espagnol.
+  ⚠ **Le français seul écarte les siens, et seulement d'une espace INSÉCABLE** — la fine,
+  U+202F, celle qu'`Intl` pose déjà devant les unités (« 512 o »). Une espace ordinaire
+  laisse le navigateur couper la ligne entre le mot et son guillemet, et le pilote voit le
+  chevron fermant tomber seul en tête de la ligne suivante : c'est arrivé sur l'accueil,
+  dans 102 messages à la fois. Les quatre autres langues collent leurs guillemets au
+  mot ; y mettre une espace serait la faute inverse. `tests/i18n/catalog.test.ts` refuse
+  les deux, et `tests/docs/coherence.test.ts` fait de même pour les README et les manuels.
 - **Un `number` est mis en forme par la langue, une `string` est recopiée telle quelle.**
   C'est ce qui protège les identifiants : `versionCode`, `1.0.3-beta`, un rang lu dans une
   clé du fichier se passent en **`string`** — « 100 030 » ne se trouve dans aucun fichier

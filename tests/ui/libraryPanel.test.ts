@@ -282,14 +282,14 @@ describe('libraryPanel — la carte d’identité ne mélange pas le lu et le su
 
   it('sans catalogue, le drapeau Pro est dit inconnu — jamais « aucun »', async () => {
     const sansCatalogue = identityCard(tr, await identityOf(BACKUP, 'backup.xcfg'))
-    const pro = sansCatalogue.assumed.find((fact) => fact.label === 'Gadgets « Pro »')
+    const pro = sansCatalogue.assumed.find((fact) => fact.label === 'Gadgets « Pro »')
     expect(pro?.value).toContain('Inconnu')
     expect(pro?.note).toContain('On ne devine pas')
 
     const avecCatalogue = identityCard(tr,
       await identityOf(BACKUP, 'backup.xcfg', (shortName) => shortName === 'WCompMap')
     )
-    const dit = avecCatalogue.assumed.find((fact) => fact.label === 'Gadgets « Pro »')
+    const dit = avecCatalogue.assumed.find((fact) => fact.label === 'Gadgets « Pro »')
     expect(dit?.value).toContain('Carte de la manche')
     expect(dit?.note).toContain('APK')
   })
@@ -999,7 +999,7 @@ describe('libraryPanel — supprimer nomme ce qui va être perdu', () => {
     const view = currentView()
     // Le titre nomme désormais l'entrée : en cessant d'être une modale, la confirmation a
     // gagné le nom dans son titre plutôt que de le laisser au seul corps du texte.
-    expect(viewTitle()).toBe('Supprimer « Essai audit » ?')
+    expect(viewTitle()).toBe('Supprimer « Essai audit » ?')
     expect(text(view)).toContain('Essai audit')
     expect(text(view)).toContain(tr.format.byteSize(PAGES.byteLength))
     expect(text(view)).toContain('n’a pas de corbeille')
