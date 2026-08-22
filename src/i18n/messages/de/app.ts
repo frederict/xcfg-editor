@@ -347,6 +347,8 @@ const app: DomainCatalog<'app'> = {
     'dort geschieht. Liegt sie nicht dort, erlauben Sie Downloads für diese Website und ' +
     'beginnen Sie von vorn.',
   'app.exportReceiptDismiss': 'Diese Speicherbestätigung schließen',
+  'app.exportWritten': '„{name}“ ({size}) — Ihr Browser hat das Schreiben bestätigt, an der von Ihnen gewählten Stelle.',
+  'app.exportCancelled': 'Speichern abgebrochen: Das Fenster wurde geschlossen, ohne etwas zu schreiben, und Ihre Konfiguration ist unverändert.',
 
   'app.exportFailedTitle': 'Die Datei konnte nicht erzeugt werden',
   'app.exportFailedMessage': 'Aus diesem Werkzeug ist nichts herausgekommen, und Ihre ' +

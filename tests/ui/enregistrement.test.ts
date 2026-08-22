@@ -70,6 +70,7 @@ import nlLabels from '../../src/catalog/preferenceCatalog/nl.json'
 const here = path.dirname(fileURLToPath(import.meta.url))
 const main = readFileSync(path.join(here, '../..', 'src/ui/main.ts'), 'utf8')
 const appCss = readFileSync(path.join(here, '../..', 'src/ui/app.css'), 'utf8')
+const delivery = readFileSync(path.join(here, '../..', 'src/ui/fileDelivery.ts'), 'utf8')
 
 const MESSAGES: Readonly<Record<UiLanguage, Record<string, unknown>>> = { fr, de, en, es, nl }
 
@@ -197,13 +198,151 @@ describe('le reçu d’enregistrement — l’échec se dit', () => {
     // Relevé à l'horloge : `link.click()` et `URL.revokeObjectURL(url)` portaient la MÊME
     // valeur de `performance.now()`. Le navigateur n'a alors aucune garantie d'avoir fini
     // de lire le `Blob`. La révocation attend désormais la livraison suivante.
-    expect(main).not.toMatch(/link\.click\(\)\s*\n\s*URL\.revokeObjectURL\(url\)/)
-    expect(main).toContain('if (deliveredUrl !== undefined) URL.revokeObjectURL(deliveredUrl)')
+    //
+    // ⚠ Le chemin classique a déménagé dans `fileDelivery.ts` le 22 août au soir, sans
+    // qu'un mot en soit rejugé : c'est là qu'il faut désormais aller le lire. `main.ts`,
+    // lui, ne doit plus en porter la moindre trace — deux fabriques de lien objet
+    // dériveraient l'une de l'autre.
+    expect(delivery).not.toMatch(/link\.click\(\)\s*\n\s*URL\.revokeObjectURL\(url\)/)
+    expect(delivery).toContain('if (deliveredUrl !== undefined) URL.revokeObjectURL(deliveredUrl)')
+    expect(main).not.toContain('URL.createObjectURL')
+    expect(main).not.toContain('link.download')
   })
 
   it('la livraison ne touche toujours pas aux octets — la fidélité tient', () => {
     // Le reçu s'ajoute au chemin d'export ; il ne le réécrit pas.
     expect(main).toMatch(/produced \?\? await exportContainer\(current\.container\)/)
+  })
+})
+
+/**
+ * # Deux chemins, deux phrases — et une seule d'entre elles peut parler d'écriture
+ *
+ * `showSaveFilePicker` change ce que l'outil a le droit de dire. Mesuré le 22 août 2026 au
+ * soir, Chrome 151 sur macOS, `http://localhost` (contexte sécurisé) : le fichier cible
+ * reste à **0 octet** après `write()` et porte les **12 octets attendus** après `close()`,
+ * relus hors du navigateur par `xxd` puis `shasum -a 256`. C'est `close()`, et lui seul,
+ * qui écrit.
+ *
+ * Donc, et pas un mot de plus :
+ *
+ * - **là où `close()` a rendu la main**, l'outil peut dire l'écriture. La phrase de
+ *   prudence — « À retrouver dans vos téléchargements, cette page ne voit pas ce qui s'y
+ *   passe » — y devient fausse **deux fois** : le fichier n'est pas dans les
+ *   téléchargements, et la page n'est plus aveugle. Elle doit disparaître ;
+ * - **partout ailleurs** — Firefox, Safari, tout le mobile, une activation perdue, une
+ *   écriture qui rejette — c'est le chemin classique, inchangé, et sa phrase reste ;
+ * - **une boîte refermée n'est ni l'un ni l'autre.** « Annulé » n'est pas « échoué » : un
+ *   pilote qui referme une boîte n'a subi aucune panne, et rien n'a même été fabriqué.
+ */
+describe('le reçu d’enregistrement — ce que chacun des deux chemins autorise à dire', () => {
+  const rendering = main.slice(
+    main.indexOf('function renderReceipt(): void'),
+    main.indexOf('function clearReceipt(): void')
+  )
+
+  it('sert deux phrases distinctes, choisies sur l’issue et non sur autre chose', () => {
+    expect(rendering).toContain("lastReceipt.kind === 'written' ? 'app.exportWritten' : 'app.exportHandedOver'")
+  })
+
+  it('ne dit où regarder QUE là où l’outil n’a pas d’accusé', () => {
+    // La phrase du repli est gardée par un `if` sur l'issue : sans lui elle reparaîtrait
+    // sous un reçu d'écriture confirmée, et enverrait le pilote chercher dans un dossier
+    // où son fichier n'est pas.
+    expect(rendering).toContain("if (lastReceipt.kind === 'handedOver') {")
+    const hint = rendering.indexOf("tr.t('app.exportWhereToLook')")
+    expect(hint).toBeGreaterThan(rendering.indexOf("if (lastReceipt.kind === 'handedOver') {"))
+  })
+
+  it('nomme le fichier et sa taille sur le chemin confirmé aussi, dans les cinq langues', () => {
+    for (const language of UI_LANGUAGES) {
+      const text = said(language, 'app.exportWritten')
+      expect(text, `${language} / app.exportWritten`).toContain('{name}')
+      expect(text, `${language} / app.exportWritten`).toContain('{size}')
+    }
+  })
+
+  it('dit une ÉCRITURE confirmée là, et une simple demande ailleurs', () => {
+    // Le verbe sépare les deux reçus. Celui du chemin confirmé dit ce que le navigateur a
+    // confirmé ; il ne doit surtout pas reprendre le verbe du repli, qui n'affirme qu'une
+    // demande — les deux phrases se ressembleraient et l'accusé ne vaudrait plus rien.
+    const CONFIRMED: Readonly<Record<UiLanguage, string>> = {
+      fr: 'confirmé', en: 'confirmed', de: 'bestätigt', es: 'confirmado', nl: 'bevestigd'
+    }
+    const REQUESTED: Readonly<Record<UiLanguage, string>> = {
+      fr: 'demandé', en: 'asked', de: 'gebeten', es: 'pedido', nl: 'gevraagd'
+    }
+    for (const language of UI_LANGUAGES) {
+      const written = said(language, 'app.exportWritten').toLowerCase()
+      expect(written, `${language} : le reçu confirmé dit une écriture confirmée`)
+        .toContain(CONFIRMED[language])
+      expect(written, `${language} : il ne reprend pas le verbe du repli`)
+        .not.toContain(REQUESTED[language])
+      expect(said(language, 'app.exportHandedOver').toLowerCase(), `${language}`)
+        .not.toContain(CONFIRMED[language])
+    }
+  })
+
+  it('n’affirme rien de ce que le fichier devient après l’écriture', () => {
+    // `close()` prouve que le navigateur a écrit ces octets-là à cet endroit-là. Il ne
+    // prouve rien d'un dossier synchronisé, d'une clé retirée, d'un antivirus. Les mots
+    // qui promettraient la conservation n'ont donc rien à faire là.
+    const promising = ['sauvegard', 'conserv', 'en sécurité', 'à l’abri', 'définitiv']
+    const text = said('fr', 'app.exportWritten').toLowerCase()
+    for (const word of promising) expect(text, `« ${word} » promet trop`).not.toContain(word)
+  })
+})
+
+describe('le reçu d’enregistrement — « annulé » n’est pas « échoué »', () => {
+  it('emploie, dans les cinq langues, le mot de l’annulation', () => {
+    const CANCELLED: Readonly<Record<UiLanguage, string>> = {
+      fr: 'annulé', en: 'cancelled', de: 'abgebrochen', es: 'cancelado', nl: 'geannuleerd'
+    }
+    for (const language of UI_LANGUAGES) {
+      expect(said(language, 'app.exportCancelled').toLowerCase(), `${language}`)
+        .toContain(CANCELLED[language])
+    }
+  })
+
+  it('n’emprunte aucun mot de panne, dans aucune des cinq', () => {
+    // Un pilote qui referme la boîte n'a rien à réparer. Le mot « échec » l'enverrait
+    // chercher une panne qui n'existe pas, et lui apprendrait à se méfier d'un geste qui
+    // marche.
+    const BROKEN: Readonly<Record<UiLanguage, readonly string[]>> = {
+      fr: ['échec', 'échou', 'erreur', 'problème'],
+      en: ['fail', 'error', 'problem'],
+      de: ['fehlgeschlagen', 'fehler', 'problem'],
+      es: ['fallo', 'fallado', 'error', 'problema'],
+      nl: ['mislukt', 'fout', 'probleem']
+    }
+    for (const language of UI_LANGUAGES) {
+      const text = said(language, 'app.exportCancelled').toLowerCase()
+      for (const word of BROKEN[language]) {
+        expect(text, `${language} — « ${word} » dit une panne`).not.toContain(word)
+      }
+    }
+  })
+
+  it('ne renvoie le pilote nulle part : il n’y a rien à aller chercher', () => {
+    const rendering = main.slice(
+      main.indexOf('function renderReceipt(): void'),
+      main.indexOf('function clearReceipt(): void')
+    )
+    const cancelled = rendering.slice(
+      rendering.indexOf("if (lastReceipt.kind === 'cancelled') {"),
+      rendering.indexOf('} else {')
+    )
+    expect(cancelled).toContain("tr.t('app.exportCancelled')")
+    expect(cancelled).not.toContain('exportWhereToLook')
+  })
+
+  it('n’ouvre aucune boîte de problème : ce n’est pas un échec de fabrication', () => {
+    const delivering = main.slice(
+      main.indexOf('async function deliver('),
+      main.indexOf('function tellDeliveryFailed(')
+    )
+    expect(delivering).not.toContain('tellProblem')
+    expect(delivering).not.toContain('tellDeliveryFailed')
   })
 })
 

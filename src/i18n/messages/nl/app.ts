@@ -343,6 +343,8 @@ const app: DomainCatalog<'app'> = {
   'app.exportWhereToLook': 'Te vinden bij uw downloads — deze pagina ziet niet wat daar ' +
     'gebeurt. Staat het er niet bij, sta downloads toe voor deze site en begin opnieuw.',
   'app.exportReceiptDismiss': 'Deze downloadbevestiging sluiten',
+  'app.exportWritten': '‘{name}’ ({size}) — uw browser heeft het wegschrijven bevestigd, op de plek die u hebt gekozen.',
+  'app.exportCancelled': 'Opslaan geannuleerd: het venster is gesloten zonder iets weg te schrijven, en uw configuratie is niet gewijzigd.',
 
   'app.exportFailedTitle': 'Het bestand kon niet worden gemaakt',
   'app.exportFailedMessage': 'Er is niets uit dit gereedschap gekomen, en uw configuratie is ' +

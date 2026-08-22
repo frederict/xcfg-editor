@@ -336,6 +336,8 @@ const app: DomainCatalog<'app'> = {
   'app.exportWhereToLook': 'Búsquelo entre sus descargas: esta página no ve lo que ocurre ' +
     'allí. Si no está, autorice las descargas para este sitio y vuelva a empezar.',
   'app.exportReceiptDismiss': 'Cerrar este recibo de guardado',
+  'app.exportWritten': '«{name}» ({size}) — su navegador ha confirmado la escritura, en el lugar que usted eligió.',
+  'app.exportCancelled': 'Guardado cancelado: el cuadro se ha cerrado sin escribir nada, y su configuración no se ha movido.',
 
   'app.exportFailedTitle': 'El archivo no se ha podido fabricar',
   'app.exportFailedMessage': 'De esta herramienta no ha salido nada, y su configuración no se ' +

@@ -21,6 +21,7 @@ import {
 import { readWidget, type Widget } from '../model/widget'
 import { renderPage } from '../render/canvas'
 import { buildDeviceSelector } from './deviceSelector'
+import { deliverBytes, type Delivery } from './fileDelivery'
 import { fileNameParts } from './fileNameParts'
 import {
   createEditor, currentBounds,
@@ -932,24 +933,13 @@ function installChromeProse(tr: Translator): void {
 
 /* ------------------------------------------------- le reçu : ce qui vient d'être remis */
 
-/** Ce que le dernier enregistrement a produit, gardé pour pouvoir le redire tel quel. */
-interface DeliveryReceipt {
-  readonly fileName: string
-  readonly byteLength: number
-}
-
-let lastReceipt: DeliveryReceipt | undefined
-
 /**
- * L'URL du dernier fichier remis, gardée en vie.
+ * Ce que le dernier enregistrement a donné, gardé pour pouvoir le redire tel quel.
  *
- * L'ancien code révoquait l'URL **dans la milliseconde** qui suivait `link.click()` —
- * relevé à l'horloge : même valeur de `performance.now()` pour le clic et la révocation.
- * Le navigateur n'a alors aucune garantie d'avoir fini de lire le `Blob`. La révocation
- * attend donc l'enregistrement suivant : un seul objet vit à la fois, et plus rien ne
- * court après le clic.
+ * C'est le type que rend `deliverBytes` (`fileDelivery.ts`), sans traduction : le reçu dit
+ * ce qui s'est **passé**, et les trois issues ne se disent pas de la même façon.
  */
-let deliveredUrl: string | undefined
+let lastReceipt: Delivery | undefined
 
 function renderReceipt(): void {
   receipt.textContent = ''
@@ -960,17 +950,40 @@ function renderReceipt(): void {
   const tr = translator()
   receipt.hidden = false
   const said = el('div', 'app-bar__receiptSaid')
-  said.append(el('p', 'app-bar__receiptText', tr.t('app.exportHandedOver', {
-    name: lastReceipt.fileName,
-    size: tr.format.byteSize(lastReceipt.byteLength)
-  })))
-  // ⚠ Elle paraît à CHAQUE enregistrement, le premier compris. Elle était réservée au
-  // deuxième, sur la foi d'un « le premier passe toujours » que le contre-essai a démenti :
-  // trois enregistrements, zéro fichier, et le pilote qui n'en fait qu'un n'aurait rien lu.
-  // Ce n'est pas pour autant un avertissement — voir `app.exportWhereToLook` : elle dit où
-  // regarder, pas qu'il y a un problème.
-  said.append(el('p', 'app-bar__receiptHint', tr.t('app.exportWhereToLook')))
-  receipt.append(said)
+  if (lastReceipt.kind === 'cancelled') {
+    /*
+     * ⚠ **Annulé n'est pas échoué.** Un pilote qui referme la boîte du système n'a subi
+     * aucune panne : rien n'a même été fabriqué, puisque `deliverBytes` n'appelle
+     * `bytes()` qu'après. La phrase ne prend donc ni le ton d'une alerte, ni le mot
+     * « échec », et le reçu reste ce qu'il est — un état, `role="status"`.
+     *
+     * Et pas d'indication d'où regarder : il n'y a rien à aller chercher.
+     */
+    said.append(el('p', 'app-bar__receiptText', tr.t('app.exportCancelled')))
+    receipt.append(said)
+  } else {
+    // Deux phrases pour deux chemins, et c'est tout ce qui les sépare : l'un a un accusé
+    // d'écriture, l'autre n'a qu'une demande adressée au navigateur. Voir `fileDelivery.ts`
+    // pour ce que chacun établit.
+    const key = lastReceipt.kind === 'written' ? 'app.exportWritten' : 'app.exportHandedOver'
+    said.append(el('p', 'app-bar__receiptText', tr.t(key, {
+      name: lastReceipt.fileName,
+      size: tr.format.byteSize(lastReceipt.byteLength)
+    })))
+    // ⚠ Elle paraît à CHAQUE enregistrement remis au navigateur, le premier compris. Elle
+    // était réservée au deuxième, sur la foi d'un « le premier passe toujours » que le
+    // contre-essai a démenti : trois enregistrements, zéro fichier, et le pilote qui n'en
+    // fait qu'un n'aurait rien lu. Ce n'est pas pour autant un avertissement — voir
+    // `app.exportWhereToLook` : elle dit où regarder, pas qu'il y a un problème.
+    //
+    // ⚠ Et elle DISPARAÎT sur le chemin de l'écriture confirmée : « cette page ne voit pas
+    // ce qui s'y passe » y serait faux, et le fichier n'est pas dans les téléchargements
+    // mais là où le pilote l'a posé.
+    if (lastReceipt.kind === 'handedOver') {
+      said.append(el('p', 'app-bar__receiptHint', tr.t('app.exportWhereToLook')))
+    }
+    receipt.append(said)
+  }
   const dismiss = el('button', 'btn btn--ghost app-bar__receiptClose', tr.t('app.close'))
   dismiss.type = 'button'
   dismiss.setAttribute('aria-label', tr.t('app.exportReceiptDismiss'))
@@ -3943,11 +3956,24 @@ function sharingSource(current: Session): SharingSource {
  * exactement là que se tient la fidélité à l'octet près, et c'est pourquoi ce
  * `?? await exportContainer(...)` ne doit jamais être remplacé par une sérialisation.
  *
- * Ce qui a changé le 22 août : la fonction **rend compte**. Ce qu'elle a fabriqué et remis
- * au navigateur passe dans le reçu de la barre de tête ; ce qui échoue chez elle — une
- * sérialisation, une archive, un `Blob` trop gros — remonte à l'appelant, qui le dit.
+ * Ce qui a changé le 22 août au matin : la fonction **rend compte**. Ce qu'elle a fabriqué
+ * et remis au navigateur passe dans le reçu de la barre de tête ; ce qui échoue chez elle —
+ * une sérialisation, une archive, un `Blob` trop gros — remonte à l'appelant, qui le dit.
  * Auparavant l'appel était un `void` sans `catch` : un échec de fabrication ne produisait
  * qu'un rejet non traité dans la console, et le pilote voyait la même chose qu'un succès.
+ *
+ * Ce qui a changé le 22 août au soir : la remise elle-même passe par `deliverBytes`
+ * (`fileDelivery.ts`), qui essaie d'abord de faire **écrire** le fichier là où le pilote le
+ * désigne. Trois conséquences se voient ici :
+ *
+ * 1. **Les octets sont fabriqués en dernier**, dans un `bytes()` que `deliverBytes`
+ *    n'appelle qu'une fois la boîte passée. Un pilote qui referme la boîte ne fait
+ *    sérialiser ni archiver quoi que ce soit — et l'appel à l'API tombe dans l'activation
+ *    du clic, qu'une longue sérialisation aurait mangée.
+ * 2. **Une annulation n'est pas une réussite** : `savedRevision` ne bouge pas, et le
+ *    navigateur continue donc de retenir le pilote au moment de quitter l'onglet.
+ * 3. `produced ?? await exportContainer(current.container)` **n'a pas bougé d'un mot** :
+ *    c'est là que se tient la fidélité à l'octet près, et rien de ce chantier n'y touche.
  */
 async function deliver(
   current: Session, produced: Uint8Array | undefined, fileName: string
@@ -3955,23 +3981,16 @@ async function deliver(
   // Le pas en cours de regroupement part avec le fichier : il doit être dans l'historique
   // avant qu'on note où en était le document au moment de l'écriture.
   flushRecord()
-  const bytes = produced ?? await exportContainer(current.container)
-  // Copie dans un ArrayBuffer simple : `Blob` n'accepte pas une vue dont le tampon
-  // pourrait être partagé, et le conteneur ne garantit rien de son origine.
-  const buffer = new ArrayBuffer(bytes.byteLength)
-  new Uint8Array(buffer).set(bytes)
-  const url = URL.createObjectURL(new Blob([buffer], { type: 'application/octet-stream' }))
-  // La précédente, et elle seule : celle-ci vient d'être remise au navigateur — voir
-  // `deliveredUrl`.
-  if (deliveredUrl !== undefined) URL.revokeObjectURL(deliveredUrl)
-  deliveredUrl = url
-  const link = el('a')
-  link.href = url
-  link.download = fileName
-  link.click()
-  // Voir `savedRevision` : le fichier entier, et lui seul, met le travail à l'abri.
-  if (produced === undefined) savedRevision = current.history.revision()
-  lastReceipt = { fileName, byteLength: bytes.byteLength }
+  const delivery = await deliverBytes({
+    fileName,
+    bytes: async () => produced ?? await exportContainer(current.container)
+  })
+  // Voir `savedRevision` : le fichier entier, et lui seul, met le travail à l'abri — et
+  // seulement s'il est sorti. Une boîte refermée ne met rien à l'abri.
+  if (produced === undefined && delivery.kind !== 'cancelled') {
+    savedRevision = current.history.revision()
+  }
+  lastReceipt = delivery
   receiptShownAt = performance.now()
   receiptView = viewSignature()
   renderReceipt()
@@ -3983,6 +4002,10 @@ async function deliver(
  * C'est le seul des deux échecs que cet outil puisse **constater**. L'autre — le
  * navigateur qui refuse le téléchargement — ne lui est jamais rapporté ; le reçu s'en
  * charge à sa façon, en disant à chaque fois où le pilote peut le constater lui-même.
+ *
+ * ⚠ Elle ne dit **pas** l'annulation, et ne doit jamais le faire : un pilote qui referme
+ * la boîte du système n'a subi aucune panne, et une boîte d'erreur le lui ferait croire.
+ * L'annulation ressort par `deliverBytes` comme une issue ordinaire, dite par le reçu.
  */
 function tellDeliveryFailed(error: unknown): void {
   const tr = translator()

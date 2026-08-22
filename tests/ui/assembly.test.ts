@@ -627,7 +627,25 @@ describe('assemblage — retenir à la fermeture, mais seulement s’il y a de q
    * un travail que le fichier produit ne porte pas.
    */
   it('seul un fichier entier met le travail à l’abri', () => {
-    expect(main).toContain('if (produced === undefined) savedRevision = current.history.revision()')
+    expect(main).toContain("if (produced === undefined && delivery.kind !== 'cancelled') {")
+    expect(main).toContain('savedRevision = current.history.revision()')
+  })
+
+  /*
+   * ⚠ **Et seulement s'il est sorti.** Depuis que la boîte du système peut être refermée
+   * par le pilote, « enregistrer » a une issue qui ne produit aucun fichier. La marquer à
+   * l'abri laisserait le navigateur le laisser partir sans un mot, sur un travail dont
+   * rien n'est sorti — le contraire exact de ce que `savedRevision` existe pour tenir.
+   */
+  it('une boîte refermée ne met rien à l’abri', () => {
+    const delivering = main.slice(
+      main.indexOf('async function deliver('),
+      main.indexOf('function tellDeliveryFailed(')
+    )
+    expect(delivering).toContain("delivery.kind !== 'cancelled'")
+    // Le repère n'est pas posé avant de savoir ce que la remise a donné.
+    expect(delivering.indexOf('const delivery = await deliverBytes('))
+      .toBeLessThan(delivering.indexOf('savedRevision = current.history.revision()'))
   })
 
   /*

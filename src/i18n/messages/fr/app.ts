@@ -644,6 +644,38 @@ const app = {
   'app.exportReceiptDismiss': 'Fermer ce reçu d’enregistrement',
 
   /**
+   * ⚠️ **L'autre reçu, et ce qu'il a de plus.**
+   *
+   * Servie quand le fichier est sorti par `showSaveFilePicker` : le pilote a désigné
+   * lui-même l'endroit, et le navigateur a **confirmé l'écriture**. Ce n'est pas une
+   * politesse de formulation, c'est ce qui est mesuré — le 22 août 2026, Chrome 151,
+   * macOS, contexte sécurisé : le fichier cible reste à 0 octet après `write()` et porte
+   * les 12 octets attendus après `close()`, relus hors du navigateur par `xxd` puis
+   * `shasum -a 256`. `close()` qui rend la main sans rejeter prouve donc l'écriture.
+   *
+   * ⚠ Ce qu'elle ne dit pas, et ne doit jamais dire : ce que le fichier devient ensuite.
+   * Un dossier synchronisé, une clé retirée, un antivirus — l'outil rapporte l'écriture,
+   * pas la conservation. Et la phrase d'à côté — « À retrouver dans vos téléchargements,
+   * cette page ne voit pas ce qui s'y passe » — **ne paraît pas ici** : elle serait fausse
+   * deux fois, sur le lieu comme sur l'aveuglement.
+   *
+   * Un seul littéral : deux repères nommés y vivent (`src/i18n/CLAUDE.md`, § 3).
+   */
+  'app.exportWritten': '« {name} » ({size}) — votre navigateur a confirmé l’écriture, à l’endroit que vous avez choisi.',
+  /**
+   * ⚠️ **« Annulé » n'est pas « échoué », et les deux mots ne se remplacent pas.**
+   *
+   * Un pilote qui referme la boîte du système n'a subi aucune panne : rien n'a même été
+   * fabriqué, puisque les octets ne sont sérialisés qu'après. La phrase dit donc ce qui
+   * s'est passé — la boîte s'est refermée, rien n'a été écrit — et se garde d'un mot
+   * d'échec, qui enverrait le pilote chercher une panne inexistante.
+   *
+   * ⚠ Elle ne dit pas non plus **qui** a annulé. Le navigateur lève le même `AbortError`
+   * quand il juge le fichier choisi trop sensible, et rien ne distingue les deux cas.
+   */
+  'app.exportCancelled': 'Enregistrement annulé : la boîte s’est refermée sans rien écrire, et votre configuration n’a pas bougé.',
+
+  /**
    * Le seul échec que cet outil puisse **constater** : la fabrication du fichier. Il
    * n'était dit nulle part — l'appel n'avait pas de `catch`, et un rejet non traité dans
    * la console ressemblait, pour le pilote, à un enregistrement réussi.

@@ -334,6 +334,8 @@ const app: DomainCatalog<'app'> = {
   'app.exportWhereToLook': 'Look for it among your downloads — this page cannot see what ' +
     'happens there. If it is not there, allow downloads for this site, then start again.',
   'app.exportReceiptDismiss': 'Dismiss this save receipt',
+  'app.exportWritten': '“{name}” ({size}) — your browser confirmed the write, in the place you chose.',
+  'app.exportCancelled': 'Saving cancelled: the dialog closed without writing anything, and your configuration has not moved.',
 
   'app.exportFailedTitle': 'The file could not be produced',
   'app.exportFailedMessage': 'Nothing came out of this tool, and your configuration has not ' +
