@@ -149,7 +149,31 @@ describe('fidélité à l’octet près', () => {
 
     setWidgetBounds(widget, { x1: before.x1 === 0 ? 1250 : 0 })
 
-    const difference = singleDifference(source, serializeJson(document))
+    const output = serializeJson(document)
+    /*
+     * ⚠️ **L'assertion sans laquelle tout ce qui suit est vrai d'un document intact.**
+     *
+     * `singleDifference` rend `{ before: '', after: '' }` quand les deux textes sont
+     * identiques, et `/^\d*$/` accepte la chaîne vide : les quatre contrôles du dessous
+     * étaient donc verts quand **rien n'avait bougé**. Mesuré en neutralisant l'écriture
+     * de `mutations.ts` (`if (false && next[field] !== current[field])`) :
+     * `setWidgetBounds` n'écrivait plus un octet, et ce test-ci — qui porte son nom —
+     * restait vert. (La propriété, elle, est tenue ailleurs : la même mutation tue
+     * vingt-deux tests de la suite. C'est l'intitulé qui promettait ce qu'il ne mesurait
+     * pas.)
+     *
+     * **Le correctif n'est pas de passer les motifs en `\d+`**, contrairement à ce qu'on
+     * pourrait croire, et c'est mesuré aussi : `singleDifference` compare un préfixe et un
+     * suffixe communs, et le suffixe **absorbe** un chiffre partagé. Ici `"X1": 0` devient
+     * `"X1": 1250` ; le `0` final de `1250` coïncide avec le `0` d'origine, si bien que la
+     * plage divergente vaut légitimement `'' → '125'`. `\d+` rendrait ce test rouge sur du
+     * code juste, ce qui est pire que le trou qu'il boucherait.
+     *
+     * Ce qui manquait n'est donc pas un `+`, c'est de dire que le texte a bougé.
+     */
+    expect(output).not.toBe(source)
+
+    const difference = singleDifference(source, output)
     // Une seule plage diverge, et elle tient dans les chiffres du nombre remplacé.
     expect(difference.before).toMatch(/^\d*$/)
     expect(difference.after).toMatch(/^\d*$/)
