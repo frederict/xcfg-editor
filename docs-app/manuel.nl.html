@@ -788,9 +788,10 @@
   <p>Elke opmerking draagt een van deze woorden, en het bepaalt wat u moet doen:</p>
 
   <ul>
-    <li><strong>verouderd</strong> — XCTrack leest deze instelling niet meer, en echte
-    bestanden die door die versie zijn geschreven dragen ze toch. Wij hebben dat zien
-    gebeuren, wij veronderstellen het niet. <em>Ze weghalen valt te verdedigen.</em></li>
+    <li><strong>verouderd</strong> — XCTrack schrijft deze instelling niet meer: een
+    andere is haar opgevolgd. Echte bestanden die door die versie zijn geschreven dragen ze
+    toch. Wij hebben dat zien gebeuren, wij veronderstellen het niet. <em>Ze weghalen valt
+    te verdedigen — maar niet altijd zonder gevolg, zie het volgende hoofdstuk.</em></li>
     <li><strong>blinde vlek</strong> — het gebrek ligt bij ons, niet in uw bestand: onze
     lezing van de versies heeft daar een gat. <em>Wij raken er niet aan.</em></li>
     <li><strong>onbekend</strong> — geen enkele versie die wij hebben kunnen lezen draagt deze
@@ -824,25 +825,41 @@
 
   <h3>Weghalen wat een oudere versie heeft achtergelaten</h3>
 
-  <p>XCTrack bewaart de instellingen die het niet meer kent: een back-up van dit jaar sleept
-  nog schakelaars van drie jaar geleden mee. De sectie
+  <p>XCTrack herleest een pagina pas wanneer het ze toont: een back-up van dit jaar sleept
+  nog schakelaars van drie jaar geleden mee, op pagina’s die uw toestel misschien nooit heeft
+  getoond. De sectie
   <span class="manual__ui">Weghalen wat een oudere versie heeft achtergelaten</span>, onder de
-  diagnose en alleen in bewerkmodus, stelt voor ze weg te halen. Valt er niets weg te halen,
-  dan verschijnt de sectie helemaal niet.</p>
+  diagnose en alleen in bewerkmodus, stelt voor ze weg te halen. Heeft ze niets te zeggen —
+  niets weg te halen en niets te melden — dan verschijnt ze helemaal niet.</p>
 
-  <p>Ze begint met u gerust te stellen, en dat is terecht: ‘Er is geen haast bij en er is
-  niets stuk: XCTrack sleept ze mee zonder ze te lezen, en ze laten staan verandert niets aan
-  uw pagina’s. Ze weghalen maakt het bestand lichter, meer niet.’</p>
+  <div class="manual__measured">
+    <p><strong>Verouderd betekent niet zonder gevolg, en dat is gemeten.</strong> Een
+    instelling van drie jaar geleden staat er nog omdat het toestel ze nog niet heeft gelezen.
+    Wanneer het dat doet, gooit het ze niet weg: het leidt er eerst zijn huidige instelling uit
+    af. <code>showWind</code> wordt <code>windStyle</code>,
+    <code>mapWidget_showTerrain</code> wordt de reliëfschaduw. Op een AIR³ 7.2 brengt het
+    weghalen van <code>showWind</code> op ja een kompas van de windpijl naar helemaal
+    niets.</p>
+    <p>Het gereedschap stelt een verwijdering dus alleen voor wanneer een heen en weer op het
+    toestel heeft getoond dat het <strong>hetzelfde</strong> afleidt, of de instelling er nu
+    staat of niet. De andere noemt het, en laat het staan.</p>
+  </div>
+
+  <p>Ze begint met u gerust te stellen, en de zin belooft nog alleen wat gemeten is: ‘XCTrack
+  leest deze instellingen bij het openen een laatste keer, leidt er zijn huidige instellingen
+  uit af en wist ze dan. Deze zijn op het toestel gemeten: het leidt hetzelfde af of ze er nu
+  staan of niet. Ze weghalen maakt het bestand lichter en verandert niets aan uw
+  pagina’s.’</p>
 
   <ol class="manual__steps">
-    <li>Klap <span class="manual__ui">Deze 9 instellingen bekijken, en afvinken wat u liever
+    <li>Klap <span class="manual__ui">Deze 6 instellingen bekijken, en afvinken wat u liever
     houdt</span> uit — het aantal is dat van uw bestand. Alles is bij de start aangevinkt;
-    elke regel zegt tot welke versie van XCTrack de instelling nog werd gelezen, en haar
+    elke regel zegt tot welke versie van XCTrack de instelling nog werd geschreven, en haar
     waarde wanneer die eenvoudig is.</li>
     <li>Vink af wat u wilt houden. De telling wordt bijgewerkt, en de knop zegt precies
     hoeveel instellingen hij zal weghalen.</li>
     <li>Klik op de knop. Het paneel wordt vervangen door een bericht en door
-    <span class="manual__ui">Deze 9 instellingen terugzetten</span>.</li>
+    <span class="manual__ui">Deze 6 instellingen terugzetten</span>.</li>
   </ol>
 
   <p>De terugkeer is volledig: teruggezet komt het bestand er byte voor byte uit. De
@@ -851,6 +868,14 @@
 
   <p>En er is niets vertrokken zolang u niet hebt opgeslagen: ‘Uw toestel weet er nog niets
   van: het bestand verandert pas wanneer u het opslaat.’</p>
+
+  <p>Onder de lijst noemt een tweede blok —
+  <span class="manual__ui">Wat een oudere versie heeft achtergelaten</span> wanneer het alleen
+  staat — de instellingen die <strong>gevonden en laten staan</strong> zijn. Zij hebben geen
+  vakje, en elk zegt waarom: ofwel toont de meting wat er zonder haar zou veranderen (‘zonder
+  haar springt <code>windStyle</code> van <code>ARROW</code> naar <code>NONE</code>’), ofwel
+  heeft niemand het ooit gemeten. In beide gevallen hoeft u niets te doen: ze verdwijnen
+  vanzelf zodra uw toestel dit bestand heeft gelezen.</p>
 
   <!-- =================================================================== 10 -->
 

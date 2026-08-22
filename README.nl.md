@@ -215,8 +215,8 @@ een belofte van getrouwheid die alleen de auteur kan nagaan, is niets waard.
   weggehaald, een gat in onze eigen opname, en een instelling waarvoor wij blind zijn vragen
   niet om dezelfde handelwijze.
 - **De instellingen weghalen die een oudere versie heeft achtergelaten** — en niets anders.
-  XCTrack bewaart de instellingen die het niet meer kent: een back-up uit 2026 sleept nog
-  schakelaars uit 2023 mee. Dit is de enige plek waar het gereedschap **uit zichzelf**
+  XCTrack herleest een pagina pas wanneer het ze toont: een back-up uit 2026 sleept nog
+  schakelaars uit 2023 mee, op nooit getoonde pagina's. Dit is de enige plek waar het gereedschap **uit zichzelf**
   voorstelt iets uit het document weg te halen, en de schifting is met opzet nauw: een
   instelling wordt pas voorgesteld wanneer een echt bestand haar bevestigt — het scherm noemt
   ze **verouderd**. Een gat in onze lezing van de versies — de instelling bestond wel, onze
@@ -229,11 +229,25 @@ een belofte van getrouwheid die alleen de auteur kan nagaan, is niets waard.
 
   Gemeten op de referentieback-up van het corpus
   (`tests/fixtures/exports/2026-08-20_backup-00.xcfg`, geschreven door XCTrack 1.0.3-beta):
-  **9 voorgestelde instellingen, op 4 widgets, op 1 059 onderzochte widgetinstellingen.** U
-  ziet de lijst — elke instelling met de laatste versie van XCTrack die ze nog las —, u vinkt
+  **6 voorgestelde en 3 laten staan instellingen, op 4 widgets, op 1 059 onderzochte
+  widgetinstellingen.** U ziet de lijst — elke instelling met de laatste versie van XCTrack
+  die ze nog schreef —, u vinkt
   af wat u liever houdt, u handelt met een uitdrukkelijk gebaar, en u kunt er meteen daarna op
   terugkomen: teruggezet komt het bestand er **byte voor byte** uit. Het opruimen staat onder
   de versiediagnose, en alleen in bewerkmodus.
+
+  ⚠️ **Een derde grendel, en de recentste.** *Verouderd* betekent *sindsdien vervangen*,
+  nooit *zonder gevolg*: XCTrack herleest een pagina pas wanneer het ze toont, en wanneer het
+  ze eindelijk leest, gooit het die instellingen niet weg — het leidt er eerst zijn huidige
+  instellingen uit af (`showWind` wordt `windStyle`, `mapWidget_showTerrain` wordt de
+  reliëfschaduw) en wist ze pas daarna. Een bestand dat ze nog draagt is dus, per constructie,
+  een bestand dat het toestel **nog niet heeft gelezen** — en net daar bijt het opruimen.
+  Gemeten op een AIR³ 7.2 op 22 augustus 2026 — drie kompassen die alleen in `showWind`
+  verschillen: die instelling op *ja* weghalen brengt de widget van de windpijl naar helemaal
+  niets. Een verwijdering wordt daarom alleen voorgesteld wanneer een heen en weer op het
+  toestel heeft getoond dat het met en zonder **hetzelfde** afleidt
+  (`src/catalog/legacyMigrations.json`, een gedateerde en begrensde opname). De andere worden
+  genoemd, uitgelegd en laten staan — de piloot hoeft niets te doen, ze verdwijnen vanzelf.
 - **Zeggen wat uw bestand over u prijsgeeft** voordat u het deelt. Een `backup`-export draagt
   uw naam, uw scherm, uw gekoppelde sensoren, uw waypointbestanden — tot en met de naam van
   de wedstrijd waaraan u deelneemt. Bij het opslaan biedt het gereedschap daarom **drie
@@ -312,10 +326,12 @@ alle vijf exemplaren — alleen onze eigen tekst verandert.*
 ![Het venster ‘Beoogde versie en compatibiliteit’: versie 1.0.3-beta voorgeselecteerd, de
 zin over de niet te onderscheiden versies, het blok ‘Verouderde instellingen’ met zijn
 negen regels, en de sectie ‘Weghalen wat een oudere versie heeft achtergelaten’ uitgeklapt
-op haar negen aankruisvakjes.](captures/version-et-nettoyage.nl.png)
+op haar zes aankruisvakjes, gevolgd door de drie laten staan
+instellingen.](captures/version-et-nettoyage.nl.png)
 
-*De versiekeuze, de diagnose, en het opruimen dat eruit voortkomt — negen instellingen, op
-vier widgets, elk met de laatste versie van XCTrack die ze nog las.*
+*De versiekeuze, de diagnose, en het opruimen dat eruit voortkomt — zes voorgestelde en drie
+laten staan instellingen, op vier widgets. ⚠️ **Dit beeld moet opnieuw**: het dateert van
+vóór de derde grendel en toont nog negen aankruisvakjes.*
 
 ![Het venster ‘Deze configuratie opslaan’: de drie uitwegen, en daarna de inventaris van de
 vijf vervangen teksten — elk met zijn pagina, zijn widget, de oude waarde doorstreept, de

@@ -763,9 +763,10 @@
   hacer:</p>
 
   <ul>
-    <li><strong>obsoleto</strong> — XCTrack ya no lee ese ajuste, y archivos de verdad
-    escritos por esa misma versión lo llevan de todos modos. Lo hemos visto ocurrir, no lo
-    suponemos. <em>Quitarlo se defiende.</em></li>
+    <li><strong>obsoleto</strong> — XCTrack ya no escribe ese ajuste: otro le ha sucedido.
+    Archivos de verdad escritos por esa misma versión lo llevan de todos modos. Lo hemos
+    visto ocurrir, no lo suponemos. <em>Quitarlo se defiende — pero no siempre sin
+    consecuencia, véase el capítulo siguiente.</em></li>
     <li><strong>punto ciego</strong> — la falta es nuestra, no de su archivo: nuestra lectura
     de las versiones tiene un hueco en ese punto. <em>No se toca.</em></li>
     <li><strong>desconocido</strong> — ninguna versión que hayamos podido leer lleva ese
@@ -799,25 +800,39 @@
 
   <h3>Quitar lo que dejó una versión antigua</h3>
 
-  <p>XCTrack conserva los ajustes que ya no conoce: una copia de seguridad de este año arrastra
-  todavía interruptores de hace tres años. La sección
+  <p>XCTrack solo vuelve a leer una página cuando la muestra: una copia de seguridad de este
+  año arrastra todavía interruptores de hace tres años, en páginas que su aparato quizá nunca
+  haya mostrado. La sección
   <span class="manual__ui">Quitar lo que dejó una versión antigua</span>, bajo el diagnóstico y
-  solo en modo edición, propone retirarlos. Si no hay nada que quitar, la sección no aparece en
-  absoluto.</p>
+  solo en modo edición, propone retirarlos. Si no tiene nada que decir — nada que quitar y nada
+  que señalar —, la sección no aparece en absoluto.</p>
 
-  <p>Empieza por tranquilizarle, y es verdad: «No hay prisa y no hay nada roto: XCTrack los
-  transporta sin leerlos, y dejarlos ahí no cambia nada en sus páginas. Quitarlos aligera el
-  archivo, nada más.»</p>
+  <div class="manual__measured">
+    <p><strong>Obsoleto no quiere decir sin efecto, y está medido.</strong> Un ajuste de hace
+    tres años sigue ahí porque el instrumento aún no lo ha leído. Cuando lo lea, no lo tirará:
+    primero derivará de él su ajuste de hoy. <code>showWind</code> se convierte en
+    <code>windStyle</code>, <code>mapWidget_showTerrain</code> se convierte en el sombreado del
+    relieve. En un AIR³ 7.2, quitar <code>showWind</code> puesto en sí lleva una brújula de la
+    flecha de viento a nada en absoluto.</p>
+    <p>Por eso la herramienta solo propone quitar algo cuando una ida y vuelta en el aparato ha
+    mostrado que el instrumento deriva <strong>lo mismo</strong>, esté el ajuste o no. A los
+    demás los nombra y los deja donde están.</p>
+  </div>
+
+  <p>Empieza por tranquilizarle, y la frase ya solo promete lo que se ha medido: «XCTrack lee
+  estos ajustes una última vez al abrir el archivo, deriva de ellos sus ajustes de hoy y luego
+  los borra. Estos se han medido en el aparato: deriva lo mismo estén o no. Quitarlos aligera
+  el archivo sin cambiar nada en sus páginas.»</p>
 
   <ol class="manual__steps">
-    <li>Despliegue <span class="manual__ui">Ver estos 9 ajustes, y desmarcar lo que prefiera
+    <li>Despliegue <span class="manual__ui">Ver estos 6 ajustes, y desmarcar lo que prefiera
     conservar</span> — el número es el de su archivo. Todo está marcado al principio; cada
-    línea dice hasta qué versión de XCTrack seguía leyéndose el ajuste, y su valor cuando es
-    simple.</li>
+    línea dice hasta qué versión de XCTrack seguía escribiéndose el ajuste, y su valor cuando
+    es simple.</li>
     <li>Desmarque lo que quiera conservar. La cuenta se actualiza, y el botón dice exactamente
     cuántos ajustes va a quitar.</li>
     <li>Pulse el botón. El panel es reemplazado por un mensaje y por
-    <span class="manual__ui">Devolver estos 9 ajustes</span>.</li>
+    <span class="manual__ui">Devolver estos 6 ajustes</span>.</li>
   </ol>
 
   <p>La vuelta atrás es completa: devueltos, el archivo sale byte a byte igual. El gesto queda
@@ -826,6 +841,14 @@
 
   <p>Y nada ha salido mientras usted no haya guardado: «Su aparato aún no sabe nada: el archivo
   solo cambia cuando usted lo guarda.»</p>
+
+  <p>Bajo la lista, un segundo bloque —
+  <span class="manual__ui">Lo que dejó una versión antigua</span> cuando está solo — nombra los
+  ajustes <strong>encontrados y dejados donde están</strong>. No tienen casilla, y cada uno dice
+  por qué: o bien la medida muestra lo que cambiaría sin él («sin él, <code>windStyle</code>
+  pasa de <code>ARROW</code> a <code>NONE</code>»), o bien nadie lo ha medido nunca. En ambos
+  casos usted no tiene nada que hacer: se irán solos en cuanto su aparato haya leído este
+  archivo.</p>
 
   <!-- =================================================================== 10 -->
 

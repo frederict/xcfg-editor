@@ -798,9 +798,10 @@
   <p>Chaque remarque porte l’un de ces mots, et il commande la conduite à tenir :</p>
 
   <ul>
-    <li><strong>périmé</strong> — XCTrack ne lit plus ce réglage, et de vrais fichiers
-    écrits par cette version-là le portent quand même. Nous l’avons vu se produire, nous ne
-    le supposons pas. <em>L’enlever se défend.</em></li>
+    <li><strong>périmé</strong> — XCTrack n’écrit plus ce réglage : un autre lui a
+    succédé. De vrais fichiers écrits par cette version-là le portent quand même. Nous
+    l’avons vu se produire, nous ne le supposons pas. <em>L’enlever se défend — mais pas
+    toujours sans conséquence, voir le chapitre suivant.</em></li>
     <li><strong>angle mort</strong> — le manque est chez nous, pas dans votre fichier :
     notre lecture des versions a un trou à cet endroit. <em>On n’y touche pas.</em></li>
     <li><strong>inconnu</strong> — aucune version que nous ayons pu lire ne porte ce
@@ -833,25 +834,41 @@
 
   <h3>Enlever ce qu’une ancienne version a laissé</h3>
 
-  <p>XCTrack conserve les réglages qu’il ne connaît plus : une sauvegarde de cette année
-  traîne encore des interrupteurs d’il y a trois ans. La section
+  <p>XCTrack ne relit une page que lorsqu’il l’affiche : une sauvegarde de cette année
+  traîne encore des interrupteurs d’il y a trois ans, sur des pages que votre appareil n’a
+  peut-être jamais montrées. La section
   <span class="manual__ui">Enlever ce qu’une ancienne version a laissé</span>, sous le
-  diagnostic et seulement en mode édition, propose de les retirer. Si rien n’est à enlever,
-  la section n’apparaît pas du tout.</p>
+  diagnostic et seulement en mode édition, propose de les retirer. Si elle n’a rien à
+  dire — rien à enlever, et rien à signaler —, elle n’apparaît pas du tout.</p>
 
-  <p>Elle commence par vous rassurer, et c’est vrai : « Rien ne presse et rien n’est cassé :
-  XCTrack les transporte sans les lire, et les laisser là ne change rien à vos pages. Les
-  enlever allège le fichier, c’est tout. »</p>
+  <div class="manual__measured">
+    <p><strong>Périmé ne veut pas dire sans effet, et c’est mesuré.</strong> Un réglage
+    d’il y a trois ans est encore là parce que l’instrument ne l’a pas encore lu. Quand il
+    le lira, il ne le jettera pas : il en tirera d’abord son réglage d’aujourd’hui.
+    <code>showWind</code> devient <code>windStyle</code>,
+    <code>mapWidget_showTerrain</code> devient l’ombrage du relief. Sur un AIR³ 7.2,
+    enlever <code>showWind</code> réglé sur oui fait passer un compas de la flèche de vent
+    à rien du tout.</p>
+    <p>L’outil ne vous propose donc un retrait que lorsqu’un aller-retour sur l’appareil a
+    montré que l’instrument en tire <strong>la même chose</strong>, que le réglage soit là
+    ou non. Les autres, il les nomme et les laisse en place.</p>
+  </div>
+
+  <p>Elle commence par vous rassurer, et la phrase ne promet plus que ce qui a été
+  mesuré : « XCTrack lit ces réglages une dernière fois à l’ouverture, en tire ses réglages
+  d’aujourd’hui, puis les efface. Ceux-ci ont été mesurés sur l’appareil : il en tire la
+  même chose qu’ils soient là ou non. Les enlever allège le fichier sans rien changer à vos
+  pages. »</p>
 
   <ol class="manual__steps">
-    <li>Dépliez <span class="manual__ui">Voir ces 9 réglages, et décocher ce que vous
+    <li>Dépliez <span class="manual__ui">Voir ces 6 réglages, et décocher ce que vous
     préférez garder</span> — le nombre est celui de votre fichier. Tout est coché au
-    départ ; chaque ligne dit jusqu’à quelle version de XCTrack le réglage était encore lu,
-    et sa valeur quand elle est simple.</li>
+    départ ; chaque ligne dit jusqu’à quelle version de XCTrack le réglage était encore
+    écrit, et sa valeur quand elle est simple.</li>
     <li>Décochez ce que vous voulez garder. Le compte se met à jour, et le bouton dit
     exactement combien de réglages il va enlever.</li>
     <li>Cliquez le bouton. Le panneau est remplacé par un message et par
-    <span class="manual__ui">Remettre ces 9 réglages</span>.</li>
+    <span class="manual__ui">Remettre ces 6 réglages</span>.</li>
   </ol>
 
   <p>Le retour en arrière est complet : remis, le fichier ressort à l’octet près. Le geste
@@ -860,6 +877,14 @@
 
   <p>Et rien n’est parti tant que vous n’avez pas enregistré : « Votre appareil n’en sait
   encore rien : le fichier ne change que lorsque vous l’enregistrez. »</p>
+
+  <p>Sous la liste, un second bloc —
+  <span class="manual__ui">Ce qu’une ancienne version a laissé</span> quand il est seul —
+  nomme les réglages <strong>trouvés et laissés en place</strong>. Ils n’ont pas de case à
+  cocher, et chacun dit pourquoi : soit la mesure montre ce qui changerait sans lui
+  (« sans lui, <code>windStyle</code> passe de <code>ARROW</code> à <code>NONE</code> »),
+  soit personne ne l’a jamais mesuré. Dans les deux cas vous n’avez rien à faire : ils
+  partiront d’eux-mêmes dès que votre appareil aura lu ce fichier.</p>
 
   <!-- =================================================================== 10 -->
 

@@ -257,8 +257,8 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
   qui ne l'est pas : un réglage retiré par XCTrack, un trou de notre propre relevé, et un
   réglage sur lequel nous sommes aveugles n'appellent pas la même conduite.
 - **Enlever les réglages qu'une ancienne version a laissés** — et rien d'autre. XCTrack
-  conserve les réglages qu'il ne connaît plus : une sauvegarde de 2026 traîne encore des
-  interrupteurs de 2023. C'est le seul endroit où l'outil propose **de lui-même** de
+  ne relit une page que lorsqu'il l'affiche : une sauvegarde de 2026 traîne encore des
+  interrupteurs de 2023, sur des pages jamais montrées. C'est le seul endroit où l'outil propose **de lui-même** de
   retirer quelque chose du document, et le tri est volontairement étroit : un réglage
   n'est proposé que lorsqu'un fichier réel l'atteste — l'écran le dit **périmé**. Un trou
   de notre lecture des versions — le réglage existait, c'est notre extraction qui l'a
@@ -271,11 +271,24 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
 
   Mesuré sur la sauvegarde de référence du corpus
   (`tests/fixtures/exports/2026-08-20_backup-00.xcfg`, écrite par XCTrack 1.0.3-beta) :
-  **9 réglages proposés, sur 4 gadgets, pour 1 059 réglages de gadgets examinés.** Vous
-  voyez la liste — chaque réglage avec la dernière version de XCTrack qui le lisait encore
-  —, vous décochez ce que vous préférez garder, vous agissez d'un geste explicite, et vous
+  **6 réglages proposés et 3 laissés en place, sur 4 gadgets, pour 1 059 réglages de
+  gadgets examinés.** Vous voyez la liste — chaque réglage avec la dernière version de
+  XCTrack qui l'écrivait encore —, vous décochez ce que vous préférez garder, vous agissez d'un geste explicite, et vous
   pouvez revenir en arrière juste après : remis, le fichier ressort **à l'octet près**. Le
   nettoyage se trouve sous le diagnostic de version, et seulement en mode édition.
+
+  ⚠️ **Une troisième serrure, et c'est la plus récente.** *Périmé* veut dire *remplacé
+  depuis*, jamais *sans effet* : XCTrack ne relit une page que lorsqu'il l'affiche, et
+  quand il la lit enfin, il ne jette pas ces réglages — il en tire d'abord ses réglages
+  d'aujourd'hui (`showWind` devient `windStyle`, `mapWidget_showTerrain` devient l'ombrage
+  du relief) puis les efface. Un fichier qui les porte encore est donc, par construction,
+  un fichier que l'instrument **n'a pas encore lu** : c'est exactement là que le nettoyage
+  mord. Mesuré sur un AIR³ 7.2 le 22 août 2026 — trois compas ne différant que par
+  `showWind` : enlever ce réglage à *oui* fait passer le gadget de la flèche de vent à
+  rien du tout. Un retrait n'est donc proposé que lorsqu'un aller-retour sur l'appareil a
+  montré que l'instrument en tire **la même chose** avec et sans
+  (`src/catalog/legacyMigrations.json`, un relevé daté et borné). Les autres sont nommés,
+  expliqués et laissés en place — le pilote n'a rien à en faire, ils partiront d'eux-mêmes.
 - **Dire ce que votre fichier révèle de vous** avant que vous ne le partagiez. Un export
   `backup` porte votre nom, votre voile, vos capteurs appairés, vos fichiers de waypoints
   — jusqu'au nom de la compétition à laquelle vous participez. Au moment d'enregistrer,
@@ -508,11 +521,13 @@ réglages restent français dans les cinq captures — seule notre prose change.
 
 ![La modale « Version visée et compatibilité » : la version 1.0.3-beta présélectionnée,
 la phrase des versions indistinguables, le bloc « Réglages périmés » et ses neuf lignes,
-et la section « Enlever ce qu'une ancienne version a laissé » dépliée sur ses neuf cases
-à cocher.](captures/version-et-nettoyage.fr.png)
+et la section « Enlever ce qu'une ancienne version a laissé » dépliée sur ses six cases
+à cocher, suivie des trois réglages laissés en
+place.](captures/version-et-nettoyage.fr.png)
 
-*Le choix de version, le diagnostic, et le nettoyage qu'il ouvre — neuf réglages, sur
-quatre gadgets, chacun avec la dernière version de XCTrack qui le lisait encore.*
+*Le choix de version, le diagnostic, et le nettoyage qu'il ouvre — six réglages proposés et
+trois laissés en place, sur quatre gadgets. ⚠️ **Cette image est à refaire** : elle date
+d'avant la troisième serrure et montre encore neuf cases à cocher.*
 
 <!--
   REFAIRE CETTE CAPTURE — captures/version-et-nettoyage.<langue>.png (1200 × 1720)
@@ -521,16 +536,23 @@ quatre gadgets, chacun avec la dernière version de XCTrack qui le lisait encore
   Fichier .... tests/fixtures/exports/2026-08-20_backup-00.xcfg
   État ....... version présélectionnée d'après le fichier (1.0.3-beta), la phrase des
                versions indistinguables visible, et la section « Enlever ce qu'une
-               ancienne version a laissé » ouverte sur ses 9 réglages / 4 gadgets.
+               ancienne version a laissé » ouverte sur ses 6 réglages / 4 gadgets, plus
+               le bloc des 3 réglages laissés en place qui la suit.
   Refaire .... npm run dev -- --port 5179, déposer le fichier, « Modifier les pages »
                (le nettoyage ne s'offre qu'en édition), menu « Fichier » puis
-               « Version et compatibilité… », enfin déplier « Voir ces 9 réglages, et
+               « Version et compatibilité… », enfin déplier « Voir ces 6 réglages, et
                décocher ce que vous préférez garder ».
   Cadrage .... viewport de 1200 × 1720 points CSS, émulation comme ci-dessus. La boîte
                ne défile alors dans aucune des cinq langues.
   Variante ... le banc d'essai dédié montre le même module hors de l'éditeur :
                    npm run dev -- --port 5178
                    http://localhost:5178/src/ui/versionDiagnostic.demo.html
+
+  ⚠️ IMAGE PÉRIMÉE — les cinq exemplaires montrent NEUF cases à cocher. Depuis le
+  22 août 2026, le nettoyage n'en propose plus que six sur cette fixture et affiche en
+  dessous un bloc « … réglages trouvés, et laissés en place » qui en nomme trois. La
+  recette ci-dessus reste bonne ; les cinq images sont à reprendre telles quelles, et le
+  cadrage est à revérifier — le bloc ajouté rallonge la boîte.
 
   RECETTE CORRIGÉE — trois points :
   1. La recette d'origine passait par le banc d'essai en expliquant que « le nettoyage
@@ -875,10 +897,13 @@ cette version-là. Quand la base dit le contraire, c'est la base qui a tort — 
 consigne au lieu de le corriger en douce.
 
 Ce n'est pas une précaution théorique, et l'inverse ne l'est pas non plus : **XCTrack
-conserve les clés qu'il ne connaît plus**. Dans une même sauvegarde de 1.0.3, sur cinq
-gadgets cartographiques, deux portent `mapWidget_showTerrain` et trois portent
+transporte les clés qu'il n'a pas encore relues**. Dans une même sauvegarde de 1.0.3, sur
+cinq gadgets cartographiques, deux portent `mapWidget_showTerrain` et trois portent
 `mapWidget_panningTimeout` — jamais les deux. Les seconds ont été refaits depuis le
-remplacement, les premiers traînent un reliquat vieux de deux ans.
+remplacement, les premiers traînent un reliquat vieux de deux ans, sur des pages que
+l'appareil n'a jamais affichées. Mesuré le 22 août 2026 : dès qu'il les affiche, il
+**consomme** ces clés — il en dérive celles d'aujourd'hui, puis les efface. Un reliquat
+n'est donc pas une clé morte, c'est une clé qui n'a pas encore servi.
 
 Une base qui prendrait toute clé observée pour une clé existante protégerait donc
 exactement les reliquats qu'un nettoyage doit ôter ; une base qui prendrait toute clé

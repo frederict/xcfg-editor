@@ -202,8 +202,9 @@ author can check is worth nothing.
   of action — and carefully distinguishes what is measured from what is not: a setting
   withdrawn by XCTrack, a hole in our own survey, and a setting we are blind to do not
   call for the same course of action.
-- **Remove the settings an older release left behind** — and nothing else. XCTrack keeps
-  the settings it no longer knows: a 2026 backup still drags along switches from 2023.
+- **Remove the settings an older release left behind** — and nothing else. XCTrack only
+  re-reads a page when it displays it: a 2026 backup still drags along switches from 2023,
+  on pages it has never shown.
   This is the only place where the tool offers **of its own accord** to take something
   out of the document, and the sorting is deliberately narrow: a setting is offered only
   when a real file attests to it — the screen calls it **outdated**. A hole in our
@@ -216,11 +217,26 @@ author can check is worth nothing.
 
   Measured on the reference backup of the corpus
   (`tests/fixtures/exports/2026-08-20_backup-00.xcfg`, written by XCTrack 1.0.3-beta):
-  **9 settings offered, across 4 widgets, out of 1,059 widget settings examined.** You
-  see the list — each setting with the last XCTrack release that still read it — you
+  **6 settings offered and 3 left in place, across 4 widgets, out of 1,059 widget settings
+  examined.** You see the list — each setting with the last XCTrack release that still
+  wrote it — you
   untick what you would rather keep, you act with one explicit gesture, and you can go
   back on it right afterwards: put back, the file comes out **byte for byte**. The
   cleanup sits under the version diagnosis, and only in editing mode.
+
+  ⚠️ **A third lock, and it is the most recent one.** *Outdated* means *replaced since*,
+  never *without effect*: XCTrack only re-reads a page when it displays it, and when it
+  does read it at last, it does not throw these settings away — it first derives its
+  present-day settings from them (`showWind` becomes `windStyle`, `mapWidget_showTerrain`
+  becomes the terrain shading) and only then erases them. A file that still carries them
+  is therefore, by construction, a file the instrument **has not read yet**: which is
+  exactly where the cleanup bites. Measured on an AIR³ 7.2 on 22 August 2026 — three
+  compasses differing only by `showWind`: removing that setting when it is set to *yes*
+  takes the widget from the wind arrow to nothing at all. So a removal is only offered
+  when a round trip on the device has shown that the instrument derives **the same thing**
+  with and without it (`src/catalog/legacyMigrations.json`, a dated and bounded survey).
+  The others are named, explained and left in place — there is nothing for the pilot to
+  do, they will go on their own.
 - **Say what your file reveals about you** before you share it. A `backup` export carries
   your name, your glider, your paired sensors, your waypoint files — down to the name of
   the competition you are flying. So when you save, the tool offers **three outcomes**,
@@ -296,11 +312,13 @@ only our own prose changes.*
 
 ![The “Target version and compatibility” dialog: release 1.0.3-beta preselected, the
 sentence about indistinguishable releases, the “Outdated settings” block and its nine
-lines, and the “Remove what an older release left behind” section unfolded on its nine
-tickboxes.](captures/version-et-nettoyage.en.png)
+lines, and the “Remove what an older release left behind” section unfolded on its six
+tickboxes, followed by the three settings left in
+place.](captures/version-et-nettoyage.en.png)
 
-*The version choice, the diagnosis, and the cleanup it opens — nine settings, across four
-widgets, each with the last XCTrack release that still read it.*
+*The version choice, the diagnosis, and the cleanup it opens — six settings offered and
+three left in place, across four widgets. ⚠️ **This image needs redoing**: it predates the
+third lock and still shows nine tickboxes.*
 
 ![The “Save this configuration” box: the three outcomes, then the inventory of the five
 replaced texts — each with its page, its widget, the old value struck through, the new

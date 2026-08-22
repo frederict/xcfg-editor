@@ -209,9 +209,9 @@ de fidelidad que solo el autor puede comprobar no vale nada.
   seguir — y distingue con cuidado lo que está medido de lo que no lo está: un ajuste
   retirado por XCTrack, un hueco de nuestro propio registro y un ajuste sobre el que estamos
   ciegos no piden la misma conducta.
-- **Quitar los ajustes que dejó una versión antigua** — y nada más. XCTrack conserva los
-  ajustes que ya no conoce: una copia de seguridad de 2026 arrastra todavía interruptores de
-  2023. Es el único sitio donde la herramienta propone **por sí misma** retirar algo del
+- **Quitar los ajustes que dejó una versión antigua** — y nada más. XCTrack solo vuelve a leer
+  una página cuando la muestra: una copia de seguridad de 2026 arrastra todavía interruptores
+  de 2023, en páginas nunca mostradas. Es el único sitio donde la herramienta propone **por sí misma** retirar algo del
   documento, y el cribado es estrecho a propósito: un ajuste solo se propone cuando un
   archivo real lo atestigua — la pantalla lo llama **obsoleto**. Un hueco de nuestra lectura
   de las versiones — el ajuste existía, es nuestra extracción la que lo ha fallado — o un
@@ -223,11 +223,26 @@ de fidelidad que solo el autor puede comprobar no vale nada.
 
   Medido en la copia de seguridad de referencia del corpus
   (`tests/fixtures/exports/2026-08-20_backup-00.xcfg`, escrita por XCTrack 1.0.3-beta):
-  **9 ajustes propuestos, en 4 widgets, sobre 1 059 ajustes de widgets examinados.** Usted ve
-  la lista — cada ajuste con la última versión de XCTrack que aún lo leía —, desmarca lo que
+  **6 ajustes propuestos y 3 dejados donde están, en 4 widgets, sobre 1 059 ajustes de
+  widgets examinados.** Usted ve la lista — cada ajuste con la última versión de XCTrack que
+  aún lo escribía —, desmarca lo que
   prefiere conservar, actúa con un gesto explícito, y puede volver atrás justo después:
   devueltos, el archivo sale **byte a byte igual**. La limpieza está bajo el diagnóstico de
   versión, y solo en modo edición.
+
+  ⚠️ **Un tercer cerrojo, y es el más reciente.** *Obsoleto* quiere decir *reemplazado desde
+  entonces*, nunca *sin efecto*: XCTrack solo vuelve a leer una página cuando la muestra, y
+  cuando por fin la lee, no tira esos ajustes — primero deriva de ellos sus ajustes de hoy
+  (`showWind` se convierte en `windStyle`, `mapWidget_showTerrain` se convierte en el
+  sombreado del relieve) y solo entonces los borra. Un archivo que todavía los lleva es, por
+  construcción, un archivo que el instrumento **aún no ha leído**: que es exactamente donde
+  muerde la limpieza. Medido en un AIR³ 7.2 el 22 de agosto de 2026 — tres brújulas que solo
+  se diferencian por `showWind`: quitar ese ajuste puesto en *sí* lleva al widget de la
+  flecha de viento a nada en absoluto. Por eso solo se propone quitar algo cuando una ida y
+  vuelta en el aparato ha mostrado que el instrumento deriva **lo mismo** con él y sin él
+  (`src/catalog/legacyMigrations.json`, un registro fechado y acotado). A los demás se los
+  nombra, se los explica y se los deja donde están — el piloto no tiene nada que hacer, se
+  irán solos.
 - **Decir lo que su archivo revela de usted** antes de que lo comparta. Una exportación
   `backup` lleva su nombre, su vela, sus sensores emparejados, sus archivos de waypoints —
   hasta el nombre de la competición en la que participa. Al guardar, la herramienta propone
@@ -303,11 +318,13 @@ en los cinco ejemplares — solo cambia nuestra propia prosa.*
 
 ![La ventana «Versión objetivo y compatibilidad»: la versión 1.0.3-beta preseleccionada, la
 frase de las versiones indistinguibles, el bloque «Ajustes obsoletos» y sus nueve líneas, y
-la sección «Quitar lo que dejó una versión antigua» desplegada sobre sus nueve
-casillas.](captures/version-et-nettoyage.es.png)
+la sección «Quitar lo que dejó una versión antigua» desplegada sobre sus seis casillas,
+seguida de los tres ajustes dejados donde
+están.](captures/version-et-nettoyage.es.png)
 
-*La elección de versión, el diagnóstico y la limpieza que abre — nueve ajustes, en cuatro
-widgets, cada uno con la última versión de XCTrack que aún lo leía.*
+*La elección de versión, el diagnóstico y la limpieza que abre — seis ajustes propuestos y
+tres dejados donde están, en cuatro widgets. ⚠️ **Esta imagen hay que rehacerla**: es
+anterior al tercer cerrojo y todavía muestra nueve casillas.*
 
 ![El cuadro «Guardar esta configuración»: las tres salidas, y después el inventario de los
 cinco textos reemplazados — cada uno con su página, su widget, el valor antiguo tachado, el

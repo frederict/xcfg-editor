@@ -764,9 +764,10 @@
   <p>Every remark carries one of these words, and it governs what to do:</p>
 
   <ul>
-    <li><strong>outdated</strong> — XCTrack no longer reads this setting, and real files
-    written by that very release carry it anyway. We have seen it happen, we are not
-    assuming it. <em>Removing it is defensible.</em></li>
+    <li><strong>outdated</strong> — XCTrack no longer writes this setting: another one
+    has succeeded it. Real files written by that very release carry it anyway. We have seen
+    it happen, we are not assuming it. <em>Removing it is defensible — but not always
+    without consequence, see the next chapter.</em></li>
     <li><strong>blind spot</strong> — the gap is ours, not your file’s: our reading of the
     releases has a hole at that point. <em>We do not touch it.</em></li>
     <li><strong>unknown</strong> — no release we have been able to read carries this
@@ -798,25 +799,40 @@
 
   <h3>Removing what an older release left behind</h3>
 
-  <p>XCTrack keeps the settings it no longer knows: a backup from this year still drags
-  along switches from three years ago. The
+  <p>XCTrack only re-reads a page when it displays it: a backup from this year still drags
+  along switches from three years ago, on pages your device may never have shown. The
   <span class="manual__ui">Remove what an older release left behind</span> section, under
-  the diagnosis and only in editing mode, offers to take them out. If there is nothing to
-  remove, the section does not appear at all.</p>
+  the diagnosis and only in editing mode, offers to take them out. If it has nothing to
+  say — nothing to remove and nothing to point out — the section does not appear at all.</p>
 
-  <p>It starts by reassuring you, and it is true: “Nothing is urgent and nothing is broken:
-  XCTrack carries them along without reading them, and leaving them there changes nothing
-  on your pages. Removing them makes the file smaller, that is all.”</p>
+  <div class="manual__measured">
+    <p><strong>Outdated does not mean without effect, and that is measured.</strong> A
+    setting from three years ago is still there because the instrument has not read it yet.
+    When it does, it will not throw it away: it will first derive its present-day setting
+    from it. <code>showWind</code> becomes <code>windStyle</code>,
+    <code>mapWidget_showTerrain</code> becomes the terrain shading. On an AIR³ 7.2,
+    removing <code>showWind</code> set to yes takes a compass from the wind arrow to
+    nothing at all.</p>
+    <p>So the tool only offers a removal when a round trip on the device has shown that the
+    instrument derives <strong>the same thing</strong> whether the setting is there or not.
+    The others it names, and leaves in place.</p>
+  </div>
+
+  <p>It starts by reassuring you, and the sentence now promises only what was measured:
+  “XCTrack reads these settings one last time when it opens the file, derives its
+  present-day settings from them, then erases them. These ones were measured on the device:
+  it derives the same thing whether they are there or not. Removing them makes the file
+  smaller and changes nothing on your pages.”</p>
 
   <ol class="manual__steps">
-    <li>Unfold <span class="manual__ui">See these 9 settings, and untick what you would
+    <li>Unfold <span class="manual__ui">See these 6 settings, and untick what you would
     rather keep</span> — the number is the one from your file. Everything is ticked to
-    start with; each line says up to which XCTrack release the setting was still read, and
-    its value when that value is simple.</li>
+    start with; each line says up to which XCTrack release the setting was still written,
+    and its value when that value is simple.</li>
     <li>Untick what you want to keep. The count updates, and the button says exactly how
     many settings it is going to remove.</li>
     <li>Click the button. The panel is replaced by a message and by
-    <span class="manual__ui">Put these 9 settings back</span>.</li>
+    <span class="manual__ui">Put these 6 settings back</span>.</li>
   </ol>
 
   <p>Going back is complete: put back, the file comes out byte for byte. The gesture is also
@@ -825,6 +841,14 @@
 
   <p>And nothing has gone anywhere until you have saved: “Your device knows nothing of it
   yet: the file only changes when you save it.”</p>
+
+  <p>Below the list, a second block —
+  <span class="manual__ui">What an older release left behind</span> when it stands alone —
+  names the settings <strong>found and left in place</strong>. They have no tickbox, and
+  each says why: either the measurement shows what would change without it (“without it,
+  <code>windStyle</code> goes from <code>ARROW</code> to <code>NONE</code>”), or nobody has
+  ever measured it. Either way there is nothing for you to do: they will go on their own as
+  soon as your device has read this file.</p>
 
   <!-- =================================================================== 10 -->
 

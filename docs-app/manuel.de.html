@@ -806,9 +806,11 @@
   <p>Jede Bemerkung trägt eines dieser Wörter, und es bestimmt, was zu tun ist:</p>
 
   <ul>
-    <li><strong>veraltet</strong> — XCTrack liest diese Einstellung nicht mehr, und echte
-    Dateien, die von eben dieser Version geschrieben wurden, tragen sie trotzdem. Wir haben
-    es geschehen sehen, wir vermuten es nicht. <em>Ein Entfernen lässt sich vertreten.</em></li>
+    <li><strong>veraltet</strong> — XCTrack schreibt diese Einstellung nicht mehr: eine
+    andere ist ihr nachgefolgt. Echte Dateien, die von eben dieser Version geschrieben
+    wurden, tragen sie trotzdem. Wir haben es geschehen sehen, wir vermuten es nicht.
+    <em>Ein Entfernen lässt sich vertreten — aber nicht immer ohne Folgen, siehe das
+    nächste Kapitel.</em></li>
     <li><strong>blinder Fleck</strong> — der Mangel liegt bei uns, nicht in Ihrer Datei:
     unsere Lesung der Versionen hat an dieser Stelle eine Lücke. <em>Wir rühren sie nicht
     an.</em></li>
@@ -844,25 +846,41 @@
 
   <h3>Entfernen, was eine ältere Version hinterlassen hat</h3>
 
-  <p>XCTrack behält die Einstellungen, die es nicht mehr kennt: eine Sicherung aus diesem
-  Jahr schleppt noch Schalter von vor drei Jahren mit. Der Abschnitt
+  <p>XCTrack liest eine Seite erst wieder, wenn es sie anzeigt: eine Sicherung aus diesem
+  Jahr schleppt noch Schalter von vor drei Jahren mit, auf Seiten, die Ihr Gerät vielleicht
+  nie gezeigt hat. Der Abschnitt
   <span class="manual__ui">Entfernen, was eine ältere Version hinterlassen hat</span>, unter
-  der Diagnose und nur im Bearbeitungsmodus, bietet an, sie zu entfernen. Ist nichts zu
-  entfernen, erscheint der Abschnitt gar nicht.</p>
+  der Diagnose und nur im Bearbeitungsmodus, bietet an, sie zu entfernen. Hat er nichts zu
+  sagen — nichts zu entfernen und nichts zu melden —, erscheint er gar nicht.</p>
 
-  <p>Er beginnt damit, Sie zu beruhigen, und das zu Recht: „Nichts eilt und nichts ist
-  kaputt: XCTrack schleppt sie mit, ohne sie zu lesen, und sie dort zu lassen ändert nichts
-  an Ihren Seiten. Sie zu entfernen macht die Datei kleiner, mehr nicht.“</p>
+  <div class="manual__measured">
+    <p><strong>Veraltet heißt nicht wirkungslos, und das ist gemessen.</strong> Eine
+    Einstellung von vor drei Jahren ist noch da, weil das Gerät sie noch nicht gelesen hat.
+    Wenn es das tut, wirft es sie nicht weg: es leitet zuerst seine heutige Einstellung
+    daraus ab. <code>showWind</code> wird <code>windStyle</code>,
+    <code>mapWidget_showTerrain</code> wird die Geländeschattierung. Auf einem AIR³ 7.2
+    bringt das Entfernen von <code>showWind</code> auf ja einen Kompass vom Windpfeil zu
+    gar nichts.</p>
+    <p>Das Werkzeug bietet ein Entfernen also nur dann an, wenn ein Hin und Zurück auf dem
+    Gerät gezeigt hat, dass es <strong>dasselbe</strong> ableitet, ob die Einstellung da
+    ist oder nicht. Die anderen nennt es und lässt sie stehen.</p>
+  </div>
+
+  <p>Er beginnt damit, Sie zu beruhigen, und der Satz verspricht nur noch, was gemessen
+  wurde: „XCTrack liest diese Einstellungen beim Öffnen ein letztes Mal, leitet daraus seine
+  heutigen Einstellungen ab und löscht sie dann. Diese hier wurden auf dem Gerät gemessen:
+  es leitet dasselbe ab, ob sie da sind oder nicht. Sie zu entfernen macht die Datei kleiner
+  und ändert nichts an Ihren Seiten.“</p>
 
   <ol class="manual__steps">
-    <li>Klappen Sie <span class="manual__ui">Diese 9 Einstellungen ansehen und abwählen, was
+    <li>Klappen Sie <span class="manual__ui">Diese 6 Einstellungen ansehen und abwählen, was
     Sie lieber behalten</span> auf — die Zahl ist die Ihrer Datei. Am Anfang ist alles
-    angehakt; jede Zeile sagt, bis zu welcher XCTrack-Version die Einstellung noch gelesen
-    wurde, und ihren Wert, wenn er einfach ist.</li>
+    angehakt; jede Zeile sagt, bis zu welcher XCTrack-Version die Einstellung noch
+    geschrieben wurde, und ihren Wert, wenn er einfach ist.</li>
     <li>Wählen Sie ab, was Sie behalten wollen. Die Zählung wird aktualisiert, und die
     Schaltfläche sagt genau, wie viele Einstellungen sie entfernen wird.</li>
     <li>Klicken Sie die Schaltfläche. Der Bereich wird durch eine Meldung ersetzt und durch
-    <span class="manual__ui">Diese 9 Einstellungen zurücklegen</span>.</li>
+    <span class="manual__ui">Diese 6 Einstellungen zurücklegen</span>.</li>
   </ol>
 
   <p>Die Umkehr ist vollständig: zurückgelegt kommt die Datei Byte für Byte wieder heraus.
@@ -871,6 +889,14 @@
 
   <p>Und nichts ist hinausgegangen, solange Sie nicht gespeichert haben: „Ihr Gerät weiß
   noch nichts davon: die Datei ändert sich erst, wenn Sie sie speichern.“</p>
+
+  <p>Unter der Liste nennt ein zweiter Block —
+  <span class="manual__ui">Was eine ältere Version hinterlassen hat</span>, wenn er allein
+  steht — die Einstellungen, die <strong>gefunden und stehen gelassen</strong> wurden. Sie
+  haben kein Kästchen, und jede sagt warum: entweder zeigt die Messung, was sich ohne sie
+  ändern würde („ohne sie springt <code>windStyle</code> von <code>ARROW</code> auf
+  <code>NONE</code>“), oder niemand hat es je gemessen. In beiden Fällen müssen Sie nichts
+  tun: sie verschwinden von selbst, sobald Ihr Gerät diese Datei gelesen hat.</p>
 
   <!-- =================================================================== 10 -->
 

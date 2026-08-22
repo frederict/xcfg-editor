@@ -221,8 +221,8 @@ Absicht — ein Treueversprechen, das nur der Autor nachprüfen kann, ist nichts
   Lücke in unserer eigenen Erhebung und eine Einstellung, auf der wir blind sind, verlangen
   nicht dasselbe Vorgehen.
 - **Entfernen, was eine ältere Version hinterlassen hat** — und nichts sonst. XCTrack
-  behält die Einstellungen, die es nicht mehr kennt: eine Sicherung von 2026 schleppt noch
-  Schalter von 2023 mit. Das ist die einzige Stelle, an der das Werkzeug **von sich aus**
+  liest eine Seite erst wieder, wenn es sie anzeigt: eine Sicherung von 2026 schleppt noch
+  Schalter von 2023 mit, auf nie gezeigten Seiten. Das ist die einzige Stelle, an der das Werkzeug **von sich aus**
   anbietet, etwas aus dem Dokument zu entfernen, und die Auswahl ist bewusst eng: eine
   Einstellung wird nur dann vorgeschlagen, wenn eine echte Datei sie bezeugt — der
   Bildschirm nennt sie **veraltet**. Eine Lücke in unserer Lesung der Versionen — die
@@ -236,12 +236,26 @@ Absicht — ein Treueversprechen, das nur der Autor nachprüfen kann, ist nichts
 
   Gemessen an der Referenzsicherung des Bestands
   (`tests/fixtures/exports/2026-08-20_backup-00.xcfg`, geschrieben von XCTrack 1.0.3-beta):
-  **9 vorgeschlagene Einstellungen, auf 4 Widgets, bei 1 059 untersuchten
-  Widget-Einstellungen.** Sie sehen die Liste — jede Einstellung mit der letzten
-  XCTrack-Version, die sie noch las —, Sie wählen ab, was Sie lieber behalten, Sie handeln
+  **6 vorgeschlagene und 3 stehen gelassene Einstellungen, auf 4 Widgets, bei 1 059
+  untersuchten Widget-Einstellungen.** Sie sehen die Liste — jede Einstellung mit der
+  letzten XCTrack-Version, die sie noch schrieb —, Sie wählen ab, was Sie lieber behalten, Sie handeln
   mit einem ausdrücklichen Klick, und Sie können gleich danach zurück: zurückgelegt kommt
   die Datei **bis aufs Byte** wieder heraus. Das Aufräumen steht unter der
   Versionsdiagnose, und nur im Bearbeitungsmodus.
+
+  ⚠️ **Eine dritte Sperre, und die jüngste.** *Veraltet* heißt *seither ersetzt*, nie
+  *wirkungslos*: XCTrack liest eine Seite erst wieder, wenn es sie anzeigt, und wenn es sie
+  endlich liest, wirft es diese Einstellungen nicht weg — es leitet zuerst seine heutigen
+  Einstellungen daraus ab (`showWind` wird `windStyle`, `mapWidget_showTerrain` wird die
+  Geländeschattierung) und löscht sie erst dann. Eine Datei, die sie noch trägt, ist
+  folglich bauartbedingt eine Datei, die das Gerät **noch nicht gelesen hat** — genau dort
+  greift das Aufräumen. Gemessen auf einem AIR³ 7.2 am 22. August 2026 — drei Kompasse, die
+  sich nur durch `showWind` unterscheiden: diese Einstellung auf *ja* zu entfernen bringt
+  das Widget vom Windpfeil zu gar nichts. Ein Entfernen wird daher nur angeboten, wenn ein
+  Hin und Zurück auf dem Gerät gezeigt hat, dass es mit und ohne **dasselbe** ableitet
+  (`src/catalog/legacyMigrations.json`, ein datiertes und begrenztes Protokoll). Die
+  anderen werden genannt, erklärt und stehen gelassen — der Pilot muss nichts tun, sie
+  verschwinden von selbst.
 - **Sagen, was Ihre Datei über Sie verrät**, bevor Sie sie weitergeben. Ein
   `backup`-Export enthält Ihren Namen, Ihren Schirm, Ihre gekoppelten Sensoren, Ihre
   Wegpunktdateien — bis hin zum Namen des Wettkampfs, an dem Sie teilnehmen. Beim Speichern
@@ -322,11 +336,12 @@ wechselt.*
 ![Der Dialog „Angepeilte Version und Kompatibilität“: die Version 1.0.3-beta
 vorausgewählt, der Satz über die nicht unterscheidbaren Versionen, der Block „Veraltete
 Einstellungen“ mit seinen neun Zeilen und der aufgeklappte Abschnitt „Entfernen, was eine
-ältere Version hinterlassen hat“ mit seinen neun
-Kästchen.](captures/version-et-nettoyage.de.png)
+ältere Version hinterlassen hat“ mit seinen sechs Kästchen, gefolgt von den drei stehen
+gelassenen Einstellungen.](captures/version-et-nettoyage.de.png)
 
-*Die Versionswahl, die Diagnose und das Aufräumen, das sie eröffnet — neun Einstellungen
-auf vier Widgets, jede mit der letzten XCTrack-Version, die sie noch las.*
+*Die Versionswahl, die Diagnose und das Aufräumen, das sie eröffnet — sechs vorgeschlagene
+und drei stehen gelassene Einstellungen auf vier Widgets. ⚠️ **Dieses Bild muss neu gemacht
+werden**: es stammt von vor der dritten Sperre und zeigt noch neun Kästchen.*
 
 ![Der Dialog „Diese Konfiguration speichern“: die drei Wege, dann das Verzeichnis der fünf
 ersetzten Texte — jeder mit seiner Seite, seinem Widget, dem durchgestrichenen alten Wert,
