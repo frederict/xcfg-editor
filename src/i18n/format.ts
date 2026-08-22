@@ -47,6 +47,35 @@ import type { UiLanguage } from './languages'
  * Pour le reste — séparateurs de milliers, virgule décimale, signe des pouces — la sortie
  * française est celle d'aujourd'hui.
  *
+ * ## Les énumérations, elles aussi
+ *
+ * `versionDiagnostic.ts` assemblait « a, b et c » à la main : `join(', ')` sur tout sauf
+ * le dernier, puis « et ». Cette fonction-là est française, et rien dans son nom ne le
+ * dit à qui la réutilise. `format.list` la remplace.
+ *
+ * Ce que `Intl.ListFormat` rend, mesuré (Node 22.23, ICU complet), sur trois éléments :
+ *
+ * | | `'and'` | `'or'` |
+ * |---|---|---|
+ * | `fr` | `a, b et c` | `a, b ou c` |
+ * | `en` | `a, b, and c` | `a, b, or c` |
+ * | `nl` | `a, b en c` | `a, b of c` |
+ * | `de` | `a, b und c` | `a, b oder c` |
+ * | `es` | `a, b y c` | `a, b o c` |
+ *
+ * Deux choses qu'une fonction maison n'aurait pas eues :
+ *
+ * - **la virgule d'Oxford anglaise** — « a, b, and c », et non « a, b and c ». CLDR la
+ *   pose pour les deux types employés ici, et ne la pose pas pour le troisième (`unit`,
+ *   inutilisé — voir `LIST_TYPES`) ;
+ * - **l'alternance espagnole**, qui n'est pas une affaire de ponctuation mais de
+ *   prononciation : *y* devient **e** devant un mot commençant par le son /i/ — « padres
+ *   e hijos » — et *o* devient **u** devant /o/ — « uno u otro ». Mesuré : ICU l'applique.
+ *   Personne n'aurait écrit cette règle à la main dans une langue qu'il ne parle pas.
+ *
+ * Une liste vide rend la chaîne vide, un seul élément se rend seul : c'est ce que le
+ * `frenchList` du dépôt faisait déjà, et il n'y a donc rien à décider à l'appel.
+ *
  * ## Ce qui ne passe PAS par ici
  *
  * Les identifiants : `versionCode 100030`, `1.0.3-beta`, `info.exportType`, un rang lu
@@ -78,6 +107,30 @@ export interface Formatters {
   dateTime(value: Date | string): string | undefined
   /** La même chose sans l'heure. */
   date(value: Date | string): string | undefined
+  /**
+   * Une énumération : « a, b et c », « a, b or c ». `kind` choisit le mot de liaison —
+   * `'and'` par défaut, `'or'` pour une alternative. Voir `LIST_TYPES`.
+   */
+  list(items: readonly string[], kind?: ListKind): string
+}
+
+/** Ce que la liste énumère : des choses qui vont ensemble, ou des choses au choix. */
+export type ListKind = 'and' | 'or'
+
+/**
+ * Les deux types CLDR employés, et pourquoi le troisième ne l'est pas.
+ *
+ * `Intl.ListFormat` en connaît trois. `unit` — « a, b, c », sans mot de liaison en
+ * anglais et en allemand — sert aux grandeurs composées (« 3 h 20 min ») ; aucune de nos
+ * énumérations n'en est une, et il rendrait en français « a, b et c » comme
+ * `conjunction`, ce qui masquerait la différence dans la seule langue où on la relirait.
+ *
+ * Les noms exposés sont `'and'` et `'or'` plutôt que *conjunction* et *disjunction* : ce
+ * sont des mots que l'appelant lit sans dictionnaire, et le rapport à CLDR est ici.
+ */
+const LIST_TYPES: Readonly<Record<ListKind, Intl.ListFormatType>> = {
+  and: 'conjunction',
+  or: 'disjunction'
 }
 
 /**
@@ -120,6 +173,17 @@ function numberFormat(language: UiLanguage, options: Intl.NumberFormatOptions): 
   if (known !== undefined) return known
   const made = new Intl.NumberFormat(language, options)
   numberFormats.set(key, made)
+  return made
+}
+
+const listFormats = new Map<string, Intl.ListFormat>()
+
+function listFormat(language: UiLanguage, kind: ListKind): Intl.ListFormat {
+  const key = `${language} ${kind}`
+  const known = listFormats.get(key)
+  if (known !== undefined) return known
+  const made = new Intl.ListFormat(language, { style: 'long', type: LIST_TYPES[kind] })
+  listFormats.set(key, made)
   return made
 }
 
@@ -210,7 +274,9 @@ export function formatters(language: UiLanguage): Formatters {
       const when = toDate(value)
       if (when === undefined) return undefined
       return dateFormat(language, { dateStyle: 'long' }).format(when)
-    }
+    },
+
+    list: (items, kind = 'and') => listFormat(language, kind).format(items)
   }
 
   built.set(language, made)

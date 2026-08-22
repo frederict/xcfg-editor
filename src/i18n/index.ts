@@ -16,7 +16,7 @@
  * | `axes.ts` | **les deux axes de langue** — le piège de conception central, à lire en premier |
  * | `languages.ts` | les cinq codes, leur détection, leurs noms dans leur propre langue |
  * | `plural.ts` | une seule règle de pluriel, `Intl.PluralRules`, pour remplacer les huit copies de `count > 1` |
- * | `format.ts` | nombres, parts, tailles, millimètres, pouces, dates — tous par `Intl` |
+ * | `format.ts` | nombres, parts, tailles, millimètres, pouces, dates, énumérations — tous par `Intl` |
  * | `catalog.ts` | le type du catalogue, dérivé du français ; le chargement d'une langue et d'une seule |
  * | `domains.ts` | **le découpage en neuf domaines** — un lot d'extraction par fichier, pour travailler à plusieurs |
  * | `messages/<langue>/` | neuf fichiers de domaine plus leur assemblage ; un morceau téléchargeable par langue |
@@ -48,7 +48,7 @@ export {
 
 export { pluralCategory, pluralForm, type PluralForms } from './plural'
 
-export { formatters, type Formatters } from './format'
+export { formatters, type Formatters, type ListKind } from './format'
 
 export {
   DOMAINS,

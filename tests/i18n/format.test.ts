@@ -96,6 +96,56 @@ describe('formateurs', () => {
     expect(fr.date('2026-08-03T12:00:00Z')).toBeDefined()
   })
 
+  it('énumère dans les cinq langues, mot de liaison compris', () => {
+    // `versionDiagnostic.frenchList()` écrivait « a, b et c » à la main : juste en
+    // français, faux partout ailleurs, et rien dans son nom ne l'annonçait à qui la
+    // réutilisait.
+    const three = ['1.0.2', '1.0.3-beta4', '1.0.3-beta5']
+    expect(formatters('fr').list(three)).toBe('1.0.2, 1.0.3-beta4 et 1.0.3-beta5')
+    expect(formatters('nl').list(three)).toBe('1.0.2, 1.0.3-beta4 en 1.0.3-beta5')
+    expect(formatters('de').list(three)).toBe('1.0.2, 1.0.3-beta4 und 1.0.3-beta5')
+    expect(formatters('es').list(three)).toBe('1.0.2, 1.0.3-beta4 y 1.0.3-beta5')
+  })
+
+  it('pose la virgule d’Oxford en anglais, et elle seule', () => {
+    // « a, b, and c » : la virgule est **avant** le mot de liaison, et le français ne
+    // l'a pas. Une fonction maison écrite depuis le français aurait rendu « a, b and c ».
+    const three = ['a', 'b', 'c']
+    expect(formatters('en').list(three)).toBe('a, b, and c')
+    expect(formatters('en').list(three, 'or')).toBe('a, b, or c')
+    // À deux éléments, personne ne la pose.
+    expect(formatters('en').list(['a', 'b'])).toBe('a and b')
+    expect(formatters('fr').list(three)).toBe('a, b et c')
+  })
+
+  it('choisit le mot de l’alternative dans chaque langue', () => {
+    const two = ['a', 'b']
+    expect(formatters('fr').list(two, 'or')).toBe('a ou b')
+    expect(formatters('nl').list(two, 'or')).toBe('a of b')
+    expect(formatters('de').list(two, 'or')).toBe('a oder b')
+    expect(formatters('es').list(two, 'or')).toBe('a o b')
+  })
+
+  it('applique l’alternance espagnole, que personne n’aurait écrite à la main', () => {
+    // Ce n'est pas de la ponctuation, c'est de la prononciation : *y* devient *e* devant
+    // le son /i/, *o* devient *u* devant /o/. C'est l'argument décisif pour `Intl` plutôt
+    // qu'un assemblage maison — on ne devine pas la phonologie d'une langue qu'on ne
+    // parle pas.
+    const es = formatters('es')
+    expect(es.list(['padres', 'hijos'])).toBe('padres e hijos')
+    expect(es.list(['padres', 'iglesias'])).toBe('padres e iglesias')
+    expect(es.list(['uno', 'otro'], 'or')).toBe('uno u otro')
+    expect(es.list(['siete', 'ocho'], 'or')).toBe('siete u ocho')
+  })
+
+  it('rend seul un élément seul, et rien du tout pour une liste vide', () => {
+    // Ce que `frenchList` faisait déjà : il n'y a donc rien à décider à l'appel.
+    for (const language of UI_LANGUAGES) {
+      expect(formatters(language).list([]), language).toBe('')
+      expect(formatters(language).list(['seul']), language).toBe('seul')
+    }
+  })
+
   it('rend le même objet pour la même langue', () => {
     for (const language of UI_LANGUAGES) {
       expect(formatters(language)).toBe(formatters(language))
