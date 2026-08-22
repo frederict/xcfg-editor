@@ -18,7 +18,9 @@ import {
   buildPaletteEntries,
   buildWidget,
   centeredBounds,
+  copiedBounds,
   createWidgetNode,
+  entryBounds,
   newWidgetBounds,
   previewKind,
   previewNode,
@@ -924,7 +926,9 @@ describe('le rappel onChoose', () => {
     expect(received).toHaveLength(1)
     expect(received[0]!.description).toContain('Boussole et vent')
     expect(readWidget(received[0]!.node).shortName).toBe('WCompass')
-    expect(readWidgetBounds(received[0]!.node)).toEqual({ x1: 4375, y1: 3793, x2: 5625, y2: 5862 })
+    // La copie garde la taille de son modèle : la boussole du fichier occupe 14 × 14
+    // cellules — 45,2 × 42,1 mm —, pas les 6 × 6 d'un gadget neuf. Voir `copiedBounds`.
+    expect(readWidgetBounds(received[0]!.node)).toEqual({ x1: 3542, y1: 2414, x2: 6459, y2: 7242 })
 
     const page = readLayout(doc).landscape[0]!.node
     const before = pageWidgets(page).items.length
@@ -1012,5 +1016,130 @@ describe('les deux axes de langue', () => {
     // Le texte, et non le HTML : les identifiants portent un compteur de palette, qui
     // diffère forcément entre deux rendus.
     expect(withoutTr.element.textContent).toBe(withFrench.element.textContent)
+  })
+})
+
+/**
+ * # Une copie garde la taille de son modèle
+ *
+ * Défaut du second essai pilote (22 août 2026), sa gêne n° 3 : « j'ai demandé la même carte
+ * sur une autre page ; les réglages ont bien suivi — je l'ai vérifié **sur l'appareil**,
+ * les deux cartes sont réglées à l'identique — mais **pas la taille**. Elle est arrivée en
+ * carré de 2 cm au milieu de la page. […] Une carte de 2 cm n'a aucun usage. »
+ *
+ * Reproduit sur `2026-08-20_backup-00.xcfg` : la carte de manche de la page paysage 2 fait
+ * `2708, 0, 10000, 10000`, soit 113,0 × 87,2 mm ; copiée sur la page paysage 1, elle
+ * arrivait au rectangle d'usine `4375, 3793, 5625, 5862` — 19,4 × 18,0 mm, le « carré de
+ * 2 cm ». Relevé aussi au navigateur, dans la liste des gadgets de la page d'arrivée :
+ * « Carte de la manche — 19,4 × 18,0 mm ».
+ *
+ * `editor.ts` avait déjà tranché la même question pour la duplication sur place :
+ * « la **taille** n'est jamais touchée : une copie est le widget, ailleurs »
+ * (`duplicateRect`). La palette dit maintenant la même chose d'une page à l'autre.
+ */
+describe('la taille d’une copie', () => {
+  /** Le rectangle du modèle que la palette retient pour ce type. */
+  function modelOf(sources: PaletteSources, shortName: string) {
+    const entry = entryFor(entries(sources), shortName)
+    expect(entry.origin, `${shortName} devrait être duplicable`).toBe('duplicate')
+    return readWidget(entry.model!)
+  }
+
+  const LANDSCAPE = gridFor(AIR3, 'landscape')
+  const PORTRAIT = gridFor(AIR3, 'portrait')
+
+  it('la carte copiée d’une autre page n’est plus un carré de 2 cm', () => {
+    const doc = document()
+    // La page paysage 1 n'a aucune carte de manche : le modèle vient donc bien d'ailleurs,
+    // exactement le geste que le pilote décrit.
+    const sources = fromPage(doc, 'landscape', 0)
+    const model = modelOf(sources, 'WCompMap')
+    expect(model.x2 - model.x1).toBe(7292)
+    expect(model.y2 - model.y1).toBe(10000)
+
+    const entry = entryFor(entries(sources), 'WCompMap')
+    const bounds = entryBounds(entry, LANDSCAPE)
+
+    expect(bounds.x2 - bounds.x1).toBe(model.x2 - model.x1)
+    expect(bounds.y2 - bounds.y1).toBe(model.y2 - model.y1)
+    // Le rectangle d'usine, celui du défaut : la copie ne doit plus y ressembler.
+    expect(bounds).not.toEqual(newWidgetBounds(AIR3, 'landscape'))
+  })
+
+  it('c’est bien ce rectangle-là que le clic pose dans le fichier', () => {
+    const doc = document()
+    const received: JsonNode[] = []
+    const view = renderWidgetPalette({
+      sources: fromPage(doc, 'landscape', 0),
+      catalog: CATALOG,
+      device: AIR3,
+      orientation: 'landscape',
+      settings: SETTINGS,
+      onChoose: (node) => { received.push(node) }
+    })
+
+    view.element.querySelector<HTMLElement>('.palette__entry[data-widget="WCompMap"]')!.click()
+
+    const posed = readWidgetBounds(received[0]!)
+    expect(posed.x2 - posed.x1).toBe(7292)
+    expect(posed.y2 - posed.y1).toBe(10000)
+  })
+
+  it('un gadget neuf, lui, garde le rectangle mesuré sur l’appareil', () => {
+    // La correction ne déplace pas la frontière entre les deux chemins : `WQNH` n'est nulle
+    // part dans le fichier, il se crée, et 6 × 6 cellules restent la seule mesure propre.
+    const entry = entryFor(entries(allWidgets(document())), 'WQNH')
+    expect(entry.origin).toBe('create')
+    expect(entryBounds(entry, LANDSCAPE)).toEqual(newWidgetBounds(AIR3, 'landscape'))
+  })
+
+  it('la copie est centrée, son coin aimanté, sa taille intacte', () => {
+    // Un rectangle qui ne tombe pas sur la grille — un fichier d'une version antérieure.
+    const model = { x1: 111, y1: 222, x2: 3111, y2: 3222 }
+    const bounds = copiedBounds(model, LANDSCAPE)
+
+    expect(bounds.x2 - bounds.x1).toBe(3000)
+    expect(bounds.y2 - bounds.y1).toBe(3000)
+    // Aimanter les deux bords aurait rogné la taille ; seul le coin l'est.
+    const cell = { x: NORMALIZED_MAX / LANDSCAPE.cols, y: NORMALIZED_MAX / LANDSCAPE.rows }
+    expect(Math.abs(bounds.x1 - Math.round(Math.round(bounds.x1 / cell.x) * cell.x)))
+      .toBeLessThanOrEqual(1)
+    expect(Math.abs(bounds.y1 - Math.round(Math.round(bounds.y1 / cell.y) * cell.y)))
+      .toBeLessThanOrEqual(1)
+  })
+
+  it('un modèle plus grand que la page d’arrivée y est ramené', () => {
+    // Le cas de l'autre orientation : les coordonnées sont relatives à la page, un modèle
+    // ne peut donc jamais dépasser — mais un fichier abîmé, si. La copie reste dans la page.
+    const bounds = copiedBounds({ x1: 0, y1: 0, x2: 99999, y2: 99999 }, PORTRAIT)
+    expect(bounds.x1).toBeGreaterThanOrEqual(0)
+    expect(bounds.y1).toBeGreaterThanOrEqual(0)
+    expect(bounds.x2).toBeLessThanOrEqual(NORMALIZED_MAX)
+    expect(bounds.y2).toBeLessThanOrEqual(NORMALIZED_MAX)
+  })
+
+  it('une copie qui recouvrirait exactement un voisin se décale d’une cellule', () => {
+    // La seule collision que rien à l'écran ne rattraperait : deux rectangles identiques,
+    // et le pilote ne sait pas si son clic a fait quelque chose.
+    const model = { x1: 0, y1: 0, x2: 2000, y2: 2000 }
+    const alone = copiedBounds(model, LANDSCAPE)
+    const nudged = copiedBounds(model, LANDSCAPE, [alone])
+
+    expect(nudged).not.toEqual(alone)
+    expect(nudged.x2 - nudged.x1).toBe(alone.x2 - alone.x1)
+    expect(nudged.y2 - nudged.y1).toBe(alone.y2 - alone.y1)
+    // Un voisin d'une autre taille ne déclenche rien : le centre est occupé presque
+    // toujours, et déplacer à chaque fois ferait fuir la copie hors de la page.
+    expect(copiedBounds(model, LANDSCAPE, [{ x1: 0, y1: 0, x2: 10, y2: 10 }])).toEqual(alone)
+  })
+
+  it('la vignette dessine le rectangle que le clic posera', () => {
+    // Les deux ne se séparent jamais : une vignette qui montrerait une autre taille
+    // promettrait ce que le fichier ne recevrait pas.
+    const sources = fromPage(document(), 'landscape', 0)
+    const entry = entryFor(entries(sources), 'WCompMap')
+    const bounds = entryBounds(entry, LANDSCAPE)
+    const node = previewNode(entry, bounds)
+    expect(readWidgetBounds(node)).toEqual(bounds)
   })
 })

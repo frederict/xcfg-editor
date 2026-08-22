@@ -4,7 +4,9 @@ import type { Device } from '../catalog/devices'
 import { readableName } from '../catalog/widgetNames'
 import type { WidgetCatalog } from '../catalog/widgetCatalog'
 import { defaultsFor, type DefaultObject, type DefaultValue } from '../catalog/widgetDefaults'
-import { gridFor, snapRect, NORMALIZED_MAX, type Grid, type Orientation } from '../model/grid'
+import {
+  gridFor, snapRect, snapValue, NORMALIZED_MAX, type Grid, type Orientation
+} from '../model/grid'
 import { duplicateWidget, type Bounds } from '../model/mutations'
 import type { Page } from '../model/layout'
 import type { RenderSettings } from '../model/preferences'
@@ -15,6 +17,7 @@ import {
   makeTranslator, UI_FALLBACK_LANGUAGE, type MessageCatalog, type Translator
 } from '../i18n'
 import frenchWidgets from '../i18n/messages/fr/widgets'
+import { duplicateRect } from './editor'
 import { aspectRatioOf } from './views'
 
 /**
@@ -40,7 +43,8 @@ import { aspectRatioOf } from './views'
  * ## Deux chemins, et ils ne valent pas la même chose
  *
  * **Dupliquer.** Si la configuration ouverte contient déjà un widget du type demandé, le
- * nouveau widget en est une **copie profonde** (`duplicateWidget`), replacée au centre. Tous
+ * nouveau widget en est une **copie profonde** (`duplicateWidget`), **à la taille du modèle**
+ * (`copiedBounds`), posée au centre de la page d'arrivée. Tous
  * ses réglages viennent alors d'un widget que XCTrack a lui-même écrit — y compris les clés
  * qu'aucune version connue ne documente et celles que cet éditeur ne sait pas présenter. Rien
  * n'est deviné, rien n'est perdu. C'est le chemin principal, et la spécification l'a tranché
@@ -207,6 +211,82 @@ export function newWidgetBounds(
   device: Device, orientation: Orientation, cells: number = NEW_WIDGET_CELLS
 ): Bounds {
   return centeredBounds(gridFor(device, orientation), cells)
+}
+
+/** Deux rectangles qui se recouvrent exactement — donc que rien à l'écran ne distingue. */
+function sameRect(a: Bounds, b: Bounds): boolean {
+  return a.x1 === b.x1 && a.y1 === b.y1 && a.x2 === b.x2 && a.y2 === b.y2
+}
+
+/**
+ * Le rectangle d'une **copie** : la taille du modèle, au centre de la page d'arrivée.
+ *
+ * ## Pourquoi la taille du modèle et non celle d'un widget neuf
+ *
+ * Une copie arrivait jusqu'ici au rectangle d'usine — 6 × 6 cellules, soit 19,4 × 18,0 mm sur
+ * un AIR³ 7.2 en paysage. Le pilote d'essai du 22 août l'a dit ainsi : « les réglages ont bien
+ * suivi, mais pas la taille ; elle arrive en carré de 2 cm par-dessus tout ». Mesuré sur
+ * `2026-08-20_backup-00.xcfg` : la carte de manche copiée depuis la page paysage 2 fait
+ * 113,0 × 87,2 mm chez elle et arrivait à 19,4 × 18,0 mm sur la page 1. « Une carte de 2 cm
+ * n'a aucun usage. »
+ *
+ * `editor.ts` avait déjà tranché la question pour la duplication sur place, et dans les mêmes
+ * termes : « la **taille** n'est jamais touchée : une copie est le widget, ailleurs »
+ * (`duplicateRect`). La palette dit maintenant la même chose d'une page à l'autre.
+ *
+ * ## Position aimantée, taille intacte
+ *
+ * C'est la règle de `movedRect` : le coin haut-gauche tombe sur la grille de la page
+ * d'arrivée, la taille reste au normalisé près, et le rectangle est ramené dans la page si le
+ * centrage l'en faisait sortir. Aimanter les deux bords indépendamment aurait rogné jusqu'à
+ * une cellule sur un modèle qui n'est pas posé sur la grille — un widget d'une version
+ * antérieure, ou d'un appareil au maillage différent.
+ *
+ * ## La place peut être occupée
+ *
+ * Le centre l'est presque toujours : c'est le prix d'un ajout, et l'appareil fait pareil. Une
+ * seule collision est corrigée, celle que rien à l'écran ne rattraperait — la copie qui
+ * recouvre **exactement** un widget déjà là. Elle se décale alors d'une cellule, comme le fait
+ * `duplicateRect`. Pour tout le reste, la copie est au premier plan, la barre d'outils annonce
+ * son rang, et c'est au pilote de la poser où il veut.
+ *
+ * ## Ce que cette fonction ne sait pas
+ *
+ * Les coordonnées d'un widget sont **relatives à sa page** : le modèle qui occupait la moitié
+ * de la largeur d'une page paysage occupera la moitié de la largeur d'une page portrait, donc
+ * 87,2 mm au lieu de 155,0. Rendre les millimètres demanderait de savoir de **quelle page** le
+ * modèle vient, et `PaletteSources.elsewhere` ne le porte pas — c'est la même information qui
+ * manque au pilote quand il demande « d'où vient la copie ? ». En attendant, la copie garde sa
+ * part de page : jamais la bonne largeur au millimètre entre deux orientations, jamais un
+ * carré de 2 cm non plus.
+ */
+export function copiedBounds(
+  model: Bounds, grid: Grid, taken: readonly Bounds[] = []
+): Bounds {
+  const spanX = Math.max(1, Math.min(model.x2 - model.x1, NORMALIZED_MAX))
+  const spanY = Math.max(1, Math.min(model.y2 - model.y1, NORMALIZED_MAX))
+  const place = (span: number, cells: number): number => {
+    const centred = snapValue(Math.round((NORMALIZED_MAX - span) / 2), cells)
+    return Math.min(Math.max(centred, 0), NORMALIZED_MAX - span)
+  }
+
+  const x1 = place(spanX, grid.cols)
+  const y1 = place(spanY, grid.rows)
+  const rect = { x1, y1, x2: x1 + spanX, y2: y1 + spanY }
+  return taken.some((other) => sameRect(other, rect)) ? duplicateRect(rect, grid) : rect
+}
+
+/**
+ * Le rectangle que le clic posera : celui du modèle pour une copie, le rectangle d'usine
+ * pour une création. C'est aussi celui que la vignette dessine — les deux ne se séparent
+ * jamais, sinon la vignette promettrait une taille que le fichier ne recevrait pas.
+ */
+export function entryBounds(
+  entry: PaletteEntry, grid: Grid, taken: readonly Bounds[] = []
+): Bounds {
+  if (entry.model === undefined) return centeredBounds(grid)
+  const model = readWidget(entry.model)
+  return copiedBounds(model, grid, taken)
 }
 
 /* ------------------------------------------------------------------ le nœud du widget */
@@ -688,7 +768,10 @@ export function renderWidgetPalette(options: WidgetPaletteOptions): WidgetPalett
 
   const list = el('div', 'palette__list')
   const groups: Group[] = []
-  const bounds = newWidgetBounds(options.device, options.orientation)
+  const grid = gridFor(options.device, options.orientation)
+  // Ce que la page d'arrivée porte déjà : la seule chose dont `copiedBounds` a besoin pour
+  // ne pas poser une copie exactement sur son jumeau.
+  const taken = options.sources.onPage.map((node) => readWidget(node))
   const aspectRatio = aspectRatioOf(options.device, options.orientation)
 
   const familyIds = [
@@ -713,7 +796,11 @@ export function renderWidgetPalette(options: WidgetPaletteOptions): WidgetPalett
 
     const group: Group = { family, head: groupHead, count, rows: [] }
     for (const entry of own) {
-      const element = buildRow(entry, options, bounds, aspectRatio, language, tr)
+      // Un rectangle par ligne, et non plus un pour toutes : une copie garde la taille de
+      // son modèle, une création prend celle d'usine.
+      const element = buildRow(
+        entry, options, entryBounds(entry, grid, taken), aspectRatio, language, tr
+      )
       group.rows.push({
         element,
         haystack: normalize(`${entry.label} ${entry.shortName} ${entry.className}`),
