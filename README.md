@@ -360,13 +360,36 @@ réglages restent français dans les cinq captures — seule notre prose change.
 <!--
   REFAIRE CETTE CAPTURE — captures/reglages-generaux.<langue>.png (1400 × 1060)
 
-  ⚠ LES CINQ IMAGES SONT PÉRIMÉES depuis le 2026-08-22 : elles montrent des boutons
-  « Retirer », qui disent maintenant « Retirer du fichier » — « Remove from the file »,
-  « Aus der Datei entfernen », « Quitar del archivo », « Uit het bestand verwijderen ».
-  Rien d'autre n'a bougé sur cet écran. Elles n'ont pas été refaites le jour même, et
-  c'était volontaire : deux autres chantiers avaient la feuille de style ouverte, et
-  une capture prise à ce moment-là aurait figé un travail à mi-course. À refaire sur un
-  arbre propre, avec la recette ci-dessous.
+  DETTE PAYÉE le 2026-08-22 : les cinq images montraient des boutons « Retirer », qui
+  disent maintenant « Retirer du fichier » — « Remove from the file », « Aus der Datei
+  entfernen », « Quitar del archivo », « Uit het bestand verwijderen ». Elles n'avaient pas
+  été refaites le jour du renommage, et c'était volontaire : deux autres chantiers avaient
+  la feuille de style ouverte, et une capture prise à ce moment-là aurait figé un travail
+  à mi-course. Ces chantiers sont clos ; les cinq images ont été reprises sur un arbre
+  propre, servi depuis un export figé de HEAD (`git archive`).
+
+  ⚠ CE QUE CES IMAGES MONTRENT ET QUI EST UN DÉFAUT, PAS UN CADRAGE. Sur les lignes au
+  défaut, le bouton de retrait passe SOUS la marque d'état et sa phrase devient illisible.
+  Ce n'est pas l'émulation : `.prefs__aside` réserve une largeur fixe de 4,6 rem (73,6 px)
+  et `.prefs__drop` porte `white-space: nowrap` — la réservation avait été taillée pour
+  « Retirer », et le renommage ne l'a pas élargie. Mesuré à 1400, 1600 et 1920 points de
+  large, à l'identique : le débordement ne dépend pas de la largeur de la fenêtre.
+      fr  « Retirer du fichier »          bouton 109 px — 24 px de recouvrement
+      es  « Quitar del archivo »          bouton 114 px — 29 px
+      en  « Remove from the file »        bouton 131 px — 46 px
+      de  « Aus der Datei entfernen »     bouton 146 px — 61 px
+      nl  « Uit het bestand verwijderen » bouton 167 px — 82 px (le mot est barré par
+                                                                la marque : illisible)
+  Les images ont tout de même été posées : elles disent le vrai, et une image qui montre
+  un bouton disparu ment davantage qu'une image qui montre un défaut réel. MAIS LES CINQ
+  SONT À REFAIRE dès que la largeur réservée suivra l'intitulé — c'est le seul changement
+  attendu ici, le cadrage ci-dessous restera bon.
+
+  ⚠ Second défaut, visible sur cet écran et signalé avant ce chantier, toujours non
+  traité : l'inversion des formes. Le vrai bouton (`.btn--ghost.prefs__drop`) a un fond et
+  une bordure transparents, il se lit comme du texte ; la marque d'état, qui ne se clique
+  pas, porte un filet gris et un rayon de 999 px, elle se lit comme un bouton. L'œil va au
+  mauvais élément. Confirmé dans les cinq langues.
 
   Écran ...... la page « Réglages généraux », mode édition.
   Langues .... CINQ exemplaires : .fr, .en, .nl, .de, .es.
@@ -383,12 +406,20 @@ réglages restent français dans les cinq captures — seule notre prose change.
                l'avertissement de version puisque ce fichier ne vient pas de la version du
                relevé) et deux lignes « Définir cette valeur » (pastille « absente du
                fichier »). Les trois gestes dans le même cadre.
-  Refaire .... npm run dev -- --port 5179, déposer le fichier, bouton « Réglages », puis
-               « Modifier les réglages », enfin faire défiler jusqu'à « Intégration
-               Android » et le caler à ~72 px sous l'en-tête collant.
+  Refaire .... npm run dev -- --port 5179, déposer le fichier, bouton « Réglages », puis
+               « Modifier les réglages », enfin faire défiler jusqu'à « Intégration
+               Android » et caler le haut du bloc à 72 px du haut de la fenêtre — soit
+               16 px sous la barre de tête collante, qui mesure 56 px.
   Cadrage .... viewport de 1400 × 1060 points CSS, émulation comme ci-dessus.
+               ⚠ L'ALLEMAND NE DÉBORDE PAS SUR CET ÉCRAN, contrairement à deux des sept
+               autres : mesuré, le bloc fait 949 px dans les CINQ langues. C'est attendu
+               — les noms et les descriptions viennent du fichier, qui déclare le
+               français, et seuls les boutons et les marques changent de langue ; aucun
+               d'eux ne pousse une ligne sur un rang de plus. Un seul cadre suffit donc
+               aux cinq. Ne pas généraliser dans l'autre sens pour autant : c'est cet
+               écran-ci qui a été mesuré, pas l'application.
 
-  RECETTE CORRIGÉE — deux points, mesurés sur les fixtures :
+  RECETTE CORRIGÉE — trois points, mesurés sur les fixtures :
   1. Le bouton ne s'appelle plus « Modifier les réglages » depuis la barre du haut : on
      ouvre l'écran par « Réglages », et on bascule ensuite en édition.
   2. Sur 2026-08-20_backup-00.xcfg, aucune ligne des réglages généraux n'offre
