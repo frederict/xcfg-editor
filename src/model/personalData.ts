@@ -5,6 +5,9 @@ import type { JsonNode } from '../core/jsonDocument'
 import { readLayout, type Layout } from './layout'
 import { findFreeTextSlots, type FreeText } from './scope'
 import type { Orientation } from './mutations'
+// `import type` : effacé à la compilation. Ce module **ne dépend pas** de `src/i18n/` à
+// l'exécution — il reçoit un traducteur en argument. Voir « La prose de ce module ».
+import type { MessageKey, Translator } from '../i18n'
 
 /**
  * **La seule réponse de cet outil à la question « qu'y a-t-il de personnel dans ce
@@ -61,6 +64,25 @@ import type { Orientation } from './mutations'
  *   en cours avec ses coordonnées — 1 332 caractères dans le backup de référence, et elle
  *   est `PUBLIC`, donc elle voyage. On en dit la taille et le danger, jamais le contenu.
  *
+ * ## La prose de ce module : elle reçoit un traducteur, elle ne le lit pas
+ *
+ * `personalProse(tr)` rend les mots de cet inventaire dans la langue du pilote. Le
+ * traducteur est **passé**, jamais importé : de `src/i18n/` ce fichier ne prend que le
+ * type `Translator`, effacé à la compilation. Le modèle reste donc ce qu'il est — une
+ * couche que la bibliothèque et les écrans peuvent charger sans traîner cinq catalogues.
+ *
+ * C'est le motif déjà employé par `resolveLanguage` (`src/model/preferences.ts`), qui
+ * reçoit `navigator.language` au lieu de le lire, et par `src/i18n/preference.ts`, qui
+ * reçoit `localStorage`. Voir `src/i18n/CLAUDE.md` pour la décision et son alternative
+ * écartée — rendre des clés que l'appelant traduirait.
+ *
+ * ⚠️ **Transition.** Les constantes françaises `PERSONAL_KIND_LABELS`,
+ * `PERSONAL_BASIS_LABELS`, `PERSONAL_CAVEAT`, `personalHomeLabel` et `personalValueText`
+ * sont **héritées** : quatre écrans les emploient encore. Elles disparaîtront quand ces
+ * écrans seront passés à `personalProse`. En attendant, `personalData.test.ts` vérifie
+ * que le catalogue français dit **exactement** ce qu'elles disent : aucune dérive n'est
+ * possible pendant la transition, et le jour de la bascule il n'y a rien à relire.
+ *
  * ## Le poids
  *
  * `personalKeys.json` — 7,3 Ko, les 44 clés marquées du catalogue avec leur nature, leur
@@ -87,7 +109,11 @@ export type PersonalBasis = CatalogPersonalData['basis']
 /** Où la donnée vit — donc ce qui décide si elle voyage avec un export « pages ». */
 export type PersonalHome = 'layout' | 'preferences'
 
-/** Le mot affiché pour chaque nature. Un seul jeu de mots pour les quatre écrans. */
+/**
+ * Le mot affiché pour chaque nature, **en français seulement**.
+ *
+ * ⚠️ Hérité : employer `personalProse(tr).kind(kind)`. Voir « La prose de ce module ».
+ */
 export const PERSONAL_KIND_LABELS: Record<PersonalKind, string> = {
   identity: 'identité',
   credential: 'identifiant',
@@ -115,6 +141,8 @@ export const PERSONAL_KIND_LABELS: Record<PersonalKind, string> = {
  * Ce que ces trois mots portent, et qu'il ne faut pas perdre : la **provenance de
  * l'affirmation** — lue dans XCTrack, ou jugée par cet éditeur. C'est la distinction
  * mesuré / supposé, appliquée aux données personnelles.
+ *
+ * ⚠️ Hérité, en français seulement : employer `personalProse(tr).basis(basis)`.
  */
 export const PERSONAL_BASIS_LABELS: Record<PersonalBasis, string> = {
   scope: 'XCTrack le déclare lui-même',
@@ -130,6 +158,8 @@ export function isReadFromApk(basis: PersonalBasis): boolean {
 /**
  * L'emplacement dit dans les mots du pilote, avec sa conséquence — c'est la conséquence
  * qui compte, pas le nom de la section.
+ *
+ * ⚠️ Hérité, en français seulement : employer `personalProse(tr).home(home)`.
  */
 export function personalHomeLabel(home: PersonalHome): string {
   return home === 'layout'
@@ -223,9 +253,23 @@ export interface PersonalInventory {
 
 /* ------------------------------------------------- les clés du layout, et leur nature */
 
+/**
+ * Les clés de raison du `layout`, et elles seules. `MessageKey` tout entier serait trop
+ * large : `t()` exigerait alors les repères de la plus exigeante des 21 phrases du
+ * catalogue. Restreindre au préfixe rend le type juste — ces douze-là n'attendent rien.
+ */
+type LayoutReasonKey = Extract<MessageKey, `personalReason.${string}`>
+
 interface LayoutKeyRule {
   kind: PersonalKind
+  /**
+   * ⚠️ Hérité, en français : la raison telle que `PersonalFinding.reason` la porte encore
+   * pour les quatre écrans qui n'ont pas de traducteur. `personalProse(tr).reason()`
+   * emploie `reasonKey`, et un test vérifie que les deux disent la même chose en français.
+   */
   reason: string
+  /** La même raison, traduisible. C'est celle-ci qui reste quand la précédente partira. */
+  reasonKey: LayoutReasonKey
 }
 
 /**
@@ -245,54 +289,66 @@ interface LayoutKeyRule {
 const LAYOUT_KEY_RULES: Record<string, LayoutKeyRule> = {
   titletext: {
     kind: 'freeText',
-    reason: 'titre personnalisé d’un gadget, écrit par vous'
+    reason: 'titre personnalisé d’un gadget, écrit par vous',
+    reasonKey: 'personalReason.titletext'
   },
   text: {
     kind: 'freeText',
-    reason: 'contenu entier d’un gadget de texte libre, écrit par vous'
+    reason: 'contenu entier d’un gadget de texte libre, écrit par vous',
+    reasonKey: 'personalReason.text'
   },
   fullName: {
     kind: 'contact',
-    reason: 'nom d’une personne enregistrée sur un bouton d’appel'
+    reason: 'nom d’une personne enregistrée sur un bouton d’appel',
+    reasonKey: 'personalReason.fullName'
   },
   phoneNumber: {
     kind: 'contact',
-    reason: 'numéro de téléphone enregistré sur un bouton d’appel'
+    reason: 'numéro de téléphone enregistré sur un bouton d’appel',
+    reasonKey: 'personalReason.phoneNumber'
   },
   url: {
     kind: 'freeText',
-    reason: 'adresse web saisie, qui peut porter un jeton ou un identifiant'
+    reason: 'adresse web saisie, qui peut porter un jeton ou un identifiant',
+    reasonKey: 'personalReason.url'
   },
   title: {
     kind: 'freeText',
-    reason: 'libellé d’un bouton de lancement, écrit par vous'
+    reason: 'libellé d’un bouton de lancement, écrit par vous',
+    reasonKey: 'personalReason.title'
   },
   name: {
     kind: 'freeText',
-    reason: 'nom de l’application visée par un bouton de lancement'
+    reason: 'nom de l’application visée par un bouton de lancement',
+    reasonKey: 'personalReason.name'
   },
   action: {
     kind: 'freeText',
-    reason: 'action Android d’un bouton de lancement, qui peut être un URI complet'
+    reason: 'action Android d’un bouton de lancement, qui peut être un URI complet',
+    reasonKey: 'personalReason.action'
   },
   filter: {
     kind: 'freeText',
-    reason: 'filtre de journal que vous avez saisi'
+    reason: 'filtre de journal que vous avez saisi',
+    reasonKey: 'personalReason.filter'
   },
   suffix: {
     kind: 'freeText',
-    reason: 'texte placé après la valeur affichée, écrit par vous'
+    reason: 'texte placé après la valeur affichée, écrit par vous',
+    reasonKey: 'personalReason.suffix'
   },
   event: {
     kind: 'freeText',
-    reason: 'nom d’événement que vous avez saisi'
+    reason: 'nom d’événement que vous avez saisi',
+    reasonKey: 'personalReason.event'
   }
 }
 
 /** Le repli d'une clé de texte libre qu'une version future ajouterait sans nous. */
 const UNKNOWN_LAYOUT_KEY: LayoutKeyRule = {
   kind: 'freeText',
-  reason: 'texte libre sans règle propre : traité comme personnel, par précaution'
+  reason: 'texte libre sans règle propre : traité comme personnel, par précaution',
+  reasonKey: 'personalReason.unknown'
 }
 
 /**
@@ -532,12 +588,90 @@ export function findingsIn(
   return inventory.findings.filter((finding) => finding.home === home)
 }
 
+/* ---------------------------------------------------------------- la prose, traduite */
+
+/**
+ * Les mots de cet inventaire, dans la langue du pilote.
+ *
+ * ```ts
+ * const prose = personalProse(tr)
+ * prose.kind(finding.kind)   // « identité », « Identität », « identidad »
+ * prose.value(finding)       // « structure de 4 entrées, non montrée »
+ * prose.caveat()
+ * ```
+ *
+ * Un objet plutôt que six fonctions à qui passer `tr` : un écran qui affiche cinquante
+ * lignes le construit une fois, et l'appel se lit sans répéter le traducteur cinquante
+ * fois. C'est aussi ce qui permet aux six fonctions héritées de garder leur nom pendant
+ * la transition.
+ */
+export interface PersonalProse {
+  /** La nature de la donnée : « identité », « texte libre »… */
+  kind(kind: PersonalKind): string
+  /** Sur quoi l'affirmation repose — lu dans XCTrack, ou jugé par nous. */
+  basis(basis: PersonalBasis): string
+  /** Où la donnée vit, avec sa conséquence : c'est la conséquence qui compte. */
+  home(home: PersonalHome): string
+  /** Pourquoi cette donnée est dite personnelle. Voir la remarque sur les 44 raisons. */
+  reason(finding: PersonalFinding): string
+  /** Ce que la donnée porte — **jamais le contenu d'une structure**. */
+  value(finding: PersonalFinding): string
+  /** Ce qu'un relevé ne peut pas promettre. */
+  caveat(): string
+}
+
+/**
+ * ⚠️ **Les 44 raisons des clés de préférences ne sont pas traduites**, et `reason()` le
+ * laisse voir : elles viennent de `personalKeys.json`, **extrait de l'APK** par
+ * `tools/extract-preferences.py`. Ce sont des données, pas de la prose de code ; les
+ * traduire demande de décider si le fichier extrait porte cinq colonnes ou des clés, et
+ * cette décision appartient au lot qui reprendra l'extraction. Les onze raisons du
+ * `layout`, elles, sont écrites ici et passent par le catalogue.
+ */
+export function personalProse(tr: Translator): PersonalProse {
+  return {
+    // Le repère du gabarit est une union fermée de neuf littéraux : une nature ajoutée
+    // sans sa clé ne compile pas. C'est ce qu'un `Record` écrit à la main donnerait aussi,
+    // en plus long.
+    kind: (kind) => tr.t(`personalKind.${kind}`),
+
+    basis: (basis) => tr.t(`personalBasis.${basis}`),
+
+    home: (home) => tr.t(`personalHome.${home}`),
+
+    reason: (finding) => {
+      const keyPath = finding.location?.keyPath
+      if (keyPath === undefined) return finding.reason
+      return tr.t(layoutRule(keyPath).reasonKey)
+    },
+
+    value: (finding) => {
+      if (!finding.filled) return tr.t('personal.emptySlot')
+      // `join(', ')` et non `format.list` : ce sont des **données** alignées — des noms de
+      // fichiers de balises —, pas une énumération dans une phrase. « coupe.wpt et
+      // autre.wpt » ferait lire une prose là où il y a une colonne.
+      if (finding.values !== undefined) return finding.values.join(', ')
+      if (finding.value !== undefined) return finding.value
+      return tr.t('personal.hiddenStructure', { count: finding.entryCount ?? 0 })
+    },
+
+    // `{version}` part en `string` et `{count}` en `number` : c'est la règle du socle, et
+    // elle compte ici — « 1.0.3-beta-5-gc036d8f2c » ne se met pas en forme, « 44 » si.
+    caveat: () => tr.t('personal.caveat', {
+      version: PERSONAL_KNOWLEDGE.versionName ?? '?',
+      count: PERSONAL_KNOWLEDGE.keyCount
+    })
+  }
+}
+
 /**
  * Ce qu'un relevé ne peut pas promettre, dit une fois pour toutes.
  *
  * Les quatre écrans le répétaient chacun à sa façon. La phrase est ici pour qu'ils la
  * disent avec les mêmes mots : le format de XCTrack change à chaque version, la liste des
  * clés surveillées se périme, et **un inventaire vide ne prouve pas une absence**.
+ *
+ * ⚠️ Hérité, en français seulement : employer `personalProse(tr).caveat()`.
  */
 export const PERSONAL_CAVEAT =
   'Cet inventaire porte sur les réglages connus de XCTrack ' +

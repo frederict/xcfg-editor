@@ -46,13 +46,24 @@ function markersOf(entry: string | PluralForms): string[] {
 const KEYS = Object.keys(fr) as MessageKey[]
 
 /**
- * Les messages dont la traduction est légitimement identique au français : ils ne portent
- * aucun mot, seulement des repères et de la ponctuation. Toute autre coïncidence est une
- * traduction oubliée.
+ * Les traductions légitimement identiques au français, **désignées langue par langue**
+ * — `en/personalKind.contact` et non `personalKind.contact`. Toute autre coïncidence est
+ * une traduction oubliée.
+ *
+ * L'exception est nominative parce qu'un mot identique dans une langue ne l'est presque
+ * jamais dans les quatre autres : dispenser la clé entière laisserait passer un
+ * « Kontakt » allemand oublié, qui est précisément ce que ce test cherche.
  */
-const IDENTICAL_ON_PURPOSE: ReadonlySet<string> = new Set<MessageKey>([
-  'zoom.resetTo',
-  'device.screenSize'
+const IDENTICAL_ON_PURPOSE: ReadonlySet<string> = new Set<string>([
+  // Aucun mot, seulement des repères et de la ponctuation : les cinq langues écrivent
+  // forcément la même chose.
+  ...UI_LANGUAGES.map((language) => `${language}/zoom.resetTo`),
+  ...UI_LANGUAGES.map((language) => `${language}/device.screenSize`),
+  // Un mot qui se trouve être le même. Le néerlandais et l'anglais disent « contact »
+  // comme le français ; l'anglais dit « position » comme lui.
+  'en/personalKind.contact',
+  'nl/personalKind.contact',
+  'en/personalKind.location'
 ])
 
 describe('catalogues de messages', () => {
@@ -106,9 +117,9 @@ describe('catalogues de messages', () => {
 
   it('ne recopient pas le français, sauf là où c’est voulu', () => {
     for (const key of KEYS) {
-      if (IDENTICAL_ON_PURPOSE.has(key)) continue
       for (const language of UI_LANGUAGES) {
         if (language === 'fr') continue
+        if (IDENTICAL_ON_PURPOSE.has(`${language}/${key}`)) continue
         expect(textsOf(CATALOGS[language][key]), `${language} / ${key}`)
           .not.toEqual(textsOf(fr[key]))
       }

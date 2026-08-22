@@ -7,6 +7,7 @@ import {
   findingsIn,
   isReadFromApk,
   personalHomeLabel,
+  personalProse,
   personalValueText,
   NEVER_EXPORTED_PERSONAL_KEYS,
   PERSONAL_BASIS_LABELS,
@@ -16,6 +17,11 @@ import {
   SECURE_PERSONAL_KEYS
 } from '../../src/model/personalData'
 import PERSONAL_KEYS from '../../src/model/personalKeys.json'
+import { makeTranslator } from '../../src/i18n/translate'
+import de from '../../src/i18n/messages/de'
+import en from '../../src/i18n/messages/en'
+import es from '../../src/i18n/messages/es'
+import fr from '../../src/i18n/messages/fr'
 import CATALOG_BASE from '../../src/catalog/preferenceCatalog/base.json'
 import { BACKUP_2026, FORMES_PRESERVEES, PAGES_2026 } from '../fixtures/paths'
 
@@ -310,5 +316,115 @@ describe('données personnelles — les raisons disent « vous »', () => {
     const inventory = collectPersonalData(documentOf(BACKUP_2026))
     const written = inventory.findings.filter((f) => f.reason.includes('par vous'))
     expect(written.length).toBeGreaterThan(0)
+  })
+})
+
+/* ============================================ la prose reçoit un traducteur, elle ne le lit pas */
+
+describe('données personnelles — la prose est traduisible, et ne dérive pas', () => {
+  /**
+   * Le motif arrêté pour toutes les couches sous l'interface : **elles reçoivent un
+   * traducteur en argument**, elles n'importent pas `src/i18n/`. Voir
+   * `src/i18n/CLAUDE.md`.
+   *
+   * Ce bloc garde les deux choses qui peuvent mal tourner pendant la transition, tant que
+   * les quatre écrans emploient encore les constantes françaises :
+   *
+   * 1. **la dérive** — quelqu'un corrige un mot d'un côté et pas de l'autre. Le jour de la
+   *    bascule, l'écran changerait de texte sans que le commit le dise ;
+   * 2. **le français qui traverse** — une clé oubliée rendrait la phrase française dans
+   *    les cinq langues, ce que rien ne signalerait à l'écran.
+   */
+  const frenchTranslator = makeTranslator('fr', fr)
+  const prose = personalProse(frenchTranslator)
+
+  it('dit en français exactement ce que les constantes héritées disent', () => {
+    for (const kind of Object.keys(PERSONAL_KIND_LABELS) as (keyof typeof PERSONAL_KIND_LABELS)[]) {
+      expect(prose.kind(kind), kind).toBe(PERSONAL_KIND_LABELS[kind])
+    }
+    for (const basis of Object.keys(PERSONAL_BASIS_LABELS) as (keyof typeof PERSONAL_BASIS_LABELS)[]) {
+      expect(prose.basis(basis), basis).toBe(PERSONAL_BASIS_LABELS[basis])
+    }
+    expect(prose.home('layout')).toBe(personalHomeLabel('layout'))
+    expect(prose.home('preferences')).toBe(personalHomeLabel('preferences'))
+    expect(prose.caveat()).toBe(PERSONAL_CAVEAT)
+  })
+
+  it('dit la même valeur que la fonction héritée, sur un fichier réel', () => {
+    // Y compris les deux cas particuliers : l'emplacement vide et la structure qu'on ne
+    // déballe pas.
+    const inventory = collectPersonalData(documentOf(BACKUP_2026))
+    expect(inventory.findings.length).toBeGreaterThan(0)
+    for (const finding of inventory.findings) {
+      expect(prose.value(finding), finding.key).toBe(personalValueText(finding))
+    }
+    const pages = collectPersonalData(documentOf(PAGES_2026))
+    for (const finding of pages.findings) {
+      expect(prose.value(finding), finding.key).toBe(personalValueText(finding))
+    }
+  })
+
+  it('rend la raison du layout par le catalogue, celle des préférences telle qu’extraite', () => {
+    const inventory = collectPersonalData(documentOf(FORMES_PRESERVEES))
+    const layout = findingsIn(inventory, 'layout')
+    expect(layout.length).toBe(5)
+    for (const finding of layout) {
+      // Les onze raisons du `layout` sont écrites dans le code : elles passent par le
+      // catalogue, et le français doit dire ce que la règle disait.
+      expect(prose.reason(finding), finding.key).toBe(finding.reason)
+    }
+    // Les 44 raisons des clés de préférences viennent de `personalKeys.json`, extrait de
+    // l'APK : ce sont des données, elles ne sont pas traduites, et `reason()` les rend
+    // telles quelles. C'est écrit, ce n'est pas oublié.
+    const backup = collectPersonalData(documentOf(BACKUP_2026))
+    for (const finding of findingsIn(backup, 'preferences')) {
+      expect(prose.reason(finding), finding.key).toBe(finding.reason)
+    }
+  })
+
+  it('rend une autre langue quand on lui donne un autre traducteur', () => {
+    // Le test qui prouve que le module ne lit rien : le même inventaire, deux langues.
+    const german = personalProse(makeTranslator('de', de))
+    expect(german.kind('identity')).toBe('Identität')
+    expect(german.home('layout')).toBe('Anordnung — geht mit den Seiten mit')
+    expect(german.caveat()).toContain('Bestandsaufnahme')
+    expect(german.caveat()).toContain(String(PERSONAL_KNOWLEDGE.versionName))
+
+    const spanish = personalProse(makeTranslator('es', es))
+    expect(spanish.kind('freeText')).toBe('texto libre')
+  })
+
+  it('choisit la forme du pluriel dans la langue, pas dans la nôtre', () => {
+    const inventory = collectPersonalData(documentOf(BACKUP_2026))
+    const structure = inventory.findings.find((f) => f.key === 'Navigation.State')
+    expect(structure).toBeDefined()
+    // Le français dit « entrées » à partir de deux, l'anglais dès zéro : c'est exactement
+    // ce que les huit copies de `count > 1` du dépôt rendaient faux.
+    const english = personalProse(makeTranslator('en', en))
+    expect(english.value({ ...structure!, entryCount: 0, values: undefined, value: undefined }))
+      .toBe('structure with 0 entries, not shown')
+    expect(prose.value({ ...structure!, entryCount: 0, values: undefined, value: undefined }))
+      .toBe('structure de 0 entrée, non montrée')
+  })
+
+  it('n’emploie que le mot mesuré de chaque langue pour le gadget', () => {
+    // Le français du dépôt dit « gadget » — mesuré sur l'AIR³ ; les quatre autres langues
+    // disent « widget » — mesuré dans les 55 relevés. Les raisons du layout en parlent
+    // onze fois.
+    expect(prose.reason({
+      home: 'layout', key: 'x', kind: 'freeText', basis: 'declared', reason: '', filled: true,
+      location: {
+        orientation: 'landscape', pageRank: 1, widgetRank: 1,
+        className: 'x', shortName: 'x', keyPath: 'titletext'
+      }
+    })).toContain('gadget')
+    const german = personalProse(makeTranslator('de', de))
+    expect(german.reason({
+      home: 'layout', key: 'x', kind: 'freeText', basis: 'declared', reason: '', filled: true,
+      location: {
+        orientation: 'landscape', pageRank: 1, widgetRank: 1,
+        className: 'x', shortName: 'x', keyPath: 'titletext'
+      }
+    })).toContain('Widget')
   })
 })

@@ -26,6 +26,37 @@ interface DomainModule {
 
 const MODULES = import.meta.glob<DomainModule>('../../src/i18n/messages/*/*.ts', { eager: true })
 
+/**
+ * Le source de tous les modules du dépôt, pour le contrôle de couches ci-dessous.
+ * `?raw` : on lit le texte, on n'exécute rien.
+ */
+const SOURCES = import.meta.glob<string>('../../src/**/*.ts', {
+  eager: true,
+  query: '?raw',
+  import: 'default'
+})
+
+/**
+ * Les imports de `src/i18n/` d'un module, avec le renseignement qui compte : `import
+ * type` ou non.
+ *
+ * On découpe sur `^import ` plutôt que d'écrire une expression rationnelle par
+ * déclaration : le dépôt n'écrit pas de point-virgule et un import peut tenir sur dix
+ * lignes, ce qui fait qu'une expression gourmande relie la première déclaration au
+ * `from` de la dixième — et accuse le mauvais import.
+ */
+function i18nImports(source: string): { typeOnly: boolean; from: string }[] {
+  const found: { typeOnly: boolean; from: string }[] = []
+  for (const statement of source.split(/^import /m).slice(1)) {
+    const match = /from '([^']*)'/.exec(statement)
+    if (match === null) continue
+    const from = match[1] as string
+    if (!from.includes('i18n')) continue
+    found.push({ typeOnly: statement.startsWith('type '), from })
+  }
+  return found
+}
+
 /** `../../src/i18n/messages/de/library.ts` donne `['de', 'library']`. */
 function coordinatesOf(path: string): [string, string] {
   const parts = path.split('/')
@@ -115,6 +146,24 @@ describe('découpage des catalogues en domaines', () => {
       'library.storedLine': '…'
     }
     expect(wrongShape).toBeDefined()
+  })
+
+  it('ne laisse aucune couche sous l’interface importer le socle autrement qu’en type', () => {
+    // **La décision sur la prose hors interface, gardée par un test.** `src/model/`,
+    // `src/library/`, `src/catalog/` et `src/render/` reçoivent un traducteur en argument
+    // et n'importent de `src/i18n/` que des **types**, effacés à la compilation. Un
+    // `import` de valeur y ferait entrer le socle — et, de proche en proche, un catalogue
+    // de langue — dans des couches que la bibliothèque charge sans écran.
+    let checked = 0
+    for (const [path, source] of Object.entries(SOURCES)) {
+      if (path.includes('/src/ui/') || path.includes('/src/i18n/')) continue
+      for (const found of i18nImports(source)) {
+        checked += 1
+        expect(found.typeOnly, `${path} importe « ${found.from} » sans « type »`).toBe(true)
+      }
+    }
+    // Le test ne doit pas devenir vert en cessant de trouver quoi que ce soit.
+    expect(checked).toBeGreaterThan(0)
   })
 
   it('garde le jeu de clés plat : le domaine ne se lit pas dans l’appel', () => {

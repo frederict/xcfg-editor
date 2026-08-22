@@ -132,7 +132,7 @@ export const DOMAIN_PREFIXES: Readonly<Record<Domain, readonly string[]>> = {
   versions: ['cleanup', 'versions'],
   sharing: ['sharing', 'warnings'],
   pages: ['device', 'pages'],
-  model: ['model']
+  model: ['model', 'personal', 'personalBasis', 'personalHome', 'personalKind', 'personalReason']
 }
 
 /** Le premier segment d'une clé : `library.entryCount` donne `library`. */
