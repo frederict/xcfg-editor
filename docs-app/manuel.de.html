@@ -101,8 +101,9 @@
 
   <h3>Auf dem Gerät</h3>
 
-  <p>Gehen Sie in die Einstellungen von XCTrack, dann
-  <span class="manual__ui">Konfiguration exportieren</span>. Die Datei landet auf der
+  <p>In XCTrack: <span class="manual__ui">Einstellungen</span>, dann
+  <span class="manual__ui">Export &amp; Import Konfiguration</span>, dann
+  <span class="manual__ui">Exportiere Konfiguration</span>. Die Datei landet auf der
   SD-Karte. Holen Sie sie auf Ihren Rechner oder Ihr Telefon.</p>
 
   <h3>Zwei Formate, zwei Inhalte</h3>
@@ -845,6 +846,24 @@
   die beiden nicht: ein <span class="manual__file">backup</span> importiert Einstellungen
   wieder, ein <span class="manual__file">pages</span> nicht.</p>
 
+  <h3>Nach dem Speichern: die Bestätigung</h3>
+
+  <p>Das Fenster schließt sich, und die obere Leiste zeigt eine Zeile, die die erzeugte
+  Datei nennt, ihre Größe und den Ort, an den sie gegangen ist — die Downloads dieses
+  Browsers. Sie bleibt sichtbar, bis Sie sie schließen, erneut speichern oder eine andere
+  Datei öffnen.</p>
+
+  <div class="manual__measured">
+    <span class="manual__boxTitle">Diese Seite kann nicht wissen, ob die Datei angekommen ist</span>
+    <p>Die Bestätigung sagt, was das Werkzeug getan hat — eine Datei erzeugt, benannt und dem
+    Browser übergeben —, nie, was der Browser danach damit gemacht hat. <strong>Auf Chrome
+    gemessen: der erste Download eines Tabs kommt an, die folgenden können verweigert
+    werden</strong>, und diese Verweigerung wird der Seite weder durch einen Fehler noch
+    durch ein Ereignis noch sonst irgendwie gemeldet. Deshalb ergänzt die Bestätigung
+    <em>ab dem zweiten Speichern</em>, was dann zu prüfen ist — und deshalb wird sie Ihnen
+    nie „es ist gespeichert“ schreiben.</p>
+  </div>
+
   <h3>Weg 1 — „Ihre Konfiguration, genau so wie sie ist“</h3>
 
   <p>Das ist Ihre Datei. Wenn Sie nichts geändert haben, kommt sie genau so wieder heraus,
@@ -970,8 +989,9 @@
   <ol class="manual__steps">
     <li>Kopieren Sie die heruntergeladene Datei auf die SD-Karte des Geräts, oder übertragen
     Sie sie per Kabel.</li>
-    <li>Öffnen Sie am Gerät den Bildschirm von XCTrack zum Teilen der Konfiguration und
-    starten Sie den Import.</li>
+    <li>Am Gerät: <span class="manual__ui">Einstellungen</span>, dann
+    <span class="manual__ui">Export &amp; Import Konfiguration</span> — derselbe Bildschirm
+    wie für den Export — und starten Sie den Import.</li>
     <li>Der Modus <span class="manual__ui">Alles ersetzen</span> ist der, auf den sich unsere
     Messungen beziehen. Denken Sie daran, was er genau tut: was die Datei nicht angibt, wird
     nicht angerührt (Kapitel&nbsp;8).</li>

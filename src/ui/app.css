@@ -211,6 +211,50 @@ body {
 .app-bar__actions { display: flex; align-items: center; gap: 0.6rem; }
 
 /*
+ * Le reçu d'enregistrement — une ligne entière DANS la barre de tête.
+ *
+ * `flex: 1 0 100%` dans une barre déjà `flex-wrap: wrap` : le reçu se pose sous la marque
+ * et les commandes, sur toute la largeur. C'est ce qui le fait voyager avec la barre, qui
+ * est collante — posé au-dessous d'elle, il serait hors champ dès que le pilote a fait
+ * défiler sa page, c'est-à-dire presque toujours au moment où il enregistre.
+ *
+ * Le filet est `--app-line-strong` et non l'ambre : un enregistrement qui se passe bien
+ * n'est pas un avertissement, et l'ambre de ce carnet ne doit rester lisible que là où
+ * elle signale. Le fond de plaque (`--app-bg`) suffit à le détacher de la barre, qui est
+ * en `--app-panel`.
+ */
+.app-bar__receipt {
+  flex: 1 0 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.3rem 0.8rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--app-line);
+  border-left: 3px solid var(--app-line-strong);
+  border-radius: 5px;
+  background: var(--app-bg);
+  font-size: 13px;
+}
+
+/* Les deux phrases forment UN bloc : sans lui, chacune serait un élément flexible pour
+   son compte et la seconde partagerait sa ligne avec le bouton de fermeture. */
+.app-bar__receiptSaid { flex: 1 1 auto; display: grid; gap: 0.3rem; }
+
+/* 78ch : la même mesure de ligne que partout ailleurs dans le carnet. */
+.app-bar__receiptText { margin: 0; max-width: 78ch; }
+
+.app-bar__receiptHint {
+  margin: 0;
+  max-width: 78ch;
+  font-size: 12.5px;
+  color: var(--app-ink-quiet);
+}
+
+/* La fermeture part à droite, sur la première ligne — celle qui dit ce qui est arrivé. */
+.app-bar__receiptClose { flex: none; }
+
+/*
  * Le nom du fichier cède la place aux commandes plutôt que de pousser la barre sur deux
  * lignes. `min-width: 0` autorise le rétrécissement dans une ligne flexible ; l'ellipse
  * fait le reste, et le nom entier reste lisible en infobulle.

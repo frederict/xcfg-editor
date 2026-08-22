@@ -166,8 +166,8 @@ const app: DomainCatalog<'app'> = {
   'landing.dropOrPick': 'o haga clic para elegirlo — .xcfg o .xczfg',
 
   'landing.stepDeviceTitle': 'En el instrumento',
-  'landing.stepDeviceText': '«Ajustes», y luego «Exportar la configuración». El archivo cae ' +
-    'en la tarjeta SD.',
+  'landing.stepDeviceText': '«Preferencias», «Configuración exportación e importación», y ' +
+    'luego «Exportar la configuración». El archivo cae en la tarjeta SD.',
   'landing.stepHereTitle': 'Aquí',
   'landing.stepHereText': 'Las páginas aparecen numeradas en el orden en que «página ' +
     'siguiente» las recorre en vuelo.',
@@ -309,6 +309,16 @@ const app: DomainCatalog<'app'> = {
   'app.exportDialogFailedMessage': 'No se ha guardado nada y su archivo no se ha movido. ' +
     'Inténtelo de nuevo.',
 
+  'app.exportHandedOver': '«{name}» ({size}) ha salido hacia las descargas de este navegador.',
+  'app.exportRefusedHint': 'Un navegador a veces rechaza un segundo guardado seguido, sin ' +
+    'decírselo a esta página. Si el archivo no está entre sus descargas, autorícelas para este ' +
+    'sitio y vuelva a empezar.',
+  'app.exportReceiptDismiss': 'Cerrar este recibo de guardado',
+
+  'app.exportFailedTitle': 'El archivo no se ha podido fabricar',
+  'app.exportFailedMessage': 'De esta herramienta no ha salido nada, y su configuración no se ' +
+    'ha movido. Inténtelo de nuevo.',
+
   'app.openFailedTitle': 'Este archivo no se ha podido abrir',
   'app.openFailedMessage': 'Esta herramienta no ha sabido sacar nada de él. El archivo no se ' +
     'ha modificado.',
@@ -318,7 +328,8 @@ const app: DomainCatalog<'app'> = {
 
   'app.unreadableTitle': 'Este archivo no se ha podido leer',
   'app.unreadableMessage': 'Compruebe que sea el archivo .xcfg o .xczfg que produce en el ' +
-    'instrumento «Ajustes», y luego «Exportar la configuración», y que esté completo.',
+    'instrumento «Preferencias», «Configuración exportación e importación», y luego «Exportar ' +
+    'la configuración», y que esté completo.',
   'app.unreadableHint': 'Sus bytes se conservan intactos: «Guardar una copia» se lo devuelve ' +
     'tal como entró, sin la menor reescritura.',
   'app.unreadableIncoming': '«{incoming}» no ha dado nada aprovechable. «{kept}» sigue ' +

@@ -99,7 +99,8 @@
 
   <h3>On the instrument</h3>
 
-  <p>Go into XCTrack’s settings, then
+  <p>In XCTrack: <span class="manual__ui">Preferences</span>, then
+  <span class="manual__ui">Export &amp; import config</span>, then
   <span class="manual__ui">Export configuration</span>. The file lands on the SD card. Get
   it onto your computer or your phone.</p>
 
@@ -804,6 +805,22 @@
   up: a <span class="manual__file">backup</span> imports settings back, a
   <span class="manual__file">pages</span> does not.</p>
 
+  <h3>Once saved: the receipt</h3>
+
+  <p>The dialog closes, and the top bar shows a line naming the file produced, its size, and
+  where it went — this browser’s downloads. It stays in front of you until you dismiss it,
+  save again, or open another file.</p>
+
+  <div class="manual__measured">
+    <span class="manual__boxTitle">This page cannot know that the file arrived</span>
+    <p>The receipt says what the tool did — a file produced, named, and handed over to the
+    browser — never what the browser did with it afterwards. <strong>Measured on Chrome: the
+    first download of a tab arrives, the following ones may be refused</strong>, and that
+    refusal is reported to the page neither by an error, nor by an event, nor by anything at
+    all. That is why the receipt adds, <em>from the second save onward</em>, what to check —
+    and why it will never write “it is saved” for you.</p>
+  </div>
+
   <h3>Outcome 1 — “Your configuration, exactly as it is”</h3>
 
   <p>This is your file. If you have changed nothing, it comes back out exactly as it went
@@ -923,8 +940,9 @@
   <ol class="manual__steps">
     <li>Copy the downloaded file onto the instrument’s SD card, or transfer it by
     cable.</li>
-    <li>On the instrument, open XCTrack’s configuration sharing screen and start the
-    import.</li>
+    <li>On the instrument: <span class="manual__ui">Preferences</span>, then
+    <span class="manual__ui">Export &amp; import config</span> — the same screen as for the
+    export — and start the import.</li>
     <li>The <span class="manual__ui">Replace everything</span> mode is the one our
     measurements cover. Remember what it does exactly: what the file does not say is not
     touched (chapter&nbsp;8).</li>

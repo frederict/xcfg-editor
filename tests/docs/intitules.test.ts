@@ -130,9 +130,18 @@ const MIN_LABEL_LENGTH = 4
  * L'apostrophe typographique du catalogue et l'apostrophe droite du Markdown désignent le
  * même mot ; une insécable et une espace ordinaire aussi ; un intitulé replié sur deux
  * lignes dans le HTML est le même que sur une seule.
+ *
+ * ⚠ **Les entités HTML se décodent ici**, et pas ailleurs. Le manuel écrit forcément
+ * `&amp;` là où l'appareil affiche `&` — « Export & import config » est le nom réel d'un
+ * écran de XCTrack sur les 55 relevés — et sans ce décodage le contrôle irait chercher
+ * dans les catalogues un intitulé qui n'existe nulle part.
  */
 function normalize(text: string): string {
   return text
+    .replaceAll('&amp;', '&')
+    .replaceAll('&lt;', '<')
+    .replaceAll('&gt;', '>')
+    .replaceAll('&nbsp;', ' ')
     .replaceAll('’', "'")
     .replaceAll(' ', ' ')
     .replaceAll(' ', ' ')

@@ -313,11 +313,28 @@ const app = {
   /**
    * Le chemin sur l'instrument s'écrit **d'une seule façon** dans toute l'application —
    * ici et dans `app.unreadableMessage`. La flèche « Réglages → … » qu'employait l'écran
-   * d'erreur ne se dit pas à voix haute et ne se cherche pas ; les deux noms de menu, eux,
-   * se lisent sur l'appareil.
+   * d'erreur ne se dit pas à voix haute et ne se cherche pas ; les noms de menu, eux, se
+   * lisent sur l'appareil.
+   *
+   * ⚠️ **Les trois noms sont mesurés, et le premier était faux.** L'accueil disait
+   * « Réglages » : ce mot n'existe nulle part dans XCTrack, et le pilote d'essai du
+   * 22 août l'a cherché un moment sur son AIR³ avant de comprendre. Le vrai chemin fait
+   * **trois écrans**, relevés sur les 55 versions d'APK du dépôt privé (`menu_preferences`,
+   * `prefShareConfig`, `prefExportConfig`) — et stables sur toutes :
+   *
+   * | | fr | en | de | es | nl |
+   * |---|---|---|---|---|---|
+   * | `menu_preferences` | Préférences | Preferences | Einstellungen | Preferencias | Voorkeuren |
+   * | `prefShareConfig` | Export et import de la config | Export & import config | Export & Import Konfiguration | Configuración exportación e importación | Ex- & importeer configuratie |
+   * | `prefExportConfig` | Exporter la configuration | Export configuration | Exportiere Konfiguration | Exportar la configuración | Configuratie exporteren |
+   *
+   * Les deux derniers sont dans `src/catalog/preferenceCatalog/<langue>.json`, et
+   * `tests/ui/enregistrement.test.ts` vérifie que ces deux messages-ci les citent
+   * exactement. Le premier ne l'est pas — les ressources de chrome ne sont pas versées au
+   * dépôt public — et ne peut donc être gardé que par la relecture.
    */
-  'landing.stepDeviceText': '« Réglages », puis « Exporter la configuration ». Le fichier ' +
-    'atterrit sur la carte SD.',
+  'landing.stepDeviceText': '« Préférences », « Export et import de la config », puis ' +
+    '« Exporter la configuration ». Le fichier atterrit sur la carte SD.',
   'landing.stepHereTitle': 'Ici',
   'landing.stepHereText': 'Les pages apparaissent numérotées dans l’ordre où « page ' +
     'suivante » les fait défiler en vol.',
@@ -534,6 +551,43 @@ const app = {
   'app.exportDialogFailedMessage': 'Rien n’a été enregistré et votre fichier n’a pas bougé. ' +
     'Réessayez.',
 
+  /* ------------------------------------------- le reçu : ce qui vient d'être remis */
+
+  /**
+   * ⚠️ Ce que cette phrase dit, et ce qu'elle se garde de dire.
+   *
+   * Elle ne dit **pas** « c'est enregistré » : cette page n'a aucun moyen de le savoir.
+   * Mesuré sur Chrome, trois enregistrements de suite depuis le même onglet — le premier
+   * arrive, les suivants sont refusés, et le refus n'est rapporté à la page ni par une
+   * exception, ni par un événement, ni par rien. Affirmer le succès serait donc mentir
+   * une fois sur deux.
+   *
+   * Elle dit ce que l'outil a réellement fait : un fichier, ce nom-là, cette taille-là,
+   * remis au navigateur. C'est ce qui manquait au pilote d'essai — « pas un mot, pas un
+   * nom de fichier » — et c'est de quoi reconnaître le fichier dans son dossier.
+   *
+   * Un seul littéral : deux repères nommés y vivent (`src/i18n/CLAUDE.md`, § 3).
+   */
+  'app.exportHandedOver': '« {name} » ({size}) est parti vers les téléchargements de ce navigateur.',
+  /**
+   * Servi **à partir du deuxième enregistrement seulement**. Le premier passe toujours :
+   * l'y ajouter ferait d'un avertissement utile une ligne de décor, et le pilote
+   * l'ignorerait le jour où elle compte.
+   */
+  'app.exportRefusedHint': 'Un navigateur refuse parfois un second enregistrement de suite, ' +
+    'sans le dire à cette page. Si le fichier n’est pas dans vos téléchargements, ' +
+    'autorisez-les pour ce site, puis recommencez.',
+  'app.exportReceiptDismiss': 'Fermer ce reçu d’enregistrement',
+
+  /**
+   * Le seul échec que cet outil puisse **constater** : la fabrication du fichier. Il
+   * n'était dit nulle part — l'appel n'avait pas de `catch`, et un rejet non traité dans
+   * la console ressemblait, pour le pilote, à un enregistrement réussi.
+   */
+  'app.exportFailedTitle': 'Le fichier n’a pas pu être fabriqué',
+  'app.exportFailedMessage': 'Rien n’est sorti de cet outil, et votre configuration n’a pas ' +
+    'bougé. Réessayez.',
+
   /* ======================================= `main.ts` — ce qui va de travers à l'ouverture */
 
   'app.openFailedTitle': 'Ce fichier n’a pas pu être ouvert',
@@ -544,7 +598,8 @@ const app = {
 
   'app.unreadableTitle': 'Ce fichier n’a pas pu être lu',
   'app.unreadableMessage': 'Vérifiez que c’est bien le fichier .xcfg ou .xczfg produit sur ' +
-    'l’instrument par « Réglages », puis « Exporter la configuration », et qu’il est entier.',
+    'l’instrument par « Préférences », « Export et import de la config », puis ' +
+    '« Exporter la configuration », et qu’il est entier.',
   'app.unreadableHint': 'Ses octets sont conservés intacts : « Enregistrer une copie » vous ' +
     'le rend tel qu’il est entré, sans la moindre réécriture.',
   'app.unreadableIncoming': '« {incoming} » n’a rien donné d’exploitable. « {kept} » reste ouvert, et tout ce que vous y avez changé est toujours là.',

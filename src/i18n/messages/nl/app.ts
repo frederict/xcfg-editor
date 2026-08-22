@@ -168,8 +168,8 @@ const app: DomainCatalog<'app'> = {
   'landing.dropOrPick': 'of klik om het te kiezen — .xcfg of .xczfg',
 
   'landing.stepDeviceTitle': 'Op het instrument',
-  'landing.stepDeviceText': '‘Instellingen’, dan ‘Configuratie exporteren’. Het bestand ' +
-    'belandt op de SD-kaart.',
+  'landing.stepDeviceText': '‘Voorkeuren’, ‘Ex- & importeer configuratie’, dan ‘Configuratie ' +
+    'exporteren’. Het bestand belandt op de SD-kaart.',
   'landing.stepHereTitle': 'Hier',
   'landing.stepHereText': 'De pagina’s verschijnen genummerd, in de volgorde waarin ‘volgende ' +
     'pagina’ ze tijdens de vlucht doorloopt.',
@@ -314,6 +314,18 @@ const app: DomainCatalog<'app'> = {
   'app.exportDialogFailedMessage': 'Er is niets opgeslagen en uw bestand is niet gewijzigd. ' +
     'Probeer het opnieuw.',
 
+  // Het Nederlands scheidt *opslaan* van *downloaden* — zie `index.ts`. Deze drie zinnen
+  // gaan over de download zelf, en zeggen dat ook zo.
+  'app.exportHandedOver': '‘{name}’ ({size}) is op weg naar de downloads van deze browser.',
+  'app.exportRefusedHint': 'Een browser weigert soms een tweede download achter elkaar, zonder ' +
+    'dat aan deze pagina te melden. Staat het bestand niet bij uw downloads, sta ze dan toe ' +
+    'voor deze site en begin opnieuw.',
+  'app.exportReceiptDismiss': 'Deze downloadbevestiging sluiten',
+
+  'app.exportFailedTitle': 'Het bestand kon niet worden gemaakt',
+  'app.exportFailedMessage': 'Er is niets uit dit gereedschap gekomen, en uw configuratie is ' +
+    'niet gewijzigd. Probeer het opnieuw.',
+
   'app.openFailedTitle': 'Dit bestand kon niet worden geopend',
   'app.openFailedMessage': 'Dit gereedschap wist er niets mee aan te vangen. Het bestand zelf ' +
     'is niet gewijzigd.',
@@ -323,7 +335,8 @@ const app: DomainCatalog<'app'> = {
 
   'app.unreadableTitle': 'Dit bestand kon niet worden gelezen',
   'app.unreadableMessage': 'Ga na of dit het .xcfg- of .xczfg-bestand is dat op het instrument ' +
-    'wordt gemaakt door ‘Instellingen’, dan ‘Configuratie exporteren’, en of het volledig is.',
+    'wordt gemaakt door ‘Voorkeuren’, ‘Ex- & importeer configuratie’, dan ‘Configuratie ' +
+    'exporteren’, en of het volledig is.',
   'app.unreadableHint': 'De bytes blijven ongeschonden bewaard: ‘Een kopie opslaan’ geeft het ' +
     'bestand terug zoals het erin ging, zonder ook maar iets te herschrijven.',
   'app.unreadableIncoming': '‘{incoming}’ leverde niets bruikbaars op. ‘{kept}’ blijft open, ' +

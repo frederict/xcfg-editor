@@ -165,8 +165,8 @@ const app: DomainCatalog<'app'> = {
   'landing.dropOrPick': 'or click to pick it — .xcfg or .xczfg',
 
   'landing.stepDeviceTitle': 'On the instrument',
-  'landing.stepDeviceText': '“Settings”, then “Export configuration”. The file lands on the ' +
-    'SD card.',
+  'landing.stepDeviceText': '“Preferences”, “Export & import config”, then “Export ' +
+    'configuration”. The file lands on the SD card.',
   'landing.stepHereTitle': 'Here',
   'landing.stepHereText': 'The pages appear numbered in the order “next page” scrolls through ' +
     'them in flight.',
@@ -307,6 +307,16 @@ const app: DomainCatalog<'app'> = {
   'app.exportDialogFailedTitle': 'The save dialog could not be opened',
   'app.exportDialogFailedMessage': 'Nothing has been saved and your file has not moved. Try again.',
 
+  'app.exportHandedOver': '“{name}” ({size}) has been handed over to this browser’s downloads.',
+  'app.exportRefusedHint': 'A browser sometimes refuses a second save in a row, without telling ' +
+    'this page. If the file is not among your downloads, allow them for this site, then start ' +
+    'again.',
+  'app.exportReceiptDismiss': 'Dismiss this save receipt',
+
+  'app.exportFailedTitle': 'The file could not be produced',
+  'app.exportFailedMessage': 'Nothing came out of this tool, and your configuration has not ' +
+    'moved. Try again.',
+
   'app.openFailedTitle': 'This file could not be opened',
   'app.openFailedMessage': 'This tool could make nothing of it. The file itself has not been ' +
     'changed.',
@@ -315,7 +325,8 @@ const app: DomainCatalog<'app'> = {
 
   'app.unreadableTitle': 'This file could not be read',
   'app.unreadableMessage': 'Check that this is the .xcfg or .xczfg file produced on the ' +
-    'instrument by “Settings”, then “Export configuration”, and that it is complete.',
+    'instrument by “Preferences”, “Export & import config”, then “Export configuration”, and ' +
+    'that it is complete.',
   'app.unreadableHint': 'Its bytes are kept intact: “Save a copy” gives it back exactly as it ' +
     'went in, without the slightest rewrite.',
   'app.unreadableIncoming': '“{incoming}” gave nothing usable. “{kept}” stays open, and ' +

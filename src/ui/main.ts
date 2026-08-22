@@ -765,7 +765,35 @@ actions.append(
   fileName, undoButton, redoButton, languageButton, repositoryLink, preferencesButton,
   editToggle, menu.root, fileInput, exportButton
 )
-bar.append(brand, actions)
+/**
+ * Le reçu d'enregistrement — la seule trace visible du geste par lequel tout le travail
+ * sort de cet outil.
+ *
+ * **Le défaut qu'il répare, mesuré le 22 août.** « Enregistrer », la boîte se ferme, et
+ * plus un mot : le pilote d'essai a dû aller fouiller son dossier de téléchargements pour
+ * savoir s'il avait son fichier. Pire, l'échec ressemblait trait pour trait au succès —
+ * relevé sur Chrome, trois enregistrements de suite depuis la même page : **le premier
+ * arrive, les suivants sont refusés sans un mot**, ni exception, ni événement, ni entrée
+ * dans le gestionnaire de téléchargements. Rien, côté page, ne distingue les deux.
+ *
+ * **Pourquoi c'est un reçu et non une confirmation.** Cet outil ne peut pas savoir que le
+ * fichier est arrivé ; il sait ce qu'il a fabriqué et ce qu'il a remis au navigateur.
+ * C'est donc cela qu'il dit — le nom, la taille, la destination —, et rien de plus. Une
+ * phrase qui affirmerait « c'est enregistré » serait fausse une fois sur deux.
+ *
+ * **Pourquoi il vit DANS la barre de tête.** La barre est collante ; une bande posée sous
+ * elle serait hors champ dès que le pilote a fait défiler sa page — c'est-à-dire presque
+ * toujours après vingt minutes de travail. Une ligne entière de la barre (`flex-basis:
+ * 100%` dans une barre déjà `flex-wrap: wrap`) voyage avec elle. Et ce n'est pas une
+ * modale : le pilote n'a rien à fermer pour continuer.
+ */
+const receipt = el('div', 'app-bar__receipt')
+receipt.hidden = true
+// `status` et non `alert` : un enregistrement qui réussit est la situation normale, et une
+// alerte sur une situation normale apprend à ignorer les alertes.
+receipt.setAttribute('role', 'status')
+
+bar.append(brand, actions, receipt)
 
 const content = el('main', 'content')
 
@@ -824,6 +852,75 @@ function installChromeProse(tr: Translator): void {
   versionItem.title = tr.t('menu.versionHint')
   manualItem.textContent = tr.t('menu.manual')
   manualItem.title = tr.t('menu.manualHint')
+  // Le reçu est de la prose lui aussi : sans cette ligne, un pilote qui change de langue
+  // juste après avoir enregistré garderait la phrase de l'ancienne sous les yeux.
+  renderReceipt()
+}
+
+/* ------------------------------------------------- le reçu : ce qui vient d'être remis */
+
+/** Ce que le dernier enregistrement a produit, gardé pour pouvoir le redire tel quel. */
+interface DeliveryReceipt {
+  readonly fileName: string
+  readonly byteLength: number
+  /**
+   * Le rang de cet enregistrement **dans l'onglet**, et non dans le document : c'est
+   * l'onglet que le navigateur compte. Au-delà du premier, le téléchargement peut être
+   * refusé sans que cette page l'apprenne, et le reçu le dit alors — pas avant.
+   */
+  readonly ordinal: number
+}
+
+let lastReceipt: DeliveryReceipt | undefined
+let deliveries = 0
+
+/**
+ * L'URL du dernier fichier remis, gardée en vie.
+ *
+ * L'ancien code révoquait l'URL **dans la milliseconde** qui suivait `link.click()` —
+ * relevé à l'horloge : même valeur de `performance.now()` pour le clic et la révocation.
+ * Le navigateur n'a alors aucune garantie d'avoir fini de lire le `Blob`. La révocation
+ * attend donc l'enregistrement suivant : un seul objet vit à la fois, et plus rien ne
+ * court après le clic.
+ */
+let deliveredUrl: string | undefined
+
+function renderReceipt(): void {
+  receipt.textContent = ''
+  if (lastReceipt === undefined) {
+    receipt.hidden = true
+    return
+  }
+  const tr = translator()
+  receipt.hidden = false
+  const said = el('div', 'app-bar__receiptSaid')
+  said.append(el('p', 'app-bar__receiptText', tr.t('app.exportHandedOver', {
+    name: lastReceipt.fileName,
+    size: tr.format.byteSize(lastReceipt.byteLength)
+  })))
+  // ⚠ La mise en garde ne paraît qu'à partir du DEUXIÈME enregistrement, parce que c'est
+  // à partir de là que le refus est possible — mesuré : le premier passe toujours. La
+  // servir dès le premier serait crier au loup sur la situation normale, et un pilote qui
+  // apprend à sauter cette ligne la sautera le jour où elle compte.
+  if (lastReceipt.ordinal > 1) {
+    said.append(el('p', 'app-bar__receiptHint', tr.t('app.exportRefusedHint')))
+  }
+  receipt.append(said)
+  const dismiss = el('button', 'btn btn--ghost app-bar__receiptClose', tr.t('app.close'))
+  dismiss.type = 'button'
+  dismiss.setAttribute('aria-label', tr.t('app.exportReceiptDismiss'))
+  dismiss.addEventListener('click', () => { clearReceipt() })
+  receipt.append(dismiss)
+}
+
+/**
+ * Le reçu s'efface. L'URL du fichier, elle, **survit** : le navigateur peut encore être
+ * en train de la lire, et le pilote qui referme le reçu ne demande pas d'annuler son
+ * téléchargement.
+ */
+function clearReceipt(): void {
+  lastReceipt = undefined
+  renderReceipt()
 }
 
 /**
@@ -3173,6 +3270,12 @@ function sharingSource(current: Session): SharingSource {
  * alors ce que `exportContainer` rend — les octets d'origine quand rien n'a bougé. C'est
  * exactement là que se tient la fidélité à l'octet près, et c'est pourquoi ce
  * `?? await exportContainer(...)` ne doit jamais être remplacé par une sérialisation.
+ *
+ * Ce qui a changé le 22 août : la fonction **rend compte**. Ce qu'elle a fabriqué et remis
+ * au navigateur passe dans le reçu de la barre de tête ; ce qui échoue chez elle — une
+ * sérialisation, une archive, un `Blob` trop gros — remonte à l'appelant, qui le dit.
+ * Auparavant l'appel était un `void` sans `catch` : un échec de fabrication ne produisait
+ * qu'un rejet non traité dans la console, et le pilote voyait la même chose qu'un succès.
  */
 async function deliver(
   current: Session, produced: Uint8Array | undefined, fileName: string
@@ -3183,11 +3286,34 @@ async function deliver(
   const buffer = new ArrayBuffer(bytes.byteLength)
   new Uint8Array(buffer).set(bytes)
   const url = URL.createObjectURL(new Blob([buffer], { type: 'application/octet-stream' }))
+  // La précédente, et elle seule : celle-ci vient d'être remise au navigateur — voir
+  // `deliveredUrl`.
+  if (deliveredUrl !== undefined) URL.revokeObjectURL(deliveredUrl)
+  deliveredUrl = url
   const link = el('a')
   link.href = url
   link.download = fileName
   link.click()
-  URL.revokeObjectURL(url)
+  deliveries += 1
+  lastReceipt = { fileName, byteLength: bytes.byteLength, ordinal: deliveries }
+  renderReceipt()
+}
+
+/**
+ * L'échec de fabrication, dit en toutes lettres.
+ *
+ * C'est le seul des deux échecs que cet outil puisse **constater**. L'autre — le
+ * navigateur qui refuse le téléchargement — ne lui est jamais rapporté ; le reçu s'en
+ * charge à sa façon, en disant ce qu'il y a à vérifier à partir du deuxième
+ * enregistrement.
+ */
+function tellDeliveryFailed(error: unknown): void {
+  const tr = translator()
+  tellProblem(
+    tr.t('app.exportFailedTitle'),
+    tr.t('app.exportFailedMessage'),
+    formatTechnicalDetail(error, tr)
+  )
 }
 
 /**
@@ -3227,7 +3353,9 @@ function askBeforeExport(current: Session): void {
 
   if (current.container.parseError !== undefined) {
     exportPending = true
-    void downloadIntact(current).finally(() => { exportPending = false })
+    void downloadIntact(current)
+      .catch(tellDeliveryFailed)
+      .finally(() => { exportPending = false })
     return
   }
 
@@ -3260,6 +3388,7 @@ function askBeforeExport(current: Session): void {
           // `sharingBytes` rend `undefined` pour un export ordinaire : c'est le signal de
           // réémettre le conteneur, jamais de sérialiser.
           void deliver(current, module.sharingBytes(result), result.fileName)
+            .catch(tellDeliveryFailed)
         }
       })
       handle.open()
@@ -3624,6 +3753,9 @@ function closeDocument(): void {
   // ouvert, qui se retrouverait posé au-dessus d'une vue qu'il n'a pas ouverte.
   menu.close()
   paletteQuery = ''
+  // Le reçu nommait un fichier tiré du document qu'on referme. Le **compte**, lui, ne
+  // repart pas de zéro : c'est l'onglet que le navigateur compte, pas le document.
+  clearReceipt()
   // Les réglages généraux affichés étaient ceux de l'autre fichier, et la vue retenue
   // pour le retour désignait une page de l'autre fichier.
   if (view.kind === 'preferences') view = { kind: 'overview' }

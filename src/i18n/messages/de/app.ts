@@ -171,8 +171,8 @@ const app: DomainCatalog<'app'> = {
   'landing.dropOrPick': 'oder klicken, um sie zu wählen — .xcfg oder .xczfg',
 
   'landing.stepDeviceTitle': 'Auf dem Gerät',
-  'landing.stepDeviceText': '„Einstellungen“, dann „Konfiguration exportieren“. Die Datei ' +
-    'landet auf der SD-Karte.',
+  'landing.stepDeviceText': '„Einstellungen“, „Export & Import Konfiguration“, dann ' +
+    '„Exportiere Konfiguration“. Die Datei landet auf der SD-Karte.',
   'landing.stepHereTitle': 'Hier',
   'landing.stepHereText': 'Die Seiten erscheinen nummeriert, in der Reihenfolge, in der ' +
     '„nächste Seite“ sie im Flug durchblättert.',
@@ -319,6 +319,16 @@ const app: DomainCatalog<'app'> = {
   'app.exportDialogFailedMessage': 'Es wurde nichts gespeichert und Ihre Datei ist ' +
     'unverändert. Versuchen Sie es erneut.',
 
+  'app.exportHandedOver': '„{name}“ ({size}) ist auf dem Weg zu den Downloads dieses Browsers.',
+  'app.exportRefusedHint': 'Ein Browser verweigert manchmal ein zweites Speichern in Folge, ' +
+    'ohne es dieser Seite mitzuteilen. Liegt die Datei nicht bei Ihren Downloads, erlauben Sie ' +
+    'sie für diese Website und beginnen Sie von vorn.',
+  'app.exportReceiptDismiss': 'Diese Speicherbestätigung schließen',
+
+  'app.exportFailedTitle': 'Die Datei konnte nicht erzeugt werden',
+  'app.exportFailedMessage': 'Aus diesem Werkzeug ist nichts herausgekommen, und Ihre ' +
+    'Konfiguration ist unverändert. Versuchen Sie es erneut.',
+
   'app.openFailedTitle': 'Diese Datei ließ sich nicht öffnen',
   'app.openFailedMessage': 'Dieser Editor konnte nichts damit anfangen. Die Datei selbst wurde ' +
     'nicht verändert.',
@@ -328,7 +338,8 @@ const app: DomainCatalog<'app'> = {
 
   'app.unreadableTitle': 'Diese Datei ließ sich nicht lesen',
   'app.unreadableMessage': 'Prüfen Sie, ob es die .xcfg- oder .xczfg-Datei ist, die auf dem ' +
-    'Gerät „Einstellungen“, dann „Konfiguration exportieren“ erzeugt, und ob sie vollständig ist.',
+    'Gerät „Einstellungen“, „Export & Import Konfiguration“, dann „Exportiere Konfiguration“ ' +
+    'erzeugt, und ob sie vollständig ist.',
   'app.unreadableHint': 'Ihre Bytes bleiben unversehrt: „Kopie speichern“ gibt sie Ihnen genau ' +
     'so zurück, wie sie hereinkam, ohne die geringste Neuschreibung.',
   'app.unreadableIncoming': '„{incoming}“ ergab nichts Brauchbares. „{kept}“ bleibt geöffnet, ' +
