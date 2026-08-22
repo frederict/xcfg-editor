@@ -882,6 +882,20 @@ describe('assemblage — le globe, et jusqu’où il va', () => {
     expect(list.slice(0, 300)).toContain('tr: translator()')
   })
 
+  it('la place que la barre de tête prend à la page est mesurée, jamais supposée', () => {
+    // `app.css` bornait le bandeau sur trois nombres écrits en dur, dont 56 px de barre de
+    // tête. Cette barre passe à deux lignes dès la première modification — le bouton
+    // d'enregistrement s'allonge —, et la page cessait alors d'être dégagée en 1024 × 640.
+    // La feuille ne sait pas lire une hauteur : c'est ici qu'elle la reçoit.
+    expect(main).toContain("document.documentElement.style.setProperty('--dock-chrome-room'")
+    expect(main).toContain('new ResizeObserver(() => publishDockChrome())')
+    // Les trois boîtes dont la hauteur décide de cette place. En retirer une remet une
+    // supposition à la place d'une mesure.
+    for (const box of ['bar', 'head', 'body']) {
+      expect(main, box).toContain(`dockChromeWatch.observe(${box})`)
+    }
+  })
+
   it('le nom du fichier porte enfin l’infobulle que la feuille promet', () => {
     // La feuille de style le tronque — plus court encore sous 1 120 px, pour rendre au
     // globe la largeur qu'il prend. Sans infobulle, deux exports du même jour deviennent

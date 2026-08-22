@@ -1815,6 +1815,50 @@ function setDockHeight(height: number): void {
   applyDockHeight()
 }
 
+/**
+ * Ce que la barre de tête collante et l'enveloppe du bandeau prennent à la page, **mesuré**
+ * et reposé en pixels dans `--dock-chrome-room`. `app.css` s'en sert pour borner le corps du
+ * bandeau sur ce qu'il LAISSE à la page (`--dock-page-room`, voir `.dock__body`).
+ *
+ * **Pourquoi une mesure et non deux constantes.** Les deux hauteurs ont d'abord été écrites
+ * en dur dans la feuille — 56 px de barre de tête, 62 px d'enveloppe, relevés en fenêtre de
+ * 1024 px de large — et aucune des deux n'est constante :
+ *
+ * - à la **première modification**, le bouton d'enregistrement passe de « Enregistrer une
+ *   copie » à « Enregistrer les modifications » ; la ligne d'actions gagne 45 px, ne tient
+ *   plus à côté de la marque dans les 976 px utiles de la barre, et le `flex-wrap: wrap`
+ *   d'`.app-bar` la renvoie à la ligne : **56 px deviennent 100,6** ;
+ * - le **reçu d'enregistrement** vit dans cette même barre collante et y prend une ligne
+ *   entière à lui ;
+ * - la **tête du bandeau** se replie à son tour sous 700 px de large : 62 px deviennent 106.
+ *
+ * Mesuré le 22 août, fenêtre 1024 × 640, mode édition : le premier de ces trois faits
+ * suffisait à ramener la bande dégagée de 369,9 px à 325,4 pour une plaque de 361,5 —
+ * « au mieux 330 px sur 361 », a dit le pilote d'essai. La feuille ne peut pas lire ces
+ * hauteurs elle-même ; ce chemin-ci les lui donne.
+ */
+function publishDockChrome(): void {
+  if (dockElement === undefined || dockBody === undefined) return
+  const body = dockBody.getBoundingClientRect().height
+  // Bandeau replié : le corps est escamoté et l'enveloppe mesurée serait le bandeau entier.
+  // Il n'y a alors plus de corps à borner, et la dernière mesure valable reste la bonne.
+  if (body === 0) return
+  const envelope = dockElement.getBoundingClientRect().height - body
+  const room = Math.ceil(bar.getBoundingClientRect().height + envelope)
+  document.documentElement.style.setProperty('--dock-chrome-room', `${room}px`)
+}
+
+/**
+ * Les trois boîtes dont la hauteur décide de cette place : la barre de tête (son reçu, le
+ * repli de sa ligne d'actions), la tête du bandeau (son repli à elle) et le corps du bandeau
+ * (que le repli escamote, et que la mesure fait varier en retour).
+ *
+ * Ce dernier ferme une boucle, et elle converge : l'enveloppe vaut `bandeau − corps`, quantité
+ * que la hauteur du corps ne change pas. La deuxième passe repose donc la même valeur, aucun
+ * style ne bouge, et l'observateur se tait.
+ */
+const dockChromeWatch = new ResizeObserver(() => publishDockChrome())
+
 /** Écrit en fin de geste, jamais à chaque pixel : `localStorage` est un accès disque. */
 function saveDockHeight(): void {
   if (dockHeight !== undefined) writeDockHeight(window.localStorage, dockHeight)
@@ -2221,7 +2265,12 @@ function buildDock(): HTMLElement {
 
   dock.append(dockGrip, head, body)
   dockElement = dock
-  // Le bandeau est neuf à chaque `render()` : la hauteur réglée se repose dessus ici.
+  // Le bandeau est neuf à chaque `render()` : la hauteur réglée se repose dessus ici, et
+  // les mesures de `publishDockChrome` se raccrochent aux boîtes neuves.
+  dockChromeWatch.disconnect()
+  dockChromeWatch.observe(bar)
+  dockChromeWatch.observe(head)
+  dockChromeWatch.observe(body)
   applyDockHeight()
   return dock
 }

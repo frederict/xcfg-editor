@@ -1837,11 +1837,16 @@ body.is-dragging .veil {
   /* Repli de sécurité : `main.ts` repose cette valeur en pixels à chaque construction du
      bandeau, plafonnée à la fenêtre courante — voir `DOCK_HEIGHT_DEFAULT` dans `views.ts`. */
   --dock-body-height: 18rem;
-  /* Ce que le bandeau déplié laisse à la page, sur une fenêtre courte : barre de tête
-     collante (56 px), enveloppe du bandeau autour de son corps (62 px) et plaque paysage
-     à 100 % de zoom sur l'AIR³ 7.2 (361 px) — 479 px mesurés, arrondis au demi-rem
-     supérieur. Voir `.dock__body`. */
-  --dock-page-room: 30.5rem;
+  /* Ce que le bandeau déplié doit laisser à la page, sur une fenêtre courte : ce que la
+     barre de tête collante et l'enveloppe du bandeau prennent — `--dock-chrome-room`,
+     que `main.ts` MESURE et repose en pixels à chaque fois que l'une des deux change de
+     hauteur —, plus la plaque paysage à 100 % de zoom sur l'AIR³ 7.2 (361,5 px mesurés,
+     arrondis au pixel supérieur : un demi-pixel de moins et la dernière ligne de la page
+     reste sous le bandeau). Le repli de 118 px est la somme des deux quand ni l'une ni
+     l'autre n'a débordé de sa ligne : 56 px de barre de tête, 62 px d'enveloppe. **Ces
+     deux nombres ont été écrits ici en dur, et aucun des deux n'est constant** — voir
+     `.dock__body`. */
+  --dock-page-room: calc(var(--dock-chrome-room, 118px) + 362px);
   position: sticky;
   bottom: 0;
   /* Au-dessus de la plaque et de ses marques d'édition, sous la barre de tête (20). */
@@ -1968,17 +1973,64 @@ body.is-dragging .veil {
    * d'essai du 22 août l'a dit ainsi : « en 1024 × 640 je ne vois rien de ma page ».
    *
    * Ce qu'il faut borner n'est donc pas une fraction de fenêtre mais **ce que le bandeau
-   * laisse**. Mesuré en fenêtre de 1024 px de large : barre de tête collante 56 px,
-   * enveloppe du bandeau autour de son corps 62 px, plaque paysage à 100 % de zoom
-   * 361 px sur l'AIR³ 7.2 — l'appareil de référence, et celui du pilote. Il reste donc
-   * `100dvh − 30.5rem` au corps ; c'est le sens de `--dock-page-room`. À 640 px de
-   * fenêtre : 152 px de corps, 214 px de bandeau, et les 370 px qui restent tiennent la
-   * plaque entière — vérifié au navigateur, la page est dégagée en entier à 406 px de
-   * défilement. Au-dessus de 792 px de fenêtre, la moitié redevient la plus basse des deux
-   * bornes et **rien ne change** — 913 px de fenêtre donnent toujours 368 px de corps.
+   * laisse** : `100dvh` moins ce que la barre de tête collante et l'enveloppe du bandeau
+   * prennent, moins la plaque paysage à 100 % de zoom sur l'AIR³ 7.2 — 361,5 px sur
+   * l'appareil de référence, celui du pilote. C'est le sens de `--dock-page-room`.
    *
-   * Le plancher de 7 rem est `DOCK_HEIGHT_MIN` : sous une fenêtre de 592 px, plus rien ne
-   * sauve la page, et écraser le bandeau au-delà ne ferait que perdre les deux.
+   * ## Ce qui prend la place n'est pas une constante — et c'est ce qui a rouvert le défaut
+   *
+   * Cette place-là a d'abord été écrite en dur, `30.5rem` : 56 px de barre de tête plus
+   * 62 px d'enveloppe plus les 361 px de la plaque, trois nombres relevés au navigateur en
+   * fenêtre de 1024 px de large. Les 8 px de marge que ce compte laissait à la plaque ont
+   * tenu une demi-journée. Contre-essai du 22 août, même fenêtre 1024 × 640, **en mode
+   * édition** : « aucune position ne me montre ma page entière, au mieux 330 px sur 361 ».
+   *
+   * Ni la barre d'édition ni le mode n'y sont pour rien — mesuré : `.editbar` est dans le
+   * flux, au-dessus de la page, elle défile hors de vue et la bande dégagée vaut 369,9 px
+   * avec elle comme sans elle. Ce qui change, c'est **la barre de tête**, et elle change
+   * pour une raison qui n'arrive qu'en édition : à la première modification, le bouton
+   * d'enregistrement passe de « Enregistrer une copie » à « Enregistrer les
+   * modifications » ; sa ligne d'actions gagne 45 px (668 → 713), la marque (251 px) et
+   * elle ne tiennent plus dans les 976 px utiles de la barre, et le `flex-wrap: wrap` de
+   * `.app-bar` la renvoie à la ligne. **56 px deviennent 100,6.** La bande dégagée tombe
+   * de 369,9 à 325,4 px pour une plaque de 361,5 : plus aucune position ne la montre
+   * entière. Le reçu d'enregistrement, qui vit dans la même barre collante et y prend une
+   * ligne entière à lui, coûte la même chose une seconde fois.
+   *
+   * L'enveloppe du bandeau n'est pas plus constante : la tête du bandeau se replie à son
+   * tour sous 700 px de large, et 62 px deviennent 105,9.
+   *
+   * Aucun des deux ne se devine depuis la feuille de style — CSS ne sait pas lire la
+   * hauteur d'une autre boîte. `main.ts` les **mesure** donc, tous les deux, et repose leur
+   * somme dans `--dock-chrome-room` à chaque fois que l'une d'elles change de hauteur (voir
+   * `publishDockChrome`) ; les 118 px écrits en repli dans `--dock-page-room` ne sont que
+   * la valeur de départ, celle où rien n'a encore débordé. ⚠ **Ne jamais réécrire ces
+   * deux nombres en dur ici** : c'est ce qui a coûté la demi-journée.
+   *
+   * ## Ce que la mesure donne, relevé au navigateur le 22 août
+   *
+   * Fenêtre 1024 × 640, page paysage à 100 % de zoom, plaque de 361,5 px, un gadget choisi :
+   *
+   * | état de la barre de tête | mesurée | corps | bandeau | bande dégagée | page entière |
+   * |---|---|---|---|---|---|
+   * | une ligne (rien de modifié) | 56,1 | 159 | 221,1 | 362,9 | oui, à 414 px |
+   * | deux lignes (après une modification) | 100,6 | 115 | 177,1 | 362,4 | oui, à 414 px |
+   *
+   * Les deux modes s'y comportent pareil, consultation comprise — c'est la barre de tête qui
+   * décide, jamais le mode.
+   *
+   * **Au-dessus, rien ne bouge.** Barre de tête sur une ligne, le corps vaut ce qu'il valait
+   * avant cette correction dès 776 px de fenêtre — 288 px de part et d'autre — et 913 px en
+   * donnent toujours 288. Barre sur deux lignes, la borne resserre encore jusqu'à 813 px, et
+   * au-delà les deux comptes retombent sur les mêmes 288 px.
+   *
+   * Le plancher de 7 rem est `DOCK_HEIGHT_MIN` : quand la barre de tête prend trop, plus rien
+   * ne sauve la page et écraser le bandeau au-delà ne ferait que perdre les deux. Mesuré, à
+   * 640 px de fenêtre : le reçu d'enregistrement ouvert porte la barre à 171,4 px, le corps
+   * bute sur son plancher et il ne reste que 294,6 px à une plaque qui en demande 361,5 — le
+   * pilote referme le reçu, ou tire la poignée. Une fenêtre de 620 px de large fait la même
+   * chose par l'autre bout : la tête du bandeau se replie, l'enveloppe passe à 105,9 px, et
+   * la bande tombe à 321,5.
    *
    * ⚠ **Ce plafond-ci ne s'applique qu'au défaut**, jamais à une hauteur réglée à la
    * poignée (`.dock--sized`, plus bas) : c'est le pilote qui arbitre entre voir sa page et

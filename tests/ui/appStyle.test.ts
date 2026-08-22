@@ -328,28 +328,66 @@ describe('rien de cette page ne vient d’un autre hôte', () => {
  * fraction ne laisse plus rien.
  *
  * Ce que la correction borne n'est donc pas une fraction, mais **ce que le bandeau laisse**.
- * Après correction, même relevé : corps de 152 px, bandeau de 214 px, et la plaque entière
- * dégagée à 406 px de défilement.
+ *
+ * ## Ce que le contre-essai a démenti le même jour
+ *
+ * Cette place à laisser avait été écrite en dur : 56 px de barre de tête, 62 px d'enveloppe
+ * du bandeau, 361 px de plaque. Contre-essai de l'après-midi, même fenêtre 1024 × 640, mais
+ * **en mode édition** : « aucune position ne me montre ma page entière, au mieux 330 px sur
+ * 361 ». Le pilote l'attribuait à la barre d'édition et à sa ligne de raccourcis clavier.
+ *
+ * **Ce n'était pas elle**, et la mesure le dit : `.editbar` est dans le flux, au-dessus de la
+ * page ; elle défile hors de vue et la bande dégagée vaut 369,9 px avec elle comme sans elle.
+ * C'est **la barre de tête**, qui n'est pas de hauteur constante : à la première modification
+ * — le geste même du mode édition —, le bouton d'enregistrement passe de « Enregistrer une
+ * copie » à « Enregistrer les modifications », sa ligne d'actions gagne 45 px, ne tient plus
+ * à côté de la marque dans les 976 px utiles de la barre, et le `flex-wrap: wrap` la renvoie
+ * à la ligne : **56,1 px deviennent 100,6**. Les 8 px que le compte laissait à la plaque
+ * étaient mangés cinq fois. Le reçu d'enregistrement, dans la même barre collante, la porte
+ * à 171,4 px ; et sous 700 px de large, c'est la tête du bandeau qui se replie à son tour.
+ *
+ * Aucun des deux ne se lit depuis la feuille de style. `main.ts` les mesure et repose leur
+ * somme dans `--dock-chrome-room` (voir `publishDockChrome`) ; ce que ces tests gardent, ce
+ * sont les deux propriétés qui en découlent — la place réservée n'est plus écrite en dur, et
+ * elle suffit à la plaque dans **les deux** états de la barre de tête. Après correction,
+ * relevé au navigateur en 1024 × 640, un gadget choisi : barre sur une ligne, corps de
+ * 159 px, bandeau de 221 px, plaque entière dégagée à 414 px de défilement ; barre sur deux
+ * lignes, corps de 115 px, bandeau de 177 px, plaque entière dégagée à 414 px elle aussi.
  */
 describe('app.css — le bandeau laisse la page visible sur une fenêtre courte', () => {
-  /** Ce que le bandeau ajoute autour de son corps, mesuré : poignée, barre de tête, bords. */
-  const DOCK_CHROME_PX = 62
-  /** La barre de tête collante, mesurée à 1024 px de large. */
-  const HEAD_BAR_PX = 56
+  /** Ce que le bandeau ajoute autour de son corps, mesuré à 1024 px : poignée, tête, bords. */
+  const DOCK_CHROME_PX = 62.1
+  /** La barre de tête collante, mesurée à 1024 px de large, tant que rien n'est modifié. */
+  const HEAD_BAR_ONE_LINE_PX = 56.1
+  /**
+   * La même barre après la première modification : « Enregistrer une copie » devient
+   * « Enregistrer les modifications », sa ligne d'actions ne tient plus à côté de la marque
+   * et le `flex-wrap: wrap` d'`.app-bar` la renvoie à la ligne. **C'est le défaut du
+   * 22 août** : la place réservée à la page comptait 56 px pour cette barre-là.
+   */
+  const HEAD_BAR_TWO_LINES_PX = 100.6
   /** La plaque d'une page paysage à 100 % de zoom sur l'AIR³ 7.2, mesurée. */
-  const LANDSCAPE_BED_PX = 361
-
-  /** La valeur en pixels d'une longueur en rem écrite dans la feuille. */
-  function rem(value: string): number {
-    const match = /^([\d.]+)rem$/.exec(value)
-    expect(match, `longueur en rem attendue : ${value}`).not.toBeNull()
-    return Number(match![1]) * 16
-  }
+  const LANDSCAPE_BED_PX = 361.5
+  /** `DOCK_HEIGHT_MIN` : sous cette hauteur, le bandeau ne montre plus rien d'utile. */
+  const DOCK_BODY_FLOOR_PX = 112
 
   function pageRoom(): string {
     const match = /--dock-page-room:\s*([^;]+);/.exec(rule('.dock'))
     expect(match, 'jeton `--dock-page-room` absent de `.dock`').not.toBeNull()
     return match![1]!.trim()
+  }
+
+  /** La plaque de référence écrite dans `--dock-page-room`, en pixels. */
+  function bedReservedPx(): number {
+    const match = /\+\s*(\d+)px\s*\)$/.exec(pageRoom())
+    expect(match, `plaque de référence absente de --dock-page-room : ${pageRoom()}`).not.toBeNull()
+    return Number(match![1])
+  }
+
+  /** Ce que le corps vaudra dans une fenêtre donnée, la barre de tête ayant cette hauteur. */
+  function bodyCap(windowPx: number, headBarPx: number): number {
+    const chrome = Math.ceil(headBarPx + DOCK_CHROME_PX)
+    return Math.max(DOCK_BODY_FLOOR_PX, windowPx - (chrome + bedReservedPx()))
   }
 
   it('le corps du bandeau est plafonné par ce qu’il laisse, pas seulement par sa hauteur', () => {
@@ -367,15 +405,44 @@ describe('app.css — le bandeau laisse la page visible sur une fenêtre courte'
     expect(rule('.dock__body')).toMatch(/max\(\s*7rem\s*,/)
   })
 
-  it('ce qui est réservé à la page suffit à une plaque paysage entière', () => {
-    // Le calcul que la mesure au navigateur a confirmé : sur une fenêtre de 640 px, ce que
-    // le bandeau laisse doit encore tenir la plaque. Changer `--dock-page-room` sans
-    // refaire la mesure fait échouer ce test plutôt que de rendre la page invisible.
+  it('ce que la barre de tête prend est mesuré, jamais écrit en dur', () => {
+    // Le défaut du 22 août tient tout entier dans ce point : les 56 px de barre de tête et
+    // les 62 px d'enveloppe avaient été relevés une fois, à 1024 px de large, et écrits
+    // dans la feuille. Aucun des deux n'est constant — la barre passe à deux lignes dès
+    // la première modification, la tête du bandeau se replie sous 700 px de large. CSS ne
+    // sait pas lire la hauteur d'une autre boîte : `main.ts` la mesure et la repose ici.
+    expect(pageRoom()).toContain('var(--dock-chrome-room')
+    expect(pageRoom()).not.toMatch(/^\d+(\.\d+)?rem$/)
+  })
+
+  it('ce qui est réservé à la page suffit à une plaque paysage entière, barre de tête repliée ou non', () => {
+    // Le calcul que la mesure au navigateur a confirmé, dans les deux états de la barre :
+    // sur une fenêtre de 640 px, ce que le bandeau laisse doit encore tenir la plaque.
+    // Changer `--dock-page-room` sans refaire la mesure fait échouer ce test plutôt que
+    // de rendre la page invisible.
     const windowPx = 640
-    const bodyCap = windowPx - rem(pageRoom())
-    const leftToPage = windowPx - HEAD_BAR_PX - (bodyCap + DOCK_CHROME_PX)
-    expect(bodyCap).toBeGreaterThanOrEqual(112)
-    expect(leftToPage).toBeGreaterThanOrEqual(LANDSCAPE_BED_PX)
+    for (const headBarPx of [HEAD_BAR_ONE_LINE_PX, HEAD_BAR_TWO_LINES_PX]) {
+      const body = bodyCap(windowPx, headBarPx)
+      const leftToPage = windowPx - headBarPx - (body + DOCK_CHROME_PX)
+      expect(body, `corps trop bas, barre de tête de ${headBarPx} px`)
+        .toBeGreaterThanOrEqual(DOCK_BODY_FLOOR_PX)
+      expect(leftToPage, `plaque rognée, barre de tête de ${headBarPx} px`)
+        .toBeGreaterThanOrEqual(LANDSCAPE_BED_PX)
+    }
+  })
+
+  it('rien ne change au-dessus de 813 px de fenêtre', () => {
+    // La borne d'avant — 30,5 rem écrits en dur — donnait 288 px de corps dès 776 px de
+    // fenêtre, et `DOCK_HEIGHT_DEFAULT` vaut 288 : au-delà, c'est lui qui gagne. La borne
+    // mesurée doit retomber sur le même chiffre, sans quoi la correction déplacerait
+    // quelque chose sur les écrans qui n'avaient pas le défaut.
+    const DOCK_HEIGHT_DEFAULT = 288
+    for (const headBarPx of [HEAD_BAR_ONE_LINE_PX, HEAD_BAR_TWO_LINES_PX]) {
+      expect(bodyCap(913, headBarPx), `913 px, barre de ${headBarPx} px`)
+        .toBeGreaterThanOrEqual(DOCK_HEIGHT_DEFAULT)
+      expect(bodyCap(813, headBarPx), `813 px, barre de ${headBarPx} px`)
+        .toBeGreaterThanOrEqual(DOCK_HEIGHT_DEFAULT)
+    }
   })
 
   it('la hauteur réglée à la poignée échappe à ce plafond', () => {
