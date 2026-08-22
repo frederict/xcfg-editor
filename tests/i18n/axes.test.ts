@@ -8,6 +8,15 @@ import {
 import { UI_LANGUAGE_KEY, initialUiLanguage, writeUiLanguage } from '../../src/i18n/preference'
 import { catalogLanguage } from '../../src/catalog/widgetCatalog'
 import { loadTranslator } from '../../src/i18n/translate'
+import { UI_LANGUAGES, UI_LANGUAGE_ENDONYMS, type UiLanguage } from '../../src/i18n/languages'
+import fr from '../../src/i18n/messages/fr/app'
+import en from '../../src/i18n/messages/en/app'
+import de from '../../src/i18n/messages/de/app'
+import es from '../../src/i18n/messages/es/app'
+import nl from '../../src/i18n/messages/nl/app'
+
+/** Le domaine `app`, langue par langue : c'est lui qui porte les deux mentions. */
+const CATALOGS = { fr, en, de, es, nl } as const
 
 /**
  * Le cas qui décide : un pilote belge dont l'AIR³ est réglé en anglais lit l'interface en
@@ -92,5 +101,71 @@ describe('les deux axes de langue', () => {
     // le repli n'est pas le même de l'un à l'autre.
     expect(axes.labels).toBe('fr-BE')
     expect(initialAxes(undefined, 'cs').ui).toBe('fr')
+  })
+})
+
+/**
+ * # Les deux mentions doivent dire de quel axe elles parlent
+ *
+ * Le défaut se produit à la seconde où un sélecteur d'interface existe, et il n'existait
+ * pas avant : le pilote change la langue de l'interface, lit dans le bandeau du fichier
+ * « LIBELLÉS — fr » inchangé, et conclut que le sélecteur est cassé. Il a raison de le
+ * croire tant que rien ne lui dit que ces deux mentions parlent de deux choses.
+ *
+ * Ces tests gardent donc une propriété du **texte** : chacune des deux mentions nomme son
+ * axe, dans les cinq langues. Un intitulé raccourci à « Libellés » les ferait tomber.
+ */
+describe('les deux mentions nomment leur axe', () => {
+  it('la mention des libellés nomme XCTrack, dans les cinq langues', () => {
+    for (const language of UI_LANGUAGES) {
+      const app = CATALOGS[language]
+      expect(app['app.metaLabels'], language).toContain('XCTrack')
+    }
+  })
+
+  it('la mention de l’interface nomme l’interface, jamais les libellés', () => {
+    // Chaque langue emploie son propre mot — Oberfläche, interfaz, interface : on vérifie
+    // qu'il est là, et surtout que « XCTrack » ne l'est PAS. Un sélecteur intitulé
+    // « Langue de XCTrack » dirait exactement le contraire de ce qu'il fait.
+    const words: Record<UiLanguage, string> = {
+      fr: 'interface', en: 'Interface', de: 'Oberfläche', es: 'interfaz', nl: 'interface'
+    }
+    for (const language of UI_LANGUAGES) {
+      const app = CATALOGS[language]
+      expect(app['app.uiLanguage'], language).toContain(words[language])
+      expect(app['app.uiLanguage'], language).not.toContain('XCTrack')
+    }
+  })
+
+  it('le sélecteur dit, dans les cinq langues, qu’il ne touche pas aux libellés', () => {
+    // C'est la phrase qui désamorce le doute avant qu'il naisse. Elle nomme XCTrack : sans
+    // ce mot, elle parlerait de « labels » en général, ce que le pilote ne rattacherait à
+    // rien de ce qu'il voit.
+    for (const language of UI_LANGUAGES) {
+      expect(CATALOGS[language]['app.uiLanguageHint'], language).toContain('XCTrack')
+    }
+    // Et la section des libellés les rattache à l'appareil du pilote — c'est ce qui rend
+    // concret le fait qu'ils ne nous appartiennent pas.
+    const devices: Record<UiLanguage, string> = {
+      fr: 'instrument', en: 'instrument', de: 'Gerät', es: 'instrumento', nl: 'instrument'
+    }
+    for (const language of UI_LANGUAGES) {
+      expect(CATALOGS[language]['app.labelsAxisLead'], language).toContain(devices[language])
+    }
+  })
+
+  it('les cinq entrées du sélecteur sont des endonymes', () => {
+    // « Nederlands », jamais « Néerlandais » : demander de reconnaître un mot français
+    // pour sortir du français rate exactement la personne qu'il faut aider. Ils ne sont
+    // donc PAS dans le catalogue — ils ne dépendent pas de la langue courante.
+    expect(UI_LANGUAGE_ENDONYMS.nl).toBe('Nederlands')
+    expect(UI_LANGUAGE_ENDONYMS.de).toBe('Deutsch')
+    for (const language of UI_LANGUAGES) {
+      const values = Object.values(CATALOGS[language]) as unknown[]
+      const flat = values.flatMap((v) => typeof v === 'string' ? [v] : Object.values(v as object))
+      for (const endonym of Object.values(UI_LANGUAGE_ENDONYMS)) {
+        expect(flat, `${language} / ${endonym}`).not.toContain(endonym)
+      }
+    }
   })
 })

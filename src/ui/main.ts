@@ -51,7 +51,11 @@ import type { SharingResult, SharingSource } from './sharingDialog'
 import type { VersionPanel } from './versionDiagnostic'
 import type { CleanupEvent } from './cleanupPanel'
 import type { Library } from '../library/library'
-import { initialUiLanguage, loadTranslator, type Translator } from '../i18n'
+import {
+  initialUiLanguage, loadTranslator, writeUiLanguage,
+  UI_LANGUAGES, UI_LANGUAGE_ENDONYMS,
+  type Translator, type UiLanguage
+} from '../i18n'
 
 interface Session {
   container: Container
@@ -114,6 +118,20 @@ type View =
  * du pilote, donc bien après.
  */
 let uiTranslator: Translator | undefined
+
+/**
+ * La langue de **notre prose**, celle que le sélecteur règle et que `localStorage` retient.
+ *
+ * Elle est tenue à côté du traducteur parce qu'un traducteur ne dit pas quelle langue il
+ * porte : le sélecteur doit pouvoir marquer l'entrée courante, et `<html lang>` doit dire
+ * la vérité à un lecteur d'écran — c'est elle qui décide de la voix qui lira l'interface.
+ *
+ * ⚠️ À ne pas confondre avec `session.language`, qui est la langue des **libellés de
+ * XCTrack** et suit le fichier ouvert. Voir `src/i18n/axes.ts`.
+ */
+let currentUiLanguage: UiLanguage = initialUiLanguage(
+  window.localStorage, [...navigator.languages]
+)
 
 /**
  * # Le traducteur, et comment un écran le reçoit
@@ -432,6 +450,49 @@ const preferencesName = el('span', 'app-bar__prefs-name')
 preferencesButton.append(gearGlyph(), preferencesName)
 preferencesButton.addEventListener('click', () => { openPreferences() })
 
+/**
+ * Le globe du sélecteur de langue — **le seul bouton de la barre qui ne porte aucun mot,
+ * et le seul qui ne doive pas en porter**.
+ *
+ * Un pilote qui arrive sur une interface dans une langue qu'il ne lit pas doit pouvoir en
+ * sortir sans lire ce qui l'entoure : « Sprache » ne l'aiderait pas plus que « Langue ».
+ * Le dessin est donc la commande, et les mots — nom accessible, infobulle, contenu de la
+ * boîte — n'arrivent qu'ensuite, pour qui peut les lire. C'est aussi ce qui le rend
+ * gratuit en largeur là où la barre est le plus pleine : 30 px de côté, comme « Annuler »
+ * et « Rétablir », et non les 118 px du couple dessin + mot des réglages.
+ *
+ * Il n'est **jamais éteint ni caché** — comme la bibliothèque et le manuel : c'est sans
+ * fichier ouvert, sur l'écran d'accueil, qu'il sert le plus.
+ */
+function globeGlyph(): SVGSVGElement {
+  const ns = 'http://www.w3.org/2000/svg'
+  const svg = document.createElementNS(ns, 'svg')
+  svg.setAttribute('viewBox', '0 0 24 24')
+  svg.setAttribute('aria-hidden', 'true')
+  svg.setAttribute('focusable', 'false')
+  svg.classList.add('btn__glyph')
+  const path = document.createElementNS(ns, 'path')
+  // Un cercle, son équateur et un méridien. Les parallèles d'un globe plus détaillé se
+  // referment en trois traits gris à 18 px ; ces trois courbes-là restent lisibles, et
+  // c'est le dessin que le reste du web emploie pour la langue.
+  path.setAttribute('d',
+    'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Z' +
+    'M3.6 9h16.8M3.6 15h16.8' +
+    'M12 3a13.5 13.5 0 0 1 0 18a13.5 13.5 0 0 1 0-18Z')
+  path.setAttribute('fill', 'none')
+  path.setAttribute('stroke', 'currentColor')
+  path.setAttribute('stroke-width', '1.7')
+  path.setAttribute('stroke-linecap', 'round')
+  path.setAttribute('stroke-linejoin', 'round')
+  svg.append(path)
+  return svg
+}
+
+const languageButton = el('button', 'btn btn--icon app-bar__lang')
+languageButton.type = 'button'
+languageButton.append(globeGlyph())
+languageButton.addEventListener('click', () => { openLanguageDialog() })
+
 /* ------------------------------------------------- menu des commandes secondaires */
 
 /**
@@ -608,8 +669,8 @@ const brandName = el('span', 'brand__name')
 brand.append(brandName, brandRole)
 const actions = el('div', 'app-bar__actions')
 actions.append(
-  fileName, undoButton, redoButton, preferencesButton, editToggle, menu.root, fileInput,
-  exportButton
+  fileName, undoButton, redoButton, languageButton, preferencesButton, editToggle,
+  menu.root, fileInput, exportButton
 )
 bar.append(brand, actions)
 
@@ -628,22 +689,34 @@ const veilText = el('span', 'veil__text')
 veil.append(veilText)
 
 /**
- * Les mots du cadre — barre de tête, menu, voile de dépôt —, posés **une fois** quand le
- * catalogue de la langue est arrivé.
+ * Les mots du cadre — barre de tête, menu, voile de dépôt —, posés quand le catalogue de
+ * la langue est arrivé, **et reposés à chaque changement de langue**.
  *
  * Ces éléments sont bâtis pendant que ce fichier s'exécute de haut en bas, donc avant le
- * traducteur : ils naissent muets. C'est aussi pourquoi le cadre n'est accroché au
- * document qu'ici — un pilote ne doit pas voir une seconde de boutons vides avant sa
- * langue. Ce qui change ensuite avec l'état du document est repris par
- * `syncEditControls`, et non ici.
+ * traducteur : ils naissent muets. Ce qui change ensuite avec l'état du document est
+ * repris par `syncEditControls`, et non ici.
+ *
+ * C'est aussi ici que `<html lang>` est réglé : l'attribut vaut « fr » dans `index.html`
+ * et mentirait dès le premier pilote néerlandophone — un lecteur d'écran prononcerait le
+ * néerlandais à la française. Il suit donc la langue de **notre prose**, jamais celle des
+ * libellés de XCTrack : c'est bien cette page-ci qui est lue à voix haute.
  */
 function installChromeProse(tr: Translator): void {
+  document.documentElement.lang = currentUiLanguage
   brandName.textContent = tr.t('app.name')
   brandRole.textContent = tr.t('app.editingRole')
   veilText.textContent = tr.t('app.dropVeil')
 
   preferencesName.textContent = tr.t('app.settings')
   preferencesButton.title = tr.t('app.settingsHint')
+
+  // Le bouton ne porte qu'un globe : la phrase entière est son nom accessible, comme pour
+  // « Annuler » et « Rétablir ». Elle nomme l'axe — « Langue de l'interface » — et non la
+  // seule idée de langue, sans quoi elle laisserait croire qu'elle règle aussi les
+  // libellés de XCTrack, que le bandeau du fichier annonce quelques centimètres plus bas.
+  const named = tr.t('app.uiLanguageNamed', { name: UI_LANGUAGE_ENDONYMS[currentUiLanguage] })
+  languageButton.setAttribute('aria-label', named)
+  languageButton.title = `${named}\n${tr.t('app.uiLanguageHint')}`
 
   menu.setLabel(tr.t('menu.file'))
   openItem.textContent = tr.t('menu.openFile')
@@ -654,7 +727,17 @@ function installChromeProse(tr: Translator): void {
   versionItem.title = tr.t('menu.versionHint')
   manualItem.textContent = tr.t('menu.manual')
   manualItem.title = tr.t('menu.manualHint')
+}
 
+/**
+ * Le cadre entre dans le document **une seule fois**, quand sa prose vient d'être posée :
+ * un pilote ne doit pas voir une seconde de boutons vides avant sa langue.
+ *
+ * Séparé de `installChromeProse` parce que celui-ci se rejoue à chaque changement de
+ * langue : réaccrocher les quatre mêmes éléments les déplacerait en fin de `#app`, et
+ * l'ordre ne tiendrait plus le jour où un cinquième s'y ajouterait ailleurs.
+ */
+function attachChrome(): void {
   app.append(bar, tools, content, veil)
 }
 
@@ -751,14 +834,11 @@ function metaStrip(current: Session): HTMLElement {
   // Ce que le fichier dit de l'appareil, distinct du gabarit d'affichage choisi
   // au-dessus : l'un est une donnée, l'autre un réglage de la visionneuse.
   add(tr.t('app.metaDevice'), current.declaredDevice ?? tr.t('app.notDeclared'))
-  add(
-    tr.t('app.metaLabels'),
-    // `language` est un code de langue lu dans le fichier — un identifiant : il se passe
-    // en `string`, jamais en `number`, et n'est donc pas mis en forme.
-    current.languageFromBrowser
-      ? tr.t('app.labelsFromBrowser', { language: current.language })
-      : tr.t('app.labelsFromFile', { language: current.language })
-  )
+  // L'intitulé nomme son axe — « Libellés de XCTrack » et non « Libellés » : depuis qu'un
+  // sélecteur règle la langue de l'interface, un pilote qui vient d'en changer lirait ici
+  // une langue inchangée et croirait le sélecteur en panne. La mention et la boîte des
+  // langues disent la même chose, par la même fonction (`labelLanguageMention`).
+  add(tr.t('app.metaLabels'), labelLanguageMention(tr, current))
   if (current.settings.fromDefaults) {
     add(tr.t('app.metaRenderSettings'), tr.t('app.renderSettingsAssumed'))
   }
@@ -1414,6 +1494,7 @@ function fillPaletteDialog(dialog: HTMLDialogElement): void {
     orientation: view.orientation,
     settings: session.settings,
     language: session.language,
+    tr: translator(),
     // On ouvre, on choisit, elle se ferme : le widget posé est sélectionné, et ses
     // réglages apparaissent dans le bandeau du bas sans un clic de plus.
     onChoose: (node, description) => {
@@ -1791,7 +1872,7 @@ function refreshPanel(): void {
     return
   }
 
-  const form = module.buildPropertyForm(widget, session.language)
+  const form = module.buildPropertyForm(widget, session.language, translator())
   updateDockCount(form, editMode)
 
   // Deux panneaux, deux contrats. En édition, `onChange` est branché et le panneau écrit.
@@ -1809,12 +1890,13 @@ function refreshPanel(): void {
   const panel = editMode
     ? module.renderProperties({
       form,
+      tr: translator(),
       ...fileVersion,
       // Le second paramètre est le formulaire **refait** : écrire une valeur jusqu'ici
       // absente ajoute une ligne, et le compte de la barre de tête mentirait sans lui.
       onChange: (field, fresh) => onPropertyChange(field, widget, fresh)
     })
-    : module.renderProperties({ form, readOnly: true, ...fileVersion })
+    : module.renderProperties({ form, tr: translator(), readOnly: true, ...fileVersion })
   panelHost.append(panel.element)
 }
 
@@ -1843,6 +1925,7 @@ function refreshWidgetList(): void {
     device: session.device,
     orientation: view.orientation,
     language: session.language,
+    tr: translator(),
     selection,
     onSelect: (index) => {
       // Choisir une ligne, c'est ouvrir les réglages du widget : replié, le bandeau se
@@ -2280,6 +2363,210 @@ function tellProblem(title: string, message: string, detail?: string): void {
   dismiss.focus()
 }
 
+/* --------------------------------------------------- le sélecteur de langue, en modale */
+
+/**
+ * La mention de l'axe des **libellés de XCTrack** — « fr (langue du navigateur) ».
+ *
+ * Une seule fonction pour ses deux emplois : le bandeau du fichier et la boîte des
+ * langues. Deux formulations pour un même fait seraient l'ambiguïté même qu'on cherche à
+ * lever ici, et elles divergeraient à la première retouche.
+ *
+ * Sans fichier ouvert, c'est le navigateur qui décide — comme `initialAxes` l'annonce :
+ * l'axe existe avant qu'un fichier arrive, et la boîte s'ouvre dès l'écran d'accueil.
+ */
+function labelLanguageMention(tr: Translator, current: Session | undefined): string {
+  const language = current?.language ?? catalogLanguage(navigator.language)
+  const fromBrowser = current?.languageFromBrowser ?? true
+  // `language` est un code de langue, donc un identifiant : il se passe en `string`.
+  return fromBrowser
+    ? tr.t('app.labelsFromBrowser', { language })
+    : tr.t('app.labelsFromFile', { language })
+}
+
+let languageDialog: HTMLDialogElement | undefined
+
+/**
+ * Referme, et **rend le focus au globe**. Sans cette dernière ligne il retomberait sur
+ * `<body>` : la tabulation repartirait du haut de la page, et un pilote au clavier
+ * perdrait sa place chaque fois qu'il ouvre cette boîte pour n'y rien changer.
+ */
+function closeLanguageDialog(): void {
+  if (languageDialog === undefined) return
+  languageDialog.close()
+  languageDialog.remove()
+  languageDialog = undefined
+  languageButton.focus()
+}
+
+/** La coche de la langue courante — le second marqueur, celui qui n'est pas une couleur. */
+function checkGlyph(): SVGSVGElement {
+  const ns = 'http://www.w3.org/2000/svg'
+  const svg = document.createElementNS(ns, 'svg')
+  svg.setAttribute('viewBox', '0 0 24 24')
+  svg.setAttribute('aria-hidden', 'true')
+  svg.setAttribute('focusable', 'false')
+  svg.classList.add('lang-choice__check')
+  const path = document.createElementNS(ns, 'path')
+  path.setAttribute('d', 'M5 12.5 10 17.5 19 6.5')
+  path.setAttribute('fill', 'none')
+  path.setAttribute('stroke', 'currentColor')
+  path.setAttribute('stroke-width', '2.4')
+  path.setAttribute('stroke-linecap', 'round')
+  path.setAttribute('stroke-linejoin', 'round')
+  svg.append(path)
+  return svg
+}
+
+/**
+ * # Les deux langues, côte à côte, une seule fois
+ *
+ * Cette boîte existe pour **une** raison, et le sélecteur en est presque un prétexte :
+ * deux réglages de langue cohabitent dans cet outil, et un seul agit sur les mots qu'on
+ * lit ici (`src/i18n/axes.ts`).
+ *
+ * Le défaut à éviter est précis, et il ne se voit qu'une fois l'outil traduit : le pilote
+ * change la langue de l'interface, lit « LIBELLÉS — fr » inchangé dans le bandeau du
+ * fichier, et conclut que le sélecteur ne marche pas. Il a raison de le croire — rien ne
+ * lui a dit que ces deux mentions parlaient de deux choses différentes.
+ *
+ * D'où la forme : **deux sections nommées**, dans une seule boîte. Celle du haut se règle
+ * et dit qu'elle gouverne cette interface ; celle du bas ne se règle pas, dit son état, et
+ * dit pourquoi il ne bouge pas. Le pilote qui vient chercher « pourquoi ça n'a pas
+ * changé » trouve la réponse à l'endroit exact où il pose la question.
+ *
+ * **Les cinq entrées sont des endonymes** — « Nederlands », jamais « Néerlandais » :
+ * demander de reconnaître un mot français pour sortir du français rate exactement la
+ * personne qu'il faut aider. Chaque bouton porte son `lang` : un lecteur d'écran prononce
+ * alors « Deutsch » en allemand, et non à la française.
+ */
+function openLanguageDialog(): void {
+  if (languageDialog !== undefined) return
+  const tr = translator()
+  const dialog = el('dialog', 'modal modal--language')
+  dialog.setAttribute('aria-label', tr.t('app.languageDialogTitle'))
+  const box = el('div', 'modal__box')
+  const head = el('div', 'modal__head')
+  head.append(el('h2', 'modal__title', tr.t('app.languageDialogTitle')))
+  const close = el('button', 'btn', tr.t('app.close'))
+  close.type = 'button'
+  close.addEventListener('click', () => closeLanguageDialog())
+  head.append(close)
+  box.append(head)
+
+  const ours = el('section', 'lang-axis')
+  ours.append(
+    el('h3', 'lang-axis__title', tr.t('app.uiLanguage')),
+    el('p', 'modal__lead', tr.t('app.uiLanguageLead'))
+  )
+  const list = el('div', 'lang-list')
+  list.setAttribute('role', 'group')
+  list.setAttribute('aria-label', tr.t('app.uiLanguage'))
+  let currentChoice: HTMLButtonElement | undefined
+  for (const code of UI_LANGUAGES) {
+    const choice = el('button', 'btn lang-choice')
+    choice.type = 'button'
+    // L'entrée est écrite dans SA langue : sans cet attribut, un lecteur d'écran
+    // francophone prononcerait « Nederlands » à la française — c'est-à-dire le rendrait
+    // méconnaissable à celui-là même qu'il faut aider.
+    choice.lang = code
+    const chosen = code === currentUiLanguage
+    // Un interrupteur et non une sélection : `aria-pressed` dit lequel est enfoncé, ce que
+    // ni l'aplat ni la coche ne disent à un lecteur d'écran.
+    choice.setAttribute('aria-pressed', String(chosen))
+    choice.classList.toggle('lang-choice--current', chosen)
+    if (chosen) {
+      choice.append(checkGlyph())
+      currentChoice = choice
+    }
+    choice.append(el('span', undefined, UI_LANGUAGE_ENDONYMS[code]))
+    choice.addEventListener('click', () => chooseUiLanguage(code))
+    list.append(choice)
+  }
+  ours.append(list)
+  box.append(ours)
+
+  const theirs = el('section', 'lang-axis lang-axis--labels')
+  theirs.append(
+    el('h3', 'lang-axis__title', tr.t('app.metaLabels')),
+    el('p', 'lang-axis__value', labelLanguageMention(tr, session)),
+    el('p', 'modal__lead', tr.t('app.labelsAxisLead'))
+  )
+  box.append(theirs)
+
+  dialog.append(box)
+  languageDialog = dialog
+  dialog.addEventListener('cancel', (event) => {
+    event.preventDefault()
+    closeLanguageDialog()
+  })
+  document.body.append(dialog)
+  dialog.showModal()
+  // Le focus va sur la langue courante et non sur « Fermer » : c'est le point de départ
+  // de la seule décision que la boîte demande, et la tabulation part de là vers les
+  // autres langues.
+  ;(currentChoice ?? close).focus()
+}
+
+/** Un chargement de catalogue est en cours : un double clic n'en lance pas deux. */
+let languagePending = false
+
+/**
+ * Changer la langue de **notre prose**, et rien d'autre.
+ *
+ * `session.language` n'est pas touché — c'est l'autre axe, celui des libellés de XCTrack,
+ * qui suit le fichier ouvert. Un pilote belge dont l'AIR³ est en anglais lit donc cette
+ * interface en français **et** ses libellés en anglais, ce qui est tout l'objet de la
+ * séparation (`src/i18n/axes.ts`).
+ *
+ * **Le choix n'est mémorisé qu'une fois le catalogue arrivé.** L'écrire avant exposerait
+ * au pire : l'amorçage attend le catalogue de la langue mémorisée et n'affiche rien tant
+ * qu'il n'est pas là — une langue enregistrée dont le morceau ne se télécharge pas
+ * laisserait un écran vide à chaque rechargement, sans moyen d'en sortir.
+ *
+ * **Trois choses survivent au rendu et sont donc refaites à la main** : les mots du cadre,
+ * le sélecteur de gabarit — qui vit hors de `content` — et les avertissements du fichier,
+ * calculés une seule fois à l'ouverture avec le traducteur d'alors.
+ */
+function chooseUiLanguage(language: UiLanguage): void {
+  if (language === currentUiLanguage) {
+    closeLanguageDialog()
+    return
+  }
+  if (languagePending) return
+  languagePending = true
+  void loadTranslator(language)
+    .then((loaded) => {
+      currentUiLanguage = language
+      uiTranslator = loaded
+      writeUiLanguage(window.localStorage, language)
+      closeLanguageDialog()
+      installChromeProse(loaded)
+      if (session !== undefined) {
+        installDeviceSelector(session.device)
+        session.warnings = computeWarnings({
+          tr: loaded,
+          document: session.container.document,
+          layout: session.layout,
+          settings: session.settings,
+          language: session.language
+        })
+      }
+      // L'annonce du carrousel a été écrite dans la langue précédente : elle ne se
+      // retraduit pas, elle se tait. Le geste qu'elle décrivait est passé.
+      pagesMessage = undefined
+      render()
+    })
+    .catch((error: unknown) => {
+      tellProblem(
+        translator().t('app.languageFailedTitle'),
+        translator().t('app.fileUntouchedRetry'),
+        formatTechnicalDetail(error)
+      )
+    })
+    .finally(() => { languagePending = false })
+}
+
 /* ------------------------------------------- 1. les préférences générales, en vue pleine */
 
 /**
@@ -2497,6 +2784,7 @@ function openVersionDialog(): void {
     .then((module) => module.buildVersionPanel({
       document: current.container.document,
       language: current.language,
+      tr: translator(),
       // Le geste n'est offert qu'en édition : hors de ce mode, l'outil promet de ne rien
       // écrire, et un bouton qui retire des réglages y serait un reniement.
       //
@@ -2858,6 +3146,10 @@ function render(): void {
     || session.container.parseError !== undefined
     || view.kind === 'preferences'
   fileName.textContent = session?.container.fileName ?? ''
+  // L'infobulle que la feuille de style promet depuis toujours, et qui manquait : le nom
+  // est tronqué par l'ellipse, et plus court encore sous 1 120 px. Sans elle, un pilote
+  // qui travaille sur deux exports du même jour ne peut plus les distinguer.
+  fileName.title = session?.container.fileName ?? ''
   syncEditControls()
 
   if (failure !== undefined) {
@@ -3450,11 +3742,12 @@ window.addEventListener('keydown', (event) => {
  * personne à qui rendre l'échec. Un catalogue qui n'arrive pas laisse l'écran vide, et
  * `loadMessages` oublie l'échec pour qu'un rechargement retente.
  */
-const uiLanguage = initialUiLanguage(window.localStorage, [...navigator.languages])
-void loadTranslator(uiLanguage).then((loaded) => {
+void loadTranslator(currentUiLanguage).then((loaded) => {
   uiTranslator = loaded
-  // Les mots du cadre d'abord — c'est aussi ce qui l'accroche au document —, la vue
-  // ensuite : le premier affichage porte donc déjà toute sa prose.
+  // Les mots du cadre d'abord, son accrochage ensuite, la vue enfin : le premier
+  // affichage porte donc déjà toute sa prose, et le pilote ne voit à aucun moment une
+  // barre de boutons vides.
   installChromeProse(loaded)
+  attachChrome()
   render()
 })

@@ -439,10 +439,12 @@ describe('assemblage — la barre de tête garde le fréquent et range le reste'
   )
 
   it('la barre ne porte que le fréquent et ce qui dit l’état du document', () => {
-    // Nom du fichier, annuler/rétablir, les réglages, l'interrupteur de mode, le menu,
-    // enregistrer. Rien d'autre : six commandes passaient sur deux lignes sous 1100 px.
+    // Nom du fichier, annuler/rétablir, la langue, les réglages, l'interrupteur de mode,
+    // le menu, enregistrer. Rien d'autre : six commandes passaient sur deux lignes sous
+    // 1100 px. Le globe est le septième et le seul muet — 30 px, la largeur d'une flèche
+    // d'annulation : c'est ce qui lui permet d'entrer sans repousser le repli.
     expect(barre).toContain(
-      'fileName, undoButton, redoButton, preferencesButton, editToggle, menu.root, fileInput,'
+      'fileName, undoButton, redoButton, languageButton, preferencesButton, editToggle,'
     )
   })
 
@@ -735,5 +737,107 @@ describe('assemblage — un document modifié ne se fait pas remplacer sans un m
     // `libraryPanel.ts` la pose déjà, et mieux : « ranger d'abord, puis charger » est
     // l'issue qui ne perd rien, et elle n'a de sens que là.
     expect(main).toContain('void loadBytes(bytes.slice(), name, { confirmed: true })')
+  })
+})
+
+/**
+ * # Le sélecteur de langue de l'interface
+ *
+ * Deux réglages de langue cohabitent dans cet outil et **un seul** agit sur les mots qu'on
+ * lit ici (`src/i18n/axes.ts`). Ces garde-fous portent sur les trois endroits où la
+ * confusion se glisserait sans qu'aucun test d'exécution ne bronche.
+ */
+describe('assemblage — changer la langue de l’interface, et rien d’autre', () => {
+  const choose = main.slice(
+    main.indexOf('function chooseUiLanguage'),
+    main.indexOf('/* ------------------------------------------- 1. les préférences générales')
+  )
+
+  it('le globe est dans la barre, muet, et n’est jamais éteint', () => {
+    // Un pilote qui arrive sur une interface qu'il ne lit pas doit pouvoir en sortir sans
+    // lire ce qui l'entoure : c'est le seul cas où un dessin vaut mieux qu'un mot. Et
+    // c'est sans fichier ouvert qu'il sert le plus — comme la bibliothèque et le manuel,
+    // il ne figure donc pas dans `syncEditControls`.
+    expect(main).toContain("const languageButton = el('button', 'btn btn--icon app-bar__lang')")
+    expect(main).toContain('languageButton.append(globeGlyph())')
+    expect(main).not.toContain('languageButton.hidden')
+    expect(main).not.toContain('languageButton.disabled')
+  })
+
+  it('son nom accessible nomme l’axe, et porte l’endonyme de la langue courante', () => {
+    // « Langue de l'interface : Français » — pas « Langue ». Les deux mentions doivent
+    // dire de quel axe elles parlent, sans quoi le pilote croira le sélecteur en panne en
+    // voyant « Libellés » ne pas bouger.
+    expect(main).toContain(
+      "tr.t('app.uiLanguageNamed', { name: UI_LANGUAGE_ENDONYMS[currentUiLanguage] })"
+    )
+    expect(main).toContain("languageButton.setAttribute('aria-label', named)")
+    // Les endonymes viennent du socle : les réécrire ici les ferait diverger.
+    expect(main).not.toContain("'Nederlands'")
+    expect(main).not.toContain("'Deutsch'")
+  })
+
+  it('les deux mentions de langue sont bâties par la même fonction', () => {
+    // Le bandeau du fichier et la boîte des langues disent le même fait. Deux
+    // formulations pour ce fait seraient exactement l'ambiguïté qu'on cherche à lever.
+    expect(main).toContain('add(tr.t(\'app.metaLabels\'), labelLanguageMention(tr, current))')
+    expect(main).toContain("el('p', 'lang-axis__value', labelLanguageMention(tr, session))")
+    expect(app['app.metaLabels']).toContain('XCTrack')
+  })
+
+  it('choisir une langue ne touche jamais à l’axe des libellés', () => {
+    // `session.language` vient du fichier ouvert et n'a rien à faire ici : un pilote belge
+    // dont l'AIR³ est en anglais lit cette interface en français ET ses libellés en
+    // anglais. C'est la promesse centrale de l'outil.
+    expect(choose).not.toContain('session.language =')
+    expect(choose).not.toContain('resolveLanguage')
+    expect(choose).not.toContain('languageFromBrowser =')
+    // Le recalcul des avertissements repasse la langue du fichier telle quelle.
+    expect(choose).toContain('language: session.language')
+  })
+
+  it('le choix n’est mémorisé qu’une fois le catalogue arrivé', () => {
+    // L'amorçage attend le catalogue de la langue mémorisée et n'affiche rien avant lui :
+    // écrire la préférence AVANT le chargement laisserait, si le morceau ne se télécharge
+    // pas, un écran vide à chaque rechargement, sans moyen d'en sortir.
+    expect(choose.indexOf('loadTranslator(language)'))
+      .toBeLessThan(choose.indexOf('writeUiLanguage(window.localStorage, language)'))
+  })
+
+  it('ce qui survit au rendu est refait à la main, et rien d’autre', () => {
+    // Trois choses ne passent pas par `render()` : les mots du cadre, le sélecteur de
+    // gabarit — qui vit hors de `content` —, et les avertissements du fichier, calculés
+    // une seule fois à l'ouverture avec le traducteur d'alors.
+    expect(choose).toContain('installChromeProse(loaded)')
+    expect(choose).toContain('installDeviceSelector(session.device)')
+    expect(choose).toContain('session.warnings = computeWarnings({')
+    expect(choose).toContain('render()')
+  })
+
+  it('`<html lang>` suit notre prose, jamais les libellés', () => {
+    // C'est cette page-ci qu'un lecteur d'écran prononce. L'attribut vaut « fr » dans
+    // `index.html` et mentirait dès le premier pilote néerlandophone.
+    expect(main).toContain('document.documentElement.lang = currentUiLanguage')
+  })
+
+  it('les écrans chargés à la demande reçoivent le traducteur du pilote', () => {
+    // Chacun de ces modules porte un repli **français** en attendant que `main.ts` ajoute
+    // la ligne (`src/i18n/CLAUDE.md` § 5). Sans elle, quatre écrans restaient en français
+    // quelle que soit la langue choisie — et le sélecteur paraissait ne rien faire.
+    expect(main).toContain('module.buildPropertyForm(widget, session.language, translator())')
+    expect(main).toContain('module.renderProperties({ form, tr: translator(), readOnly: true')
+    const palette = main.slice(main.indexOf('const palette = module.renderWidgetPalette({'))
+    expect(palette.slice(0, 400)).toContain('tr: translator()')
+    const version = main.slice(main.indexOf('module.buildVersionPanel({'))
+    expect(version.slice(0, 300)).toContain('tr: translator()')
+    const list = main.slice(main.indexOf('const list = renderWidgetList({'))
+    expect(list.slice(0, 300)).toContain('tr: translator()')
+  })
+
+  it('le nom du fichier porte enfin l’infobulle que la feuille promet', () => {
+    // La feuille de style le tronque — plus court encore sous 1 120 px, pour rendre au
+    // globe la largeur qu'il prend. Sans infobulle, deux exports du même jour deviennent
+    // indiscernables.
+    expect(main).toContain("fileName.title = session?.container.fileName ?? ''")
   })
 })

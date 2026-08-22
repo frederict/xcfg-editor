@@ -76,3 +76,59 @@ describe('app.css — le bouton des réglages tient dans la barre', () => {
     expect(compact.slice(0, 300)).not.toContain('display: none')
   })
 })
+
+/**
+ * Le globe des langues, et les 40 px qu'il prend à la barre.
+ *
+ * Mesuré sur la fixture `2026-08-20_backup-00.xcfg` en édition, document modifié, page
+ * ouverte : la barre repassait sur deux lignes sous 1 023 px en français, 1 020 en
+ * allemand et 1 028 en néerlandais — au-dessus des 1 024 px de l'écran le plus étroit
+ * qu'on vise. Les deux réductions du bloc compact les rendent, et davantage : 957, 954 et
+ * 962 px, soit mieux que les 983 / 980 / 988 px d'avant le globe.
+ *
+ * Ce test garde les deux règles. Les retirer ferait revenir la barre à 95 px de haut sur
+ * un écran de 1 024 px, et personne ne le verrait avant un pilote.
+ */
+describe('app.css — le globe des langues ne repousse pas le repli de la barre', () => {
+  const compact = css.slice(
+    css.indexOf('@media (max-width: 1120px)'),
+    css.indexOf('/* ------------------------------------------------- menu des commandes secondaires')
+  )
+
+  it('l’écart des commandes se resserre sous le seuil', () => {
+    expect(compact).toContain('.app-bar__actions { gap: 0.4rem; }')
+  })
+
+  it('le nom du fichier cède le premier, comme la règle le promet depuis toujours', () => {
+    expect(compact).toContain('.app-bar__file { max-width: 18ch; }')
+    // Il cède de la PLACE, pas du contenu : l'ellipse et l'infobulle gardent le nom entier.
+    expect(rule('.app-bar__file')).toContain('text-overflow: ellipsis;')
+  })
+})
+
+/**
+ * La boîte des langues. Le sélecteur n'en est presque qu'un prétexte : ce qu'elle porte
+ * d'irremplaçable, c'est la mise **côte à côte** des deux axes — celui qui se règle et
+ * celui qui ne se règle pas. Voir `src/i18n/axes.ts`.
+ */
+describe('app.css — les deux axes de langue se distinguent avant d’être lus', () => {
+  it('l’axe des libellés se peint comme un constat, pas comme une commande', () => {
+    // Le liséré et l'aplat le rangent avec ce qui renseigne. Rien dedans n'a l'air
+    // cliquable, parce que rien ne l'est.
+    const box = rule('.lang-axis--labels')
+    expect(box).toContain('border-left: 3px solid var(--app-line-strong);')
+    expect(box).toContain('background: var(--app-panel);')
+  })
+
+  it('la langue courante est marquée deux fois, dont une qui n’est pas une couleur', () => {
+    // Le pilote qui ouvre cette boîte est, par hypothèse, celui qui ne lit pas ce qui
+    // l'entoure : l'aplat inversé ne suffit pas, la coche le double.
+    expect(rule('.lang-choice--current')).toContain('background: var(--app-ink);')
+    expect(css).toContain('.lang-choice__check {')
+  })
+
+  it('les cinq entrées s’alignent en pairs', () => {
+    // Cinq boutons de largeurs différentes se liraient comme cinq commandes différentes.
+    expect(rule('.lang-choice')).toContain('min-width: 8.5rem;')
+  })
+})

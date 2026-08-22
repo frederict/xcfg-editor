@@ -187,6 +187,27 @@ body {
 .app-bar__prefs { flex: none; gap: 0.4rem; }
 .app-bar__prefs .btn__glyph { flex: none; }
 
+/*
+ * Le globe des langues coûte 40 px à la barre — 30 de bouton, 10 d'écart. Mesuré au repli
+ * près, sur la fixture `2026-08-20_backup-00.xcfg` en édition, document modifié, page
+ * ouverte : la barre passait sur deux lignes sous 1 023 px en français, 1 020 en allemand
+ * et 1 028 en néerlandais, c'est-à-dire AU-DESSUS des 1 024 px de l'écran le plus étroit
+ * qu'on vise. Les deux règles ci-dessous rendent ces 40 px, et davantage :
+ *
+ * | | avant le globe | globe seul | avec ces deux règles |
+ * |---|---|---|---|
+ * | français | 983 px | 1 023 px | **957 px** |
+ * | allemand | 980 px | 1 020 px | **954 px** |
+ * | néerlandais | 988 px | 1 028 px | **962 px** |
+ *
+ * L'écart entre les langues n'est pas du bruit : « De wijzigingen opslaan » et « Änderungen
+ * speichern » sont plus longs que « Enregistrer les modifications » ne le laisse croire, et
+ * c'est la langue la plus large qui décide.
+ *
+ * Aucune commande n'est perdue : l'écart resserré et le nom du fichier tronqué sont deux
+ * réductions de **place**, pas de contenu — le nom entier reste dans l'infobulle, que
+ * `main.ts` pose sur l'élément.
+ */
 @media (max-width: 1120px) {
   .app-bar__prefs { width: 30px; height: 30px; padding: 0; justify-content: center; }
   .app-bar__prefs-name {
@@ -197,6 +218,8 @@ body {
     clip-path: inset(50%);
     white-space: nowrap;
   }
+  .app-bar__actions { gap: 0.4rem; }
+  .app-bar__file { max-width: 18ch; }
 }
 
 /* ------------------------------------------------- menu des commandes secondaires */
@@ -2828,3 +2851,65 @@ body.is-dragging .veil {
  * sens dans une grille de modale qui pose déjà ses écarts.
  */
 .warnings--notice { margin: 0; }
+
+/* ------------------------------------------------- la boîte des deux langues */
+
+/*
+ * # Deux réglages de langue, et un seul agit sur les mots qu'on lit
+ *
+ * Le globe de la barre n'ouvre pas un sélecteur : il ouvre la boîte qui **distingue les
+ * deux axes** (`src/i18n/axes.ts`). Le défaut qu'elle prévient est mesurable en une
+ * seconde d'usage — le pilote change la langue de l'interface, lit dans le bandeau du
+ * fichier « LIBELLÉS DE XCTRACK — fr » inchangé, et conclut que le sélecteur est cassé.
+ *
+ * La feuille sépare donc les deux sections par la forme, et pas seulement par leur titre :
+ * en haut cinq boutons, c'est-à-dire une commande ; en bas un encadré sans rien à cliquer,
+ * c'est-à-dire un constat. On voit lequel des deux se règle avant d'avoir lu un mot.
+ *
+ * Étroite (30 rem) : cinq noms de langue et deux paragraphes n'ont pas besoin de plus, et
+ * une boîte large ferait courir les boutons d'un bord à l'autre de l'écran.
+ */
+.modal--language { max-width: min(30rem, 92vw); }
+
+.lang-axis { display: grid; gap: 0.5rem; }
+.lang-axis__title { margin: 0; font-size: 13px; font-weight: 600; }
+
+.lang-list { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+/*
+ * Chaque entrée porte son endonyme — « Nederlands », jamais « Néerlandais ». Une largeur
+ * minimale commune les aligne en colonnes régulières : c'est une liste de cinq pairs, et
+ * cinq boutons de largeurs différentes se liraient comme cinq commandes différentes.
+ */
+.lang-choice { justify-content: center; gap: 0.4rem; min-width: 8.5rem; }
+
+/*
+ * La langue courante est marquée **deux fois** : par l'aplat inversé et par la coche. La
+ * couleur seule ne suffit pas — et le pilote qui ouvre cette boîte est, par hypothèse,
+ * celui qui ne lit pas ce qui l'entoure. `aria-pressed` dit la même chose aux lecteurs
+ * d'écran.
+ */
+.lang-choice--current {
+  background: var(--app-ink);
+  border-color: var(--app-ink);
+  color: var(--app-bg);
+  font-weight: 500;
+}
+
+.lang-choice--current:hover { opacity: 0.88; }
+.lang-choice__check { width: 14px; height: 14px; flex: none; }
+
+/*
+ * L'axe des libellés : un constat, pas une commande. Le liséré et l'aplat le rangent avec
+ * ce qui **renseigne** — même famille visuelle que la ligne repliée des remarques —, et
+ * rien dedans n'a l'air cliquable, parce que rien ne l'est.
+ */
+.lang-axis--labels {
+  padding: 0.7rem 0.9rem;
+  border-left: 3px solid var(--app-line-strong);
+  border-radius: 3px;
+  background: var(--app-panel);
+}
+
+/* Le code de langue est un identifiant lu dans le fichier : il se compose comme tel. */
+.lang-axis__value { margin: 0; font-family: var(--font-data); font-size: 12.5px; }

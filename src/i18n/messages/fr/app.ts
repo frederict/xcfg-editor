@@ -315,6 +315,21 @@ const app = {
     'parties de ce navigateur.',
   'landing.readManual': 'Lire le manuel d’utilisation',
 
+  /* --------------------------------------- le sélecteur de langue de l’interface */
+
+  /**
+   * Deux réglages de langue cohabitent dans cet outil et un seul agit sur les mots qu’on
+   * lit ici. Chacune des deux mentions dit donc **de quel axe elle parle** : celle-ci
+   * nomme l’interface, `app.metaLabels` nomme XCTrack. Voir `src/i18n/axes.ts`.
+   */
+  'app.uiLanguage': 'Langue de l’interface',
+  'app.uiLanguageNamed': 'Langue de l’interface : {name}',
+  'app.uiLanguageHint': 'Choisir la langue de cette interface. Les libellés de XCTrack, eux, ne changent pas.',
+  'app.uiLanguageLead': 'Les mots de cette interface : intitulés, explications, avertissements. Le choix est retenu par ce navigateur.',
+  'app.labelsAxisLead': 'Les noms de gadgets, d’options et de réglages, tels que votre instrument les affiche. Ils viennent du fichier ouvert, et ce choix-ci ne les change pas.',
+  'app.languageDialogTitle': 'Langues',
+  'app.languageFailedTitle': 'La langue n’a pas pu être chargée',
+
   /* ============================================ `main.ts` — ce que le fichier déclare */
 
   'app.metaFormat': 'Format',
@@ -322,7 +337,7 @@ const app = {
   'app.containerPlain': 'fichier .xcfg',
   'app.metaDevice': 'Appareil du fichier',
   'app.notDeclared': 'non déclaré',
-  'app.metaLabels': 'Libellés',
+  'app.metaLabels': 'Libellés de XCTrack',
   'app.labelsFromBrowser': '{language} (langue du navigateur)',
   'app.labelsFromFile': '{language} (déclaré par le fichier)',
   'app.metaRenderSettings': 'Réglages de rendu',
