@@ -1,4 +1,5 @@
 import './libraryPanel.css'
+import { meta as WIDGET_CATALOGUE_META } from '../catalog/widgetCatalog/en.json'
 import { readableName } from '../catalog/widgetNames'
 import { formatTechnicalDetail } from '../core/technicalDetail'
 import { sha256Hex } from '../library/digest'
@@ -174,6 +175,16 @@ export interface LibraryPanelHandle {
 }
 
 /* ================================================================ mise dans la langue */
+
+/**
+ * La version d'APK dont le catalogue des gadgets est extrait — « XCTrack-1.0.3-beta5 » →
+ * « 1.0.3-beta5 ». **Lue, jamais écrite** : le numéro tenait dans la phrase de
+ * `library.proNote`, recopié cinq fois, et se serait périmé cinq fois au prochain
+ * catalogue. `meta.source` est le même dans les 33 fichiers de langue du catalogue ;
+ * l'anglais sert de porteur, comme dans `warnings.ts`, et le reste du fichier n'est pas
+ * embarqué.
+ */
+const CATALOGUE_APK = WIDGET_CATALOGUE_META.source.replace(/^XCTrack-/, '')
 
 /**
  * Une date ISO à la minute, dans la langue du pilote. Une date absente ou illisible —
@@ -420,7 +431,7 @@ export function identityCard(
           : assumed.proWidgets.map((shortName) => readableName(shortName, language)).join(', '),
       note: assumed.proKnowledge === 'absent'
         ? tr.t('library.proUnknownNote')
-        : tr.t('library.proNote')
+        : tr.t('library.proNote', { version: CATALOGUE_APK })
     },
     {
       label: tr.t('library.factVersionGap'),

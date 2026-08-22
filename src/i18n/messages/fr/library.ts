@@ -125,12 +125,17 @@ const library = {
   'library.identityLead':
     'Deux moitiés, jamais mélangées : ce que le fichier déclare, et ce que cet éditeur en suppose. Tout ce qui est supposé peut être faux sans que le fichier soit en cause.',
   'library.readNote':
-    'Lu tel quel dans les octets rangés. Un champ absent est dit absent, jamais remplacé par une valeur par défaut.',
+    'Lu tel quel dans les octets rangés. Un champ absent est dit absent, jamais remplacé par une valeur d’usine.',
   'library.assumedNote':
     'Rien de ceci n’est dans le fichier. L’appareil et sa résolution viennent de notre table ; savoir qu’un gadget est réservé à la version Pro vient d’un catalogue extrait de l’APK.',
 
   'library.factExportType': 'Format d’export',
-  'library.factExportTypeNote': 'Clé info.exportType.',
+  /**
+   * « Clé » nommait ici un membre de l'objet `info`, pas un réglage — mais le pilote n'a
+   * pas deux sens du mot, il n'en a aucun : ce que le fichier porte, ce sont des lignes.
+   * Le dire « du fichier » lève l'ambiguïté que le mot seul laissait.
+   */
+  'library.factExportTypeNote': 'Ligne info.exportType du fichier.',
 
   'library.factContainer': 'Conteneur',
   'library.containerArchive': {
@@ -147,7 +152,7 @@ const library = {
   'library.versionValue': '{name} — code {code}',
   'library.versionNameAbsent': '(nom absent)',
   'library.versionCodeAbsent': '(absent)',
-  'library.factVersionNote': 'Clés info.versionName et info.versionCode.',
+  'library.factVersionNote': 'Lignes info.versionName et info.versionCode du fichier.',
 
   'library.factDevice': 'Appareil déclaré',
   'library.deviceAbsent': 'Le fichier ne le dit pas',
@@ -214,7 +219,12 @@ const library = {
   'library.proNone': 'Aucun',
   'library.proUnknownNote':
     'On ne devine pas si un gadget est réservé à la version Pro : sans catalogue, on ne dit rien.',
-  'library.proNote': 'D’après le catalogue extrait de l’APK 1.0.3-beta5, pas d’après le fichier.',
+  /**
+   * `{version}` arrive des métadonnées du catalogue, jamais écrit à la main : le numéro
+   * en dur se serait périmé cinq fois, une par langue. C'est une chaîne, donc recopiée
+   * telle quelle — « 100 030 » ne se lit dans aucun fichier XCTrack.
+   */
+  'library.proNote': 'D’après le catalogue extrait de l’APK {version}, pas d’après le fichier.',
 
   'library.factVersionGap': 'Situation de la version',
   'library.versionGapOlder': 'Plus ancienne que celle sur laquelle cet éditeur dessine',
@@ -353,7 +363,7 @@ const library = {
 
   'library.removeTitle': 'Supprimer « {name} » ?',
   'library.removeBody':
-    '« {name} » et ses {size} d’octets seront retirés de ce navigateur. Cette bibliothèque n’a pas de corbeille.',
+    '« {name} » et ses {size} seront retirés de ce navigateur. Cette bibliothèque n’a pas de corbeille.',
   'library.removeCaveat':
     'Si vous n’en êtes pas sûr : ressortez d’abord le fichier, ou exportez la bibliothèque entière.',
   'library.removed': '« {name} » a été supprimée.',
@@ -412,8 +422,8 @@ const library = {
   'library.removeBrokenTitle': 'Supprimer cette entrée illisible ?',
   'library.brokenRemoved': 'L’entrée illisible a été supprimée.',
   'library.brokenHeading': {
-    one: '{count} Entrée qui ne se relit pas',
-    other: '{count} Entrées qui ne se relisent pas'
+    one: '{count} entrée qui ne se relit pas',
+    other: '{count} entrées qui ne se relisent pas'
   },
 
   /* ------------------------------------------------------------------ exporter, importer */

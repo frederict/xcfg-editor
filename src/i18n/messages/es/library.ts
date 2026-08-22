@@ -99,12 +99,12 @@ const library: DomainCatalog<'library'> = {
   'library.identityLead':
     'Dos mitades, nunca mezcladas: lo que el archivo declara, y lo que este editor supone. Todo lo supuesto puede ser falso sin que el archivo tenga la culpa.',
   'library.readNote':
-    'Leído tal cual en los bytes guardados. Un campo ausente se dice ausente, nunca se sustituye por un valor predeterminado.',
+    'Leído tal cual en los bytes guardados. Un campo ausente se dice ausente, nunca se sustituye por un valor de fábrica.',
   'library.assumedNote':
     'Nada de esto está en el archivo. El aparato y su resolución vienen de nuestra tabla; saber que un widget está reservado a la versión Pro viene de un catálogo extraído del APK.',
 
   'library.factExportType': 'Formato de exportación',
-  'library.factExportTypeNote': 'Clave info.exportType.',
+  'library.factExportTypeNote': 'Línea info.exportType del archivo.',
 
   'library.factContainer': 'Contenedor',
   'library.containerArchive': {
@@ -121,7 +121,7 @@ const library: DomainCatalog<'library'> = {
   'library.versionValue': '{name} — código {code}',
   'library.versionNameAbsent': '(nombre ausente)',
   'library.versionCodeAbsent': '(ausente)',
-  'library.factVersionNote': 'Claves info.versionName e info.versionCode.',
+  'library.factVersionNote': 'Líneas info.versionName e info.versionCode del archivo.',
 
   'library.factDevice': 'Aparato declarado',
   'library.deviceAbsent': 'El archivo no lo dice',
@@ -183,7 +183,7 @@ const library: DomainCatalog<'library'> = {
   'library.proNone': 'Ninguno',
   'library.proUnknownNote':
     'No adivinamos si un widget está reservado a la versión Pro: sin catálogo, no decimos nada.',
-  'library.proNote': 'Según el catálogo extraído del APK 1.0.3-beta5, no según el archivo.',
+  'library.proNote': 'Según el catálogo extraído del APK {version}, no según el archivo.',
 
   'library.factVersionGap': 'Situación de la versión',
   'library.versionGapOlder': 'Más antigua que aquella para la que dibuja este editor',
@@ -303,7 +303,7 @@ const library: DomainCatalog<'library'> = {
 
   'library.removeTitle': '¿Eliminar «{name}»?',
   'library.removeBody':
-    '«{name}» y sus {size} de bytes se retirarán de este navegador. Esta biblioteca no tiene papelera.',
+    '«{name}» y sus {size} se retirarán de este navegador. Esta biblioteca no tiene papelera.',
   'library.removeCaveat':
     'Si no está seguro: saque primero el archivo, o exporte la biblioteca entera.',
   'library.removed': '«{name}» ha sido eliminada.',
@@ -352,8 +352,8 @@ const library: DomainCatalog<'library'> = {
   'library.removeBrokenTitle': '¿Eliminar esta entrada ilegible?',
   'library.brokenRemoved': 'La entrada ilegible ha sido eliminada.',
   'library.brokenHeading': {
-    one: '{count} Entrada que no se deja releer',
-    other: '{count} Entradas que no se dejan releer'
+    one: '{count} entrada que no se deja releer',
+    other: '{count} entradas que no se dejan releer'
   },
 
   /* --------------------------------------------------- exportar e importar */

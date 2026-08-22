@@ -99,12 +99,12 @@ const library: DomainCatalog<'library'> = {
   'library.identityLead':
     'Two halves, never mixed: what the file declares, and what this editor assumes about it. Anything assumed can be wrong without the file being at fault.',
   'library.readNote':
-    'Read as it stands in the stored bytes. A missing field is said to be missing, never replaced by a default value.',
+    'Read as it stands in the stored bytes. A missing field is said to be missing, never replaced by a factory value.',
   'library.assumedNote':
     'None of this is in the file. The device and its resolution come from our table; knowing that a widget is reserved for the Pro version comes from a catalogue extracted from the APK.',
 
   'library.factExportType': 'Export format',
-  'library.factExportTypeNote': 'Key info.exportType.',
+  'library.factExportTypeNote': 'Line info.exportType in the file.',
 
   'library.factContainer': 'Container',
   'library.containerArchive': {
@@ -121,7 +121,7 @@ const library: DomainCatalog<'library'> = {
   'library.versionValue': '{name} — version code {code}',
   'library.versionNameAbsent': '(name missing)',
   'library.versionCodeAbsent': '(missing)',
-  'library.factVersionNote': 'Keys info.versionName and info.versionCode.',
+  'library.factVersionNote': 'Lines info.versionName and info.versionCode in the file.',
 
   'library.factDevice': 'Device declared',
   'library.deviceAbsent': 'The file does not say',
@@ -183,7 +183,7 @@ const library: DomainCatalog<'library'> = {
   'library.proNone': 'None',
   'library.proUnknownNote':
     'We do not guess whether a widget is reserved for the Pro version: without a catalogue, we say nothing.',
-  'library.proNote': 'According to the catalogue extracted from APK 1.0.3-beta5, not according to the file.',
+  'library.proNote': 'According to the catalogue extracted from APK {version}, not according to the file.',
 
   'library.factVersionGap': 'Where the version stands',
   'library.versionGapOlder': 'Older than the one this editor draws for',
@@ -303,7 +303,7 @@ const library: DomainCatalog<'library'> = {
 
   'library.removeTitle': 'Delete “{name}”?',
   'library.removeBody':
-    '“{name}” and its {size} of bytes will be taken out of this browser. This library has no wastebasket.',
+    '“{name}” and its {size} will be taken out of this browser. This library has no wastebasket.',
   'library.removeCaveat':
     'If you are not sure: take the file back out first, or export the whole library.',
   'library.removed': '“{name}” has been deleted.',
@@ -352,8 +352,8 @@ const library: DomainCatalog<'library'> = {
   'library.removeBrokenTitle': 'Delete this unreadable entry?',
   'library.brokenRemoved': 'The unreadable entry has been deleted.',
   'library.brokenHeading': {
-    one: '{count} Entry that cannot be read back',
-    other: '{count} Entries that cannot be read back'
+    one: '{count} entry that cannot be read back',
+    other: '{count} entries that cannot be read back'
   },
 
   /* ------------------------------------------------------- exporting and importing */

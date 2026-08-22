@@ -100,12 +100,12 @@ const library: DomainCatalog<'library'> = {
   'library.identityLead':
     'Twee helften, nooit vermengd: wat het bestand opgeeft, en wat deze editor erover veronderstelt. Alles wat verondersteld is, kan verkeerd zijn zonder dat het bestand schuld heeft.',
   'library.readNote':
-    'Gelezen zoals het in de opgeborgen bytes staat. Een ontbrekend veld wordt ontbrekend genoemd, nooit vervangen door een standaardwaarde.',
+    'Gelezen zoals het in de opgeborgen bytes staat. Een ontbrekend veld wordt ontbrekend genoemd, nooit vervangen door een fabriekswaarde.',
   'library.assumedNote':
     'Niets hiervan staat in het bestand. Het toestel en zijn resolutie komen uit onze tabel; dat een widget voorbehouden is aan de Pro-versie komt uit een uit de APK gehaalde catalogus.',
 
   'library.factExportType': 'Exportformaat',
-  'library.factExportTypeNote': 'Sleutel info.exportType.',
+  'library.factExportTypeNote': 'Regel info.exportType van het bestand.',
 
   'library.factContainer': 'Container',
   'library.containerArchive': {
@@ -122,7 +122,7 @@ const library: DomainCatalog<'library'> = {
   'library.versionValue': '{name} — versiecode {code}',
   'library.versionNameAbsent': '(naam ontbreekt)',
   'library.versionCodeAbsent': '(ontbreekt)',
-  'library.factVersionNote': 'Sleutels info.versionName en info.versionCode.',
+  'library.factVersionNote': 'Regels info.versionName en info.versionCode van het bestand.',
 
   'library.factDevice': 'Opgegeven toestel',
   'library.deviceAbsent': 'Het bestand zegt het niet',
@@ -184,7 +184,7 @@ const library: DomainCatalog<'library'> = {
   'library.proNone': 'Geen',
   'library.proUnknownNote':
     'Of een widget voorbehouden is aan de Pro-versie, raden wij niet: zonder catalogus zeggen we niets.',
-  'library.proNote': 'Volgens de uit de APK 1.0.3-beta5 gehaalde catalogus, niet volgens het bestand.',
+  'library.proNote': 'Volgens de uit de APK {version} gehaalde catalogus, niet volgens het bestand.',
 
   'library.factVersionGap': 'Stand van de versie',
   'library.versionGapOlder': 'Ouder dan die waarvoor deze editor tekent',
@@ -304,7 +304,7 @@ const library: DomainCatalog<'library'> = {
 
   'library.removeTitle': '‘{name}’ verwijderen?',
   'library.removeBody':
-    '‘{name}’ en haar {size} aan bytes worden uit deze browser gehaald. Deze bibliotheek heeft geen prullenbak.',
+    '‘{name}’ en haar {size} worden uit deze browser gehaald. Deze bibliotheek heeft geen prullenbak.',
   'library.removeCaveat':
     'Als u niet zeker bent: haal eerst het bestand eruit, of exporteer de hele bibliotheek.',
   'library.removed': '‘{name}’ is verwijderd.',
@@ -353,8 +353,8 @@ const library: DomainCatalog<'library'> = {
   'library.removeBrokenTitle': 'Dit onleesbare item verwijderen?',
   'library.brokenRemoved': 'Het onleesbare item is verwijderd.',
   'library.brokenHeading': {
-    one: '{count} Item dat zich niet meer laat lezen',
-    other: '{count} Items die zich niet meer laten lezen'
+    one: '{count} item dat zich niet meer laat lezen',
+    other: '{count} items die zich niet meer laten lezen'
   },
 
   /* -------------------------------------------------- exporteren en importeren */
