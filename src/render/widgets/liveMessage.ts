@@ -1,5 +1,6 @@
 import type { Widget } from '../../model/widget'
 import type { RenderSettings } from '../../model/preferences'
+import type { Translator } from '../../i18n/translate'
 import { readNumber } from '../../core/access'
 
 /**
@@ -44,24 +45,28 @@ import { readNumber } from '../../core/access'
  *   sur son sens exact, non tranchée et désormais sans objet.
  */
 
-const PREFIX: Record<string, string> = { fr: 'Panneau de messages', en: 'Message panel' }
-
-/** Line count is always an integer ≥ 0 in the corpus (always 2); a fractional or
- * negative value in a foreign file is clamped defensively rather than shown raw. */
-function linesSuffix(count: number, language: string): string {
-  const n = Math.max(0, Math.trunc(count))
-  if (language === 'fr') return `${n} ligne${n > 1 ? 's' : ''} réservée${n > 1 ? 's' : ''}`
-  return `${n} line${n === 1 ? '' : 's'} reserved`
-}
-
-function liveMessageLabel(widget: Widget, language: string): string {
-  const prefix = PREFIX[language] ?? PREFIX.en!
+/**
+ * L'étiquette de survol — **notre prose**, pas un texte de l'appareil : XCTrack ne peint
+ * rien ici au repos, c'est tout l'objet du commentaire de tête. Elle suit donc l'axe `ui`,
+ * la langue que le pilote a choisie, et passe par le catalogue.
+ *
+ * Jusqu'au 2026-08-22 elle vivait dans une table figée à `fr`/`en`, avec sa propre copie
+ * de `plural()`, et suivait la langue du **fichier** : trois pilotes sur cinq lisaient
+ * l'anglais. `Intl.PluralRules` s'en charge maintenant, comme partout ailleurs.
+ *
+ * `line_count` est toujours un entier positif dans le corpus (toujours 2) ; une valeur
+ * fractionnaire ou négative venue d'un fichier inconnu est ramenée par prudence plutôt
+ * qu'affichée telle quelle.
+ */
+function liveMessageLabel(widget: Widget, tr: Translator): string {
   const rawCount = readNumber(widget.node, 'line_count')
-  if (rawCount === undefined) return prefix
-  return `${prefix} — ${linesSuffix(rawCount, language)}`
+  if (rawCount === undefined) return tr.t('render.liveMessagePanel')
+  return tr.t('render.liveMessageLines', { count: Math.max(0, Math.trunc(rawCount)) })
 }
 
-export function drawLiveMessage(widget: Widget, _settings: RenderSettings, language: string): HTMLElement {
+export function drawLiveMessage(
+  widget: Widget, _settings: RenderSettings, _language: string, tr: Translator
+): HTMLElement {
   const element = document.createElement('div')
   element.className = 'xc-livemsg'
 
@@ -71,7 +76,7 @@ export function drawLiveMessage(widget: Widget, _settings: RenderSettings, langu
   // comme sur l'appareil.
   const label = document.createElement('span')
   label.className = 'xc-livemsg__label'
-  label.textContent = liveMessageLabel(widget, language)
+  label.textContent = liveMessageLabel(widget, tr)
   element.append(label)
 
   return element

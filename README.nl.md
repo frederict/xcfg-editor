@@ -303,7 +303,10 @@ een belofte van getrouwheid die alleen de auteur kan nagaan, is niets waard.
   gehaald — 33 talen voor de widgets, 34 voor hun opties, 35 voor de opschriften van de
   algemene instellingen —, en ze volgen de taal van het geopende bestand; alleen voor een
   bestand dat er geen vermeldt nemen ze die van de interface over. Die drie getallen zijn
-  geen keuze van ons: het is wat de APK draagt.
+  geen keuze van ons: het is wat de APK draagt. De tekening van een pagina volgt dezelfde
+  verdeling: alles wat het toestel daar tekent behoudt de taal van het bestand, en de enige
+  twee opschriften die de editor toevoegt — de actie van een knop, de strook die voor
+  berichten is gereserveerd, beide zichtbaar bij aanwijzen — volgen die van u.
 - **Zichzelf ter plaatse uitleggen**: een handleiding in dertien hoofdstukken opent vanaf het
   startscherm en vanuit het menu ‘Bestand’, zonder de pagina te verlaten — **in de vijf
   talen**, en alleen de taal die wordt getoond, wordt gedownload. Ze is voor een piloot

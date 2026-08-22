@@ -330,8 +330,22 @@ const model: DomainCatalog<'model'> = {
   'reachability.heldInLandscape': 'Die allgemeinen Einstellungen dieser Datei halten den Bildschirm im Querformat: Ihre Hochformat-Seiten erscheinen dort nicht, gleich welche Navigationen sie tragen. So steht es in der Datei: „Display.Orientation: {value}“.',
   'reachability.heldInPortrait': 'Die allgemeinen Einstellungen dieser Datei halten den Bildschirm im Hochformat: Ihre Querformat-Seiten erscheinen dort nicht, gleich welche Navigationen sie tragen. So steht es in der Datei: „Display.Orientation: {value}“.',
   'reachability.enableAllRemedy': 'Dieser Editor kann sie wieder öffnen: „Für alle Navigationen aktivieren“ schreibt den Wert, den XCTrack selbst schreibt, wenn alle fünf Navigationen aktiv sind. Die Schaltfläche steht auf dieser Seite und in „Seiten verwalten“, sobald „Seiten bearbeiten“ aktiv ist. Um nur einzelne zu behalten, führt kein Weg am Gerät vorbei.',
-  'reachability.heldRemedy': 'Das lässt sich nicht auf der Seite beheben: Es ist eine Einstellung des ganzen Geräts, und sie steht unter „Einstellungen“ in der Zeile, die die Bildschirmausrichtung festlegt. Dieser Editor rührt sie nicht von sich aus an. Einmal beobachtet: Auf ein AIR³ 7.2 importierte Hochformat-Seiten wurden dort nie angezeigt, solange diese Einstellung den Bildschirm im Querformat hielt.'
+  'reachability.heldRemedy': 'Das lässt sich nicht auf der Seite beheben: Es ist eine Einstellung des ganzen Geräts, und sie steht unter „Einstellungen“ in der Zeile, die die Bildschirmausrichtung festlegt. Dieser Editor rührt sie nicht von sich aus an. Einmal beobachtet: Auf ein AIR³ 7.2 importierte Hochformat-Seiten wurden dort nie angezeigt, solange diese Einstellung den Bildschirm im Querformat hielt.',
 
+  /* ==== was die Darstellung einer Seite der Gerätezeichnung hinzufügt: zwei Hinweise == */
+
+  'render.actionNextWaypoint': 'nächster Wegpunkt',
+  'render.actionPrevWaypoint': 'vorheriger Wegpunkt',
+  'render.actionPlus': 'erhöhen',
+  'render.actionMinus': 'verringern',
+  'render.actionZoomIn': 'hineinzoomen',
+  'render.actionZoomOut': 'herauszoomen',
+  'render.actionLongPress': '{action} (langes Drücken)',
+  'render.liveMessagePanel': 'Nachrichtenbereich',
+  'render.liveMessageLines': {
+    one: 'Nachrichtenbereich — {count} Zeile reserviert',
+    other: 'Nachrichtenbereich — {count} Zeilen reserviert'
+  }
 }
 
 export default model

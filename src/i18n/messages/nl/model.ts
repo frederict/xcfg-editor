@@ -331,8 +331,22 @@ const model: DomainCatalog<'model'> = {
   'reachability.heldInLandscape': 'De algemene instellingen van dit bestand houden het scherm in liggend formaat: uw staande pagina’s verschijnen daar niet, welke navigaties ze ook dragen. Zoals het in het bestand staat: ‘Display.Orientation: {value}’.',
   'reachability.heldInPortrait': 'De algemene instellingen van dit bestand houden het scherm in staand formaat: uw liggende pagina’s verschijnen daar niet, welke navigaties ze ook dragen. Zoals het in het bestand staat: ‘Display.Orientation: {value}’.',
   'reachability.enableAllRemedy': 'Deze editor kan haar heropenen: ‘Voor alle navigaties inschakelen’ schrijft de waarde die XCTrack zelf schrijft wanneer alle vijf navigaties actief zijn. De knop staat op deze pagina en in ‘Pagina’s beheren’, zodra ‘De pagina’s bewerken’ actief is. Om er slechts enkele te behouden, moet u langs het instrument.',
-  'reachability.heldRemedy': 'Dit valt niet op de pagina te herstellen: het is een instelling van het hele instrument, en ze staat onder ‘Instellingen’, op de regel die de schermstand vastlegt. Deze editor raakt ze niet uit zichzelf aan. Eénmaal waargenomen: staande pagina’s die op een AIR³ 7.2 waren geïmporteerd, werden daar nooit getoond zolang die instelling het scherm liggend hield.'
+  'reachability.heldRemedy': 'Dit valt niet op de pagina te herstellen: het is een instelling van het hele instrument, en ze staat onder ‘Instellingen’, op de regel die de schermstand vastlegt. Deze editor raakt ze niet uit zichzelf aan. Eénmaal waargenomen: staande pagina’s die op een AIR³ 7.2 waren geïmporteerd, werden daar nooit getoond zolang die instelling het scherm liggend hield.',
 
+  /* ==== wat de weergave van een pagina aan de tekening van het toestel toevoegt ===== */
+
+  'render.actionNextWaypoint': 'volgend waypoint',
+  'render.actionPrevWaypoint': 'vorig waypoint',
+  'render.actionPlus': 'verhogen',
+  'render.actionMinus': 'verlagen',
+  'render.actionZoomIn': 'inzoomen',
+  'render.actionZoomOut': 'uitzoomen',
+  'render.actionLongPress': '{action} (lang indrukken)',
+  'render.liveMessagePanel': 'Berichtenpaneel',
+  'render.liveMessageLines': {
+    one: 'Berichtenpaneel — {count} regel gereserveerd',
+    other: 'Berichtenpaneel — {count} regels gereserveerd'
+  }
 }
 
 export default model

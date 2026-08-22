@@ -211,7 +211,7 @@ function pageCard(
   card.addEventListener('click', onOpen)
 
   const screen = el('span', 'card__screen')
-  screen.append(renderPage(page, aspectRatioOf(ctx.device, orientation), ctx.settings, ctx.language))
+  screen.append(renderPage(page, aspectRatioOf(ctx.device, orientation), ctx.settings, ctx.language, tr))
 
   const head = el('span', 'card__head')
   head.append(
@@ -754,7 +754,7 @@ export function buildDetail(options: DetailOptions): HTMLElement {
   stage.style.setProperty('--page-width', `${screenSize.widthMm.toFixed(2)}mm`)
 
   const plate = el('div', 'plate')
-  plate.append(renderPage(page, aspectRatioOf(ctx.device, orientation), ctx.settings, ctx.language))
+  plate.append(renderPage(page, aspectRatioOf(ctx.device, orientation), ctx.settings, ctx.language, tr))
 
   const hotspots = el('div', 'hotspots')
   const readout = el('div', 'readout')

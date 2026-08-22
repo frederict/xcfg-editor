@@ -311,7 +311,10 @@ Absicht — ein Treueversprechen, das nur der Autor nachprüfen kann, ist nichts
   Widgets, 34 für ihre Optionen, 35 für die Beschriftungen der allgemeinen Einstellungen —,
   und sie richten sich nach der Sprache der geöffneten Datei; nur bei einer Datei, die
   keine angibt, übernehmen sie die der Oberfläche. Diese drei Zahlen sind keine Wahl von
-  uns: es ist das, was das APK enthält.
+  uns: es ist das, was das APK enthält. Die Zeichnung einer Seite folgt derselben
+  Aufteilung: Alles, was das Gerät dort malt, behält die Sprache der Datei, und die einzigen
+  zwei Beschriftungen, die der Editor hinzufügt — die Aktion einer Schaltfläche, der für
+  Nachrichten reservierte Streifen, beide beim Überfahren sichtbar —, folgen Ihrer.
 - **Sich an Ort und Stelle erklären**: ein Handbuch in dreizehn Kapiteln öffnet sich vom
   Startbildschirm und aus dem Menü „Datei“, ohne die Seite zu verlassen — **in allen fünf
   Sprachen**, und heruntergeladen wird nur die angezeigte. Es ist für Pilotinnen und

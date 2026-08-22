@@ -4,6 +4,11 @@ import type { Widget } from '../../../src/model/widget'
 import { drawLogPeek, drawWebView } from '../../../src/render/widgets/logPeek'
 import { drawWidget } from '../../../src/render/registry'
 import '../../../src/render/widgets'
+import { makeTranslator } from '../../../src/i18n/translate'
+import frenchMessages from '../../../src/i18n/messages/fr'
+
+/** Notre prose, axe `ui` — jamais la langue des libellés passée à côté. */
+const tr = makeTranslator('fr', frenchMessages)
 
 /**
  * Écart 2.11 de la revue des 75 visuels — « rien contre un contenu plein ». Relevé sur
@@ -104,7 +109,7 @@ describe('« Page web » (WWebView)', () => {
 describe('l’annuaire sert les deux dessins', () => {
   it('WLogPeek et WWebView ne retombent plus sur le repli générique', () => {
     for (const type of ['WLogPeek', 'WWebView']) {
-      expect(drawWidget(widget(type), settings, 'fr').className).not.toContain('xc-generic')
+      expect(drawWidget(widget(type), settings, 'fr', tr).className).not.toContain('xc-generic')
     }
   })
 })

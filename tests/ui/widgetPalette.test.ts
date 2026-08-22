@@ -618,7 +618,7 @@ describe('la vignette', () => {
   it('recadre le rendu de la page sur le seul rectangle du widget', () => {
     const entry = entryFor(entries(EMPTY), 'WCompass')
     const bounds = newWidgetBounds(AIR3, 'landscape')
-    const scene = renderThumbnail(entry, bounds, 16 / 9, SETTINGS, 'fr')
+    const scene = renderThumbnail(entry, bounds, 16 / 9, SETTINGS, 'fr', FRENCH)
 
     // Repère de rendu : 1280 de large, 720 de haut (canvas.ts). Le rectangle relevé sur
     // l'appareil, 4375..5625 × 3793..5862, passe d'abord par la grille de rendu 51 × 29

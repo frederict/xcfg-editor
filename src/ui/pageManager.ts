@@ -874,7 +874,7 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
         tally: tr.t('common.widgetCount', { count: page.widgets.length })
       })
     )
-    screen.append(renderPage(page, aspectRatioOf(ctx.device, orientation), ctx.settings, ctx.language))
+    screen.append(renderPage(page, aspectRatioOf(ctx.device, orientation), ctx.settings, ctx.language, tr))
     if (options.onOpen) screen.addEventListener('click', () => options.onOpen?.(index))
     else screen.disabled = true
     card.append(screen)

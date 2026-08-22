@@ -359,7 +359,10 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
   options, 35 pour les libellés des réglages généraux —, et ils suivent la langue du
   fichier ouvert ; ce n'est que pour un fichier qui n'en déclare aucune qu'ils prennent
   celle de l'interface. Ces trois chiffres ne sont pas un choix de notre part : c'est ce
-  que l'APK porte.
+  que l'APK porte. Le dessin d'une page suit le même partage : tout ce que l'instrument y
+  peint garde la langue du fichier, et les deux seules étiquettes que l'éditeur ajoute —
+  l'action d'un bouton, la bande réservée aux messages, visibles au survol — suivent la
+  vôtre.
 - **S'expliquer sur place** : un manuel d'utilisation en treize chapitres s'ouvre depuis
   l'écran d'accueil et depuis le menu « Fichier », sans quitter la page — **dans les cinq
   langues**, et seule celle qui est affichée est téléchargée. Il est écrit pour un
@@ -1313,7 +1316,9 @@ l'écran dit lequel s'applique à chaque code :
 
 1. **une touche pressée à la main**, son code lu à l'arrivée — `keyCodes.hardwareKeys[].keys`,
    `basis: "measured"`. Le seul cran qui prouve qu'un bouton existe. Trois touches sur
-   l'AIR³ 7.2 : volume haut (24), volume bas (25), marche/arrêt (26) ;
+   l'AIR³ 7.2 : les codes 24, 25 et 26. ⚠️ Ce relevé ne porte **aucun nom** : ce qui a été
+   mesuré, c'est qu'une touche pressée émet le code 24, pas la façon de l'appeler — le nom
+   vient de XCTrack, voir plus bas ;
 2. **un code déclaré par le noyau du boîtier** — `keyCodes.hardwareKeys[].kernelDeclaration`,
    relevé le 2026-08-22 par `getevent -pl`, `dumpsys input` pour savoir quel fichier de
    disposition Android applique réellement à chaque périphérique, puis lecture de ce
@@ -1343,7 +1348,7 @@ même boîtier déclare.
 Le diagnostic « Version et compatibilité », lui, ne consulte toujours ni l'une ni l'autre
 de ces deux bases.
 
-### Les cinq noms de navigation — le seul catalogue sans script
+### Les libellés transcrits à la main — navigations et touches physiques
 
 `src/catalog/navigationLabels.json` porte les noms que XCTrack donne aux cinq navigations
 d'une page (`TaskBackToTakeoff`, `TaskTriangleClosing`, `TaskToWaypoint`,
@@ -1367,6 +1372,39 @@ Deux réserves, qui se disent plutôt que de se deviner :
 partie. XCTrack sert alors sa locale par défaut, et cet outil fait pareil : un pilote
 néerlandais lit « Live pilot » des deux côtés. Rien n'est traduit maison pour combler le
 trou ; `hasNavigationLabel()` permet de savoir que le repli a joué.
+
+**`src/catalog/hardwareKeyLabels.json` est le second de ces catalogues transcrits**, et il
+existe pour la même raison, découverte le même jour. L'écran des touches nommait les trois
+touches physiques de l'AIR³ 7.2 « volume haut », « volume bas » et
+« marche/arrêt » : des mots **de nous**, écrits en français dans le relevé matériel,
+servis tels quels aux cinq interfaces — et introuvables sur l'appareil du pilote, dont
+l'écran natif de réglage des touches affiche « Augmenter le volume ».
+
+La confusion tenait en un mot. Ce qui avait été **mesuré**, c'est qu'une touche pressée à
+la main émet le code 24 ; « volume haut » n'était pas cette mesure, c'était notre façon
+de la dire. Rien n'a jamais été relevé en français. Le remède n'était donc pas de traduire
+ces trois mots en cinq langues — ce qui aurait **inventé** un nom là où XCTrack en porte
+déjà un — mais d'aller chercher le sien : `keyVolumeUp`, `keyVolumeDown` et `keyPower`, en
+32 langues, que les 55 relevés d'APK portent tous. Ils suivent l'axe des libellés, donc la
+langue du fichier ouvert.
+
+Deux réserves, là encore :
+
+- **l'appariement code ↔ clé de ressource est mesuré pour 24, déduit pour 25 et 26.**
+  Mesuré, parce que l'écran natif affiche « Appui long : Augmenter le volume » sur la
+  ligne portant `16777240` (= 24 | 0x1000000) — c'est l'observation qui fonde déjà
+  `longPressBitBasis` ; déduit pour les deux autres, par la seule correspondance des noms ;
+- **trois codes, et trois seulement.** XCTrack nomme une trentaine de touches
+  (`keyBack`, `keyCamera`, `keyMenu`…) et porte même de quoi nommer celles qu'il ignore
+  (`keyExtShort` = « Touche externe »). Aucune mesure ne dit lequel de ces mots son
+  écran choisit pour un code donné, et le bytecode est obfusqué : au-delà de trois, ce
+  serait deviner. Un code non apparié garde son nom Android, `KEYCODE_STEM_2`.
+
+Ce que le **noyau** déclare a fait le chemin inverse. « la prise casque »,
+« la dalle tactile » étaient également écrits en français dans le relevé — mais ceux-là
+sont bien notre glose, et non un mot de XCTrack : le noyau, lui, déclare `ACCDET` et des
+codes. Ils sont passés au catalogue de notre prose (préfixe `inputDevice`) et suivent
+désormais la langue de l'interface.
 
 ## Licence
 

@@ -421,8 +421,22 @@ const model = {
   'reachability.heldInLandscape': 'Les réglages généraux de ce fichier tiennent l’écran en paysage : vos pages portrait n’y apparaîtront pas, quelles que soient leurs navigations. Tel qu’il s’écrit dans le fichier : « Display.Orientation: {value} ».',
   'reachability.heldInPortrait': 'Les réglages généraux de ce fichier tiennent l’écran en portrait : vos pages paysage n’y apparaîtront pas, quelles que soient leurs navigations. Tel qu’il s’écrit dans le fichier : « Display.Orientation: {value} ».',
   'reachability.enableAllRemedy': 'Cet éditeur sait la rouvrir : « Activer pour toutes les navigations » écrit la valeur que XCTrack écrit lui-même quand les cinq navigations sont actives. Le bouton est sur cette page et dans « Gérer les pages », dès que « Modifier les pages » est actif. Pour n’en choisir que certaines, il faut passer par l’instrument.',
-  'reachability.heldRemedy': 'Cela ne se répare pas sur la page : c’est un réglage de tout l’instrument, et il se trouve dans « Réglages », à la ligne qui fixe l’orientation de l’écran. Cet éditeur n’y touche pas de lui-même. Constaté une fois : des pages portrait importées sur un AIR³ 7.2 ne s’y sont jamais affichées tant que ce réglage tenait l’écran en paysage.'
+  'reachability.heldRemedy': 'Cela ne se répare pas sur la page : c’est un réglage de tout l’instrument, et il se trouve dans « Réglages », à la ligne qui fixe l’orientation de l’écran. Cet éditeur n’y touche pas de lui-même. Constaté une fois : des pages portrait importées sur un AIR³ 7.2 ne s’y sont jamais affichées tant que ce réglage tenait l’écran en paysage.',
 
+  /* ===== ce que le rendu d'une page ajoute au dessin de l'appareil : deux étiquettes = */
+
+  'render.actionNextWaypoint': 'balise suivante',
+  'render.actionPrevWaypoint': 'balise précédente',
+  'render.actionPlus': 'augmenter',
+  'render.actionMinus': 'diminuer',
+  'render.actionZoomIn': 'zoom avant',
+  'render.actionZoomOut': 'zoom arrière',
+  'render.actionLongPress': '{action} (appui long)',
+  'render.liveMessagePanel': 'Panneau de messages',
+  'render.liveMessageLines': {
+    one: 'Panneau de messages — {count} ligne réservée',
+    other: 'Panneau de messages — {count} lignes réservées'
+  }
 } as const
 
 export default model

@@ -20,7 +20,7 @@ Un domaine = un lot de travail = un fichier par langue. Le vôtre :
 | `versions` | `versionDiagnostic.ts`, `cleanupPanel.ts` | `messages/<langue>/versions.ts` |
 | `sharing` | `sharingDialog.ts`, `warnings.ts` | `messages/<langue>/sharing.ts` |
 | `pages` | `pageManager.ts`, `deviceSelector.ts` | `messages/<langue>/pages.ts` |
-| `model` | la prose **hors interface** : `src/model/`, `src/library/`, `src/catalog/` | `messages/<langue>/model.ts` |
+| `model` | la prose **hors interface** : `src/model/`, `src/library/`, `src/catalog/`, `src/render/` | `messages/<langue>/model.ts` |
 | `common` | le vocabulaire partagé — **lecture seule pour vous**, voir § 6 | `messages/<langue>/common.ts` |
 
 Cinq fichiers à modifier pour un message : le français d'abord, puis `en`, `de`, `es`,
@@ -116,6 +116,11 @@ phrases longues, et rien ne s'y oppose.
 - Jamais de `.replace('.', ',')`, jamais de `toLocaleString('fr-FR')`, jamais de nom de
   mois écrit en dur, jamais `o` / `ko` / `Mo` en dur — ils s'écrivent `B` / `kB` / `MB`
   ailleurs.
+  ⚠️ **Une exception, écrite et assumée** : `src/render/locale.ts` fait bien
+  `.replace('.', ',')`, et c'est juste. Il ne met pas en forme un nombre **à nous** : il
+  imite le séparateur décimal de l'instrument, sur un texte recopié du fichier, à la langue
+  de l'appareil. `Intl` y perdrait `3.0` et `1.0E7` et grouperait des milliers que
+  l'appareil ne groupe pas. C'est la seule exception du dépôt ; son docblock la porte.
 - `list(items)` rend « a, b et c », « a, b, and c » (virgule d'Oxford), « a, b y c ».
   `list(items, 'or')` rend l'alternative. Il remplace le `frenchList()` de
   `versionDiagnostic.ts`.
@@ -186,6 +191,16 @@ déjà remplacés.
 **Les deux axes de langue** (`src/i18n/axes.ts`) : *notre prose* suit le choix du pilote,
 *les libellés de XCTrack* suivent le fichier ouvert. Ils ne se confondent jamais.
 
+⚠️ **`axes.ts` est un document, pas une couche.** Il a porté jusqu'au 22 août 2026 un type
+`LanguageAxes` et cinq fonctions qu'aucun module n'appelait, et dont le modèle avait
+divergé du modèle vivant (trois sources de libellés, pas deux). L'API est supprimée ; le
+texte reste, parce qu'une quinzaine de modules le citent et que c'est la meilleure
+explication des deux axes du dépôt. **N'écrivez pas `withLabelLanguage(axes, …)`** : allez
+lire les modules que son tableau « où la doctrine s'applique » nomme — `resolveLanguage`
+et `labelFallbackLanguage` (`src/model/preferences.ts`), `LabelSource` (`src/ui/main.ts`),
+`catalogLanguage` (`src/catalog/widgetCatalog.ts`). `tests/i18n/axes.test.ts` vérifie que
+le document ne nomme rien qui n'existe plus.
+
 ## 7. Ce qu'il ne faut jamais faire
 
 1. **Traduire un libellé de XCTrack.** Les noms de gadgets, d'options et de préférences
@@ -205,6 +220,13 @@ déjà remplacés.
    domaines. Deux clés voisines dans deux domaines coûtent moins cher qu'un conflit ici.
 7. **Faire dépendre `src/model/`, `src/library/`, `src/catalog/` ou `src/render/` de
    `src/i18n/`** autrement que par un `import type`.
+8. **Verser au catalogue un texte que XCTrack peint lui-même.** Dans `src/render/`, la
+   distinction est la seule chose qui compte : le dessin **imite un instrument**. Un texte
+   anglais y est peut-être exactement ce que l'appareil affiche — « Turn the volume up »,
+   « DÉCOLLAGE », `TAS` —, et le traduire donnerait au pilote un mot qu'il ne trouvera nulle
+   part. Seul ce que le rendu **ajoute** au dessin est notre prose : aujourd'hui les deux
+   étiquettes de survol du préfixe `render.*`, et rien d'autre. Le partage est écrit en
+   tête de `src/render/canvas.ts`.
 8. **Réécrire une formulation validée** en passant. L'extraction déplace du texte ; elle
    ne le rejuge pas. Un mot qui vous paraît faux se signale, il ne se corrige pas dans le
    même commit.

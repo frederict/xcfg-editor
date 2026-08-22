@@ -1,5 +1,6 @@
 import type { Page } from '../model/layout'
 import type { RenderSettings } from '../model/preferences'
+import type { Translator } from '../i18n/translate'
 import { drawWidget } from './registry'
 import { TITLE_SIZE_RATIO } from './textMetrics'
 
@@ -234,9 +235,40 @@ export function titleFontPx(aspectRatio: number, titleSizePercent: number): numb
  * premier est au fond, le dernier au-dessus. L'empilement naturel du DOM suffit — aucun
  * z-index n'est nécessaire.
  *
- * `language` est déjà résolue en code concret par l'appelant (`resolveLanguage` dans
- * `src/model/preferences.ts`, avec `navigator.language` côté `src/ui/` quand le fichier
- * ne précise rien) : ce module ne fait que la relayer jusqu'aux dessins de widgets.
+ * ## Les deux langues du rendu — ce qui suit le fichier, ce qui suit le pilote
+ *
+ * Le dessin **imite l'écran d'un instrument**. Tout ce qu'il peint suit donc l'axe
+ * `labels`, c'est-à-dire `language` : déjà résolue en code concret par l'appelant
+ * (`resolveLanguage` dans `src/model/preferences.ts`, avec `navigator.language` côté
+ * `src/ui/` quand le fichier ne précise rien), ce module ne fait que la relayer jusqu'aux
+ * dessins de widgets. Trois familles de textes en relèvent, et **aucune ne se traduit par
+ * le catalogue** :
+ *
+ * 1. **ce qui vient du fichier** — un `titletext` écrit par le pilote, le `text` d'un
+ *    `WFreeText`, l'adresse d'un `WWebView`, le `title`/`name` d'un lanceur ;
+ * 2. **ce que XCTrack écrit lui-même** — les noms de gadgets du catalogue de l'APK
+ *    (`readableName`), les suffixes de titre (« / 2s », `TAS`, `GS`, `AGL`), « Monter le
+ *    son », « DÉCOLLAGE », les libellés de la fiche de manche, la virgule décimale
+ *    (`locale.ts`). Les traduire donnerait au pilote un mot qu'il ne trouvera **nulle
+ *    part** sur son appareil ;
+ * 3. **les valeurs d'exemple** — l'heure, le pourcentage de batterie, l'échelle de la
+ *    carte, les noms de zones : ce sont des données fictives, pas de la prose.
+ *
+ * `tr` est l'autre axe, `ui` : **notre** prose, dans la langue que le pilote a choisie. Le
+ * rendu n'ajoute au dessin de l'appareil que deux étiquettes de survol, et ce sont les
+ * seules choses que `tr` traduit ici :
+ *
+ * - l'action d'un bouton (`widgets/buttons.ts`) — elle existe parce que deux boutons
+ *   d'actions opposées portent parfois le même pictogramme ;
+ * - la bande réservée aux messages (`widgets/liveMessage.ts`).
+ *
+ * Jusqu'au 2026-08-22, ces deux-là vivaient dans deux tables figées à `fr`/`en` et
+ * suivaient l'axe `labels` : un pilote allemand, néerlandais ou espagnol lisait l'anglais,
+ * et le seul secours prévu pour distinguer deux boutons identiques ne lui parlait pas.
+ *
+ * ⚠️ **Distinguer avant de corriger.** Un texte anglais dans `src/render/` n'est pas
+ * forcément un oubli : si l'appareil l'écrit en anglais, le laisser tel quel est la
+ * consigne. Voir `src/i18n/axes.ts`.
  *
  * **La page entière est enveloppée dans un `<svg viewBox>` + `<foreignObject>`** :
  * c'est ce qui la rend lisible à toute taille (défaut du jalon, constaté en capturant
@@ -252,7 +284,9 @@ export function titleFontPx(aspectRatio: number, titleSizePercent: number): numb
  * calibrés sur `REFERENCE_WIDTH`, voir son commentaire) suit la mise à l'échelle du
  * conteneur réel, sans rien changer aux widgets eux-mêmes.
  */
-export function renderPage(page: Page, aspectRatio: number, settings: RenderSettings, language: string): SVGSVGElement {
+export function renderPage(
+  page: Page, aspectRatio: number, settings: RenderSettings, language: string, tr: Translator
+): SVGSVGElement {
   const canvas = document.createElement('div')
   canvas.className = 'xc-page'
   // Deux mesures valables pour toute la page, héritées par tous les widgets : la taille
@@ -290,7 +324,7 @@ export function renderPage(page: Page, aspectRatio: number, settings: RenderSett
 
     const content = document.createElement('div')
     content.className = 'xc-widget__content'
-    content.append(drawWidget(widget, settings, language))
+    content.append(drawWidget(widget, settings, language, tr))
 
     element.append(background, content)
     canvas.append(element)

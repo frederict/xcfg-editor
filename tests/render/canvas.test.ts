@@ -12,7 +12,15 @@ import { registerBlankAtRest } from '../../src/render/registry'
 // cartes…) — nécessaire pour les tests d'intégration ci-dessous, qui vérifient le
 // comportement sur les widgets réels du corpus, pas seulement sur un type synthétique.
 import '../../src/render/widgets'
+import { makeTranslator } from '../../src/i18n/translate'
+import frenchMessages from '../../src/i18n/messages/fr'
 import { BACKUP_2026 } from '../fixtures/paths'
+
+/**
+ * Notre prose, axe `ui` — distincte de la langue des libellés passée à côté. Le rendu ne
+ * s'en sert que pour les deux étiquettes de survol qu'il ajoute au dessin de l'appareil.
+ */
+const tr = makeTranslator('fr', frenchMessages)
 
 describe('positionnement', () => {
   it('convertit les coordonnées 0-10000 en pourcentages', () => {
@@ -67,7 +75,7 @@ describe('repère de référence (défaut 1 — lisibilité à toute taille)', (
   const page = readLayout(doc).landscape[3]!
 
   it('enveloppe la page dans un <svg viewBox> + <foreignObject>', () => {
-    const element = renderPage(page, 16 / 9, settings, 'fr')
+    const element = renderPage(page, 16 / 9, settings, 'fr', tr)
     expect(element.tagName.toLowerCase()).toBe('svg')
     expect(element.classList.contains('xc-page-scene')).toBe(true)
     // Le viewBox fixe le repère à REFERENCE_WIDTH (1280, la largeur de la capture de
@@ -82,7 +90,7 @@ describe('repère de référence (défaut 1 — lisibilité à toute taille)', (
   })
 
   it('calcule un viewBox aux proportions du portrait (9/16) sans déformer le repère', () => {
-    const element = renderPage(page, 9 / 16, settings, 'fr')
+    const element = renderPage(page, 9 / 16, settings, 'fr', tr)
     // 1280 de large / (9/16) = 2275.55...
     expect(element.getAttribute('viewBox')).toBe('0 0 1280 2275.5555555555557')
   })
@@ -91,7 +99,7 @@ describe('repère de référence (défaut 1 — lisibilité à toute taille)', (
     // Correction mesurée sur 2026-08-21_polices-reference.png : la taille des titres ne
     // dépend PAS du widget — voir src/render/textMetrics.ts. Elle est donc posée une
     // seule fois, sur `.xc-page`, et héritée.
-    const element = renderPage(page, 16 / 9, settings, 'fr')
+    const element = renderPage(page, 16 / 9, settings, 'fr', tr)
     const canvas = element.querySelector('.xc-page') as HTMLElement
     expect(Number(canvas.style.getPropertyValue('--xc-page-min'))).toBe(720)
     expect(Number(canvas.style.getPropertyValue('--xc-title'))).toBeCloseTo(titleFontPx(16 / 9, settings.titleSizePercent), 6)
@@ -101,7 +109,7 @@ describe('repère de référence (défaut 1 — lisibilité à toute taille)', (
   })
 
   it('pose --xc-w sur chaque widget, pour le garde-fou de largeur des titres', () => {
-    const element = renderPage(page, 16 / 9, settings, 'fr')
+    const element = renderPage(page, 16 / 9, settings, 'fr', tr)
     const widgets = [...element.querySelectorAll('.xc-widget')] as HTMLElement[]
     // WVarioColumn (landscape[3]) : X1:0, X2:833 — le widget le plus étroit de la page.
     const largeurs = widgets.map(w => Number(w.style.getPropertyValue('--xc-w')))
@@ -110,7 +118,7 @@ describe('repère de référence (défaut 1 — lisibilité à toute taille)', (
   })
 
   it('pose --xc-h sur chaque widget, proportionnel à sa hauteur normalisée', () => {
-    const element = renderPage(page, 16 / 9, settings, 'fr')
+    const element = renderPage(page, 16 / 9, settings, 'fr', tr)
     const widgets = [...element.querySelectorAll('.xc-widget')] as HTMLElement[]
     // WStatusLine (landscape[3]) : Y1:0, Y2:1034 sur 10000 — le widget le plus plat de
     // la page. WThermalAssistant : Y1:1034, Y2:7586 — le plus haut.
@@ -169,7 +177,7 @@ describe('empilement', () => {
   const page = readLayout(doc).landscape[4]!
 
   it('émet les widgets dans l’ordre du tableau', () => {
-    const element = renderPage(page, 16 / 9, settings, 'fr')
+    const element = renderPage(page, 16 / 9, settings, 'fr', tr)
     const children = [...element.querySelectorAll('.xc-widget')]
     expect(children).toHaveLength(21)
     // Le grand widget cartographique est au fond : il est émis en premier. Sa largeur
@@ -185,7 +193,7 @@ describe('empilement', () => {
   })
 
   it('reporte l’opacité déduite de _bg sur chaque widget', () => {
-    const element = renderPage(page, 16 / 9, settings, 'fr')
+    const element = renderPage(page, 16 / 9, settings, 'fr', tr)
     const widgets = [...element.querySelectorAll('.xc-widget')] as HTMLElement[]
     const opacity = (rank: number): string =>
       widgets[rank - 1]!.style.getPropertyValue('--xc-bg-opacity')
@@ -206,7 +214,7 @@ describe('empilement', () => {
    * aucun fond pour eux (capture `vol-thermalassistant-boutonsnavig.png`).
    */
   it('n’efface pas la carte : les widgets à _bg 100 posés dessus ne peignent aucun fond', () => {
-    const element = renderPage(page, 16 / 9, settings, 'fr')
+    const element = renderPage(page, 16 / 9, settings, 'fr', tr)
     const widgets = [...element.querySelectorAll('.xc-widget')] as HTMLElement[]
     const sansFond = widgets.filter(w => w.style.getPropertyValue('--xc-bg-opacity') === '0')
     expect(sansFond).toHaveLength(12)
@@ -239,7 +247,7 @@ describe('aucun type n’échappe à son _bg', () => {
    */
   it('un type qui ne peint aucun contenu au repos reçoit quand même son fond et son cadre', () => {
     registerBlankAtRest('WEssaiSansDessinCanvas')
-    const element = renderPage(pageWith('WEssaiSansDessinCanvas', 0, true), 1, settings, 'fr')
+    const element = renderPage(pageWith('WEssaiSansDessinCanvas', 0, true), 1, settings, 'fr', tr)
     const el = element.querySelector('.xc-widget') as HTMLElement
     expect(el.style.getPropertyValue('--xc-bg-opacity')).toBe('1')
     expect(el.classList.contains('xc-widget--border')).toBe(true)
@@ -247,7 +255,7 @@ describe('aucun type n’échappe à son _bg', () => {
 
   it('et son _bg 100 lui donne un fond nul, comme à tout le monde', () => {
     registerBlankAtRest('WEssaiSansDessinCanvas')
-    const element = renderPage(pageWith('WEssaiSansDessinCanvas', 100, false), 1, settings, 'fr')
+    const element = renderPage(pageWith('WEssaiSansDessinCanvas', 100, false), 1, settings, 'fr', tr)
     const el = element.querySelector('.xc-widget') as HTMLElement
     expect(el.style.getPropertyValue('--xc-bg-opacity')).toBe('0')
     expect(el.classList.contains('xc-widget--border')).toBe(false)
@@ -257,7 +265,7 @@ describe('aucun type n’échappe à son _bg', () => {
   it('le WLiveMessage du corpus ne peint toujours aucun fond, mais par son _bg', () => {
     const doc = parseJson(readFileSync(BACKUP_2026, 'utf8'))
     const page = readLayout(doc).landscape[4]!
-    const element = renderPage(page, 16 / 9, readRenderSettings(doc), 'fr')
+    const element = renderPage(page, 16 / 9, readRenderSettings(doc), 'fr', tr)
     const widgets = [...element.querySelectorAll('.xc-widget')] as HTMLElement[]
     const live = widgets.find(w => w.querySelector('.xc-livemsg') !== null)!
     expect(live.style.getPropertyValue('--xc-bg-opacity')).toBe('0')
@@ -278,7 +286,7 @@ describe('boutons réels du corpus (intégration)', () => {
   const navigPage = readLayout(doc).landscape[4]!
 
   it('WButtonBrightness dessine son pictogramme et n’est plus une case vide', () => {
-    const element = renderPage(brightnessPage, 16 / 9, settings, 'fr')
+    const element = renderPage(brightnessPage, 16 / 9, settings, 'fr', tr)
     const boutons = [...element.querySelectorAll('.xc-button--brightness')]
     expect(boutons).toHaveLength(2)
     for (const bouton of boutons) {
@@ -287,7 +295,7 @@ describe('boutons réels du corpus (intégration)', () => {
   })
 
   it('la carte qui les recouvre est bien dessinée APRÈS eux — c’est l’ordre, pas le type', () => {
-    const element = renderPage(brightnessPage, 16 / 9, settings, 'fr')
+    const element = renderPage(brightnessPage, 16 / 9, settings, 'fr', tr)
     const widgets = [...element.querySelectorAll('.xc-widget')]
     const rangs = widgets
       .map((w, index) => (w.querySelector('.xc-button--brightness') !== null ? index : -1))
@@ -299,7 +307,7 @@ describe('boutons réels du corpus (intégration)', () => {
   })
 
   it('respecte _border: true du fichier pour WButtonNavig', () => {
-    const element = renderPage(navigPage, 16 / 9, settings, 'fr')
+    const element = renderPage(navigPage, 16 / 9, settings, 'fr', tr)
     const widgets = [...element.querySelectorAll('.xc-widget')]
     const navigWidgets = widgets.filter(w => w.querySelector('.xc-button--navig') !== null)
     expect(navigWidgets).toHaveLength(2)
@@ -365,7 +373,7 @@ describe('grille de rendu (51 × 29)', () => {
       widgets: [readLayout(parseJson(readFileSync(BACKUP_2026, 'utf8'))).landscape[0]!.widgets[0]!],
       navigations: { kind: 'none' }
     }
-    const element = renderPage(page, 16 / 9, readRenderSettings(parseJson(readFileSync(BACKUP_2026, 'utf8'))), 'fr')
+    const element = renderPage(page, 16 / 9, readRenderSettings(parseJson(readFileSync(BACKUP_2026, 'utf8'))), 'fr', tr)
     const widget = element.querySelector('.xc-widget') as HTMLElement
     const gauche = Number.parseFloat(widget.style.left)
     expect(gauche * 51 / 100).toBeCloseTo(Math.round(gauche * 51 / 100), 6)

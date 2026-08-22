@@ -1,5 +1,6 @@
 import type { Widget } from '../../model/widget'
 import type { RenderSettings } from '../../model/preferences'
+import type { Translator } from '../../i18n/translate'
 import { readString } from '../../core/access'
 import { widgetBoolean } from '../defaults'
 
@@ -338,29 +339,35 @@ function actionSign(widget: Widget): string {
  * l'appareil : elle nomme l'action pour le pilote qui compose sa page, puisque deux
  * boutons d'actions opposées portent parfois le même pictogramme (les deux
  * `WButtonNavig` du corpus, par exemple, sont indiscernables à l'écran).
- * Traductions maison, pas des libellés XCTrack.
+ *
+ * ⚠️ **C'est notre prose, pas un libellé de XCTrack** : rien de ceci n'est écrit sur
+ * l'appareil. Elle suit donc l'axe `ui` — la langue que le pilote a choisie — et passe par
+ * le catalogue, comme toute phrase que nous écrivons. Ce qui reste ici est la seule chose
+ * qui appartienne à ce module : **la table qui va d'un code d'action de XCTrack à la clé
+ * du message**.
+ *
+ * Jusqu'au 2026-08-22 elle vivait dans une table figée à `fr`/`en`, indexée par la langue
+ * du **fichier** : un pilote allemand, néerlandais ou espagnol lisait l'anglais sur le
+ * seul secours prévu pour distinguer deux boutons identiques.
  */
-const ACTION_LABELS: Record<string, Record<string, string>> = {
-  ACTION_NEXT_WAYPOINT: { fr: 'balise suivante', en: 'next waypoint' },
-  ACTION_PREV_WAYPOINT: { fr: 'balise précédente', en: 'previous waypoint' },
-  ACTION_PLUS: { fr: 'augmenter', en: 'increase' },
-  ACTION_MINUS: { fr: 'diminuer', en: 'decrease' },
-  ACTION_ZOOM_IN: { fr: 'zoom avant', en: 'zoom in' },
-  ACTION_ZOOM_OUT: { fr: 'zoom arrière', en: 'zoom out' }
+const ACTION_MESSAGES: Record<string, (tr: Translator) => string> = {
+  ACTION_NEXT_WAYPOINT: (tr) => tr.t('render.actionNextWaypoint'),
+  ACTION_PREV_WAYPOINT: (tr) => tr.t('render.actionPrevWaypoint'),
+  ACTION_PLUS: (tr) => tr.t('render.actionPlus'),
+  ACTION_MINUS: (tr) => tr.t('render.actionMinus'),
+  ACTION_ZOOM_IN: (tr) => tr.t('render.actionZoomIn'),
+  ACTION_ZOOM_OUT: (tr) => tr.t('render.actionZoomOut')
 }
 
-const LONG_CLICK: Record<string, string> = { fr: 'appui long', en: 'long press' }
-
-function hoverLabel(widget: Widget, language: string): string | undefined {
+function hoverLabel(widget: Widget, tr: Translator): string | undefined {
   const type = readString(widget.node, 'type')
-  const map = type !== undefined ? ACTION_LABELS[type] : undefined
-  const action = map?.[language] ?? map?.en
-  if (action === undefined) return undefined
+  const say = type !== undefined ? ACTION_MESSAGES[type] : undefined
+  if (say === undefined) return undefined
+  const action = say(tr)
   // `longClick` vaut `true` par défaut sur cinq des neuf boutons : l'étiquette de survol
   // omettait donc « appui long » sur un fichier qui n'écrit pas la clé.
   const longClick = widgetBoolean(widget, 'longClick') ?? false
-  const suffix = longClick ? ` (${LONG_CLICK[language] ?? LONG_CLICK.en!})` : ''
-  return `${action}${suffix}`
+  return longClick ? tr.t('render.actionLongPress', { action }) : action
 }
 
 /**
@@ -412,9 +419,11 @@ function caption(text: string): HTMLElement {
   return span
 }
 
-export function drawButtonNavig(widget: Widget, _settings: RenderSettings, language: string): HTMLElement {
+export function drawButtonNavig(
+  widget: Widget, _settings: RenderSettings, _language: string, tr: Translator
+): HTMLElement {
   const element = shell(widget, 'navig')
-  const label = hoverLabel(widget, language)
+  const label = hoverLabel(widget, tr)
   if (label !== undefined) element.title = label
   const line = row(flagGlyph(), slashedCircleGlyph())
   line.style.gap = `${NAVIG_ROW_GAP}em`
@@ -441,9 +450,11 @@ export function drawButtonCamera(widget: Widget, _settings: RenderSettings, _lan
   return element
 }
 
-export function drawButtonZoom(widget: Widget, _settings: RenderSettings, language: string): HTMLElement {
+export function drawButtonZoom(
+  widget: Widget, _settings: RenderSettings, _language: string, tr: Translator
+): HTMLElement {
   const element = shell(widget, 'zoom')
-  const label = hoverLabel(widget, language)
+  const label = hoverLabel(widget, tr)
   if (label !== undefined) element.title = label
   element.append(row(signSpan(actionSign(widget))))
   return element
@@ -451,37 +462,57 @@ export function drawButtonZoom(widget: Widget, _settings: RenderSettings, langua
 
 /** Le seul bouton titré, et c'est `showTitle` qui le commande — pas `_title`. Le titre
  * porte la couleur de titre du fichier, comme les widgets numériques. */
-export function drawButtonVario(widget: Widget, settings: RenderSettings, language: string): HTMLElement {
+export function drawButtonVario(widget: Widget, settings: RenderSettings): HTMLElement {
   const element = shell(widget, 'vario')
   if (widgetBoolean(widget, 'showTitle') ?? true) {
     const title = document.createElement('span')
     title.className = 'xc-button__title'
     title.style.color = settings.titleColor
-    title.textContent = language === 'fr' ? 'Vario' : 'Vario'
+    // « Vario » est le titre que l'appareil écrit, et il l'écrit ainsi dans les cinq
+    // langues du dépôt — c'est un mot international, pas notre prose. Il ne suit donc
+    // aucun des deux axes et ne passe pas par le catalogue. La ligne portait jusqu'au
+    // 2026-08-22 un ternaire `language === 'fr' ? 'Vario' : 'Vario'` dont les deux
+    // branches disaient la même chose : il annonçait une variation qui n'existe pas.
+    title.textContent = 'Vario'
     element.append(title)
   }
   element.append(row(varioBarsGlyph(), speakerGlyph()))
   return element
 }
 
-export function drawButtonBrightness(widget: Widget, _settings: RenderSettings, language: string): HTMLElement {
+export function drawButtonBrightness(
+  widget: Widget, _settings: RenderSettings, _language: string, tr: Translator
+): HTMLElement {
   const element = shell(widget, 'brightness')
-  const label = hoverLabel(widget, language)
+  const label = hoverLabel(widget, tr)
   if (label !== undefined) element.title = label
   element.append(row(sunGlyph(actionSign(widget))))
   return element
 }
 
-export function drawButtonVolume(widget: Widget, _settings: RenderSettings, language: string): HTMLElement {
+export function drawButtonVolume(
+  widget: Widget, _settings: RenderSettings, _language: string, tr: Translator
+): HTMLElement {
   const element = shell(widget, 'volume')
-  const label = hoverLabel(widget, language)
+  const label = hoverLabel(widget, tr)
   if (label !== undefined) element.title = label
   element.append(row(speakerGlyph(), signSpan(actionSign(widget))))
   return element
 }
 
-/** Le libellé est une phrase, pas un identifiant : il suit la langue du pilote, comme
- * sur l'appareil, qui écrit « Monter le son » en français. */
+/**
+ * ⚠️ **Ceci n'est pas notre prose** : c'est XCTrack qui peint cette phrase sur le bouton,
+ * et elle suit donc l'axe `labels` — la langue du fichier ouvert, jamais celle de
+ * l'interface. La verser au catalogue donnerait au pilote un mot qu'il ne trouverait
+ * **nulle part** sur son appareil.
+ *
+ * **Mesuré en français seulement** (`2026-08-21_planche-sol-5-boutons-autres-test.png`,
+ * appareil réglé en français) ; l'anglais est repris de la ressource anglaise de l'APK.
+ * Les trois autres langues **ne sont pas mesurées** : plutôt qu'inventer un mot qu'aucun
+ * relevé n'atteste, un fichier `de`, `nl` ou `es` retombe sur l'anglais. C'est la règle du
+ * dépôt (`src/i18n/CLAUDE.md` § 7.5) et non un oubli — la corriger demande une capture,
+ * pas une traduction.
+ */
 const VOLUME_REMINDER: Record<string, string> = { fr: 'Monter le son', en: 'Turn the volume up' }
 
 export function drawButtonVolumeReminder(widget: Widget, _settings: RenderSettings, language: string): HTMLElement {

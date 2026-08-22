@@ -17,6 +17,7 @@ import {
   makeTranslator, UI_FALLBACK_LANGUAGE, type MessageCatalog, type Translator
 } from '../i18n'
 import frenchWidgets from '../i18n/messages/fr/widgets'
+import frenchModel from '../i18n/messages/fr/model'
 import { duplicateRect } from './editor'
 import { aspectRatioOf } from './views'
 
@@ -112,8 +113,12 @@ let inheritedProse: Translator | undefined
 
 function prose(tr: Translator | undefined): Translator {
   if (tr !== undefined) return tr
+  // Deux domaines, et le second n'est pas une commodité : la vignette d'une entrée passe
+  // par `renderPage`, et le rendu lit `render.*` (domaine `model`) pour les deux
+  // étiquettes de survol qu'il ajoute au dessin. Un repli au seul domaine `widgets`
+  // lèverait sur la première entrée `WLiveMessage` de la palette.
   inheritedProse ??= makeTranslator(
-    UI_FALLBACK_LANGUAGE, frenchWidgets as unknown as MessageCatalog
+    UI_FALLBACK_LANGUAGE, { ...frenchWidgets, ...frenchModel } as unknown as MessageCatalog
   )
   return inheritedProse
 }
@@ -678,7 +683,7 @@ export function previewNote(kind: PreviewKind, tr: Translator): string {
  */
 export function renderThumbnail(
   entry: PaletteEntry, bounds: Bounds, aspectRatio: number,
-  settings: RenderSettings, language: string
+  settings: RenderSettings, language: string, tr: Translator
 ): SVGSVGElement {
   const node = previewNode(entry, bounds)
   const page: Page = {
@@ -687,7 +692,7 @@ export function renderThumbnail(
     widgets: [readWidget(node)],
     navigations: { kind: 'none' }
   }
-  const scene = renderPage(page, aspectRatio, settings, language)
+  const scene = renderPage(page, aspectRatio, settings, language, tr)
 
   const at = (x1: number, y1: number, x2: number, y2: number): { w: number; h: number } => ({
     w: widgetWidthPx({ x1, y1, x2, y2, background: 0 }, aspectRatio),
@@ -996,7 +1001,7 @@ function buildRow(
   const thumb = el('span', 'palette__thumb')
   thumb.dataset.preview = kind
   thumb.title = previewNote(kind, tr)
-  thumb.append(renderThumbnail(entry, bounds, aspectRatio, options.settings, language))
+  thumb.append(renderThumbnail(entry, bounds, aspectRatio, options.settings, language, tr))
   // « rien à voir » écrit noir sur blanc plutôt qu'un cadre vide sans explication : le titre
   // au survol dit pourquoi, le texte dit qu'il n'y a pas d'erreur.
   // Deux cases quasi vides, deux causes opposées, et un pilote ne peut pas les deviner :

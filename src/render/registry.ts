@@ -1,5 +1,6 @@
 import type { Widget } from '../model/widget'
 import type { RenderSettings } from '../model/preferences'
+import type { Translator } from '../i18n/translate'
 import { drawGeneric } from './generic'
 
 /**
@@ -7,12 +8,26 @@ import { drawGeneric } from './generic'
  * des titres viennent des préférences du fichier ouvert, et un même widget se dessine
  * différemment selon la configuration qui l'accompagne.
  *
+ * ## Deux langues, et elles ne se confondent pas
+ *
  * `language` est un paramètre distinct de `settings`, déjà résolu en code concret
  * (`settings.language` est une `LanguagePreference`, potentiellement « langue système » :
- * c'est à l'appelant — à terme `src/ui/`, via `resolveLanguage` — de trancher avec
- * `navigator.language`, jamais ici).
+ * c'est à l'appelant — `src/ui/`, via `resolveLanguage` — de trancher avec
+ * `navigator.language`, jamais ici). C'est l'axe **`labels`** : la langue de l'appareil du
+ * pilote, celle dans laquelle son instrument écrit ce qu'il peint.
+ *
+ * `tr` est l'axe **`ui`** : notre prose, dans la langue que le pilote a choisie. Un dessin
+ * ne s'en sert **que** pour ce qu'il ajoute au dessin de l'appareil — aujourd'hui les deux
+ * étiquettes de survol, et rien d'autre. Le partage exact est écrit en tête de
+ * `canvas.ts` ; la doctrine des deux axes, dans `src/i18n/axes.ts`.
+ *
+ * ⚠️ `tr` arrive **en argument**, comme partout sous l'interface : ce module n'importe de
+ * `src/i18n/` que le **type** `Translator`, effacé à la compilation
+ * (`tests/i18n/domains.test.ts` le vérifie).
  */
-export type WidgetDrawer = (widget: Widget, settings: RenderSettings, language: string) => HTMLElement
+export type WidgetDrawer = (
+  widget: Widget, settings: RenderSettings, language: string, tr: Translator
+) => HTMLElement
 
 const drawers = new Map<string, WidgetDrawer>()
 
@@ -20,8 +35,10 @@ export function register(shortName: string, drawer: WidgetDrawer): void {
   drawers.set(shortName, drawer)
 }
 
-export function drawWidget(widget: Widget, settings: RenderSettings, language: string): HTMLElement {
-  return (drawers.get(widget.shortName) ?? drawGeneric)(widget, settings, language)
+export function drawWidget(
+  widget: Widget, settings: RenderSettings, language: string, tr: Translator
+): HTMLElement {
+  return (drawers.get(widget.shortName) ?? drawGeneric)(widget, settings, language, tr)
 }
 
 /**

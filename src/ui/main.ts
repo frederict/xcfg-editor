@@ -1514,7 +1514,7 @@ function repaint(): void {
   const drawing = plate?.firstElementChild
   if (!plate || !drawing) return
   plate.replaceChild(
-    renderPage(page, aspectRatioOf(session.device, orientation), session.settings, session.language),
+    renderPage(page, aspectRatioOf(session.device, orientation), session.settings, session.language, translator()),
     drawing
   )
   // Le nombre de widgets est un fait de la vue, et une action de structure vient peut-être

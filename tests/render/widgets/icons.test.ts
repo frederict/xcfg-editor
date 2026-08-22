@@ -7,6 +7,11 @@ import { drawCompassDigital } from '../../../src/render/widgets/compassDigital'
 import { BADGE_SIZE_H, BADGE_GAP_H, badgeWidthH } from '../../../src/render/widgets/badge'
 import { drawWidget } from '../../../src/render/registry'
 import '../../../src/render/widgets'
+import { makeTranslator } from '../../../src/i18n/translate'
+import frenchMessages from '../../../src/i18n/messages/fr'
+
+/** Notre prose, axe `ui` — jamais la langue des libellés passée à côté. */
+const tr = makeTranslator('fr', frenchMessages)
 
 /**
  * Écart 2.9 de la revue des 75 visuels — « Les icônes et pastilles de widget manquent ».
@@ -140,7 +145,7 @@ describe('« Boussole Point optimisé » (compassDigital.ts)', () => {
 describe('l’annuaire sert les quatre dessins', () => {
   it('WOptiUnfinishedFAIPotential et WCompassDigital ne retombent plus sur le repli', () => {
     for (const type of ['WOptiUnfinishedFAIPotential', 'WCompassDigital']) {
-      expect(drawWidget(widget(type), settings, 'fr').className).not.toContain('xc-generic')
+      expect(drawWidget(widget(type), settings, 'fr', tr).className).not.toContain('xc-generic')
     }
   })
 })

@@ -1,5 +1,3 @@
-import { UI_FALLBACK_LANGUAGE, type UiLanguage } from './languages'
-
 /**
  * # Les deux axes de langue
  *
@@ -10,7 +8,11 @@ import { UI_FALLBACK_LANGUAGE, type UiLanguage } from './languages'
  * | Axe | Ce qu'il gouverne | D'où il vient |
  * |---|---|---|
  * | `ui` | **notre prose** : intitulés, remarques, explications, avertissements | le choix du pilote, mémorisé (`src/i18n/preference.ts`) ; à défaut le navigateur ; à défaut le français |
- * | `labels` | **les mots de XCTrack** : noms de gadgets, options, préférences | `Display.Language` du fichier ouvert ; à défaut la langue choisie au globe, sinon `navigator.language` (`resolveLanguage` et `labelFallbackLanguage`, `src/model/preferences.ts`) |
+ * | `labels` | **les mots de XCTrack** : noms de gadgets, options, préférences | `Display.Language` du fichier ouvert ; à défaut la langue choisie au globe, sinon `navigator.language` |
+ *
+ * ⚠️ **Ce fichier est un document, pas une couche.** Il n'expose aucune fonction : la
+ * doctrine s'applique dans les modules nommés plus bas, et un test la tient contre eux.
+ * Voir « Ce que ce fichier a été, et pourquoi il ne l'est plus ».
  *
  * ## Ce que le fichier déclare ne se discute pas
  *
@@ -32,9 +34,18 @@ import { UI_FALLBACK_LANGUAGE, type UiLanguage } from './languages'
  * **la supposition suit le choix du pilote au globe** — à défaut seulement
  * `navigator.language`.
  *
+ * L'axe `labels` a donc **trois** sources, et non deux ; l'interface les nomme une à une,
+ * parce que le pilote qui se demande « pourquoi ces mots-là ? » a besoin de la réponse et
+ * pas d'un code de langue seul. Le type qui les porte est `LabelSource`
+ * (`src/ui/main.ts`), dont le docblock détaille l'ordre de priorité :
+ *
+ * - `file` — le fichier déclare sa `Display.Language`. Rien ne passe devant.
+ * - `ui` — le fichier se tait, et le pilote a choisi une langue d'interface au globe.
+ * - `browser` — le fichier se tait et le pilote n'a rien choisi : reste `navigator.language`.
+ *
  * Ce n'est pas une confusion des deux axes, c'est ce qu'ils font quand l'un des deux n'a
  * rien à dire. Le repli précédent était le navigateur seul, et le défaut se voyait au
- * premier essai du sélecteur : le pilote passait à l'anglais, les 217 noms de réglages
+ * premier essai du sélecteur : le pilote passait à l'anglais, les noms de réglages
  * restaient dans la langue de son navigateur — l'essentiel de l'écran —, et la page
  * paraissait n'avoir pas changé de langue. Entre deux suppositions, celle qu'il a posée
  * lui-même dans cet outil vaut mieux qu'un réglage de système qu'il n'a pas réglé pour
@@ -45,72 +56,62 @@ import { UI_FALLBACK_LANGUAGE, type UiLanguage } from './languages'
  * XCTrack en portent 33 à 36. Un pilote tchèque qui n'a rien choisi garde ses libellés
  * tchèques (voir `labelFallbackLanguage`).
  *
- * ## Ce que ce module garantit, structurellement
+ * ## Où la doctrine s'applique, dans le code vivant
  *
- * Les deux axes vivent dans **un seul objet**, avec deux champs nommés, et les seules
- * façons de le faire évoluer sont `withUiLanguage` et `withLabelLanguage` : chacune ne
- * touche **qu'un** champ. Aucun appel ne peut donc changer les deux à la fois par
- * inadvertance, et un test le vérifie (`tests/i18n/axes.test.ts`).
+ * Elle ne s'applique nulle part ici. Chaque ligne du tableau est tenue par un module réel,
+ * et c'est là qu'il faut aller lire — ou corriger :
  *
- * Les types y aident aussi : `ui` est une union fermée de cinq codes, `labels` est une
- * `string` quelconque — les 35 langues du catalogue de préférences, et demain celles
- * qu'une version de XCTrack ajoutera. Passer une langue de libellés là où une langue
- * d'interface est attendue est une erreur de compilation dès que la valeur n'est pas un
- * littéral de nos cinq codes.
+ * | Ce qui est en jeu | Le module qui le tient |
+ * |---|---|
+ * | le fichier l'emporte sur toute supposition | `resolveLanguage` (`src/model/preferences.ts`) |
+ * | le repli quand le fichier se tait | `labelFallbackLanguage` (`src/model/preferences.ts`) |
+ * | les trois sources, et leur mention à l'écran | `LabelSource`, `labelFallback()` (`src/ui/main.ts`) |
+ * | la langue de notre prose, mémorisée | `src/i18n/preference.ts`, `src/i18n/languages.ts` |
+ * | le repli d'un catalogue de l'APK sur ce qu'il porte | `catalogLanguage` (`src/catalog/widgetCatalog.ts`) |
+ * | notre prose passée à une couche, jamais lue par elle | `Translator` (`src/i18n/translate.ts`) |
  *
- * ## Le seul endroit où les deux se rencontrent
+ * Les deux axes ne se rencontrent **jamais dans une variable** : un écran reçoit `tr`
+ * (notre prose) et `language` (les libellés de XCTrack) côte à côte, sous deux noms, et
+ * aucun chemin de code ne peut faire bouger l'un en touchant l'autre.
  *
- * Les **chemins du menu de l'appareil** — « *Réglages → Exporter la configuration* ». Ce
- * sont des mots de notre prose (« ouvrez… ») autour de mots de XCTrack. Ils doivent
- * suivre l'axe `labels`, sans quoi on renvoie le pilote vers un menu qui n'existe pas sur
- * son écran. Ce cas se traite message par message, jamais par une règle générale : la
- * prose passe par le catalogue, le nom du menu se lit dans le catalogue de préférences,
- * à la langue `labels`.
+ * ## Les deux endroits où les deux se rencontrent quand même
+ *
+ * 1. **Les chemins du menu de l'appareil** — « *Réglages → Exporter la configuration* ».
+ *    Ce sont des mots de notre prose (« ouvrez… ») autour de mots de XCTrack. Ils doivent
+ *    suivre l'axe `labels`, sans quoi on renvoie le pilote vers un menu qui n'existe pas
+ *    sur son écran. Ce cas se traite message par message, jamais par une règle générale :
+ *    la prose passe par le catalogue, le nom du menu se lit dans le catalogue de
+ *    préférences, à la langue `labels`.
+ * 2. **Le rendu d'une page** (`src/render/`). Le dessin imite l'écran de l'instrument :
+ *    tout ce qu'il peint suit l'axe `labels`, y compris les textes que XCTrack écrit lui-même
+ *    dans une langue et qu'il ne nous appartient pas de traduire. Mais le rendu **ajoute**
+ *    deux étiquettes de survol qui ne sont pas sur l'appareil — l'action d'un bouton, la
+ *    bande réservée aux messages — et celles-là sont notre prose : elles suivent l'axe
+ *    `ui`. C'est pourquoi `renderPage` reçoit `language` **et** `tr`. La règle de partage
+ *    est écrite en tête de `src/render/canvas.ts`.
+ *
+ * ## Ce que ce fichier a été, et pourquoi il ne l'est plus
+ *
+ * Il a porté un type `LanguageAxes` et cinq fonctions (`languageAxes`, `withUiLanguage`,
+ * `withLabelLanguage`, `initialAxes`) qui tenaient les deux axes dans un seul objet. La
+ * revue du 22 août 2026 a établi deux faits : **aucun module ne les appelait** — le seul
+ * importeur de valeur était le baril `index.ts`, que personne ne consommait pour ces
+ * liaisons —, et le modèle qu'elles portaient avait **divergé** du modèle vivant, qui
+ * connaît trois sources de libellés là où `LanguageAxes` n'en modélisait aucune.
+ *
+ * Un fichier mort qui décrit faussement un principe vivant est pire qu'un fichier absent :
+ * `src/i18n/CLAUDE.md` le désignait comme la référence « à ne pas rejuger », et le lecteur
+ * suivant aurait écrit `withLabelLanguage(axes, …)` pour découvrir qu'aucun `LanguageAxes`
+ * ne circule — ou pire, en aurait mis un en circulation à côté de `currentUiLanguage`,
+ * créant une seconde source de vérité pour la langue des libellés.
+ *
+ * L'API est donc supprimée. **Le document reste** : quinze modules le citent en docblock,
+ * c'est le texte le plus lu du dépôt, et le déplacer aurait laissé vingt-six renvois dans
+ * le vide. Ce qu'il affirme est désormais **tenu par un test** — `tests/i18n/axes.test.ts`
+ * vérifie que chaque module et chaque symbole nommés ci-dessus existent, et que les deux
+ * axes ne se touchent pas dans le code vivant. La prochaine dérive sera rouge.
  */
-export interface LanguageAxes {
-  /** Notre prose. Choix du pilote, mémorisé. Ne dépend jamais du fichier ouvert. */
-  readonly ui: UiLanguage
-  /**
-   * Les mots de XCTrack, tels que l'appareil du pilote les affiche. Vient du fichier
-   * (`Display.Language`), à défaut du navigateur. Ne dépend jamais du choix d'interface.
-   *
-   * Volontairement une `string` brute et non une union : le catalogue en porte 33 à 35
-   * selon la ressource, et c'est `catalogLanguage()` — chacun le sien — qui décide du
-   * repli. Restreindre ici obligerait à maintenir trois listes en miroir.
-   */
-  readonly labels: string
-}
 
-export function languageAxes(ui: UiLanguage, labels: string): LanguageAxes {
-  return { ui, labels }
-}
-
-/**
- * Change la langue de **notre prose** et rien d'autre. Le pilote a cliqué dans le
- * sélecteur d'interface : ce qu'il lit sur son instrument, lui, n'a pas bougé.
- */
-export function withUiLanguage(axes: LanguageAxes, ui: UiLanguage): LanguageAxes {
-  return { ui, labels: axes.labels }
-}
-
-/**
- * Change la langue des **libellés de XCTrack** et rien d'autre. Un autre fichier vient
- * d'être ouvert, qui déclare une autre `Display.Language` : l'interface, elle, reste dans
- * la langue que le pilote a choisie.
- */
-export function withLabelLanguage(axes: LanguageAxes, labels: string): LanguageAxes {
-  return { ui: axes.ui, labels }
-}
-
-/**
- * Les axes au tout premier écran, avant qu'un fichier soit ouvert : notre prose dans la
- * langue mémorisée ou détectée, les libellés dans celle que l'appelant a résolue —
- * langue choisie s'il y en a une, navigateur sinon —, c'est ce que l'écran annonce déjà
- * par « LIBELLÉS — fr (langue du navigateur) ».
- *
- * `labels` est ici la langue **brute** du navigateur : c'est à chaque catalogue de la
- * replier sur ce qu'il porte, et le repli n'est pas le même d'un catalogue à l'autre.
- */
-export function initialAxes(ui: UiLanguage | undefined, navigatorLanguage: string): LanguageAxes {
-  return { ui: ui ?? UI_FALLBACK_LANGUAGE, labels: navigatorLanguage }
-}
+// Aucune surface d'exécution : ce module est un document. `export {}` le garde module
+// plutôt que script global, pour que rien ne puisse y déclarer un symbole par mégarde.
+export {}

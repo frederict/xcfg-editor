@@ -4,6 +4,11 @@ import type { Widget } from '../../../src/model/widget'
 import { drawAltitudeDataGraph } from '../../../src/render/widgets/altitudeDataGraph'
 import { drawWidget } from '../../../src/render/registry'
 import '../../../src/render/widgets'
+import { makeTranslator } from '../../../src/i18n/translate'
+import frenchMessages from '../../../src/i18n/messages/fr'
+
+/** Notre prose, axe `ui` — jamais la langue des libellés passée à côté. */
+const tr = makeTranslator('fr', frenchMessages)
 
 /**
  * Écart 2.4 de la revue des 75 visuels — `WAltitudeDataGraph` ne dessinait rien du tout.
@@ -40,6 +45,6 @@ describe('WAltitudeDataGraph', () => {
   })
 
   it('ne retombe plus sur le repli générique', () => {
-    expect(drawWidget(widget, settings, 'fr').className).not.toContain('xc-generic')
+    expect(drawWidget(widget, settings, 'fr', tr).className).not.toContain('xc-generic')
   })
 })

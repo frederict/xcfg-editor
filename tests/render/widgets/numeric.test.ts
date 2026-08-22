@@ -11,6 +11,11 @@ import { drawWidget } from '../../../src/render/registry'
 import '../../../src/render/widgets'
 import { EXPORTS } from '../../fixtures/paths'
 import { titleWidthEm, valueWidthEm } from '../../../src/render/textMetrics'
+import { makeTranslator } from '../../../src/i18n/translate'
+import frenchMessages from '../../../src/i18n/messages/fr'
+
+/** Notre prose, axe `ui` — jamais la langue des libellés passée à côté. */
+const tr = makeTranslator('fr', frenchMessages)
 
 const settings: RenderSettings = {
   fromDefaults: false, theme: 'WhiteHCTheme', titleColor: '#f44336',
@@ -606,7 +611,7 @@ describe('widgets numériques', () => {
         const layout = readLayout(document)
         for (const page of [...layout.portrait, ...layout.landscape]) {
           for (const widgetOnPage of page.widgets) {
-            const el = drawWidget(widgetOnPage, settings, language)
+            const el = drawWidget(widgetOnPage, settings, language, tr)
             if (!el.classList.contains('xc-num')) continue // pas un widget numérique
             const value = el.querySelector('.xc-num__value')?.textContent
             if (value === '--' && !offenders.includes(widgetOnPage.shortName)) {

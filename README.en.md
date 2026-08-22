@@ -286,7 +286,10 @@ author can check is worth nothing.
   extracted from the APK — 33 languages for the widgets, 34 for their options, 35 for the
   labels of the general settings — and they follow the language of the file you opened;
   only for a file that declares none do they take that of the interface. Those three
-  figures are not a choice of ours: they are what the APK carries.
+  figures are not a choice of ours: they are what the APK carries. The drawing of a page
+  follows the same split: everything the instrument paints there keeps the language of the
+  file, and the only two labels the editor adds — a button's action, the strip reserved for
+  messages, both shown on hover — follow yours.
 - **Explain itself on the spot**: a user manual in thirteen chapters opens from the
   welcome screen and from the “File” menu, without leaving the page — **in all five
   languages**, and only the one on display is downloaded. It is written for a pilot, not

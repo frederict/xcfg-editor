@@ -5,6 +5,7 @@ import { readLayout, type Layout, type Page } from '../model/layout'
 import { readRenderSettings } from '../model/preferences'
 import { findFreeTexts } from '../model/scope'
 import { renderPage } from '../render/canvas'
+import type { Translator } from '../i18n'
 // Effet de bord : enregistre les dessins réels (numériques, barre d'état, cartes,
 // boussoles…). Sans lui, `renderPage` ne poserait que des repères génériques, et la
 // vignette ne ressemblerait à rien de ce que le pilote voit sur son instrument.
@@ -103,6 +104,16 @@ export interface PreviewSource {
    * langue du moment ; les anciennes gardent la leur, et c'est sans conséquence.
    */
   language: string
+  /**
+   * Notre prose — axe `ui`, celui du pilote. Le dessin ne s'en sert que pour les deux
+   * étiquettes de survol qu'il **ajoute** au dessin de l'appareil (voir `render/canvas.ts`).
+   *
+   * Même parti que `language` juste au-dessus, et pour la même raison : une vignette garde
+   * la langue qu'avait l'interface au moment où elle a été dessinée. Ce qu'elle porte de
+   * notre prose ne se lit qu'au survol, et jamais dans la liste où elle sert à reconnaître
+   * une configuration.
+   */
+  tr: Translator
 }
 
 /** La page choisie, avec de quoi la nommer au pilote. */
@@ -205,7 +216,8 @@ export async function makeLibraryPreview(source: PreviewSource): Promise<Preview
     chosen.page,
     aspectRatioOf(source.device, chosen.orientation),
     settings,
-    source.language
+    source.language,
+    source.tr
   )
   redactScene(scene, redactedRanks(layout, chosen))
 

@@ -4,6 +4,11 @@ import { drawWidget } from '../../../src/render/registry'
 import '../../../src/render/widgets'
 import type { RenderSettings } from '../../../src/model/preferences'
 import type { Widget } from '../../../src/model/widget'
+import { makeTranslator } from '../../../src/i18n/translate'
+import frenchMessages from '../../../src/i18n/messages/fr'
+
+/** Notre prose, axe `ui` — jamais la langue des libellés passée à côté. */
+const tr = makeTranslator('fr', frenchMessages)
 
 const settings: RenderSettings = {
   fromDefaults: false, theme: 'WhiteHCTheme', titleColor: '#f44336',
@@ -32,7 +37,7 @@ function lines(el: HTMLElement): string[] {
  */
 describe('WLocation — deux lignes de coordonnées, calées à droite', () => {
   it('ne retombe plus sur le repli générique', () => {
-    expect(drawWidget(widget(), settings, 'fr').className).not.toContain('xc-generic')
+    expect(drawWidget(widget(), settings, 'fr', tr).className).not.toContain('xc-generic')
   })
 
   it('écrit DEUX lignes, degrés décimaux à quatre décimales, lettre d’hémisphère détachée', () => {

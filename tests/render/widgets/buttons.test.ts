@@ -14,6 +14,22 @@ import { isBlankAtRest, isRegistered } from '../../../src/render/registry'
 import '../../../src/render/widgets/index'
 import type { RenderSettings } from '../../../src/model/preferences'
 import type { Widget } from '../../../src/model/widget'
+import { makeTranslator } from '../../../src/i18n/translate'
+import frenchMessages from '../../../src/i18n/messages/fr'
+import germanMessages from '../../../src/i18n/messages/de'
+import englishMessages from '../../../src/i18n/messages/en'
+import spanishMessages from '../../../src/i18n/messages/es'
+import dutchMessages from '../../../src/i18n/messages/nl'
+import type { UiLanguage } from '../../../src/i18n/languages'
+
+/** Les cinq catalogues, pour vérifier que l'étiquette existe dans les cinq langues. */
+const CATALOGUES = {
+  fr: frenchMessages, en: englishMessages, de: germanMessages,
+  es: spanishMessages, nl: dutchMessages
+}
+
+/** Notre prose, axe `ui` — jamais la langue des libellés passée à côté. */
+const tr = makeTranslator('fr', frenchMessages)
 
 const settings: RenderSettings = {
   fromDefaults: false, theme: 'WhiteHCTheme', titleColor: '#f44336',
@@ -76,7 +92,7 @@ describe('les neuf widgets « bouton »', () => {
 
   describe('chaque bouton porte son pictogramme', () => {
     it('WButtonNavig : drapeau + cercle barré', () => {
-      const el = drawButtonNavig(widget('WButtonNavig', { type: '"ACTION_NEXT_WAYPOINT"' }), settings, 'fr')
+      const el = drawButtonNavig(widget('WButtonNavig', { type: '"ACTION_NEXT_WAYPOINT"' }), settings, 'fr', tr)
       expect(el.querySelector('.xc-button__glyph--flag')).not.toBeNull()
       expect(el.querySelector('.xc-button__glyph--slashed')).not.toBeNull()
     })
@@ -93,35 +109,40 @@ describe('les neuf widgets « bouton »', () => {
     })
 
     it('WButtonZoom : le signe seul, sans pictogramme — mesuré à 0,21 W × 0,39 H', () => {
-      const el = drawButtonZoom(widget('WButtonZoom', { type: '"ACTION_ZOOM_IN"' }), settings, 'fr')
+      const el = drawButtonZoom(widget('WButtonZoom', { type: '"ACTION_ZOOM_IN"' }), settings, 'fr', tr)
       expect(el.querySelector('.xc-button__glyph')).toBeNull()
       expect(el.querySelector('.xc-button__sign')?.textContent).toBe('+')
     })
 
     it('WButtonVario : barres de vario + haut-parleur', () => {
-      const el = drawButtonVario(widget('WButtonVario'), settings, 'fr')
+      const el = drawButtonVario(widget('WButtonVario'), settings)
       expect(el.querySelector('.xc-button__glyph--variobars')).not.toBeNull()
       expect(el.querySelector('.xc-button__glyph--speaker')).not.toBeNull()
     })
 
     it('WButtonBrightness : soleil portant le signe — la case n’est plus vide', () => {
-      const el = drawButtonBrightness(widget('WButtonBrightness', { type: '"ACTION_PLUS"' }), settings, 'fr')
+      const el = drawButtonBrightness(widget('WButtonBrightness', { type: '"ACTION_PLUS"' }), settings, 'fr', tr)
       expect(el.querySelector('.xc-button__glyph--sun')).not.toBeNull()
       expect(el.querySelector('.xc-button__glyph-sign')?.textContent).toBe('+')
     })
 
     it('WButtonVolume : haut-parleur + signe', () => {
-      const el = drawButtonVolume(widget('WButtonVolume', { type: '"ACTION_PLUS"' }), settings, 'fr')
+      const el = drawButtonVolume(widget('WButtonVolume', { type: '"ACTION_PLUS"' }), settings, 'fr', tr)
       expect(el.querySelector('.xc-button__glyph--speaker')).not.toBeNull()
       expect(el.querySelector('.xc-button__sign')?.textContent).toBe('+')
     })
 
-    it('WButtonVolumeReminder : haut-parleur au-dessus de son libellé, dans la langue du pilote', () => {
+    // ⚠ « Monter le son » est peint par l'APPAREIL : il suit la langue du fichier ouvert
+    // (axe `labels`), jamais celle de l'interface. Mesuré en français seulement — les
+    // trois autres langues retombent sur l'anglais faute de relevé, et c'est assumé.
+    it('WButtonVolumeReminder : haut-parleur au-dessus du libellé que l’appareil peint', () => {
       const fr = drawButtonVolumeReminder(widget('WButtonVolumeReminder'), settings, 'fr')
       const en = drawButtonVolumeReminder(widget('WButtonVolumeReminder'), settings, 'en')
+      const de = drawButtonVolumeReminder(widget('WButtonVolumeReminder'), settings, 'de')
       expect(fr.querySelector('.xc-button__glyph--speaker')).not.toBeNull()
       expect(fr.querySelector('.xc-button__caption')?.textContent).toBe('Monter le son')
       expect(en.querySelector('.xc-button__caption')?.textContent).toBe('Turn the volume up')
+      expect(de.querySelector('.xc-button__caption')?.textContent).toBe('Turn the volume up')
     })
 
     it('WButtonIntentLauncher : les clés `title` et `name`, jamais des textes inventés', () => {
@@ -141,39 +162,39 @@ describe('les neuf widgets « bouton »', () => {
     it('ACTION_MINUS et ACTION_ZOOM_OUT donnent un moins, tout le reste un plus', () => {
       const signe = (el: HTMLElement): string | undefined =>
         el.querySelector('.xc-button__sign, .xc-button__glyph-sign')?.textContent ?? undefined
-      expect(signe(drawButtonZoom(widget('WButtonZoom', { type: '"ACTION_ZOOM_OUT"' }), settings, 'fr'))).toBe('−')
-      expect(signe(drawButtonZoom(widget('WButtonZoom', { type: '"ACTION_ZOOM_IN"' }), settings, 'fr'))).toBe('+')
-      expect(signe(drawButtonVolume(widget('WButtonVolume', { type: '"ACTION_MINUS"' }), settings, 'fr'))).toBe('−')
-      expect(signe(drawButtonBrightness(widget('WButtonBrightness', { type: '"ACTION_MINUS"' }), settings, 'fr'))).toBe('−')
+      expect(signe(drawButtonZoom(widget('WButtonZoom', { type: '"ACTION_ZOOM_OUT"' }), settings, 'fr', tr))).toBe('−')
+      expect(signe(drawButtonZoom(widget('WButtonZoom', { type: '"ACTION_ZOOM_IN"' }), settings, 'fr', tr))).toBe('+')
+      expect(signe(drawButtonVolume(widget('WButtonVolume', { type: '"ACTION_MINUS"' }), settings, 'fr', tr))).toBe('−')
+      expect(signe(drawButtonBrightness(widget('WButtonBrightness', { type: '"ACTION_MINUS"' }), settings, 'fr', tr))).toBe('−')
     })
 
     it('sans clé `type`, le signe vaut `+` — la valeur par défaut des trois types (§ 3)', () => {
-      expect(drawButtonZoom(widget('WButtonZoom'), settings, 'fr')
+      expect(drawButtonZoom(widget('WButtonZoom'), settings, 'fr', tr)
         .querySelector('.xc-button__sign')?.textContent).toBe('+')
     })
   })
 
   describe('WButtonVario est le seul titré, et c’est `showTitle` qui le commande', () => {
     it('titre affiché par défaut, dans la couleur de titre du fichier', () => {
-      const el = drawButtonVario(widget('WButtonVario'), settings, 'fr')
+      const el = drawButtonVario(widget('WButtonVario'), settings)
       const titre = el.querySelector('.xc-button__title') as HTMLElement
       expect(titre?.textContent).toBe('Vario')
       expect(titre.style.color).toBe(settings.titleColor)
     })
 
     it('showTitle à false le supprime', () => {
-      expect(drawButtonVario(widget('WButtonVario', { showTitle: 'false' }), settings, 'fr')
+      expect(drawButtonVario(widget('WButtonVario', { showTitle: 'false' }), settings)
         .querySelector('.xc-button__title')).toBeNull()
     })
 
     it('aucun autre bouton ne porte de titre', () => {
       const autres: [string, (w: Widget) => HTMLElement][] = [
-        ['WButtonNavig', (w) => drawButtonNavig(w, settings, 'fr')],
+        ['WButtonNavig', (w) => drawButtonNavig(w, settings, 'fr', tr)],
         ['WButtonPhone', (w) => drawButtonPhone(w, settings, 'fr')],
         ['WButtonCamera', (w) => drawButtonCamera(w, settings, 'fr')],
-        ['WButtonZoom', (w) => drawButtonZoom(w, settings, 'fr')],
-        ['WButtonBrightness', (w) => drawButtonBrightness(w, settings, 'fr')],
-        ['WButtonVolume', (w) => drawButtonVolume(w, settings, 'fr')]
+        ['WButtonZoom', (w) => drawButtonZoom(w, settings, 'fr', tr)],
+        ['WButtonBrightness', (w) => drawButtonBrightness(w, settings, 'fr', tr)],
+        ['WButtonVolume', (w) => drawButtonVolume(w, settings, 'fr', tr)]
       ]
       for (const [shortName, draw] of autres) {
         expect(draw(widget(shortName, { _title: 'true' })).querySelector('.xc-button__title')).toBeNull()
@@ -183,24 +204,52 @@ describe('les neuf widgets « bouton »', () => {
 
   describe('étiquette de survol — la seule chose que l’appareil ne dessine pas', () => {
     it('nomme l’action, et signale l’appui long', () => {
-      const el = drawButtonNavig(widget('WButtonNavig', { type: '"ACTION_NEXT_WAYPOINT"', longClick: 'true' }), settings, 'fr')
+      const el = drawButtonNavig(widget('WButtonNavig', { type: '"ACTION_NEXT_WAYPOINT"', longClick: 'true' }), settings, 'fr', tr)
       expect(el.title).toBe('balise suivante (appui long)')
     })
 
-    it('retombe sur l’anglais pour une langue sans traduction maison', () => {
-      const el = drawButtonBrightness(widget('WButtonBrightness', { type: '"ACTION_PLUS"', longClick: 'false' }), settings, 'de')
-      expect(el.title).toBe('increase')
+    /**
+     * **L'étiquette suit le pilote, pas le fichier.** C'est notre prose : elle nomme une
+     * action pour celui qui compose sa page, et rien de ceci n'est écrit sur l'appareil.
+     *
+     * Jusqu'au 2026-08-22 elle suivait la langue du **fichier**, dans une table figée à
+     * `fr`/`en` : un pilote allemand, néerlandais ou espagnol lisait « increase » quoi
+     * qu'il choisisse au globe. Ces deux assertions le disent dans les deux sens — la
+     * langue du fichier ne la touche pas, la langue du pilote la commande.
+     */
+    it('suit la langue du pilote, quelle que soit celle du fichier', () => {
+      const allemand = makeTranslator('de', germanMessages)
+      const nœud = widget('WButtonBrightness', { type: '"ACTION_PLUS"', longClick: 'false' })
+      // Fichier en allemand, pilote en français : l'étiquette reste française.
+      expect(drawButtonBrightness(nœud, settings, 'de', tr).title).toBe('augmenter')
+      // Fichier en français, pilote en allemand : elle passe à l'allemand.
+      expect(drawButtonBrightness(nœud, settings, 'fr', allemand).title).toBe('erhöhen')
+    })
+
+    it('donne les cinq langues à l’action et à l’appui long', () => {
+      const nœud = widget('WButtonNavig', { type: '"ACTION_NEXT_WAYPOINT"', longClick: 'true' })
+      const attendu: Record<string, string> = {
+        fr: 'balise suivante (appui long)',
+        en: 'next waypoint (long press)',
+        de: 'nächster Wegpunkt (langes Drücken)',
+        es: 'baliza siguiente (pulsación larga)',
+        nl: 'volgend waypoint (lang indrukken)'
+      }
+      for (const [langue, texte] of Object.entries(CATALOGUES)) {
+        expect(drawButtonNavig(nœud, settings, 'fr', makeTranslator(langue as UiLanguage, texte)).title)
+          .toBe(attendu[langue])
+      }
     })
 
     it('signale l’appui long même quand le fichier n’écrit pas `longClick`', () => {
       // Le relevé donne `longClick: true` à cinq des neuf boutons : l'ancien `=== true`
       // taisait l'appui long sur tout fichier écrit avec les seules clés universelles.
-      const el = drawButtonBrightness(widget('WButtonBrightness', { type: '"ACTION_PLUS"' }), settings, 'fr')
+      const el = drawButtonBrightness(widget('WButtonBrightness', { type: '"ACTION_PLUS"' }), settings, 'fr', tr)
       expect(el.title).toBe('augmenter (appui long)')
     })
 
     it('aucune étiquette pour un code inconnu — jamais de texte inventé', () => {
-      expect(drawButtonZoom(widget('WButtonZoom', { type: '"ACTION_INCONNUE"' }), settings, 'fr').title).toBe('')
+      expect(drawButtonZoom(widget('WButtonZoom', { type: '"ACTION_INCONNUE"' }), settings, 'fr', tr).title).toBe('')
     })
   })
 
@@ -225,32 +274,32 @@ describe('les neuf widgets « bouton »', () => {
     const CASE_PLATE = { x2: 2500, y2: 2069 }
 
     it('ne touche à rien aux géométries de la planche — les neuf gardent la taille de style.css', () => {
-      expect(fit(drawButtonNavig(widget('WButtonNavig'), settings, 'fr'))).toBe(1)
+      expect(fit(drawButtonNavig(widget('WButtonNavig'), settings, 'fr', tr))).toBe(1)
       expect(fit(drawButtonPhone(widget('WButtonPhone'), settings, 'fr'))).toBe(1)
       expect(fit(drawButtonCamera(widget('WButtonCamera'), settings, 'fr'))).toBe(1)
-      expect(fit(drawButtonZoom(widget('WButtonZoom'), settings, 'fr'))).toBe(1)
+      expect(fit(drawButtonZoom(widget('WButtonZoom'), settings, 'fr', tr))).toBe(1)
       expect(fit(drawButtonIntentLauncher(widget('WButtonIntentLauncher'), settings, 'fr'))).toBe(1)
-      expect(fit(drawButtonVario(widget('WButtonVario', {}, CASE_PLATE), settings, 'fr'))).toBe(1)
-      expect(fit(drawButtonVolume(widget('WButtonVolume', {}, CASE_PLATE), settings, 'fr'))).toBe(1)
-      expect(fit(drawButtonBrightness(widget('WButtonBrightness', {}, CASE_PLATE), settings, 'fr'))).toBe(1)
+      expect(fit(drawButtonVario(widget('WButtonVario', {}, CASE_PLATE), settings))).toBe(1)
+      expect(fit(drawButtonVolume(widget('WButtonVolume', {}, CASE_PLATE), settings, 'fr', tr))).toBe(1)
+      expect(fit(drawButtonBrightness(widget('WButtonBrightness', {}, CASE_PLATE), settings, 'fr', tr))).toBe(1)
       expect(fit(drawButtonVolumeReminder(widget('WButtonVolumeReminder', {}, CASE_PLATE), settings, 'fr'))).toBe(1)
     })
 
     it('réduit WButtonNavig dans la case étroite jusqu’à l’encre mesurée sur l’appareil', () => {
       // Rangée de 0,946 fois la hauteur du widget ; case de 123 × 146 px, soit
       // L/H = 0,842. L'appareil y dessine 82 × 45 px.
-      const facteur = fit(drawButtonNavig(widget('WButtonNavig', {}, CASE_ETROITE), settings, 'fr'))
+      const facteur = fit(drawButtonNavig(widget('WButtonNavig', {}, CASE_ETROITE), settings, 'fr', tr))
       expect(0.946 * facteur * 146).toBeCloseTo(82, 0)
       expect(0.523 * facteur * 146).toBeCloseTo(45, 0)
     })
 
     it('réduit aussi les deux autres boutons à deux pictogrammes', () => {
-      expect(fit(drawButtonVario(widget('WButtonVario', {}, CASE_ETROITE), settings, 'fr'))).toBeLessThan(1)
-      expect(fit(drawButtonVolume(widget('WButtonVolume', {}, CASE_ETROITE), settings, 'fr'))).toBeLessThan(1)
+      expect(fit(drawButtonVario(widget('WButtonVario', {}, CASE_ETROITE), settings))).toBeLessThan(1)
+      expect(fit(drawButtonVolume(widget('WButtonVolume', {}, CASE_ETROITE), settings, 'fr', tr))).toBeLessThan(1)
     })
 
     it('ne réduit jamais en deçà du plancher, même sur une case dégénérée', () => {
-      const el = drawButtonNavig(widget('WButtonNavig', {}, { x2: 60, y2: 5000 }), settings, 'fr')
+      const el = drawButtonNavig(widget('WButtonNavig', {}, { x2: 60, y2: 5000 }), settings, 'fr', tr)
       expect(fit(el)).toBe(0.3)
     })
   })
@@ -265,13 +314,13 @@ describe('les neuf widgets « bouton »', () => {
       [...el.querySelectorAll('svg')] as SVGSVGElement[]
 
     it('le drapeau est nettement plus haut que large, et le Ø carré', () => {
-      const [flag, slashed] = glyphes(drawButtonNavig(widget('WButtonNavig'), settings, 'fr'))
+      const [flag, slashed] = glyphes(drawButtonNavig(widget('WButtonNavig'), settings, 'fr', tr))
       expect(flag?.getAttribute('viewBox')).toBe('0 0 62 91')
       expect(slashed?.getAttribute('viewBox')).toBe('0 0 24 24')
     })
 
     it('les deux tailles sont écrites en ligne, en cadratins, et donnent le rapport 1,82', () => {
-      const [flag, slashed] = glyphes(drawButtonNavig(widget('WButtonNavig'), settings, 'fr'))
+      const [flag, slashed] = glyphes(drawButtonNavig(widget('WButtonNavig'), settings, 'fr', tr))
       const em = (value: string): number => Number(value.replace('em', ''))
       const hauteur = em(flag!.style.height)
       const largeur = em(flag!.style.width) + 0.209 + em(slashed!.style.width)
@@ -280,13 +329,13 @@ describe('les neuf widgets « bouton »', () => {
     })
 
     it('la base du mât est un arc, plus une barre pleine', () => {
-      const [flag] = glyphes(drawButtonNavig(widget('WButtonNavig'), settings, 'fr'))
+      const [flag] = glyphes(drawButtonNavig(widget('WButtonNavig'), settings, 'fr', tr))
       const d = flag!.querySelector('path')?.getAttribute('d') ?? ''
       expect(d).toContain('Q')
     })
 
     it('l’écart entre les deux pictogrammes est celui de la capture', () => {
-      const el = drawButtonNavig(widget('WButtonNavig'), settings, 'fr')
+      const el = drawButtonNavig(widget('WButtonNavig'), settings, 'fr', tr)
       expect(el.querySelector('.xc-button__row')?.getAttribute('style')).toContain('0.209em')
     })
   })

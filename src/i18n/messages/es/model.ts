@@ -322,8 +322,22 @@ const model: DomainCatalog<'model'> = {
   'reachability.heldInLandscape': 'Los ajustes generales de este archivo mantienen la pantalla en horizontal: sus páginas verticales no aparecerán en él, sean cuales sean sus navegaciones. Tal como se escribe en el archivo: «Display.Orientation: {value}».',
   'reachability.heldInPortrait': 'Los ajustes generales de este archivo mantienen la pantalla en vertical: sus páginas horizontales no aparecerán en él, sean cuales sean sus navegaciones. Tal como se escribe en el archivo: «Display.Orientation: {value}».',
   'reachability.enableAllRemedy': 'Este editor sabe volver a abrirla: «Activar para todas las navegaciones» escribe el valor que el propio XCTrack escribe cuando las cinco navegaciones están activas. El botón está en esta página y en «Gestionar las páginas», en cuanto «Editar las páginas» está activo. Para conservar solo algunas, hay que pasar por el instrumento.',
-  'reachability.heldRemedy': 'Esto no se repara en la página: es un ajuste de todo el instrumento, y se encuentra en «Ajustes», en la línea que fija la orientación de la pantalla. Este editor no lo toca por su cuenta. Observado una vez: unas páginas verticales importadas en un AIR³ 7.2 nunca se mostraron mientras ese ajuste mantenía la pantalla en horizontal.'
+  'reachability.heldRemedy': 'Esto no se repara en la página: es un ajuste de todo el instrumento, y se encuentra en «Ajustes», en la línea que fija la orientación de la pantalla. Este editor no lo toca por su cuenta. Observado una vez: unas páginas verticales importadas en un AIR³ 7.2 nunca se mostraron mientras ese ajuste mantenía la pantalla en horizontal.',
 
+  /* ==== lo que la representación de una página añade al dibujo del aparato: dos ==== */
+
+  'render.actionNextWaypoint': 'baliza siguiente',
+  'render.actionPrevWaypoint': 'baliza anterior',
+  'render.actionPlus': 'aumentar',
+  'render.actionMinus': 'disminuir',
+  'render.actionZoomIn': 'acercar',
+  'render.actionZoomOut': 'alejar',
+  'render.actionLongPress': '{action} (pulsación larga)',
+  'render.liveMessagePanel': 'Panel de mensajes',
+  'render.liveMessageLines': {
+    one: 'Panel de mensajes — {count} línea reservada',
+    other: 'Panel de mensajes — {count} líneas reservadas'
+  }
 }
 
 export default model

@@ -1061,7 +1061,8 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
       // Le gabarit d'écran est une **supposition** de cet éditeur (`identity.assumed`) :
       // il ne décide que des proportions du cadre, jamais du contenu de la page.
       device: entry.identity.assumed.device,
-      language
+      language,
+      tr
     })
     if (preview === undefined) return
     await library.setPreview(entry.id, preview.bytes, preview.ref, entry.revision)

@@ -295,7 +295,10 @@ de fidelidad que solo el autor puede comprobar no vale nada.
   extraídos del APK — 33 idiomas para los widgets, 34 para sus opciones, 35 para los rótulos
   de los ajustes generales —, y siguen el idioma del archivo abierto; solo para un archivo
   que no indica ninguno toman el de la interfaz. Estas tres cifras no son una elección
-  nuestra: es lo que el APK lleva.
+  nuestra: es lo que el APK lleva. El dibujo de una página sigue el mismo reparto: todo lo
+  que el instrumento pinta allí conserva el idioma del archivo, y los dos únicos rótulos que
+  el editor añade — la acción de un botón, la franja reservada a los mensajes, visibles al
+  pasar el cursor — siguen el suyo.
 - **Explicarse en el sitio**: un manual de uso en trece capítulos se abre desde la pantalla
   de inicio y desde el menú «Archivo», sin salir de la página — **en los cinco idiomas**, y
   solo se descarga el que se muestra. Está escrito para un piloto, no para un informático, y

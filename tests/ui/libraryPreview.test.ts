@@ -13,6 +13,11 @@ import {
   PREVIEW_MEDIA_TYPE
 } from '../../src/ui/libraryPreview'
 import { BACKUP_2026 } from '../fixtures/paths'
+import { makeTranslator } from '../../src/i18n/translate'
+import frenchMessages from '../../src/i18n/messages/fr'
+
+/** Notre prose, axe `ui` — jamais la langue des libellés passée à côté. */
+const tr = makeTranslator('fr', frenchMessages)
 
 const AIR3 = deviceFor('AIR3 AIR3-7.2 8.1.0')
 const bytesOf = (text: string): Uint8Array => new TextEncoder().encode(text)
@@ -104,7 +109,7 @@ const PORTRAIT_ONLY = JSON.stringify({
 }, null, 2)
 
 const preview = (text: string): ReturnType<typeof makeLibraryPreview> =>
-  makeLibraryPreview({ bytes: bytesOf(text), fileName: 'essai.xcfg', device: AIR3, language: 'fr' })
+  makeLibraryPreview({ bytes: bytesOf(text), fileName: 'essai.xcfg', device: AIR3, language: 'fr', tr })
 
 describe('choix de la page représentée', () => {
   it('prend la première page paysage que l’appareil montre', () => {
@@ -217,7 +222,7 @@ describe('le poids', () => {
   it('reste de l’ordre de la dizaine de kilo-octets, pas de la centaine', async () => {
     const bytes = new Uint8Array(readFileSync(BACKUP_2026))
     const made = (await makeLibraryPreview({
-      bytes, fileName: 'backup.xcfg', device: AIR3, language: 'fr'
+      bytes, fileName: 'backup.xcfg', device: AIR3, language: 'fr', tr
     }))!
     expect(made.bytes.byteLength).toBeLessThan(32_000)
   })
@@ -238,7 +243,7 @@ describe('fidélité à l’octet près', () => {
     const avant = await library.bytesOf(entry.id)
 
     const made = (await makeLibraryPreview({
-      bytes: avant, fileName: entry.fileName, device: AIR3, language: 'fr'
+      bytes: avant, fileName: entry.fileName, device: AIR3, language: 'fr', tr
     }))!
     const posee = await library.setPreview(entry.id, made.bytes, made.ref, entry.revision)
 

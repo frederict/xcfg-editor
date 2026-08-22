@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { drawWidget, isBlankAtRest, register, registerBlankAtRest } from '../../src/render/registry'
 import type { RenderSettings } from '../../src/model/preferences'
 import type { Widget } from '../../src/model/widget'
+import { makeTranslator } from '../../src/i18n/translate'
+import frenchMessages from '../../src/i18n/messages/fr'
 
 const settings: RenderSettings = {
   fromDefaults: true, theme: 'WhiteHCTheme', titleColor: '#f44336',
@@ -10,8 +12,11 @@ const settings: RenderSettings = {
   windSpeedUnit: 'km/h', distanceUnit: 'km', relativeDistanceUnit: 'km', airspaceAltitudeUnit: 'm'
 }
 
-// Langue déjà résolue en chaîne, distincte de `settings` — voir numeric.test.ts.
+// Langue déjà résolue en chaîne, distincte de `settings` — voir numeric.test.ts. C'est
+// l'axe `labels` ; `tr` à côté est l'axe `ui`, notre prose, et les deux ne se confondent
+// jamais — voir `src/i18n/axes.ts`.
 const language = 'en'
+const tr = makeTranslator('fr', frenchMessages)
 
 const widget = (shortName: string): Widget => ({
   node: { kind: 'object', entries: [] },
@@ -22,14 +27,14 @@ const widget = (shortName: string): Widget => ({
 
 describe('annuaire', () => {
   it('utilise le rendu générique pour un type inconnu', () => {
-    const element = drawWidget(widget('WInventeEn2027'), settings, language)
+    const element = drawWidget(widget('WInventeEn2027'), settings, language, tr)
     expect(element.textContent).toContain('WInventeEn2027')
   })
 
   it('affiche le nom lisible quand il existe', () => {
     // language vaut 'en' ici : libellé officiel anglais, pas la traduction maison
     // française.
-    expect(drawWidget(widget('WAltitude'), settings, language).textContent).toContain('GPS Alt')
+    expect(drawWidget(widget('WAltitude'), settings, language, tr).textContent).toContain('GPS Alt')
   })
 
   it('utilise le dessin enregistré quand il existe', () => {
@@ -38,7 +43,7 @@ describe('annuaire', () => {
       el.textContent = 'dessin sur mesure'
       return el
     })
-    expect(drawWidget(widget('WEssai'), settings, language).textContent).toBe('dessin sur mesure')
+    expect(drawWidget(widget('WEssai'), settings, language, tr).textContent).toBe('dessin sur mesure')
   })
 })
 

@@ -14,7 +14,7 @@
  * | Fichier | Ce qu'il porte |
  * |---|---|
  * | `CLAUDE.md` | **la marche à suivre pour verser un message** — à lire avant d'extraire de la prose |
- * | `axes.ts` | **les deux axes de langue** — le piège de conception central, à lire en premier |
+ * | `axes.ts` | **les deux axes de langue** — le piège de conception central, à lire en premier. Un **document**, sans surface d'exécution : la doctrine s'applique dans les modules qu'il nomme |
  * | `languages.ts` | les cinq codes, leur détection, leurs noms dans leur propre langue |
  * | `plural.ts` | une seule règle de pluriel, `Intl.PluralRules`, pour remplacer les huit copies de `count > 1` |
  * | `format.ts` | nombres, parts, tailles, millimètres, pouces, dates, énumérations — tous par `Intl` |
@@ -38,14 +38,6 @@ export {
   uiLanguage,
   type UiLanguage
 } from './languages'
-
-export {
-  initialAxes,
-  languageAxes,
-  withLabelLanguage,
-  withUiLanguage,
-  type LanguageAxes
-} from './axes'
 
 export { pluralCategory, pluralForm, type PluralForms } from './plural'
 

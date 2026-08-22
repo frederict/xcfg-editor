@@ -33,7 +33,7 @@ import type { FrenchWidgets } from './messages/fr/widgets'
  * | `versions` | `versionDiagnostic.ts`, `cleanupPanel.ts` |
  * | `sharing` | `sharingDialog.ts`, `warnings.ts` |
  * | `pages` | `pageManager.ts`, `deviceSelector.ts` |
- * | `model` | la prose **hors interface** : `src/model/`, `src/library/`, `src/catalog/` |
+ * | `model` | la prose **hors interface** : `src/model/`, `src/library/`, `src/catalog/`, `src/render/` |
  *
  * ⚠️ **`common` n'est pas un fourre-tout.** Il est le seul fichier que plusieurs lots
  * peuvent vouloir toucher, donc le seul qui puisse redevenir un point de conflit. Un mot
@@ -126,7 +126,9 @@ export type DomainCatalog<D extends Domain> = {
 export const DOMAIN_PREFIXES: Readonly<Record<Domain, readonly string[]>> = {
   common: ['common', 'provenance', 'factoryValue'],
   app: ['action', 'app', 'dock', 'editor', 'landing', 'menu', 'pageKind', 'view', 'zoom'],
-  preferences: ['preferences'],
+  // `inputDevice` : les quatre périphériques d'entrée que le noyau d'un boîtier déclare,
+  // dits dans la langue du pilote. Une famille de valeurs fermée, donc son propre préfixe.
+  preferences: ['inputDevice', 'preferences'],
   library: ['library'],
   widgets: ['palette', 'properties', 'widgets'],
   versions: ['cleanup', 'removalEffect', 'versions'],
@@ -136,10 +138,14 @@ export const DOMAIN_PREFIXES: Readonly<Record<Domain, readonly string[]>> = {
   // dans `src/catalog/navigationLabels.json`. Ils ont été déclarés sous `navigation.*`
   // jusqu'au 2026-08-22, et quatre des cinq ne disaient pas ce que l'appareil dit.
   pages: ['device', 'pages'],
+  // ⚠️ `render` ne porte QUE ce que le rendu **ajoute** au dessin de l'appareil : les deux
+  // étiquettes de survol, qui sont notre prose et suivent donc l'axe `ui`. Tout ce que le
+  // dessin peint — noms de gadgets, suffixes de titre, textes que XCTrack écrit lui-même —
+  // suit l'axe `labels` et n'entre jamais ici. Voir `src/render/canvas.ts`.
   model: [
     'model', 'personal', 'personalBasis', 'personalHome', 'personalKind', 'personalReason',
     'sharingReason', 'suspectClue', 'ruleTitle', 'ruleSummary', 'inspection', 'libraryError',
-    'reachability'
+    'reachability', 'render'
   ]
 }
 

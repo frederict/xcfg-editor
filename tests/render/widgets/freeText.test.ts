@@ -4,6 +4,11 @@ import type { Widget } from '../../../src/model/widget'
 import { drawEmitTestEvent, drawFreeText } from '../../../src/render/widgets/freeText'
 import { drawWidget } from '../../../src/render/registry'
 import '../../../src/render/widgets'
+import { makeTranslator } from '../../../src/i18n/translate'
+import frenchMessages from '../../../src/i18n/messages/fr'
+
+/** Notre prose, axe `ui` — jamais la langue des libellés passée à côté. */
+const tr = makeTranslator('fr', frenchMessages)
 
 /**
  * Écart 2.10 de la revue des 75 visuels — deux des quatre gadgets « autres » que
@@ -101,7 +106,7 @@ describe('« Émettre un événement test » (WEmitTestEvent)', () => {
 describe('l’annuaire sert les deux dessins', () => {
   it('WFreeText et WEmitTestEvent ne retombent plus sur le repli générique', () => {
     for (const type of ['WFreeText', 'WEmitTestEvent']) {
-      expect(drawWidget(widget(type), settings, 'fr').className).not.toContain('xc-generic')
+      expect(drawWidget(widget(type), settings, 'fr', tr).className).not.toContain('xc-generic')
     }
   })
 })
