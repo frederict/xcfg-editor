@@ -1260,7 +1260,7 @@ const RUNTIME_DEFAULT_REASON = 'preferences.runtimeDefaultReason' satisfies Mess
 /**
  * Vrai si la page sait présenter cette clé sous son libellé, dans son écran.
  *
- * `control !== null` écarte les 85 clés qu'aucun écran de réglages ne montre — de l'état
+ * `control !== null` écarte les 86 clés qu'aucun écran de réglages ne montre — de l'état
  * sérialisé pour une part, des réglages d'écrans construits en code pour le reste. Le
  * libellé écarte le peu qui resterait sans nom.
  *
@@ -3435,14 +3435,24 @@ export async function openPreferencesPage(
  * Ce que cette page coûte au réseau — **mesuré** sur `vite build`, pas estimé — pour que
  * l'assembleur sache ce qu'il déclenche et le dise au pilote s'il le juge utile.
  *
+ * ⚠️ **Ce tableau est un instantané, et il ne peut pas être autre chose** : chaque octet
+ * dépend de la construction du jour, et le moindre commit le fait bouger de quelques
+ * dixièmes. Il est donc **daté**, et aucun test ne le tient — le tenir voudrait dire
+ * reconstruire le site à chaque essai. Ce qui compte et qui, lui, ne bouge pas, est en
+ * dessous du tableau : cinq morceaux, tous à la demande, aucun dans le morceau principal.
+ *
+ * **Relevé le 22 août 2026**, `npm run build` puis `ls -l dist/assets` et `gzip -9`.
+ * L'écart avec le relevé précédent était de 1 à 3 % sur deux lignes — `preferencesPage-*.css`
+ * annoncé 9,6 Ko pour 9,9 mesurés, `preferenceCatalog/base` 98,9 pour 97,9 :
+ *
  * Cinq morceaux, tous chargés à la demande, aucun dans le morceau principal :
  *
  * | morceau                   |  émis   |  gzip   |
  * |---------------------------|---------|---------|
  * | `preferencesPage-*.js`    | 37,9 Ko | 11,5 Ko |
- * | `preferencesPage-*.css`   |  9,6 Ko |  2,3 Ko |
+ * | `preferencesPage-*.css`   |  9,9 Ko |  2,3 Ko |
  * | `preferenceDomains-*.js`  | 12,7 Ko |  4,3 Ko |
- * | `preferenceCatalog/base`  | 98,9 Ko | 14,8 Ko |
+ * | `preferenceCatalog/base`  | 97,9 Ko | 14,6 Ko |
  * | `preferenceCatalog/<lg>`  | 17,0 Ko |  6,3 Ko |
  *
  * Soit **176 Ko émis, environ 39 Ko transférés** à la première ouverture, puis 17 Ko de

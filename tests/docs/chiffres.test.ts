@@ -154,6 +154,15 @@ describe('les chiffres du catalogue des réglages généraux', () => {
     expect(total - PREFERENCES_BASE.meta.labelledCount).toBe(sansControle)
     expect(cited('src/catalog/preferenceCatalog.ts', /\*\*(\d+) clés n'ont pas de libellé\*\*/))
       .toBe(sansControle)
+    // Le même compte est cité deux fois dans `preferencesPage.ts`, et les deux disaient
+    // deux choses (85 et 86) jusqu'au 22 août 2026.
+    expect(cited('src/ui/preferencesPage.ts', /écarte les (\d+) clés/)).toBe(sansControle)
+    expect(cited('src/ui/preferencesPage.ts', /(\d+) réglages sur \d+ n'ont aucun libellé/))
+      .toBe(sansControle)
+    // Le total, cité dans la même phrase, est celui du catalogue — pas celui du dernier
+    // palier de `preferenceVersions`, que le paragraphe distingue explicitement.
+    expect(cited('src/ui/preferencesPage.ts', /\d+ réglages sur (\d+) n'ont aucun libellé/))
+      .toBe(total)
   })
 
   /**
