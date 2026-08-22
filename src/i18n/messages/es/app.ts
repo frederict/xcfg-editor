@@ -9,7 +9,7 @@ const app: DomainCatalog<'app'> = {
   'zoom.label': 'Zoom',
 
   'pageKind.free': 'Página en blanco',
-  'pageKind.freeNote': 'Creada vacía en el instrumento, lista para tus propios widgets.',
+  'pageKind.freeNote': 'Creada vacía en el instrumento, lista para sus propios widgets.',
   'pageKind.competition': 'Página de competición',
   'pageKind.competitionNote': 'Creada con el juego de widgets de competición del instrumento.',
   'pageKind.thermalAssistant': 'Página de asistente de térmica',
@@ -52,16 +52,16 @@ const app: DomainCatalog<'app'> = {
 
   'view.rulerCentimeters': '{value} cm',
 
-  'view.pointHint': 'Señala un widget, con el dedo o el ratón, para ver su nombre y sus dimensiones.',
-  'view.pointHintSelectable': 'Señala un widget, con el dedo o el ratón, para ver su nombre ' +
-    'y sus dimensiones; elígelo para ver sus ajustes.',
+  'view.pointHint': 'Señale un widget, con el dedo o el ratón, para ver su nombre y sus dimensiones.',
+  'view.pointHintSelectable': 'Señale un widget, con el dedo o el ratón, para ver su nombre ' +
+    'y sus dimensiones; elíjalo para ver sus ajustes.',
 
   'view.selectedPin': 'seleccionado',
 
   'view.widgetSpoken': '{name}, {width} por {height} milímetros',
 
   'view.scaleAdvice': 'La página se dibuja al tamaño real que tiene en el instrumento. Puede ' +
-    'que tu pantalla no tenga la densidad que el navegador supone: ajusta el zoom hasta que ' +
+    'que su pantalla no tenga la densidad que el navegador supone: ajuste el zoom hasta que ' +
     'una regla apoyada en la pantalla coincida con las marcas.',
 
   'editor.moveNamed': 'Mover {name}',
@@ -120,7 +120,7 @@ const app: DomainCatalog<'app'> = {
   'app.editingRole': 'edición',
   'app.editingBadge': 'Edición',
 
-  'app.dropVeil': 'Suelta el archivo para abrirlo',
+  'app.dropVeil': 'Suelte el archivo para abrirlo',
 
   'app.settings': 'Ajustes',
   'app.settingsHint': 'Ajustes generales — todo lo que se configura fuera de las páginas de ' +
@@ -128,17 +128,17 @@ const app: DomainCatalog<'app'> = {
 
   'menu.file': 'Archivo',
   'menu.openFile': 'Abrir un archivo…',
-  'menu.openFileHint': 'Elige un .xcfg o un .xczfg exportado desde el instrumento. El archivo ' +
+  'menu.openFileHint': 'Elija un .xcfg o un .xczfg exportado desde el instrumento. El archivo ' +
     'se queda en esta máquina.',
   'menu.library': 'Biblioteca…',
-  'menu.libraryHint': 'Guarda la configuración abierta con un nombre y recupera las que ya ' +
-    'has guardado. Todo se queda en este navegador: sin servidor y sin cuenta.',
+  'menu.libraryHint': 'Guarde la configuración abierta con un nombre y recupere las que ya ' +
+    'ha guardado. Todo se queda en este navegador: sin servidor y sin cuenta.',
   'menu.version': 'Versión y compatibilidad…',
-  'menu.versionHint': 'Elige la versión de XCTrack a la que apuntas y descubre qué lleva este ' +
+  'menu.versionHint': 'Elija la versión de XCTrack a la que apunta y descubra qué lleva este ' +
     'archivo que ella no conoce — o al revés.',
   'menu.manual': 'Manual de uso…',
-  'menu.manualHint': 'Cómo sacar el archivo del instrumento, cómo preparar tus páginas y qué ' +
-    'no debes compartir nunca.',
+  'menu.manualHint': 'Cómo sacar el archivo del instrumento, cómo preparar sus páginas y qué ' +
+    'no debe compartir nunca.',
 
   'app.saveCopy': 'Guardar una copia',
   'app.saveChanges': 'Guardar los cambios',
@@ -153,34 +153,34 @@ const app: DomainCatalog<'app'> = {
   'action.undoNothing': 'Nada que deshacer',
   'action.undoNamed': 'Deshacer: {what}',
 
-  'landing.title': 'Prepara tus páginas de XCTrack antes de volar',
-  'landing.lead': 'Abre un archivo .xcfg o .xczfg exportado desde el instrumento: sus páginas ' +
-    'aparecen tal como el aparato las dibuja, a tamaño real. Mueve un widget, cambia su ' +
-    'tamaño, añade más, y llévate luego una copia nueva para la tarjeta SD.',
+  'landing.title': 'Prepare sus páginas de XCTrack antes de volar',
+  'landing.lead': 'Abra un archivo .xcfg o .xczfg exportado desde el instrumento: sus páginas ' +
+    'aparecen tal como el aparato las dibuja, a tamaño real. Mueva un widget, cambie su ' +
+    'tamaño, añada más, y llévese luego una copia nueva para la tarjeta SD.',
 
-  'landing.privacy': 'Tu archivo no sale de esta máquina: todo ocurre en este navegador, sin ' +
-    'servidor y sin cuenta. Y lo que no has tocado sale exactamente como entró, sin una sola ' +
-    'coma reescrita — tus ajustes seguirán siendo tuyos.',
+  'landing.privacy': 'Su archivo no sale de esta máquina: todo ocurre en este navegador, sin ' +
+    'servidor y sin cuenta. Y lo que no ha tocado sale exactamente como entró, sin una sola ' +
+    'coma reescrita — sus ajustes seguirán siendo suyos.',
 
-  'landing.dropHere': 'Suelta aquí tu archivo',
-  'landing.dropOrPick': 'o haz clic para elegirlo — .xcfg o .xczfg',
+  'landing.dropHere': 'Suelte aquí su archivo',
+  'landing.dropOrPick': 'o haga clic para elegirlo — .xcfg o .xczfg',
 
   'landing.stepDeviceTitle': 'En el instrumento',
   'landing.stepDeviceText': '«Ajustes», y luego «Exportar la configuración». El archivo cae ' +
     'en la tarjeta SD.',
   'landing.stepHereTitle': 'Aquí',
-  'landing.stepHereText': 'Las páginas aparecen numeradas en el orden en que « página ' +
-    'siguiente » las recorre en vuelo.',
+  'landing.stepHereText': 'Las páginas aparecen numeradas en el orden en que «página ' +
+    'siguiente» las recorre en vuelo.',
   'landing.stepEditTitle': 'Editar',
-  'landing.stepEditText': 'Mueve un widget con el dedo o con el ratón, cambia su tamaño, añade ' +
-    'otros: la página se redibuja a tamaño real ante tus ojos.',
+  'landing.stepEditText': 'Mueva un widget con el dedo o con el ratón, cambie su tamaño, añada ' +
+    'otros: la página se redibuja a tamaño real ante sus ojos.',
   'landing.stepKnowTitle': 'Conviene saberlo',
-  'landing.stepKnowText': 'Es el ajuste « navigations » de una página, y no su tipo, lo que ' +
+  'landing.stepKnowText': 'Es el ajuste «navigations» de una página, y no su tipo, lo que ' +
     'decide cuándo el aparato la muestra.',
 
-  'landing.returning': '¿Ya has estado aquí? Las configuraciones que guardaste están en el ' +
-    'menú « Archivo », arriba a la derecha, en « Biblioteca »: nunca han salido de este navegador.',
-  'landing.manualLead': '¿Es tu primera vez aquí? El manual dice qué hace esta herramienta, qué se ha medido en el aparato y qué revela de ti un archivo de configuración.',
+  'landing.returning': '¿Ya ha estado aquí? Las configuraciones que guardó están en el ' +
+    'menú «Archivo», arriba a la derecha, en «Biblioteca»: nunca han salido de este navegador.',
+  'landing.manualLead': '¿Es su primera vez aquí? El manual dice qué hace esta herramienta, qué se ha medido en el aparato y qué revela de usted un archivo de configuración.',
   'landing.readManual': 'Leer el manual de uso',
 
   'app.uiLanguage': 'Idioma de la interfaz',
@@ -209,9 +209,9 @@ const app: DomainCatalog<'app'> = {
     other: 'Ver los detalles ({count})'
   },
   'app.attentionTitle': 'Conviene revisar en este archivo',
-  'app.revealsTitle': 'Lo que este archivo revela de ti',
+  'app.revealsTitle': 'Lo que este archivo revela de usted',
 
-  'app.editModeNote': 'Modo edición: abre una página para añadirle widgets, moverlos y ' +
+  'app.editModeNote': 'Modo edición: abra una página para añadirle widgets, moverlos y ' +
     'ajustar sus opciones. Las páginas mismas — insertar, duplicar, eliminar, reordenar — se ' +
     'gestionan aquí.',
 
@@ -221,15 +221,15 @@ const app: DomainCatalog<'app'> = {
   },
   'dock.countPair': '{settings} · {customized}',
   'dock.customizedCount': {
-    one: '{count} cambiado por ti',
-    other: '{count} cambiados por ti'
+    one: '{count} cambiado por usted',
+    other: '{count} cambiados por usted'
   },
 
   'dock.label': 'Widgets de la página y ajustes del widget seleccionado',
   'dock.labelReadOnly': 'Widgets de la página y ajustes del widget seleccionado, solo lectura',
 
   'dock.gripLabel': 'Altura del panel de ajustes',
-  'dock.gripHint': 'Arrastra para cambiar la altura del panel — con el teclado, flechas ' +
+  'dock.gripHint': 'Arrastre para cambiar la altura del panel — con el teclado, flechas ' +
     'arriba y abajo, Re Pág y Av Pág a pasos grandes, Inicio y Fin a los extremos.',
   'dock.heightPixels': {
     one: '{count} píxel',
@@ -244,10 +244,10 @@ const app: DomainCatalog<'app'> = {
 
   'dock.noSelection': 'Ningún widget seleccionado',
   'dock.selectionRank': '{name} — capa {index} de {total}',
-  'dock.chooseWidget': 'Elige un widget para ver sus ajustes',
-  'dock.hintEditing': 'Haz clic en un widget de la página: sus ajustes aparecen aquí, en el ' +
+  'dock.chooseWidget': 'Elija un widget para ver sus ajustes',
+  'dock.hintEditing': 'Haga clic en un widget de la página: sus ajustes aparecen aquí, en el ' +
     'orden en que el instrumento los presenta.',
-  'dock.hintInspecting': 'Haz clic en un widget de la página — o elígelo en la lista — para ' +
+  'dock.hintInspecting': 'Haga clic en un widget de la página — o elíjalo en la lista — para ' +
     'leer sus ajustes. Aquí no se puede cambiar nada: esto es la consulta.',
   'dock.loadingSettings': 'Cargando los ajustes…',
 
@@ -264,11 +264,11 @@ const app: DomainCatalog<'app'> = {
     'puede crearlo: no inventa nada que el archivo no lleve ya.',
 
   'app.managePagesLead': 'Insertar, duplicar, eliminar, reordenar. Cada operación queda ' +
-    'registrada: « Deshacer » la revierte como todo lo demás. La clase de una página, en ' +
+    'registrada: «Deshacer» la revierte como todo lo demás. La clase de una página, en ' +
     'cambio, no se ofrece para cambiarla — XCTrack la fija al crearla, y el efecto de ' +
     'cambiarla después no se ha comprobado en el aparato.',
 
-  'app.pageOperationFailed': 'Este cambio no se ha podido hacer: tus páginas no se han ' +
+  'app.pageOperationFailed': 'Este cambio no se ha podido hacer: sus páginas no se han ' +
     'movido. Detalle técnico: {detail}',
 
   'app.repository': 'El proyecto en GitHub — informar de un problema, proponer una mejora',
@@ -289,46 +289,46 @@ const app: DomainCatalog<'app'> = {
   'app.loadingManual': 'Cargando el manual…',
   'app.manualFailedMessage': 'Nada ha cambiado en su archivo. Inténtelo de nuevo.',
   'app.manualFailedTitle': 'El manual no se ha podido abrir',
-  'app.fileUntouchedRetry': 'Tu archivo no se ha movido. Inténtalo de nuevo.',
+  'app.fileUntouchedRetry': 'Su archivo no se ha movido. Inténtelo de nuevo.',
 
   'app.versionDialogTitle': 'Versión objetivo y compatibilidad',
-  'app.versionLead': 'El formato de XCTrack cambia en cada versión. Elige la versión a la que ' +
-    'apuntas: el editor dirá entonces qué lleva este archivo que esa versión no conoce, y qué ' +
-    'espera ella que él no tiene. Es una constatación: nada se mueve mientras no lo pidas.',
+  'app.versionLead': 'El formato de XCTrack cambia en cada versión. Elija la versión a la que ' +
+    'apunta: el editor dirá entonces qué lleva este archivo que esa versión no conoce, y qué ' +
+    'espera ella que él no tiene. Es una constatación: nada se mueve mientras no lo pida.',
   'app.loadingVersions': 'Cargando la base de versiones…',
   'app.versionFailedTitle': 'El diagnóstico de versión no se ha podido abrir',
   'app.versionFailedMessage': 'No se ha podido cargar la lista de versiones de XCTrack.',
 
   'app.libraryFailedTitle': 'La biblioteca no se ha podido abrir',
-  'app.libraryFailedMessage': 'Tu navegador no ha dado acceso al almacenamiento de esta ' +
+  'app.libraryFailedMessage': 'Su navegador no ha dado acceso al almacenamiento de esta ' +
     'herramienta. El archivo abierto no se ha movido.',
 
   'app.exportDialogFailedTitle': 'La ventana de guardado no se ha podido abrir',
-  'app.exportDialogFailedMessage': 'No se ha guardado nada y tu archivo no se ha movido. ' +
-    'Inténtalo de nuevo.',
+  'app.exportDialogFailedMessage': 'No se ha guardado nada y su archivo no se ha movido. ' +
+    'Inténtelo de nuevo.',
 
   'app.openFailedTitle': 'Este archivo no se ha podido abrir',
   'app.openFailedMessage': 'Esta herramienta no ha sabido sacar nada de él. El archivo no se ' +
     'ha modificado.',
-  'app.openFailedHint': 'Comprueba que sea realmente una exportación de XCTrack (.xcfg o ' +
-    '.xczfg). Puedes soltar otro archivo en cualquier punto de esta página, o elegirlo en el ' +
-    'menú « Archivo », arriba a la derecha.',
+  'app.openFailedHint': 'Compruebe que sea realmente una exportación de XCTrack (.xcfg o ' +
+    '.xczfg). Puede soltar otro archivo en cualquier punto de esta página, o elegirlo en el ' +
+    'menú «Archivo», arriba a la derecha.',
 
   'app.unreadableTitle': 'Este archivo no se ha podido leer',
-  'app.unreadableMessage': 'Comprueba que sea el archivo .xcfg o .xczfg que produce en el ' +
+  'app.unreadableMessage': 'Compruebe que sea el archivo .xcfg o .xczfg que produce en el ' +
     'instrumento «Ajustes», y luego «Exportar la configuración», y que esté completo.',
-  'app.unreadableHint': 'Sus bytes se conservan intactos: « Guardar una copia » te lo devuelve ' +
+  'app.unreadableHint': 'Sus bytes se conservan intactos: «Guardar una copia» se lo devuelve ' +
     'tal como entró, sin la menor reescritura.',
-  'app.unreadableIncoming': '« {incoming} » no ha dado nada aprovechable. « {kept} » sigue ' +
-    'abierto, y todo lo que has cambiado en él sigue ahí.',
+  'app.unreadableIncoming': '«{incoming}» no ha dado nada aprovechable. «{kept}» sigue ' +
+    'abierto, y todo lo que ha cambiado en él sigue ahí.',
 
-  'app.unsavedTitle': 'Tus cambios no están guardados',
-  'app.replaceMessage': 'Abrir « {incoming} » cierra « {kept} » y todo lo que acabas de ' +
+  'app.unsavedTitle': 'Sus cambios no están guardados',
+  'app.replaceMessage': 'Abrir «{incoming}» cierra «{kept}» y todo lo que acaba de ' +
     'cambiar en él. Esta herramienta no guarda nada por su cuenta: lo que no se guarda se pierde.',
-  'app.lastChange': 'Último cambio: « {change} ».',
-  'app.replaceHint': 'Para no perder nada: conserva tus cambios y luego usa « Guardar los ' +
-    'cambios » en lo alto de la página — o guarda esta configuración en la biblioteca.',
-  'app.replaceAndLose': 'Abrir « {incoming} » y perderlos',
+  'app.lastChange': 'Último cambio: «{change}».',
+  'app.replaceHint': 'Para no perder nada: conserve sus cambios y luego use «Guardar los ' +
+    'cambios» en lo alto de la página — o guarde esta configuración en la biblioteca.',
+  'app.replaceAndLose': 'Abrir «{incoming}» y perderlos',
   'app.keepChanges': 'Conservar mis cambios'
 }
 
