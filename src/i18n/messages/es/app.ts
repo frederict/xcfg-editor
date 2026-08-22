@@ -195,7 +195,12 @@ const app: DomainCatalog<'app'> = {
   'app.languageFailedTitle': 'No se ha podido cargar el idioma',
 
   'app.metaFormat': 'Formato',
-  'app.containerArchive': 'archivo comprimido .xczfg',
+  'app.containerArchiveAlone': 'archivo comprimido .xczfg — solo contiene {inner}, ningún archivo anexo',
+  'app.containerArchiveWith': 'archivo comprimido .xczfg — contiene {inner} y {annexes}',
+  'app.annexCount': {
+    one: '{count} archivo anexo',
+    other: '{count} archivos anexos'
+  },
   'app.containerPlain': 'archivo .xcfg',
   'app.metaDevice': 'Aparato según el archivo',
   'app.notDeclared': 'no indicado',

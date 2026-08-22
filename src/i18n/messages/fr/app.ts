@@ -400,7 +400,18 @@ const app = {
   /* ============================================ `main.ts` — ce que le fichier déclare */
 
   'app.metaFormat': 'Format',
-  'app.containerArchive': 'archive .xczfg',
+  /**
+   * ⚠️ Une archive **dit ce qu'elle transporte**. `app.containerArchive` ne le disait pas,
+   * et il a fallu qu'un pilote-testeur ouvre l'archive lui-même le 2026-08-22 pour savoir
+   * qu'elle ne portait que son `.xcfg` — pendant que la page listait, juste à côté, quatre
+   * fichiers extérieurs « pas dans cette configuration ».
+   */
+  'app.containerArchiveAlone': 'archive .xczfg — elle ne contient que {inner}, aucun fichier annexe',
+  'app.containerArchiveWith': 'archive .xczfg — elle contient {inner} et {annexes}',
+  'app.annexCount': {
+    one: '{count} fichier annexe',
+    other: '{count} fichiers annexes'
+  },
   'app.containerPlain': 'fichier .xcfg',
   'app.metaDevice': 'Appareil du fichier',
   'app.notDeclared': 'non déclaré',

@@ -20,6 +20,7 @@ import {
 import { readWidget, type Widget } from '../model/widget'
 import { renderPage } from '../render/canvas'
 import { buildDeviceSelector } from './deviceSelector'
+import { fileNameParts } from './fileNameParts'
 import {
   createEditor, currentBounds,
   type Editor, type Viewport, type WidgetEdit, type WidgetStructureEdit
@@ -1105,9 +1106,23 @@ function metaStrip(current: Session): HTMLElement {
     strip.append(item)
   }
   // Le nom du fichier est déjà dans la barre de tête : ne pas le répéter ici.
-  add(tr.t('app.metaFormat'), current.container.kind === 'xczfg'
-    ? tr.t('app.containerArchive')
-    : tr.t('app.containerPlain'))
+  // ⚠️ Une archive **dit ce qu'elle transporte**. Elle ne le disait pas, et un
+  // pilote-testeur a dû l'ouvrir lui-même le 2026-08-22 pour trancher : à côté de quatre
+  // fichiers extérieurs annoncés « pas dans cette configuration », un `.xczfg` muet laisse
+  // croire à une contradiction. Celui-là ne portait que son `.xcfg` — mais rien dans
+  // l'outil ne permettait de le savoir, et celui qui exporte « avec les médias » repart
+  // convaincu que son thème de carte a voyagé. Le compte est LU dans le conteneur.
+  // La fiche de bibliothèque le disait déjà (`library.containerArchive`) ; l'écran qu'on a
+  // sous les yeux en ouvrant le fichier, non.
+  const annexes = current.container.extras.length
+  add(tr.t('app.metaFormat'), current.container.kind !== 'xczfg'
+    ? tr.t('app.containerPlain')
+    : annexes === 0
+      ? tr.t('app.containerArchiveAlone', { inner: current.container.innerName })
+      : tr.t('app.containerArchiveWith', {
+        inner: current.container.innerName,
+        annexes: tr.t('app.annexCount', { count: annexes })
+      }))
   // Ce que le fichier dit de l'appareil, distinct du gabarit d'affichage choisi
   // au-dessus : l'un est une donnée, l'autre un réglage de la visionneuse.
   add(tr.t('app.metaDevice'), current.declaredDevice ?? tr.t('app.notDeclared'))
@@ -3670,9 +3685,20 @@ function render(): void {
     || session.container.parseError !== undefined
     || view.kind === 'preferences'
     || view.kind === 'manual'
-  fileName.textContent = session?.container.fileName ?? ''
+  // ⚠️ **Deux morceaux, et non un texte.** La troncature doit manger le DÉBUT : la date
+  // ouvre tous les exports d'une même journée, la fin porte le format et l'extension.
+  // L'ellipse ordinaire mangeait exactement la fin, et `2026-08-20_backup-00.xcfg` comme
+  // `2026-08-20_backupwithmedia-00.xczfg` s'affichaient « 2026-08-20_backu… » — mesuré
+  // par un pilote-testeur le 2026-08-22. Voir `fileNameParts`, et les deux `flex-shrink`
+  // d'`app.css` qui décident lequel cède.
+  fileName.textContent = ''
+  const shown = fileNameParts(session?.container.fileName ?? '')
+  fileName.append(
+    el('span', 'app-bar__fileHead', shown.head),
+    el('span', 'app-bar__fileTail', shown.tail)
+  )
   // L'infobulle que la feuille de style promet depuis toujours, et qui manquait : le nom
-  // est tronqué par l'ellipse, et plus court encore sous 1 120 px. Sans elle, un pilote
+  // reste tronqué — par la tête désormais — et plus court encore sous 1 120 px. Sans elle, un pilote
   // qui travaille sur deux exports du même jour ne peut plus les distinguer.
   fileName.title = session?.container.fileName ?? ''
   syncEditControls()
