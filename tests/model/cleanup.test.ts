@@ -1,4 +1,6 @@
 import { readFileSync } from 'node:fs'
+import { dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import {
   VersionDatabase,
@@ -12,6 +14,7 @@ import { parseJson } from '../../src/core/parseJson'
 import { serializeJson } from '../../src/core/serializeJson'
 import {
   applyCleanup,
+  CLEANABLE_STATUSES,
   planCleanup,
   revertCleanup,
   type CleanupEntry,
@@ -511,5 +514,95 @@ describe('appliquer un plan', () => {
     expect(outcome.keyCount).toBe(0)
     expect(outcome.widgetCount).toBe(0)
     expect(serializeJson(document)).toBe(source)
+  })
+})
+
+/* ------------------------------------------- la consigne écrite dit-elle ce que le code fait ? */
+
+/**
+ * # La règle de sûreté, comparée à ce que trois fichiers en disent
+ *
+ * **Constat reproduit** : le 22 août, trois modules donnaient trois règles différentes sur
+ * ce qu'un nettoyage a le droit d'effacer, et la plus ancienne était l'**inverse exact**
+ * de ce que le code fait.
+ *
+ * | | ce qui était écrit |
+ * |---|---|
+ * | `widgetVersions.ts:37` | « …que sur `'absent'` » |
+ * | `widgetVersions.ts:322` | « seul `'absent'` autorise… » |
+ * | `preferenceVersions.ts:61` | « …que sur `'legacy'` et `'absent'` » |
+ * | `cleanup.ts:129` | `keyStatus() !== 'legacy'` → on passe |
+ *
+ * Le seul outil de nettoyage du dépôt ne supprime que `'legacy'` et **refuse explicitement
+ * `'absent'`** (`cleanup.ts:37`). Suivie à la lettre, la consigne du catalogue ferait
+ * effacer des réglages valides — le risque que `cleanup.ts` classe lui-même comme le plus
+ * lourd des deux, parce qu'un pilote le découvre en l'air.
+ *
+ * **Aucun test ne pouvait le voir** : les autres tests de ce fichier prouvent
+ * remarquablement ce que le code *fait*, et une phrase fausse à côté n'en dérange aucun.
+ * C'est le même angle mort que `tests/docs/` ferme pour les cinq README : une affirmation
+ * de prose vieillit exactement comme une autre. Celui-ci le ferme pour la seule consigne
+ * du dépôt dont l'inversion coûte un réglage de vol.
+ */
+describe('la consigne de sûreté écrite dans le code', () => {
+  const RACINE = `${dirname(fileURLToPath(import.meta.url))}/../../src/`
+
+  /** Les trois fichiers qui énoncent la règle. Aucun n'a le droit d'en dire une autre. */
+  const PORTEURS = [
+    'model/cleanup.ts',
+    'catalog/widgetVersions.ts',
+    'catalog/preferenceVersions.ts'
+  ]
+
+  /**
+   * La phrase est cherchée sur le texte **déplié** : les docblocks la coupent en deux
+   * lignes au gré de la largeur, et un test qui ne lirait qu'une ligne à la fois raterait
+   * exactement les occurrences que celui-ci existe pour attraper.
+   */
+  function deplie(chemin: string): string {
+    return readFileSync(RACINE + chemin, 'utf8')
+      .replace(/^\s*\*\s?/gm, ' ')
+      .replace(/\s+/g, ' ')
+  }
+
+  const FORMULE = /proposer une suppression que sur ((?:`'[a-z]+'`(?:\s*(?:et|,)\s*)?)+)/g
+
+  it('est la même dans les trois fichiers, et c’est celle que `planCleanup` applique', () => {
+    const attendu = [...CLEANABLE_STATUSES].sort().join(', ')
+    let trouvees = 0
+
+    for (const chemin of PORTEURS) {
+      const texte = deplie(chemin)
+      const occurrences = [...texte.matchAll(FORMULE)]
+      // Un fichier qui cesse de porter la formule sort du contrôle sans que rien ne le
+      // dise : c'est le défaut des boucles à vide, et il se ferme ici.
+      expect(occurrences.length, `${chemin} — la formule a disparu`).toBeGreaterThan(0)
+
+      for (const occurrence of occurrences) {
+        const cites = [...occurrence[1]!.matchAll(/`'([a-z]+)'`/g)].map((m) => m[1]!)
+        expect(cites.sort().join(', '), `${chemin} — « ${occurrence[0]} »`).toBe(attendu)
+        trouvees += 1
+      }
+    }
+    expect(trouvees).toBeGreaterThanOrEqual(PORTEURS.length)
+  })
+
+  it('et `planCleanup` ne retient bien que ces statuts-là, sur tout le corpus', () => {
+    // La contrepartie : la formule pourrait être juste et le code avoir dérivé. Les deux
+    // sens sont tenus, et c'est le seul moyen que la comparaison ci-dessus veuille dire
+    // quelque chose.
+    expect([...CLEANABLE_STATUSES]).toEqual(['legacy'])
+    let planifies = 0
+    for (const chemin of [BACKUP_2026, BACKUP_2025, PAGES_2026, PAGES_2025, GSON_2022]) {
+      const layout = readLayout(documentOf(chemin))
+      for (let tier = 0; tier < db.schema.tierCount; tier += 1) {
+        for (const entry of planCleanup(db, layout, tier).entries) {
+          expect(CLEANABLE_STATUSES as readonly string[], `${chemin} — ${entry.path}`)
+            .toContain(db.keyStatus(entry.shortName, entry.key, tier))
+          planifies += 1
+        }
+      }
+    }
+    expect(planifies).toBeGreaterThan(0)
   })
 })

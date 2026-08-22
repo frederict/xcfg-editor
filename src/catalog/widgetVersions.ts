@@ -33,8 +33,15 @@
  * - `blind` — les clés attestées qu'aucun relevé, d'aucune version, ne retrouve. Pour
  *   celles-là l'extraction est aveugle de bout en bout : son silence ne dit rien.
  *
- * `keyStatus()` rend ces quatre cas explicitement, et un outil de nettoyage n'a le
- * droit de proposer une suppression que sur `'absent'`.
+ * `keyStatus()` rend **six** cas explicitement — `present`, `attested`, `blind`,
+ * `legacy`, `absent`, `unknown` — et un outil de nettoyage n'a le droit de proposer une
+ * suppression que sur `'legacy'`.
+ *
+ * ⚠️ Cette dernière phrase a dit `'absent'` pendant une nuit, c'est-à-dire l'inverse
+ * exact de ce que le seul nettoyeur du dépôt fait. La règle vit maintenant dans
+ * `CLEANABLE_STATUSES` (`src/model/cleanup.ts`), qui porte aussi le raisonnement : ne
+ * rien supprimer ne casse rien, supprimer à tort casse une configuration de vol, et
+ * `absent` n'est attesté par aucun fichier réel.
  *
  * ## Chargement
  *
@@ -166,23 +173,6 @@ export interface VersionSchema {
 }
 
 /**
- * Ce que la base sait d'un couple *(widget, clé)* à un palier donné.
- *
- * - `present` — l'extraction l'a lue dans le bytecode de ce palier.
- * - `attested` — l'extraction ne l'a pas vue ici mais la lit dans des paliers
- *   **postérieurs**, et un fichier réel de ce palier-ci la porte : c'est un trou de
- *   l'extraction, la clé existait. À ne jamais supprimer.
- * - `blind` — attestée quelque part, retrouvée dans aucun palier. L'extraction est
- *   aveugle de bout en bout sur cette clé ; on ne peut rien conclure de son silence.
- * - `legacy` — l'extraction ne la lit que dans des paliers **antérieurs**, et un
- *   fichier réel de ce palier-ci la porte quand même. XCTrack conserve les clés qu'il
- *   ne connaît plus : c'est un reliquat, et c'est exactement ce qu'un nettoyage ôte.
- * - `absent` — ni lue, ni attestée, alors que le widget, lui, est connu du palier.
- * - `unknown` — palier inconnu, ou widget absent de toute la base : on ne sait pas.
- *
- * Un nettoyage se défend sur `legacy` et `absent`, jamais sur `attested` ni `blind`.
- */
-/**
  * Pourquoi un fichier réel porte une clé que le relevé de sa version ne connaît pas.
  *
  * - `gap` — la clé existait ; c'est le relevé qui l'a manquée (elle apparaît dans des
@@ -201,6 +191,26 @@ export type AttestationKind = 'gap' | 'legacy' | 'blind'
 /** Ordre d'examen : la nature la plus précise d'abord. */
 const ATTESTATION_KINDS: AttestationKind[] = ['gap', 'legacy', 'blind']
 
+/**
+ * Ce que la base sait d'un couple *(widget, clé)* à un palier donné.
+ *
+ * - `present` — l'extraction l'a lue dans le bytecode de ce palier.
+ * - `attested` — l'extraction ne l'a pas vue ici mais la lit dans des paliers
+ *   **postérieurs**, et un fichier réel de ce palier-ci la porte : c'est un trou de
+ *   l'extraction, la clé existait. À ne jamais supprimer.
+ * - `blind` — attestée quelque part, retrouvée dans aucun palier. L'extraction est
+ *   aveugle de bout en bout sur cette clé ; on ne peut rien conclure de son silence.
+ * - `legacy` — l'extraction ne la lit que dans des paliers **antérieurs**, et un
+ *   fichier réel de ce palier-ci la porte quand même. XCTrack conserve les clés qu'il
+ *   ne connaît plus : c'est un reliquat, et c'est exactement ce qu'un nettoyage ôte.
+ * - `absent` — ni lue, ni attestée, alors que le widget, lui, est connu du palier.
+ * - `unknown` — palier inconnu, ou widget absent de toute la base : on ne sait pas.
+ *
+ * Un outil de nettoyage n'a le droit de proposer une suppression que sur `'legacy'` — le
+ * seul de ces six cas qu'un fichier réel atteste. `absent` s'en défendrait *sur la foi du
+ * relevé seul*, et c'est justement ce qui ne suffit pas : voir `CLEANABLE_STATUSES` et le
+ * commentaire de tête de `src/model/cleanup.ts`.
+ */
 export type KeyStatus =
   | 'present' | 'attested' | 'blind' | 'legacy' | 'absent' | 'unknown'
 
@@ -320,8 +330,8 @@ export class VersionDatabase {
   }
 
   /**
-   * Ce que la base sait de ce couple à ce palier. Voir `KeyStatus` : seul `'absent'`
-   * autorise un outil de nettoyage à proposer une suppression.
+   * Ce que la base sait de ce couple à ce palier. Voir `KeyStatus` : un outil de nettoyage
+   * n'a le droit de proposer une suppression que sur `'legacy'`.
    */
   keyStatus(widget: string, key: string, tier: number): KeyStatus {
     if (tier < 0 || tier >= this.schema.tierCount) return 'unknown'

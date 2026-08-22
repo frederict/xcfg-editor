@@ -27,7 +27,9 @@ import { widgetOptionKeys } from './widget'
  * Le plan ne retient donc qu'un seul cas, le seul que la base **atteste par un fichier
  * réel** : `keyStatus() === 'legacy'`. Le relevé lit ce réglage à des paliers antérieurs
  * au palier visé, plus à celui-ci, et des fichiers écrits par cette version-là le
- * portent quand même. C'est un reliquat mesuré, pas déduit.
+ * portent quand même. C'est un reliquat mesuré, pas déduit. Autrement dit, et c'est la
+ * formule que les trois modules concernés répètent mot pour mot : **un outil de nettoyage
+ * n'a le droit de proposer une suppression que sur `'legacy'`**.
  *
  * Tout le reste est écarté, y compris ce que le diagnostic qualifie pourtant de
  * « suppression défendable » :
@@ -39,6 +41,20 @@ import { widgetOptionKeys } from './widget'
  *   *sur la foi du relevé seul* ; le relevé seul ne suffit pas à effacer le réglage d'un
  *   pilote, et la base compte cinq trous connus qui, sans les fichiers du corpus,
  *   auraient exactement cette allure.
+ *
+ * ⚠️ **Cette consigne a déjà dérivé, et dans le sens qui casse.** Le 21 août, trois
+ * commits d'une même soirée ont laissé trois règles différentes en place : `4f2c336`
+ * (15 h 58) posait « que sur `'absent'` » avant que l'outil n'existe ; `b7300f7` (21 h 28)
+ * a écrit l'outil et retenu `'legacy'` **en rejetant `'absent'`**, pour la raison
+ * ci-dessus ; `f8bf341` (21 h 35) en a écrit une troisième. La première n'a jamais été
+ * corrigée, et elle est l'**inverse exact** de ce que le code fait : suivie à la lettre,
+ * elle ferait effacer des réglages valides — précisément le risque que ce module classe
+ * comme le plus lourd des deux.
+ *
+ * D'où `CLEANABLE_STATUSES` juste dessous : la règle cesse d'être une phrase que trois
+ * fichiers recopient, et devient une valeur que `planCleanup` lit. La phrase reste — elle
+ * porte le raisonnement, que la valeur ne peut pas porter — mais un test compare
+ * maintenant l'une à l'autre dans les trois fichiers.
  *
  * Double serrure, enfin : même sur un `legacy`, le plan exige de retrouver dans le relevé
  * **le dernier palier qui lisait encore le réglage**. Sans cette trace, on ne saurait pas
@@ -53,6 +69,19 @@ import { widgetOptionKeys } from './widget'
  * **à l'octet près**, et un fichier nettoyé ne diffère que des réglages retirés :
  * `3.0` reste `3.0`, `1.0E7` reste `1.0E7`, partout ailleurs.
  */
+
+/**
+ * **Les seuls statuts sur lesquels une suppression se propose.** La règle de sûreté du
+ * module, sous la seule forme qu'une phrase ne peut pas avoir : une valeur, lue par
+ * `planCleanup` et comparée par les tests à ce que les commentaires en disent.
+ *
+ * Un seul élément aujourd'hui, et le commentaire de tête dit pourquoi les cinq autres
+ * `KeyStatus` sont écartés — `gap` et `blind` parce que notre silence ne conclut rien,
+ * `absent` sous toutes ses formes parce qu'aucun fichier réel ne l'atteste, `present` et
+ * `unknown` parce qu'il n'y a rien à conclure. Ce n'est pas une liste qu'on allonge en
+ * passant : chaque ajout autorise l'outil à effacer le réglage d'un pilote.
+ */
+export const CLEANABLE_STATUSES = ['legacy'] as const
 
 /** Les deux orientations, dans l'ordre où le diagnostic les parcourt. */
 const ORIENTATIONS: Orientation[] = ['landscape', 'portrait']
@@ -126,7 +155,8 @@ export function planCleanup(
         for (const key of widgetOptionKeys(widget.node)) {
           examinedCount += 1
           // Première serrure : le seul statut que la base atteste par un fichier réel.
-          if (db.keyStatus(widget.shortName, key, tier) !== 'legacy') continue
+          const status = db.keyStatus(widget.shortName, key, tier)
+          if (!(CLEANABLE_STATUSES as readonly string[]).includes(status)) continue
           // Seconde serrure : savoir DEPUIS QUAND. Un reliquat dont le relevé ne porte
           // aucune lecture antérieure n'est pas explicable au pilote — on le garde.
           const bounds = db.keyReadBounds(widget.shortName, key)

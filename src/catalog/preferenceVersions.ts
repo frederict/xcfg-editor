@@ -58,7 +58,14 @@
  *   remplira au premier fichier venu d'un appareil que nous n'avons pas.
  *
  * `keyStatus()` rend ces cas explicitement, et un outil de nettoyage n'a le droit de
- * proposer une suppression que sur `'legacy'` et `'absent'`.
+ * proposer une suppression que sur `'legacy'`.
+ *
+ * ⚠️ Cette phrase a dit « `'legacy'` et `'absent'` » pendant une nuit — une troisième
+ * règle, à côté des deux que portait `widgetVersions.ts`. `absent` veut dire « ni lue, ni
+ * attestée » : aucun fichier réel ne vient dire que le réglage est bien un reliquat, et
+ * la base compte cinq trous connus qui, sans les fichiers du corpus, auraient exactement
+ * cette allure. La règle vit maintenant dans `CLEANABLE_STATUSES` (`src/model/cleanup.ts`),
+ * avec son raisonnement.
  *
  * ## Chargement
  *
