@@ -460,7 +460,7 @@ describe('anonymizeDocument — l’inventaire annonce ce qui va changer', () =>
       shortName: 'WFreeText',
       keyPath: 'text',
       text: 'Vol du 8 février avec Amélie 🤘',
-      replacement: 'Texte 1'
+      replacement: 'Text 1'
     })
     expect(FRENCH.reason(first).length).toBeGreaterThan(20)
   })
@@ -483,23 +483,43 @@ describe('anonymizeDocument — l’inventaire annonce ce qui va changer', () =>
     const titles = replacements.filter((r) => r.keyPath === 'titletext' && r.widgetRank === 1)
     expect(titles.map((t) => t.text)).toEqual(['Élévation à l’œil', 'Élévation à l’œil, bis'])
     // Numérotées, donc distinctes : deux titres différents le restent.
-    expect(titles.map((t) => t.replacement)).toEqual(['Titre 1', 'Titre 2'])
+    expect(titles.map((t) => t.replacement)).toEqual(['Title 1', 'Title 2'])
   })
 
   it('applique la règle décidée pour chaque clé', () => {
     const by = (keyPath: string): string =>
       replacements.find((r) => r.keyPath === keyPath)!.replacement
-    expect(by('text')).toBe('Texte 1')
+    expect(by('text')).toBe('Text 1')
     expect(by('contact/fullName')).toBe('Contact 1')
     expect(by('contact/phoneNumber')).toBe(NEUTRAL_PHONE_NUMBER)
     expect(by('url')).toBe(NEUTRAL_URL)
-    expect(by('title')).toBe('Bouton 1')
-    expect(by('name')).toBe('Application 1')
+    expect(by('title')).toBe('Button 1')
+    expect(by('name')).toBe('App 1')
     expect(by('action')).toBe(NEUTRAL_INTENT_ACTION)
     expect(by('event')).toBe(NEUTRAL_TEST_EVENT)
     // Vide, parce que vide est la valeur *neutre* de ces deux réglages, pas un effacement.
     expect(by('filter')).toBe('')
     expect(by('suffix')).toBe('')
+  })
+
+  it('n’écrit dans le fichier aucun mot d’une langue d’interface', () => {
+    /*
+     * Les cinq mots posés à la place étaient français jusqu'au 22 août 2026 : la colonne
+     * « après » d'un pilote néerlandais lisait `Titre 1`, et son destinataire aussi. Or
+     * ces mots-là **s'écrivent dans le fichier**, qui est fait pour partir — issue GitHub,
+     * autre pilote, instrument inconnu. Ils rejoignent donc les quatre valeurs neutres
+     * qui ne se traduisaient déjà pas : une seule convention pour les neuf clés.
+     *
+     * Ce que cet essai prouve n'est pas « c'est en anglais » — c'est que le contenu du
+     * fichier ne dépend d'aucune langue d'interface. Aucun des cinq catalogues n'a de
+     * part à ce qui s'écrit là.
+     */
+    const written = replacements.map((r) => r.replacement).filter((t) => t !== '')
+    expect(written.filter((t) => /Titre|Texte|Bouton|Application|Titel|Título/.test(t)))
+      .toEqual([])
+    // Et toutes les valeurs écrites sont en ASCII imprimable : pas d'accent, pas de
+    // guillemet typographique, rien qui trahisse une langue.
+    for (const text of written) expect(text, text).toMatch(/^[\x20-\x7E]+$/)
   })
 
   it('le numéro de remplacement ne peut aboutir nulle part', () => {
@@ -563,7 +583,7 @@ describe('anonymizeDocument — aucune valeur d’origine ne survit', () => {
     // valeur neutre, et une chaîne vide n'est pas un texte libre. Les douze autres clés
     // portent toujours un texte — remplacer n'est pas effacer.
     expect(findFreeTexts(layout)).toHaveLength(ORIGINALS.length - 2)
-    expect(findFreeTexts(layout).map((f) => f.text)).toContain('Titre 1')
+    expect(findFreeTexts(layout).map((f) => f.text)).toContain('Title 1')
   })
 
   it('anonymiser deux fois donne le même fichier', () => {

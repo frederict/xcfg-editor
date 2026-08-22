@@ -206,7 +206,7 @@ describe('l’inventaire montre ce qui part — formes-preservees.xcfg', () => {
 
   it('la chaîne vide posée se dit « (vide) » plutôt que de disparaître', () => {
     expect(displayedReplacement('', tr)).toBe('(vide)')
-    expect(displayedReplacement('Titre 1', tr)).toBe('Titre 1')
+    expect(displayedReplacement('Title 1', tr)).toBe('Title 1')
   })
 })
 

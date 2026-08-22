@@ -324,14 +324,34 @@ interface FreeTextRule {
  *
  * Les valeurs sont **recopiées** ici, pas importées du catalogue : deux constantes valent
  * mieux qu'une dépendance de l'anonymisation envers un fichier régénéré à chaque APK.
+ *
+ * ## Les cinq mots posés à la place sont neutres, pas français
+ *
+ * `Title 1`, `Text 1`, `Contact 1`, `Button 1`, `App 1`. Ils étaient français jusqu'au
+ * 22 août 2026 — `Titre 1`, `Bouton 1` — et c'était un défaut, pour une raison qui n'est
+ * pas de goût : **ces mots s'écrivent dans le fichier produit**, et ce fichier est fait
+ * pour partir. La version partageable existe pour être jointe à une issue, envoyée à un
+ * autre pilote, ouverte sur un instrument dont on ne sait rien. Un néerlandophone qui
+ * relisait la colonne « après » de l'inventaire y lisait du français, et le destinataire
+ * de son fichier aussi.
+ *
+ * Deux issues étaient possibles : suivre la langue de l'interface, ou n'en suivre aucune.
+ * La seconde, parce que ces cinq mots rejoignent alors les quatre valeurs neutres
+ * ci-dessus — `+00 000 00 00 00`, `example.invalid`, l'action de test, `Battery50` —, qui
+ * ne se traduisent pas non plus. **Une seule convention pour les neuf clés**, et une
+ * propriété qui se prouve : ce que l'anonymisation écrit ne dépend pas de qui a cliqué.
+ * Suivre la langue de l'interface aurait fait dépendre les octets d'un fichier d'un
+ * réglage d'affichage, ce que rien d'autre dans ce dépôt ne fait.
+ *
+ * Les *raisons*, elles, restent traduites : elles s'affichent, elles ne s'écrivent pas.
  */
 const FREE_TEXT_RULES: Record<string, FreeTextRule> = {
   titletext: {
-    replacement: (rank) => `Titre ${rank}`,
+    replacement: (rank) => `Title ${rank}`,
     reasonKey: 'sharingReason.titletext'
   },
   text: {
-    replacement: (rank) => `Texte ${rank}`,
+    replacement: (rank) => `Text ${rank}`,
     reasonKey: 'sharingReason.text'
   },
   fullName: {
@@ -347,11 +367,11 @@ const FREE_TEXT_RULES: Record<string, FreeTextRule> = {
     reasonKey: 'sharingReason.url'
   },
   title: {
-    replacement: (rank) => `Bouton ${rank}`,
+    replacement: (rank) => `Button ${rank}`,
     reasonKey: 'sharingReason.title'
   },
   name: {
-    replacement: (rank) => `Application ${rank}`,
+    replacement: (rank) => `App ${rank}`,
     reasonKey: 'sharingReason.name'
   },
   action: {
@@ -381,7 +401,7 @@ const FREE_TEXT_RULES: Record<string, FreeTextRule> = {
  * une version future de XCTrack ajoute une clé plus vite que nous.
  */
 const UNKNOWN_KEY_RULE: FreeTextRule = {
-  replacement: (rank) => `Texte ${rank}`,
+  replacement: (rank) => `Text ${rank}`,
   reasonKey: 'sharingReason.unknownFreeText'
 }
 
