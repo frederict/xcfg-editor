@@ -23,7 +23,8 @@ import {
   type LibraryPanelHandle,
   type LibraryPanelOptions
 } from '../../src/ui/libraryPanel'
-import { proseFormat } from '../../src/ui/prose'
+import { makeTranslator } from '../../src/i18n/translate'
+import fr from '../../src/i18n/messages/fr'
 import { ARCHIVE, BACKUP_2026, FORMES_PRESERVEES, PAGES_2026 } from '../fixtures/paths'
 
 /**
@@ -53,6 +54,14 @@ import { ARCHIVE, BACKUP_2026, FORMES_PRESERVEES, PAGES_2026 } from '../fixtures
  * près, revenir en arrière — la séparation du lu et du supposé, et le fait qu'aucune
  * défaillance ne soit passée sous silence.
  */
+
+/**
+ * Le traducteur que l'assembleur passe au panneau. Français : c'est la langue dans
+ * laquelle ce fichier lit ce qu'il vérifie, et le catalogue français est la source de
+ * vérité du jeu de clés. Les quatre autres langues sont éprouvées par
+ * `tests/i18n/catalog.test.ts`, qui les compare toutes au français.
+ */
+const tr = makeTranslator('fr', fr)
 
 const PAGES = new Uint8Array(readFileSync(PAGES_2026))
 const BACKUP = new Uint8Array(readFileSync(BACKUP_2026))
@@ -151,6 +160,7 @@ async function mount(options: Partial<LibraryPanelOptions> & { library: Library 
   const downloads: Harness['downloads'] = []
   const loaded: Harness['loaded'] = []
   const handle = renderLibraryPanel({
+    tr,
     now: () => new Date(2026, 7, 21, 15, 32, 7),
     download: (bytes, fileName) => downloads.push({ bytes, fileName }),
     onLoad: (entry, bytes) => { loaded.push({ entry, bytes }) },
@@ -184,7 +194,7 @@ afterEach(() => {
 describe('libraryPanel — la mise en français', () => {
   it('les sélecteurs de fichiers cachés restent hors de l’arbre d’accessibilité', () => {
     const { library } = bibliotheque()
-    const handle = renderLibraryPanel({ library })
+    const handle = renderLibraryPanel({ tr, library })
     const pickers = [...handle.element.querySelectorAll('input[type="file"]')]
     expect(pickers).toHaveLength(2)
     for (const picker of pickers) {
@@ -195,22 +205,22 @@ describe('libraryPanel — la mise en français', () => {
   })
 
   it('une date absente ou illisible se dit, elle ne se devine pas', () => {
-    expect(formatStamp('')).toBe('date inconnue')
-    expect(formatStamp('pas une date')).toBe('date inconnue')
+    expect(formatStamp(tr, '')).toBe('date inconnue')
+    expect(formatStamp(tr, 'pas une date')).toBe('date inconnue')
     const iso = '2026-08-20T10:00:00.000Z'
     // L'heure est locale : on ne compare que ce qui ne dépend pas du fuseau.
-    expect(formatStamp(iso)).toContain(String(new Date(iso).getFullYear()))
+    expect(formatStamp(tr, iso)).toContain(String(new Date(iso).getFullYear()))
     // « 3 août 2026 à 14:32 ». L'heure s'écrit à la mode de CLDR, celle que le système
     // d'exploitation du pilote emploie partout ailleurs ; le « 14 h 32 » typographique
     // était un choix maison, et il ne se transpose dans aucune des quatre autres langues.
-    expect(formatStamp(iso)).toMatch(/\d{1,2} \p{L}+ \d{4} à \d{2}:\d{2}/u)
+    expect(formatStamp(tr, iso)).toMatch(/\d{1,2} \p{L}+ \d{4} à \d{2}:\d{2}/u)
   })
 
   it('un format d’export absent est dit non déclaré, jamais deviné', () => {
-    expect(exportTypeLabel('backup')).toContain('Sauvegarde complète')
-    expect(exportTypeLabel('pages')).toContain('Pages seules')
-    expect(exportTypeLabel(undefined)).toBe('Non déclaré par le fichier')
-    expect(exportTypeChip(undefined)).toBe('Type non déclaré')
+    expect(exportTypeLabel(tr, 'backup')).toContain('Sauvegarde complète')
+    expect(exportTypeLabel(tr, 'pages')).toContain('Pages seules')
+    expect(exportTypeLabel(tr, undefined)).toBe('Non déclaré par le fichier')
+    expect(exportTypeChip(tr, undefined)).toBe('Type non déclaré')
   })
 
   it('le radical d’un nom de fichier sert de nom proposé', () => {
@@ -224,9 +234,9 @@ describe('libraryPanel — la mise en français', () => {
     const datum = {
       key: 'a', kind: 'freeText', basis: 'declared', reason: 'r', filled: true, value: 'b'
     } as const
-    expect(personalDatumWhere({ ...datum, home: 'layout' }))
+    expect(personalDatumWhere(tr, { ...datum, home: 'layout' }))
       .toContain('part avec les pages')
-    expect(personalDatumWhere({ ...datum, home: 'preferences' }))
+    expect(personalDatumWhere(tr, { ...datum, home: 'preferences' }))
       .toContain('reste chez vous')
   })
 })
@@ -244,7 +254,7 @@ async function identityOf(bytes: Uint8Array, fileName: string, pro?: (shortName:
 describe('libraryPanel — la carte d’identité ne mélange pas le lu et le supposé', () => {
   it('la résolution n’apparaît que du côté supposé — le fichier n’en porte aucune', async () => {
     const identity = await identityOf(BACKUP, 'backup.xcfg')
-    const card = identityCard(identity)
+    const card = identityCard(tr, identity)
 
     const lu = card.read.map((fact) => `${fact.label} ${fact.value} ${fact.note ?? ''}`).join('\n')
     const suppose = card.assumed.map((fact) => `${fact.label} ${fact.value} ${fact.note ?? ''}`).join('\n')
@@ -258,7 +268,7 @@ describe('libraryPanel — la carte d’identité ne mélange pas le lu et le su
 
   it('le versionCode lu et la comparaison supposée ne sont pas dans la même moitié', async () => {
     const identity = await identityOf(BACKUP, 'backup.xcfg')
-    const card = identityCard(identity)
+    const card = identityCard(tr, identity)
     const version = card.read.find((fact) => fact.label === 'Version de XCTrack déclarée')
     expect(version?.value).toContain(String(identity.read.versionCode))
 
@@ -270,12 +280,12 @@ describe('libraryPanel — la carte d’identité ne mélange pas le lu et le su
   })
 
   it('sans catalogue, le drapeau Pro est dit inconnu — jamais « aucun »', async () => {
-    const sansCatalogue = identityCard(await identityOf(BACKUP, 'backup.xcfg'))
+    const sansCatalogue = identityCard(tr, await identityOf(BACKUP, 'backup.xcfg'))
     const pro = sansCatalogue.assumed.find((fact) => fact.label === 'Gadgets « Pro »')
     expect(pro?.value).toContain('Inconnu')
     expect(pro?.note).toContain('On ne devine pas')
 
-    const avecCatalogue = identityCard(
+    const avecCatalogue = identityCard(tr,
       await identityOf(BACKUP, 'backup.xcfg', (shortName) => shortName === 'WCompMap')
     )
     const dit = avecCatalogue.assumed.find((fact) => fact.label === 'Gadgets « Pro »')
@@ -284,11 +294,11 @@ describe('libraryPanel — la carte d’identité ne mélange pas le lu et le su
   })
 
   it('un « pages » dit qu’il ne porte aucune préférence, et l’archive dit ses annexes', async () => {
-    const pages = identityCard(await identityOf(PAGES, 'pages.xcfg'))
+    const pages = identityCard(tr, await identityOf(PAGES, 'pages.xcfg'))
     const reglages = pages.read.find((fact) => fact.label === 'Réglages enregistrés')
     expect(reglages?.value).toContain('aucune')
 
-    const archive = identityCard(await identityOf(ARCHIVE_BYTES, 'media.xczfg'))
+    const archive = identityCard(tr, await identityOf(ARCHIVE_BYTES, 'media.xczfg'))
     const conteneur = archive.read.find((fact) => fact.label === 'Conteneur')
     expect(conteneur?.value).toContain('Archive .xczfg')
   })
@@ -298,7 +308,7 @@ describe('libraryPanel — la carte d’identité ne mélange pas le lu et le su
     const compte = personalDataCount(identity)
     expect(compte.inLayout).toBeGreaterThan(0)
 
-    const card = identityCard(identity)
+    const card = identityCard(tr, identity)
     const voyage = card.assumed.find((fact) => fact.label.startsWith('Données personnelles'))
     expect(voyage?.value).toContain('Oui')
     expect(voyage?.note).toContain('n’est donc pas anonyme')
@@ -515,7 +525,7 @@ describe('libraryPanel — charger une autre configuration', () => {
   it('sans rappel de chargement, le bouton n’existe pas — le panneau reste utile', async () => {
     const { library } = bibliotheque()
     await library.add({ name: 'École', bytes: PAGES, fileName: 'p.xcfg' })
-    const handle = renderLibraryPanel({ library, download: () => {} })
+    const handle = renderLibraryPanel({ tr, library, download: () => {} })
     document.body.append(handle.element)
     await settle()
 
@@ -747,7 +757,7 @@ describe('libraryPanel — l’export et la réimportation de la bibliothèque e
 describe('libraryPanel — ce que l’assembleur reçoit', () => {
   it('l’élément rendu n’est posé nulle part par le module lui-même', () => {
     const { library } = bibliotheque()
-    const handle = renderLibraryPanel({ library })
+    const handle = renderLibraryPanel({ tr, library })
     expect(handle.element.isConnected).toBe(false)
     expect(handle.element.getAttribute('aria-label')).toBe('Bibliothèque de configurations')
     handle.close()
@@ -987,7 +997,7 @@ describe('libraryPanel — supprimer nomme ce qui va être perdu', () => {
     // gagné le nom dans son titre plutôt que de le laisser au seul corps du texte.
     expect(viewTitle()).toBe('Supprimer « Essai audit » ?')
     expect(text(view)).toContain('Essai audit')
-    expect(text(view)).toContain(proseFormat.byteSize(PAGES.byteLength))
+    expect(text(view)).toContain(tr.format.byteSize(PAGES.byteLength))
     expect(text(view)).toContain('n’a pas de corbeille')
     // L'issue pour qui doute : ressortir le fichier, ou exporter la bibliothèque.
     expect(text(view.querySelector('.library__caveat'))).toContain('ressortez d’abord le fichier')
@@ -1026,7 +1036,7 @@ describe('openLibraryDialog — une couche, et Échap qui fait ce qu’on attend
   it('la bibliothèque ouvre une seule `<dialog>`, et le niveau ne s’y ajoute pas', async () => {
     const { library } = bibliotheque()
     await library.add({ name: 'Essai audit', bytes: PAGES, fileName: 'p.xcfg' })
-    const handle = openLibraryDialog({ library, download: () => {} })
+    const handle = openLibraryDialog({ tr, library, download: () => {} })
     handle.open()
     await settle()
 
@@ -1053,6 +1063,7 @@ describe('openLibraryDialog — une couche, et Échap qui fait ce qu’on attend
     await library.add({ name: 'Essai audit', bytes: PAGES, fileName: 'p.xcfg' })
     let closed = false
     const handle = openLibraryDialog({
+      tr,
       library, download: () => {}, onClose: () => { closed = true }
     })
     handle.open()

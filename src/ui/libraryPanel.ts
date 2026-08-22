@@ -6,15 +6,8 @@ import { LibraryError } from '../library/errors'
 import { personalInventoryOf, type EntryIdentity, type PersonalDatum } from '../library/identity'
 import type { BrokenEntry, Library, LibraryEntry, LibrarySnapshot } from '../library/library'
 import { exportLibrary, importLibrary, type ImportReport } from '../library/transfer'
-import {
-  isReadFromApk,
-  personalHomeLabel,
-  personalValueText,
-  PERSONAL_CAVEAT,
-  PERSONAL_KIND_LABELS
-} from '../model/personalData'
-import type { PluralForms } from '../i18n'
-import { plural, proseFormat } from './prose'
+import { isReadFromApk, personalProse, type PersonalProse } from '../model/personalData'
+import type { Translator } from '../i18n'
 
 /**
  * La **bibliothèque de configurations nommées**, côté pilote : ranger, retrouver, revenir
@@ -103,6 +96,13 @@ export interface CurrentDocument {
 }
 
 export interface LibraryPanelOptions {
+  /**
+   * Le traducteur de **notre prose**, dans la langue du pilote. Passé, jamais lu : ce
+   * module ne va pas chercher la langue courante. À ne pas confondre avec `language`
+   * ci-dessous, qui suit le **fichier ouvert** et nomme les gadgets — voir
+   * `src/i18n/axes.ts`.
+   */
+  readonly tr: Translator
   /** La bibliothèque ouverte par l'assembleur — magasin durable ou repli en mémoire. */
   library: Library
   /**
@@ -164,10 +164,10 @@ export interface LibraryPanelHandle {
   close: () => void
 }
 
-/* ==================================================================== mise en français */
+/* ================================================================ mise dans la langue */
 
 /**
- * Une date ISO à la minute, dans la langue de la prose. Une date absente ou illisible —
+ * Une date ISO à la minute, dans la langue du pilote. Une date absente ou illisible —
  * un enregistrement ancien, dont `addedAt` est vide — se dit, elle ne se devine pas : le
  * formateur du socle rend `undefined`, et le mot à écrire alors est de la prose.
  *
@@ -175,8 +175,8 @@ export interface LibraryPanelHandle {
  * assemblaient. C'était la partie du dépôt qui cassait le plus franchement hors du
  * français : « 3 August 2026 » n'est ni anglais ni allemand.
  */
-export function formatStamp(iso: string): string {
-  return proseFormat.dateTime(iso) ?? 'date inconnue'
+export function formatStamp(tr: Translator, iso: string): string {
+  return tr.format.dateTime(iso) ?? tr.t('common.unknownDate')
 }
 
 /**
@@ -195,16 +195,16 @@ function fileStamp(when: Date): string {
     `${pad(when.getHours())}${pad(when.getMinutes())}`
 }
 
-/** « 3 gadgets » — la fiche d'identité le dit, et la vignette de chaque entrée le redit. */
-const GADGET_COUNT: PluralForms = { one: '{count} gadget', other: '{count} gadgets' }
-
 /**
  * « enregistrée 3 fois ». `revision` vaut 1 au rangement et grandit d'une écriture à
  * l'autre : c'est un compte, et le pilote le lit comme tel — « révision 3 » lui demandait
  * de deviner à la fois le mot et son point de départ.
+ *
+ * La forme `one` du message est « enregistrée une seule fois » et ne porte donc pas de
+ * nombre : c'est la phrase que le français dit à 1, et le socle la choisit tout seul.
  */
-function timesStored(revision: number): string {
-  return revision <= 1 ? 'enregistrée une seule fois' : `enregistrée ${revision} fois`
+function timesStored(tr: Translator, revision: number): string {
+  return tr.t('library.timesStored', { count: revision })
 }
 
 /**
@@ -212,18 +212,18 @@ function timesStored(revision: number): string {
  * paresse : les fichiers de 2022 n'ont pas d'`exportType` du tout, et c'est un
  * renseignement.
  */
-export function exportTypeLabel(exportType: string | undefined): string {
-  if (exportType === 'backup') return 'Sauvegarde complète (pages et préférences)'
-  if (exportType === 'pages') return 'Pages seules (aucune préférence)'
-  if (exportType === undefined) return 'Non déclaré par le fichier'
+export function exportTypeLabel(tr: Translator, exportType: string | undefined): string {
+  if (exportType === 'backup') return tr.t('library.exportTypeBackup')
+  if (exportType === 'pages') return tr.t('library.exportTypePages')
+  if (exportType === undefined) return tr.t('library.exportTypeUndeclared')
   return exportType
 }
 
 /** Le même, en deux mots, pour la pastille de la liste. */
-export function exportTypeChip(exportType: string | undefined): string {
-  if (exportType === 'backup') return 'Sauvegarde'
-  if (exportType === 'pages') return 'Pages seules'
-  if (exportType === undefined) return 'Type non déclaré'
+export function exportTypeChip(tr: Translator, exportType: string | undefined): string {
+  if (exportType === 'backup') return tr.t('library.chipBackup')
+  if (exportType === 'pages') return tr.t('library.chipPages')
+  if (exportType === undefined) return tr.t('library.chipUndeclared')
   return exportType
 }
 
@@ -231,12 +231,16 @@ export function exportTypeChip(exportType: string | undefined): string {
  * Quatre états nommés **par rapport à un repère que la phrase dit** : « la version de
  * référence de cet éditeur » ne désignait rien pour un pilote, et « impossible à situer »
  * lui faisait croire à une défaillance de l'outil là où c'est le fichier qui se tait.
+ *
+ * Un cinquième état venu d'une version future de `describeContainer` ressortirait tel
+ * quel, sans phrase inventée : c'est ce que le `?? gap` du bas dit.
  */
-const VERSION_GAP_LABELS: Record<string, string> = {
-  older: 'Plus ancienne que celle sur laquelle cet éditeur dessine',
-  same: 'Celle sur laquelle cet éditeur dessine',
-  newer: 'Plus récente que celle sur laquelle cet éditeur dessine',
-  unknown: 'Le fichier ne dit pas de quelle version il vient'
+function versionGapText(tr: Translator, gap: string): string {
+  if (gap === 'older') return tr.t('library.versionGapOlder')
+  if (gap === 'same') return tr.t('library.versionGapSame')
+  if (gap === 'newer') return tr.t('library.versionGapNewer')
+  if (gap === 'unknown') return tr.t('library.versionGapUnknown')
+  return gap
 }
 
 /**
@@ -246,8 +250,8 @@ const VERSION_GAP_LABELS: Record<string, string> = {
  * ce qui fait que la bibliothèque, la page des réglages, la boîte de partage et
  * l'avertissement d'export disent la même chose avec les mêmes termes.
  */
-export function personalDatumWhere(datum: PersonalDatum): string {
-  return personalHomeLabel(datum.home)
+export function personalDatumWhere(tr: Translator, datum: PersonalDatum): string {
+  return personalProse(tr).home(datum.home)
 }
 
 /* =========================================================== la carte d'identité, pure */
@@ -274,137 +278,141 @@ export interface IdentityCard {
   assumed: IdentityFact[]
 }
 
-export function identityCard(identity: EntryIdentity, language = 'fr'): IdentityCard {
+export function identityCard(
+  tr: Translator, identity: EntryIdentity, language = 'fr'
+): IdentityCard {
   const { read, assumed } = identity
 
   const pages = read.orientations.length === 0
-    ? 'aucune page'
+    ? tr.t('library.noPage')
     : [
       read.pageCount.landscape > 0
-        ? plural({ one: '{count} page paysage', other: '{count} pages paysage' }, read.pageCount.landscape)
+        ? tr.t('library.landscapePageCount', { count: read.pageCount.landscape })
         : '',
       read.pageCount.portrait > 0
-        ? plural({ one: '{count} page portrait', other: '{count} pages portrait' }, read.pageCount.portrait)
+        ? tr.t('library.portraitPageCount', { count: read.pageCount.portrait })
         : ''
     ].filter((part) => part !== '').join(' · ')
 
+  // Un décompte par type, aligné comme une donnée : le nom du gadget vient du catalogue de
+  // XCTrack (axe `labels`), le nombre est mis en forme par la langue du pilote.
   const topTypes = read.widgetTypes.slice(0, 5)
-    .map((type) => `${readableName(type.shortName, language)} × ${type.count}`)
+    .map((type) => `${readableName(type.shortName, language)} × ${tr.format.number(type.count)}`)
     .join(', ')
 
   const readFacts: IdentityFact[] = [
-    { label: 'Format d’export', value: exportTypeLabel(read.exportType), note: 'Clé info.exportType.' },
     {
-      label: 'Conteneur',
+      label: tr.t('library.factExportType'),
+      value: exportTypeLabel(tr, read.exportType),
+      note: tr.t('library.factExportTypeNote')
+    },
+    {
+      label: tr.t('library.factContainer'),
       value: read.containerKind === 'xczfg'
-        ? `Archive .xczfg — ${plural({
-          one: '{count} fichier annexe',
-          other: '{count} fichiers annexes'
-        }, read.extraFileNames.length)}`
-        : 'Fichier .xcfg',
+        ? tr.t('library.containerArchive', { count: read.extraFileNames.length })
+        : tr.t('library.containerPlain'),
       note: read.extraFileNames.length === 0
         ? undefined
-        : `Annexes : ${read.extraFileNames.join(', ')}. Cet éditeur n’en inspecte pas le contenu.`
+        : tr.t('library.containerExtrasNote', { names: read.extraFileNames.join(', ') })
     },
-    { label: 'Taille', value: proseFormat.byteSize(read.byteLength) },
+    { label: tr.t('library.factSize'), value: tr.format.byteSize(read.byteLength) },
     {
-      label: 'Version de XCTrack déclarée',
+      label: tr.t('library.factVersion'),
       value: read.versionName === undefined && read.versionCode === undefined
-        ? 'Le fichier ne la dit pas'
-        : `${read.versionName ?? '(nom absent)'} — code ${read.versionCode ?? '(absent)'}`,
-      note: 'Clés info.versionName et info.versionCode.'
+        ? tr.t('library.versionAbsent')
+        // Le nom et le code partent en `string` : ce sont des identifiants lus dans le
+        // fichier, et « 100 030 » ne se retrouve dans aucun fichier XCTrack.
+        : tr.t('library.versionValue', {
+          name: read.versionName ?? tr.t('library.versionNameAbsent'),
+          code: read.versionCode === undefined
+            ? tr.t('library.versionCodeAbsent')
+            : String(read.versionCode)
+        }),
+      note: tr.t('library.factVersionNote')
     },
     {
-      label: 'Appareil déclaré',
-      value: read.deviceString ?? 'Le fichier ne le dit pas',
-      note: 'Chaîne brute de info.device. Elle ne porte aucune résolution.'
+      label: tr.t('library.factDevice'),
+      value: read.deviceString ?? tr.t('library.deviceAbsent'),
+      note: tr.t('library.factDeviceNote')
     },
-    { label: 'Pages', value: pages },
+    { label: tr.t('library.factPages'), value: pages },
     {
-      label: 'Gadgets',
-      value: `${plural(GADGET_COUNT, read.widgetCount)} de ` +
-        `${plural({ one: '{count} type', other: '{count} types' }, read.widgetTypes.length)}`,
-      note: topTypes === '' ? undefined : `Les plus employés : ${topTypes}.`
-    },
-    {
-      label: 'Sections de premier niveau',
-      value: read.rootKeys.length === 0 ? 'aucune' : read.rootKeys.join(', ')
+      label: tr.t('library.factWidgets'),
+      value: tr.t('library.widgetsOfTypes', {
+        count: read.widgetCount,
+        types: tr.t('library.typeCount', { count: read.widgetTypes.length })
+      }),
+      note: topTypes === '' ? undefined : tr.t('library.topTypesNote', { types: topTypes })
     },
     {
-      label: 'Réglages enregistrés',
+      label: tr.t('library.factRootSections'),
+      value: read.rootKeys.length === 0 ? tr.t('library.noRootSection') : read.rootKeys.join(', ')
+    },
+    {
+      label: tr.t('library.factSettings'),
       value: read.preferenceKeyCount === 0
-        ? 'aucune — ce fichier ne transporte pas vos préférences'
-        : plural({ one: '{count} ligne', other: '{count} lignes' }, read.preferenceKeyCount),
-      note: read.preferenceKeyCount === 0
-        ? undefined
-        : 'Cet éditeur ne sait en nommer que quelques familles : le compte est là pour que ' +
-          'le reste reste visible.'
+        ? tr.t('library.settingsNone')
+        : tr.t('library.settingLineCount', { count: read.preferenceKeyCount }),
+      note: read.preferenceKeyCount === 0 ? undefined : tr.t('library.settingsNote')
     }
   ]
 
   if (read.duplicateKeys.length > 0) {
     readFacts.push({
-      label: 'Lignes en double',
-      value: plural({
-        one: '{count} ligne en double',
-        other: '{count} lignes en double'
-      }, read.duplicateKeys.length),
-      note: `XCTrack n’en lira qu’une : ${read.duplicateKeys.join(', ')}.`
+      label: tr.t('library.factDuplicates'),
+      value: tr.t('library.duplicateLineCount', { count: read.duplicateKeys.length }),
+      note: tr.t('library.duplicatesNote', { keys: read.duplicateKeys.join(', ') })
     })
   }
   if (read.externalResources.length > 0) {
     readFacts.push({
-      label: 'Ressources extérieures attendues',
+      label: tr.t('library.factExternal'),
       value: read.externalResources.map((resource) => resource.name).join(', '),
-      note: 'Ces fichiers doivent exister sur l’appareil d’arrivée ; ils ne sont pas dans ' +
-        'la configuration.'
+      note: tr.t('library.externalNote')
     })
   }
   if (read.parseError !== undefined) {
     readFacts.push({
-      label: 'Analyse',
-      value: 'Le contenu n’a pas pu être analysé',
-      note: 'Les octets sont rangés et ressortiront tels quels ; c’est leur description ' +
-        `qui manque. Détail technique : ${read.parseError}.`
+      label: tr.t('library.factParse'),
+      value: tr.t('library.parseFailed'),
+      note: tr.t('library.parseNote', { detail: read.parseError })
     })
   }
 
   const assumedFacts: IdentityFact[] = [
     {
-      label: 'Gabarit d’écran retenu',
+      label: tr.t('library.factScreen'),
+      // Le nom du gabarit et sa résolution : une ligne de données, sans un mot à traduire.
+      // Le nombre n'y passe pas par le formateur — « 1 280 × 720 px » ne se lit nulle part.
       value: assumed.deviceRecognised
         ? `${assumed.device.label} — ${assumed.device.widthPx} × ${assumed.device.heightPx} px`
-        : `${assumed.device.label} — gabarit de repli, aucun appareil reconnu`,
-      note: 'La résolution vient de la table d’appareils de cet éditeur, pas du fichier.'
+        : tr.t('library.screenFallback', { device: assumed.device.label }),
+      note: tr.t('library.factScreenNote')
     },
     {
-      label: 'Gadgets « Pro »',
+      label: tr.t('library.factPro'),
       value: assumed.proKnowledge === 'absent'
-        ? 'Inconnu — aucun catalogue de gadgets n’a été fourni'
+        ? tr.t('library.proUnknown')
         : assumed.proWidgets.length === 0
-          ? 'Aucun'
+          ? tr.t('library.proNone')
           : assumed.proWidgets.map((shortName) => readableName(shortName, language)).join(', '),
       note: assumed.proKnowledge === 'absent'
-        ? 'On ne devine pas si un gadget est réservé à la version Pro : sans catalogue, ' +
-          'on ne dit rien.'
-        : 'D’après le catalogue extrait de l’APK 1.0.3-beta5, pas d’après le fichier.'
+        ? tr.t('library.proUnknownNote')
+        : tr.t('library.proNote')
     },
     {
-      label: 'Situation de la version',
-      value: VERSION_GAP_LABELS[assumed.versionGap] ?? assumed.versionGap,
-      note: 'Cet éditeur règle son dessin sur une version précise de XCTrack ; c’est à ' +
-        'celle-là que ce fichier est comparé, pas à celle de votre appareil.'
+      label: tr.t('library.factVersionGap'),
+      value: versionGapText(tr, assumed.versionGap),
+      note: tr.t('library.factVersionGapNote')
     },
     {
-      label: 'Données personnelles voyageant avec les pages',
+      label: tr.t('library.factPersonalTravels'),
       value: assumed.personalDataTravelsWithPages
-        ? 'Oui — la disposition porte au moins un texte écrit par vous'
-        : 'Non — aucun texte libre trouvé dans la disposition',
+        ? tr.t('library.personalTravelsYes')
+        : tr.t('library.personalTravelsNo'),
       note: assumed.personalDataTravelsWithPages
-        ? 'Un export « pages » n’est donc pas anonyme par construction : le nom et le ' +
-          'numéro d’un bouton d’appel sont dans la disposition, pas dans les préférences.'
-        : 'La liste des champs de texte libre est fixe et se périmera : elle ne prouve ' +
-          'pas une absence.'
+        ? tr.t('library.personalTravelsYesNote')
+        : tr.t('library.personalTravelsNoNote')
     }
   ]
 
@@ -539,7 +547,7 @@ let viewSequence = 0
  * sans quoi il serait masqué avec le reste et n'annoncerait plus rien.
  */
 function createViewStack(
-  root: HTMLElement, main: HTMLElement, announce: (text: string) => void
+  tr: Translator, root: HTMLElement, main: HTMLElement, announce: (text: string) => void
 ): ViewStack {
   const host = el('div', 'library__view')
   host.hidden = true
@@ -569,8 +577,8 @@ function createViewStack(
     show()
     const below = frames[frames.length - 1]
     announce(below === undefined
-      ? 'Retour à la liste des configurations.'
-      : `Retour : ${below.title}.`)
+      ? tr.t('library.announceBackToList')
+      : tr.t('library.announceBackTo', { title: below.title }))
     // L'ouvrant a pu disparaître entre-temps — la liste se redessine sur un changement
     // venu d'un autre onglet. Le focus reste alors dans le panneau plutôt que de retomber
     // sur le document.
@@ -596,7 +604,7 @@ function createViewStack(
     // Le retour est en HAUT À GAUCHE, le « Fermer » de la bibliothèque en haut à droite :
     // c'est ce qui remplace les deux « Fermer » qui se touchaient.
     const backButton = button(
-      frames.length === 0 ? '← Retour à la liste' : '← Retour', 'btn library__back'
+      tr.t(frames.length === 0 ? 'library.backToList' : 'library.back'), 'btn library__back'
     )
     const heading = el('h3', 'library__viewTitle', spec.title)
     heading.id = titleId
@@ -606,7 +614,7 @@ function createViewStack(
     bodyWrap.append(spec.body)
 
     const actions = el('div', 'library__viewActions')
-    const cancel = button(spec.cancelLabel ?? 'Annuler')
+    const cancel = button(spec.cancelLabel ?? tr.t('library.cancel'))
     actions.append(cancel)
 
     let primaryButton: HTMLButtonElement | undefined
@@ -723,12 +731,16 @@ type FlashTone = 'info' | 'trouble'
 
 export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHandle {
   const library = options.library
+  const tr = options.tr
   const language = options.language ?? 'fr'
   const now = options.now ?? (() => new Date())
   const download = options.download ?? defaultDownload
+  // Construit une fois pour tout le panneau : une entrée en porte jusqu'à seize lignes, et
+  // chacune demande quatre de ces six mots.
+  const personal: PersonalProse = personalProse(tr)
 
   const root = el('section', 'library')
-  root.setAttribute('aria-label', 'Bibliothèque de configurations')
+  root.setAttribute('aria-label', tr.t('library.panelLabel'))
 
   /*
    * Tout ce qui se laisse remplacer par un niveau vit dans `main` : la tête, les bandeaux,
@@ -741,14 +753,14 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
   /* --- tête : ce qu'on peut faire --- */
 
   const head = el('header', 'library__head')
-  const title = el('h2', 'library__title', 'Mes configurations')
+  const title = el('h2', 'library__title', tr.t('library.title'))
   const actions = el('div', 'library__actions')
   head.append(title, actions)
 
-  const storeCurrent = button('Ranger la configuration ouverte', 'btn btn--primary')
-  const addFile = button('Ranger un fichier…')
-  const exportAll = button('Exporter la bibliothèque')
-  const importAll = button('Importer une bibliothèque…')
+  const storeCurrent = button(tr.t('library.storeCurrent'), 'btn btn--primary')
+  const addFile = button(tr.t('library.addFile'))
+  const exportAll = button(tr.t('library.exportAll'))
+  const importAll = button(tr.t('library.importAll'))
   actions.append(storeCurrent, addFile, exportAll, importAll)
 
   // Deux sélecteurs de fichiers, invisibles : le bouton visible est le nôtre, celui du
@@ -770,12 +782,7 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
 
   main.append(head)
 
-  main.append(el(
-    'p', 'library__lead',
-    'Gardez plusieurs configurations sous un nom, dans ce navigateur, et revenez à ' +
-    'l’une d’elles quand vous voulez. Rien n’est envoyé nulle part : tout reste sur cet ' +
-    'appareil. Les octets rangés sont ceux de votre fichier, jamais une copie réécrite.'
-  ))
+  main.append(el('p', 'library__lead', tr.t('library.lead')))
 
   /* --- les bandeaux : durabilité, puis message courant --- */
 
@@ -803,7 +810,7 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
   announcer.setAttribute('role', 'status')
   root.append(announcer)
 
-  const views = createViewStack(root, main, (text) => { announcer.textContent = text })
+  const views = createViewStack(tr, root, main, (text) => { announcer.textContent = text })
 
   /* ------------------------------------------------------------------ dire ce qui arrive */
 
@@ -831,18 +838,15 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
   const showFailure = (context: string, error: unknown): void => {
     if (error instanceof LibraryError) {
       if (error.failure === 'quota') {
-        const action = button('Exporter la bibliothèque maintenant')
+        const action = button(tr.t('library.exportNow'))
         action.addEventListener('click', () => { void doExport() })
         say(error.message, 'trouble', action)
         return
       }
       if (error.failure === 'conflict') {
-        const action = button('Recharger la bibliothèque')
+        const action = button(tr.t('library.reloadLibrary'))
         action.addEventListener('click', () => { void refresh() })
-        say(
-          `${error.message} Rien n’a été écrit : votre modification n’a pas écrasé la sienne.`,
-          'trouble', action
-        )
+        say(tr.t('library.conflict', { message: error.message }), 'trouble', action)
         return
       }
       say(error.message, 'trouble')
@@ -851,8 +855,10 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
     // Le contexte est une phrase du pilote (« Suppression », « Rangement ») ; le détail
     // vient après, nommé, et sans le « Error: » du moteur JavaScript.
     say(
-      `${context} : l’opération n’a pas abouti. Détail technique : ` +
-      `${formatTechnicalDetail(error)}`,
+      tr.t('library.operationFailed', {
+        context,
+        detail: formatTechnicalDetail(error)
+      }),
       'trouble'
     )
   }
@@ -881,35 +887,31 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
 
   const personalSection = (entry: LibraryEntry): HTMLElement => {
     const section = el('section', 'library__section')
-    section.append(el('h3', 'library__heading', 'Ce que cette entrée porte de personnel'))
+    section.append(el('h3', 'library__heading', tr.t('library.personalHeading')))
 
     const { findings: data, counts } = personalInventoryOf(entry.identity)
     if (data.length === 0) {
       section.append(el(
         'p', 'library__note',
-        `Aucune donnée personnelle repérée. ${PERSONAL_CAVEAT}`
+        tr.t('library.noPersonalData', { caveat: personal.caveat() })
       ))
       return section
     }
 
+    /*
+     * Trois accords dans une seule phrase — le total, ce qui est renseigné, ce qui est
+     * vide. Chacun arrive déjà accordé dans son repère : la phrase reste entière, et
+     * l'allemand peut la réécrire d'un bout à l'autre sans qu'on ait à découper.
+     */
     section.append(el(
       'p', 'library__note',
-      `${plural({
-        one: '{count} donnée personnelle est présente',
-        other: '{count} données personnelles sont présentes'
-      }, counts.total)} ` +
-      `dans cette entrée : ${String(counts.layout)} dans la disposition, qui part avec les ` +
-      `pages, et ${String(counts.preferences)} dans les préférences, qui restent chez vous ` +
-      `dans un export « pages ». ` +
-      `${plural({
-        one: '{count} est renseignée',
-        other: '{count} sont renseignées'
-      }, counts.filled)}, ` +
-      `${plural({
-        one: '{count} est un emplacement vide',
-        other: '{count} sont des emplacements vides'
-      }, counts.empty)}. ` +
-      'Elles sont montrées, jamais retirées : c’est vous qui décidez.'
+      tr.t('library.personalSummary', {
+        total: tr.t('library.personalTotal', { count: counts.total }),
+        layout: counts.layout,
+        preferences: counts.preferences,
+        filled: tr.t('library.personalFilled', { count: counts.filled }),
+        empty: tr.t('library.personalEmpty', { count: counts.empty })
+      })
     ))
 
     const list = el('ul', 'library__personal')
@@ -919,97 +921,84 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
         : 'library__datum')
       if (!datum.filled) item.classList.add('library__datum--empty')
       item.append(
-        el('span', 'library__datumWhere', personalDatumWhere(datum)),
+        el('span', 'library__datumWhere', personal.home(datum.home)),
         el('code', 'library__datumKey', datum.key),
-        el('span', 'library__datumValue', personalValueText(datum)),
+        el('span', 'library__datumValue', personal.value(datum)),
         // La nature et la base, côte à côte : ce que c'est, et si on l'a lu dans
         // l'application ou jugé nous-mêmes. La seconde est la valeur du relevé.
-        el('span', 'library__datumKind', PERSONAL_KIND_LABELS[datum.kind]),
-        el('span', 'library__datumBasis',
-          isReadFromApk(datum.basis) ? 'lu dans l’application' : 'jugé par cet éditeur')
+        el('span', 'library__datumKind', personal.kind(datum.kind)),
+        el('span', 'library__datumBasis', isReadFromApk(datum.basis)
+          ? tr.t('library.basisReadInApp')
+          : tr.t('library.basisJudgedHere'))
       )
-      item.title = datum.reason
+      item.title = personal.reason(datum)
       list.append(item)
     }
     section.append(list)
 
     if (entry.identity.assumed.personalDataTravelsWithPages) {
-      section.append(el(
-        'p', 'library__caveat',
-        'Les lignes marquées « part avec les pages » sont dans la disposition : elles ' +
-        'voyagent même dans un export « pages ». Dériver un « pages » est un tri de gros ' +
-        'grain, ce n’est pas un nettoyage.'
-      ))
+      section.append(el('p', 'library__caveat', tr.t('library.travelsCaveat')))
     }
     return section
   }
 
   const previewSection = (entry: LibraryEntry): HTMLElement => {
     const section = el('section', 'library__section')
-    section.append(el('h3', 'library__heading', 'Aperçu'))
+    section.append(el('h3', 'library__heading', tr.t('library.previewHeading')))
     section.append(previewSlot(entry))
-    section.append(el(
-      'p', 'library__note',
-      'La place est réservée dans la bibliothèque, mais aucune image n’est produite par ' +
-      'ce panneau : le dessin d’une page appartient au moteur de rendu. Le jour où il la ' +
-      'fournira, ni le rangement ni la forme de l’enregistrement n’auront à changer.'
-    ))
+    section.append(el('p', 'library__note', tr.t('library.previewNote')))
     return section
   }
 
   const openIdentity = (entry: LibraryEntry): void => {
-    const card = identityCard(entry.identity, language)
+    const card = identityCard(tr, entry.identity, language)
     const body = el('div', 'library__card')
 
-    body.append(el(
-      'p', 'library__lead',
-      'Deux moitiés, jamais mélangées : ce que le fichier déclare, et ce que cet éditeur ' +
-      'en suppose. Tout ce qui est supposé peut être faux sans que le fichier soit en cause.'
-    ))
+    body.append(el('p', 'library__lead', tr.t('library.identityLead')))
 
     const readSection = el('section', 'library__section')
+    // Les deux titres viennent du vocabulaire partagé : la boîte de partage et la page des
+    // réglages disent la même distinction avec les mêmes mots.
     readSection.append(el('h3', 'library__heading library__heading--read',
-      'Ce que le fichier déclare'))
-    readSection.append(el('p', 'library__note',
-      'Lu tel quel dans les octets rangés. Un champ absent est dit absent, jamais remplacé ' +
-      'par une valeur par défaut.'))
+      tr.t('provenance.declaredByFile')))
+    readSection.append(el('p', 'library__note', tr.t('library.readNote')))
     readSection.append(factList(card.read))
 
     const assumedSection = el('section', 'library__section')
     assumedSection.append(el('h3', 'library__heading library__heading--assumed',
-      'Ce que cet éditeur suppose'))
-    assumedSection.append(el('p', 'library__note',
-      'Rien de ceci n’est dans le fichier. L’appareil et sa résolution viennent de notre ' +
-      'table ; savoir qu’un gadget est réservé à la version Pro vient d’un catalogue ' +
-      'extrait de l’APK.'))
+      tr.t('provenance.assumedByEditor')))
+    assumedSection.append(el('p', 'library__note', tr.t('library.assumedNote')))
     assumedSection.append(factList(card.assumed))
 
     const identitySection = el('section', 'library__section')
-    identitySection.append(el('h3', 'library__heading', 'L’entrée elle-même'))
+    identitySection.append(el('h3', 'library__heading', tr.t('library.entryItself')))
     const own = el('dl', 'library__facts')
-    own.append(el('dt', 'library__factLabel', 'Nom'), el('dd', 'library__factValue', entry.name))
-    own.append(el('dt', 'library__factLabel', 'Fichier d’origine'),
-      el('dd', 'library__factValue', entry.fileName === '' ? '(inconnu)' : entry.fileName))
-    own.append(el('dt', 'library__factLabel', 'Rangée le'),
-      el('dd', 'library__factValue', formatStamp(entry.addedAt)))
-    own.append(el('dt', 'library__factLabel', 'Dernière écriture'),
+    own.append(el('dt', 'library__factLabel', tr.t('library.fieldName')),
+      el('dd', 'library__factValue', entry.name))
+    own.append(el('dt', 'library__factLabel', tr.t('library.factOriginalFile')),
       el('dd', 'library__factValue',
-        `${formatStamp(entry.updatedAt)} — ${timesStored(entry.revision)}`))
+        entry.fileName === '' ? tr.t('library.unknownOriginalFile') : entry.fileName))
+    own.append(el('dt', 'library__factLabel', tr.t('library.factStoredOn')),
+      el('dd', 'library__factValue', formatStamp(tr, entry.addedAt)))
+    own.append(el('dt', 'library__factLabel', tr.t('library.factLastWrite')),
+      el('dd', 'library__factValue',
+        `${formatStamp(tr, entry.updatedAt)} — ${timesStored(tr, entry.revision)}`))
     const digest = el('dd', 'library__factValue')
     digest.append(el('code', 'library__digest', entry.sha256))
-    own.append(el('dt', 'library__factLabel', 'Empreinte SHA-256'), digest)
+    own.append(el('dt', 'library__factLabel', tr.t('library.factDigest')), digest)
     identitySection.append(own)
     if (entry.note !== '') {
-      identitySection.append(el('p', 'library__note', `Votre note : ${entry.note}`))
+      identitySection.append(el('p', 'library__note',
+        tr.t('library.yourNote', { note: entry.note })))
     }
 
     body.append(identitySection, readSection, assumedSection,
       personalSection(entry), previewSection(entry))
 
     views.open({
-      title: `Carte d’identité — ${entry.name}`,
+      title: tr.t('library.identityTitle', { name: entry.name }),
       body,
-      cancelLabel: 'Retour à la liste',
+      cancelLabel: tr.t('library.returnToList'),
       choices: []
     })
   }
@@ -1024,25 +1013,32 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
       fileName: source.fileName,
       note
     })
-    say(`« ${entry.name} » est rangée — ${proseFormat.byteSize(entry.byteLength)}, ` +
-      `empreinte ${entry.sha256.slice(0, 12)}…`)
+    say(tr.t('library.stored', {
+      name: entry.name,
+      size: tr.format.byteSize(entry.byteLength),
+      // Une empreinte tronquée est un identifiant : elle passe en `string`, jamais en
+      // `number`, et ne se met donc pas en forme.
+      digest: entry.sha256.slice(0, 12)
+    }))
   }
 
   const askStore = (source: CurrentDocument, then?: () => void | Promise<void>): void => {
     openFormView(views, {
-      title: 'Ranger la configuration ouverte',
-      lead: 'Donnez-lui un nom que vous reconnaîtrez dans six mois — « Comp Annecy », ' +
-        '« Vol-biv Alpes », « École ». Ce qui est rangé, c’est votre fichier lui-même, ' +
-        'sans une virgule réécrite.',
+      title: tr.t('library.storeCurrent'),
+      lead: tr.t('library.storeLead'),
       fields: [
-        { key: 'name', label: 'Nom', value: source.suggestedName ?? stemOf(source.fileName) },
         {
-          key: 'note', label: 'Note (facultative)', value: '', multiline: true,
-          hint: 'Ce que vous voudrez : le site, la voile, le réglage du vario. Jamais interprétée.'
+          key: 'name',
+          label: tr.t('library.fieldName'),
+          value: source.suggestedName ?? stemOf(source.fileName)
+        },
+        {
+          key: 'note', label: tr.t('library.fieldNoteOptional'), value: '', multiline: true,
+          hint: tr.t('library.noteHint')
         }
       ],
-      confirmLabel: 'Ranger',
-      onConfirm: (values) => guard('Rangement', async () => {
+      confirmLabel: tr.t('library.store'),
+      onConfirm: (values) => guard(tr.t('library.contextStoring'), async () => {
         await doStore(source, values.name ?? '', values.note ?? '')
         await then?.()
       })
@@ -1061,41 +1057,40 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
   const doLoad = async (entry: LibraryEntry): Promise<void> => {
     const bytes = await library.bytesOf(entry.id)
     await options.onLoad?.(entry, bytes)
-    say(`« ${entry.name} » est chargée — ${proseFormat.byteSize(bytes.byteLength)}, ` +
-      'octets vérifiés contre leur empreinte.')
+    say(tr.t('library.loaded', {
+      name: entry.name,
+      size: tr.format.byteSize(bytes.byteLength)
+    }))
   }
 
   const askLoad = (entry: LibraryEntry): void => {
     const source = options.current?.()
     if (source === undefined || !source.modified) {
-      void guard('Chargement', () => doLoad(entry))
+      void guard(tr.t('library.contextLoading'), () => doLoad(entry))
       return
     }
 
     const body = el('div', 'library__confirm')
     body.append(el(
       'p', 'library__note',
-      `Le document ouvert — « ${source.fileName} » — porte des modifications que vous ` +
-      'n’avez pas enregistrées. Charger « ' + entry.name + ' » les remplace dans l’éditeur.'
+      tr.t('library.unsavedBody', { file: source.fileName, name: entry.name })
     ))
-    body.append(el(
-      'p', 'library__caveat',
-      'Ranger d’abord ne coûte rien : la configuration ouverte prend un nom dans la ' +
-      'bibliothèque, et vous y reviendrez d’un clic.'
-    ))
+    body.append(el('p', 'library__caveat', tr.t('library.storeFirstCaveat')))
 
     views.open({
-      title: 'Des modifications ne sont pas enregistrées',
+      title: tr.t('library.unsavedTitle'),
       body,
       choices: [
         {
-          label: 'Ranger d’abord, puis charger',
+          label: tr.t('library.storeThenLoad'),
           primary: true,
-          run: () => { askStore(source, () => guard('Chargement', () => doLoad(entry))) }
+          run: () => {
+            askStore(source, () => guard(tr.t('library.contextLoading'), () => doLoad(entry)))
+          }
         },
         {
-          label: 'Charger sans ranger',
-          run: () => guard('Chargement', () => doLoad(entry))
+          label: tr.t('library.loadWithoutStoring'),
+          run: () => guard(tr.t('library.contextLoading'), () => doLoad(entry))
         }
       ]
     })
@@ -1107,8 +1102,7 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
     const extension = entry.identity.read.containerKind === 'xczfg' ? '.xczfg' : '.xcfg'
     const stem = entry.fileName === '' ? stemOf(entry.name) : stemOf(entry.fileName)
     download(bytes, `${stem}-${fileStamp(now())}${extension}`)
-    say(`« ${entry.name} » ressort telle qu’elle est entrée : ${bytes.byteLength} octets, ` +
-      `empreinte vérifiée.`)
+    say(tr.t('library.extracted', { name: entry.name, count: bytes.byteLength }))
   }
 
   /**
@@ -1133,61 +1127,58 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
     const same = digest === entry.sha256 && bytes?.byteLength === entry.byteLength
 
     const body = el('div', 'library__verify')
-    body.append(el(
-      'p', 'library__note',
-      'L’empreinte a été posée au moment du rangement, sur les octets rangés. Celle-ci ' +
-      'vient d’être recalculée sur ce que la bibliothèque rend maintenant.'
-    ))
+    body.append(el('p', 'library__note', tr.t('library.verifyNote')))
     const facts = el('dl', 'library__facts')
-    facts.append(el('dt', 'library__factLabel', 'Enregistrée'))
+    facts.append(el('dt', 'library__factLabel', tr.t('library.digestStored')))
     const stored = el('dd', 'library__factValue')
     stored.append(el('code', 'library__digest', entry.sha256))
     facts.append(stored)
-    facts.append(el('dt', 'library__factLabel', 'Recalculée à l’instant'))
+    facts.append(el('dt', 'library__factLabel', tr.t('library.digestFresh')))
     const fresh = el('dd', 'library__factValue')
-    if (digest === undefined) fresh.append(el('span', 'library__factText', 'aucune — les octets n’ont pas été rendus'))
-    else fresh.append(el('code', 'library__digest', digest))
+    if (digest === undefined) {
+      fresh.append(el('span', 'library__factText', tr.t('library.digestMissing')))
+    } else fresh.append(el('code', 'library__digest', digest))
     facts.append(fresh)
-    facts.append(el('dt', 'library__factLabel', 'Taille'))
-    facts.append(el('dd', 'library__factValue',
-      `${bytes === undefined ? 'illisible' : `${bytes.byteLength} octets`} — ` +
-      `${entry.byteLength} attendus`))
+    facts.append(el('dt', 'library__factLabel', tr.t('library.factSize')))
+    facts.append(el('dd', 'library__factValue', bytes === undefined
+      ? tr.t('library.sizeUnreadable', { expected: entry.byteLength })
+      : tr.t('library.sizeCompared', {
+        count: bytes.byteLength,
+        expected: entry.byteLength
+      })))
     body.append(facts)
     body.append(el(
       'p', same
         ? 'library__verdict library__verdict--same'
         : 'library__verdict library__verdict--differs',
-      same
-        ? 'Identiques : les octets rangés sont exactement ceux du fichier d’origine.'
-        : 'Différentes — cette entrée ne sera pas restituée.'
+      same ? tr.t('library.digestSame') : tr.t('library.digestDiffers')
     ))
     if (failure !== undefined) body.append(el('p', 'library__caveat', failure))
     views.open({
-      title: `Empreinte — ${entry.name}`,
+      title: tr.t('library.digestTitle', { name: entry.name }),
       body,
-      cancelLabel: 'Retour à la liste',
+      cancelLabel: tr.t('library.returnToList'),
       choices: []
     })
   }
 
   const askRemove = (entry: LibraryEntry): void => {
     const body = el('div', 'library__confirm')
-    body.append(el('p', 'library__note',
-      `« ${entry.name} » et ses ${proseFormat.byteSize(entry.byteLength)} d’octets seront ` +
-      'retirés de ce navigateur. Cette bibliothèque n’a pas de corbeille.'))
-    body.append(el('p', 'library__caveat',
-      'Si vous n’en êtes pas sûr : ressortez d’abord le fichier, ou exportez la ' +
-      'bibliothèque entière.'))
+    body.append(el('p', 'library__note', tr.t('library.removeBody', {
+      name: entry.name,
+      size: tr.format.byteSize(entry.byteLength)
+    })))
+    body.append(el('p', 'library__caveat', tr.t('library.removeCaveat')))
     views.open({
-      title: `Supprimer « ${entry.name} » ?`,
+      title: tr.t('library.removeTitle', { name: entry.name }),
       body,
       tone: 'grave',
       choices: [{
-        label: 'Supprimer',
+        label: tr.t('library.remove'),
         primary: true,
-        run: () => guard('Suppression', async () => {
+        run: () => guard(tr.t('library.contextRemoving'), async () => {
           await library.remove(entry.id)
-          say(`« ${entry.name} » a été supprimée.`)
+          say(tr.t('library.removed', { name: entry.name }))
         })
       }]
     })
@@ -1200,46 +1191,39 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
    */
   const brokenBody = (broken: BrokenEntry): HTMLElement => {
     const body = el('div')
-    body.append(el('p', 'library__note',
-      'Cette entrée ne se relit pas : on ne sait pas ce qu’elle contenait. La supprimer ' +
-      'libère sa place et ne perd rien de lisible.'))
+    body.append(el('p', 'library__note', tr.t('library.brokenBody')))
     body.append(el('p', 'library__note library__note--technical',
-      `Identifiant interne ${broken.id}. Détail technique : ${broken.reason}.`))
+      tr.t('library.brokenTechnical', { id: broken.id, reason: broken.reason })))
     return body
   }
 
   const askRemoveBroken = (broken: BrokenEntry): void => {
     views.open({
-      title: 'Supprimer cette entrée illisible ?',
+      title: tr.t('library.removeBrokenTitle'),
       tone: 'grave',
       body: brokenBody(broken),
       choices: [{
-        label: 'Supprimer',
+        label: tr.t('library.remove'),
         primary: true,
-        run: () => guard('Suppression', async () => {
+        run: () => guard(tr.t('library.contextRemoving'), async () => {
           await library.remove(broken.id)
-          say('L’entrée illisible a été supprimée.')
+          say(tr.t('library.brokenRemoved'))
         })
       }]
     })
   }
 
   const doExport = async (): Promise<void> => {
-    await guard('Export de la bibliothèque', async () => {
+    await guard(tr.t('library.contextExporting'), async () => {
       const when = now()
       const { archive, exported, skipped } = await exportLibrary(library, when)
       download(archive, `xctrack-bibliotheque-${fileStamp(when)}.zip`)
+      // La phrase de fin est une phrase entière, ou rien : elle ne s'ajoute pas au message
+      // par une concaténation, elle y entre par son repère.
       const tail = skipped.length === 0
         ? ''
-        : ` ${plural({
-          one: '{count} entrée illisible n’y est pas',
-          other: '{count} entrées illisibles n’y sont pas'
-        }, skipped.length)} : la sauvegarde est incomplète, et le dit.`
-      say(`${plural({
-        one: '{count} configuration exportée',
-        other: '{count} configurations exportées'
-      }, exported)} dans ` +
-        `une archive ZIP. Chaque .xcfg s’en extrait avec n’importe quel décompresseur.${tail}`)
+        : tr.t('library.exportSkipped', { count: skipped.length })
+      say(tr.t('library.exported', { count: exported, tail }))
     })
   }
 
@@ -1251,18 +1235,16 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
     const body = el('div', 'library__confirm')
     body.append(el(
       'p', 'library__note',
-      `Archive exportée le ${formatStamp(report.exportedAt ?? '')}. Aucune entrée ` +
-      'existante n’a été écrasée : une entrée déjà présente sous d’autres octets est ' +
-      'replacée à côté, suffixée.'
+      tr.t('library.importLead', { when: formatStamp(tr, report.exportedAt ?? '') })
     ))
     const list = el('ul', 'library__results')
     const labels: Record<string, string> = {
       // « replacée », et non « rétablie » : le troisième sens du mot (`i18n`,
       // `library.entryRestored`). Les deux autres vivent ailleurs dans l'application.
-      imported: 'replacée',
-      'already-present': 'déjà présente, rien à faire',
-      duplicated: 'replacée à côté : son identifiant était déjà pris',
-      rejected: 'refusée'
+      imported: tr.t('library.outcomeImported'),
+      'already-present': tr.t('library.outcomeAlreadyPresent'),
+      duplicated: tr.t('library.outcomeDuplicated'),
+      rejected: tr.t('library.outcomeRejected')
     }
     for (const result of report.results) {
       const item = el('li', result.outcome === 'rejected'
@@ -1275,19 +1257,20 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
     }
     body.append(list)
     views.open({
-      title: 'Bibliothèque importée',
+      title: tr.t('library.importTitle'),
       body,
-      cancelLabel: 'Retour à la liste',
+      cancelLabel: tr.t('library.returnToList'),
       choices: []
     })
     const rejected = counts.get('rejected') ?? 0
-    say(`${plural({
-      one: '{count} entrée lue',
-      other: '{count} entrées lues'
-    }, report.results.length)} dans l’archive` +
-      (rejected === 0
-        ? '.'
-        : ` — ${plural({ one: '{count} refusée', other: '{count} refusées' }, rejected)}.`))
+    // Deux nombres, deux accords : le compte des refusées arrive déjà accordé dans son
+    // repère, et la phrase reste entière.
+    say(rejected === 0
+      ? tr.t('library.imported', { count: report.results.length })
+      : tr.t('library.importedWithRejected', {
+        count: report.results.length,
+        rejected: tr.t('library.rejectedCount', { count: rejected })
+      }))
   }
 
   /* ------------------------------------------------------------------------ le dessin */
@@ -1298,7 +1281,7 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
     // Rien quand il n'y a rien : « Aperçu à venir » était une promesse affichée en
     // permanence, et une promesse non tenue vaut moins qu'un cadre vide.
     if (entry.preview !== undefined) {
-      slot.append(el('span', 'library__previewText', 'Aperçu rangé'))
+      slot.append(el('span', 'library__previewText', tr.t('library.previewStored')))
     }
     return slot
   }
@@ -1313,58 +1296,63 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
 
     const meta = el('p', 'library__meta')
     meta.append(
-      el('span', 'chip', exportTypeChip(entry.identity.read.exportType)),
-      el('span', 'chip chip--quiet', proseFormat.byteSize(entry.byteLength)),
-      el('span', 'chip chip--quiet', plural(GADGET_COUNT, entry.identity.read.widgetCount))
+      el('span', 'chip', exportTypeChip(tr, entry.identity.read.exportType)),
+      el('span', 'chip chip--quiet', tr.format.byteSize(entry.byteLength)),
+      el('span', 'chip chip--quiet',
+        tr.t('common.widgetCount', { count: entry.identity.read.widgetCount }))
     )
     if (entry.identity.read.containerKind === 'xczfg') {
-      meta.append(el('span', 'chip chip--quiet', 'archive .xczfg'))
+      meta.append(el('span', 'chip chip--quiet', tr.t('library.chipArchive')))
     }
-    const personal = personalDataCount(entry.identity)
-    if (personal.total > 0) {
+    const counted = personalDataCount(entry.identity)
+    if (counted.total > 0) {
       // Les deux chiffres sont **toujours** dits, y compris le zéro : « 16 données
       // personnelles » seul laisserait croire que les 16 voyagent. Ce qui décide de ce
       // qu'on peut envoyer, c'est le second.
-      const flag = el('span', 'flag',
-        `${plural({
-          one: '{count} donnée personnelle',
-          other: '{count} données personnelles'
-        }, personal.total)} · ` +
-        `${plural({
-          one: '{count} part avec les pages',
-          other: '{count} partent avec les pages'
-        }, personal.inLayout)}`)
+      //
+      // Le point médian sépare deux pastilles de données alignées, pas deux morceaux d'une
+      // même phrase : chacune est une phrase entière, accordée par le socle.
+      const flag = el('span', 'flag', [
+        tr.t('library.personalCount', { count: counted.total }),
+        tr.t('library.personalTravellingCount', { count: counted.inLayout })
+      ].join(' · '))
       meta.append(flag)
     }
     main.append(meta)
 
-    main.append(el('p', 'library__stamp',
-      `Rangée le ${formatStamp(entry.addedAt)} · ${entry.fileName === '' ? 'fichier inconnu' : entry.fileName}`))
+    main.append(el('p', 'library__stamp', tr.t('library.entryStamp', {
+      when: formatStamp(tr, entry.addedAt),
+      file: entry.fileName === '' ? tr.t('library.unknownFileName') : entry.fileName
+    })))
     if (entry.note !== '') main.append(el('p', 'library__entryNote', entry.note))
 
     const row = el('div', 'library__entryActions')
     if (options.onLoad !== undefined) {
-      const load = button('Charger', 'btn btn--primary')
+      const load = button(tr.t('library.load'), 'btn btn--primary')
       load.addEventListener('click', () => { askLoad(entry) })
       row.append(load)
     }
-    const extract = button('Ressortir le fichier')
-    extract.addEventListener('click', () => { void guard('Restitution', () => doExtract(entry)) })
-    const card = button('Carte d’identité')
+    const extract = button(tr.t('library.extract'))
+    extract.addEventListener('click', () => {
+      void guard(tr.t('library.contextExtracting'), () => doExtract(entry))
+    })
+    const card = button(tr.t('library.identity'))
     card.addEventListener('click', () => { openIdentity(entry) })
-    const verify = button('Vérifier l’empreinte', 'btn btn--ghost')
-    verify.addEventListener('click', () => { void guard('Vérification', () => doVerify(entry)) })
-    const rename = button('Renommer', 'btn btn--ghost')
+    const verify = button(tr.t('library.verify'), 'btn btn--ghost')
+    verify.addEventListener('click', () => {
+      void guard(tr.t('library.contextVerifying'), () => doVerify(entry))
+    })
+    const rename = button(tr.t('library.rename'), 'btn btn--ghost')
     rename.addEventListener('click', () => {
       openFormView(views, {
-        title: `Renommer « ${entry.name} »`,
-        lead: 'Le nom est à vous ; les octets rangés ne bougent pas.',
+        title: tr.t('library.renameTitle', { name: entry.name }),
+        lead: tr.t('library.renameLead'),
         fields: [
-          { key: 'name', label: 'Nom', value: entry.name },
-          { key: 'note', label: 'Note', value: entry.note, multiline: true }
+          { key: 'name', label: tr.t('library.fieldName'), value: entry.name },
+          { key: 'note', label: tr.t('library.fieldNote'), value: entry.note, multiline: true }
         ],
-        confirmLabel: 'Enregistrer',
-        onConfirm: (values) => guard('Renommage', async () => {
+        confirmLabel: tr.t('library.save'),
+        onConfirm: (values) => guard(tr.t('library.contextRenaming'), async () => {
           // Deux écritures, deux révisions : la seconde attend la première, sinon elle
           // partirait avec une révision périmée et se verrait refuser — par notre propre
           // contrôle de concurrence.
@@ -1377,11 +1365,14 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
           if (note !== entry.note) {
             latest = await library.annotate(entry.id, note, latest.revision)
           }
-          say(`« ${latest.name} » est à jour — ${timesStored(latest.revision)}.`)
+          say(tr.t('library.renamed', {
+            name: latest.name,
+            times: timesStored(tr, latest.revision)
+          }))
         })
       })
     })
-    const remove = button('Supprimer', 'btn btn--ghost')
+    const remove = button(tr.t('library.remove'), 'btn btn--ghost')
     remove.addEventListener('click', () => { askRemove(entry) })
     row.append(extract, card, verify, rename, remove)
     main.append(row)
@@ -1393,17 +1384,14 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
   const brokenItem = (broken: BrokenEntry): HTMLElement => {
     const item = el('li', 'library__entry library__entry--broken')
     const main = el('div', 'library__entryMain')
-    main.append(el('h3', 'library__entryName', 'Entrée illisible'))
+    main.append(el('h3', 'library__entryName', tr.t('library.brokenName')))
     main.append(el('p', 'library__meta'))
+    // Un identifiant interne et la raison technique, alignés comme des données : rien à
+    // traduire ici, tout est déjà dit par la phrase du dessous.
     main.append(el('p', 'library__stamp', `${broken.id} — ${broken.reason}`))
-    main.append(el(
-      'p', 'library__note',
-      'Elle n’empêche pas les autres de s’afficher, et elle reste supprimable. Ses octets ' +
-      'ne seront pas exportés : on n’écrit pas dans une sauvegarde ce qu’on ne saurait pas ' +
-      'restituer.'
-    ))
+    main.append(el('p', 'library__note', tr.t('library.brokenNote')))
     const row = el('div', 'library__entryActions')
-    const remove = button('Supprimer', 'btn')
+    const remove = button(tr.t('library.remove'), 'btn')
     remove.addEventListener('click', () => { askRemoveBroken(broken) })
     row.append(remove)
     main.append(row)
@@ -1418,14 +1406,9 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
       return
     }
     storageNote.hidden = false
-    storageNote.append(el('strong', 'library__bannerTitle', 'Rangement non durable'))
-    storageNote.append(el(
-      'span', 'library__bannerText',
-      'Ce navigateur n’accorde pas de rangement persistant à cette page : ce que vous ' +
-      'rangez ici vivra le temps de l’onglet, puis disparaîtra. La bibliothèque reste ' +
-      'utilisable — mais ce n’est pas une sauvegarde. Exportez-la avant de fermer.'
-    ))
-    const action = button('Exporter la bibliothèque maintenant')
+    storageNote.append(el('strong', 'library__bannerTitle', tr.t('library.notDurableTitle')))
+    storageNote.append(el('span', 'library__bannerText', tr.t('library.notDurableText')))
+    const action = button(tr.t('library.exportNow'))
     action.addEventListener('click', () => { void doExport() })
     storageNote.append(action)
   }
@@ -1433,32 +1416,31 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
   const drawFoot = async (snapshot: LibrarySnapshot): Promise<void> => {
     const total = snapshot.entries.reduce((sum, entry) => sum + entry.byteLength, 0)
     foot.textContent = ''
-    foot.append(el('span', 'library__footText',
-      `${plural({
-        one: '{count} configuration rangée',
-        other: '{count} configurations rangées'
-      }, snapshot.entries.length)}` +
-      `${snapshot.entries.length === 0 ? '' : ` — ${proseFormat.byteSize(total)} au total`}` +
-      `${snapshot.broken.length === 0 ? '' : `, ${plural({
-        one: '{count} entrée illisible',
-        other: '{count} entrées illisibles'
-      }, snapshot.broken.length)}`}.`))
+    /*
+     * Deux queues de phrase, ou rien : une bibliothèque vide ne dit pas « 0 o au total »,
+     * et une bibliothèque saine ne parle pas d'entrées illisibles. Chacune entre par son
+     * repère, déjà accordée — pas par une concaténation.
+     */
+    foot.append(el('span', 'library__footText', tr.t('library.footCount', {
+      count: snapshot.entries.length,
+      size: snapshot.entries.length === 0
+        ? ''
+        : tr.t('library.footTotalSize', { size: tr.format.byteSize(total) }),
+      broken: snapshot.broken.length === 0
+        ? ''
+        : tr.t('library.footBroken', { count: snapshot.broken.length })
+    })))
 
     if (options.requestPersistence !== undefined && snapshot.durable) {
-      const ask = button('Empêcher le navigateur d’effacer ma bibliothèque',
-        'btn btn--ghost')
+      const ask = button(tr.t('library.preventErase'), 'btn btn--ghost')
       ask.addEventListener('click', () => {
         void (async () => {
           const verdict = await options.requestPersistence?.()
           say(verdict === 'granted'
-            ? 'Le navigateur a accepté. Ce n’est jamais une garantie : certains effacent ' +
-              'tout de même les données d’un site non visité depuis sept jours. La seule ' +
-              'sauvegarde qui tienne est l’archive que vous exportez.'
+            ? tr.t('library.persistenceGranted')
             : verdict === 'denied'
-              ? 'Le navigateur a refusé. La bibliothèque fonctionne toujours, mais il peut ' +
-                'l’effacer : exportez-la régulièrement.'
-              : 'Ce navigateur ne propose pas ce réglage. Exportez votre bibliothèque ' +
-                'régulièrement.')
+              ? tr.t('library.persistenceDenied')
+              : tr.t('library.persistenceUnsupported'))
         })()
       })
       foot.append(ask)
@@ -1467,10 +1449,11 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
     if (options.estimateStorage !== undefined) {
       const estimate = await options.estimateStorage()
       foot.append(el('span', 'library__footText', estimate === undefined
-        ? 'Ce navigateur ne dit rien de l’espace disponible.'
-        : `Place employée par ce site : ${proseFormat.byteSize(estimate.usage)} sur ` +
-          `${proseFormat.byteSize(estimate.quota)} accordés — le navigateur n’en donne qu’un ` +
-          `ordre de grandeur.`))
+        ? tr.t('library.storageUnknown')
+        : tr.t('library.storageEstimate', {
+          usage: tr.format.byteSize(estimate.usage),
+          quota: tr.format.byteSize(estimate.quota)
+        })))
     }
   }
 
@@ -1479,11 +1462,7 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
     drawStorage(snapshot)
 
     if (snapshot.entries.length === 0 && snapshot.broken.length === 0) {
-      listWrap.append(el(
-        'p', 'library__empty',
-        'Rien de rangé pour l’instant. Rangez la configuration ouverte, ou glissez-y un ' +
-        'fichier .xcfg déjà exporté : il gardera son nom, sa date et ses octets.'
-      ))
+      listWrap.append(el('p', 'library__empty', tr.t('library.empty')))
       return
     }
 
@@ -1496,10 +1475,7 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
     if (snapshot.broken.length > 0) {
       const section = el('section', 'library__section library__section--broken')
       section.append(el('h3', 'library__heading',
-        plural({
-          one: '{count} Entrée qui ne se relit pas',
-          other: '{count} Entrées qui ne se relisent pas'
-        }, snapshot.broken.length)))
+        tr.t('library.brokenHeading', { count: snapshot.broken.length })))
       const list = el('ul', 'library__list')
       for (const broken of snapshot.broken) list.append(brokenItem(broken))
       section.append(list)
@@ -1518,7 +1494,7 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
       draw(snapshot)
       await drawFoot(snapshot)
     } catch (error) {
-      showFailure('Lecture de la bibliothèque', error)
+      showFailure(tr.t('library.contextReading'), error)
     } finally {
       drawing = false
     }
@@ -1536,8 +1512,7 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
     clearFlash()
     const source = options.current?.()
     if (source === undefined) {
-      say('Aucun fichier n’est ouvert : ouvrez une configuration, ou rangez un fichier ' +
-        'depuis le disque.', 'trouble')
+      say(tr.t('library.noOpenFile'), 'trouble')
       return
     }
     askStore(source)
@@ -1547,7 +1522,7 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
   filePicker.addEventListener('change', () => {
     const file = filePicker.files?.[0]
     if (file === undefined) return
-    void guard('Rangement', async () => {
+    void guard(tr.t('library.contextStoring'), async () => {
       const bytes = new Uint8Array(await file.arrayBuffer())
       askStore({ fileName: file.name, modified: false, bytes: async () => bytes })
     })
@@ -1560,7 +1535,7 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
   archivePicker.addEventListener('change', () => {
     const file = archivePicker.files?.[0]
     if (file === undefined) return
-    void guard('Import de la bibliothèque', async () => {
+    void guard(tr.t('library.contextImporting'), async () => {
       const bytes = new Uint8Array(await file.arrayBuffer())
       showImportReport(await importLibrary(library, bytes))
     })
@@ -1614,11 +1589,11 @@ export function openLibraryDialog(
   const panel = renderLibraryPanel(options)
 
   const dialog = el('dialog', 'modal modal--library modal--libraryPanel')
-  dialog.setAttribute('aria-label', 'Bibliothèque de configurations')
+  dialog.setAttribute('aria-label', options.tr.t('library.panelLabel'))
   const box = el('div', 'modal__box')
   const head = el('div', 'modal__head')
-  head.append(el('h2', 'modal__title', 'Bibliothèque de configurations'))
-  const dismiss = button('Fermer', 'btn btn--ghost')
+  head.append(el('h2', 'modal__title', options.tr.t('library.panelLabel')))
+  const dismiss = button(options.tr.t('library.close'), 'btn btn--ghost')
   head.append(dismiss)
   box.append(head, panel.element)
   dialog.append(box)

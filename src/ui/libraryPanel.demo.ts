@@ -7,6 +7,7 @@ import {
   estimateStorage, openIndexedDbStore, requestPersistence
 } from '../library/indexedDbStore'
 import { blobKey, type LibraryStore } from '../library/store'
+import { initialUiLanguage, loadTranslator } from '../i18n'
 import { renderLibraryPanel, type CurrentDocument, type LibraryPanelHandle } from './libraryPanel'
 
 /**
@@ -127,7 +128,11 @@ async function build(): Promise<void> {
   }
 
   library = createLibrary({ store })
+  // La langue du pilote, comme l'assembleur la choisit : le panneau reçoit son traducteur,
+  // il ne va jamais le chercher. Changer de langue ici, c'est changer celle du navigateur.
+  const tr = await loadTranslator(initialUiLanguage(window.localStorage, [...navigator.languages]))
   panel = renderLibraryPanel({
+    tr,
     library,
     current: () => current,
     onLoad: (entry, bytes) => {
