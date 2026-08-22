@@ -2370,6 +2370,7 @@ function buildPreferencesView(current: Session): HTMLElement {
   void import('./preferencesPage')
     .then((module) => module.openPreferencesPage({
       document: current.container.document,
+      tr: translator(),
       language: current.language,
       fileName: current.container.fileName,
       ...(current.versionName === undefined ? {} : { fileVersionName: current.versionName }),
@@ -2770,6 +2771,7 @@ function askBeforeExport(current: Session): void {
   const notice = warningNotice(warningsAt(
     current.container.modified
       ? computeWarnings({
+        tr: translator(),
         document: current.container.document,
         layout: current.layout,
         settings: current.settings,
@@ -2784,6 +2786,7 @@ function askBeforeExport(current: Session): void {
   void import('./sharingDialog')
     .then((module) => {
       const handle = module.renderSharingDialog({
+        tr: translator(),
         source: sharingSource(current),
         language: current.language,
         ...(notice === undefined ? {} : { notice }),
@@ -2969,6 +2972,7 @@ function render(): void {
   // premier geste.
   const { attention, remarks } = splitWarnings(warningsAt(session.warnings, 'import').concat(
     preflightWarnings({
+      tr: translator(),
       document: session.container.document,
       layout: session.layout,
       language: session.language,
@@ -3180,7 +3184,9 @@ function buildSession(container: Container): Session {
     languageFromBrowser: settings.language.kind === 'system',
     versionCode: info ? readNumber(info, 'versionCode') : undefined,
     versionName: info ? readString(info, 'versionName') : undefined,
-    warnings: computeWarnings({ document: container.document, layout, settings, language })
+    warnings: computeWarnings({
+      document: container.document, layout, settings, language, tr: translator()
+    })
   }
 }
 
