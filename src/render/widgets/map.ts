@@ -25,6 +25,20 @@ import { readRotation } from './rotation'
  * trace de vol) : comme les valeurs d'exemple des widgets numériques (numeric.ts), tout
  * ce qui est dessiné ici est une valeur statique fixe qui juge la mise en page, pas une
  * simulation de navigation.
+ *
+ * ## `WThermalAssistant` en spirale — ce que le rejeu du 2026-08-22 montre en plus
+ *
+ * `captures-air3/2026-08-22_rejeu-assistant-thermique.png`, pilote en spirale : trois
+ * éléments qu'aucune capture au sol ne montre. Deux sont dessinés ici — le **cercle du
+ * noyau** (`drawCircle`, un anneau bleu-violet centré sur le pilote) et la **trace récente
+ * colorée** le long du cercle. Le troisième ne l'est pas :
+ *
+ * **NON DESSINÉ** — l'**étiquette du taux de montée instantané**, « +1,4 m/s » en vert vif
+ * cerné de noir, collée sous le pilote et à sa gauche, à l'intérieur du cercle. C'est une
+ * valeur d'exemple de plus, pas une simulation ; ce qui manque est un calque de texte
+ * positionné sur le pilote — donc une famille de règles que `style.css` ne porte pas
+ * encore. Le vent (`20 km/h` gris au-dessus de sa flèche, en bas au centre), l'échelle
+ * (`150m`) et la rose des vents de coin, eux, étaient déjà connus et sont dessinés.
  */
 
 export type MapKind = 'WCompMap' | 'WXCAssistant' | 'WThermalAssistant'

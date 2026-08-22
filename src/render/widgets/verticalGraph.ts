@@ -22,7 +22,10 @@ import { widgetNumber } from '../defaults'
  *
  * **L'orange était la valeur du fichier du PROPRIÉTAIRE, prise pour un défaut.** Le vrai
  * défaut de `dot_color` est `-8355585`, soit `#8080ff` — c'est ce que dit le relevé des
- * 75 gadgets (`widgetDefaults.json`), et c'est ce que la capture montre. Ce module lisait
+ * 75 gadgets (`widgetDefaults.json`), et c'est ce que la capture montre. Le rejeu du
+ * 2026-08-22 le confirme dans l'autre sens : sur la configuration du propriétaire, les
+ * points sont `#ff9800`, c'est-à-dire exactement son `dot_color: -26624`. La clé se lit
+ * donc, elle ne se tranche pas a priori — ce que fait déjà `drawVerticalGraph`. Ce module lisait
  * `readNumber(widget.node, 'dot_color')` avec un repli en dur, sans passer par
  * `widgetNumber` : **la septième occurrence** du défaut « une clé absente vaut son défaut,
  * pas ma constante » — les six premières étaient des `readBoolean(...) === true`,

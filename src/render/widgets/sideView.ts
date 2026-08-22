@@ -44,14 +44,29 @@ import type { RenderSettings } from '../../model/preferences'
  *   savoir que ces deux marques occuperont ces deux coins. Leur RÔLE, lui, reste inconnu
  *   et c'est écrit ici plutôt que deviné.
  *
- * ## Ce qui n'est PAS dessiné, et pourquoi
+ * ## Ce qui n'est PAS dessiné — et ce que le rejeu du 2026-08-22 corrige dans ce constat
  *
- * `captures-air3/2026-08-21_planche-competition-7-carte-manche-et-resume.png` — donc une
- * manche chargée et le mode compétition actif — montre le même gadget avec, en plus : des
- * **lignes d'altitude en pointillés** graduées 500 à 2500 m et étiquetées à droite, un
- * **trait vertical gris** pour la balise avec son nom en haut, et une **ligne de plané en
- * pointillés**. Les trois viennent de la manche et du vol en cours, que le fichier de
- * pages ne porte pas. Ce moteur dessine l'état au repos, comme partout ailleurs.
+ * Le paragraphe qui suivait rangeait les lignes d'altitude et la ligne de plané parmi ce
+ * qui « vient de la manche et du vol en cours » : elles n'apparaissaient que sur
+ * `planche-competition-7`, manche chargée et mode compétition actif. **C'est faux, et
+ * c'est aussi la réserve n° 4 qui tombe** (`2026-08-21-reserves-de-rendu.md`).
+ *
+ * `captures-air3/2026-08-22_rejeu-vue-de-cote.png` — **aucune manche chargée**, `type:
+ * SIDE_BEARING`, `distance: 15000` — montre le gadget plein :
+ *
+ * | élément | présent SANS manche |
+ * |---|---|
+ * | profil du terrain, brun plein sur toute la largeur | oui |
+ * | **grille d'altitude en tirets, étiquetée à droite** (`1500m` … `3000m`) | **oui** |
+ * | **ligne de plané en tirets, descendant depuis le pilote** | **oui** |
+ * | échelle de distance (`5km`, `10km`) | oui |
+ * | traits de balise et leur nom | non — c'est le seul élément qui demande une manche |
+ *
+ * La densité visuelle de l'appareil est donc très supérieure à la nôtre, et **une part est
+ * atteignable sans rien simuler d'un vol** : la grille d'altitude et le profil ne
+ * dépendent que de la position. Ce qui manque ici, ce sont la grille et la ligne de plané ;
+ * elles demandent deux familles de traits que `style.css` ne porte pas encore. Le trait de
+ * balise, lui, reste hors de portée pour la raison d'origine : il vient de la manche.
  */
 
 const SVG_NS = 'http://www.w3.org/2000/svg'
