@@ -134,7 +134,11 @@ body {
   padding: 0.35rem 0.9rem;
   border: 1px solid var(--app-line-strong);
   /* Une pastille, comme partout dans le carnet : les commandes de la barre, les boutons
-     d'une boîte et les marques d'état partagent la même forme arrondie. */
+     d'une boîte et les marques d'état partagent la même forme arrondie.
+     ⚠ La forme, oui ; le **trait**, non. Un filet plein n'entoure que ce qui se clique —
+     les marques qui ne font que renseigner (`.props__origin`, `.prefs__state`,
+     `.prefs__personal`) portent un filet tireté. Deux pastilles identiques dont une
+     seule répondait au clic ont valu à un pilote d'essai de cliquer pour rien. */
   border-radius: 999px;
   background: transparent;
   color: var(--app-ink);
@@ -1566,10 +1570,12 @@ body.is-dragging .veil {
   /* Alignée sur `.prefs__state` : les deux écrans disent la même chose, ils ne doivent
      pas la dire dans deux tailles différentes — ni dans deux formes différentes. Les
      deux portent donc la même paire de pastilles : contour seul pour la valeur d'usine,
-     aplat d'ambre pour ce que le pilote a réglé. */
+     aplat d'ambre pour ce que le pilote a réglé. Et le contour est **tireté** des deux
+     côtés : une marque ne se clique pas, elle ne doit pas emprunter le filet plein des
+     boutons qui l'entourent. */
   font-size: 12px;
   padding: 0.1rem 0.55rem;
-  border: 1px solid var(--app-line);
+  border: 1px dashed var(--app-line);
   border-radius: 999px;
   color: var(--app-ink-soft);
   white-space: nowrap;

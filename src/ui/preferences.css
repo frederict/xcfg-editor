@@ -641,7 +641,18 @@
    * pour ce que le pilote a réglé, filet seul pour ce que XCTrack pose d'usine.
    */
   padding: 0.1rem 0.55rem;
-  border: 1px solid transparent;
+  /*
+   * ⚠ **Tireté, et non plein** : c'est ce qui sépare une marque d'un bouton.
+   *
+   * La forme arrondie reste partagée avec les commandes — c'est la décision d'`app.css`
+   * et elle tient. Ce qui ne tenait pas, c'est le **trait** : les deux gestes voisins de
+   * cette page (« Définir cette valeur », « Rétablir la valeur d'usine ») sont des
+   * pastilles à filet plein, et cette marque-ci portait exactement le même filet sans se
+   * cliquer. Un pilote d'essai l'a dit : « j'ai cliqué dessus pour rien ». Le filet
+   * tireté est déjà, dans cette application, le trait de ce qui renseigne sans agir
+   * (`.hint-note`) ; il va avec le pointeur `help` posé juste en dessous.
+   */
+  border: 1px dashed transparent;
   border-radius: 999px;
   color: var(--prefs-soft);
   cursor: help;
@@ -685,10 +696,11 @@
 .prefs__personal {
   justify-self: start;
   /* Le marqueur d'une donnée personnelle : lui aussi porte une information qu'on ne
-     peut pas se permettre de manquer avant de partager un fichier. */
+     peut pas se permettre de manquer avant de partager un fichier. Tireté comme la
+     marque d'état, et pour la même raison : il ne se clique pas. */
   font-size: 11px;
   padding: 0.05rem 0.5rem;
-  border: 1px solid var(--app-flag-line, #cf9c2c);
+  border: 1px dashed var(--app-flag-line, #cf9c2c);
   border-radius: 999px;
   color: var(--app-flag-ink, #7a5410);
   cursor: help;

@@ -309,6 +309,10 @@ qu'on a réglé, ou figer ce que le fichier ne dit pas.*
   REFAIRE CETTE CAPTURE — captures/panneau-gadget.<langue>.png (1400 × 1650 ;
                           1400 × 1750 pour l'allemand)
   Écran ...... l'éditeur en mode édition, panneau de réglages d'un gadget déplié.
+  ⚠ PÉRIMÉE DEPUIS LE 2026-08-22 : les marques d'origine du panneau (`.props__origin` —
+               « valeur d'usine », « réglé par vous ») portaient le filet PLEIN des boutons
+               voisins sans se cliquer, et portent maintenant un filet TIRETÉ. Rien d'autre
+               n'a bougé sur cet écran ; le cadrage ci-dessous reste bon.
   Langues .... CINQ exemplaires : .fr, .en, .nl, .de, .es. Le texte est le sujet.
                Ce fichier-ci ne déclare AUCUNE langue (`Display.Language` vide) : les
                noms de XCTrack suivent donc, à défaut, celle de l'interface — le globe
@@ -368,9 +372,9 @@ réglages restent français dans les cinq captures — seule notre prose change.
   à mi-course. Ces chantiers sont clos ; les cinq images ont été reprises sur un arbre
   propre, servi depuis un export figé de HEAD (`git archive`).
 
-  ⚠ LES CINQ IMAGES SONT PÉRIMÉES DEPUIS LE 2026-08-22 : elles montrent le recouvrement
-  ci-dessous, que le code ne produit plus. La recette, elle, reste bonne — il n'y a que
-  les photographies à reprendre.
+  ⚠ LES CINQ IMAGES SONT PÉRIMÉES DEPUIS LE 2026-08-22, ET POUR DEUX RAISONS. Elles
+  montrent un écran que le code ne produit plus. La recette, elle, reste bonne — il n'y a
+  que les photographies à reprendre.
 
   Sur les images, le bouton de retrait passe SOUS la marque d'état. Ce n'était pas
   l'émulation : `.prefs__aside` réservait une largeur écrite de 4,6 rem (73,6 px), taillée
@@ -389,6 +393,13 @@ réglages restent français dans les cinq captures — seule notre prose change.
   marque dans les cinq langues — c'est l'écart de colonnes de la grille, il ne dépend donc
   pas de la fenêtre —, un seul bord droit pour les 157 lignes, et la liste garde ses 240 px
   dans les cinq langues.
+
+  ⚠ ET UNE SECONDE RAISON, du même écran : LES MARQUES ONT CHANGÉ DE TRAIT.
+  « valeur d'usine », « absente du fichier », « réglé par vous » et la marque de donnée
+  personnelle portaient le filet PLEIN des deux boutons voisins — « Définir cette valeur »
+  et « Rétablir la valeur d'usine » — sans se cliquer, et un pilote d'essai a cliqué dessus
+  pour rien. Elles portent maintenant un filet TIRETÉ ; les boutons gardent le plein. La
+  pastille reste la même forme : c'est le trait qui distingue, pas l'arrondi.
 
   Écran ...... la page « Réglages généraux », mode édition.
   Langues .... CINQ exemplaires : .fr, .en, .nl, .de, .es.

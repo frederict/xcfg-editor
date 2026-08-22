@@ -143,6 +143,38 @@ describe('app.css — la case à cocher reste avec son libellé', () => {
 })
 
 /**
+ * # Une marque ne se déguise pas en bouton
+ *
+ * Signalé par un pilote d'essai sur les réglages généraux — « j'ai cliqué dessus pour
+ * rien » —, puis mesuré deux fois : la marque d'origine d'une valeur (`.props__origin`
+ * ici, `.prefs__state` dans les réglages) portait la **pastille à filet plein** des
+ * boutons qui l'entourent, sans se cliquer ni répondre au survol.
+ *
+ * La forme arrondie reste partagée : c'est la décision écrite en tête de `.btn`, et elle
+ * fait tenir le carnet. Ce qui ne se partage plus, c'est le **trait** — plein pour ce
+ * qui agit, tireté pour ce qui renseigne. Le tireté n'est pas une invention : cette
+ * feuille l'emploie déjà pour `.hint-note`, et `preferences.css` pour `.prefs__empty`.
+ */
+describe('app.css — une marque d’origine ne se déguise pas en bouton', () => {
+  it('la marque du panneau des gadgets porte un filet tireté', () => {
+    expect(rule('.props__origin')).toContain('border: 1px dashed')
+  })
+
+  it('les boutons, eux, gardent le filet plein', () => {
+    // Si les deux traits redevenaient identiques, la confusion reviendrait entière.
+    expect(rule('.btn')).toContain('border: 1px solid var(--app-line-strong);')
+    expect(rule('.btn')).not.toContain('dashed')
+  })
+
+  it('la marque reste alignée sur celle des réglages généraux', () => {
+    // Même taille, même rembourrage, même pastille : les deux écrans disent la même
+    // chose. `preferences.css` porte l'autre moitié de cette paire, et son propre test.
+    expect(rule('.props__origin')).toContain('font-size: 12px;')
+    expect(rule('.props__origin')).toContain('border-radius: 999px;')
+  })
+})
+
+/**
  * L'entrée directe des réglages généraux. Elle a coûté 40 px à une barre qui repliait
  * déjà : le seuil de sa forme compacte est une mesure, et un changement de valeur doit
  * faire échouer ce test plutôt que de laisser la barre repasser sur deux lignes à

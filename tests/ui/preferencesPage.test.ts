@@ -1344,6 +1344,26 @@ describe('preferences.css habille les contrôles sans sortir du cadre', () => {
     expect(edition).toMatch(/grid-template-columns:.*\bauto\b.*;/)
   })
 
+  it('donne un filet tireté à ce qui ne se clique pas', () => {
+    // Un pilote d'essai a cliqué sur la marque d'état : elle portait le filet plein et la
+    // pastille des deux boutons voisins (« Définir cette valeur », « Rétablir la valeur
+    // d'usine ») sans rien faire au clic. La forme arrondie reste partagée — c'est la
+    // décision d'`app.css` —, le trait ne l'est plus : plein pour ce qui agit, tireté
+    // pour ce qui renseigne, comme `.prefs__empty` et `.hint-note` le font déjà.
+    for (const rule of ['.prefs__state', '.prefs__personal']) {
+      const body = new RegExp(`\\${rule} \\{[^}]*\\}`).exec(css)?.[0] ?? ''
+      expect(body, rule).not.toBe('')
+      expect(body, rule).toMatch(/border: 1px dashed/)
+    }
+    // Les trois gestes de la page gardent, eux, le filet plein de `.btn` : aucun ne se
+    // met à ressembler à une marque en échange.
+    for (const rule of ['.prefs__adopt', '.prefs__drop', '.prefs__restore-btn']) {
+      const body = new RegExp(`\\${rule}[,\\s][^}]*\\}`).exec(css)?.[0] ?? ''
+      expect(body, rule).not.toBe('')
+      expect(body, rule).not.toMatch(/dashed/)
+    }
+  })
+
   it('empile les trois morceaux d’une liaison au lieu de les aligner', () => {
     // Trois morceaux côte à côte pousseraient la valeur hors de sa colonne dès le
     // premier libellé un peu long : la colonne de cette page existe pour tenir.
