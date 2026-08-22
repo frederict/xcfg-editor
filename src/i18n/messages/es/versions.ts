@@ -260,8 +260,8 @@ const versions: DomainCatalog<'versions'> = {
   /* ------------------------------------------------------------- décocher, puis agir */
 
   'cleanup.allSelected': {
-    one: '{count} ajuste marcado.',
-    other: '{count} ajustes marcados.'
+    one: '{count} ajuste marcado: se quitará.',
+    other: '{count} ajustes marcados: se quitarán.'
   },
   'cleanup.someSelected': {
     one: '{count} marcado de {total} — {left}.',

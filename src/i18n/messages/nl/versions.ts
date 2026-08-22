@@ -257,8 +257,8 @@ const versions: DomainCatalog<'versions'> = {
   /* ------------------------------------------------------------- décocher, puis agir */
 
   'cleanup.allSelected': {
-    one: '{count} instelling aangevinkt.',
-    other: '{count} instellingen aangevinkt.'
+    one: '{count} instelling aangevinkt: die wordt weggehaald.',
+    other: '{count} instellingen aangevinkt: die worden weggehaald.'
   },
   'cleanup.someSelected': {
     one: '{count} aangevinkt van de {total} — {left}.',
