@@ -264,7 +264,7 @@ const model = {
    * Sept règles, leur titre, ce qu'elles valent en général, et ce qu'elles disent d'un
    * gadget donné.
    *
-   * ⚠️ **Trois des sept sont des suppositions déclarées** (`certainty: 'hypothesis'`) :
+   * ⚠️ **Quatre des sept sont des suppositions déclarées** (`certainty: 'hypothesis'`) :
    * `unreachableWidget`, `thermalPages`, `widgetTooSmall` et `proWidget` sortent en doute,
    * et leur `…ToVerify` dit **ce qui lèverait le doute sur l'instrument**. C'est la
    * distinction mesuré / supposé qui fait la valeur de ce projet : une traduction qui

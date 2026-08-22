@@ -61,7 +61,7 @@ import type { MessageKey, Translator } from '../i18n'
  * « Paysage, page 5, gadget 9 », en sortent — de `src/i18n/` ce fichier ne prend que des
  * **types**, effacés à la compilation, et il reste le module pur qu'il était.
  *
- * ⚠️ **Ce que la traduction ne doit pas perdre.** Trois des sept règles sortent en
+ * ⚠️ **Ce que la traduction ne doit pas perdre.** Quatre des sept règles sortent en
  * `certainty: 'hypothesis'` et se formulent **en question**, jamais en verdict ; leur
  * `toVerify` nomme l'essai qui trancherait sur l'instrument. C'est la distinction mesuré /
  * supposé, et c'est elle qui fait la valeur du projet : une traduction qui affirmerait ce
