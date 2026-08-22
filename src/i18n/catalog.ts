@@ -56,13 +56,13 @@ import type { FrenchMessages } from './messages/fr'
  * compile pas. Avec un chemin calculé, elle ne casserait qu'à l'exécution, chez le
  * pilote qui a précisément choisi cette langue-là.
  *
- * **Mesuré après le découpage** (Vite 8.2.2, `minify: true`, sur une entrée qui n'importe
- * que `src/i18n/`) : **cinq** morceaux distincts, un par langue — les neuf fichiers de
- * domaine d'une langue sont bien fondus dans le sien. Le socle pèse 1 735 octets
- * compressés ; chaque catalogue de ce socle — 21 messages, neuf domaines dont trois
- * vides — en pèse 783 (en) à 869 (nl), et le pilote en télécharge **un**. Le découpage a
- * coûté une quarantaine d'octets compressés par langue, ce que valent trois objets vides
- * répandus dans l'assemblage.
+ * **Mesuré** (Vite 8.2.2, `minify: true`, sur une entrée qui n'importe que `src/i18n/`) :
+ * **cinq** morceaux distincts, un par langue — les neuf fichiers de domaine d'une langue
+ * sont bien fondus dans le sien, et le découpage n'a donc rien changé au nombre de
+ * requêtes. Le socle pèse 1 804 octets compressés ; chaque catalogue — 54 messages, neuf
+ * domaines dont deux encore vides — en pèse 1 509 (en) à 1 695 (de), et le pilote en
+ * télécharge **un**. La même mesure sur la construction complète de l'application donne
+ * les mêmes cinq morceaux, aux mêmes tailles.
  *
  * À l'échelle des 627 unités de message du dépôt, l'ordre de grandeur est de 25 ko
  * compressés par langue : c'est ce qu'une extraction en un seul fichier ferait

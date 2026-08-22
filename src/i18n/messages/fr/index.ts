@@ -32,6 +32,13 @@ import widgets from './widgets'
  * vient, et un message qui change de domaine garde sa clé. Le domaine est une affaire de
  * fichier, jamais d'appel.
  *
+ * ## Ce catalogue est un socle, pas la traduction
+ *
+ * Il porte les 54 messages qui **arbitrent du vocabulaire** ou qui **démontrent une
+ * construction** — pluriel, phrase à repères nommés, formateur, énumération. Les 627
+ * unités de message de `src/ui/` seront versées domaine par domaine, par les lots
+ * d'extraction ; `src/i18n/CLAUDE.md` dit comment.
+ *
  * Chaque clé ne doit apparaître que dans **un** domaine : la fusion ci-dessous en
  * garderait silencieusement une seule, et `tests/i18n/domains.test.ts` refuse le cas.
  */
