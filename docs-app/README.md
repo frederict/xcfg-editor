@@ -69,18 +69,24 @@ raison :
 | `.manual__warning` | Le seul encadré coloré, réservé aux données personnelles. |
 | `.manual__boxTitle` | Le titre d'un encadré. Volontairement pas un élément de titre : il ne doit pas entrer dans le sommaire. |
 | `.manual__steps` | Une suite de gestes numérotés, quand l'ordre compte. |
-| `.manual__figure` | Un `<figure>` : une capture de l'écran dont le chapitre parle, et son `<figcaption>`. Il n'y en a que **deux** dans tout le manuel — voir la section suivante. |
+| `.manual__figure` | Un `<figure>` : une capture de l'écran dont le chapitre parle, et son `<figcaption>`. Il n'y en a que **quatre** dans tout le manuel — voir la section suivante. |
 
-## Les deux figures, et pourquoi elles ne sont pas dans `docs-app/`
+## Les quatre figures, et pourquoi elles ne sont pas dans `docs-app/`
 
-Le manuel porte **deux images**, pas treize : illustrer chaque chapitre en ferait un
-catalogue. Elles sont aux deux endroits où une image dit en une seconde ce que trois
+Le manuel porte **quatre images**, pas treize : illustrer chaque chapitre en ferait un
+catalogue. Elles sont aux quatre endroits où une image dit en une seconde ce que trois
 paragraphes expliquent :
 
 | Chapitre | Fichier | Ce qu'elle montre |
 |---|---|---|
+| 7, `m-usine` | `manuel/trois-gestes.<langue>.png` | les trois gestes de valeur d'usine sur un même écran : ils se ressemblent, **un seul** change ce que l'appareil fait en vol |
+| 9, `m-version` | `manuel/nettoyage-propose-et-laisse.<langue>.png` | **quatre** réglages proposés au retrait **et cinq** laissés en place, chacun avec sa raison et sa mesure |
 | 10, `m-enregistrer` | `manuel/trois-issues.<langue>.png` | les trois cartes de la boîte d'enregistrement, l'une sous l'autre : l'échelle de ce qui part |
 | 11, `m-bibliotheque` | `manuel/bibliotheque-entree.<langue>.png` | une entrée rangée, sa vignette aux **barres grises**, son compte de données personnelles |
+
+Les deux premières ont été **ajoutées le 2026-08-22**, sur arbitrage du propriétaire :
+deux pilotes s'étaient trompés de bouton au chapitre 7, et l'asymétrie du chapitre 9
+(quatre proposés, cinq laissés) se raconte mal en prose.
 
 **Chaque langue a la sienne.** Une capture française dans le manuel allemand serait un
 mensonge illustré : le lecteur y chercherait des mots qu'il ne trouve pas à l'écran.
@@ -100,22 +106,55 @@ côté client — le document est toujours à la racine de l'application.
 
 ### Le poids, et comment il est tenu
 
-Dix images, **162 ko en tout**. Un pilote en télécharge **deux**, celles de sa langue, soit
-**31 ko** — et seulement s'il descend jusqu'au chapitre 10, grâce à `loading="lazy"`. Le
-premier écran, lui, ne paie toujours rien.
+Vingt images, **1,8 Mo en tout** — c'était 162 ko avant les deux figures du 2026-08-22, et
+il faut le dire plutôt que le laisser découvrir. Un pilote en télécharge **quatre**, celles
+de sa langue, soit **362 ko** (fr) — et seulement s'il descend jusqu'au chapitre 7, grâce à
+`loading="lazy"`. Le premier écran, lui, ne paie toujours rien.
 
-Elles sont prises **à leur taille naturelle**, sous la mesure de 40 rem de la colonne de
-texte : 596 et 625 points de large. Agrandir une capture ne rend pas son texte lisible,
-seulement flou ; la CSS la laisse rétrécir et jamais grandir.
+La plus lourde est de loin `nettoyage-propose-et-laisse` (234 à 255 ko selon la langue) :
+611 × 1 240 points de texte sur aplat ambre, et c'est le prix de ce qu'elle montre — les
+deux listes entières, sans quoi l'asymétrie ne se voit plus. Mesuré, pas estimé.
+
+Trois d'entre elles sont prises **à leur taille naturelle**, sous la mesure de 40 rem
+(640 px) de la colonne de texte : 596, 625 et 611 points de large. Agrandir une capture ne
+rend pas son texte lisible, seulement flou ; la CSS la laisse rétrécir et jamais grandir.
+
+⚠ **`trois-gestes.<langue>.png` est la seule exception, et elle est mesurée.** Elle fait
+**829** points de large et s'affiche donc à 640, soit 77 %. On ne peut pas faire mieux :
+l'écran des réglages généraux a besoin de **940 points de fenêtre** avant que la valeur
+d'un réglage cesse de déborder sous son bouton. Relevé le 2026-08-22, rangée
+« Définir cette valeur », largeur rendue de la valeur contre sa largeur naturelle
+(37,9 px) : à 740 points la cellule ne fait que 96 px pour un bouton de 120,8 et la valeur
+tombe à 0 — le bouton passe **par-dessus le nom du réglage** ; à 860 le français passe mais
+le néerlandais déborde encore de 20 px ; à 940 les cinq langues sont nettes. La rangée
+mesure alors 829 px, et la colonne de texte 640. **C'est un défaut de mise en page à ces
+largeurs, pas un défaut de la capture** : il n'a pas été corrigé le jour où la figure a été
+prise, et il attend son propre chantier.
 
 ### Comment les refaire
 
-Viewport de **700 × 1400** points, à cette largeur-là et pas une autre : c'est elle qui
-donne une boîte de 596 px et une entrée de 625 px, donc des images qui tiennent dans la
-colonne sans être réduites. Fixtures anonymisées, comme partout —
-`formes-preservees.xcfg` pour les deux (c'est la seule dont la vignette porte des barres
-grises). La recette longue, avec l'état exact et les pièges, est celle des captures du
-`README.md` français : ces deux figures en sont des recadrages, pris au même endroit.
+Viewport de **700 × 1400** points pour `trois-issues` et `bibliotheque-entree`, à cette
+largeur-là et pas une autre : c'est elle qui donne une boîte de 596 px et une entrée de
+625 px, donc des images qui tiennent dans la colonne sans être réduites.
+
+Les deux figures du 2026-08-22 ont chacune la leur, mesurée :
+
+- `nettoyage-propose-et-laisse` — viewport **700 × 3400**, fixture
+  `2026-08-20_backup-00.xcfg`, mode édition, menu « Fichier » puis
+  « Version et compatibilité… », section de nettoyage dépliée ; recadrage sur `.vclean`,
+  611,2 px de large, 1 240,3 de haut (1 359,2 en allemand). ⚠ **3 400 et pas 2 600** : à
+  2 600 la boîte allemande dépasse son plafond de 88 vh, un ascenseur paraît *dans* la
+  boîte et `.vclean` rétrécit à 596,2 — la mesure devient fausse sans que rien ne le dise.
+- `trois-gestes` — viewport **940 × 1600**, fixture `2025-07-07_backup-00.xcfg`, écran
+  « Réglages » puis mode édition, bloc `[data-screen="preferences_tweaks"]` ; recadrage sur
+  les rangées **5 à 8** du bloc (indices 4 à 7), 829 px de large, 496,8 de haut dans les
+  cinq langues. Le 940 est expliqué plus haut ; le haut du recadrage se cale sous la barre
+  de tête, qui mesure 100,6 px à cette largeur dans quatre langues et 56 en anglais.
+
+Fixtures anonymisées, comme partout — `formes-preservees.xcfg` pour `trois-issues` et
+`bibliotheque-entree` (c'est la seule dont la vignette porte des barres grises). La recette
+longue, avec l'état exact et les pièges, est celle des captures du `README.md` français :
+les quatre figures en sont des recadrages, pris au même endroit.
 
 **Le recadrage se calcule, il ne se devine pas** : `.library__entry` mesure 625,2 px de
 large et sa hauteur dépend de la langue (182 px en anglais, où les six commandes tiennent
