@@ -56,17 +56,20 @@ import type { FrenchMessages } from './messages/fr'
  * compile pas. Avec un chemin calculé, elle ne casserait qu'à l'exécution, chez le
  * pilote qui a précisément choisi cette langue-là.
  *
- * **Mesuré** (Vite 8.2.2, `minify: true`, sur une entrée qui n'importe que `src/i18n/`) :
- * **cinq** morceaux distincts, un par langue — les neuf fichiers de domaine d'une langue
- * sont bien fondus dans le sien, et le découpage n'a donc rien changé au nombre de
- * requêtes. Le socle pèse 1 804 octets compressés ; chaque catalogue — 54 messages, neuf
- * domaines dont deux encore vides — en pèse 1 509 (en) à 1 695 (de), et le pilote en
- * télécharge **un**. La même mesure sur la construction complète de l'application donne
- * les mêmes cinq morceaux, aux mêmes tailles.
+ * **Mesuré** (`npm run build`, Vite 8.2.2, l'application entière — une commande, et non
+ * plus une entrée fabriquée pour la mesure) : **cinq** morceaux distincts, un par langue
+ * — les neuf fichiers de domaine d'une langue sont bien fondus dans le sien, et le
+ * découpage n'a donc rien changé au nombre de requêtes.
  *
- * À l'échelle des 627 unités de message du dépôt, l'ordre de grandeur est de 25 ko
- * compressés par langue : c'est ce qu'une extraction en un seul fichier ferait
- * télécharger cinq fois, pour en afficher une.
+ * Les lots d'extraction ont versé la prose des écrans : chaque catalogue porte les
+ * **1 145 messages** relevés à cette mesure, soit
+ * 1 272 formes, les 127 pluriels comptant double. Il pèse de 31,6 ko compressés (fr,
+ * 116 ko bruts) à 35,3 ko (de, 129 ko) — l'anglais, l'espagnol et le néerlandais entre
+ * les deux —, et le pilote en télécharge **un**.
+ *
+ * Les quatre autres pèsent 135 ko compressés à eux quatre, et c'est exactement ce
+ * qu'une extraction en un seul fichier ferait télécharger pour rien. L'estimation d'avant
+ * l'extraction — « de l'ordre de 25 ko par langue » — est remplacée par cette mesure.
  */
 
 /**
