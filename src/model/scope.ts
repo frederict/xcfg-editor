@@ -164,6 +164,99 @@ export function derivePagesDocument(source: JsonNode): PagesDerivation {
   return { document, droppedRootKeys, previousExportType }
 }
 
+/* ------------------------------------------------------ n'emporter que certaines pages */
+
+/**
+ * Une page désignée comme le pilote la voit : son orientation et son rang, **à partir
+ * de 1**. C'est la seule désignation possible — mesuré sur les 21 fichiers du corpus, une
+ * page ne porte ni nom, ni titre, ni identifiant : `CLASS`, `navigations`, `widgets`, et
+ * rien d'autre. Le `UUID` que chaque *gadget* portait a lui-même disparu en 0.9.8.4.
+ *
+ * Le rang est donc à la fois l'identité de la page **et** sa place dans le défilement de
+ * l'instrument : mesuré sur un AIR³ 7.2 le 22 août 2026, l'ordre des pages atteintes au
+ * balayage est l'ordre du fichier.
+ */
+export interface PageRef {
+  orientation: Orientation
+  /** Rang dans son orientation, à partir de 1 — le rang que voit le pilote. */
+  rank: number
+}
+
+/** Les pages qu'un export emporte, désignées par orientation et par rang. */
+export type PageSelection = readonly PageRef[]
+
+/** Les deux orientations, dans l'ordre où le `layout` les écrit. */
+const ORIENTATIONS: readonly Orientation[] = ['portrait', 'landscape']
+
+/** Toutes les pages du document, dans l'ordre du fichier. */
+export function allPageRefs(layout: Layout): PageRef[] {
+  const refs: PageRef[] = []
+  for (const orientation of ORIENTATIONS) {
+    layout[orientation].forEach((_page, index) => {
+      refs.push({ orientation, rank: index + 1 })
+    })
+  }
+  return refs
+}
+
+/**
+ * Ne garde, dans le `layout` du document reçu, que les pages désignées — **en place**, et
+ * rend celles qui sont parties.
+ *
+ * ## Ce que cette fonction permet, et ce qu'elle ne permet pas
+ *
+ * Elle permet le geste que les pilotes demandent depuis 2017 (GitLab #23, doublée par
+ * #1117 en 2024) et qu'un essai du 22 août 2026 a redit dans ces mots : « Il voulait ma
+ * page de cross. La version partageable emporte mes neuf pages. » Un fichier réduit à une
+ * page est **structurellement** un export `pages` comme un autre : `info` et `layout`,
+ * deux tableaux d'orientation, le même ordre de clés. Rien dans le format ne distingue un
+ * `layout` d'une page d'un `layout` de onze — le corpus en compte de 5, 6, 8, 9 et 11.
+ *
+ * ⚠️ **Elle ne permet pas de dire ce que l'instrument en fera, et personne ne l'a
+ * mesuré.** Aucun fichier d'une seule page n'a jamais été importé sur l'AIR³, ni aucun
+ * fichier dont une orientation porte un tableau vide. Ce qui *est* mesuré, le 21 août 2026
+ * puis le 22, c'est que « Remplacer les pages uniquement » donne à l'appareil **le nombre
+ * de pages du fichier** — 5 pages devenues 6, 3 devenues 4 — et qu'« Ajouter des pages
+ * uniquement » les ajoute **après** celles de l'appareil, sans en toucher aucune (9 pages
+ * ajoutées après 5). La déduction en découle mais reste une déduction, et l'interface la
+ * dit comme telle.
+ *
+ * ## Les deux orientations restent écrites, même vides
+ *
+ * Un `layout` du corpus porte toujours ses deux tableaux. Retirer `portrait` parce que
+ * aucune page portrait n'est cochée fabriquerait une forme que XCTrack n'écrit jamais —
+ * exactement ce que `PAGES_ROOT_KEYS` refuse de faire sur les clés de premier niveau. Le
+ * tableau vide, lui, est une forme que le fichier peut prendre par construction ; qu'un
+ * instrument l'accepte n'est **pas mesuré**, et c'est dit au pilote.
+ *
+ * ## Elle est appelée **avant** le remplacement des textes libres
+ *
+ * L'ordre n'est pas indifférent. `replaceFreeTextsInPlace` numérote les remplacements
+ * dans l'ordre du fichier (`Title 1`, `Title 2`) : filtrer d'abord donne un fichier dont
+ * la numérotation lui est propre, et un inventaire qui décrit **exactement** ce qui part.
+ * Filtrer après laisserait le pilote lire « Title 7 » dans un fichier d'une seule page.
+ */
+export function keepPages(document: JsonNode, selection: PageSelection): PageRef[] {
+  const layout = getMember(document, 'layout')
+  if (layout === undefined) return []
+
+  const dropped: PageRef[] = []
+  for (const orientation of ORIENTATIONS) {
+    const node = getMember(layout, orientation)
+    if (node?.kind !== 'array') continue
+    const kept = new Set(
+      selection.filter((ref) => ref.orientation === orientation).map((ref) => ref.rank)
+    )
+    const survivors: JsonNode[] = []
+    node.items.forEach((page, index) => {
+      if (kept.has(index + 1)) survivors.push(page)
+      else dropped.push({ orientation, rank: index + 1 })
+    })
+    node.items = survivors
+  }
+  return dropped
+}
+
 /* ------------------------------------------------- inventaire des textes libres du layout */
 
 /**

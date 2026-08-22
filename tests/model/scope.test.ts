@@ -6,8 +6,10 @@ import { decode, encode, getMember, setLiteral, setString } from '../../src/core
 import type { JsonNode } from '../../src/core/jsonDocument'
 import { readLayout } from '../../src/model/layout'
 import {
+  allPageRefs,
   derivePagesDocument,
   findFreeTexts,
+  keepPages,
   FREE_TEXT_KEYS,
   PAGES_ROOT_KEYS
 } from '../../src/model/scope'
@@ -412,5 +414,116 @@ describe('findFreeTexts', () => {
     const derived = derivePagesDocument(source).document
     expect(findFreeTexts(readLayout(derived))).toEqual(findFreeTexts(readLayout(source)))
     expect(findFreeTexts(readLayout(derived))).toHaveLength(4)
+  })
+})
+
+/* ==================================================================================
+ * n'emporter que certaines pages
+ * ================================================================================== */
+
+describe('allPageRefs — désigner une page comme le pilote la voit', () => {
+  it('rend chaque page dans l’ordre du fichier, portrait puis paysage, rangs à partir de 1', () => {
+    const layout = readLayout(parseJson(read(PAGES)))
+    expect(allPageRefs(layout)).toEqual([
+      { orientation: 'portrait', rank: 1 },
+      { orientation: 'portrait', rank: 2 },
+      { orientation: 'portrait', rank: 3 },
+      { orientation: 'landscape', rank: 1 },
+      { orientation: 'landscape', rank: 2 },
+      { orientation: 'landscape', rank: 3 },
+      { orientation: 'landscape', rank: 4 },
+      { orientation: 'landscape', rank: 5 }
+    ])
+  })
+})
+
+describe('keepPages — le fichier ne porte que les pages désignées', () => {
+  it('ne garde qu’une page, et dit lesquelles sont restées', () => {
+    const derived = derivePagesDocument(parseJson(read(PAGES))).document
+    const dropped = keepPages(derived, [{ orientation: 'landscape', rank: 2 }])
+
+    const layout = readLayout(derived)
+    expect(layout.landscape).toHaveLength(1)
+    expect(layout.portrait).toHaveLength(0)
+    expect(dropped).toHaveLength(7)
+    expect(dropped).toContainEqual({ orientation: 'portrait', rank: 1 })
+    expect(dropped).toContainEqual({ orientation: 'landscape', rank: 5 })
+    expect(dropped).not.toContainEqual({ orientation: 'landscape', rank: 2 })
+  })
+
+  it('la page gardée est celle qu’on a désignée, à l’octet près', () => {
+    const full = derivePagesDocument(parseJson(read(PAGES))).document
+    const expected = serializeJson(readLayout(full).landscape[2]!.node)
+
+    const derived = derivePagesDocument(parseJson(read(PAGES))).document
+    keepPages(derived, [{ orientation: 'landscape', rank: 3 }])
+    expect(serializeJson(readLayout(derived).landscape[0]!.node)).toBe(expected)
+  })
+
+  it('garde plusieurs pages dans l’ordre du fichier, quel que soit l’ordre de la sélection', () => {
+    const derived = derivePagesDocument(parseJson(read(PAGES))).document
+    keepPages(derived, [
+      { orientation: 'landscape', rank: 4 },
+      { orientation: 'landscape', rank: 1 },
+      { orientation: 'portrait', rank: 2 }
+    ])
+    const layout = readLayout(derived)
+    expect(layout.portrait).toHaveLength(1)
+    expect(layout.landscape).toHaveLength(2)
+
+    const full = readLayout(derivePagesDocument(parseJson(read(PAGES))).document)
+    expect(serializeJson(layout.landscape[0]!.node))
+      .toBe(serializeJson(full.landscape[0]!.node))
+    expect(serializeJson(layout.landscape[1]!.node))
+      .toBe(serializeJson(full.landscape[3]!.node))
+  })
+
+  it('les deux orientations restent écrites, même quand l’une est vide', () => {
+    const derived = derivePagesDocument(parseJson(read(PAGES))).document
+    keepPages(derived, [{ orientation: 'landscape', rank: 1 }])
+    const layout = getMember(derived, 'layout')
+    expect(layout).toBeDefined()
+    expect(rootKeys(layout!)).toEqual(['landscape', 'portrait'])
+    expect(getMember(layout!, 'portrait')).toEqual({ kind: 'array', items: [] })
+  })
+
+  it('tout garder ne change rien au fichier, octet pour octet', () => {
+    const reference = derivePagesDocument(parseJson(read(PAGES))).document
+    const derived = derivePagesDocument(parseJson(read(PAGES))).document
+    const dropped = keepPages(derived, allPageRefs(readLayout(derived)))
+    expect(dropped).toEqual([])
+    expect(serializeJson(derived)).toBe(serializeJson(reference))
+  })
+
+  it('une sélection vide vide le layout sans détruire sa forme', () => {
+    const derived = derivePagesDocument(parseJson(read(PAGES))).document
+    expect(keepPages(derived, [])).toHaveLength(8)
+    const layout = readLayout(derived)
+    expect(layout.landscape).toEqual([])
+    expect(layout.portrait).toEqual([])
+  })
+
+  it('un rang qui n’existe pas ne fabrique aucune page', () => {
+    const derived = derivePagesDocument(parseJson(read(PAGES))).document
+    keepPages(derived, [{ orientation: 'landscape', rank: 99 }])
+    expect(readLayout(derived).landscape).toEqual([])
+  })
+
+  it('`info` traverse en entier — le destinataire doit savoir quelle version a écrit ceci', () => {
+    const derived = derivePagesDocument(parseJson(read(PAGES))).document
+    keepPages(derived, [{ orientation: 'landscape', rank: 1 }])
+    const info = getMember(derived, 'info')
+    expect(info).toBeDefined()
+    expect(rootKeys(info!)).toEqual([
+      'device', 'exportType', 'proUpTo', 'timeCreated', 'versionCode', 'versionName'
+    ])
+  })
+
+  it('les pièges du layout survivent à la sélection — aucun passage par JSON.stringify', () => {
+    const source = parseJson(TRAP_SOURCE)
+    const derived = derivePagesDocument(source).document
+    keepPages(derived, [{ orientation: 'landscape', rank: 1 }])
+    const kept = serializeJson(readLayout(derived).landscape[0]!.node)
+    expect(kept).toBe(serializeJson(readLayout(source).landscape[0]!.node))
   })
 })

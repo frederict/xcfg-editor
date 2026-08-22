@@ -1089,3 +1089,217 @@ describe('la boîte dans les cinq langues', () => {
     handle.close()
   })
 })
+
+/* ============================================ n'envoyer que certaines pages, dans la boîte */
+
+/** Les cases à cocher du choix de pages, dans l'ordre du fichier. */
+function pageBoxes(handle: { element: HTMLDialogElement }): HTMLInputElement[] {
+  return [...handle.element.querySelectorAll<HTMLInputElement>('.sharing__pageBox')]
+}
+
+function tick(box: HTMLInputElement, checked: boolean): void {
+  box.checked = checked
+  box.dispatchEvent(new Event('change', { bubbles: true }))
+}
+
+function confirmButton(handle: { element: HTMLDialogElement }): HTMLButtonElement {
+  return handle.element.querySelector<HTMLButtonElement>('.modal__actions .btn--primary')!
+}
+
+describe('choisir ses pages : le geste que le pilote d’essai ne trouvait nulle part', () => {
+  const backup = (): SharingSource => ({
+    document: readSource(BACKUP_2026), fileName: shortName(BACKUP_2026), kind: 'xcfg'
+  })
+
+  it('les pages du fichier sont offertes une à une, toutes cochées au départ', () => {
+    const handle = open(backup(), () => {})
+    const boxes = pageBoxes(handle)
+    const layout = readLayout(readSource(BACKUP_2026))
+    expect(boxes).toHaveLength(layout.portrait.length + layout.landscape.length)
+    expect(boxes.every((box) => box.checked)).toBe(true)
+    handle.close()
+  })
+
+  it('chaque page se reconnaît à son orientation, son rang, son type et ce qu’elle porte', () => {
+    const handle = open(backup(), () => {})
+    const names = [...handle.element.querySelectorAll('.sharing__pageName')]
+      .map((node) => node.textContent ?? '')
+    expect(names[0]).toContain('Portrait')
+    expect(names[0]).toContain('Page 1')
+    expect(names[0]).toMatch(/gadget/)
+    // Jamais « widget » dans notre prose française — le mot du dépôt est « gadget ».
+    expect(names.join(' ').toLowerCase()).not.toContain('widget')
+    handle.close()
+  })
+
+  /**
+   * **La propriété qui fait tenir tout le reste** : ce que le pilote coche est exactement
+   * ce que le fichier porte. Le document rendu à l'appelant vient du même calcul que
+   * l'inventaire affiché — il n'y a pas deux chemins qui « devraient » dire la même chose.
+   */
+  it('le fichier produit ne porte que la page cochée', () => {
+    let result: SharingResult | undefined
+    const handle = open(backup(), (r) => { result = r })
+    choose(handle, 'pages')
+    const boxes = pageBoxes(handle)
+    for (const box of boxes) tick(box, false)
+    tick(boxes[boxes.length - 1]!, true)
+    confirmButton(handle).click()
+
+    expect(result?.form).toBe('pages')
+    expect(result?.anonymized).toBe(true)
+    const layout = readLayout(result!.document!)
+    expect(layout.landscape).toHaveLength(1)
+    expect(layout.portrait).toHaveLength(0)
+
+    const original = readLayout(readSource(BACKUP_2026))
+    expect(layout.landscape[0]!.widgets)
+      .toHaveLength(original.landscape[original.landscape.length - 1]!.widgets.length)
+  })
+
+  it('tout cocher rend le fichier de toujours, octet pour octet', () => {
+    let selective: SharingResult | undefined
+    const handleOne = open(backup(), (r) => { selective = r })
+    choose(handleOne, 'pages')
+    const boxes = pageBoxes(handleOne)
+    tick(boxes[0]!, false)
+    tick(boxes[0]!, true)
+    confirmButton(handleOne).click()
+
+    let plain: SharingResult | undefined
+    const handleTwo = open(backup(), (r) => { plain = r })
+    choose(handleTwo, 'pages')
+    confirmButton(handleTwo).click()
+
+    expect(serializeJson(selective!.document!)).toBe(serializeJson(plain!.document!))
+  })
+
+  it('les deux boutons cochent et décochent tout', () => {
+    const handle = open(backup(), () => {})
+    choose(handle, 'pages')
+    const buttons = [...panel(handle, 'pages').querySelectorAll<HTMLButtonElement>('.sharing__pagesBulk .btn')]
+    expect(buttons.map((b) => b.textContent)).toEqual(['Tout cocher', 'Tout décocher'])
+    buttons[1]!.click()
+    expect(pageBoxes(handle).every((box) => !box.checked)).toBe(true)
+    buttons[0]!.click()
+    expect(pageBoxes(handle).every((box) => box.checked)).toBe(true)
+    handle.close()
+  })
+
+  it('aucune page cochée : le bouton se coupe et la raison est écrite', () => {
+    let called = false
+    const handle = open(backup(), () => { called = true })
+    choose(handle, 'pages')
+    for (const box of pageBoxes(handle)) tick(box, false)
+
+    expect(confirmButton(handle).disabled).toBe(true)
+    expect(panel(handle, 'pages').textContent)
+      .toContain('Aucune page cochée : il n’y a rien à envoyer.')
+    confirmButton(handle).click()
+    expect(called).toBe(false)
+    handle.close()
+  })
+
+  it('revenir à l’export ordinaire rend le bouton, même sans page cochée', () => {
+    const handle = open(backup(), () => {})
+    choose(handle, 'pages')
+    for (const box of pageBoxes(handle)) tick(box, false)
+    expect(confirmButton(handle).disabled).toBe(true)
+    choose(handle, 'plain')
+    expect(confirmButton(handle).disabled).toBe(false)
+    handle.close()
+  })
+
+  it('le compte de ce qui part suit les cases, et la carte le répète', () => {
+    const handle = open(backup(), () => {})
+    choose(handle, 'pages')
+    const boxes = pageBoxes(handle)
+    for (const box of boxes) tick(box, false)
+    tick(boxes[0]!, true)
+    tick(boxes[1]!, true)
+
+    expect(panel(handle, 'pages').querySelector('.sharing__pagesTally')?.textContent)
+      .toBe(`2 pages partent sur ${boxes.length}.`)
+    const note = handle.element.querySelector('.sharing__choice:last-of-type .sharing__choiceNote')
+    expect(note?.textContent).toContain(`2 pages partent sur ${boxes.length}.`)
+    handle.close()
+  })
+
+  /**
+   * ⚠️ **La section qui rend ce geste offrable.** Sans elle, le destinataire coche par
+   * réflexe « Remplacer les pages uniquement » et perd les siennes. Les deux issues de
+   * l'instrument sont mesurées ; la limite de la mesure est dite.
+   */
+  it('ce que le destinataire en fera est écrit avant le téléchargement', () => {
+    const handle = open(backup(), () => {})
+    choose(handle, 'pages')
+    const text = panel(handle, 'pages').textContent ?? ''
+    expect(text).toContain('Ce que le destinataire en fera')
+    expect(text).toContain('Ajouter des pages uniquement')
+    expect(text).toContain('Remplacer les pages uniquement')
+    expect(text).toContain('Remplacer tout')
+    expect(text).toContain('Mesuré')
+    handle.close()
+  })
+
+  it('la limite de la mesure n’est dite que lorsqu’une page reste à quai', () => {
+    const handle = open(backup(), () => {})
+    choose(handle, 'pages')
+    expect(panel(handle, 'pages').textContent).not.toContain('Ce qui n’est pas mesuré')
+    tick(pageBoxes(handle)[0]!, false)
+    expect(panel(handle, 'pages').textContent).toContain('Ce qui n’est pas mesuré')
+    handle.close()
+  })
+
+  it('ce qu’une page emprunte à l’appareil d’arrivée est dit, et ce qu’elle ne cite pas', () => {
+    const handle = open(backup(), () => {})
+    choose(handle, 'pages')
+    const text = panel(handle, 'pages').textContent ?? ''
+    expect(text).toContain('ne désigne aucun fichier extérieur')
+    expect(text).toContain('thème de carte')
+    expect(text).toContain('points de virage')
+    handle.close()
+  })
+
+  /** L'expurgement est le même — c'est le même appel, et voici la preuve dans la boîte. */
+  it('une page seule sort expurgée comme le fichier entier', () => {
+    const source: SharingSource = {
+      document: readSource(FORMES_PRESERVEES),
+      fileName: shortName(FORMES_PRESERVEES),
+      kind: 'xcfg'
+    }
+    let result: SharingResult | undefined
+    const handle = open(source, (r) => { result = r })
+    choose(handle, 'pages')
+    const boxes = pageBoxes(handle)
+    for (const box of boxes) tick(box, false)
+    tick(boxes[boxes.length - 1]!, true)
+    confirmButton(handle).click()
+
+    const produced = serializeJson(result!.document!)
+    expect(produced).not.toContain('preferences')
+    expect(produced).toContain(`"exportType": "${PAGES_EXPORT_TYPE}"`)
+    for (const marker of ['+32 470', 'Amélie', 'BEAUVECHAIN']) {
+      expect(produced).not.toContain(marker)
+    }
+    expect(produced).toContain(NEUTRAL_PHONE_NUMBER)
+  })
+
+  it('l’export ordinaire ne dépend pas des cases : il reste à l’octet près', async () => {
+    const bytes = new Uint8Array(readFileSync(BACKUP_2026))
+    const container = await openContainer(bytes, shortName(BACKUP_2026))
+    let result: SharingResult | undefined
+    const handle = open(
+      { document: container.document, fileName: container.fileName, kind: container.kind,
+        modified: container.modified },
+      (r) => { result = r }
+    )
+    choose(handle, 'pages')
+    for (const box of pageBoxes(handle)) tick(box, false)
+    choose(handle, 'plain')
+    confirmButton(handle).click()
+
+    expect(sharingBytes(result!)).toBeUndefined()
+    expect(await sha256Hex(await exportContainer(container))).toBe(await sha256Hex(bytes))
+  })
+})

@@ -7,7 +7,12 @@ import { openContainer, exportContainer } from '../../src/core/container'
 import { readZip } from '../../src/core/zip'
 import { sha256Hex } from '../../src/library/digest'
 import { readLayout } from '../../src/model/layout'
-import { derivePagesDocument, findFreeTexts, FREE_TEXT_KEYS } from '../../src/model/scope'
+import {
+  allPageRefs,
+  derivePagesDocument,
+  findFreeTexts,
+  FREE_TEXT_KEYS
+} from '../../src/model/scope'
 import {
   ANONYMOUS_MARK,
   anonymizeBackup,
@@ -1117,4 +1122,123 @@ describe('findPersonalSuspects — muet sur le corpus, parlant sur ce qui a ét�
     expect(found.value).toHaveLength(SUSPECT_VALUE_LIMIT + 1)
     expect(found.value.endsWith('…')).toBe(true)
   })
+})
+
+/* ==================================================================================
+ * n'envoyer qu'une page — le même expurgement, prouvé page par page
+ * ================================================================================== */
+
+describe('anonymizeDocument — une page seule subit le même expurgement', () => {
+  const source = parseJson(SOURCE)
+  const everyPage = allPageRefs(readLayout(source))
+
+  it('les deux pages du document d’essai sont bien là', () => {
+    expect(everyPage).toEqual([
+      { orientation: 'portrait', rank: 1 },
+      { orientation: 'landscape', rank: 1 }
+    ])
+  })
+
+  /**
+   * **La preuve que ce geste n'ouvre pas une seconde porte.** Un fichier réduit à une page
+   * passe par `anonymizeDocument`, donc par la dérivation `pages` **et** par le
+   * remplacement des onze clés de texte libre. Le contrôle porte sur le texte sérialisé
+   * complet : aucune des quatorze valeurs d'origine ne doit s'y retrouver, quelle que soit
+   * la page choisie — y compris celles de la page **restée à quai**, qui ne doivent pas y
+   * être non plus.
+   */
+  for (const page of everyPage) {
+    it(`${page.orientation} page ${page.rank} : aucune des quatorze valeurs d’origine ne survit`, () => {
+      const text = serializeJson(anonymizeDocument(source, [page]).document)
+      for (const original of ORIGINALS) {
+        expect(SOURCE).toContain(original)
+        expect(text).not.toContain(original)
+      }
+      for (const marker of ['Pilot.Name', 'Amélie Exemple', 'Comp2026.wpt']) {
+        expect(text).not.toContain(marker)
+      }
+    })
+  }
+
+  it('le fichier produit se déclare « pages » et ne porte que `info` et `layout`', () => {
+    const produced = anonymizeDocument(source, [{ orientation: 'landscape', rank: 1 }])
+    expect(documentExportType(produced.document)).toBe('pages')
+    expect(produced.droppedRootKeys).toEqual(['airspaceSelectedChannels', 'preferences'])
+  })
+
+  it('ne porte que la page demandée, et dit laquelle est restée', () => {
+    const produced = anonymizeDocument(source, [{ orientation: 'landscape', rank: 1 }])
+    const layout = readLayout(produced.document)
+    expect(layout.landscape).toHaveLength(1)
+    expect(layout.portrait).toHaveLength(0)
+    expect(produced.droppedPages).toEqual([{ orientation: 'portrait', rank: 1 }])
+    expect(layout.landscape[0]!.widgets).toHaveLength(5)
+  })
+
+  /**
+   * L'inventaire montré décrit **le fichier produit**, pas la source : les textes de la
+   * page restée à quai n'ont pas à y figurer, et la numérotation posée dans le fichier
+   * (`Title 1`) est celle qu'un destinataire y lira.
+   */
+  it('l’inventaire ne parle que de ce qui part', () => {
+    const produced = anonymizeDocument(source, [{ orientation: 'landscape', rank: 1 }])
+    expect(produced.replacements.every((one) => one.orientation === 'landscape')).toBe(true)
+    expect(produced.replacements.map((one) => one.text))
+      .not.toContain('Capteur de Frédéric')
+    expect(produced.replacements.map((one) => one.replacement)).toContain('Title 1')
+  })
+
+  it('sans sélection, le fichier produit est exactement celui d’avant', () => {
+    const withoutSelection = serializeJson(anonymizeDocument(source).document)
+    const withEveryPage = serializeJson(anonymizeDocument(source, everyPage).document)
+    expect(withEveryPage).toBe(withoutSelection)
+    expect(anonymizeDocument(source).droppedPages).toEqual([])
+  })
+
+  it('la source n’a pas bougé', async () => {
+    const before = await sha256Hex(new TextEncoder().encode(serializeJson(source)))
+    anonymizeDocument(source, [{ orientation: 'portrait', rank: 1 }])
+    const after = await sha256Hex(new TextEncoder().encode(serializeJson(source)))
+    expect(after).toBe(before)
+  })
+
+  it('le soupçon est cherché dans ce qui part, pas dans ce qui reste', () => {
+    // `findPersonalSuspects` travaille sur le document produit : une page écartée ne peut
+    // pas faire naître un avertissement sur un texte qui ne partira pas.
+    const produced = anonymizeDocument(source, [{ orientation: 'landscape', rank: 1 }])
+    for (const suspect of produced.suspects) {
+      expect(suspect.path.startsWith('preferences')).toBe(false)
+    }
+  })
+})
+
+describe('anonymizeDocument — une page seule, sur les fichiers réels', () => {
+  for (const path of [BACKUP_2026, PAGES_2026, FORMES_PRESERVEES]) {
+    const source = parseJson(readFileSync(path, 'utf8'))
+    const pages = allPageRefs(readLayout(source))
+
+    it(`${path.split('/').pop()} : chaque page seule donne un « pages » d’une page`, () => {
+      expect(pages.length).toBeGreaterThan(0)
+      for (const page of pages) {
+        const produced = anonymizeDocument(source, [page])
+        const layout = readLayout(produced.document)
+        expect(layout[page.orientation]).toHaveLength(1)
+        expect(produced.droppedPages).toHaveLength(pages.length - 1)
+        expect(documentExportType(produced.document)).toBe('pages')
+      }
+    })
+
+    it(`${path.split('/').pop()} : la page envoyée est celle du fichier, à l’octet près`, () => {
+      const full = readLayout(anonymizeDocument(source).document)
+      for (const page of pages) {
+        const produced = anonymizeDocument(source, [page])
+        const sent = readLayout(produced.document)[page.orientation][0]!
+        // Comparaison sur le seul `widgets` : les titres neutres se renumérotent d'un
+        // fichier à l'autre, ce qui est voulu (voir `keepPages`). Les gadgets, eux, sont
+        // les mêmes objets aux mêmes places, dans le même ordre.
+        expect(sent.className).toBe(full[page.orientation][page.rank - 1]!.className)
+        expect(sent.widgets).toHaveLength(full[page.orientation][page.rank - 1]!.widgets.length)
+      }
+    })
+  }
 })

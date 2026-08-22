@@ -55,6 +55,53 @@ const sharing: DomainCatalog<'sharing'> = {
   'sharing.pagesNote': 'A “pages” export whose texts written by you are replaced with ' +
     'neutral ones. The layout is kept; the preferences do not travel.',
 
+  /* --------------------------------- sending only some pages, and saying it truthfully */
+
+  /**
+   * ⚠️ The most dangerous section of this box after fidelity. See `fr/sharing.ts`: the
+   * first three sentences are **measured on an AIR³ 7.2, XCTrack 1.0.3-beta**, on
+   * 21 and 22 August 2026; the fourth says what is **not** measured. Translating away that
+   * distinction would cost the project what sets it apart.
+   */
+  'sharing.pagesImportHeading': 'What the recipient will get',
+  'sharing.pagesImportAdd': 'On their instrument they choose what the import does to their ' +
+    'own pages. “Add pages only” puts yours after theirs, touching none of them: that is ' +
+    'the option to tell them about. Measured on an AIR³ 7.2 on 22 August 2026 — nine pages ' +
+    'added after five, no existing file changed.',
+  'sharing.pagesImportReplace': '“Replace pages only” replaces all their pages with the ' +
+    'ones in this file, in both orientations. Measured on the same instrument: five pages ' +
+    'became six, three became four — the instrument ends up with the count of the file.',
+  'sharing.pagesImportLocked': 'Their settings stay theirs whatever they choose: faced with ' +
+    'a “pages” export, the instrument greys out “Replace everything”. Measured at import.',
+  'sharing.pagesImportUnmeasured': 'What is not measured: no file cut down to part of its ' +
+    'pages has ever been imported on an instrument, nor any file where one orientation ' +
+    'carries nothing at all. What the instrument does with it is inferred from the ' +
+    'measurements above; it has not been observed.',
+  'sharing.pagesCarry': 'A page names no outside file — surveyed on the 21 files of the ' +
+    'corpus: no map theme, no waypoint list, no airspace files, which all live in the ' +
+    'preferences. Nor does it carry a screen size: what sits on it is placed in ' +
+    'thousandths, and the receiving instrument redraws it to its own panel. What it ' +
+    'borrows from the recipient’s instrument — theme, units, title size, offline maps — ' +
+    'will be theirs, not yours.',
+
+  'sharing.pagesChoiceHeading': 'Which pages travel',
+  'sharing.pagesChoiceIntro': {
+    one: 'This file carries {count} page. Untick the ones that stay with you.',
+    other: 'This file carries {count} pages. Untick the ones that stay with you.'
+  },
+  'sharing.pagesChoiceLine': 'Page {rank} in {orientation} · {kind} · {parts}',
+  'sharing.pagesChoicePersonal': {
+    one: '{count} text written by you',
+    other: '{count} texts written by you'
+  },
+  'sharing.pagesChoiceAll': 'Tick all',
+  'sharing.pagesChoiceClear': 'Untick all',
+  'sharing.pagesChoiceEmpty': 'No page ticked: there is nothing to send.',
+  'sharing.pagesSelectedCount': {
+    one: '{count} page of {total} travels.',
+    other: '{count} pages of {total} travel.'
+  },
+
   'sharing.fidelityUnchanged': 'You changed nothing: the file comes back out exactly as it ' +
     'went in, without a single comma rewritten.',
   'sharing.fidelityUnchangedDetail': 'The bytes you opened are re-emitted without being ' +

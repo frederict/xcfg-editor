@@ -290,3 +290,38 @@
  * fois** pour tout un groupe sans perdre ce qui, lui, diffère d'une ligne à l'autre.
  */
 .sharing__kind { font-size: 11px; color: var(--app-ink-soft); font-style: italic; }
+
+/* ==========================================================================
+ * n'envoyer que certaines pages
+ * ========================================================================== */
+
+/*
+ * La liste des pages ouvre le volet « pages » : elle décide de ce que tout le reste du
+ * volet décrit. Un pilote qui coche une page et lit ensuite un inventaire portant sur
+ * neuf pages n'aurait aucune raison de croire le second.
+ */
+.sharing__pages { gap: 0.15rem; }
+
+.sharing__pageLabel {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 0.15rem 0.2rem;
+  border-radius: 4px;
+}
+.sharing__pageLabel:hover { background: var(--app-bed); }
+
+/* La case reste alignée sur la première ligne du libellé, même quand celui-ci se replie. */
+.sharing__pageBox { flex: none; position: relative; top: 1px; }
+
+.sharing__pageName { font-size: 12px; color: var(--app-ink); }
+
+.sharing__pagesBulk { display: flex; gap: 0.4rem; margin-top: 0.4rem; }
+
+/*
+ * Le compte de ce qui part se lit **sous** les cases, à l'endroit où le regard finit de
+ * cocher — et il porte aussi la phrase du refus (« Aucune page cochée »), qui est la
+ * raison pour laquelle « Enregistrer » ne répond plus.
+ */
+.sharing__pagesTally { font-weight: 600; }

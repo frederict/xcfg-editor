@@ -5,8 +5,11 @@ import { cloneNode } from './mutations'
 import {
   derivePagesDocument,
   findFreeTextNodes,
+  keepPages,
   FREE_TEXT_KEYS,
-  type FreeText
+  type FreeText,
+  type PageRef,
+  type PageSelection
 } from './scope'
 import {
   collectPersonalData,
@@ -484,6 +487,11 @@ export interface AnonymousExport extends FreeTextAnonymization {
    * déclaré. Un avertissement, jamais une action — voir `findPersonalSuspects`.
    */
   suspects: PersonalSuspect[]
+  /**
+   * Les pages restées à quai, dans l'ordre du fichier. Vide quand toutes partent — donc
+   * vide sur le chemin ordinaire, où `anonymizeDocument` est appelé sans sélection.
+   */
+  droppedPages: PageRef[]
 }
 
 /**
@@ -521,9 +529,27 @@ export interface AnonymousExport extends FreeTextAnonymization {
  * `derivePagesDocument` recopie déjà en profondeur. On réécrit donc **sur sa copie**,
  * sans en faire une seconde. La source est intacte à l'octet près après l'appel, y compris
  * si l'appelant jette le résultat.
+ *
+ * ## `selection` : n'emporter que certaines pages
+ *
+ * Absente, toutes les pages partent — et le fichier produit est **exactement** celui
+ * d'avant l'existence de ce paramètre, octet pour octet. Présente, seules les pages
+ * désignées partent, et `droppedPages` dit lesquelles sont restées.
+ *
+ * **Le filtre s'applique au même endroit que tout le reste.** Il n'y a pas un second
+ * chemin d'export pour les pages seules : c'est ce qui garantit qu'une page seule subit le
+ * **même** expurgement — les préférences ne sont jamais mises, les onze clés de texte
+ * libre sont remplacées, et `findPersonalSuspects` avertit sur le document produit. Une
+ * seconde porte serait la porte par laquelle la garantie finirait par sortir.
  */
-export function anonymizeDocument(source: JsonNode): AnonymousExport {
+export function anonymizeDocument(
+  source: JsonNode, selection?: PageSelection
+): AnonymousExport {
   const derived = derivePagesDocument(source)
+  // Les pages d'abord, les textes ensuite : une page qui ne part pas n'a pas à figurer
+  // dans l'inventaire des remplacements, et la numérotation du fichier produit lui
+  // appartient. Voir `keepPages`.
+  const droppedPages = selection === undefined ? [] : keepPages(derived.document, selection)
   const replacements = replaceFreeTextsInPlace(derived.document)
   return {
     document: derived.document,
@@ -531,7 +557,8 @@ export function anonymizeDocument(source: JsonNode): AnonymousExport {
     previousExportType: derived.previousExportType,
     replacements,
     // Sur le document **produit**, pas sur la source : ce qu'on avertit, c'est ce qui part.
-    suspects: findPersonalSuspects(derived.document)
+    suspects: findPersonalSuspects(derived.document),
+    droppedPages
   }
 }
 

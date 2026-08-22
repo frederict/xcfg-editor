@@ -1,7 +1,9 @@
 import './sharingDialog.css'
-import { readableName } from '../catalog/widgetNames'
+import { pageClassLabel, readableName } from '../catalog/widgetNames'
 import type { JsonNode } from '../core/jsonDocument'
 import { serializeJson } from '../core/serializeJson'
+import { readLayout } from '../model/layout'
+import { allPageRefs, type PageRef, type PageSelection } from '../model/scope'
 import {
   anonymizeBackup,
   anonymizeDocument,
@@ -152,6 +154,12 @@ export interface PagesPlan {
   droppedExtras: readonly SharingExtra[]
   /** Ce qui ressemble à une donnée personnelle sans être déclaré, dans ce qui part. */
   suspects: PersonalSuspect[]
+  /** Les pages effectivement emportées, dans l'ordre du fichier. */
+  keptPages: PageRef[]
+  /** Les pages restées chez le pilote. Vide quand tout part. */
+  droppedPages: PageRef[]
+  /** Combien de pages le fichier ouvert porte, toutes orientations confondues. */
+  totalPages: number
 }
 
 /** Ce que produirait la sauvegarde entière aux données personnelles remplacées. */
@@ -217,9 +225,83 @@ export interface SharingPlan {
  * Les deux issues anonymisantes sortent en **`.xcfg` nu**, archive ou non, et pour la même
  * raison : cet éditeur n'inspecte pas les annexes d'un `.xczfg` — voir `ANNEXES_NOTE`.
  */
+/**
+ * Une page qu'on peut décider d'envoyer ou de garder, avec de quoi la reconnaître.
+ *
+ * Une page ne porte **ni nom ni identifiant** — mesuré sur les 21 fichiers du corpus :
+ * `CLASS`, `navigations`, `widgets`, et rien d'autre. Ce qui la désigne au pilote est
+ * donc son orientation, son rang, son type, et ce qu'elle porte. Le rang est aussi sa
+ * place dans le défilement de l'instrument.
+ */
+export interface PageOffer {
+  ref: PageRef
+  /** Le nom court de la classe de page — `WPEmpty`. Suit l'axe `labels`, pas notre prose. */
+  shortName: string
+  widgetCount: number
+  /** Combien de textes écrits par le pilote partiraient avec cette page. */
+  personalCount: number
+}
+
+/**
+ * Les pages du fichier ouvert, dans l'ordre où il les écrit, prêtes à être cochées.
+ *
+ * Le compte de textes personnels vient de `collectPersonalData` — le **même** inventaire
+ * que la boîte affiche par ailleurs, filtré par page. Deux chiffres calculés séparément
+ * finiraient par se contredire ; celui-ci ne le peut pas.
+ */
+export function offeredPages(document: JsonNode, personal: PersonalInventory): PageOffer[] {
+  const layout = readLayout(document)
+  return allPageRefs(layout).map((ref) => {
+    const page = layout[ref.orientation][ref.rank - 1]
+    return {
+      ref,
+      shortName: page === undefined
+        ? ''
+        : (page.className.split('.').pop() ?? page.className),
+      widgetCount: page?.widgets.length ?? 0,
+      personalCount: personal.findings.filter((finding) =>
+        finding.home === 'layout' && finding.filled &&
+        finding.location?.orientation === ref.orientation &&
+        finding.location.pageRank === ref.rank
+      ).length
+    }
+  })
+}
+
+/**
+ * L'issue « pages », recalculée pour une sélection donnée.
+ *
+ * Séparée de `planSharing` parce qu'elle seule dépend de ce que le pilote coche : la boîte
+ * la rappelle à chaque case cochée, et le document qu'elle rend est **celui qui sera
+ * écrit**. L'inventaire montré et le fichier produit sortent donc du même appel — la règle
+ * « on annonce avant de changer » ne tient qu'à ce prix.
+ */
+export function planPages(
+  source: SharingSource, when: Date, selection?: PageSelection
+): PagesPlan {
+  const pages = anonymizeDocument(source.document, selection)
+  const total = allPageRefs(readLayout(source.document))
+  const dropped = new Set(pages.droppedPages.map((ref) => `${ref.orientation}:${ref.rank}`))
+  return {
+    document: pages.document,
+    fileName: buildExportFileName({
+      when,
+      exportType: documentExportType(pages.document),
+      anonymized: true
+    }),
+    replacements: pages.replacements,
+    droppedRootKeys: pages.droppedRootKeys,
+    derived: pages.previousExportType !== 'pages',
+    droppedExtras: source.kind === 'xczfg' ? (source.extras ?? []) : [],
+    suspects: pages.suspects,
+    keptPages: total.filter((ref) => !dropped.has(`${ref.orientation}:${ref.rank}`)),
+    droppedPages: pages.droppedPages,
+    totalPages: total.length
+  }
+}
+
 export function planSharing(source: SharingSource, when: Date): SharingPlan {
   const exportType = documentExportType(source.document)
-  const pages = anonymizeDocument(source.document)
   const backup = anonymizeBackup(source.document)
   const personal = collectPersonalData(source.document)
   const droppedExtras = source.kind === 'xczfg' ? (source.extras ?? []) : []
@@ -257,15 +339,7 @@ export function planSharing(source: SharingSource, when: Date): SharingPlan {
       suspects: backup.suspects,
       droppedExtras
     },
-    pages: {
-      document: pages.document,
-      fileName: anonymousName(pages.document),
-      replacements: pages.replacements,
-      droppedRootKeys: pages.droppedRootKeys,
-      derived: pages.previousExportType !== 'pages',
-      droppedExtras,
-      suspects: pages.suspects
-    },
+    pages: planPages(source, when),
     personal
   }
 }
@@ -854,6 +928,71 @@ function personalSection(
   return section
 }
 
+/* ------------------------------------------- n'envoyer que certaines pages, et le dire */
+
+/**
+ * La désignation d'une page dans les mots du pilote : l'orientation, le rang, le type de
+ * page et ce qu'elle porte.
+ *
+ * Le **type** suit l'axe `labels` — c'est un mot de XCTrack, il vient du catalogue extrait
+ * de l'APK et suit la langue du fichier ouvert, jamais celle de notre interface.
+ */
+function pageOfferLabel(
+  offer: PageOffer, language: string, tr: Translator
+): string {
+  const line = tr.t('sharing.pagesChoiceLine', {
+    // Le rang est un rang lu dans le fichier, pas une quantité : il se passe en `string`
+    // pour qu'aucune langue ne le mette en forme — « 1 000 » ne désigne aucune page.
+    rank: String(offer.ref.rank),
+    orientation: orientationLabel(offer.ref.orientation, tr),
+    kind: pageClassLabel(offer.shortName, language),
+    parts: tr.t('common.widgetCount', { count: offer.widgetCount })
+  })
+  return offer.personalCount === 0
+    ? line
+    : `${line} · ${tr.t('sharing.pagesChoicePersonal', { count: offer.personalCount })}`
+}
+
+/**
+ * **Ce que le destinataire obtiendra vraiment** — la section qui décide si ce geste est un
+ * cadeau ou un dégât.
+ *
+ * Elle existe parce que le réflexe est faux. Un pilote qui reçoit des pages coche
+ * naturellement « Remplacer les pages uniquement », et ce bouton-là **remplace la totalité
+ * de son jeu de pages, dans les deux orientations** : mesuré sur un AIR³ 7.2 les 21 et
+ * 22 août 2026, l'appareil se retrouve avec le nombre de pages du fichier — 5 devenues 6,
+ * 3 devenues 4. Recevoir une page seule ainsi, c'est perdre les siennes.
+ *
+ * L'instrument offre pourtant l'issue qu'il faut, et personne ne la nomme : **« Ajouter
+ * des pages uniquement »** pose les pages reçues **à la suite** de celles de l'appareil,
+ * sans en toucher aucune — mesuré le 22 août 2026, neuf pages ajoutées après cinq, aucun
+ * fichier existant modifié. C'est cette phrase-là qui rend le geste offrable, et elle
+ * s'affiche **avant** le téléchargement, avec le fichier qu'elle décrit.
+ *
+ * ⚠️ **Ce qui n'est pas mesuré est dit comme tel.** Aucun fichier d'une seule page n'a
+ * jamais été importé sur un instrument, ni aucun fichier dont une orientation porte un
+ * tableau vide. Ce que l'appareil en fait se **déduit** des deux mesures ci-dessus ; le
+ * projet n'a pas le droit de l'affirmer.
+ *
+ * ⚠️ **La fusion mesurée sur « Remplacer tout » ne s'étend pas aux pages.** Un import de
+ * sauvegarde complète n'a changé que 3 préférences sur 136 : une ligne absente du fichier
+ * garde sa valeur sur l'appareil. C'est vrai des **réglages**, et le croire vrai des pages
+ * serait la faute que ce projet redoute le plus — une mesure exacte étendue à un ensemble
+ * qu'elle ne couvre pas. Les pages, elles, sont remplacées en bloc.
+ */
+function pagesImportSection(plan: PagesPlan, tr: Translator): HTMLElement {
+  const section = el('section', 'sharing__section')
+  section.append(el('h3', 'sharing__heading', tr.t('sharing.pagesImportHeading')))
+  section.append(el('p', 'sharing__note', tr.t('sharing.pagesImportAdd')))
+  section.append(el('p', 'sharing__note', tr.t('sharing.pagesImportReplace')))
+  section.append(el('p', 'sharing__note', tr.t('sharing.pagesImportLocked')))
+  if (plan.droppedPages.length > 0) {
+    section.append(el('p', 'sharing__caveat', tr.t('sharing.pagesImportUnmeasured')))
+  }
+  section.append(el('p', 'sharing__caveat', tr.t('sharing.pagesCarry')))
+  return section
+}
+
 function droppedSection(plan: PagesPlan, tr: Translator): HTMLElement {
   const section = el('section', 'sharing__section')
   section.append(el('h3', 'sharing__heading', tr.t('sharing.droppedHeading')))
@@ -965,7 +1104,7 @@ export function renderSharingDialog(options: SharingDialogOptions): SharingDialo
   const buildChoice = (
     form: SharingForm, title: string, note: string, checked: boolean,
     detail?: string
-  ): HTMLElement => {
+  ): { panel: HTMLElement; retitle: (text: string) => void } => {
     const label = el('label', 'sharing__choice')
     const input = el('input', 'sharing__radio')
     input.type = 'radio'
@@ -978,10 +1117,8 @@ export function renderSharingDialog(options: SharingDialogOptions): SharingDialo
     // l'emporte sur celui que le navigateur aurait tiré du contenu de l'étiquette.
     input.setAttribute('aria-label', tr.t('sharing.choiceLabel', { title, note }))
     const body = el('span', 'sharing__choiceBody')
-    body.append(
-      el('span', 'sharing__choiceTitle', title),
-      el('span', 'sharing__choiceNote', note)
-    )
+    const noteBox = el('span', 'sharing__choiceNote', note)
+    body.append(el('span', 'sharing__choiceTitle', title), noteBox)
     if (detail !== undefined) {
       const curious = el('details', 'sharing__curious')
       curious.append(el('summary', 'sharing__curiousHead', tr.t('sharing.curiousHead')))
@@ -998,7 +1135,14 @@ export function renderSharingDialog(options: SharingDialogOptions): SharingDialo
     const panel = el('div', `sharing__detail sharing__detail--${form}`)
     choices.append(panel)
     panels.push({ form, panel })
-    return panel
+    // La note change quand le pilote choisit ses pages : le nom accessible du bouton
+    // radio la porte, il doit changer avec elle. Un nom figé dirait « toutes vos pages »
+    // à qui n'en a coché qu'une.
+    const retitle = (text: string): void => {
+      noteBox.textContent = text
+      input.setAttribute('aria-label', tr.t('sharing.choiceLabel', { title, note: text }))
+    }
+    return { panel, retitle }
   }
 
   const counts = plan.personal.counts
@@ -1042,12 +1186,13 @@ export function renderSharingDialog(options: SharingDialogOptions): SharingDialo
     : tr.t('sharing.backupNoteChanged', { count: plan.backup.changed })
 
   const backupPanel = offers('backup')
-    ? buildChoice('backup', tr.t('sharing.backupTitle'), backupNote, false)
+    ? buildChoice('backup', tr.t('sharing.backupTitle'), backupNote, false).panel
     : undefined
 
-  const pagesPanel = buildChoice(
+  const pagesChoice = buildChoice(
     'pages', tr.t('sharing.pagesTitle'), tr.t('sharing.pagesNote'), false
   )
+  const pagesPanel = pagesChoice.panel
 
   box.append(choices)
 
@@ -1067,14 +1212,93 @@ export function renderSharingDialog(options: SharingDialogOptions): SharingDialo
     backupPanel.append(suspectsSection(plan.backup.suspects, tr, prose, why))
   }
 
-  pagesPanel.append(droppedSection(plan.pages, tr))
-  const pagesAnnexes = annexesSection(plan.pages, tr)
-  if (pagesAnnexes) pagesPanel.append(pagesAnnexes)
-  pagesPanel.append(replacementsSection(
-    plan.pages.replacements, plan.personal,
-    { remindPreferences: true, caveat: residual }, language, tr, prose, why
-  ))
-  pagesPanel.append(suspectsSection(plan.pages.suspects, tr, prose, why))
+  /*
+   * Choisir ses pages **avant** de lire ce que le fichier emportera : le reste du volet
+   * décrit le fichier produit, et un inventaire qui décrirait un autre fichier que celui
+   * qu'on va télécharger vaudrait moins que pas d'inventaire du tout. D'où le
+   * recalcul complet — `planPages` — à chaque case cochée.
+   */
+  const offersList = offeredPages(options.source.document, plan.personal)
+  const refKey = (ref: PageRef): string => `${ref.orientation}:${ref.rank}`
+  const chosenPages = new Set(offersList.map((offer) => refKey(offer.ref)))
+  let pagesPlan = plan.pages
+
+  const chooser = el('section', 'sharing__section sharing__pagesChoice')
+  chooser.append(el('h3', 'sharing__heading', tr.t('sharing.pagesChoiceHeading')))
+  chooser.append(el('p', 'sharing__note', tr.t('sharing.pagesChoiceIntro', {
+    count: offersList.length
+  })))
+
+  const chosenLine = el('p', 'sharing__note sharing__pagesTally')
+  const outcome = el('div', 'sharing__pagesOutcome')
+
+  const rebuildOutcome = (): void => {
+    const selection: PageRef[] = offersList
+      .filter((offer) => chosenPages.has(refKey(offer.ref)))
+      .map((offer) => offer.ref)
+    pagesPlan = planPages(options.source, when, selection)
+
+    chosenLine.textContent = selection.length === 0
+      ? tr.t('sharing.pagesChoiceEmpty')
+      : tr.t('sharing.pagesSelectedCount', {
+        count: selection.length, total: offersList.length
+      })
+    pagesChoice.retitle(selection.length === offersList.length
+      ? tr.t('sharing.pagesNote')
+      : `${tr.t('sharing.pagesNote')} ${chosenLine.textContent}`)
+
+    outcome.replaceChildren()
+    if (selection.length === 0) return
+    outcome.append(pagesImportSection(pagesPlan, tr))
+    outcome.append(droppedSection(pagesPlan, tr))
+    const pagesAnnexes = annexesSection(pagesPlan, tr)
+    if (pagesAnnexes) outcome.append(pagesAnnexes)
+    outcome.append(replacementsSection(
+      pagesPlan.replacements, plan.personal,
+      { remindPreferences: true, caveat: residual }, language, tr, prose, why
+    ))
+    outcome.append(suspectsSection(pagesPlan.suspects, tr, prose, why))
+  }
+
+  const pageList = el('ul', 'sharing__list sharing__list--plain sharing__pages')
+  for (const offer of offersList) {
+    const item = el('li', 'sharing__page')
+    const label = el('label', 'sharing__pageLabel')
+    const box2 = el('input', 'sharing__pageBox')
+    box2.type = 'checkbox'
+    box2.checked = true
+    box2.addEventListener('change', () => {
+      if (box2.checked) chosenPages.add(refKey(offer.ref))
+      else chosenPages.delete(refKey(offer.ref))
+      rebuildOutcome()
+      refreshConfirm()
+    })
+    label.append(box2, el('span', 'sharing__pageName', pageOfferLabel(offer, language, tr)))
+    item.append(label)
+    pageList.append(item)
+  }
+  chooser.append(pageList)
+
+  const bulk = el('div', 'sharing__pagesBulk')
+  const setAll = (checked: boolean): void => {
+    for (const input of pageList.querySelectorAll('input')) input.checked = checked
+    chosenPages.clear()
+    if (checked) for (const offer of offersList) chosenPages.add(refKey(offer.ref))
+    rebuildOutcome()
+    refreshConfirm()
+  }
+  const checkAll = el('button', 'btn btn--ghost', tr.t('sharing.pagesChoiceAll'))
+  checkAll.type = 'button'
+  checkAll.addEventListener('click', () => { setAll(true) })
+  const clearAll = el('button', 'btn btn--ghost', tr.t('sharing.pagesChoiceClear'))
+  clearAll.type = 'button'
+  clearAll.addEventListener('click', () => { setAll(false) })
+  bulk.append(checkAll, clearAll)
+  chooser.append(bulk)
+  chooser.append(chosenLine)
+
+  pagesPanel.append(chooser, outcome)
+  rebuildOutcome()
 
   const inventory = personalSection(plan.personal, tr, prose)
   if (inventory) box.append(inventory)
@@ -1090,13 +1314,27 @@ export function renderSharingDialog(options: SharingDialogOptions): SharingDialo
   const FILE_NAMES: Record<SharingForm, () => string> = {
     plain: () => plan.plainFileName,
     backup: () => plan.backup.fileName,
-    pages: () => plan.pages.fileName
+    pages: () => pagesPlan.fileName
+  }
+
+  const cancel = el('button', 'btn', tr.t('sharing.cancel'))
+  cancel.type = 'button'
+  const confirm = el('button', 'btn btn--primary', tr.t('sharing.confirm'))
+  confirm.type = 'button'
+
+  // Un fichier sans une seule page n'est pas un fichier partageable : il remplacerait les
+  // pages du destinataire par rien. Le bouton se coupe, et la phrase qui dit pourquoi est
+  // déjà sous les cases — même forme que le panneau de nettoyage, qui refuse « Aucun
+  // réglage coché ».
+  const refreshConfirm = (): void => {
+    confirm.disabled = chosenForm() === 'pages' && chosenPages.size === 0
   }
 
   const refresh = (): void => {
     const form = chosenForm()
     for (const one of panels) one.panel.hidden = one.form !== form
     fileNameLine.textContent = tr.t('sharing.producedFileName', { name: FILE_NAMES[form]() })
+    refreshConfirm()
   }
   for (const one of inputs) one.input.addEventListener('change', refresh)
   refresh()
@@ -1104,10 +1342,6 @@ export function renderSharingDialog(options: SharingDialogOptions): SharingDialo
   /* --- confirmer ou renoncer --- */
 
   const actions = el('div', 'modal__actions')
-  const cancel = el('button', 'btn', tr.t('sharing.cancel'))
-  cancel.type = 'button'
-  const confirm = el('button', 'btn btn--primary', tr.t('sharing.confirm'))
-  confirm.type = 'button'
   actions.append(cancel, confirm)
   box.append(actions)
 
@@ -1145,9 +1379,10 @@ export function renderSharingDialog(options: SharingDialogOptions): SharingDialo
 
   confirm.addEventListener('click', () => {
     const form = chosenForm()
+    if (form === 'pages' && chosenPages.size === 0) return
     handle.close()
     if (form !== 'plain') {
-      const chosen = form === 'backup' ? plan.backup : plan.pages
+      const chosen = form === 'backup' ? plan.backup : pagesPlan
       options.onConfirm({
         form,
         anonymized: true,

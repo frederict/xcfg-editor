@@ -122,6 +122,62 @@ const sharing = {
     'remplacés par des textes neutres. La disposition est conservée ; les préférences ne ' +
     'partent pas.',
 
+  /* ------------------------------------- n'envoyer que certaines pages, et le dire juste */
+
+  /**
+   * ⚠️ **La section la plus dangereuse de cette boîte après la fidélité.** Elle dit ce que
+   * le destinataire obtiendra vraiment, et le réflexe est faux : « Remplacer les pages
+   * uniquement » remplace **tout** son jeu de pages, dans les deux orientations. Recevoir
+   * une page seule ainsi, c'est perdre les siennes.
+   *
+   * Les trois premières phrases sont **mesurées sur un AIR³ 7.2, XCTrack 1.0.3-beta**, les
+   * 21 et 22 août 2026 : neuf pages ajoutées après cinq sans qu'aucun fichier de l'appareil
+   * soit touché ; le remplacement qui donne à l'appareil le nombre de pages du fichier
+   * (5 → 6, 3 → 4) ; « Remplacer tout » grisé devant un export « pages ».
+   * La quatrième dit ce qui **n'est pas** mesuré. Traduire en gommant cette distinction
+   * ferait perdre au projet ce qui le distingue.
+   */
+  'sharing.pagesImportHeading': 'Ce que le destinataire en fera',
+  'sharing.pagesImportAdd': 'Sur son instrument, il choisit ce que l’import fait de ses ' +
+    'propres pages. « Ajouter des pages uniquement » pose les vôtres à la suite des ' +
+    'siennes, sans en toucher aucune : c’est l’issue à lui indiquer. Mesuré sur un AIR³ 7.2 ' +
+    'le 22 août 2026 — neuf pages ajoutées après cinq, aucun fichier existant modifié.',
+  'sharing.pagesImportReplace': '« Remplacer les pages uniquement » remplace toutes ' +
+    'ses pages par celles de ce fichier, dans les deux orientations. Mesuré sur le même ' +
+    'appareil : cinq pages devenues six, trois devenues quatre — l’appareil se retrouve ' +
+    'avec le compte du fichier.',
+  'sharing.pagesImportLocked': 'Ses réglages restent les siens quoi qu’il choisisse : ' +
+    'devant un export « pages », l’instrument grise « Remplacer tout ». Mesuré à ' +
+    'l’import.',
+  'sharing.pagesImportUnmeasured': 'Ce qui n’est pas mesuré : aucun fichier réduit à une ' +
+    'partie de ses pages n’a jamais été importé sur un instrument, ni aucun fichier dont ' +
+    'une orientation ne porte plus rien. Ce qu’en fait l’appareil se déduit des mesures ' +
+    'ci-dessus, il n’a pas été constaté.',
+  'sharing.pagesCarry': 'Une page ne désigne aucun fichier extérieur — relevé sur les 21 ' +
+    'fichiers du corpus : ni thème de carte, ni liste de points de virage, ni espaces ' +
+    'aériens, qui vivent tous dans les préférences. Elle ne porte pas non plus de taille ' +
+    'd’écran : ce qui est posé dessus l’est en millièmes, et l’instrument d’arrivée le ' +
+    'redessine à sa dalle. Ce qu’elle emprunte à l’appareil du destinataire — thème, ' +
+    'unités, taille des titres, cartes hors-ligne — sera le sien, pas le vôtre.',
+
+  'sharing.pagesChoiceHeading': 'Quelles pages partent',
+  'sharing.pagesChoiceIntro': {
+    one: 'Ce fichier porte {count} page. Décochez celles qui restent chez vous.',
+    other: 'Ce fichier porte {count} pages. Décochez celles qui restent chez vous.'
+  },
+  'sharing.pagesChoiceLine': 'Page {rank} en {orientation} · {kind} · {parts}',
+  'sharing.pagesChoicePersonal': {
+    one: '{count} texte écrit par vous',
+    other: '{count} textes écrits par vous'
+  },
+  'sharing.pagesChoiceAll': 'Tout cocher',
+  'sharing.pagesChoiceClear': 'Tout décocher',
+  'sharing.pagesChoiceEmpty': 'Aucune page cochée : il n’y a rien à envoyer.',
+  'sharing.pagesSelectedCount': {
+    one: '{count} page part sur {total}.',
+    other: '{count} pages partent sur {total}.'
+  },
+
   /* ------------------------------- ce que la boîte a le droit de promettre sur les octets */
 
   /**

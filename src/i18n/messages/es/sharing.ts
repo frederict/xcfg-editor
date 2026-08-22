@@ -57,6 +57,56 @@ const sharing: DomainCatalog<'sharing'> = {
   'sharing.pagesNote': 'Una exportación «pages» cuyos textos escritos por usted se ' +
     'reemplazan por textos neutros. La disposición se conserva; las preferencias no salen.',
 
+  /* ------------------------------ enviar solo algunas páginas, y decirlo con exactitud */
+
+  /**
+   * ⚠️ La sección más delicada de este cuadro después de la fidelidad. Véase
+   * `fr/sharing.ts`: las tres primeras frases están **medidas en un AIR³ 7.2, XCTrack
+   * 1.0.3-beta, el 21 y el 22 de agosto de 2026**; la cuarta dice lo que **no** está
+   * medido. Traducir borrando esa distinción le quitaría al proyecto lo que lo distingue.
+   */
+  'sharing.pagesImportHeading': 'Lo que obtendrá el destinatario',
+  'sharing.pagesImportAdd': 'En su instrumento elige qué hace la importación con sus ' +
+    'propias páginas. «Añadir solo páginas» pone las suyas de usted a continuación de las ' +
+    'de él, sin tocar ninguna: es la opción que conviene indicarle. Medido en un AIR³ 7.2 ' +
+    'el 22 de agosto de 2026: nueve páginas añadidas tras cinco, ningún archivo existente ' +
+    'modificado.',
+  'sharing.pagesImportReplace': '«Reemplazar solo las páginas» reemplaza todas sus páginas ' +
+    'por las de este archivo, en ambas orientaciones. Medido en el mismo instrumento: cinco ' +
+    'páginas pasaron a seis, tres a cuatro — el instrumento se queda con la cuenta del ' +
+    'archivo.',
+  'sharing.pagesImportLocked': 'Sus ajustes siguen siendo suyos elija lo que elija: ante ' +
+    'una exportación «pages», el instrumento atenúa «Reemplazar todo». Medido al importar.',
+  'sharing.pagesImportUnmeasured': 'Lo que no está medido: nunca se ha importado en un ' +
+    'instrumento un archivo reducido a una parte de sus páginas, ni ninguno en el que una ' +
+    'orientación ya no lleve nada. Lo que el aparato hace con él se deduce de las medidas ' +
+    'anteriores, no se ha comprobado.',
+  'sharing.pagesCarry': 'Una página no designa ningún archivo exterior — relevado en los ' +
+    '21 archivos del corpus: ni tema de mapa, ni lista de puntos de viraje, ni archivos de ' +
+    'espacios aéreos, que viven todos en las preferencias. Tampoco lleva un tamaño de ' +
+    'pantalla: lo que se coloca en ella va en milésimas, y el instrumento de destino lo ' +
+    'redibuja en su propia pantalla. Lo que toma prestado del aparato del destinatario ' +
+    '— tema, unidades, tamaño de los títulos, mapas sin conexión — será el suyo, no el de ' +
+    'usted.',
+
+  'sharing.pagesChoiceHeading': 'Qué páginas salen',
+  'sharing.pagesChoiceIntro': {
+    one: 'Este archivo lleva {count} página. Desmarque las que se quedan con usted.',
+    other: 'Este archivo lleva {count} páginas. Desmarque las que se quedan con usted.'
+  },
+  'sharing.pagesChoiceLine': 'Página {rank} en {orientation} · {kind} · {parts}',
+  'sharing.pagesChoicePersonal': {
+    one: '{count} texto escrito por usted',
+    other: '{count} textos escritos por usted'
+  },
+  'sharing.pagesChoiceAll': 'Marcar todo',
+  'sharing.pagesChoiceClear': 'Desmarcar todo',
+  'sharing.pagesChoiceEmpty': 'Ninguna página marcada: no hay nada que enviar.',
+  'sharing.pagesSelectedCount': {
+    one: 'Sale {count} página de {total}.',
+    other: 'Salen {count} páginas de {total}.'
+  },
+
   'sharing.fidelityUnchanged': 'Usted no ha modificado nada: el archivo sale exactamente ' +
     'tal como entró, sin una sola coma reescrita.',
   'sharing.fidelityUnchangedDetail': 'Los bytes que usted abrió se reemiten sin ser ' +

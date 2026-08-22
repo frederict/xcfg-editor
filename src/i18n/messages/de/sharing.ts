@@ -57,6 +57,54 @@ const sharing: DomainCatalog<'sharing'> = {
     'neutrale ersetzt werden. Der Seitenaufbau bleibt erhalten; die Einstellungen gehen ' +
     'nicht mit.',
 
+  /* ------------------------- nur bestimmte Seiten verschicken, und es richtig sagen */
+
+  /**
+   * ⚠️ Der nach der Bittreue gefährlichste Abschnitt dieses Fensters. Siehe
+   * `fr/sharing.ts`: die ersten drei Sätze sind **auf einem AIR³ 7.2, XCTrack 1.0.3-beta,
+   * am 21. und 22. August 2026 gemessen**; der vierte sagt, was **nicht** gemessen ist.
+   * Eine Übersetzung, die diesen Unterschied verwischt, nimmt dem Projekt das, was es
+   * auszeichnet.
+   */
+  'sharing.pagesImportHeading': 'Was die empfangende Person erhält',
+  'sharing.pagesImportAdd': 'Auf ihrem Gerät wählt sie, was der Import mit ihren eigenen ' +
+    'Seiten macht. „Nur Seiten hinzufügen“ setzt Ihre hinter ihre, ohne eine einzige ' +
+    'anzurühren: darauf sollten Sie sie hinweisen. Gemessen auf einem AIR³ 7.2 am ' +
+    '22. August 2026 — neun Seiten nach fünf hinzugefügt, keine vorhandene Datei geändert.',
+  'sharing.pagesImportReplace': '„Nur Seiten ersetzen“ ersetzt alle ihre Seiten durch die ' +
+    'dieser Datei, in beiden Ausrichtungen. Auf demselben Gerät gemessen: aus fünf Seiten ' +
+    'wurden sechs, aus drei vier — das Gerät hat am Ende die Anzahl der Datei.',
+  'sharing.pagesImportLocked': 'Ihre Einstellungen bleiben ihre, was sie auch wählt: vor ' +
+    'einem „pages“-Export blendet das Gerät „Alles ersetzen“ aus. Beim Import gemessen.',
+  'sharing.pagesImportUnmeasured': 'Was nicht gemessen ist: keine auf einen Teil ihrer ' +
+    'Seiten gekürzte Datei wurde je auf einem Gerät importiert, und auch keine Datei, in ' +
+    'der eine Ausrichtung gar nichts mehr trägt. Was das Gerät damit macht, ist aus den ' +
+    'obigen Messungen erschlossen, nicht beobachtet.',
+  'sharing.pagesCarry': 'Eine Seite nennt keine äußere Datei — auf den 21 Dateien des ' +
+    'Korpus erhoben: kein Kartenthema, keine Wegpunktliste, keine Luftraumdateien, die ' +
+    'alle in den Einstellungen wohnen. Sie trägt auch keine Bildschirmgröße: was auf ihr ' +
+    'liegt, ist in Tausendsteln gesetzt, und das empfangende Gerät zeichnet es auf seiner ' +
+    'eigenen Anzeige neu. Was sie sich vom Gerät der empfangenden Person leiht — Thema, ' +
+    'Einheiten, Titelgröße, Offline-Karten — wird ihres sein, nicht Ihres.',
+
+  'sharing.pagesChoiceHeading': 'Welche Seiten mitgehen',
+  'sharing.pagesChoiceIntro': {
+    one: 'Diese Datei trägt {count} Seite. Haken Sie ab, was bei Ihnen bleibt.',
+    other: 'Diese Datei trägt {count} Seiten. Haken Sie ab, was bei Ihnen bleibt.'
+  },
+  'sharing.pagesChoiceLine': 'Seite {rank} im {orientation} · {kind} · {parts}',
+  'sharing.pagesChoicePersonal': {
+    one: '{count} von Ihnen geschriebener Text',
+    other: '{count} von Ihnen geschriebene Texte'
+  },
+  'sharing.pagesChoiceAll': 'Alle ankreuzen',
+  'sharing.pagesChoiceClear': 'Alle abwählen',
+  'sharing.pagesChoiceEmpty': 'Keine Seite angekreuzt: es gibt nichts zu verschicken.',
+  'sharing.pagesSelectedCount': {
+    one: '{count} von {total} Seiten geht mit.',
+    other: '{count} von {total} Seiten gehen mit.'
+  },
+
   'sharing.fidelityUnchanged': 'Sie haben nichts geändert: die Datei kommt genau so wieder ' +
     'heraus, wie sie hineingegangen ist, ohne ein einziges neu geschriebenes Komma.',
   'sharing.fidelityUnchangedDetail': 'Die Bytes, die Sie geöffnet haben, werden erneut ' +

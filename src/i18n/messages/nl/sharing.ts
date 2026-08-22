@@ -56,6 +56,57 @@ const sharing: DomainCatalog<'sharing'> = {
   'sharing.pagesNote': 'Een ‘pages’-export waarvan de door u geschreven teksten door ' +
     'neutrale worden vervangen. De opmaak blijft behouden; de voorkeuren vertrekken niet.',
 
+  /* --------------------------- alleen bepaalde pagina's versturen, en het juist zeggen */
+
+  /**
+   * ⚠️ Het gevaarlijkste onderdeel van dit venster na de getrouwheid. Zie `fr/sharing.ts`:
+   * de eerste drie zinnen zijn **gemeten op een AIR³ 7.2, XCTrack 1.0.3-beta, op 21 en
+   * 22 augustus 2026**; de vierde zegt wat **niet** gemeten is. Een vertaling die dat
+   * onderscheid wegpoetst, ontneemt het project wat het onderscheidt.
+   */
+  'sharing.pagesImportHeading': 'Wat de ontvanger krijgt',
+  'sharing.pagesImportAdd': 'Op zijn instrument kiest hij wat de import met zijn eigen ' +
+    'pagina’s doet. ‘Alleen pagina’s toevoegen’ zet die van u achter de zijne, zonder er ' +
+    'één aan te raken: dat is de keuze die u hem moet aanwijzen. Gemeten op een AIR³ 7.2 ' +
+    'op 22 augustus 2026 — negen pagina’s toegevoegd na vijf, geen bestaand bestand ' +
+    'gewijzigd.',
+  'sharing.pagesImportReplace': '‘Alleen pagina’s vervangen’ vervangt al zijn pagina’s ' +
+    'door die van dit bestand, in beide oriëntaties. Op hetzelfde instrument gemeten: vijf ' +
+    'pagina’s werden er zes, drie werden er vier — het instrument houdt het aantal van het ' +
+    'bestand over.',
+  'sharing.pagesImportLocked': 'Zijn instellingen blijven de zijne, wat hij ook kiest: ' +
+    'tegenover een ‘pages’-export maakt het instrument ‘Alles vervangen’ grijs. Bij de ' +
+    'import gemeten.',
+  'sharing.pagesImportUnmeasured': 'Wat niet gemeten is: nooit is een bestand dat tot een ' +
+    'deel van zijn pagina’s is teruggebracht op een instrument ingelezen, en evenmin een ' +
+    'bestand waarin één oriëntatie niets meer draagt. Wat het toestel ermee doet, is uit ' +
+    'de bovenstaande metingen afgeleid, niet vastgesteld.',
+  'sharing.pagesCarry': 'Een pagina wijst geen enkel bestand buiten zichzelf aan — ' +
+    'opgenomen op de 21 bestanden van het corpus: geen kaartthema, geen keerpuntenlijst, ' +
+    'geen luchtruimbestanden, die allemaal in de voorkeuren wonen. Ze draagt evenmin een ' +
+    'schermformaat: wat erop staat, is in duizendsten geplaatst, en het ontvangende ' +
+    'instrument tekent het op zijn eigen scherm opnieuw. Wat ze van het toestel van de ' +
+    'ontvanger leent — thema, eenheden, titelgrootte, offlinekaarten — zal het zijne zijn, ' +
+    'niet het uwe.',
+
+  'sharing.pagesChoiceHeading': 'Welke pagina’s vertrekken',
+  'sharing.pagesChoiceIntro': {
+    one: 'Dit bestand draagt {count} pagina. Vink af wat bij u blijft.',
+    other: 'Dit bestand draagt {count} pagina’s. Vink af wat bij u blijft.'
+  },
+  'sharing.pagesChoiceLine': 'Pagina {rank} in {orientation} · {kind} · {parts}',
+  'sharing.pagesChoicePersonal': {
+    one: '{count} door u geschreven tekst',
+    other: '{count} door u geschreven teksten'
+  },
+  'sharing.pagesChoiceAll': 'Alles aanvinken',
+  'sharing.pagesChoiceClear': 'Alles afvinken',
+  'sharing.pagesChoiceEmpty': 'Geen pagina aangevinkt: er is niets te versturen.',
+  'sharing.pagesSelectedCount': {
+    one: '{count} van de {total} pagina’s vertrekt.',
+    other: '{count} van de {total} pagina’s vertrekken.'
+  },
+
   'sharing.fidelityUnchanged': 'U hebt niets gewijzigd: het bestand komt er precies zo uit ' +
     'als het erin ging, zonder één herschreven komma.',
   'sharing.fidelityUnchangedDetail': 'De bytes die u hebt geopend worden opnieuw ' +
