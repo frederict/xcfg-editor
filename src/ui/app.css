@@ -2866,8 +2866,7 @@ body.is-dragging .veil {
 
 /* Les conséquences : mêmes marques que les notes de la vue d'ensemble. */
 .pages__advice,
-.pages__choice-advice,
-.pagecard__consequences {
+.pages__choice-advice {
   list-style: none;
   margin: 0.9rem 0 0;
   padding: 0;
@@ -3099,17 +3098,16 @@ body.is-dragging .veil {
 .pagecard__removal { flex: 1 1 100%; display: grid; gap: 0.4rem; }
 .pagecard__remove { justify-self: start; }
 
-/* Armé, le bouton devient un aplat encré : il change d'aspect au point qu'un second clic
-   distrait est impossible, sans recourir au rouge que cette feuille s'interdit. */
-.pagecard__remove--armed {
-  background: var(--app-ink);
-  border-color: var(--app-ink);
-  color: var(--app-bg);
-  font-weight: 500;
-}
-
-.pagecard__consequences { margin: 0; }
-.pagecard__consequences .pages__advice-item { font-size: 11.5px; }
+/*
+ * ⚠ Il y avait ici `.pagecard__remove--armed`, l'aplat encré du bouton « Confirmer la
+ * suppression », et `.pagecard__consequences`, la liste qu'il dépliait. Le commentaire
+ * promettait qu'ainsi armé, « un second clic distrait est impossible » : c'était une
+ * supposition, et un pilote-testeur l'a démentie le 2026-08-22 en traversant les deux
+ * clics sans voir le premier — le second tombe sur le même bouton, aux mêmes pixels.
+ * La suppression d'une page part désormais au premier clic et se dit dans l'annonce,
+ * puisque « Annuler » la reprend ; ces deux règles n'ont plus rien à peindre. Voir la
+ * tête de `src/ui/pageManager.ts`.
+ */
 
 .pagecard__class-field { display: flex; align-items: center; gap: 0.4rem; }
 
