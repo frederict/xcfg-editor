@@ -242,6 +242,19 @@ const widgets: DomainCatalog<'widgets'> = {
     '‘{name}’ toevoegen — kopie van een widget op een andere pagina',
   'palette.addNew': '‘{name}’ toevoegen — nieuwe widget, instellingen aan XCTrack gelaten',
 
+  /** Voir `messages/fr/widgets.ts` : d'où vient la copie, la page nommée. */
+  'palette.elsewhereOnLandscape': 'elders — pagina {rank} in liggend formaat',
+  'palette.elsewhereOnPortrait': 'elders — pagina {rank} in staand formaat',
+  'palette.spokenCopyFromLandscape':
+    'wordt gekopieerd met de instellingen van de widget op pagina {rank} in liggend formaat',
+  'palette.spokenCopyFromPortrait':
+    'wordt gekopieerd met de instellingen van de widget op pagina {rank} in staand formaat',
+  'palette.addCopyFromLandscape':
+    '‘{name}’ toevoegen — kopie van de widget op pagina {rank} in liggend formaat',
+  'palette.addCopyFromPortrait':
+    '‘{name}’ toevoegen — kopie van de widget op pagina {rank} in staand formaat',
+
+
   /* ======================================== widgetList.ts — de widgets van de pagina */
 
   'widgets.listTitle': 'Widgets van de pagina',

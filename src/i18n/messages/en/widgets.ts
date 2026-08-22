@@ -238,6 +238,19 @@ const widgets: DomainCatalog<'widgets'> = {
   'palette.addCopyFromElsewhere': 'Add “{name}” — copy of a widget on another page',
   'palette.addNew': 'Add “{name}” — new widget, settings left to XCTrack',
 
+  /** Voir `messages/fr/widgets.ts` : d'où vient la copie, la page nommée. */
+  'palette.elsewhereOnLandscape': 'elsewhere — page {rank} in landscape',
+  'palette.elsewhereOnPortrait': 'elsewhere — page {rank} in portrait',
+  'palette.spokenCopyFromLandscape':
+    'will be copied with the settings of the widget on page {rank} in landscape',
+  'palette.spokenCopyFromPortrait':
+    'will be copied with the settings of the widget on page {rank} in portrait',
+  'palette.addCopyFromLandscape':
+    'Add “{name}” — copy of the widget on page {rank} in landscape',
+  'palette.addCopyFromPortrait':
+    'Add “{name}” — copy of the widget on page {rank} in portrait',
+
+
   /* ============================================= widgetList.ts — the widgets of the page */
 
   'widgets.listTitle': 'Widgets on the page',

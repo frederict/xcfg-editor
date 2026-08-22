@@ -241,6 +241,19 @@ const widgets: DomainCatalog<'widgets'> = {
     '„{name}“ hinzufügen — Kopie eines Widgets einer anderen Seite',
   'palette.addNew': '„{name}“ hinzufügen — neues Widget, Einstellungen XCTrack überlassen',
 
+  /** Voir `messages/fr/widgets.ts` : d'où vient la copie, la page nommée. */
+  'palette.elsewhereOnLandscape': 'anderswo — Seite {rank} im Querformat',
+  'palette.elsewhereOnPortrait': 'anderswo — Seite {rank} im Hochformat',
+  'palette.spokenCopyFromLandscape':
+    'wird mit den Einstellungen des Widgets auf Seite {rank} im Querformat kopiert',
+  'palette.spokenCopyFromPortrait':
+    'wird mit den Einstellungen des Widgets auf Seite {rank} im Hochformat kopiert',
+  'palette.addCopyFromLandscape':
+    '„{name}“ hinzufügen — Kopie des Widgets auf Seite {rank} im Querformat',
+  'palette.addCopyFromPortrait':
+    '„{name}“ hinzufügen — Kopie des Widgets auf Seite {rank} im Hochformat',
+
+
   /* ========================================== widgetList.ts — die Widgets der Seite */
 
   'widgets.listTitle': 'Widgets der Seite',

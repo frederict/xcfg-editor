@@ -320,6 +320,31 @@ export function createWidgetNode(className: string, bounds: Bounds): JsonNode {
 /** Ce qui distingue les deux chemins, et ce que l'interface doit rendre visible. */
 export type PaletteOrigin = 'duplicate' | 'create'
 
+/**
+ * Une page, telle que le pilote la désigne : son orientation et son rang **à partir de 1**,
+ * c'est-à-dire le numéro qu'il lit sur la vue d'ensemble et sur son appareil.
+ */
+export interface PageRef {
+  orientation: Orientation
+  rank: number
+}
+
+/** Un modèle pris sur une autre page, et la page d'où il vient. */
+export interface ForeignWidget {
+  node: JsonNode
+  page: PageRef
+}
+
+/** Le nœud d'un modèle, qu'il vienne avec sa page ou tout nu. */
+function modelNode(source: JsonNode | ForeignWidget): JsonNode {
+  return 'kind' in source ? source : source.node
+}
+
+/** La page d'un modèle, quand l'appelant l'a donnée. */
+function modelPageOf(source: JsonNode | ForeignWidget): PageRef | undefined {
+  return 'kind' in source ? undefined : source.page
+}
+
 /** Les widgets de la configuration ouverte, séparés selon ce que la palette en tire. */
 export interface PaletteSources {
   /**
@@ -333,8 +358,13 @@ export interface PaletteSources {
    * Les widgets des **autres pages**, modèles de repli. Un type qui n'existe que là reste
    * duplicable ; la ligne le dit (« ailleurs dans le fichier ») pour que le pilote sache
    * d'où viendront les réglages.
+   *
+   * Un nœud nu ne dit pas de quelle page il vient, et la ligne ne peut alors que dire
+   * « ailleurs ». Passez un `ForeignWidget` et elle **nomme la page** — c'est ce que le
+   * pilote d'essai réclamait : « "un gadget d'une autre page", laquelle ? ». Les deux
+   * formes se mélangent dans le même tableau.
    */
-  elsewhere: readonly JsonNode[]
+  elsewhere: readonly (JsonNode | ForeignWidget)[]
 }
 
 /** Un type de widget proposé par la palette. */
@@ -371,6 +401,11 @@ export interface PaletteEntry {
    */
   modelFromPage: boolean
   /**
+   * **Laquelle** de ces autres pages, quand `PaletteSources` l'a dit. Absent tant que
+   * l'appelant ne passe que des nœuds nus : la ligne se contente alors d'« ailleurs ».
+   */
+  modelPage?: PageRef
+  /**
    * Vrai si un autre type porte exactement le même libellé. Le cas est attesté :
    * « Luminosité de l'écran » désigne `WBrightnessInfo` (Système) **et** `WButtonBrightness`
    * (Boutons d'actions), deux widgets distincts (§ 3.2). Une palette indexée par libellé se
@@ -395,11 +430,15 @@ interface Seen {
   onPageCount: number
   model?: JsonNode
   modelFromPage: boolean
+  modelPage?: PageRef
 }
 
 /** Dépouille les widgets d'une provenance, en tenant les deux compteurs à jour. */
-function collect(seen: Map<string, Seen>, nodes: readonly JsonNode[], fromPage: boolean): void {
-  for (const node of nodes) {
+function collect(
+  seen: Map<string, Seen>, sources: readonly (JsonNode | ForeignWidget)[], fromPage: boolean
+): void {
+  for (const source of sources) {
+    const node = modelNode(source)
     const widget = readWidget(node)
     if (widget.shortName === '') continue
     let entry = seen.get(widget.shortName)
@@ -414,6 +453,8 @@ function collect(seen: Map<string, Seen>, nodes: readonly JsonNode[], fromPage: 
     if (entry.model === undefined && usableModel(node)) {
       entry.model = node
       entry.modelFromPage = fromPage
+      const page = modelPageOf(source)
+      if (page !== undefined) entry.modelPage = page
     }
   }
 }
@@ -461,6 +502,7 @@ export function buildPaletteEntries(
       origin: found?.model === undefined ? 'create' : 'duplicate',
       ...(found?.model === undefined ? {} : { model: found.model }),
       modelFromPage: found?.modelFromPage ?? false,
+      ...(found?.modelPage === undefined ? {} : { modelPage: found.modelPage }),
       ambiguousLabel: false
     })
   }
@@ -498,6 +540,23 @@ export interface PaletteChoice {
  * Chaque appel rend un nœud **indépendant** — cliquer deux fois pose deux widgets, et le modèle
  * dupliqué n'est jamais partagé avec sa copie.
  */
+/**
+ * La phrase d'historique d'une copie. Trois cas, du plus précis au plus vague : le gadget de
+ * cette page, celui d'une page **nommée**, celui d'« une autre page » quand l'appelant n'a
+ * pas dit laquelle.
+ *
+ * Chaque cas est une phrase entière : un nom d'orientation glissé dans un trou ne s'accorde
+ * pas dans les cinq langues.
+ */
+function copyDescription(entry: PaletteEntry, tr: Translator): string {
+  if (entry.modelFromPage) return tr.t('palette.addCopyFromPage', { name: entry.label })
+  const page = entry.modelPage
+  if (page === undefined) return tr.t('palette.addCopyFromElsewhere', { name: entry.label })
+  return page.orientation === 'landscape'
+    ? tr.t('palette.addCopyFromLandscape', { name: entry.label, rank: page.rank })
+    : tr.t('palette.addCopyFromPortrait', { name: entry.label, rank: page.rank })
+}
+
 export function buildWidget(
   entry: PaletteEntry, bounds: Bounds, tr?: Translator
 ): PaletteChoice {
@@ -507,10 +566,7 @@ export function buildWidget(
   if (entry.model !== undefined) {
     return {
       node: duplicateWidget(entry.model, bounds),
-      description: say.t(
-        entry.modelFromPage ? 'palette.addCopyFromPage' : 'palette.addCopyFromElsewhere',
-        { name: entry.label }
-      ),
+      description: copyDescription(entry, say),
       entry
     }
   }
@@ -866,6 +922,15 @@ export function renderWidgetPalette(options: WidgetPaletteOptions): WidgetPalett
  * juxtaposent sans jamais se mélanger. Le `', '` est celui d'une **fiche**, pas d'une
  * énumération de prose : `format.list` y ferait lire « … et sera créé ».
  */
+function spokenCopy(entry: PaletteEntry, tr: Translator): string {
+  if (entry.modelFromPage) return tr.t('palette.spokenCopyFromPage')
+  const page = entry.modelPage
+  if (page === undefined) return tr.t('palette.spokenCopyFromElsewhere')
+  return page.orientation === 'landscape'
+    ? tr.t('palette.spokenCopyFromLandscape', { rank: page.rank })
+    : tr.t('palette.spokenCopyFromPortrait', { rank: page.rank })
+}
+
 function spokenLabel(entry: PaletteEntry, familyLabel: string, tr: Translator): string {
   const parts = [entry.label, entry.shortName, familyLabel]
   if (entry.pro) parts.push(tr.t('palette.spokenPro'))
@@ -874,12 +939,17 @@ function spokenLabel(entry: PaletteEntry, familyLabel: string, tr: Translator): 
       ? tr.t('palette.spokenHereCount', { count: entry.onPageCount })
       : tr.t('palette.spokenHereOnce'))
   }
-  parts.push(entry.origin === 'duplicate'
-    ? (entry.modelFromPage
-        ? tr.t('palette.spokenCopyFromPage')
-        : tr.t('palette.spokenCopyFromElsewhere'))
-    : tr.t('palette.spokenCreate'))
+  parts.push(entry.origin === 'duplicate' ? spokenCopy(entry, tr) : tr.t('palette.spokenCreate'))
   return parts.join(', ')
+}
+
+/** La marque de provenance : la page nommée si on la connaît, « ailleurs » sinon. */
+function elsewhereMark(entry: PaletteEntry, tr: Translator): string {
+  const page = entry.modelPage
+  if (page === undefined) return tr.t('palette.elsewhere')
+  return page.orientation === 'landscape'
+    ? tr.t('palette.elsewhereOnLandscape', { rank: page.rank })
+    : tr.t('palette.elsewhereOnPortrait', { rank: page.rank })
 }
 
 /**
@@ -951,7 +1021,9 @@ function buildRow(
       : tr.t('palette.hereOnceHelp')
     marks.append(here)
   } else if (entry.count > 0) {
-    const elsewhere = el('span', 'palette__elsewhere', tr.t('palette.elsewhere'))
+    // « ailleurs » ne suffit pas quand le pilote a deux cartes réglées différemment : la
+    // marque nomme la page dès que `PaletteSources` la donne.
+    const elsewhere = el('span', 'palette__elsewhere', elsewhereMark(entry, tr))
     elsewhere.title = tr.t('palette.elsewhereHelp', { count: entry.count })
     marks.append(elsewhere)
   }

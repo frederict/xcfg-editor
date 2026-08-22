@@ -30,6 +30,7 @@ import {
   NOT_OFFERED_FAMILY,
   notOfferedLabel,
   WIDGET_CLASS_PREFIX,
+  type ForeignWidget,
   type PaletteEntry,
   type PaletteSources
 } from '../../src/ui/widgetPalette'
@@ -1141,5 +1142,92 @@ describe('la taille d’une copie', () => {
     const bounds = entryBounds(entry, LANDSCAPE)
     const node = previewNode(entry, bounds)
     expect(readWidgetBounds(node)).toEqual(bounds)
+  })
+})
+
+/**
+ * # D'où vient la copie
+ *
+ * Défaut du second essai pilote (22 août 2026), sa gêne n° 4 : « "sera copié avec les
+ * réglages d'un gadget d'une autre page" — **laquelle** ? J'ai deux cartes dans mon
+ * fichier, réglées différemment. Je ne sais pas laquelle je vais recevoir. J'ai cliqué en
+ * croisant les doigts. »
+ *
+ * Reproduit sur `2026-08-20_backup-00.xcfg`, qui porte bien trois cartes de manche —
+ * paysage 2, paysage 5, portrait 2. Depuis la page paysage 1, la palette proposait
+ * « ailleurs » et rien d'autre, dans la marque comme dans l'intitulé vocal comme dans la
+ * phrase d'annulation.
+ *
+ * La palette ne pouvait pas répondre : `PaletteSources.elsewhere` ne portait que des nœuds,
+ * et un nœud ne sait pas de quelle page il vient. Elle accepte désormais un `ForeignWidget`
+ * — le nœud **et** sa page — et nomme alors la page aux trois endroits. Les deux formes se
+ * mélangent, et un appelant qui ne passe que des nœuds retrouve « ailleurs » : c'est ce qui
+ * permet de brancher `main.ts` en une ligne, plus tard, sans rien casser.
+ */
+describe('d’où vient la copie', () => {
+  /** Les sources vues depuis la page paysage 1, chaque modèle avec sa page. */
+  function withPages(doc: JsonNode): PaletteSources {
+    const layout = readLayout(doc)
+    const page = layout.landscape[0]!
+    const elsewhere: ForeignWidget[] = []
+    for (const orientation of ['landscape', 'portrait'] as const) {
+      layout[orientation].forEach((other, index) => {
+        if (other === page) return
+        for (const widget of other.widgets) {
+          elsewhere.push({ node: widget.node, page: { orientation, rank: index + 1 } })
+        }
+      })
+    }
+    return { onPage: page.widgets.map((w) => w.node), elsewhere }
+  }
+
+  it('nomme la page du modèle sur la ligne', () => {
+    const view = renderWidgetPalette({
+      sources: withPages(document()),
+      catalog: CATALOG,
+      device: AIR3,
+      orientation: 'landscape',
+      settings: SETTINGS,
+      tr: FRENCH
+    })
+
+    const row = view.element
+      .querySelector<HTMLElement>('.palette__entry[data-widget="WCompMap"]')!
+    // La carte de manche la plus proche dans l'ordre du fichier est celle de la page 2.
+    expect(row.querySelector('.palette__elsewhere')?.textContent)
+      .toBe('ailleurs — page 2 en paysage')
+    expect(row.getAttribute('aria-label'))
+      .toContain('sera copié avec les réglages du gadget de la page 2 en paysage')
+  })
+
+  it('la phrase d’annulation la nomme aussi', () => {
+    const entry = entryFor(entries(withPages(document())), 'WCompMap')
+    expect(entry.modelPage).toEqual({ orientation: 'landscape', rank: 2 })
+    expect(buildWidget(entry, newWidgetBounds(AIR3, 'landscape'), FRENCH).description)
+      .toBe('Ajouter « Carte de la manche » — copie du gadget de la page 2 en paysage')
+  })
+
+  it('une page portrait se dit portrait', () => {
+    // `WOptiUnfinishedTriangle` n'est que sur la page portrait 1 de cette configuration.
+    const entry = entryFor(entries(withPages(document())), 'WOptiUnfinishedTriangle')
+    expect(entry.modelPage).toEqual({ orientation: 'portrait', rank: 1 })
+    expect(buildWidget(entry, newWidgetBounds(AIR3, 'landscape'), FRENCH).description)
+      .toContain('en portrait')
+  })
+
+  it('un modèle de la page affichée reste « de cette page »', () => {
+    // La provenance ne remplace pas la distinction ici / ailleurs : elle la précise.
+    const entry = entryFor(entries(withPages(document())), 'WAltitude')
+    expect(entry.modelFromPage).toBe(true)
+    expect(buildWidget(entry, newWidgetBounds(AIR3, 'landscape'), FRENCH).description)
+      .toBe('Ajouter « Altitude GPS » — copie d’un gadget de cette page')
+  })
+
+  it('sans provenance, la palette dit « ailleurs » comme avant', () => {
+    // Le chemin que `main.ts` emprunte encore : des nœuds nus. Rien ne doit y changer.
+    const entry = entryFor(entries(fromPage(document(), 'landscape', 0)), 'WCompMap')
+    expect(entry.modelPage).toBeUndefined()
+    expect(buildWidget(entry, newWidgetBounds(AIR3, 'landscape'), FRENCH).description)
+      .toBe('Ajouter « Carte de la manche » — copie d’un gadget d’une autre page')
   })
 })

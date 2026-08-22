@@ -321,6 +321,34 @@ const widgets = {
   'palette.addCopyFromElsewhere': 'Ajouter « {name} » — copie d’un gadget d’une autre page',
   'palette.addNew': 'Ajouter « {name} » — gadget neuf, réglages laissés à XCTrack',
 
+  /**
+   * D'où vient la copie — la page, nommée.
+   *
+   * Le pilote d'essai du 22 août : « on ne me dit pas de quelle page vient la copie —
+   * "un gadget d'une autre page", laquelle ? J'ai deux cartes dans mon fichier, réglées
+   * différemment. Je ne sais pas laquelle je vais recevoir. J'ai cliqué en croisant les
+   * doigts. »
+   *
+   * Une phrase entière par orientation, et non un nom d'orientation glissé dans un trou :
+   * c'est l'idiome de `library.previewOfLandscapePage`, et il évite d'assembler des
+   * fragments qui ne s'assemblent pas dans les cinq langues. `{rank}` est un rang de page,
+   * un nombre que le pilote lit et compare — il se met donc en forme comme un nombre.
+   *
+   * Les trois messages « d'une autre page » restent : la palette ne connaît la page que si
+   * `PaletteSources.elsewhere` la lui donne, et elle fonctionne sans.
+   */
+  'palette.elsewhereOnLandscape': 'ailleurs — page {rank} en paysage',
+  'palette.elsewhereOnPortrait': 'ailleurs — page {rank} en portrait',
+  'palette.spokenCopyFromLandscape':
+    'sera copié avec les réglages du gadget de la page {rank} en paysage',
+  'palette.spokenCopyFromPortrait':
+    'sera copié avec les réglages du gadget de la page {rank} en portrait',
+  'palette.addCopyFromLandscape':
+    'Ajouter « {name} » — copie du gadget de la page {rank} en paysage',
+  'palette.addCopyFromPortrait':
+    'Ajouter « {name} » — copie du gadget de la page {rank} en portrait',
+
+
   /* ============================================ widgetList.ts — les gadgets de la page */
 
   'widgets.listTitle': 'Gadgets de la page',
