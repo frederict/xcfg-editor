@@ -785,10 +785,12 @@
   elles ne valent pas la même chose :</p>
 
   <ul>
-    <li><strong>un nom en toutes lettres</strong> — « volume haut », « marche/arrêt » — a
-    été relevé <strong>à la main sur un boîtier</strong> : la touche a été pressée et le
-    code lu à l’arrivée. Il n’en existe que pour les modèles que nous avons eus entre les
-    mains ; sur l’AIR³ 7.2, trois touches ;</li>
+    <li><strong>un nom en toutes lettres</strong> — « Augmenter le volume »,
+    « Mise en route » — est celui que <strong>XCTrack donne à la touche</strong> :
+    c’est le mot que vous lisez sur l’écran de réglage des touches de votre appareil, et il
+    suit la langue du fichier ouvert, comme tous les autres noms de XCTrack. Il ne
+    s’affiche que pour les touches que nous avons <strong>pressées à la main</strong> sur
+    le modèle que votre fichier déclare ; sur l’AIR³ 7.2, trois touches ;</li>
     <li><strong>un nom en <code>KEYCODE_</code></strong> — <code>KEYCODE_STEM_2</code>,
     code 266 — vient de la table des touches d’Android. Cette table nomme un
     <em>code</em>, pas un bouton : elle ne dit pas laquelle de vos touches l’émet.</li>
@@ -1135,6 +1137,44 @@
   domaine réservé qui ne mène nulle part. Ces mots sont en anglais quelle que soit la
   langue de l’interface : ce fichier est fait pour partir, et son destinataire ne parle
   pas forcément la vôtre.</p>
+
+  <h3>N’envoyer qu’une page</h3>
+
+  <p>Vous avez dessiné une belle page de vol et un copain la veut&nbsp;: il n’a pas besoin
+  de toute votre configuration. Le geste vit dans cette issue&nbsp;3. Sous
+  <span class="manual__ui">Quelles pages partent</span>, chaque page du fichier porte une
+  case, toutes cochées au départ. Décochez celles qui restent chez vous&nbsp;;
+  <span class="manual__ui">Tout décocher</span>, puis une seule case, donne un fichier
+  d’une page. Chaque page se reconnaît à son rang, à son type et à ce qu’elle porte —
+  y compris le nombre de textes que vous y avez écrits.</p>
+
+  <p>Ce n’est pas une quatrième issue, et c’est voulu&nbsp;: le fichier produit reste un
+  export « pages », expurgé exactement de la même façon. Un seul chemin, donc une
+  seule garantie à tenir. Si vous décochez tout, <span class="manual__ui">Enregistrer</span>
+  ne répond plus&nbsp;: un fichier sans une seule page ne se partage pas.</p>
+
+  <div class="manual__warning">
+    <span class="manual__boxTitle">Dites à votre destinataire quelle option choisir à l’import</span>
+    <p>Sur son instrument, XCTrack propose trois façons d’importer, et le réflexe est le
+    mauvais. <strong>« Ajouter des pages uniquement » pose vos pages à la suite
+    des siennes, sans en toucher aucune</strong> — c’est celle-là qu’il lui faut.
+    « Remplacer les pages uniquement » remplace <em>toutes</em> ses pages par
+    celles de votre fichier, dans les deux orientations&nbsp;: il perdrait les siennes.
+    « Remplacer tout » lui est de toute façon refusé devant un export
+    « pages », l’instrument le grise. <em>Mesuré sur un AIR³&nbsp;7.2 les 21 et
+    22 août 2026.</em></p>
+    <p><strong>Ce qui n’est pas mesuré&nbsp;:</strong> aucun fichier réduit à une partie de
+    ses pages n’a jamais été importé sur un instrument, ni aucun fichier dont une
+    orientation ne porte plus rien. Ce que l’appareil en fait se déduit des mesures
+    ci-dessus&nbsp;; il n’a pas été constaté.</p>
+  </div>
+
+  <p>Une page ne désigne aucun fichier extérieur — relevé sur les 21 fichiers du corpus&nbsp;:
+  le thème de carte, les listes de points de virage et les fichiers d’espaces aériens
+  vivent tous dans les préférences, que cette issue ne transporte pas. Elle ne porte pas
+  non plus de taille d’écran&nbsp;: ce qui est posé dessus l’est en millièmes, et
+  l’instrument d’arrivée le redessine à sa dalle. Votre destinataire verra donc votre page
+  avec <em>son</em> thème, <em>ses</em> unités et <em>ses</em> cartes.</p>
 
   <h3>Ce qui a l’air d’un texte que vous auriez écrit</h3>
 

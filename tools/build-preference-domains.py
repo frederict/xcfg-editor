@@ -197,6 +197,15 @@ UNIT_DOMAIN_SOURCE = {
 # modèle-là** porte. Les AIR³ plus récents en ont davantage, et un réglage sans effet
 # sur celui-ci peut être parfaitement vivant sur un autre. Le `.xcfg` déclarant son
 # appareil (`info.device`), l'interface conditionne son propos au modèle.
+#
+# ⚠️ **Aucun nom de touche ici, et c'est délibéré depuis le 2026-08-22.** Ce relevé a
+# porté jusque-là un `label` français — « volume haut », « volume bas »,
+# « marche/arrêt » — tenu pour une donnée de mesure. Il n'en était pas une : ce qui a
+# été mesuré, c'est qu'une touche pressée émet le code 24 ; « volume haut » était
+# notre façon de le dire, et rien n'a été mesuré en français. XCTrack, lui, nomme ces
+# touches dans ses ressources (`keyVolumeUp`, `keyVolumeDown`, `keyPower`, 32
+# langues), et c'est ce nom-là que le pilote lit sur son appareil. Il vit désormais
+# dans `src/catalog/hardwareKeyLabels.json` et suit l'axe `labels`.
 MEASURED_HARDWARE_KEYS = [
     {
         "deviceId": "air3-7.2",
@@ -204,9 +213,9 @@ MEASURED_HARDWARE_KEYS = [
         "label": "AIR³ 7.2",
         "basis": "measured",
         "keys": [
-            {"code": 24, "label": "volume haut"},
-            {"code": 25, "label": "volume bas"},
-            {"code": 26, "label": "marche/arrêt"},
+            {"code": 24},
+            {"code": 25},
+            {"code": 26},
         ],
         "caveats": [
             "relevé sur ce modèle seul ; les AIR³ plus récents portent davantage de "
@@ -246,7 +255,7 @@ KERNEL_KEY_DECLARATIONS = {
         "devices": [
             {
                 "name": "mtk-kpd",
-                "what": "le clavier du boîtier",
+                "whatKey": "keypad",
                 "keyLayoutFile": "/system/usr/keylayout/mtk-kpd.kl",
                 "keyLayoutIsFallback": False,
                 "linuxCodes": [114, 115, 116, 408],
@@ -255,7 +264,7 @@ KERNEL_KEY_DECLARATIONS = {
             },
             {
                 "name": "sn7326-key",
-                "what": "le contrôleur de clavier sn7326",
+                "whatKey": "keyboardController",
                 # Le fichier propre au périphérique n'existe pas : Android se rabat
                 # sur Generic.kl, et c'est lui qui traduit 212 en CAMERA (27).
                 "keyLayoutFile": "/system/usr/keylayout/Generic.kl",
@@ -266,7 +275,7 @@ KERNEL_KEY_DECLARATIONS = {
             },
             {
                 "name": "mtk-tpd",
-                "what": "la dalle tactile",
+                "whatKey": "touchPanel",
                 "keyLayoutFile": "/system/usr/keylayout/Generic.kl",
                 "keyLayoutIsFallback": True,
                 "linuxCodes": [139, 158, 172, 217, 330],
@@ -275,7 +284,7 @@ KERNEL_KEY_DECLARATIONS = {
             },
             {
                 "name": "ACCDET",
-                "what": "la prise casque",
+                "whatKey": "headsetJack",
                 "keyLayoutFile": "/system/usr/keylayout/ACCDET.kl",
                 "keyLayoutIsFallback": False,
                 "linuxCodes": [87, 88, 114, 115, 164, 582],

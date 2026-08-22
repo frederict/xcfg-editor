@@ -352,6 +352,57 @@ describe('catalogues de messages', () => {
   })
 
   /**
+   * ⚠️ **Les quatre périphériques d'entrée sont notre glose, et ils se distinguent.**
+   *
+   * Le noyau déclare `mtk-kpd`, `sn7326-key`, `mtk-tpd`, `ACCDET` et des codes ; dire de
+   * l'un qu'il est la prise casque est notre lecture, pas une mesure. Elle a vécu en
+   * français dans `preferenceDomains.json` jusqu'au 2026-08-22 et s'affichait telle quelle
+   * dans les cinq langues.
+   *
+   * Deux exigences : quatre mots **différents** — un clavier de boîtier n'est pas un
+   * contrôleur de clavier, et c'est toute la différence entre les deux crans —, et le nom
+   * de la puce **passé**, jamais écrit dans la phrase : c'est une mesure, elle se recopie.
+   */
+  it('nomment les quatre périphériques d’entrée par quatre mots distincts', () => {
+    for (const language of UI_LANGUAGES) {
+      const catalog = CATALOGS[language]
+      const four = [
+        catalog['inputDevice.keypad'],
+        catalog['inputDevice.keyboardController'],
+        catalog['inputDevice.touchPanel'],
+        catalog['inputDevice.headsetJack']
+      ]
+      expect(new Set(four).size, `${language}`).toBe(4)
+      expect(catalog['inputDevice.keyboardController'], `${language}`).toContain('{name}')
+      for (const said of four) {
+        expect(said, `${language}`).not.toContain('sn7326')
+        expect(said, `${language}`).not.toContain('ACCDET')
+      }
+    }
+  })
+
+  /**
+   * ⚠️ **Aucun catalogue ne nomme une touche physique.** C'est XCTrack qui les nomme, en
+   * 32 langues, et c'est ce nom-là que le pilote lit sur son appareil. Un mot de nous —
+   * fût-il bien traduit — serait un mot qu'il ne trouverait nulle part.
+   *
+   * Les trois premiers interdits sont les mots que l'écran a réellement affichés jusqu'au
+   * 2026-08-22 ; le quatrième est la traduction la plus probable si quelqu'un
+   * recommençait.
+   */
+  it('ne nomment aucune touche physique : ce nom-là vient de l’APK', () => {
+    for (const language of UI_LANGUAGES) {
+      const said = Object.values(CATALOGS[language])
+        .map((one) => typeof one === 'string' ? one : Object.values(one).join(' '))
+        .join('\n')
+        .toLowerCase()
+      for (const forbidden of ['volume haut', 'volume bas', 'marche/arrêt', 'volume up']) {
+        expect(said, `${language} — ${forbidden}`).not.toContain(forbidden)
+      }
+    }
+  })
+
+  /**
    * ⚠️ **L'hypothèse sur 266 se dit comme une hypothèse, dans les cinq langues.** C'est
    * la touche que le pilote presse le plus en compétition, et rien ne l'explique : ni un
    * appui, ni le noyau. Une traduction qui la présenterait comme une explication ferait

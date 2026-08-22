@@ -175,8 +175,28 @@ const preferences = {
    *
    * Aucune ne doit faire dire qu'une touche n'existe pas : le parc n'est pas homogène.
    */
+  /* ---------------------------------- ce que le noyau du boîtier déclare, en quatre mots */
+
+  /**
+   * ⚠️ **Notre glose, et non le relevé.** Le noyau déclare « mtk-kpd », « ACCDET » et des
+   * codes ; dire de l'un qu'il est la prise casque est notre lecture. Elle a vécu en
+   * français dans `preferenceDomains.json` jusqu'au 2026-08-22 et s'affichait telle quelle
+   * dans les cinq langues, au milieu d'une infobulle allemande.
+   *
+   * Ces quatre-là entrent dans « le noyau du boîtier le déclare sur … » : ils doivent donc
+   * porter, dans chaque langue, la forme que cette phrase-là demande.
+   *
+   * ⚠️ `{name}` est le nom que le **noyau** donne à la puce — « sn7326-key ». C'est une
+   * mesure : il se recopie tel quel, jamais traduit, et c'est lui qui permet de refaire le
+   * relevé.
+   */
+  'inputDevice.keypad': 'le clavier du boîtier',
+  'inputDevice.keyboardController': 'le contrôleur de clavier {name}',
+  'inputDevice.touchPanel': 'la dalle tactile',
+  'inputDevice.headsetJack': 'la prise casque',
+
   'preferences.keyFromSurvey':
-    '« {label} » est le nom de cette touche sur le boîtier, relevé à la main sur {model}. {name} est le nom qu’Android donne au code {code}.',
+    '« {label} » est le nom que XCTrack donne à cette touche, dans la langue du fichier ouvert. Sur {model}, une touche pressée à la main émet bien le code {code}, qu’Android nomme {name}.',
   'preferences.keyFromKernel':
     '{name} est le nom que la table des touches d’Android donne au code {code}. Nous n’avons pressé aucune touche qui l’émette sur {model}, mais le noyau du boîtier le déclare sur {devices}. Ce code est donc possible sur ce matériel, ce qui ne prouve pas qu’un bouton lui soit soudé.',
   'preferences.keyFromNeither':
@@ -210,7 +230,7 @@ const preferences = {
     'Une « intention » (intent, en anglais) est le message par lequel une application Android en fait réagir une autre. Cette touche ne pilote donc pas XCTrack : elle envoie un signal, et c’est une autre application, réglée sur l’appareil, qui y répond.',
 
   'preferences.keyNamingOrigin':
-    'Un nom en toutes lettres est celui que porte la touche sur le boîtier, relevé en la pressant à la main : il n’y en a que pour les modèles que nous avons eus entre les mains. Un nom en KEYCODE_ vient de la table des touches d’Android, qui nomme le code et non le bouton. Entre les deux se glisse un troisième cran : le noyau du boîtier déclare des codes que nous n’avons jamais pressés, et un code déclaré est possible sur ce matériel sans qu’un bouton l’émette pour autant. Un nom qui manque est donc une mesure qui manque, jamais une touche qui n’existerait pas.',
+    'Un nom en toutes lettres est celui que XCTrack donne à la touche, dans la langue du fichier ouvert ; il ne s’affiche que pour les touches que nous avons pressées à la main sur ce modèle. Un nom en KEYCODE_ vient de la table des touches d’Android, qui nomme le code et non le bouton. Entre les deux se glisse un troisième cran : le noyau du boîtier déclare des codes que nous n’avons jamais pressés, et un code déclaré est possible sur ce matériel sans qu’un bouton l’émette pour autant. Un nom qui manque est donc une mesure qui manque, jamais une touche qui n’existerait pas.',
 
   /* ================================================== pourquoi il n'y a rien à comparer */
 

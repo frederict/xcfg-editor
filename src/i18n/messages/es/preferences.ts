@@ -86,8 +86,25 @@ const preferences: DomainCatalog<'preferences'> = {
     'en ninguno de sus dispositivos de entrada: no sabemos qué teclas los emiten.',
   'preferences.keyNoteBelow':
     'La nota bajo este bloque dice lo que valen estas mediciones.',
+  /* ------------------------------ lo que el núcleo de la caja declara, en pocas palabras */
+
+  /**
+   * ⚠️ **Nuestra glosa, no la medición.** El núcleo declara « mtk-kpd », « ACCDET » y
+   * códigos; llamar a uno de ellos la toma de auriculares es nuestra lectura. Hasta el
+   * 2026-08-22 vivía en francés en `preferenceDomains.json` y aparecía así en los cinco
+   * idiomas.
+   *
+   * Estos cuatro entran en « el núcleo de la caja lo declara en … », así que cada idioma
+   * debe darles la forma que esa frase pide. `{name}` es el nombre que el núcleo da al
+   * chip (« sn7326-key »): una medición, se copia tal cual, nunca se traduce.
+   */
+  'inputDevice.keypad': 'el teclado de la caja',
+  'inputDevice.keyboardController': 'el controlador de teclado {name}',
+  'inputDevice.touchPanel': 'el panel táctil',
+  'inputDevice.headsetJack': 'la toma de auriculares',
+
   'preferences.keyFromSurvey':
-    '«{label}» es el nombre de esta tecla en la carcasa, medido a mano en {model}. {name} es el nombre que Android da al código {code}.',
+    '«{label}» es el nombre que XCTrack da a esta tecla, en el idioma del archivo abierto. En {model}, una tecla pulsada a mano sí emite el código {code}, que Android llama {name}.',
   'preferences.keyFromKernel':
     '{name} es el nombre que la tabla de teclas de Android da al código {code}. No hemos ' +
     'pulsado ninguna tecla que lo emita en {model}, pero el núcleo de la caja lo declara ' +
@@ -110,7 +127,7 @@ const preferences: DomainCatalog<'preferences'> = {
     'Una «intención» (intent, en inglés) es el mensaje con el que una aplicación de Android hace reaccionar a otra. Esta tecla no gobierna pues XCTrack: envía una señal, y es otra aplicación, configurada en el aparato, la que responde.',
 
   'preferences.keyNamingOrigin':
-    'Un nombre en palabras es el que lleva la tecla en la carcasa, recogido al pulsarla a mano: solo existe para los modelos que hemos tenido entre las manos. Un nombre en KEYCODE_ viene de la tabla de teclas de Android, que nombra el código y no el botón. Entre ambos se cuela un tercer nivel: el núcleo de la caja declara códigos que nunca hemos pulsado, y un código declarado es posible en este material sin que un botón lo emita por ello. Un nombre que falta es pues una medición que falta, nunca una tecla que no existiría.',
+    'Un nombre en palabras es el que XCTrack da a la tecla, en el idioma del archivo abierto; solo aparece para las teclas que hemos pulsado a mano en este modelo. Un nombre en KEYCODE_ viene de la tabla de teclas de Android, que nombra el código y no el botón. Entre ambos se cuela un tercer nivel: el núcleo de la caja declara códigos que nunca hemos pulsado, y un código declarado es posible en este material sin que un botón lo emita por ello. Un nombre que falta es pues una medición que falta, nunca una tecla que no existiría.',
 
   'preferences.runtimeDefaultReason':
     'XCTrack rellena esta lista en el código y su valor de fábrica depende del idioma y ' +

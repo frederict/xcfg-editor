@@ -88,8 +88,25 @@ const preferences: DomainCatalog<'preferences'> = {
     'keinem seiner Eingabegeräte an: wir wissen nicht, welche Tasten sie senden.',
   'preferences.keyNoteBelow':
     'Die Anmerkung unter diesem Block sagt, was diese Erhebungen wert sind.',
+  /* ------------------------------ was der Kernel des Gehäuses angibt, in wenigen Worten */
+
+  /**
+   * ⚠️ **Unsere Deutung, nicht die Erhebung.** Der Kernel gibt « mtk-kpd », « ACCDET » und
+   * Codes an; eines davon die Kopfhörerbuchse zu nennen, ist unsere Lesart. Bis zum
+   * 2026-08-22 stand sie auf Französisch in `preferenceDomains.json` und erschien so in
+   * allen fünf Sprachen.
+   *
+   * Diese vier stehen in « der Kernel des Gehäuses gibt ihn an … an » — hier also im
+   * **Dativ**. `{name}` ist der Name, den der Kernel dem Chip gibt (« sn7326-key »): eine
+   * Messung, die unübersetzt übernommen wird.
+   */
+  'inputDevice.keypad': 'der Tastatur des Gehäuses',
+  'inputDevice.keyboardController': 'dem Tastatur-Controller {name}',
+  'inputDevice.touchPanel': 'dem Touchpanel',
+  'inputDevice.headsetJack': 'der Kopfhörerbuchse',
+
   'preferences.keyFromSurvey':
-    '„{label}“ ist der Name dieser Taste am Gehäuse, von Hand auf {model} gemessen. {name} ist der Name, den Android dem Code {code} gibt.',
+    '„{label}“ ist der Name, den XCTrack dieser Taste gibt, in der Sprache der geöffneten Datei. Auf {model} sendet eine von Hand gedrückte Taste tatsächlich den Code {code}, den Android {name} nennt.',
   'preferences.keyFromKernel':
     '{name} ist der Name, den die Tastentabelle von Android dem Code {code} gibt. Wir ' +
     'haben auf {model} keine Taste gedrückt, die ihn sendet, aber der Kernel des ' +
@@ -112,7 +129,7 @@ const preferences: DomainCatalog<'preferences'> = {
     'Ein „Intent“ ist die Nachricht, mit der eine Android-Anwendung eine andere reagieren lässt. Diese Taste steuert also nicht XCTrack: sie sendet ein Signal, und es ist eine andere, auf dem Gerät eingerichtete Anwendung, die darauf antwortet.',
 
   'preferences.keyNamingOrigin':
-    'Ein ausgeschriebener Name ist der, den die Taste am Gehäuse trägt, durch Drücken von Hand erhoben: solche Namen gibt es nur für die Modelle, die wir in der Hand hatten. Ein Name mit KEYCODE_ stammt aus der Tastentabelle von Android, die den Code benennt und nicht die Taste. Dazwischen liegt eine dritte Stufe: der Kernel des Gehäuses gibt Codes an, die wir nie gedrückt haben, und ein angegebener Code ist auf dieser Hardware möglich, ohne dass eine Taste ihn deshalb sendet. Ein fehlender Name ist also eine fehlende Messung, nie eine Taste, die es nicht gäbe.',
+    'Ein ausgeschriebener Name ist der, den XCTrack der Taste gibt, in der Sprache der geöffneten Datei; er erscheint nur für die Tasten, die wir auf diesem Modell von Hand gedrückt haben. Ein Name mit KEYCODE_ stammt aus der Tastentabelle von Android, die den Code benennt und nicht die Taste. Dazwischen liegt eine dritte Stufe: der Kernel des Gehäuses gibt Codes an, die wir nie gedrückt haben, und ein angegebener Code ist auf dieser Hardware möglich, ohne dass eine Taste ihn deshalb sendet. Ein fehlender Name ist also eine fehlende Messung, nie eine Taste, die es nicht gäbe.',
 
   'preferences.runtimeDefaultReason':
     'XCTrack füllt diese Liste im Code, und ihr Werkswert hängt von Sprache und Land des ' +

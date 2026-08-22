@@ -747,10 +747,11 @@
   lo mismo:</p>
 
   <ul>
-    <li><strong>un nombre en palabras</strong> — «volume haut», «marche/arrêt» — se midió
-    <strong>a mano en una carcasa</strong>: se pulsó la tecla y se leyó el código que
-    llegaba. Solo existen para los modelos que hemos tenido entre las manos; en el AIR³
-    7.2, tres teclas. Siguen en francés, porque así se anotó la medición;</li>
+    <li><strong>un nombre en palabras</strong> — «Subir volumen», «Encendido» — es el que
+    <strong>XCTrack da a la tecla</strong>: es la palabra que usted lee en la pantalla de
+    asignación de teclas de su aparato, y sigue el idioma del archivo abierto, como todos
+    los demás nombres de XCTrack. Solo aparece para las teclas que hemos <strong>pulsado a
+    mano</strong> en el modelo que su archivo declara; en el AIR³ 7.2, tres teclas;</li>
     <li><strong>un nombre en <code>KEYCODE_</code></strong> — <code>KEYCODE_STEM_2</code>,
     código 266 — viene de la tabla de teclas de Android. Esa tabla nombra un
     <em>código</em>, no un botón: no dice cuál de sus teclas lo emite.</li>
@@ -1091,6 +1092,44 @@
   reservado que no lleva a ninguna parte. Estas palabras van en inglés sea cual sea el
   idioma de la interfaz: este archivo está hecho para enviarse, y quien lo reciba no habla
   necesariamente el suyo.</p>
+
+  <h3>Enviar una sola página</h3>
+
+  <p>Usted ha dibujado una buena página de vuelo y un compañero la quiere: no necesita toda
+  su configuración. El gesto vive en esta salida&nbsp;3. Bajo
+  <span class="manual__ui">Qué páginas salen</span>, cada página del archivo lleva una
+  casilla, todas marcadas al principio. Desmarque las que se quedan con usted;
+  <span class="manual__ui">Desmarcar todo</span> y luego una sola casilla da un archivo de
+  una página. Cada página se reconoce por su número, su tipo y lo que lleva — incluido el
+  número de textos que usted escribió en ella.</p>
+
+  <p>No es una cuarta salida, y es intencionado: el archivo producido sigue siendo una
+  exportación «pages», depurada exactamente de la misma manera. Un solo camino, por tanto
+  una sola garantía que sostener. Si lo desmarca todo,
+  <span class="manual__ui">Guardar</span> deja de responder: un archivo sin una sola página
+  no se comparte.</p>
+
+  <div class="manual__warning">
+    <span class="manual__boxTitle">Diga a su destinatario qué opción elegir al importar</span>
+    <p>En su instrumento, XCTrack ofrece tres formas de importar, y el reflejo es el malo.
+    <strong>«Añadir solo páginas» pone las suyas de usted a continuación de las de él, sin
+    tocar ninguna</strong>: esa es la que le conviene. «Reemplazar solo las páginas»
+    reemplaza <em>todas</em> sus páginas por las de su archivo, en ambas orientaciones:
+    perdería las suyas. «Reemplazar todo» le está vedado de todos modos ante una
+    exportación «pages», el instrumento lo atenúa. <em>Medido en un AIR³&nbsp;7.2 el 21 y
+    el 22 de agosto de 2026.</em></p>
+    <p><strong>Lo que no está medido:</strong> nunca se ha importado en un instrumento un
+    archivo reducido a una parte de sus páginas, ni ninguno en el que una orientación ya no
+    lleve nada. Lo que el aparato hace con él se deduce de las medidas anteriores; no se ha
+    comprobado.</p>
+  </div>
+
+  <p>Una página no designa ningún archivo exterior — relevado en los 21 archivos del
+  corpus: el tema de mapa, las listas de puntos de viraje y los archivos de espacios aéreos
+  viven todos en las preferencias, que esta salida no transporta. Tampoco lleva un tamaño
+  de pantalla: lo que se coloca en ella va en milésimas, y el instrumento de destino lo
+  redibuja en su propia pantalla. Su destinatario verá pues su página con <em>su</em> tema,
+  <em>sus</em> unidades y <em>sus</em> mapas.</p>
 
   <h3>Lo que parece un texto que usted habría escrito</h3>
 

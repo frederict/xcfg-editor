@@ -85,8 +85,24 @@ const preferences: DomainCatalog<'preferences'> = {
     'van zijn invoerapparaten op: wij weten niet welke toetsen ze uitzenden.',
   'preferences.keyNoteBelow':
     'De opmerking onder dit blok zegt wat deze metingen waard zijn.',
+  /* ------------------------------ wat de kernel van het kastje opgeeft, in enkele woorden */
+
+  /**
+   * ⚠️ **Onze duiding, niet de meting.** De kernel geeft « mtk-kpd », « ACCDET » en codes
+   * op; er een de koptelefoonaansluiting noemen is onze lezing. Tot 2026-08-22 stond zij
+   * in het Frans in `preferenceDomains.json` en verscheen zo in alle vijf de talen.
+   *
+   * Deze vier komen in « de kernel van het kastje geeft hem op … op » : elke taal moet ze
+   * dus de vorm geven die die zin vraagt. `{name}` is de naam die de kernel aan de chip
+   * geeft (« sn7326-key ») : een meting, die onvertaald wordt overgenomen.
+   */
+  'inputDevice.keypad': 'het toetsenbord van het kastje',
+  'inputDevice.keyboardController': 'de toetsenbordcontroller {name}',
+  'inputDevice.touchPanel': 'het aanraakscherm',
+  'inputDevice.headsetJack': 'de koptelefoonaansluiting',
+
   'preferences.keyFromSurvey':
-    '‘{label}’ is de naam van deze toets op de behuizing, met de hand gemeten op {model}. {name} is de naam die Android aan code {code} geeft.',
+    '‘{label}’ is de naam die XCTrack aan deze toets geeft, in de taal van het geopende bestand. Op {model} zendt een met de hand ingedrukte toets wel degelijk code {code} uit, die Android {name} noemt.',
   'preferences.keyFromKernel':
     '{name} is de naam die de toetsentabel van Android aan code {code} geeft. Wij hebben ' +
     'op {model} geen toets ingedrukt die hem uitzendt, maar de kernel van het kastje ' +
@@ -109,7 +125,7 @@ const preferences: DomainCatalog<'preferences'> = {
     'Een ‘intent’ is het bericht waarmee de ene Android-toepassing een andere laat reageren. Deze toets bestuurt dus niet XCTrack: zij zendt een signaal uit, en het is een andere toepassing, op het toestel ingesteld, die daarop antwoordt.',
 
   'preferences.keyNamingOrigin':
-    'Een naam in gewone woorden is die welke de toets op de behuizing draagt, opgenomen door hem met de hand in te drukken: die bestaat alleen voor de modellen die wij in handen hebben gehad. Een naam met KEYCODE_ komt uit de toetsentabel van Android, die de code benoemt en niet de knop. Daartussen ligt een derde trap: de kernel van het kastje geeft codes op die wij nooit hebben ingedrukt, en een opgegeven code is mogelijk op dit materiaal zonder dat een knop hem daarom uitzendt. Een ontbrekende naam is dus een ontbrekende meting, nooit een toets die niet zou bestaan.',
+    'Een naam in gewone woorden is die welke XCTrack aan de toets geeft, in de taal van het geopende bestand; hij verschijnt alleen voor de toetsen die wij op dit model met de hand hebben ingedrukt. Een naam met KEYCODE_ komt uit de toetsentabel van Android, die de code benoemt en niet de knop. Daartussen ligt een derde trap: de kernel van het kastje geeft codes op die wij nooit hebben ingedrukt, en een opgegeven code is mogelijk op dit materiaal zonder dat een knop hem daarom uitzendt. Een ontbrekende naam is dus een ontbrekende meting, nooit een toets die niet zou bestaan.',
 
   'preferences.runtimeDefaultReason':
     'XCTrack vult deze lijst in code en de fabriekswaarde ervan hangt af van de taal en ' +

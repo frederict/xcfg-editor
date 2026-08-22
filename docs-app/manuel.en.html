@@ -749,11 +749,11 @@
   the code your device sends. Two origins of name meet there, and they are not worth the same:</p>
 
   <ul>
-    <li><strong>a name in plain words</strong> — “volume haut”, “marche/arrêt” — was
-    measured <strong>by hand on a case</strong>: the key was pressed and the incoming code
-    read. Such names exist only for the models we have had in our hands; on the AIR³ 7.2,
-    three keys. They stay in French, because that is how the measurement was written
-    down;</li>
+    <li><strong>a name in plain words</strong> — “Volume Up”, “Power” — is the one
+    <strong>XCTrack gives the key</strong>: it is the word you read on your device’s key
+    binding screen, and it follows the language of the open file, like every other XCTrack
+    name. It is shown only for the keys we have <strong>pressed by hand</strong> on the
+    model your file declares; on the AIR³ 7.2, three keys;</li>
     <li><strong>a name in <code>KEYCODE_</code></strong> — <code>KEYCODE_STEM_2</code>,
     code 266 — comes from Android’s key table. That table names a <em>code</em>, not a
     button: it does not say which of your keys emits it.</li>
@@ -1093,6 +1093,43 @@
   impossible to dial, a web address becomes an address in a reserved domain that leads
   nowhere. Those words stay in English whatever the language of the interface: this file is
   made to be sent on, and whoever receives it may not speak yours.</p>
+
+  <h3>Sending a single page</h3>
+
+  <p>You have drawn a fine flight page and a friend wants it: he does not need your whole
+  configuration. The gesture lives in this outcome&nbsp;3. Under
+  <span class="manual__ui">Which pages travel</span>, every page of the file carries a
+  tick box, all ticked to begin with. Untick the ones that stay with you;
+  <span class="manual__ui">Untick all</span>, then a single box, gives a one-page file.
+  Each page is recognised by its rank, its type and what it carries — including how many
+  texts you wrote on it.</p>
+
+  <p>This is not a fourth outcome, and that is deliberate: the file produced is still a
+  “pages” export, expurgated in exactly the same way. One path, therefore one guarantee to
+  keep. If you untick everything, <span class="manual__ui">Save</span> stops answering: a
+  file without a single page cannot be shared.</p>
+
+  <div class="manual__warning">
+    <span class="manual__boxTitle">Tell your recipient which option to pick at import</span>
+    <p>On their instrument XCTrack offers three ways to import, and the reflex is the wrong
+    one. <strong>“Add pages only” puts your pages after theirs, touching none of
+    them</strong> — that is the one they need. “Replace pages only” replaces <em>all</em>
+    their pages with the ones in your file, in both orientations: they would lose their
+    own. “Replace everything” is refused to them anyway when faced with a “pages” export;
+    the instrument greys it out. <em>Measured on an AIR³&nbsp;7.2 on 21 and 22 August
+    2026.</em></p>
+    <p><strong>What is not measured:</strong> no file cut down to part of its pages has
+    ever been imported on an instrument, nor any file where one orientation carries nothing
+    at all. What the instrument does with it is inferred from the measurements above; it
+    has not been observed.</p>
+  </div>
+
+  <p>A page names no outside file — surveyed on the 21 files of the corpus: the map theme,
+  the waypoint lists and the airspace files all live in the preferences, which this outcome
+  does not carry. Nor does it carry a screen size: what sits on it is placed in
+  thousandths, and the receiving instrument redraws it to its own panel. Your recipient
+  will therefore see your page with <em>their</em> theme, <em>their</em> units and
+  <em>their</em> maps.</p>
 
   <h3>What looks like a text you would have written</h3>
 

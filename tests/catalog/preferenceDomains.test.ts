@@ -193,6 +193,44 @@ describe('les touches que le boîtier porte vraiment', () => {
   })
 
   /**
+   * ⚠️ **Un relevé ne porte pas de prose, et celui-ci en portait.** Jusqu'au 2026-08-22,
+   * chaque touche pressée traînait un `label` français — « volume haut », « marche/arrêt »
+   * — que le `basis: 'measured'` faisait passer pour une donnée relevée. Il n'en était pas
+   * une : ce qui a été mesuré, c'est qu'une touche pressée émet le code 24. Le mot pour la
+   * nommer est celui de XCTrack (`hardwareKeyLabels.json`), et il suit l'axe `labels`.
+   *
+   * Ce test interdit le retour du mot dans le relevé, sous quelque nom que ce soit : une
+   * chaîne de plus dans une touche, et cinq interfaces reliraient du français.
+   */
+  it('ne porte aucun mot de nous sur une touche pressée', () => {
+    for (const survey of domains.hardwareKeySurveys()) {
+      for (const key of survey.keys) {
+        // Deux champs, et deux seulement : le code mesuré, et le nom que la table
+        // d'Android lui donne. Rien qui se traduise.
+        expect(Object.keys(key).sort(), `${survey.deviceId} / ${key.code}`)
+          .toEqual(['code', 'name'])
+      }
+    }
+  })
+
+  /**
+   * ⚠️ **Ce que le noyau déclare porte une clé, plus une phrase.** « la prise casque » est
+   * notre lecture de `ACCDET`, pas une mesure — et elle s'affichait en français au milieu
+   * d'une infobulle allemande. Le mot vient maintenant du catalogue, la clé du relevé.
+   */
+  it('dit ce qu’un périphérique d’entrée est par une clé, jamais par une phrase', () => {
+    const kinds = ['keypad', 'keyboardController', 'touchPanel', 'headsetJack']
+    for (const survey of domains.hardwareKeySurveys()) {
+      for (const device of survey.kernelDeclaration?.devices ?? []) {
+        expect(kinds, `${survey.deviceId} / ${device.name}`).toContain(device.whatKey)
+      }
+    }
+    const declaration = domains.hardwareKeysFor('AIR3 AIR3-7.2 8.1.0')?.kernelDeclaration
+    expect(declaration?.devices.map((one) => one.whatKey))
+      .toEqual(['keypad', 'keyboardController', 'touchPanel', 'headsetJack'])
+  })
+
+  /**
    * ⚠️ **Le deuxième cran.** Le 2026-08-22, `getevent -pl` sur l'AIR³ 7.2 a montré que le
    * boîtier déclare bien plus que les trois touches pressées : `sn7326-key` déclare
    * `CAMERA` en 27 — le code que `Keys.PrevWaypoint` porte dans le corpus du

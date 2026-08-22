@@ -337,11 +337,11 @@ describe('la comparaison à la valeur d’usine dit ce qu’elle vaut', () => {
 
     // Une touche non attribuée : « -1 » ne dit rien, « aucune touche » dit tout.
     expect(rowFor(BACKUP_2026, 'Keys.EnterPan').value).toBe('aucune touche')
-    // Et une touche attribuée ne se dit plus « code 24 » : la touche telle qu'elle est
-    // sur le boîtier relevé, son code et son nom Android pour le rapport de panne, et
-    // l'appui — trois choses que l'entier du fichier mêlait en une.
+    // Et une touche attribuée ne se dit plus « code 24 » : le nom que XCTrack donne à la
+    // touche — dans la langue du fichier, comme tous ses libellés —, son code et son nom
+    // Android pour le rapport de panne, et l'appui : trois choses que l'entier mêlait.
     expect(rowFor(BACKUP_2026, 'Keys.ZoomIn').value)
-      .toBe('volume haut (code 24, KEYCODE_VOLUME_UP), appui simple')
+      .toBe('Augmenter le volume (code 24, KEYCODE_VOLUME_UP), appui simple')
   })
 
   it('substitue la valeur dans les gabarits de ressource Android', () => {
@@ -866,7 +866,10 @@ describe('une liaison de touche se lit, et en trois morceaux', () => {
     const { page } = editable(BACKUP_2026)
     // `Keys.PreviousPage` vaut 16777240 = 24 | 0x1000000.
     const row = rowElement(page, 'Keys.PreviousPage')
-    expect(row.querySelector('.prefs__binding-key')?.textContent).toBe('volume haut')
+    // ⚠️ « Augmenter le volume » est le mot de **XCTrack**, extrait de l'APK. L'écran a
+    // affiché « volume haut » jusqu'au 2026-08-22 : un mot de nous, français dans les cinq
+    // langues, et introuvable sur l'appareil du pilote.
+    expect(row.querySelector('.prefs__binding-key')?.textContent).toBe('Augmenter le volume')
     expect(row.querySelector('.prefs__binding-detail')?.textContent)
       .toBe('code 24, KEYCODE_VOLUME_UP')
     expect(row.querySelector('.prefs__binding-press')?.textContent).toBe('appui long')
@@ -874,7 +877,7 @@ describe('une liaison de touche se lit, et en trois morceaux', () => {
     // La même touche sans le bit : même touche, autre appui. C'est exactement ce que
     // l'entier du fichier ne laissait pas voir.
     const zoom = rowElement(page, 'Keys.ZoomIn')
-    expect(zoom.querySelector('.prefs__binding-key')?.textContent).toBe('volume haut')
+    expect(zoom.querySelector('.prefs__binding-key')?.textContent).toBe('Augmenter le volume')
     expect(zoom.querySelector('.prefs__binding-press')?.textContent).toBe('appui simple')
   })
 
@@ -896,7 +899,10 @@ describe('une liaison de touche se lit, et en trois morceaux', () => {
     // manque, c'est une mesure — et chaque ligne le dit maintenant d'elle-même.
     const measured = rowElement(page, 'Keys.ZoomIn')
       .querySelector<HTMLElement>('.prefs__binding')?.title ?? ''
-    expect(measured).toContain('relevé à la main sur AIR³ 7.2')
+    // Deux choses, et la phrase les tient séparées : le **mot** est celui de XCTrack, la
+    // **mesure** est qu'une touche pressée sur ce modèle émet ce code-là.
+    expect(measured).toContain('est le nom que XCTrack donne à cette touche')
+    expect(measured).toContain('Sur AIR³ 7.2, une touche pressée à la main émet bien le code 24')
     expect(measured).toContain('KEYCODE_VOLUME_UP')
 
     // 266 : ni pressé, ni déclaré par le noyau. Le troisième cran, et il se dit comme
@@ -1004,7 +1010,8 @@ describe('une liaison de touche se lit, et en trois morceaux', () => {
     const said = origin[0]?.textContent ?? ''
     // Les trois crans, et dans cet ordre : pressé à la main, nommé par Android, déclaré
     // par le noyau du boîtier. Deux n'y suffisaient pas — voir `keyCodeEvidence`.
-    expect(said).toContain('en la pressant à la main')
+    expect(said).toContain('que XCTrack donne à la touche')
+    expect(said).toContain('les touches que nous avons pressées à la main sur ce modèle')
     expect(said).toContain('KEYCODE_')
     expect(said).toContain('le noyau du boîtier déclare des codes que nous n’avons jamais pressés')
     expect(said).toContain('possible sur ce matériel')
@@ -1129,7 +1136,8 @@ describe('ce que la page dit du matériel, et ce qu’elle ne dira jamais', () =
     const said = notes[0]?.textContent ?? ''
     expect(said).toContain('AIR³ 7.2')
     expect(said).toContain('le modèle que ce fichier déclare')
-    expect(said).toContain('volume haut (24)')
+    // Les trois touches, nommées par XCTrack dans la langue du fichier.
+    expect(said).toContain('Augmenter le volume (24), Diminuer le volume (25), Mise en route (26)')
     expect(said).toContain('Le code 266 n’est aucune d’elles')
     expect(said).toContain('ne le déclare sur aucun de ses périphériques d’entrée')
     // Et la réserve part avec l'affirmation, pas ailleurs.
@@ -1185,7 +1193,17 @@ describe('ce que la page dit du matériel, et ce qu’elle ne dira jamais', () =
     }
   })
 
-  it('n’affirme jamais qu’une touche n’existe pas ni qu’un réglage est sans effet', () => {
+  /**
+   * ⚠️ **Le contrôle porte sur les cinq langues depuis le 2026-08-22.** Il ne tenait que
+   * le français, quand la page a commencé à nommer les touches avec les mots de XCTrack et
+   * à dire dans la langue du pilote ce que le noyau déclare : un texte neuf, dans quatre
+   * langues que personne ne relit ligne à ligne, et un contrôle qui ne les regardait pas.
+   *
+   * Les mots interdits sont, dans chaque langue, ceux qui trancheraient : « la touche
+   * n'existe pas » d'un côté, « cette touche existe » de l'autre. Ni l'un ni l'autre n'est
+   * mesuré.
+   */
+  it('n’affirme jamais qu’une touche n’existe pas ni qu’un réglage est sans effet', async () => {
     // Le propriétaire l'a signalé : son 7.2 n'a que trois touches, mais le parc n'est
     // pas homogène. Sur un modèle plus récent, `Keys.PrevWaypoint` peut être vivant.
     // Une page qui trancherait ferait retirer un réglage qui marche.
@@ -1198,21 +1216,103 @@ describe('ce que la page dit du matériel, et ce qu’elle ne dira jamais', () =
       ['code 27 déclaré par le noyau', withPrevWaypoint(27)],
       ['code 3 déclaré par la dalle', withPrevWaypoint(3)]
     ]
-    for (const [path, document] of documents) {
-      const page = pageOf(document)
-      const said = [
-        page.element.textContent ?? '',
-        ...[...page.element.querySelectorAll<HTMLElement>('[title]')].map((one) => one.title)
-      ].join('\n')
-      for (const forbidden of [
-        'n’existe pas', 'inerte', 'sans effet', 'ne fait rien', 'ne sert à rien',
+    const forbidden: Record<string, string[]> = {
+      fr: ['n’existe pas', 'inerte', 'sans effet', 'ne fait rien', 'ne sert à rien',
         'ne répond à rien', 'inutile',
         // Le revers du cran du milieu : une capacité déclarée n'est pas un bouton.
-        'cette touche existe', 'votre boîtier porte'
-      ]) {
-        expect(said, `${path} — ${forbidden}`).not.toContain(forbidden)
+        'cette touche existe', 'votre boîtier porte'],
+      en: ['does not exist', 'doesn’t exist', 'has no effect', 'does nothing', 'useless',
+        'this key exists', 'your unit has'],
+      de: ['existiert nicht', 'ohne Wirkung', 'tut nichts', 'nutzlos',
+        'diese Taste existiert', 'Ihr Gehäuse hat'],
+      es: ['no existe', 'sin efecto', 'no hace nada', 'no sirve',
+        'esta tecla existe', 'su caja tiene'],
+      nl: ['bestaat niet', 'zonder effect', 'doet niets', 'nutteloos',
+        'deze toets bestaat', 'uw kastje heeft']
+    }
+    for (const language of Object.keys(forbidden)) {
+      // Les deux axes séparés : notre prose dans la langue éprouvée, les libellés de
+      // XCTrack dans celle du fichier. C'est ce que l'assembleur fait.
+      const speaker = await loadTranslator(language as 'fr')
+      for (const [path, document] of documents) {
+        const page = renderPreferencesPage({
+          document, catalog, tr: speaker, domains, onEdit: () => {}
+        })
+        const said = [
+          page.element.textContent ?? '',
+          ...[...page.element.querySelectorAll<HTMLElement>('[title]')].map((one) => one.title)
+        ].join('\n')
+        for (const word of forbidden[language] ?? []) {
+          expect(said, `${language} — ${path} — ${word}`).not.toContain(word)
+        }
       }
     }
+  })
+
+  /**
+   * ⚠️ **Le nom d'une touche est un libellé de XCTrack, et il suit le fichier.**
+   *
+   * Jusqu'au 2026-08-22, l'écran affichait « volume haut » : notre prose, écrite en
+   * français dans le relevé matériel et servie telle quelle aux cinq interfaces. Deux
+   * défauts en un — un anglophone lisait du français, et le mot n'existait **nulle part**
+   * sur l'appareil du pilote, qui lit « Augmenter le volume » sur son écran de réglage des
+   * touches.
+   *
+   * Ce que XCTrack nomme se lit donc dans son APK (`hardwareKeyLabels.json`, 32 langues) et
+   * suit l'axe `labels`. Ce test le vérifie dans les deux sens : la langue de notre prose
+   * ne déplace pas le nom de la touche, et la langue du fichier le déplace.
+   */
+  it('nomme les touches avec les mots de XCTrack, dans la langue du fichier', async () => {
+    const [german, english] = await Promise.all([
+      loadTranslator('de'), loadPreferenceCatalog('en')
+    ])
+    const document = documentOf(BACKUP_2026)
+
+    // Interface allemande, libellés français : le nom de la touche suit le fichier.
+    const mixed = renderPreferencesPage({
+      document, catalog, tr: german, domains, onEdit: () => {}
+    })
+    expect(rowElement(mixed, 'Keys.ZoomIn').querySelector('.prefs__binding-key')?.textContent)
+      .toBe('Augmenter le volume')
+
+    // Libellés anglais : le mot change, et c'est celui de l'APK — jamais une traduction
+    // de nous, jamais le mot allemand de l'interface.
+    const inEnglish = renderPreferencesPage({
+      document, catalog: english, tr: german, domains, onEdit: () => {}
+    })
+    expect(rowElement(inEnglish, 'Keys.ZoomIn').querySelector('.prefs__binding-key')?.textContent)
+      .toBe('Volume Up')
+    const said = [
+      inEnglish.element.textContent ?? '',
+      ...[...inEnglish.element.querySelectorAll<HTMLElement>('[title]')].map((one) => one.title)
+    ].join('\n')
+    // Le mot inventé n'est nulle part, dans aucune des deux langues de l'écran.
+    expect(said).not.toContain('volume haut')
+    expect(said).not.toContain('Augmenter le volume')
+    expect(said).not.toContain('Lautstärke')
+  })
+
+  /**
+   * ⚠️ **Ce que le noyau déclare, en revanche, est notre glose et suit le pilote.**
+   *
+   * Le noyau déclare `ACCDET` et des codes ; dire de lui qu'il est la prise casque est
+   * notre lecture. Elle a vécu en français dans `preferenceDomains.json` — et s'affichait
+   * donc en français au milieu d'une infobulle allemande.
+   *
+   * Le nom que le noyau donne à la puce, lui, ne se traduit pas : c'est une mesure, et
+   * c'est ce qui permet de refaire le relevé.
+   */
+  it('dit dans la langue du pilote ce que le noyau du boîtier déclare', async () => {
+    const german = await loadTranslator('de')
+    const page = renderPreferencesPage({
+      document: withPrevWaypoint(27), catalog, tr: german, domains, onEdit: () => {}
+    })
+    const title = rowElement(page, 'Keys.PrevWaypoint')
+      .querySelector<HTMLElement>('.prefs__binding')?.title ?? ''
+    expect(title).toContain('dem Tastatur-Controller sn7326-key')
+    // Et plus une trace de notre français dans une infobulle allemande.
+    expect(title).not.toContain('contrôleur de clavier')
+    expect(title).not.toContain('la prise casque')
   })
 
   it('se tait sur un appareil qu’il n’a pas relevé, et dit qu’il se tait', () => {

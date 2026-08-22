@@ -94,8 +94,24 @@ const preferences: DomainCatalog<'preferences'> = {
     'input devices: we do not know which keys emit them.',
   'preferences.keyNoteBelow':
     'The note below this block says what these surveys are worth.',
+  /* --------------------------------- what the unit's kernel declares, in a few words */
+
+  /**
+   * ⚠️ **Our gloss, not the survey.** The kernel declares « mtk-kpd », « ACCDET » and
+   * codes; calling one of them the headset jack is our reading. Until 2026-08-22 it lived
+   * in French inside `preferenceDomains.json` and showed up as such in all five languages.
+   *
+   * These four go into « the unit's kernel declares it on … », so each language must give
+   * them the form that sentence needs. `{name}` is the kernel's own name for the chip —
+   * « sn7326-key » —, a measurement: copied as is, never translated.
+   */
+  'inputDevice.keypad': 'the unit’s keypad',
+  'inputDevice.keyboardController': 'the {name} keyboard controller',
+  'inputDevice.touchPanel': 'the touch panel',
+  'inputDevice.headsetJack': 'the headset jack',
+
   'preferences.keyFromSurvey':
-    '“{label}” is what this key is called on the case, measured by hand on {model}. {name} is the name Android gives code {code}.',
+    '“{label}” is the name XCTrack gives this key, in the language of the open file. On {model}, a key pressed by hand does emit code {code}, which Android calls {name}.',
   'preferences.keyFromKernel':
     '{name} is the name Android’s key table gives code {code}. We have not pressed any ' +
     'key emitting it on {model}, but the unit’s kernel declares it on {devices}. The ' +
@@ -118,7 +134,7 @@ const preferences: DomainCatalog<'preferences'> = {
     'An “intent” is the message by which one Android application makes another react. This key therefore does not drive XCTrack: it sends a signal, and it is another application, set up on the device, that answers it.',
 
   'preferences.keyNamingOrigin':
-    'A name in plain words is what the key is called on the case, recorded by pressing it by hand: there are such names only for the models we have had in our hands. A name in KEYCODE_ comes from Android’s key table, which names the code and not the button. A third rung sits between the two: the unit’s kernel declares codes we have never pressed, and a declared code is possible on this hardware without a button necessarily emitting it. A missing name is therefore a missing measurement, never a key that would not exist.',
+    'A name in plain words is the one XCTrack gives the key, in the language of the open file; it is shown only for the keys we have pressed by hand on this model. A name in KEYCODE_ comes from Android’s key table, which names the code and not the button. A third rung sits between the two: the unit’s kernel declares codes we have never pressed, and a declared code is possible on this hardware without a button necessarily emitting it. A missing name is therefore a missing measurement, never a key that would not exist.',
 
   'preferences.runtimeDefaultReason':
     'XCTrack fills this list in code and its factory value depends on the language and ' +

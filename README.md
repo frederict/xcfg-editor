@@ -333,7 +333,19 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
      comme telles. C'est celle qui permet de demander de l'aide sur ses réglages de vario
      sans publier son nom ;
   3. **« Version partageable, sans données personnelles »** — un export `pages`, sans
-     aucune préférence.
+     aucune préférence. C'est aussi celle qui permet de **n'envoyer qu'une page** : sous
+     « Quelles pages partent », chaque page porte une case, toutes cochées au départ.
+     Décochez celles qui restent chez vous. Le fichier reste un export `pages` expurgé de
+     la même façon — un seul chemin, donc une seule garantie à tenir, et pas une quatrième
+     issue à lire dans le menu.
+
+     ⚠ **Dites à votre destinataire quelle option choisir à l'import.** Mesuré sur un
+     AIR³ 7.2 les 21 et 22 août 2026 : « Ajouter des pages uniquement » pose vos pages
+     à la suite des siennes sans en toucher aucune, tandis que
+     « Remplacer les pages uniquement » remplace **toutes** les siennes, dans les deux
+     orientations. Ses réglages, eux, sont hors d'atteinte : devant un export `pages`
+     l'instrument grise « Remplacer tout ». *Non mesuré :* aucun fichier réduit à une
+     partie de ses pages n'a jamais été importé sur un instrument.
 
   Chaque issue porte son inventaire : chaque ligne touchée, son emplacement et sa raison,
   montrés *avant* le téléchargement. Le nom du fichier produit est horodaté et **ne
@@ -393,6 +405,21 @@ qu'on a réglé, ou figer ce que le fichier ne dit pas.*
 <!--
   REFAIRE CETTE CAPTURE — captures/panneau-gadget.<langue>.png (1400 × 1650 ;
                           1400 × 1730 pour l'allemand)
+  VÉRIFIÉE À L'ÉCRAN le 2026-08-22, sur DEUX points que le cinquième essai en vol classait
+  « mineurs, non revérifiés », et dont AUCUN n'est un défaut de l'image :
+  1. « Rotate direction arrow by » reste EN ANGLAIS dans la version néerlandaise. Ce n'est
+     ni un trou de notre catalogue ni un défaut de l'éditeur : la ressource
+     `widgetSettingsGlassAirspaceArrow` n'est traduite que dans 17 des 34 locales de l'APK,
+     et le néerlandais n'en fait pas partie (mesuré sur les 55 relevés). XCTrack sert alors
+     sa locale par défaut, et cet outil fait pareil — le pilote néerlandais lit le même mot
+     anglais sur son instrument. Ne PAS « corriger » l'image.
+  2. UNE CASE À COCHER CHANGE DE COLONNE d'une langue à l'autre — « Montrer les limites
+     verticales recalculées avec l'altitude GPS » est en tête de la colonne DROITE en
+     français, en pied de la colonne GAUCHE en néerlandais. C'est le flux d'une mise en
+     colonnes CSS : `.dock .props__list` est un bloc `column-width: 22rem` (mesuré au
+     navigateur : 352 px, gouttière 32 px, deux colonnes à 971 px), et le point de coupure
+     suit la HAUTEUR du contenu. L'ordre des réglages ne bouge pas, la coupure oui. Voir le
+     commentaire de `.dock .props__list` dans `src/ui/app.css`.
   PÉREMPTION SIGNALÉE le 2026-08-22 au soir, NON RÉPARÉE — même raison que ci-dessus. Le
   NOM DE CLASSE en tête du panneau (« WSpeed ») porte désormais un filet pointillé sous le
   mot, et le curseur d'aide : c'est ce qui annonce la bulle qui dit ce qu'est ce nom. Voir
@@ -765,6 +792,18 @@ montré avant le téléchargement, pas après.*
                passé devant l'allemand depuis la mesure d'origine, et il ne reste que
                6 px sous le plafond : ne pas raccourcir ce cadre sans remesurer.
 
+  PÉREMPTION SIGNALÉE le 2026-08-22, NON RÉPARÉE — celle-ci PÉRIME LE CADRAGE, pas
+  seulement un détail. La troisième issue porte maintenant, EN TÊTE de son volet, le choix
+  des pages : le titre « Quelles pages partent », une phrase, UNE CASE PAR PAGE de la
+  fixture, deux boutons (« Tout cocher », « Tout décocher »), le compte de ce qui part, puis
+  une section « Ce que le destinataire en fera » de quatre paragraphes. Sur
+  formes-preservees.xcfg cela fait 2 pages cochées + ~8 lignes de texte AVANT tout ce que
+  la capture montrait déjà.
+  ⚠ LES CINQ IMAGES SONT À REPRENDRE, et la HAUTEUR EST À REMESURER dans les cinq langues
+  avant de fixer le cadre : la mesure de 2 480 px datait de la boîte sans choix de pages,
+  et le NÉERLANDAIS n'avait plus que 6 px de marge sous le plafond. Reprendre la méthode
+  ci-dessus — mesurer le contenu dans les cinq langues, diviser par 0,88.
+
   PÉREMPTION SIGNALÉE le 2026-08-22 au soir, NON RÉPARÉE. Le NOM DE FICHIER de la barre de
   tête se coupe maintenant en TROIS et non en deux : le rang et l'extension ne cèdent plus
   jamais. Mesuré à 920 px sur cette fixture — « f…-preservees.xcfg » devient
@@ -825,6 +864,13 @@ textes par des barres grises, parce qu'une image échappe à l'anonymisation. Et
 
 <!--
   RECETTE — captures/bibliotheque.<langue>.png (1100 × 700)
+  VÉRIFIÉE À L'ÉCRAN le 2026-08-22 : la BARRE DE BOUTONS de « Mes configurations » tient
+  sur UNE ligne en français, en anglais, en allemand et en espagnol, et passe à DEUX en
+  NÉERLANDAIS. Ce n'est pas un défaut de l'image ni un cadrage à reprendre : `.library__head`
+  est `flex-wrap: wrap` et c'est exactement ce cas qu'il prévoit. Mesuré au navigateur, sur
+  la plaque de 977 px : quatre boutons néerlandais demandent 840 px contre 776 à l'allemand,
+  et le titre en prend 144 — 1 000 px pour 977. Même famille que « l'allemand déborde » :
+  une langue plus longue, une image qui le montre. Ne PAS retoucher.
   PÉREMPTION SIGNALÉE le 2026-08-22 au soir, NON RÉPARÉE. Même cause que pour
   « enregistrer-et-partager » : le nom de fichier de la barre de tête se coupe en trois, et
   le rang et l'extension ne cèdent plus. Mesuré à 1 100 px : « f…-preservees.xcfg » devient
@@ -1396,7 +1442,8 @@ Deux réserves, là encore :
   `longPressBitBasis` ; déduit pour les deux autres, par la seule correspondance des noms ;
 - **trois codes, et trois seulement.** XCTrack nomme une trentaine de touches
   (`keyBack`, `keyCamera`, `keyMenu`…) et porte même de quoi nommer celles qu'il ignore
-  (`keyExtShort` = « Touche externe »). Aucune mesure ne dit lequel de ces mots son
+  (`keyExtShort`, le mot qu'il emploie pour une touche externe qu'il ne sait
+  pas nommer). Aucune mesure ne dit lequel de ces mots son
   écran choisit pour un code donné, et le bytecode est obfusqué : au-delà de trois, ce
   serait deviner. Un code non apparié garde son nom Android, `KEYCODE_STEM_2`.
 

@@ -19,10 +19,12 @@ import {
   declaringDevices,
   keyCodeEvidence,
   loadPreferenceDomains,
+  type DeclaredInputDevice,
   type HardwareKeySurvey,
   type KeyBinding,
   type PreferenceDomainCatalog
 } from '../catalog/preferenceDomains'
+import { hardwareKeyLabel } from '../catalog/hardwareKeyLabels'
 import {
   collectPersonalData,
   personalProse,
@@ -222,14 +224,20 @@ import type { MessageKey, Translator } from '../i18n'
  *   listes —, dans la langue du fichier ouvert. Ils ne se traduisent pas : un libellé
  *   « traduit » serait un mot que le pilote ne trouverait nulle part sur son appareil.
  *
- * Trois textes affichés ne viennent **ni de l'un ni de l'autre** et restent en français
- * dans les cinq langues, parce que ce sont des **données relevées** portées par
- * `catalog/preferenceDomains.json` : le nom des touches physiques (« volume haut »,
- * « marche/arrêt »), la méthode du relevé des unités et ses réserves. La parade est
- * connue — le fichier extrait porte une **clé** au lieu d'une phrase, comme l'a fait le
- * champ `reason` des 44 clés personnelles (voir `DECLARED_PERSONAL` dans
+ * Deux textes affichés ne viennent **ni de l'un ni de l'autre** et restent en français
+ * dans les cinq langues, parce qu'ils sont portés en clair par
+ * `catalog/preferenceDomains.json` : la méthode du relevé des unités et ses réserves. La
+ * parade est connue — le fichier extrait porte une **clé** au lieu d'une phrase, comme
+ * l'a fait le champ `reason` des 44 clés personnelles (voir `DECLARED_PERSONAL` dans
  * `tools/extract-preferences.py`) — mais elle appartient au lot qui reprendra
  * `build-preference-domains.py`.
+ *
+ * ⚠️ **Le nom des touches physiques était le troisième, et il ne l'est plus.** « volume
+ * haut », « marche/arrêt » se donnaient pour des données de mesure : ils n'en étaient
+ * pas. Ce qui est mesuré, c'est qu'une touche pressée émet le code 24 ; le mot pour la
+ * nommer est celui de XCTrack, il vient de l'APK en 32 langues et suit l'axe `labels` —
+ * voir `catalog/hardwareKeyLabels.ts`. Ce que le noyau déclare (« la prise casque ») est
+ * l'inverse : notre glose, elle passe par le catalogue et suit l'axe `ui`.
  *
  * Le module portait deux fautes de mécanique, corrigées avec cette extraction : un
  * `plural()` local codant `count > 1` — la règle française, fausse dans les quatre autres
@@ -611,6 +619,16 @@ function structuredSize(node: JsonNode): number {
 export interface BindingContext {
   domains?: PreferenceDomainCatalog
   hardware?: HardwareKeySurvey | null
+  /**
+   * La langue des **libellés de XCTrack** — celle du catalogue chargé, donc celle du
+   * fichier ouvert. C'est elle qui nomme les touches physiques : « Augmenter le volume »
+   * pour un fichier français, « Volume Up » pour un fichier anglais.
+   *
+   * ⚠️ Ce n'est **jamais** `tr.language`. Un pilote belge dont l'AIR³ est réglé en anglais
+   * lit cet écran en français et ses touches en anglais, parce que c'est ce que son
+   * appareil affiche. Voir `src/i18n/axes.ts`.
+   */
+  labels: string
 }
 
 /**
@@ -640,19 +658,23 @@ export interface BindingParts {
  * prudence.
  */
 export function bindingParts(
-  binding: KeyBinding, hardware: HardwareKeySurvey | null | undefined, tr: Translator
+  binding: KeyBinding, keys: BindingContext | undefined, tr: Translator
 ): BindingParts {
   const press = tr.t(binding.longPress ? 'preferences.longPress' : 'preferences.shortPress')
   // `code` part en **`string`** : c'est un code Android, pas un compte. « 16 777 240 » ne
   // se retrouve dans aucun fichier XCTrack — voir `src/i18n/format.ts`.
   const code = String(binding.code)
-  const physical = hardware?.keys.find((one) => one.code === binding.code)
-  if (physical !== undefined) {
-    // ⚠️ `physical.label` — « volume haut », « marche/arrêt » — vient de
-    // `preferenceDomains.json` et reste en français dans les cinq langues : c'est une
-    // **donnée relevée**, pas de la prose de code.
+  // ⚠️ Le nom d'une touche est un **libellé de XCTrack**, dans la langue du fichier
+  // ouvert : « Augmenter le volume », jamais un mot de nous. Il ne s'affiche que sur une
+  // touche que nous avons pressée à la main sur ce modèle — un nom qui manque reste une
+  // mesure qui manque, et le catalogue rend `null` plutôt qu'un mot deviné.
+  const physical = keys?.hardware?.keys.find((one) => one.code === binding.code)
+  const named = physical === undefined || keys === undefined
+    ? null
+    : hardwareKeyLabel(physical.code, keys.labels)
+  if (named !== null && physical !== undefined) {
     return {
-      key: physical.label,
+      key: named,
       detail: tr.t('preferences.codeAndName', { code, name: physical.name }),
       press
     }
@@ -666,6 +688,32 @@ export function bindingParts(
 }
 
 /**
+ * Ce qu'un périphérique d'entrée **est**, dans la langue du pilote : « le clavier du
+ * boîtier », « la prise casque ».
+ *
+ * ⚠️ **Notre glose, et non le relevé.** Le noyau déclare `mtk-kpd`, `ACCDET` et des codes ;
+ * dire de l'un qu'il est la prise casque est notre lecture. Elle a vécu en français dans
+ * `preferenceDomains.json` jusqu'au 2026-08-22, et s'affichait telle quelle dans les cinq
+ * langues — au milieu d'une infobulle allemande. Le relevé porte maintenant une clé, et le
+ * mot vient du catalogue.
+ *
+ * Le contrôleur de clavier garde son nom de noyau (`sn7326-key`) dans la phrase : c'est
+ * une mesure, elle ne se traduit pas, et c'est elle qui permet de refaire le relevé.
+ *
+ * Le `switch` est exhaustif à la compilation : une famille de périphériques ajoutée au
+ * relevé sans un mot pour la nommer ne passera pas `tsc`.
+ */
+function inputDeviceWord(device: DeclaredInputDevice, tr: Translator): string {
+  switch (device.whatKey) {
+    case 'keypad': return tr.t('inputDevice.keypad')
+    case 'keyboardController':
+      return tr.t('inputDevice.keyboardController', { name: device.name })
+    case 'touchPanel': return tr.t('inputDevice.touchPanel')
+    case 'headsetJack': return tr.t('inputDevice.headsetJack')
+  }
+}
+
+/**
  * **D'où vient le nom affiché** sur cette ligne-là, en une phrase — et **lequel des trois
  * crans** de connaissance s'applique à ce code.
  *
@@ -673,13 +721,20 @@ export function bindingParts(
  *
  * L'écran des touches met côte à côte des provenances qui ne se ressemblent pas :
  *
- * - « volume haut », « marche/arrêt » — un nom **relevé à la main sur un boîtier**, rangé
- *   dans `preferenceDomains.json` sous `keyCodes.hardwareKeys[].label`. C'est une donnée
- *   de mesure : elle reste en français dans les cinq langues, et il n'y en a que pour les
- *   modèles que nous avons eus entre les mains — trois touches sur l'AIR³ 7.2 ;
+ * - « Augmenter le volume », « Mise en route » — le nom que **XCTrack** donne à la touche,
+ *   extrait de l'APK et rangé dans `hardwareKeyLabels.json`. Il suit la langue du fichier
+ *   ouvert, comme tous les libellés de XCTrack, et ne s'affiche que pour les touches que
+ *   nous avons **pressées à la main** sur le modèle du fichier — trois sur l'AIR³ 7.2 ;
  * - `KEYCODE_STEM_2` — le nom que la **table des touches d'Android** donne au code, lue
  *   dans l'`android.jar` du SDK (`keyCodes.source`, `keyCodes.androidApiLevel`). Elle
  *   nomme un code, pas un bouton.
+ *
+ * ⚠️ **Le premier a été notre prose, et c'était une faute.** Jusqu'au 2026-08-22, l'écran
+ * affichait « volume haut » — un mot de nous, français dans les cinq langues, et
+ * introuvable sur l'appareil du pilote. Ce qui était mesuré, c'est qu'une touche pressée
+ * émet le code 24 ; le nommer en français n'était pas une mesure. La correction n'a pas
+ * été de traduire ces trois mots mais de les remplacer par ceux que XCTrack porte déjà —
+ * voir `src/catalog/hardwareKeyLabels.ts`, et le même geste sur les cinq navigations.
  *
  * Rien ne le disait, et le pilote-testeur du 2026-08-22 a posé la seule question qui
  * suit : « pourquoi les touches de volume sont traduites et pas les autres ? » — sur la
@@ -712,18 +767,25 @@ export function bindingOrigin(
   const code = String(binding.code)
   const evidence = keyCodeEvidence(hardware, binding.code)
   const physical = hardware?.keys.find((one) => one.code === binding.code)
-  if (evidence === 'pressed' && physical !== undefined && hardware != null) {
+  const named = physical === undefined || keys === undefined
+    ? null
+    : hardwareKeyLabel(physical.code, keys.labels)
+  if (evidence === 'pressed' && physical !== undefined && named !== null && hardware != null) {
+    // Deux choses, et la phrase les tient séparées : le **mot** est celui de XCTrack, la
+    // **mesure** est qu'une touche pressée sur ce modèle émet ce code.
     return tr.t('preferences.keyFromSurvey', {
-      label: physical.label, model: hardware.label, name: physical.name, code
+      label: named, model: hardware.label, name: physical.name, code
     })
   }
   // Sans nom Android, il n'y a rien à dire de plus que le code : les trois crans parlent
   // du matériel, et nommer le code est le préalable de chacun.
   if (binding.name === null) return tr.t('preferences.keyFromNowhere', { code })
-  // Deuxième cran : le noyau déclare le code, personne ne l'a pressé. `what` — « le
-  // contrôleur de clavier sn7326 » — vient du relevé : une donnée, française partout.
+  // Deuxième cran : le noyau déclare le code, personne ne l'a pressé. Ce que le
+  // périphérique **est** — « la prise casque » — est notre glose et passe par le
+  // catalogue ; ce que le noyau déclare, lui, c'est `ACCDET` et des codes.
   if (evidence === 'declared' && hardware != null) {
-    const devices = declaringDevices(hardware, binding.code).map((one) => one.what).join(', ')
+    const devices = declaringDevices(hardware, binding.code)
+      .map((one) => inputDeviceWord(one, tr)).join(', ')
     return tr.t('preferences.keyFromKernel', {
       name: binding.name, code, model: hardware.label, devices
     })
@@ -858,7 +920,8 @@ export function bindingEvidence(
  */
 export function hardwareNote(
   bindings: readonly KeyBinding[], hardware: HardwareKeySurvey | null | undefined,
-  surveys: readonly HardwareKeySurvey[], device: string | undefined, tr: Translator
+  surveys: readonly HardwareKeySurvey[], device: string | undefined, tr: Translator,
+  labels: string
 ): string | undefined {
   const assigned = bindings.filter((one) => !one.unset)
   if (assigned.length === 0) return undefined
@@ -883,9 +946,12 @@ export function hardwareNote(
   const unattested = codesOf('unattested')
   if (declared.length === 0 && unattested.length === 0) return undefined
 
-  // ⚠️ `one.label` — « volume haut » — vient de `preferenceDomains.json` : une donnée
-  // relevée, française dans les cinq langues.
-  const listed = hardware.keys.map((one) => `${one.label} (${String(one.code)})`).join(', ')
+  // ⚠️ Le nom d'une touche est un **libellé de XCTrack**, dans la langue du fichier
+  // ouvert. Une touche que XCTrack ne nomme pas garde son nom Android : la note énumère
+  // ce que le boîtier porte, elle n'invente pas de mot pour le dire.
+  const listed = hardware.keys
+    .map((one) => `${hardwareKeyLabel(one.code, labels) ?? one.name} (${String(one.code)})`)
+    .join(', ')
   // Deux phrases séparées, et non une seule qui mélangerait les deux crans : un code que
   // le noyau déclare est possible sur ce matériel, un code qu'il ignore ne l'est pas —
   // et rien de ce qu'on peut dire du second ne vaut pour le premier.
@@ -987,7 +1053,7 @@ export function readableValue(
       : keys.domains.decodeKeyBinding(raw)
     return binding === undefined
       ? tr.t('preferences.rawCode', { code: text })
-      : bindingText(bindingParts(binding, keys?.hardware, tr))
+      : bindingText(bindingParts(binding, keys, tr))
   }
 
   const choices = entry === undefined ? [] : catalog.values(key)
@@ -1057,6 +1123,8 @@ interface RowContext {
   catalog: PreferenceCatalog
   /** Le traducteur de **notre prose** — jamais celui des libellés de XCTrack. */
   tr: Translator
+  /** La langue des **libellés de XCTrack**, celle du catalogue chargé. L'autre axe. */
+  labels: string
   file: Map<string, JsonNode>
   /** Les clés que XCTrack se contredit lui-même à défaillir — voir `meta.defaultConflicts`. */
   conflicts: Set<string>
@@ -1393,6 +1461,9 @@ export function buildPreferenceInventory(
   const ctx: RowContext = {
     catalog,
     tr,
+    // La langue **réellement** chargée, pas celle qui a été demandée : c'est celle que
+    // l'écran montre, et donc celle dans laquelle il doit nommer les touches.
+    labels: catalog.language,
     file,
     conflicts: new Set(catalog.meta.defaultConflicts),
     domains,
@@ -1780,6 +1851,8 @@ interface RenderedRow {
 interface PageContext {
   collected: RenderedRow[]
   tr: Translator
+  /** La langue des **libellés de XCTrack**, celle du catalogue chargé. L'autre axe. */
+  labels: string
   /**
    * Les mots de l'inventaire des données personnelles, construits **une fois** pour la
    * page entière : un écran qui affiche cinquante lignes n'a pas à repasser le traducteur
@@ -1806,6 +1879,8 @@ interface EditContext {
   catalog: PreferenceCatalog
   /** Le traducteur de notre prose, le même que celui de la page. */
   tr: Translator
+  /** La langue des **libellés de XCTrack**, celle du catalogue chargé. L'autre axe. */
+  labels: string
   conflicts: Set<string>
   /** Les domaines relevés, s'ils ont été chargés — voir l'en-tête. */
   domains?: PreferenceDomainCatalog
@@ -1856,7 +1931,7 @@ function readOnlyValue(row: PreferenceRow): HTMLElement {
 function bindingValue(
   binding: KeyBinding, keys: BindingContext, tr: Translator
 ): HTMLElement {
-  const parts = bindingParts(binding, keys.hardware, tr)
+  const parts = bindingParts(binding, keys, tr)
   const wrap = el('span', 'prefs__binding')
   // L'infobulle dit **d'où vient le nom affiché**, et lequel des trois crans s'applique —
   // pressé à la main, déclaré par le noyau du boîtier, attesté nulle part —, puis renvoie
@@ -2115,7 +2190,9 @@ function buildRowElement(row: PreferenceRow, ctx: PageContext): HTMLElement {
       // Sans touche affectée, rien à découper : « aucune touche » se dit comme une valeur.
       cell.append(row.binding === undefined || row.binding.unset
         ? readOnlyValue(row)
-        : bindingValue(row.binding, { domains: ctx.domains, hardware: ctx.hardware }, tr))
+        : bindingValue(
+        row.binding, { domains: ctx.domains, hardware: ctx.hardware, labels: ctx.labels }, tr
+      ))
       return
     }
     if (row.state === 'absent' || row.state === 'unwritten') {
@@ -2963,8 +3040,8 @@ export function renderPreferencesPage(options: PreferencesPageOptions): Preferen
   root.append(head)
 
   const ctx: PageContext = {
-    collected: [], tr, personal: personalProse(tr), hardware, domains: options.domains,
-    device: fileDevice(options.document)
+    collected: [], tr, labels: options.catalog.language, personal: personalProse(tr),
+    hardware, domains: options.domains, device: fileDevice(options.document)
   }
 
   if (inventory.summary.empty) {
@@ -2990,6 +3067,7 @@ export function renderPreferencesPage(options: PreferencesPageOptions): Preferen
       document: options.document,
       catalog: options.catalog,
       tr,
+      labels: options.catalog.language,
       conflicts: new Set(options.catalog.meta.defaultConflicts),
       domains: options.domains,
       hardware,
@@ -3061,7 +3139,8 @@ function refreshPersonal(
 ): void {
   const file = readFilePreferences(document)
   const ctx: RowContext = {
-    catalog, tr, file, conflicts: new Set(catalog.meta.defaultConflicts)
+    catalog, tr, labels: catalog.language, file,
+    conflicts: new Set(catalog.meta.defaultConflicts)
   }
   inventory.personal = []
   inventory.summary.personalCount = 0
@@ -3153,7 +3232,7 @@ function hardwareScopeNote(
   if (ctx.domains === undefined) return undefined
   return hardwareNote(
     screenBindings(screen), ctx.hardware, ctx.domains.hardwareKeySurveys(),
-    ctx.device, ctx.tr
+    ctx.device, ctx.tr, ctx.labels
   )
 }
 
@@ -3172,7 +3251,8 @@ function keyNamingScopeNote(
 function hypothesisScopeNotes(screen: PreferenceScreenBlock, ctx: PageContext): string[] {
   if (ctx.domains === undefined) return []
   return hypothesisNotes(
-    screenBindings(screen), { domains: ctx.domains, hardware: ctx.hardware }, ctx.tr
+    screenBindings(screen),
+    { domains: ctx.domains, hardware: ctx.hardware, labels: ctx.labels }, ctx.tr
   )
 }
 

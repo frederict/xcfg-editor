@@ -78,6 +78,16 @@
  * `.xcfg` déclarant son appareil, `hardwareKeysFor()` conditionne le propos au modèle
  * et rend `null` dès qu'il ne le reconnaît pas.
  *
+ * ## Le nom d'une touche n'est pas une mesure
+ *
+ * Ce module dit **quels codes** un boîtier émet ; il ne dit pas comment ils s'appellent.
+ * Jusqu'au 2026-08-22 il portait trois noms français — « volume haut », « volume bas »,
+ * « marche/arrêt » — qu'un `basis: 'measured'` faisait passer pour des données relevées.
+ * Ils n'en étaient pas : ce qui a été mesuré, c'est qu'une touche pressée émet le code
+ * 24, et ces trois mots étaient notre façon de le dire. Ils sont partis, et le nom d'une
+ * touche se lit désormais dans `hardwareKeyLabels.ts` — les ressources de XCTrack, en 32
+ * langues, celles que le pilote voit sur l'écran natif de réglage des touches.
+ *
  * ## Ce qu'aucun des deux crans n'explique
  *
  * `unexplainedCodes` range les codes du corpus que ni l'appui ni le noyau ne rendent
@@ -140,14 +150,33 @@ export interface UnitDomains {
   }>
 }
 
-/** Une touche physique d'un boîtier, appuyée et son code lu à l'arrivée. */
+/**
+ * Une touche physique d'un boîtier, appuyée et son code lu à l'arrivée.
+ *
+ * ⚠️ **Pas de nom ici, et c'est le sujet du 2026-08-22.** Ce relevé a porté jusque-là un
+ * `label` français — « volume haut », « marche/arrêt » — tenu pour une donnée de mesure.
+ * Il n'en était pas une : ce qui a été mesuré, c'est qu'une touche pressée émet le code
+ * 24 ; « volume haut » était **notre** façon de le dire, et rien n'a été mesuré en
+ * français. Le nom de la touche est celui que XCTrack lui donne, il vient de l'APK et
+ * suit l'axe `labels` — voir `hardwareKeyLabels.ts`.
+ */
 export interface HardwareKey {
   code: number
   /** Le nom Android du code, ajouté par l'outil depuis la table lue. */
   name: string
-  /** Ce que la touche est sur le boîtier : « volume haut », « marche/arrêt ». */
-  label: string
 }
+
+/**
+ * Ce qu'un périphérique d'entrée **est**, en un mot d'identifiant : le clavier du
+ * boîtier, le contrôleur de clavier, la dalle tactile, la prise casque.
+ *
+ * ⚠️ **C'est une clé, pas un texte.** Ce champ a porté une phrase française jusqu'au
+ * 2026-08-22 — « la prise casque » —, qui s'affichait telle quelle dans les cinq langues.
+ * Ce n'est pas une mesure : le noyau déclare `ACCDET`, pas « la prise casque ». La mesure
+ * est le nom du périphérique et les codes qu'il déclare ; le reste est notre glose, elle
+ * passe par le catalogue et suit l'axe `ui`.
+ */
+export type InputDeviceKind = 'keypad' | 'keyboardController' | 'touchPanel' | 'headsetJack'
 
 /**
  * Un périphérique d'entrée déclaré par le noyau, et les codes Android qu'il peut
@@ -159,8 +188,8 @@ export interface HardwareKey {
 export interface DeclaredInputDevice {
   /** Le nom que le noyau lui donne : « sn7326-key », « mtk-kpd ». */
   name: string
-  /** Ce qu'il est, en trois mots : « la dalle tactile », « la prise casque ». */
-  what: string
+  /** Ce qu'il est, en une clé — l'écran en dit le mot dans la langue du pilote. */
+  whatKey: InputDeviceKind
   /** Le fichier de disposition qu'Android lui applique, lu dans `dumpsys input`. */
   keyLayoutFile: string
   /**
