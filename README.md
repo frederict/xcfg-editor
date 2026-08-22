@@ -45,6 +45,15 @@ la plaque qui la porte — est identique dans toutes.*
   l'image reprise : plaque jusqu'à 1 039,4 px, bandeau à partir de 1 069,9 — 30 px, comme
   la dernière ligne de cette recette l'annonce.
 
+  PÉREMPTION SIGNALÉE le 2026-08-22 au soir, NON RÉPARÉE — un autre chantier tenait les
+  captures au moment où le code a changé, et une image reprise à mi-course aurait figé un
+  travail en cours. Ce qui a bougé : la pastille du nom de classe (« WPEmpty », qui ferme
+  la plaque de faits) porte désormais un FILET POINTILLÉ sous le mot, et le curseur d'aide.
+  C'est le troisième filet de la famille — plein pour ce qui se clique, tireté pour les
+  pastilles inertes, pointillé pour ce qui cache une bulle : sans lui, la bulle posée le
+  matin même ne s'annonçait pas, et un pilote-testeur l'a trouvée « par curiosité, en
+  survolant ». Voir `.glossed` dans `src/ui/app.css`.
+
   Écran ...... l'éditeur entier, mode consultation, panneau des gadgets ouvert.
   Langues .... UN SEUL exemplaire, en français, employé par les cinq README. Le sujet
                est une géométrie, pas un texte : la page, la règle, la plaque. Les
@@ -359,6 +368,11 @@ qu'on a réglé, ou figer ce que le fichier ne dit pas.*
 <!--
   REFAIRE CETTE CAPTURE — captures/panneau-gadget.<langue>.png (1400 × 1650 ;
                           1400 × 1730 pour l'allemand)
+  PÉREMPTION SIGNALÉE le 2026-08-22 au soir, NON RÉPARÉE — même raison que ci-dessus. Le
+  NOM DE CLASSE en tête du panneau (« WSpeed ») porte désormais un filet pointillé sous le
+  mot, et le curseur d'aide : c'est ce qui annonce la bulle qui dit ce qu'est ce nom. Voir
+  `.glossed` dans `src/ui/app.css`.
+
   Écran ...... l'éditeur en mode édition, panneau de réglages d'un gadget déplié.
 
   DETTE PAYÉE le 2026-08-22, en fin de journée. Les cinq images portaient quatre
@@ -719,6 +733,14 @@ montré avant le téléchargement, pas après.*
                passé devant l'allemand depuis la mesure d'origine, et il ne reste que
                6 px sous le plafond : ne pas raccourcir ce cadre sans remesurer.
 
+  PÉREMPTION SIGNALÉE le 2026-08-22 au soir, NON RÉPARÉE. Le NOM DE FICHIER de la barre de
+  tête se coupe maintenant en TROIS et non en deux : le rang et l'extension ne cèdent plus
+  jamais. Mesuré à 920 px sur cette fixture — « f…-preservees.xcfg » devient
+  « …-preservees.xcfg » : un caractère de tête en moins, et c'est tout ce qui change ici.
+  ⚠ Sur la machine du pilote-testeur, la MÊME barre affichait « f…-preservees.xc… » —
+  l'extension coupée. C'est ce que le nouveau découpage rend impossible, et c'est la seule
+  raison qui vaille de reprendre ces cinq images. Voir `src/ui/fileNameParts.ts`.
+
   Écran ...... la boîte d'enregistrement, ses trois issues : « Votre configuration,
                telle qu'elle est », « Tous vos réglages, sans ce qui vous désigne » et
                « Version partageable, sans données personnelles ».
@@ -771,6 +793,13 @@ textes par des barres grises, parce qu'une image échappe à l'anonymisation. Et
 
 <!--
   RECETTE — captures/bibliotheque.<langue>.png (1100 × 700)
+  PÉREMPTION SIGNALÉE le 2026-08-22 au soir, NON RÉPARÉE. Même cause que pour
+  « enregistrer-et-partager » : le nom de fichier de la barre de tête se coupe en trois, et
+  le rang et l'extension ne cèdent plus. Mesuré à 1 100 px : « f…-preservees.xcfg » devient
+  « …-preservees.xcfg ». ⚠ Le pilote-testeur du 2026-08-22 a relevé que CETTE image
+  montrait elle-même le défaut — « on y lit f…-preservees.xc… » : l'extension coupée sur
+  la capture qui sert d'exemple. Voir `src/ui/fileNameParts.ts`.
+
   Écran ...... la boîte « Bibliothèque de configurations », sur sa liste, deux entrées.
   Langues .... CINQ exemplaires : .fr, .en, .nl, .de, .es. Le texte est le sujet — les
                comptes de données personnelles et le geste d'effacement.
