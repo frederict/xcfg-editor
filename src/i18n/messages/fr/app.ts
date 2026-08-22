@@ -514,6 +514,14 @@ const app = {
     'les réglages ; et ici, aucun cran de zoom ne la montre entière.',
   /** ⚠ Un seul littéral : un `+` rendrait `{level}` invisible au compilateur (§ 3 bis). */
   'dock.crampedZoom': 'Cette fenêtre est trop courte pour montrer la page entière et ses réglages à la fois. « Replier » rend à la page la place du bandeau, mais vous prend les réglages ; le zoom à {level} la montre entière, mais plus à sa taille réelle.',
+  /**
+   * ⚠ **Le cas où le calcul tombe sur 100 % a sa propre phrase.** Voir `syncPlateFit` :
+   * « … mais plus à sa taille réelle » suppose le pilote au zoom qu’il a calibré à la
+   * règle. À 100 % la supposition tombe, et la phrase contredit alors
+   * `view.scaleAdvice`, à trois centimètres de là. Elle dit donc ce que 100 % EST — le
+   * cran d’origine — au lieu de dire ce qu’il n’est pas.
+   */
+  'dock.crampedZoomFull': 'Cette fenêtre est trop courte pour montrer la page entière et ses réglages à la fois. « Replier » rend à la page la place du bandeau, mais vous prend les réglages ; le zoom à {level} la montre entière — c’est le cran d’origine, celui d’où part le réglage à la règle graduée.',
 
   'dock.loadingSettings': 'Chargement des réglages…',
 

@@ -2282,6 +2282,26 @@ body.is-dragging .veil {
   line-height: 1.4;
 }
 
+/*
+ * LE REMÈDE, DANS LA PHRASE QUI LE NOMME.
+ *
+ * ⚠ **Mesuré le 2026-08-22, et c'est la raison d'être de ce bouton.** La phrase conseillait
+ * « le zoom à 100 % » pendant que le bouton « Zoom 100 % » de la barre de zoom se trouvait
+ * à 24,3 px du haut de la fenêtre — sous une barre de tête COLLANTE dont le bas est à
+ * 56,1 px. `elementFromPoint` en son centre rendait `.app-bar__actions` : le remède
+ * n'était pas seulement haut, il était inatteignable. Fenêtre 1024 × 640, page 3 de
+ * `2025-07-07_backup-00.xcfg`, un gadget choisi.
+ *
+ * Il reste dans le flux de la phrase — pas de position, pas de flottement : c'est une
+ * remarque, et son bouton en fait partie. `vertical-align: baseline` le tient sur la ligne
+ * du texte plutôt que de le poser sur le pied de la boîte.
+ */
+.dock__crampedZoom {
+  margin-left: 0.4rem;
+  vertical-align: baseline;
+  font-size: 12.5px;
+}
+
 .dock__list {
   flex: none;
   display: flex;
@@ -3142,6 +3162,26 @@ body.is-dragging .veil {
   min-height: 1.2em;
   font-size: 12px;
   color: var(--app-ink-soft);
+}
+
+/*
+ * « ANNULER CE GESTE », DANS L'ANNONCE ELLE-MÊME.
+ *
+ * ⚠ La phrase de l'annonce nomme « Annuler » depuis le 2026-08-22 ; le bouton qu'elle
+ * nommait était **hors de portée d'ici**. Cette boîte s'ouvre par `dialog.showModal()`,
+ * qui rend inerte tout ce qui l'entoure — la barre de tête comprise —, et `main.ts` coupe
+ * Ctrl+Z dès qu'une modale est ouverte : il fallait refermer la boîte pour atteindre le
+ * remède, c'est-à-dire quitter l'écran qui venait d'en parler.
+ *
+ * Il porte la pastille pleine des commandes, et non le filet discret : c'est la sortie de
+ * secours d'un geste qui vient de partir sans rien demander, et l'œil doit y aller. Il ne
+ * paraît qu'avec une annonce qu'« Annuler » reprend — jamais tout seul, jamais après une
+ * annulation.
+ */
+.pages__undo {
+  margin-left: 0.5rem;
+  vertical-align: baseline;
+  font-size: 12px;
 }
 
 /* ------------------------------------------- assemblage : palette et carrousel */

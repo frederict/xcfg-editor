@@ -240,3 +240,56 @@ describe('clés inconnues', () => {
     )
   })
 })
+
+/**
+ * ⚠️ **Ce compteur existe pour qu'un avertissement de fermeture d'onglet ne paraisse pas
+ * quand il n'y a rien à perdre.** `container.modified` reste vrai pour toujours une fois
+ * qu'il est vrai — il commande la fidélité à l'octet près, et le remettre à faux après un
+ * enregistrement ferait ressortir les octets d'origine au suivant. C'est donc lui,
+ * `revision()`, qui répond à « le document est-il encore celui qu'on a écrit sur le
+ * disque ? ».
+ */
+describe('le repère du travail enregistré', () => {
+  it('change à chaque pas franchi — enregistré, annulé, rétabli', () => {
+    const history = createHistory(parseJson(source))
+    const seen = [history.revision()]
+
+    moveWidgetBy(widgetAt(page(history.current(), 'landscape', 0), 4), 10, 0)
+    history.record('Déplacer')
+    seen.push(history.revision())
+
+    history.undo()
+    seen.push(history.revision())
+
+    history.redo()
+    seen.push(history.revision())
+
+    expect(new Set(seen).size).toBe(seen.length)
+  })
+
+  it('ne revient jamais en arrière : deux états distincts ne peuvent pas porter le même repère', () => {
+    const history = createHistory(parseJson(source))
+
+    moveWidgetBy(widgetAt(page(history.current(), 'landscape', 0), 4), 10, 0)
+    history.record('Déplacer à droite')
+    const afterFirst = history.revision()
+
+    history.undo()
+    // Une modification AUTRE, depuis le même rang de curseur : le curseur revient à 1, le
+    // document non. Si le repère suivait le curseur, ce nouvel état se ferait passer pour
+    // celui qui a été enregistré, et le pilote fermerait l'onglet dessus sans un mot.
+    moveWidgetBy(widgetAt(page(history.current(), 'landscape', 0), 4), 0, 20)
+    history.record('Déplacer vers le bas')
+
+    expect(history.revision()).not.toBe(afterFirst)
+    expect(history.revision()).toBeGreaterThan(afterFirst)
+  })
+
+  it('ne bouge pas quand rien ne se passe', () => {
+    const history = createHistory(parseJson(source))
+    const start = history.revision()
+    history.current()
+    expect(history.canUndo()).toBe(false)
+    expect(history.revision()).toBe(start)
+  })
+})

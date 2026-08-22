@@ -162,6 +162,13 @@ een belofte van getrouwheid die alleen de auteur kan nagaan, is niets waard.
   bibliotheek legen, een bestand openen bovenop niet-opgeslagen werk. Eén bevestiging meer
   op wat zich laat terugdraaien zou de aandacht opsouperen die nodig is voor wat dat niet
   doet.
+  De weg terug is **bereikbaar vanaf waar u leest dat hij bestaat**: ‘Pagina’s beheren’
+  opent als venster bovenop de pagina, waar de bovenste balk onbereikbaar is en Ctrl+Z is
+  afgesneden — de afsnijding beschermt het deelvenster, dat één keer op een momentopname
+  wordt gebouwd die niets bijwerkt —, dus draagt de melding haar eigen knop ‘Deze stap
+  ongedaan maken’, boven het carrousel. En dit geheugen **sterft met het tabblad**: de
+  browser houdt u bij het vertrekken tegen zolang het werk niet is opgeslagen, met zijn
+  eigen tekst, en houdt daarmee op zodra het hele bestand dat wel is.
 - **De algemene instellingen instellen** — de 217 voorkeuren die buiten de pagina’s leven:
   eenheden, knoppen, sensoren, geluid, luchtruim. In de boomstructuur van de 23 regels van
   het instrumentmenu. In kijkmodus wordt er **geen enkel formulierveld gebouwd**; in

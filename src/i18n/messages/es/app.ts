@@ -265,6 +265,14 @@ const app: DomainCatalog<'app'> = {
     'ajustes a la vez. «Plegar» devuelve a la página el espacio del panel, pero le quita ' +
     'los ajustes; y aquí ningún paso del zoom la muestra entera.',
   'dock.crampedZoom': 'Esta ventana es demasiado corta para mostrar la página entera y sus ajustes a la vez. «Plegar» devuelve a la página el espacio del panel, pero le quita los ajustes; con un zoom del {level} se ve entera, pero ya no a su tamaño real.',
+  /**
+   * ⚠ **Le cas où le calcul tombe sur 100 % a sa propre phrase.** Voir `syncPlateFit` :
+   * « … mais plus à sa taille réelle » suppose le pilote au zoom qu’il a calibré à la
+   * règle. À 100 % la supposition tombe, et la phrase contredit alors
+   * `view.scaleAdvice`, à trois centimètres de là. Elle dit donc ce que 100 % EST — le
+   * cran d’origine — au lieu de dire ce qu’il n’est pas.
+   */
+  'dock.crampedZoomFull': 'Esta ventana es demasiado corta para mostrar la página entera y sus ajustes a la vez. «Plegar» devuelve a la página el espacio del panel, pero le quita los ajustes; con un zoom del {level} se ve entera: es el paso de partida, aquel desde el que se ajusta con una regla real.',
 
   'dock.loadingSettings': 'Cargando los ajustes…',
 

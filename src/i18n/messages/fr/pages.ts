@@ -161,11 +161,39 @@ const pages = {
    * se trouve et **jusqu'à quand** il vaut — les trois manquaient, et un pilote-testeur a
    * supprimé une page de vingt gadgets sans savoir qu'elle revenait.
    *
+   * ⚠️ **Elle disait « dans la barre du haut », et c'était hors de portée d'ici.** Cette
+   * boîte s'ouvre par `dialog.showModal()`, qui rend inerte tout ce qui l'entoure, et
+   * `main.ts` coupe Ctrl+Z dès qu'une modale est ouverte : atteindre la barre de tête
+   * demandait de refermer la boîte, c'est-à-dire de quitter l'écran où l'on venait de lire
+   * que le remède existait. Le bouton `pages.undoNow` est désormais dans la phrase même,
+   * et celle-ci ne nomme plus la barre de tête que pour la suite — une fois la boîte
+   * refermée.
+   *
    * ⚠️ « Annuler » est le **nom accessible** du bouton de la barre de tête
    * (`action.undoNamed`), qui ne montre qu'un chevron : le citer entre guillemets est ce
    * qui permet au pilote de faire le lien entre la phrase et le dessin.
    */
-  'pages.undoRestores': '« Annuler », dans la barre du haut, revient sur ce geste tant que cet onglet reste ouvert.',
+  'pages.undoRestores': '« Annuler » revient sur ce geste tant que cet onglet reste ouvert : ' +
+    'ici même, ou dans la barre du haut une fois cette boîte refermée.',
+
+  /**
+   * Le remède, en toutes lettres sur le bouton qui l'applique.
+   *
+   * Il porte le même mot que la phrase et que le bouton de la barre de tête, et il dit en
+   * plus **quoi** : dans une boîte où six gestes différents s'annoncent au même endroit,
+   * « Annuler » tout seul se lirait comme « refermer sans rien faire ».
+   */
+  'pages.undoNow': 'Annuler ce geste',
+
+  /**
+   * Ce que la zone d'annonce dit une fois le geste défait. Le pas est nommé comme
+   * l'historique le nomme — « Supprimer la page 5 (paysage) » —, parce que c'est ce
+   * nom-là que le pilote vient de lire dans la phrase qui l'annonçait.
+   *
+   * ⚠️ **Aucun bouton ne l'accompagne**, et c'est voulu : le pas d'avant appartient à un
+   * geste que cette boîte n'a pas annoncé. Voir `PageManagerOptions.onUndo`.
+   */
+  'pages.undone': 'Annulé : {what}. Le carrousel est revenu à ce qu’il montrait avant ce geste.',
 
   /**
    * Le prix d'une suppression, compté sur la page **avant** qu'elle parte : la vignette

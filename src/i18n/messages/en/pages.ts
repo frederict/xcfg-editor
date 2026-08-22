@@ -60,7 +60,11 @@ const pages: DomainCatalog<'pages'> = {
 
   'pages.announcementWithAdvice': '{done}. {advice}',
 
-  'pages.undoRestores': '“Undo”, in the top bar, takes this step back for as long as this tab stays open.',
+  'pages.undoRestores': '“Undo” takes this step back for as long as this tab stays open: right here, or in the top bar once this box is closed.',
+
+  'pages.undoNow': 'Undo this step',
+
+  'pages.undone': 'Undone: {what}. The carousel is back to what it showed before that step.',
 
   'pages.removalTally': {
     one: '{count} widget goes with it.',

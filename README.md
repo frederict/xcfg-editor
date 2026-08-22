@@ -54,6 +54,14 @@ la plaque qui la porte — est identique dans toutes.*
   matin même ne s'annonçait pas, et un pilote-testeur l'a trouvée « par curiosité, en
   survolant ». Voir `.glossed` dans `src/ui/app.css`.
 
+  VÉRIFIÉE ET GARDÉE le 2026-08-22, au soir, sur un point précis. La phrase du cadrage —
+  celle qui dit que la page entière ne tient pas ici — porte désormais un bouton qui pose
+  le cran de zoom qu'elle annonce (« Zoom 100 % » quand ce cran vaut 100 %), et sa
+  formulation change dans ce cas-là. Elle n'entre pas dans cette image : elle ne se remesure
+  qu'à la sélection d'un gadget, et l'état de cette recette n'en sélectionne aucun. Vérifié
+  sur le fichier lui-même — le corps du bandeau s'ouvre directement sur
+  « Gadgets de la page ».
+
   Écran ...... l'éditeur entier, mode consultation, panneau des gadgets ouvert.
   Langues .... UN SEUL exemplaire, en français, employé par les cinq README. Le sujet
                est une géométrie, pas un texte : la page, la règle, la plaque. Les
@@ -214,6 +222,13 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
   bibliothèque, ouvrir un fichier par-dessus un travail non enregistré. Une confirmation de
   plus sur ce qui se défait userait l'attention qu'il faut garder pour ce qui ne se défait
   pas.
+  Le remède est **atteignable depuis là où on lit qu'il existe** : « Gérer les pages »
+  s'ouvre en modale, où la barre du haut est inerte et Ctrl+Z coupé — la coupure protège la
+  boîte de partage, bâtie une fois sur un instantané que rien ne resynchronise —, l'annonce
+  y porte donc son propre « Annuler ce geste », au-dessus du carrousel. Et cette mémoire
+  **meurt avec l'onglet** : le navigateur vous retient au départ tant que le travail n'est
+  pas enregistré, avec son propre texte, et cesse de le faire dès que le fichier entier
+  l'est.
 - **Régler les réglages généraux** — les 217 préférences qui vivent hors des pages :
   unités, touches, capteurs, son, espaces aériens. Dans l'arborescence des 23 lignes du
   menu de l'instrument. En consultation, **aucun contrôle de formulaire n'est
@@ -379,6 +394,13 @@ qu'on a réglé, ou figer ce que le fichier ne dit pas.*
   NOM DE CLASSE en tête du panneau (« WSpeed ») porte désormais un filet pointillé sous le
   mot, et le curseur d'aide : c'est ce qui annonce la bulle qui dit ce qu'est ce nom. Voir
   `.glossed` dans `src/ui/app.css`.
+
+  VÉRIFIÉE ET GARDÉE le 2026-08-22, au soir, pour la même raison, et celle-ci demandait
+  d'aller regarder : un gadget EST sélectionné ici, la phrase du cadrage pourrait donc
+  paraître. Elle ne paraît pas — vérifié sur `captures/panneau-gadget.fr.png` lui-même, où
+  le corps du bandeau s'ouvre directement sur « Gadgets de la page ». Le cadre de
+  1 650 points laisse la plaque tenir dans la bande, et cette phrase suit la géométrie, pas
+  les clics.
 
   Écran ...... l'éditeur en mode édition, panneau de réglages d'un gadget déplié.
 
@@ -876,6 +898,13 @@ plutôt que par la visite guidée, et son sommaire reste à gauche pendant toute
 
 <!--
   REFAIRE CETTE CAPTURE — captures/manuel.<langue>.png (1200 × 1110)
+
+  VÉRIFIÉE ET GARDÉE UNE SECONDE FOIS le 2026-08-22, au soir : le manuel a gagné cinq
+  paragraphes de plus, aux chapitres 5, 6 et 10 — le remède porté dans
+  « Gérer les pages », la mémoire qui meurt avec l'onglet, le bouton du cran de zoom, et
+  le reçu que le changement d'écran referme. AUCUN n'est un titre : le diff n'ajoute ni
+  `<h2>` ni `<h3>` dans les cinq manuels, compté à zéro dans chacun. Le sommaire ne bouge
+  donc pas, et le cadre s'arrête toujours au milieu du chapitre 1.
 
   VÉRIFIÉE ET GARDÉE le 2026-08-22, en fin de journée — la seule des sept dans ce cas.
   Le manuel a gagné ce jour-là deux sections (« Les touches physiques… » au chapitre 8,

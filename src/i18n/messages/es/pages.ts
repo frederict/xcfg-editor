@@ -58,7 +58,11 @@ const pages: DomainCatalog<'pages'> = {
 
   'pages.announcementWithAdvice': '{done}. {advice}',
 
-  'pages.undoRestores': '«Deshacer», en la barra superior, revierte este gesto mientras esta pestaña siga abierta.',
+  'pages.undoRestores': '«Deshacer» revierte este gesto mientras esta pestaña siga abierta: aquí mismo, o en la barra superior una vez cerrado este cuadro.',
+
+  'pages.undoNow': 'Deshacer este gesto',
+
+  'pages.undone': 'Deshecho: {what}. El carrusel ha vuelto a lo que mostraba antes de ese gesto.',
 
   'pages.removalTally': {
     one: '{count} widget se va con ella.',

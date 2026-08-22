@@ -637,6 +637,25 @@ export interface PageManagerOptions {
   onOperation: (operation: PageOperation, description: string) => void
   /** Clic sur une vignette : ouvrir la page, comme l'appui simple de l'appareil. */
   onOpen?: (index: number) => void
+  /**
+   * Le remède, **là où se lit la phrase qui le nomme**.
+   *
+   * ⚠️ **Sans lui, `pages.undoRestores` désignait un bouton hors de portée**, et c'est
+   * mesuré : cette boîte s'ouvre par `dialog.showModal()`, qui rend inerte tout ce qui est
+   * hors d'elle — la barre de tête et son « Annuler » compris — et `main.ts` coupe
+   * explicitement Ctrl+Z dès qu'une modale est ouverte. Le seul chemin vers le remède
+   * était donc de refermer la boîte, c'est-à-dire de quitter l'écran où on venait de lire
+   * qu'il existait. Le pilote d'essai nº 5 a supprimé une page de vingt gadgets sans
+   * savoir qu'elle revenait ; lui dire où aller ne suffisait pas, il fallait le mettre à
+   * portée de main.
+   *
+   * L'appelant annule un pas d'historique et **réannonce** ce qu'il vient de défaire :
+   * voir `announce`, dont le second argument décide si ce bouton reparaît. Il ne reparaît
+   * pas après une annulation — le pas précédent appartient à un geste que cette boîte n'a
+   * pas annoncé, et un « Annuler » qui remonterait un cran de plus sans le dire serait la
+   * surprise même contre laquelle Ctrl+Z est coupé sous modale.
+   */
+  onUndo?: () => void
   /** Changer la classe après création — offert par défaut, voir `classChangeAdvice`. */
   allowClassChange?: boolean
   /**
@@ -676,8 +695,14 @@ export function resetRemovalGuard(): void {
 
 export interface PageManager {
   root: HTMLElement
-  /** Pousse un message dans la zone d'annonce — pour l'appelant qui vient de reconstruire. */
-  announce(message: string): void
+  /**
+   * Pousse un message dans la zone d'annonce — pour l'appelant qui vient de reconstruire.
+   *
+   * `undoable` pose **avec** le message le bouton du remède (`onUndo`). Il vaut vrai pour
+   * les six opérations du carrousel, qu'« Annuler » reprend toutes, et faux pour ce que
+   * l'appelant dit d'autre — au premier chef l'annulation elle-même.
+   */
+  announce(message: string, undoable?: boolean): void
 }
 
 function adviceList(advice: readonly Advice[], className = 'pages__advice'): HTMLElement {
@@ -711,11 +736,25 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
   const live = el('p', 'pages__live')
   live.setAttribute('aria-live', 'polite')
 
-  const announce = (message: string): void => { live.textContent = message }
+  // Le texte est un nœud à part, et le bouton vit DANS le paragraphe vivant : la synthèse
+  // vocale annonce alors la phrase et le remède d'un seul tenant, ce qui est exactement ce
+  // qu'un pilote qui ne voit pas l'écran a besoin d'entendre. Un `textContent =` sur le
+  // paragraphe emporterait le bouton à chaque annonce ; d'où le nœud de texte.
+  const said = document.createTextNode('')
+  const undo = el('button', 'btn pages__undo', tr.t('pages.undoNow'))
+  undo.type = 'button'
+  undo.hidden = true
+  undo.addEventListener('click', () => { options.onUndo?.() })
+  live.append(said, undo)
+
+  const announce = (message: string, undoable = false): void => {
+    said.data = message
+    undo.hidden = !undoable || options.onUndo === undefined
+  }
 
   const request = (operation: PageOperation): void => {
     const description = describeOperation(pages, operation, orientation, tr, ctx.language)
-    announce(operationAnnouncement(pages, operation, orientation, tr, ctx.language))
+    announce(operationAnnouncement(pages, operation, orientation, tr, ctx.language), true)
     options.onOperation(operation, description)
   }
 
@@ -734,6 +773,21 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
   const standing = layoutAdvice(pages, tr)
   if (allowClassChange) standing.push(classChangeAdvice(tr))
   if (standing.length > 0) root.append(adviceList(standing))
+
+  /*
+   * ⚠️ **L'annonce vient AVANT le rail, et c'est une mesure qui l'y a mise.** Elle fermait
+   * la section jusqu'au 2026-08-22 ; relevé en 1024 × 640 sur `2025-07-07_backup-00.xcfg`,
+   * après la suppression de la page 5 en paysage : le rail fait 750,0 px de haut, la zone
+   * d'annonce tombait à 1017,6 px du haut de la fenêtre et son bouton de remède à 1035,6 —
+   * `elementFromPoint` rendait `null`, c'est-à-dire hors de la fenêtre. Et l'appelant
+   * reconstruit la boîte entière après chaque opération (`fillPagesDialog`), ce qui remet
+   * le défilement à zéro : le pilote qui avait descendu jusqu'à la page 5 était ramené en
+   * haut, loin de la phrase qui venait de dire ce qu'il avait perdu.
+   *
+   * Ici, elle est à 254,8 px — sous les yeux, avec son remède, à l'endroit exact où la
+   * reconstruction vient de reposer le regard.
+   */
+  root.append(live)
 
   /* --- le rail : points d'insertion et vignettes en alternance --- */
   const rail = el('ol', 'pages__rail')
@@ -981,6 +1035,5 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
     root.append(el('p', 'pages__empty', tr.t('pages.emptyOrientation')))
   }
 
-  root.append(live)
   return { root, announce }
 }

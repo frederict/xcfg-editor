@@ -319,6 +319,26 @@ let dockGrip: HTMLElement | undefined
  * l'emporte pas.
  */
 let plateFitNote: HTMLElement | undefined
+/**
+ * Le texte de cette phrase, à part de l'élément qui le porte : le bouton du remède vit
+ * dans le **même** paragraphe, et un `textContent =` l'emporterait à chaque mesure.
+ */
+let plateFitSaid: Text | undefined
+/**
+ * Le remède, à portée de la phrase qui le nomme.
+ *
+ * ⚠️ **Mesuré le 2026-08-22, et c'est la raison d'être de ce bouton.** Fenêtre 1024 × 640,
+ * `2025-07-07_backup-00.xcfg`, page 3 en consultation, un gadget choisi : la phrase
+ * conseillait « le zoom à 100 % », et le bouton « Zoom 100 % » de la barre de zoom se
+ * trouvait alors à **24,3 px** du haut de la fenêtre, sous une barre de tête COLLANTE dont
+ * le bas est à 56,1 px. `elementFromPoint` en son centre rendait `.app-bar__actions` : le
+ * bouton n'était pas seulement haut, il était **inatteignable**. Le pilote d'essai nº 5 l'a
+ * relevé au même endroit, à −8 px chez lui.
+ *
+ * Il ne rétablit pas le zoom : il pose le cran que la phrase vient d'annoncer, en passant
+ * par la glissière elle-même — un seul chemin, donc un seul comportement.
+ */
+let plateFitZoom: HTMLButtonElement | undefined
 let listToggle: HTMLButtonElement | undefined
 let widgetList: WidgetList | undefined
 let widgetListHost: HTMLElement | undefined
@@ -326,8 +346,12 @@ let widgetListHost: HTMLElement | undefined
 /**
  * La dernière annonce du carrousel. Le module la pose dans sa propre zone, que la
  * reconstruction qui suit l'opération emporte : on la garde ici pour la lui rendre.
+ *
+ * `undoable` voyage avec elle parce que le **bouton du remède** voyage avec elle : il
+ * paraît sous les six opérations, qu'« Annuler » reprend toutes, et pas sous ce qui les
+ * suit — au premier chef l'annulation elle-même. Voir `PageManagerOptions.onUndo`.
  */
-let pagesMessage: { orientation: Orientation; text: string } | undefined
+let pagesMessage: { orientation: Orientation; text: string; undoable: boolean } | undefined
 
 /**
  * Seule clé régionale du catalogue de libellés (`widgetLabels.json`) : toutes les
@@ -926,6 +950,7 @@ function renderReceipt(): void {
 function clearReceipt(): void {
   lastReceipt = undefined
   receiptShownAt = undefined
+  receiptView = undefined
   renderReceipt()
 }
 
@@ -934,6 +959,23 @@ function clearReceipt(): void {
  * il ne s'agit que de mesurer une durée écoulée, et l'heure système peut reculer.
  */
 let receiptShownAt: number | undefined
+
+/**
+ * L'écran sur lequel le reçu est né, et la seule chose qui puisse le périmer d'un coup.
+ *
+ * `viewSignature()` rend une chaîne : `overview`, `detail:landscape:2`, `preferences`.
+ * Deux vues différentes ne peuvent pas rendre la même, et rien d'autre qu'un changement
+ * de vue ne la fait bouger — ni le gabarit d'écran, ni le zoom, ni une modification du
+ * document. Voir `RECEIPT_READ_MS` pour ce que ce repère sert à trancher.
+ */
+let receiptView: string | undefined
+
+function viewSignature(): string {
+  switch (view.kind) {
+    case 'detail': return `detail:${view.orientation}:${String(view.index)}`
+    default: return view.kind
+  }
+}
 
 /**
  * Le temps qu'il faut pour LIRE le reçu, avant que le geste suivant ait le droit de
@@ -957,6 +999,14 @@ let receiptShownAt: number | undefined
  * qu'on est parti regarder dans ses téléchargements, et qui revient à l'écran le retrouve.
  * C'est aussi ce qui met ce comportement hors du champ du critère « délai ajustable » :
  * il n'y a pas de délai au bout duquel quelque chose se produit.
+ *
+ * ⚠ **Il ne vaut que pour l'écran où le reçu est né** — voir `receiptView`. Relevé le
+ * 2026-08-22, 1024 × 640, `2025-07-07_backup-00.xcfg`, page 2 en consultation : un
+ * enregistrement, puis un clic réel sur « Page suivante » avant les 20 secondes. La page
+ * passait bien de 2 à 3, et le reçu restait — « un reçu qui nomme un fichier enregistré
+ * depuis la page précédente flotte toujours en tête d'écran », essai pilote nº 5. Le temps
+ * de lecture protège la lecture de l'écran qu'on a sous les yeux ; il n'a rien à protéger
+ * sur un écran qu'on vient de quitter.
  */
 const RECEIPT_READ_MS = 20_000
 
@@ -980,17 +1030,47 @@ function dismissReceiptOnNextMove(): void {
   clearReceipt()
 }
 
+/**
+ * L'autre moitié du recensement : **le reçu ne survit pas à l'écran qu'il nommait**.
+ *
+ * Appelée par `render()`, c'est-à-dire par le seul passage obligé de tout changement de
+ * vue — page suivante, page précédente, retour à la vue d'ensemble, ouverture d'une page
+ * depuis le carrousel, réglages généraux, manuel. Il n'y a donc rien à recenser geste par
+ * geste, et rien à oublier : la question est posée à la vue, pas aux boutons qui la
+ * changent. Le reste des gestes — choisir un gadget, déplier le bandeau, changer de
+ * gabarit — laisse la vue en place et retombe sur `dismissReceiptOnNextMove`.
+ *
+ * Le temps de lecture ne s'applique pas ici, et c'est le fond de l'affaire : il protège la
+ * lecture d'un reçu sur l'écran où il est apparu. Quitter cet écran est déjà la réponse.
+ */
+function dismissReceiptOnViewChange(): void {
+  if (lastReceipt === undefined || receiptView === undefined) return
+  if (receiptView === viewSignature()) return
+  clearReceipt()
+}
+
 /*
  * En capture, sur le document entier : un seul point d'accroche vaut mieux que le geste
  * par geste, qui en oublie toujours un. Ce qui part du reçu lui-même ne compte pas —
  * cliquer « Fermer » passe déjà par `clearReceipt`, et viser le texte pour le sélectionner
  * n'est pas passer à autre chose.
  *
- * `click` en plus de `pointerdown` : un vrai clic donne les deux, mais une activation
- * posée par le code — un `element.click()`, ce dont vivent les tests et les harnais — ne
- * donne que le second. Sans lui, le comportement n'était pas vérifiable.
+ * ⚠ **`pointerdown` en a été retiré le 2026-08-22, et il ne doit pas y revenir : il
+ * mangeait le geste qu'il recensait.** Le reçu vit dans la barre COLLANTE ; le retirer
+ * remonte tout ce qui suit. Relevé en 1024 × 640 sur `2025-07-07_backup-00.xcfg`,
+ * page 3 : « Page suivante » à 234,5 px du haut avec le reçu, à 144,3 sans lui — 90,2 px
+ * d'écart, posés entre le `pointerdown` et le `mouseup`. Le navigateur recalcule alors la
+ * cible du relâchement, n'émet plus aucun `click` sur le bouton, et **la page ne tourne
+ * pas** : le premier clic effaçait le reçu, le second seulement changeait de page. Vérifié
+ * deux fois, aux pages 1 et 3.
+ *
+ * `click` et `keydown` n'ont pas ce défaut : leur cible est arrêtée avant qu'aucune
+ * écoute ne s'exécute. Et ils ne laissent rien dehors — un glissement de gadget émet un
+ * `click` en fin de course malgré le `preventDefault()` du `pointerdown` (`editor.ts`),
+ * et une activation au clavier passe par les deux. Le défilement, lui, reste hors du
+ * recensement : la molette ne dit pas qu'on a lu.
  */
-for (const kind of ['pointerdown', 'keydown', 'click'] as const) {
+for (const kind of ['keydown', 'click'] as const) {
   document.addEventListener(kind, (event) => {
     if (event.target instanceof Node && receipt.contains(event.target)) return
     dismissReceiptOnNextMove()
@@ -2310,16 +2390,51 @@ function zoomThatFits(room: PlateRoom): number | undefined {
  * l'enveloppe prend.
  */
 function syncPlateFit(): void {
-  if (plateFitNote === undefined) return
+  if (plateFitNote === undefined || plateFitSaid === undefined) return
+  const note = plateFitZoom
   const room = plateRoom()
   const tight = room !== undefined && room.box.height > room.band.bottom - room.band.top
   plateFitNote.hidden = !tight
   if (room === undefined || !tight) return
   const tr = translator()
   const notch = zoomThatFits(room)
-  plateFitNote.textContent = notch === undefined
+  // ⚠️ **Le cas où le cran vaut 100 % a sa propre phrase, et ce n'est pas un détail de
+  // style.** « … mais plus à sa taille réelle » suppose que le pilote est au zoom qu'il a
+  // calibré à la règle, et que descendre le lui prend. À 100 % la supposition tombe : la
+  // légende de la règle, trois centimètres plus bas, dit que la page est dessinée à sa
+  // taille réelle et qu'on règle le zoom jusqu'à ce qu'une règle posée sur l'écran
+  // coïncide. Un pilote qui n'a pas calibré son écran lisait donc deux phrases
+  // contradictoires — relevé par l'essai pilote nº 5, et reproduit le 2026-08-22 en
+  // 1024 × 640 sur la page 3 de `2025-07-07_backup-00.xcfg`. La seconde phrase ne dit plus
+  // ce que 100 % n'est pas, elle dit ce qu'il est : le cran d'origine.
+  plateFitSaid.data = notch === undefined
     ? tr.t('dock.cramped')
-    : tr.t('dock.crampedZoom', { level: tr.format.percent(notch) })
+    : notch === 1
+      ? tr.t('dock.crampedZoomFull', { level: tr.format.percent(notch) })
+      : tr.t('dock.crampedZoom', { level: tr.format.percent(notch) })
+  if (note === undefined) return
+  note.hidden = notch === undefined
+  if (notch === undefined) return
+  note.textContent = tr.t('zoom.resetTo', { level: tr.format.percent(notch) })
+  // Affectation et non `addEventListener` : la phrase se remesure à chaque sélection et à
+  // chaque coup de glissière, et le cran annoncé change avec elle. Un abonnement de plus
+  // à chaque passage poserait le cran d'il y a trois mesures.
+  note.onclick = () => { applyZoom(notch) }
+}
+
+/**
+ * Poser un cran de zoom **par la glissière**, jamais à côté d'elle.
+ *
+ * La glissière est le seul endroit qui sache tout ce qu'un changement de zoom entraîne :
+ * la variable `--zoom` de la scène, le pour-cent affiché, le calque d'édition à rafraîchir
+ * et cette phrase-ci à remesurer (`onZoom`, `views.ts`). Le bouton « Zoom 100 % » de la
+ * barre de zoom fait déjà exactement cela ; celui de la phrase passe par le même chemin.
+ */
+function applyZoom(factor: number): void {
+  const slider = content.querySelector('.zoom__slider')
+  if (!(slider instanceof HTMLInputElement)) return
+  slider.value = String(factor)
+  slider.dispatchEvent(new Event('input'))
 }
 
 /**
@@ -2563,6 +2678,14 @@ function buildDock(): HTMLElement {
 
   plateFitNote = el('p', 'dock__cramped')
   plateFitNote.hidden = true
+  // Le bouton vit DANS le paragraphe, et non à côté : la phrase est annoncée d'un bloc à
+  // la synthèse vocale, et le remède qu'elle nomme doit être annoncé avec elle. Un
+  // `<button>` est du contenu de phrase, un `<p>` a le droit d'en porter un.
+  plateFitSaid = document.createTextNode('')
+  plateFitZoom = el('button', 'btn btn--ghost dock__crampedZoom')
+  plateFitZoom.type = 'button'
+  plateFitZoom.hidden = true
+  plateFitNote.append(plateFitSaid, plateFitZoom)
 
   body.append(plateFitNote, split)
 
@@ -2772,12 +2895,15 @@ function runPageOperation(
       orientation,
       text: translator().t('app.pageOperationFailed', {
         detail: formatTechnicalDetail(error, translator())
-      })
+      }),
+      // Rien n'a bougé dans le document : il n'y a rien à annuler, et un bouton qui le
+      // proposerait déferait le geste d'AVANT.
+      undoable: false
     }
     syncPagesDialog()
     return
   }
-  pagesMessage = { orientation, text }
+  pagesMessage = { orientation, text, undoable: true }
 
   session.container.modified = true
   session.history.record(description)
@@ -2841,6 +2967,26 @@ function fillPagesDialog(dialog: HTMLDialogElement): void {
       onOperation: (operation, description) => {
         runPageOperation(orientation, operation, description)
       },
+      /**
+       * Le remède, dans la boîte qui vient d'en parler.
+       *
+       * On lit le nom du pas AVANT de l'annuler : `stepHistory` remplace le document par
+       * un arbre neuf et remet `pagesMessage` à `undefined` — l'annonce précédente décrit
+       * un geste qui n'a plus lieu. On repose donc la nôtre après coup, sans bouton :
+       * remonter d'un cran de plus emporterait un geste que cette boîte n'a pas annoncé.
+       */
+      onUndo: () => {
+        if (session?.history.canUndo() !== true) return
+        const what = session.history.undoDescription()
+        stepHistory('undo')
+        if (what === undefined) return
+        pagesMessage = {
+          orientation,
+          text: translator().t('pages.undone', { what }),
+          undoable: false
+        }
+        syncPagesDialog()
+      },
       onOpen: (index) => {
         closePagesDialog()
         view = { kind: 'detail', orientation, index }
@@ -2852,7 +2998,9 @@ function fillPagesDialog(dialog: HTMLDialogElement): void {
     })
     box.append(manager.root)
     // Ce que l'opération précédente a produit, redit dans le carrousel reconstruit.
-    if (pagesMessage?.orientation === orientation) manager.announce(pagesMessage.text)
+    if (pagesMessage?.orientation === orientation) {
+      manager.announce(pagesMessage.text, pagesMessage.undoable)
+    }
   }
 
   dialog.append(box)
@@ -3646,6 +3794,9 @@ function sharingSource(current: Session): SharingSource {
 async function deliver(
   current: Session, produced: Uint8Array | undefined, fileName: string
 ): Promise<void> {
+  // Le pas en cours de regroupement part avec le fichier : il doit être dans l'historique
+  // avant qu'on note où en était le document au moment de l'écriture.
+  flushRecord()
   const bytes = produced ?? await exportContainer(current.container)
   // Copie dans un ArrayBuffer simple : `Blob` n'accepte pas une vue dont le tampon
   // pourrait être partagé, et le conteneur ne garantit rien de son origine.
@@ -3660,8 +3811,11 @@ async function deliver(
   link.href = url
   link.download = fileName
   link.click()
+  // Voir `savedRevision` : le fichier entier, et lui seul, met le travail à l'abri.
+  if (produced === undefined) savedRevision = current.history.revision()
   lastReceipt = { fileName, byteLength: bytes.byteLength }
   receiptShownAt = performance.now()
+  receiptView = viewSignature()
   renderReceipt()
 }
 
@@ -3773,6 +3927,10 @@ function askBeforeExport(current: Session): void {
 
 function render(): void {
   const tr = translator()
+  // AVANT tout le reste : le reçu occupe la barre collante, et la place qu'il prend est
+  // celle que le cadrage mesure quelques lignes plus bas. L'effacer après aurait laissé
+  // cadrer sur une hauteur périmée.
+  dismissReceiptOnViewChange()
   // Le calque appartient à la vue qu'on efface : on le démonte explicitement, pour que
   // ses écoutes de fenêtre (`pointermove`, `pointerup`) partent avec lui.
   editor?.destroy()
@@ -3786,6 +3944,8 @@ function render(): void {
   dockClass = undefined
   dockCount = undefined
   plateFitNote = undefined
+  plateFitSaid = undefined
+  plateFitZoom = undefined
   dockToggle = undefined
   dockBody = undefined
   dockGrip = undefined
@@ -4059,9 +4219,32 @@ interface UnsavedWork {
   lastChange: string | undefined
 }
 
+/**
+ * Le pas d'historique auquel le document ouvert a été **écrit dans un fichier entier**,
+ * et rien d'autre.
+ *
+ * ⚠️ `container.modified` ne répond pas à cette question : il dit « le document a bougé
+ * depuis l'ouverture », il reste vrai après l'enregistrement, et il commande la fidélité à
+ * l'octet près (`exportContainer` réémet la source tant qu'il est faux). Le remettre à
+ * faux après un enregistrement ferait ressortir les octets d'ORIGINE au suivant. C'est
+ * donc un repère séparé, et il ne touche à rien.
+ *
+ * ⚠️ **Seul un fichier entier compte.** `deliver` sert aussi les deux versions dépouillées
+ * de la boîte de partage, qui laissent des réglages derrière elles — un « pages » n'emporte
+ * pas les préférences. Marquer le travail enregistré sur celles-là laisserait le pilote
+ * fermer l'onglet sur un travail que le fichier produit ne porte pas. Le repère n'est donc
+ * posé que sur le chemin `produced === undefined`, celui de la réémission du conteneur.
+ *
+ * Non posé par le rangement en bibliothèque : le sens prudent est de continuer à retenir.
+ */
+let savedRevision: number | undefined
+
 function unsavedWork(): UnsavedWork | undefined {
   const current = session
   if (current?.container.modified !== true) return undefined
+  // Enregistré, et rien changé depuis : il n'y a rien à perdre, et un avertissement qui
+  // paraît quand il n'y a rien à perdre est un avertissement qu'on cesse de lire.
+  if (pendingStep === undefined && savedRevision === current.history.revision()) return undefined
   return {
     fileName: current.container.fileName,
     // Le pas en cours de regroupement n'est pas encore enregistré, et c'est pourtant le
@@ -4167,6 +4350,11 @@ function closeDocument(): void {
   // Le reçu nommait un fichier tiré du document qu'on referme : il n'a plus rien à dire du
   // document qui s'ouvre.
   clearReceipt()
+  // ⚠️ Sans cette ligne, le repère du travail enregistré traverserait les documents : une
+  // histoire neuve repart de zéro, et le premier pas d'un fichier tout juste ouvert
+  // porterait le numéro auquel le PRÉCÉDENT avait été enregistré. Le pilote fermerait alors
+  // l'onglet sur une modification jamais écrite, sans un mot.
+  savedRevision = undefined
   // Les réglages généraux affichés étaient ceux de l'autre fichier, et la vue retenue
   // pour le retour désignait une page de l'autre fichier.
   if (view.kind === 'preferences') view = { kind: 'overview' }
@@ -4397,6 +4585,17 @@ redoButton.addEventListener('click', () => stepHistory('redo'))
  * Un pilote qui voyait le navigateur le retenir à la fermeture et l'outil écraser sans un
  * mot au dépôt d'un fichier avait sous les yeux deux réponses contradictoires à une
  * question unique : il n'y en a plus qu'une.
+ *
+ * ⚠️ **Un avertissement qui paraît quand il n'y a rien à perdre est un avertissement qu'on
+ * cesse de lire.** `container.modified` ne suffit donc pas à le déclencher : il reste vrai
+ * après l'enregistrement, et le pilote qui venait d'écrire son fichier était retenu quand
+ * même. `savedRevision` répond à la vraie question — le document a-t-il bougé depuis qu'il
+ * a été écrit en entier ? Les deux autres portes restent fermées comme avant : un document
+ * intact ne demande rien, un document ramené à son état d'origine par annulation non plus
+ * (`history.isDirty()`).
+ *
+ * Relevé le 2026-08-22 sous Chrome : le navigateur montre **son** texte, que la page ne
+ * choisit pas et ne peut pas allonger ; refuser la sortie annule bien le rechargement.
  */
 window.addEventListener('beforeunload', (event) => {
   if (unsavedWork() === undefined) return
@@ -4417,6 +4616,24 @@ window.addEventListener('keydown', (event) => {
   // Une boîte est ouverte par-dessus : le pilote y travaille, et défaire une modification
   // qu'il ne voit pas serait une surprise. La bibliothèque et le partage s'ouvrent
   // désormais depuis la barre de tête, donc aussi depuis une page en édition.
+  //
+  // ⚠️ **Ce que cette coupure protège, nommément, et pourquoi elle reste.** `render()`
+  // remet trois boîtes d'accord avec le document — `syncPagesDialog`, `syncPaletteDialog`,
+  // `syncVersionDialog` —, et la bibliothèque lit le document par un **getter**
+  // (`currentForLibrary`), donc au geste et jamais figé. La boîte de partage, elle, est
+  // bâtie **une fois** sur un instantané : `sharingSource(current)` retient le nœud
+  // `container.document` et le `modified` de l'instant, `warningNotice` est calculé au
+  // même moment, et rien ne la resynchronise. Or `history.undo()` rend un **arbre neuf**.
+  // Un Ctrl+Z sous cette boîte-là lui laisserait donc annoncer le compte de données
+  // personnelles, le nom de fichier et la promesse « telle qu'elle est » d'un document qui
+  // n'existe plus, avant d'écrire des octets qui ne sont pas ceux qu'elle décrit. C'est le
+  // seul défaut que la coupure évite, et il suffit à la garder.
+  //
+  // Elle a un prix, et il se paie ailleurs : depuis « Gérer les pages », le remède nommé
+  // par l'annonce devenait inatteignable — `showModal()` rend inerte tout ce qui entoure
+  // la boîte, barre de tête comprise. La réponse n'est pas de rouvrir Ctrl+Z pour tout le
+  // monde, c'est de porter le remède dans la boîte : voir `PageManagerOptions.onUndo`, qui
+  // ne passe que par des boîtes que `render()` resynchronise.
   if (modalOpen()) return
   event.preventDefault()
   stepHistory(event.shiftKey ? 'redo' : 'undo')

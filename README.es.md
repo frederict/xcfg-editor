@@ -158,6 +158,13 @@ de fidelidad que solo el autor puede comprobar no vale nada.
   nada revierte: retirar una configuración guardada, vaciar la biblioteca, abrir un archivo
   encima de un trabajo sin guardar. Una confirmación más sobre lo que se deshace gastaría la
   atención que hay que guardar para lo que no se deshace.
+  El remedio es **alcanzable desde donde se lee que existe**: «Gestionar las páginas» se
+  abre en un cuadro modal, donde la barra superior queda inerte y Ctrl+Z cortado —el corte
+  protege el cuadro de compartir, construido una vez sobre una instantánea que nada
+  resincroniza—, así que el anuncio lleva su propio «Deshacer este gesto», encima del
+  carrusel. Y esta memoria **muere con la pestaña**: el navegador le retiene al salir
+  mientras el trabajo no está guardado, con su propio texto, y deja de hacerlo en cuanto lo
+  está el archivo entero.
 - **Ajustar los ajustes generales** — las 217 preferencias que viven fuera de las páginas:
   unidades, botones, sensores, sonido, espacios aéreos. En el árbol de las 23 líneas del
   menú del instrumento. En consulta, **no se construye ningún control de formulario**; en

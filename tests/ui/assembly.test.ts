@@ -567,6 +567,153 @@ describe('assemblage — le reçu s’efface au geste suivant, jamais pendant qu
     expect(main).toContain('receiptShownAt = performance.now()')
     expect(main).not.toContain('receiptShownAt = Date.now()')
   })
+
+  /*
+   * ⚠️ **Le recensement ne doit jamais manger le geste qu'il recense.** Le reçu vit dans
+   * la barre COLLANTE : le retirer remonte tout ce qui suit. Relevé en 1024 × 640 sur
+   * `2025-07-07_backup-00.xcfg`, page 3 : « Page suivante » à 234,5 px du haut avec le
+   * reçu, à 144,3 sans lui. Les 90,2 px d'écart tombaient entre le `pointerdown` et le
+   * `mouseup` ; le navigateur recalculait la cible du relâchement, n'émettait plus aucun
+   * `click` sur le bouton, et la page ne tournait pas. Il fallait deux clics : le premier
+   * effaçait le reçu, le second seulement changeait de page.
+   */
+  it('ne se déclenche que sur des événements dont la cible est déjà arrêtée', () => {
+    expect(dismiss).toContain("for (const kind of ['keydown', 'click'] as const)")
+    expect(dismiss).not.toContain("'pointerdown'")
+  })
+
+  /*
+   * L'autre moitié du recensement : le temps de lecture protège la lecture d'un reçu sur
+   * l'écran où il est né. Quitter cet écran est déjà la réponse — le pilote d'essai nº 5 :
+   * « Je change de page, et un reçu qui nomme un fichier enregistré depuis la page
+   * précédente flotte toujours en tête d'écran. »
+   */
+  it('le reçu ne survit pas à l’écran qu’il nommait', () => {
+    expect(main).toContain('function dismissReceiptOnViewChange')
+    expect(main).toContain('receiptView = viewSignature()')
+    // La question est posée à la vue, jamais aux boutons qui la changent : un seul point
+    // d'accroche, et rien à oublier.
+    expect(main).toMatch(/function render\(\): void \{[\s\S]{0,400}dismissReceiptOnViewChange\(\)/)
+    // Et le temps de lecture n'a rien à y faire : il ne vaut que pour l'écran d'origine.
+    const onView = main.slice(
+      main.indexOf('function dismissReceiptOnViewChange'),
+      main.indexOf('for (const kind of')
+    )
+    expect(onView).not.toContain('RECEIPT_READ_MS')
+  })
+})
+
+/**
+ * ⚠️ **Un avertissement qui paraît quand il n'y a rien à perdre est un avertissement qu'on
+ * cesse de lire.** Le pilote qui venait d'écrire son fichier était retenu quand même :
+ * `container.modified` reste vrai une fois qu'il est vrai, et il ne peut pas être remis à
+ * faux — c'est lui qui commande la réémission à l'octet près.
+ */
+describe('assemblage — retenir à la fermeture, mais seulement s’il y a de quoi', () => {
+  it('la question passe par un repère séparé, jamais par `modified` remis à faux', () => {
+    expect(main).toContain('let savedRevision: number | undefined')
+    expect(main).toContain(
+      'if (pendingStep === undefined && savedRevision === current.history.revision()) return undefined'
+    )
+    // `modified` n'est jamais rendu faux : `exportContainer` en dépend pour réémettre la
+    // source telle quelle.
+    expect(main).not.toContain('container.modified = false')
+  })
+
+  /*
+   * `deliver` sert aussi les deux versions dépouillées de la boîte de partage, qui
+   * laissent des réglages derrière elles — un « pages » n'emporte pas les préférences.
+   * Marquer le travail enregistré sur celles-là laisserait le pilote fermer l'onglet sur
+   * un travail que le fichier produit ne porte pas.
+   */
+  it('seul un fichier entier met le travail à l’abri', () => {
+    expect(main).toContain('if (produced === undefined) savedRevision = current.history.revision()')
+  })
+
+  /*
+   * Une histoire neuve repart de zéro : sans cette remise, le premier pas d'un fichier
+   * tout juste ouvert porterait le numéro auquel le PRÉCÉDENT avait été enregistré.
+   */
+  it('le repère ne traverse pas les documents', () => {
+    const start = main.indexOf('function closeDocument')
+    const closing = main.slice(start, main.indexOf('\n}', start))
+    expect(closing).toContain('savedRevision = undefined')
+  })
+
+  it('la retenue elle-même n’a pas bougé de porte', () => {
+    expect(main).toMatch(
+      /window\.addEventListener\('beforeunload', \(event\) => \{\s*\n\s*if \(unsavedWork\(\) === undefined\) return/
+    )
+  })
+})
+
+/**
+ * ⚠️ **Le remède nommé par une annonce doit être atteignable depuis l'endroit où on la
+ * lit.** « Gérer les pages » s'ouvre par `dialog.showModal()`, qui rend inerte tout ce qui
+ * l'entoure, et Ctrl+Z est coupé sous modale : le seul chemin vers « Annuler » était de
+ * refermer la boîte, c'est-à-dire de quitter l'écran qui venait d'en parler.
+ */
+describe('assemblage — Ctrl+Z sous modale, et le remède porté dans la boîte', () => {
+  /*
+   * La coupure reste, et ce qu'elle protège est nommé : `render()` remet trois boîtes
+   * d'accord avec le document, la bibliothèque lit le document par un getter, mais la
+   * boîte de partage est bâtie UNE FOIS sur un instantané que rien ne resynchronise.
+   * `history.undo()` rend un arbre neuf : elle annoncerait alors le compte de données
+   * personnelles d'un document qui n'existe plus avant d'écrire des octets qui ne sont pas
+   * ceux qu'elle décrit.
+   */
+  it('la coupure tient, et le commentaire dit ce qu’elle protège', () => {
+    expect(main).toContain('if (modalOpen()) return')
+    const guard = main.slice(
+      main.indexOf('Annuler et rétablir au clavier'),
+      main.indexOf('if (modalOpen()) return')
+    )
+    expect(guard).toContain('sharingSource')
+    expect(guard).toContain('resynchronise')
+  })
+
+  it('la boîte des pages porte son propre « Annuler »', () => {
+    expect(main).toContain('onUndo: () => {')
+    expect(main).toContain("text: translator().t('pages.undone', { what }),")
+    // Sans bouton après coup : remonter d'un cran de plus emporterait un geste que cette
+    // boîte n'a pas annoncé.
+    expect(main).toMatch(/t\('pages\.undone'[\s\S]{0,80}undoable: false/)
+  })
+
+  it('le nom du pas se lit AVANT de l’annuler', () => {
+    expect(main).toMatch(
+      /const what = session\.history\.undoDescription\(\)\s*\n\s*stepHistory\('undo'\)/
+    )
+  })
+})
+
+/**
+ * ⚠️ **La phrase du cadrage se contredisait quand le calcul tombait sur 100 %.** « … mais
+ * plus à sa taille réelle » suppose le pilote au zoom qu'il a calibré à la règle ; à 100 %
+ * la supposition tombe, et la phrase contredit `view.scaleAdvice`, trois centimètres plus
+ * bas. Et le bouton « Zoom 100 % » de la barre de zoom se trouvait alors à 24,3 px du haut
+ * de la fenêtre, sous une barre de tête collante dont le bas est à 56,1 px :
+ * `elementFromPoint` en son centre rendait `.app-bar__actions`.
+ */
+describe('assemblage — le cran de zoom conseillé, et le bouton qui le pose', () => {
+  it('100 % a sa propre phrase', () => {
+    expect(main).toContain("? tr.t('dock.crampedZoomFull', { level: tr.format.percent(notch) })")
+    expect(app['dock.crampedZoomFull']).not.toContain('taille réelle')
+    // Elle dit ce que 100 % EST, au lieu de dire ce qu'il n'est pas.
+    expect(app['dock.crampedZoomFull']).toContain('cran d’origine')
+  })
+
+  it('le remède est dans la phrase, et passe par la glissière', () => {
+    expect(main).toContain("plateFitZoom = el('button', 'btn btn--ghost dock__crampedZoom')")
+    expect(main).toContain('note.onclick = () => { applyZoom(notch) }')
+    expect(main).toContain("const slider = content.querySelector('.zoom__slider')")
+    expect(main).toContain("slider.dispatchEvent(new Event('input'))")
+  })
+
+  it('le bouton porte le cran annoncé, et disparaît quand aucun cran ne suffit', () => {
+    expect(main).toContain("note.textContent = tr.t('zoom.resetTo', { level: tr.format.percent(notch) })")
+    expect(main).toContain('note.hidden = notch === undefined')
+  })
 })
 
 describe('assemblage — la vue d’ensemble montre les pages avant les constats', () => {

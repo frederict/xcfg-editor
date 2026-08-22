@@ -609,7 +609,7 @@ describe('la description d’une opération', () => {
     ]
     for (const gesture of gestures) {
       expect(operationAnnouncement(pages, gesture, 'landscape', tr, LABELS))
-        .toContain('«\u202fAnnuler\u202f», dans la barre du haut, revient sur ce geste')
+        .toContain('«\u202fAnnuler\u202f» revient sur ce geste tant que cet onglet reste ouvert')
     }
   })
 })
@@ -745,7 +745,80 @@ describe('le carrousel', () => {
     expect(said).toContain('Supprimer la page 2 (paysage)')
     expect(said).toContain(`${page.widgets.length} gadgets partent avec elle.`)
     expect(said).toContain('Les pages 3 à 5 deviennent 2 à 4')
-    expect(said).toContain('«\u202fAnnuler\u202f», dans la barre du haut')
+    expect(said).toContain('«\u202fAnnuler\u202f» revient sur ce geste tant que cet onglet reste ouvert')
+  })
+
+  /*
+   * ⚠️ **Le remède doit être ATTEIGNABLE depuis l'endroit où on lit qu'il existe.**
+   * L'annonce nomme « Annuler » depuis le 2026-08-22 ; le bouton qu'elle nommait vivait
+   * dans la barre de tête, que `dialog.showModal()` rend inerte, et `main.ts` coupe Ctrl+Z
+   * sous modale. Il fallait refermer la boîte pour atteindre le remède — c'est-à-dire
+   * quitter l'écran qui venait d'en parler.
+   */
+  describe('le remède, dans la boîte qui vient d’en parler', () => {
+    it('pose « Annuler ce geste » avec l’annonce d’une opération', () => {
+      const { root } = build({ onUndo: () => undefined })
+      const undo = root.querySelector<HTMLButtonElement>('.pages__undo')!
+      expect(undo.hidden).toBe(true)
+
+      query<HTMLElement>(root, '.pages__slot')[1]!
+        .querySelector<HTMLButtonElement>('.pagecard__remove')!.click()
+
+      expect(undo.hidden).toBe(false)
+      expect(undo.textContent).toBe('Annuler ce geste')
+      // Il vit DANS la région vivante : la synthèse vocale annonce la phrase et son remède
+      // d'un seul tenant.
+      expect(root.querySelector('.pages__live')!.contains(undo)).toBe(true)
+    })
+
+    it('appelle onUndo, et rien d’autre', () => {
+      let asked = 0
+      const { root, captured } = build({ onUndo: () => { asked += 1 } })
+      query<HTMLElement>(root, '.pages__slot')[1]!
+        .querySelector<HTMLButtonElement>('.pagecard__remove')!.click()
+      expect(captured).toHaveLength(1)
+
+      root.querySelector<HTMLButtonElement>('.pages__undo')!.click()
+      expect(asked).toBe(1)
+      // Le carrousel ne décide de rien : il ne s'est pas fabriqué une opération de plus.
+      expect(captured).toHaveLength(1)
+    })
+
+    it('ne paraît pas sous une annonce que rien ne reprend', () => {
+      const manager = renderPageManager({
+        pages: pagesOf(load(), 'landscape'),
+        orientation: 'landscape',
+        ctx: context(load()),
+        tr,
+        onOperation: () => undefined,
+        onUndo: () => undefined
+      })
+      // C'est ce que `main.ts` repose après une annulation : le pas d'avant appartient à
+      // un geste que cette boîte n'a pas annoncé.
+      manager.announce('Annulé : Supprimer la page 5 (paysage).')
+      expect(manager.root.querySelector<HTMLElement>('.pages__undo')!.hidden).toBe(true)
+    })
+
+    it('ne paraît jamais chez un appelant qui n’offre pas le remède', () => {
+      const { root } = build()
+      query<HTMLElement>(root, '.pages__slot')[1]!
+        .querySelector<HTMLButtonElement>('.pagecard__remove')!.click()
+      expect(root.querySelector<HTMLElement>('.pages__undo')!.hidden).toBe(true)
+    })
+
+    /*
+     * ⚠️ Mesuré en 1024 × 640 : l'annonce fermait la section, sous un rail de 750,0 px, et
+     * tombait à 1017,6 px du haut de la fenêtre — hors champ. L'appelant reconstruit la
+     * boîte après chaque opération, ce qui remet le défilement à zéro : le pilote était
+     * ramené en haut, loin de la phrase qui venait de dire ce qu'il avait perdu.
+     */
+    it('annonce AVANT le rail, là où la reconstruction repose le regard', () => {
+      const { root } = build({ onUndo: () => undefined })
+      const live = root.querySelector('.pages__live')!
+      const rail = root.querySelector('.pages__rail')!
+      expect(live.compareDocumentPosition(rail) & Node.DOCUMENT_POSITION_FOLLOWING)
+        .toBeTruthy()
+    })
   })
 
   /*

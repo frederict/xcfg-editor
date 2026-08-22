@@ -60,7 +60,11 @@ const pages: DomainCatalog<'pages'> = {
 
   'pages.announcementWithAdvice': '{done}. {advice}',
 
-  'pages.undoRestores': '„Rückgängig“ in der Kopfleiste nimmt diesen Schritt zurück, solange dieser Tab geöffnet bleibt.',
+  'pages.undoRestores': '„Rückgängig“ nimmt diesen Schritt zurück, solange dieser Tab geöffnet bleibt: hier, oder in der Kopfleiste, sobald dieses Fenster geschlossen ist.',
+
+  'pages.undoNow': 'Diesen Schritt rückgängig machen',
+
+  'pages.undone': 'Rückgängig gemacht: {what}. Das Karussell zeigt wieder, was es vor diesem Schritt zeigte.',
 
   'pages.removalTally': {
     one: '{count} Widget verschwindet mit ihr.',

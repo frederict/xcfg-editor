@@ -268,6 +268,14 @@ const app: DomainCatalog<'app'> = {
     'te tonen. ‘Inklappen’ geeft de pagina de ruimte van de balk terug, maar neemt u de ' +
     'instellingen af; en geen enkele zoomstap toont haar hier helemaal.',
   'dock.crampedZoom': 'Dit venster is te laag om de hele pagina en haar instellingen tegelijk te tonen. ‘Inklappen’ geeft de pagina de ruimte van de balk terug, maar neemt u de instellingen af; bij een zoom van {level} is ze helemaal te zien, maar niet meer op ware grootte.',
+  /**
+   * ⚠ **Le cas où le calcul tombe sur 100 % a sa propre phrase.** Voir `syncPlateFit` :
+   * « … mais plus à sa taille réelle » suppose le pilote au zoom qu’il a calibré à la
+   * règle. À 100 % la supposition tombe, et la phrase contredit alors
+   * `view.scaleAdvice`, à trois centimètres de là. Elle dit donc ce que 100 % EST — le
+   * cran d’origine — au lieu de dire ce qu’il n’est pas.
+   */
+  'dock.crampedZoomFull': 'Dit venster is te laag om de hele pagina en haar instellingen tegelijk te tonen. ‘Inklappen’ geeft de pagina de ruimte van de balk terug, maar neemt u de instellingen af; bij een zoom van {level} is ze helemaal te zien — dat is de uitgangsstand, vanwaar u met een echte liniaal bijstelt.',
 
   'dock.loadingSettings': 'Instellingen laden…',
 

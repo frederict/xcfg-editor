@@ -58,7 +58,11 @@ const pages: DomainCatalog<'pages'> = {
 
   'pages.announcementWithAdvice': '{done}. {advice}',
 
-  'pages.undoRestores': '‘Ongedaan maken’ in de bovenste balk draait deze stap terug zolang dit tabblad open blijft.',
+  'pages.undoRestores': '‘Ongedaan maken’ draait deze stap terug zolang dit tabblad open blijft: hier, of in de bovenste balk zodra dit venster gesloten is.',
+
+  'pages.undoNow': 'Deze stap ongedaan maken',
+
+  'pages.undone': 'Ongedaan gemaakt: {what}. Het carrousel toont weer wat het vóór deze stap toonde.',
 
   'pages.removalTally': {
     one: '{count} widget verdwijnt ermee.',

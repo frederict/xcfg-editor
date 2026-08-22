@@ -163,6 +163,13 @@ Absicht — ein Treueversprechen, das nur der Autor nachprüfen kann, ist nichts
   eine Datei über nicht gespeicherte Arbeit öffnen. Eine Bestätigung mehr auf dem, was sich
   rückgängig machen lässt, würde die Aufmerksamkeit aufbrauchen, die für das andere
   gebraucht wird.
+  Der Weg zurück ist **von dort aus erreichbar, wo man liest, dass es ihn gibt**: „Seiten
+  verwalten“ öffnet als Dialog, in dem die Kopfleiste unerreichbar und Strg+Z abgeschaltet
+  ist — die Abschaltung schützt den Teilen-Dialog, der einmal auf einem Abbild gebaut wird,
+  das nichts nachführt —, die Meldung trägt deshalb ihre eigene Schaltfläche „Diesen
+  Schritt rückgängig machen“ über dem Karussell. Und dieses Gedächtnis **stirbt mit dem
+  Tab**: der Browser hält Sie beim Verlassen zurück, solange die Arbeit nicht gespeichert
+  ist, mit seinem eigenen Text, und hört damit auf, sobald die ganze Datei es ist.
 - **Die allgemeinen Einstellungen setzen** — die 217 Einstellungen, die außerhalb der
   Seiten leben: Einheiten, Tasten, Sensoren, Ton, Lufträume. In der Baumstruktur der
   23 Zeilen des Gerätemenüs. Beim Ansehen wird **kein einziges Formularelement gebaut**;

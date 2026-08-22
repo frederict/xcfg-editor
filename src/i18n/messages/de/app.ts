@@ -273,6 +273,14 @@ const app: DomainCatalog<'app'> = {
     'Einstellungen gleichzeitig zu zeigen. „Zuklappen“ gibt der Seite den Platz der Leiste ' +
     'zurück, nimmt Ihnen aber die Einstellungen; und keine Zoomstufe zeigt sie hier ganz.',
   'dock.crampedZoom': 'Dieses Fenster ist zu niedrig, um die ganze Seite und ihre Einstellungen gleichzeitig zu zeigen. „Zuklappen“ gibt der Seite den Platz der Leiste zurück, nimmt Ihnen aber die Einstellungen; bei einem Zoom von {level} ist sie ganz zu sehen, dann aber nicht mehr in Originalgröße.',
+  /**
+   * ⚠ **Le cas où le calcul tombe sur 100 % a sa propre phrase.** Voir `syncPlateFit` :
+   * « … mais plus à sa taille réelle » suppose le pilote au zoom qu’il a calibré à la
+   * règle. À 100 % la supposition tombe, et la phrase contredit alors
+   * `view.scaleAdvice`, à trois centimètres de là. Elle dit donc ce que 100 % EST — le
+   * cran d’origine — au lieu de dire ce qu’il n’est pas.
+   */
+  'dock.crampedZoomFull': 'Dieses Fenster ist zu niedrig, um die ganze Seite und ihre Einstellungen gleichzeitig zu zeigen. „Zuklappen“ gibt der Seite den Platz der Leiste zurück, nimmt Ihnen aber die Einstellungen; bei einem Zoom von {level} ist sie ganz zu sehen — das ist die Ausgangsstufe, von der aus Sie mit einem echten Lineal einstellen.',
 
   'dock.loadingSettings': 'Einstellungen werden geladen…',
 

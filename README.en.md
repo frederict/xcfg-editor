@@ -152,6 +152,12 @@ author can check is worth nothing.
   a stored configuration, emptying the library, opening a file on top of unsaved work. One
   more confirmation on what undoes itself would spend the attention we need to keep for
   what does not.
+  The way back is **reachable from where you read that it exists**: “Manage the pages”
+  opens as a modal, where the top bar is inert and Ctrl+Z switched off — the cut protects
+  the sharing box, built once on a snapshot nothing resynchronises — so the announcement
+  carries its own “Undo this step”, above the carousel. And this memory **dies with the
+  tab**: the browser holds you back on the way out for as long as the work is not saved,
+  with its own wording, and stops doing so as soon as the whole file is.
 - **Set the general settings** — the 217 preferences that live outside the pages: units,
   buttons, sensors, sound, airspaces. In the tree of the 23 lines of the instrument's
   menu. In view-only mode, **no form control is built at all**; in editing mode, 77 of

@@ -72,6 +72,24 @@ export interface EditHistory {
   redoDescription(): string | undefined
   /** Vrai si le document diffère de son état d'origine : active l'export, prévient avant de fermer. */
   isDirty(): boolean
+  /**
+   * Un numéro qui change à **chaque** pas franchi — enregistré, annulé ou rétabli — et qui
+   * ne revient jamais en arrière.
+   *
+   * Il sert à répondre à une question, et à une seule : « le document est-il encore celui
+   * qu'on a écrit sur le disque ? ». C'est ce qui permet à `beforeunload` de ne retenir le
+   * pilote que s'il a **vraiment** quelque chose à perdre, au lieu de le retenir sur la foi
+   * d'un `modified` qui reste vrai pour toujours une fois qu'il est vrai.
+   *
+   * ⚠️ **Ce n'est pas le rang du curseur, et il ne faut pas le confondre.** Annuler puis
+   * modifier autrement ramène le curseur au même rang sur un document différent : deux
+   * états distincts porteraient le même repère, et l'un se ferait passer pour l'autre.
+   * Ce compteur ne redescend jamais, au prix assumé d'un faux positif — revenir par
+   * annulation à l'état exactement enregistré fait quand même paraître l'avertissement.
+   * C'est le sens prudent, et `isDirty()` couvre déjà le seul cas qui compte, le retour à
+   * l'état d'origine.
+   */
+  revision(): number
 }
 
 /**
@@ -103,6 +121,8 @@ export function createHistory(initial: JsonNode, limit: number = HISTORY_LIMIT):
   const descriptions: string[] = []
   let cursor = 0
   let prunedOrigin = false
+  // Voir `EditHistory.revision` : monotone, jamais le rang du curseur.
+  let revision = 0
 
   function canUndo(): boolean {
     return cursor > 0
@@ -125,6 +145,7 @@ export function createHistory(initial: JsonNode, limit: number = HISTORY_LIMIT):
       snapshots.push(cloneNode(live))
       descriptions.push(description)
       cursor++
+      revision++
 
       while (snapshots.length > limit + 1) {
         snapshots.shift()
@@ -137,6 +158,7 @@ export function createHistory(initial: JsonNode, limit: number = HISTORY_LIMIT):
     undo(): JsonNode {
       if (!canUndo()) throw new Error('History.undo : rien à annuler')
       cursor--
+      revision++
       live = cloneNode(snapshots[cursor]!)
       return live
     },
@@ -144,6 +166,7 @@ export function createHistory(initial: JsonNode, limit: number = HISTORY_LIMIT):
     redo(): JsonNode {
       if (!canRedo()) throw new Error('History.redo : rien à rétablir')
       cursor++
+      revision++
       live = cloneNode(snapshots[cursor]!)
       return live
     },
@@ -152,6 +175,7 @@ export function createHistory(initial: JsonNode, limit: number = HISTORY_LIMIT):
     canRedo,
     undoDescription: () => (canUndo() ? descriptions[cursor - 1] : undefined),
     redoDescription: () => (canRedo() ? descriptions[cursor] : undefined),
-    isDirty: () => prunedOrigin || cursor !== 0
+    isDirty: () => prunedOrigin || cursor !== 0,
+    revision: () => revision
   }
 }

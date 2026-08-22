@@ -263,6 +263,14 @@ const app: DomainCatalog<'app'> = {
     'once. “Fold away” gives the page the panel’s room back, but takes your settings; and ' +
     'here no zoom notch shows it whole.',
   'dock.crampedZoom': 'This window is too short to show the whole page and its settings at once. “Fold away” gives the page the panel’s room back, but takes your settings; a zoom of {level} shows it whole, though no longer at its real size.',
+  /**
+   * ⚠ **Le cas où le calcul tombe sur 100 % a sa propre phrase.** Voir `syncPlateFit` :
+   * « … mais plus à sa taille réelle » suppose le pilote au zoom qu’il a calibré à la
+   * règle. À 100 % la supposition tombe, et la phrase contredit alors
+   * `view.scaleAdvice`, à trois centimètres de là. Elle dit donc ce que 100 % EST — le
+   * cran d’origine — au lieu de dire ce qu’il n’est pas.
+   */
+  'dock.crampedZoomFull': 'This window is too short to show the whole page and its settings at once. “Fold away” gives the page the panel’s room back, but takes your settings; a zoom of {level} shows it whole — that is the starting notch, the one you adjust from with a real ruler.',
 
   'dock.loadingSettings': 'Loading the settings…',
 
