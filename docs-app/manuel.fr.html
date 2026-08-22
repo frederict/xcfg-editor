@@ -698,6 +698,32 @@
   <span class="manual__ui">Lignes que ce catalogue ne connaît pas</span> — ces dernières ont
   été écrites par une autre version de XCTrack. Toutes ressortent intactes.</p>
 
+  <h3>Les touches physiques, et pourquoi certaines n’ont pas de nom</h3>
+
+  <p>L’écran <span class="manual__ui">Edition de liens entre touches</span> montre, pour
+  chaque commande, le code que votre appareil envoie. Deux provenances s’y croisent, et
+  elles ne valent pas la même chose :</p>
+
+  <ul>
+    <li><strong>un nom en toutes lettres</strong> — « volume haut », « marche/arrêt » — a
+    été relevé <strong>à la main sur un boîtier</strong> : la touche a été pressée et le
+    code lu à l’arrivée. Il n’en existe que pour les modèles que nous avons eus entre les
+    mains ; sur l’AIR³ 7.2, trois touches ;</li>
+    <li><strong>un nom en <code>KEYCODE_</code></strong> — <code>KEYCODE_STEM_2</code>,
+    code 266 — vient de la table des touches d’Android. Cette table nomme un
+    <em>code</em>, pas un bouton : elle ne dit pas laquelle de vos touches l’émet.</li>
+  </ul>
+
+  <p>Un nom qui manque est donc une <strong>mesure</strong> qui manque, jamais une touche
+  qui n’existerait pas. Le parc n’est pas homogène : les AIR³ plus récents portent
+  davantage de touches physiques que le 7.2, et un code sans écho sur l’un peut commander
+  un vrai bouton sur l’autre. Nous n’inventons aucun nom.</p>
+
+  <p>Pour savoir quelle touche envoie un code donné, il n’y a qu’un moyen sûr, et il est
+  sur l’instrument : poser le gadget
+  <span class="manual__ui">Dernière touche pressée</span> sur une page, puis presser la
+  touche.</p>
+
   <h3>Le volet des données personnelles</h3>
 
   <p>Un volet replié, en tête de page, inventorie ce que <em>ces réglages-ci</em> révèlent de

@@ -148,6 +148,26 @@ const preferences = {
   'preferences.unmatchedKeyTitle':
     'Aucune des touches mesurées sur {model} n’émet le code {code}. La note sous ce bloc dit ce que cette mesure vaut.',
 
+  /* ------------------------------------------- d'où vient le nom qu'on lit sur la ligne */
+
+  /**
+   * ⚠️ **Trois provenances, et elles ne se mélangent pas.** L'écran des touches met côte à
+   * côte un nom relevé à la main sur un boîtier (« volume haut ») et un nom lu dans la
+   * table des touches d'Android (`KEYCODE_STEM_2`). Un pilote-testeur y a vu, le
+   * 2026-08-22, une traduction oubliée. Ce n'en est pas une : c'est une mesure qui manque,
+   * et ces phrases le disent plutôt que de laisser croire à une négligence.
+   *
+   * Aucune ne doit faire dire qu'une touche n'existe pas : le parc n'est pas homogène.
+   */
+  'preferences.keyFromSurvey':
+    '« {label} » est le nom de cette touche sur le boîtier, relevé à la main sur {model}. {name} est le nom qu’Android donne au code {code}.',
+  'preferences.keyFromAndroid':
+    '{name} est le nom que la table des touches d’Android donne au code {code}. Cette table nomme un code, pas un bouton : elle ne dit pas laquelle de vos touches l’émet, et nous n’avons pas relevé celle-ci à la main.',
+  'preferences.keyFromNowhere':
+    'Le code {code} ne figure dans aucune table de touches que nous ayons lue. Aucun nom ne lui est donné ici : en inventer un serait le pire des services.',
+  'preferences.keyNamingOrigin':
+    'Un nom en toutes lettres est celui que porte la touche sur le boîtier, relevé à la main : il n’y en a que pour les modèles que nous avons eus entre les mains. Un nom en KEYCODE_ vient de la table des touches d’Android, qui nomme le code et non le bouton. Un nom qui manque est donc une mesure qui manque, jamais une touche qui n’existerait pas.',
+
   /* ================================================== pourquoi il n'y a rien à comparer */
 
   'preferences.runtimeDefaultReason':

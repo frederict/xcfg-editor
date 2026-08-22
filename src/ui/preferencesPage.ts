@@ -651,6 +651,66 @@ export function bindingParts(
   return { key: tr.t('preferences.rawCode', { code }), press }
 }
 
+/**
+ * **D'où vient le nom affiché** sur cette ligne-là, en une phrase.
+ *
+ * ## Pourquoi cette phrase existe
+ *
+ * L'écran des touches met côte à côte deux provenances qui ne se ressemblent pas :
+ *
+ * - « volume haut », « marche/arrêt » — un nom **relevé à la main sur un boîtier**, rangé
+ *   dans `preferenceDomains.json` sous `keyCodes.hardwareKeys[].label`. C'est une donnée
+ *   de mesure : elle reste en français dans les cinq langues, et il n'y en a que pour les
+ *   modèles que nous avons eus entre les mains — trois touches sur l'AIR³ 7.2 ;
+ * - `KEYCODE_STEM_2` — le nom que la **table des touches d'Android** donne au code, lue
+ *   dans l'`android.jar` du SDK (`keyCodes.source`, `keyCodes.androidApiLevel`). Elle
+ *   nomme un code, pas un bouton.
+ *
+ * Rien ne le disait, et le pilote-testeur du 2026-08-22 a posé la seule question qui
+ * suit : « pourquoi les touches de volume sont traduites et pas les autres ? » — sur la
+ * touche qu'il presse le plus en compétition. La réponse n'est pas une traduction
+ * manquante : c'est une mesure manquante.
+ *
+ * ⚠️ **Elle ne nomme donc aucune touche que nous n'ayons pas relevée**, et ne dit jamais
+ * qu'une touche n'existe pas : le parc n'est pas homogène, et un code sans écho sur
+ * l'AIR³ 7.2 peut commander un vrai bouton sur un modèle plus récent.
+ */
+export function bindingOrigin(
+  binding: KeyBinding, hardware: HardwareKeySurvey | null | undefined, tr: Translator
+): string | undefined {
+  if (binding.unset) return undefined
+  // `code` et `name` partent en **`string`** : ce sont des identifiants, pas des comptes.
+  const code = String(binding.code)
+  const physical = hardware?.keys.find((one) => one.code === binding.code)
+  if (physical !== undefined) {
+    return tr.t('preferences.keyFromSurvey', {
+      label: physical.label, model: hardware?.label ?? '', name: physical.name, code
+    })
+  }
+  if (binding.name !== null) {
+    return tr.t('preferences.keyFromAndroid', { name: binding.name, code })
+  }
+  return tr.t('preferences.keyFromNowhere', { code })
+}
+
+/**
+ * L'infobulle entière d'une liaison : d'où vient le nom, puis — si notre relevé couvre ce
+ * modèle et ignore ce code-là — ce que ce relevé en dit.
+ *
+ * Une seule infobulle, sur l'élément entier, plutôt qu'une par morceau : deux `title`
+ * imbriqués ne se lisent jamais tous les deux, et le survol ne dirait alors qu'une moitié
+ * de ce qu'il y a à savoir.
+ */
+export function bindingTitle(
+  binding: KeyBinding, hardware: HardwareKeySurvey | null | undefined,
+  unmatched: boolean, tr: Translator
+): string | undefined {
+  const origin = bindingOrigin(binding, hardware, tr)
+  if (!unmatched || hardware === undefined || hardware === null) return origin
+  const note = unmatchedTitle(binding, hardware, tr)
+  return origin === undefined ? note : `${origin} ${note}`
+}
+
 /** Les trois morceaux en une phrase, pour le texte de la ligne et pour le filtre. */
 export function bindingText(parts: BindingParts): string {
   const named = parts.detail === undefined ? parts.key : `${parts.key} (${parts.detail})`
@@ -725,6 +785,30 @@ export function hardwareNote(
     listed,
     missing
   })
+}
+
+/**
+ * Pourquoi certaines touches de ce bloc portent un nom en toutes lettres et d'autres un
+ * `KEYCODE_*`. Écrite **en clair sous le bloc**, pas seulement en infobulle.
+ *
+ * Le pilote-testeur du 2026-08-22 a lu « volume haut » deux lignes au-dessus de
+ * `KEYCODE_STEM_2` et en a conclu à une traduction oubliée. Ce n'en est pas une : c'est
+ * une mesure qui manque, et le dire vaut mieux que laisser croire à une négligence.
+ *
+ * Elle ne s'écrit que quand les deux provenances sont **effectivement** à l'écran, ou
+ * qu'un `KEYCODE_*` y est seul : sur un bloc où tout est nommé par le relevé, elle
+ * expliquerait une asymétrie qui n'apparaît pas.
+ */
+export function keyNamingNote(
+  bindings: readonly KeyBinding[], hardware: HardwareKeySurvey | null | undefined,
+  tr: Translator
+): string | undefined {
+  const assigned = bindings.filter((one) => !one.unset)
+  if (assigned.length === 0) return undefined
+  const named = (one: KeyBinding): boolean =>
+    hardware?.keys.some((key) => key.code === one.code) === true
+  if (assigned.every(named)) return undefined
+  return tr.t('preferences.keyNamingOrigin')
 }
 
 /** L'infobulle d'une liaison dont le code n'est aucune des touches relevées. */
@@ -1610,9 +1694,12 @@ function bindingValue(
 ): HTMLElement {
   const parts = bindingParts(binding, hardware, tr)
   const wrap = el('span', 'prefs__binding')
-  // L'infobulle renvoie à la note du bloc ; elle ne la remplace pas. Un propos sur le
-  // matériel doit rester lisible sans survol, et il l'est — trois lignes plus bas.
-  if (unmatched && hardware != null) wrap.title = unmatchedTitle(binding, hardware, tr)
+  // L'infobulle dit **d'où vient le nom affiché** — relevé sur un boîtier, ou lu dans la
+  // table des touches d'Android — et renvoie à la note du bloc quand notre relevé ignore
+  // ce code-là ; elle ne la remplace pas. Un propos sur le matériel doit rester lisible
+  // sans survol, et il l'est — trois lignes plus bas.
+  const title = bindingTitle(binding, hardware, unmatched, tr)
+  if (title !== undefined) wrap.title = title
   wrap.append(el('span', 'prefs__binding-key', parts.key))
   if (parts.detail !== undefined) {
     wrap.append(el('span', 'prefs__binding-detail', parts.detail))
@@ -2809,6 +2896,14 @@ function buildMenuElement(entry: PreferenceMenuEntry, ctx: PageContext): HTMLEle
 
     const scope = hardwareScopeNote(screen, ctx)
     if (scope !== undefined) block.append(el('p', 'prefs__hardware', scope))
+    // Pourquoi une touche porte un nom et l'autre un `KEYCODE_*`. Après la note de
+    // matériel, parce qu'elle explique ce que celle-ci vient de montrer.
+    const naming = keyNamingScopeNote(screen, ctx)
+    // Même habillage que la note de matériel — c'est une phrase de portée, pas une
+    // alarme —, et un modificateur pour que le compte de l'une ne prenne pas l'autre.
+    if (naming !== undefined) {
+      block.append(el('p', 'prefs__hardware prefs__hardware--origin', naming))
+    }
 
     if (screen.neverExported > 0) {
       block.append(el('p', 'prefs__never',
@@ -2835,6 +2930,18 @@ function hardwareScopeNote(
   return hardwareNote(
     bindings, ctx.hardware, ctx.domains.hardwareKeySurveys(), ctx.device, ctx.tr
   )
+}
+
+/** D'où viennent les noms de touches de ce bloc. Rassemble les liaisons, rien de plus. */
+function keyNamingScopeNote(
+  screen: PreferenceScreenBlock, ctx: PageContext
+): string | undefined {
+  if (ctx.domains === undefined) return undefined
+  const bindings = screen.blocks
+    .flatMap((group) => group.rows)
+    .map((row) => row.binding)
+    .filter((one): one is KeyBinding => one !== undefined)
+  return keyNamingNote(bindings, ctx.hardware, ctx.tr)
 }
 
 /**

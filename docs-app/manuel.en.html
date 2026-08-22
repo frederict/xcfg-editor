@@ -666,6 +666,31 @@
   <span class="manual__ui">Lines this catalogue does not know</span> — those last ones were
   written by another release of XCTrack. All of them come back out untouched.</p>
 
+  <h3>Physical keys, and why some of them have no name</h3>
+
+  <p>The <span class="manual__ui">Key bindings</span> screen shows, for each command,
+  the code your device sends. Two origins meet there, and they are not worth the same:</p>
+
+  <ul>
+    <li><strong>a name in plain words</strong> — “volume haut”, “marche/arrêt” — was
+    measured <strong>by hand on a case</strong>: the key was pressed and the incoming code
+    read. Such names exist only for the models we have had in our hands; on the AIR³ 7.2,
+    three keys. They stay in French, because that is how the measurement was written
+    down;</li>
+    <li><strong>a name in <code>KEYCODE_</code></strong> — <code>KEYCODE_STEM_2</code>,
+    code 266 — comes from Android’s key table. That table names a <em>code</em>, not a
+    button: it does not say which of your keys emits it.</li>
+  </ul>
+
+  <p>A missing name is therefore a missing <strong>measurement</strong>, never a key that
+  would not exist. The fleet is not uniform: newer AIR³ units carry more physical keys
+  than the 7.2, and a code with no echo on one may drive a real button on the other. We
+  invent no names.</p>
+
+  <p>To find out which key sends a given code there is only one sure way, and it is on the
+  instrument: put the <span class="manual__ui">Last key pressed</span> widget on a page,
+  then press the key.</p>
+
   <h3>The personal data panel</h3>
 
   <p>A folded panel, at the top of the page, inventories what <em>these settings</em>

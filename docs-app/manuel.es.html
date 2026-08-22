@@ -663,6 +663,32 @@
   <span class="manual__ui">Líneas que este catálogo no conoce</span> — estas últimas las ha
   escrito otra versión de XCTrack. Todas salen intactas.</p>
 
+  <h3>Las teclas físicas, y por qué algunas no tienen nombre</h3>
+
+  <p>La pantalla <span class="manual__ui">Asignación de teclas</span> muestra, para
+  cada orden, el código que envía su aparato. Allí se cruzan dos procedencias, y no valen
+  lo mismo:</p>
+
+  <ul>
+    <li><strong>un nombre en palabras</strong> — «volume haut», «marche/arrêt» — se midió
+    <strong>a mano en una carcasa</strong>: se pulsó la tecla y se leyó el código que
+    llegaba. Solo existen para los modelos que hemos tenido entre las manos; en el AIR³
+    7.2, tres teclas. Siguen en francés, porque así se anotó la medición;</li>
+    <li><strong>un nombre en <code>KEYCODE_</code></strong> — <code>KEYCODE_STEM_2</code>,
+    código 266 — viene de la tabla de teclas de Android. Esa tabla nombra un
+    <em>código</em>, no un botón: no dice cuál de sus teclas lo emite.</li>
+  </ul>
+
+  <p>Un nombre que falta es pues una <strong>medición</strong> que falta, nunca una tecla
+  que no existiría. El parque no es homogéneo: los AIR³ más recientes llevan más teclas
+  físicas que el 7.2, y un código sin eco en uno puede mandar un botón real en el otro. No
+  inventamos ningún nombre.</p>
+
+  <p>Para saber qué tecla envía un código dado solo hay un modo seguro, y está en el
+  instrumento: poner el widget
+  <span class="manual__ui">Último botón presionado</span> en una página y luego pulsar la
+  tecla.</p>
+
   <h3>El panel de los datos personales</h3>
 
   <p>Un panel plegado, en cabecera de página, inventaría lo que <em>estos ajustes</em> revelan

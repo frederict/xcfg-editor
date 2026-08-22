@@ -864,6 +864,39 @@ describe('une liaison de touche se lit, et en trois morceaux', () => {
     expect(row.querySelector('.prefs__binding-press')?.textContent).toBe('appui simple')
   })
 
+  it('dit d’où vient le nom qu’il affiche, touche par touche', () => {
+    const { page } = editable(BACKUP_2026)
+    // Le pilote-testeur du 2026-08-22 a lu « volume haut » deux lignes au-dessus de
+    // `KEYCODE_STEM_2` et en a conclu à une traduction oubliée : « pourquoi les touches
+    // de volume sont traduites et pas les autres ? ». Ce n'est pas une traduction qui
+    // manque, c'est une mesure — et chaque ligne le dit maintenant d'elle-même.
+    const measured = rowElement(page, 'Keys.ZoomIn')
+      .querySelector<HTMLElement>('.prefs__binding')?.title ?? ''
+    expect(measured).toContain('relevé à la main sur AIR³ 7.2')
+    expect(measured).toContain('KEYCODE_VOLUME_UP')
+
+    const android = rowElement(page, 'Keys.PrevWaypoint')
+      .querySelector<HTMLElement>('.prefs__binding')?.title ?? ''
+    expect(android).toContain('table des touches d’Android')
+    expect(android).toContain('nomme un code, pas un bouton')
+    // Et la note de matériel n'a pas disparu de l'infobulle : les deux s'y suivent.
+    expect(android).toContain('n’émet le code 266')
+  })
+
+  it('explique sous le bloc pourquoi une touche est nommée et l’autre non', () => {
+    const { page } = editable(BACKUP_2026)
+    const bloc = page.element
+      .querySelector('.prefs__screen[data-screen="preferences_keybindings"]')
+    const origin = bloc?.querySelectorAll('.prefs__hardware--origin') ?? []
+    // Une fois sous le bloc, comme les autres phrases de portée — pas quinze fois.
+    expect(origin).toHaveLength(1)
+    const said = origin[0]?.textContent ?? ''
+    expect(said).toContain('relevé à la main')
+    expect(said).toContain('KEYCODE_')
+    // Ce que la phrase ne doit jamais laisser croire : le parc n'est pas homogène.
+    expect(said).toContain('jamais une touche qui n’existerait pas')
+  })
+
   it('laisse « aucune touche » tel quel, sans le découper en trois', () => {
     const { page } = editable(BACKUP_2026)
     const row = rowElement(page, 'Keys.Menu')
@@ -879,7 +912,9 @@ describe('ce que la page dit du matériel, et ce qu’elle ne dira jamais', () =
     // Une fois sous le bloc, comme la phrase de refus — pas deux fois entre deux lignes.
     const bloc = page.element
       .querySelector('.prefs__screen[data-screen="preferences_keybindings"]')
-    const notes = bloc?.querySelectorAll('.prefs__hardware') ?? []
+    // `:not(--origin)` : la phrase qui dit d'où viennent les NOMS de touches partage
+    // l'habillage de celle-ci, elle n'en est pas un second exemplaire.
+    const notes = bloc?.querySelectorAll('.prefs__hardware:not(.prefs__hardware--origin)') ?? []
     expect(notes).toHaveLength(1)
     const said = notes[0]?.textContent ?? ''
     expect(said).toContain('AIR³ 7.2')

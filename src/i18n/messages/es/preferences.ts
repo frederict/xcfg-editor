@@ -76,6 +76,14 @@ const preferences: DomainCatalog<'preferences'> = {
   'preferences.unmatchedKeyTitle':
     'Ninguna de las teclas medidas en {model} emite el código {code}. La nota bajo este ' +
     'bloque dice lo que vale esa medición.',
+  'preferences.keyFromSurvey':
+    '«{label}» es el nombre de esta tecla en la carcasa, medido a mano en {model}. {name} es el nombre que Android da al código {code}.',
+  'preferences.keyFromAndroid':
+    '{name} es el nombre que la tabla de teclas de Android da al código {code}. Esa tabla nombra un código, no un botón: no dice cuál de sus teclas lo emite, y esta no la hemos medido a mano.',
+  'preferences.keyFromNowhere':
+    'El código {code} no figura en ninguna tabla de teclas que hayamos leído. Aquí no se le da ningún nombre: inventarlo sería el peor de los servicios.',
+  'preferences.keyNamingOrigin':
+    'Un nombre en palabras es el que lleva la tecla en la carcasa, medido a mano: solo existe para los modelos que hemos tenido entre las manos. Un nombre en KEYCODE_ viene de la tabla de teclas de Android, que nombra el código y no el botón. Un nombre que falta es pues una medición que falta, nunca una tecla que no existiría.',
 
   'preferences.runtimeDefaultReason':
     'XCTrack rellena esta lista en el código y su valor de fábrica depende del idioma y ' +

@@ -700,6 +700,33 @@
   wurden von einer anderen XCTrack-Version geschrieben. Alle kommen unversehrt wieder
   heraus.</p>
 
+  <h3>Die physischen Tasten, und warum manche keinen Namen haben</h3>
+
+  <p>Der Bildschirm <span class="manual__ui">Tastenzuordnungen</span> zeigt für
+  jeden Befehl den Code, den Ihr Gerät sendet. Zwei Herkünfte treffen dort aufeinander,
+  und sie sind nicht dasselbe wert:</p>
+
+  <ul>
+    <li><strong>ein ausgeschriebener Name</strong> — „volume haut“, „marche/arrêt“ — wurde
+    <strong>von Hand an einem Gehäuse gemessen</strong>: die Taste wurde gedrückt und der
+    ankommende Code gelesen. Solche Namen gibt es nur für die Modelle, die wir in der Hand
+    hatten; am AIR³ 7.2 sind es drei Tasten. Sie bleiben französisch, denn so wurde die
+    Messung aufgeschrieben;</li>
+    <li><strong>ein Name mit <code>KEYCODE_</code></strong> — <code>KEYCODE_STEM_2</code>,
+    Code 266 — stammt aus der Tastentabelle von Android. Diese Tabelle benennt einen
+    <em>Code</em>, keine Taste: sie sagt nicht, welche Ihrer Tasten ihn sendet.</li>
+  </ul>
+
+  <p>Ein fehlender Name ist also eine fehlende <strong>Messung</strong>, nie eine Taste,
+  die es nicht gäbe. Der Gerätepark ist nicht einheitlich: neuere AIR³ tragen mehr
+  physische Tasten als das 7.2, und ein Code ohne Echo am einen kann am anderen eine
+  echte Taste steuern. Wir erfinden keine Namen.</p>
+
+  <p>Um zu erfahren, welche Taste einen bestimmten Code sendet, gibt es nur einen sicheren
+  Weg, und er führt über das Gerät: das Widget
+  <span class="manual__ui">Zuletzt gedrückte Taste</span> auf eine Seite legen und dann
+  die Taste drücken.</p>
+
   <h3>Der Bereich der persönlichen Daten</h3>
 
   <p>Ein zugeklappter Bereich am Kopf der Seite verzeichnet, was <em>diese Einstellungen

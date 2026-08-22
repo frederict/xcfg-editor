@@ -685,6 +685,33 @@
   <span class="manual__ui">Regels die deze catalogus niet kent</span> — die laatste zijn door
   een andere versie van XCTrack geschreven. Alle komen er ongeschonden uit.</p>
 
+  <h3>De fysieke toetsen, en waarom sommige geen naam hebben</h3>
+
+  <p>Het scherm <span class="manual__ui">Sneltoetsen</span> toont voor elk
+  commando de code die uw toestel verzendt. Twee herkomsten kruisen elkaar daar, en zij
+  zijn niet hetzelfde waard:</p>
+
+  <ul>
+    <li><strong>een naam in gewone woorden</strong> — ‘volume haut’, ‘marche/arrêt’ — is
+    <strong>met de hand op een behuizing gemeten</strong>: de toets werd ingedrukt en de
+    binnenkomende code gelezen. Zulke namen bestaan alleen voor de modellen die wij in
+    handen hebben gehad; op de AIR³ 7.2 zijn dat drie toetsen. Zij blijven in het Frans,
+    want zo is de meting opgeschreven;</li>
+    <li><strong>een naam met <code>KEYCODE_</code></strong> — <code>KEYCODE_STEM_2</code>,
+    code 266 — komt uit de toetsentabel van Android. Die tabel benoemt een <em>code</em>,
+    geen knop: zij zegt niet welke van uw toetsen hem uitzendt.</li>
+  </ul>
+
+  <p>Een ontbrekende naam is dus een ontbrekende <strong>meting</strong>, nooit een toets
+  die niet zou bestaan. Het park is niet homogeen: recentere AIR³ dragen meer fysieke
+  toetsen dan de 7.2, en een code zonder echo op de ene kan op de andere een echte knop
+  aansturen. Wij verzinnen geen namen.</p>
+
+  <p>Om te weten welke toets een gegeven code verzendt is er maar één zekere manier, en die
+  ligt op het instrument: de widget die XCTrack
+  <span class="manual__ui">Last key pressed</span> noemt — er bestaat geen Nederlandse
+  naam voor — op een pagina zetten en dan de toets indrukken.</p>
+
   <h3>Het luik met de persoonlijke gegevens</h3>
 
   <p>Een ingeklapt luik boven aan de pagina inventariseert wat <em>deze instellingen</em> over

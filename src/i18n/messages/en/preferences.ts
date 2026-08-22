@@ -85,6 +85,14 @@ const preferences: DomainCatalog<'preferences'> = {
   'preferences.unmatchedKeyTitle':
     'None of the keys measured on {model} emits code {code}. The note below this block ' +
     'says what that measurement is worth.',
+  'preferences.keyFromSurvey':
+    '“{label}” is what this key is called on the case, measured by hand on {model}. {name} is the name Android gives code {code}.',
+  'preferences.keyFromAndroid':
+    '{name} is the name Android’s key table gives code {code}. That table names a code, not a button: it does not say which of your keys emits it, and we have not measured this one by hand.',
+  'preferences.keyFromNowhere':
+    'Code {code} appears in no key table we have read. No name is given to it here: inventing one would be the worst of services.',
+  'preferences.keyNamingOrigin':
+    'A name in plain words is what the key is called on the case, measured by hand: there are such names only for the models we have had in our hands. A name in KEYCODE_ comes from Android’s key table, which names the code and not the button. A missing name is therefore a missing measurement, never a key that would not exist.',
 
   'preferences.runtimeDefaultReason':
     'XCTrack fills this list in code and its factory value depends on the language and ' +
