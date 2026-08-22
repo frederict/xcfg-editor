@@ -197,24 +197,45 @@ const versions: DomainCatalog<'versions'> = {
 
   'cleanup.title': 'Quitar lo que dejó una versión antigua',
 
+  /** El título cuando no se propone nada: solo queda decir lo que se ha encontrado. */
+  'cleanup.foundTitle': 'Lo que dejó una versión antigua',
+
   'cleanup.lead': {
-    one: '{count} ajuste de este archivo ya no lo usa la versión elegida, repartido en {instances}: {list}.',
-    other: '{count} ajustes de este archivo ya no los usa la versión elegida, repartidos en {instances}: {list}.'
+    one: '{count} ajuste de este archivo viene de una versión más antigua de XCTrack, repartido en {instances}: {list}.',
+    other: '{count} ajustes de este archivo vienen de una versión más antigua de XCTrack, repartidos en {instances}: {list}.'
   },
 
-  'cleanup.calm': 'No hay prisa y no hay nada roto: XCTrack los transporta sin leerlos, y dejarlos ahí no cambia nada en sus páginas. Quitarlos aligera el archivo, nada más.',
+  /**
+   * ⚠️ Esta frase afirmó dos cosas falsas hasta el 22 de agosto de 2026 — «XCTrack los
+   * transporta sin leerlos» y «quitarlos aligera el archivo, nada más». Una ida y vuelta
+   * en un AIR³ 7.2 mostró lo contrario: el instrumento los lee, deriva de ellos sus
+   * ajustes de hoy y luego los borra. Ahora solo tranquiliza sobre lo que se ha medido,
+   * ajuste por ajuste.
+   */
+  'cleanup.calm': 'XCTrack lee estos ajustes una última vez al abrir el archivo, deriva de ellos sus ajustes de hoy y luego los borra. Estos se han medido en el aparato: deriva lo mismo estén o no. Quitarlos aligera el archivo sin cambiar nada en sus páginas.',
 
   'cleanup.seeList': {
     one: 'Ver este ajuste, y desmarcar lo que prefiera conservar',
     other: 'Ver estos {count} ajustes, y desmarcar lo que prefiera conservar'
   },
 
-  'cleanup.caveat': 'Los nombres de abajo son los que escribe XCTrack. La aplicación ya no los muestra en sus menús: eso es precisamente lo que indica que ya no los usa.',
+  'cleanup.caveat': 'Los nombres de abajo son los que escribe XCTrack. La aplicación ya no los muestra en sus menús: los reemplaza, en la primera lectura, por los ajustes que los sucedieron.',
+
+  /* ------------------------------------------- ce qui est trouvé et laissé en place */
+
+  'cleanup.heldTitle': {
+    one: '{count} ajuste encontrado, y dejado donde está',
+    other: '{count} ajustes encontrados, y dejados donde están'
+  },
+  'cleanup.heldLead': 'Estos no se proponen. XCTrack los lee una última vez al abrir el archivo, para derivar de ellos sus ajustes de hoy: quitarlos antes de que lo haya hecho cambiaría lo que muestra su instrumento, o no sabemos decir que no. No tiene nada que hacer: se irán solos en cuanto su aparato haya leído este archivo.',
+  /** `{successor}`, `{present}` y `{absent}` son nombres y valores de XCTrack: copiados tal cual. */
+  'cleanup.heldLive': 'medido en el aparato: sin él, {successor} pasa de {present} a {absent}',
+  'cleanup.heldUnmeasured': 'lo que sería sin él nunca se ha medido en un aparato',
 
   /* ------------------------------------------- ce que porte chaque réglage périmé */
 
-  'cleanup.usedUntil': 'usado hasta XCTrack {release}',
-  'cleanup.noLongerRead': 'ya no lo lee la versión elegida',
+  'cleanup.usedUntil': 'escrito por XCTrack hasta la versión {release}',
+  'cleanup.noLongerRead': 'reemplazado desde entonces, sin que sepamos decir cuándo',
   'cleanup.noteWithValue': 'ajustado en {value}, {since}',
   'cleanup.noteRepeated': {
     one: '{note}, escrito {count} vez en este widget',

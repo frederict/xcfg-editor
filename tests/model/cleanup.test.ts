@@ -8,6 +8,9 @@ import {
   type VersionIndex,
   type VersionSchema
 } from '../../src/catalog/widgetVersions'
+import {
+  MigrationTable, type MigrationsFile
+} from '../../src/catalog/legacyMigrations'
 import { getMember } from '../../src/core/access'
 import type { JsonNode } from '../../src/core/jsonDocument'
 import { parseJson } from '../../src/core/parseJson'
@@ -65,27 +68,66 @@ function markOf(entry: CleanupEntry): string {
 /* ------------------------------------------------------------- le plan, sur le corpus */
 
 describe('le plan sur les fichiers réels', () => {
-  it('retient les neuf reliquats de la sauvegarde 1.0.3, sur quatre gadgets', () => {
+  it('trouve les neuf reliquats de la sauvegarde 1.0.3, et n’en propose que six', () => {
     const plan = planOf(BACKUP_2026, 20)
-    expect(plan.entries).toHaveLength(9)
+    expect(plan.entries.length + plan.held.length).toBe(9)
+    expect(plan.entries).toHaveLength(6)
     expect(plan.widgetCount).toBe(4)
     expect(plan.examinedCount).toBe(1059)
     // Rien de reconnu comme reliquat n'a dû être retenu faute d'explication.
     expect(plan.withheldCount).toBe(0)
   })
 
+  it('laisse en place les trois dont le retrait changerait l’instrument', () => {
+    const plan = planOf(BACKUP_2026, 20)
+    expect(plan.held.map((entry) => `${entry.key}=${entry.removal.verdict}`)).toEqual([
+      'mapWidget_showTerrain=live',
+      'mapWidget_showTerrain=live',
+      'showWind=live'
+    ])
+    // Et l'écran a de quoi le dire : le réglage d'aujourd'hui, avec et sans.
+    const wind = plan.held[2]
+    expect(wind?.removal.successor).toBe('windStyle')
+    expect(wind?.removal.present).toBe('ARROW')
+    expect(wind?.removal.absent).toBe('NONE')
+    const terrain = plan.held[0]
+    expect(terrain?.removal.successor).toBe('mapWidget_mapAppearance.terrain')
+    expect(terrain?.removal.present).toBe('Light')
+    expect(terrain?.removal.absent).toBe('None')
+  })
+
+  it('ne propose que des retraits mesurés sans effet, jamais un « on suppose »', () => {
+    for (const path of [BACKUP_2026, BACKUP_2025, PAGES_2026, PAGES_2025, GSON_2022]) {
+      const layout = readLayout(documentOf(path))
+      for (let tier = 0; tier < db.schema.tierCount; tier += 1) {
+        const plan = planCleanup(db, layout, tier)
+        for (const entry of plan.entries) {
+          expect(entry.removal.verdict, `${path} palier ${tier} — ${entry.path}`)
+            .toBe('inert')
+          // Sans effet veut dire : l'appareil écrit la même chose avec et sans.
+          expect(entry.removal.present, entry.path).toBe(entry.removal.absent)
+        }
+        for (const entry of plan.held) {
+          expect(entry.removal.verdict, entry.path).not.toBe('inert')
+        }
+      }
+    }
+  })
+
   it('désigne chaque réglage par son chemin dans le document', () => {
     const plan = planOf(BACKUP_2026, 20)
     expect(plan.entries.map((entry) => entry.path)).toEqual([
       'layout/portrait/0/widgets/0/mapWidget_showOpenStreet',
-      'layout/portrait/0/widgets/0/mapWidget_showTerrain',
       'layout/portrait/0/widgets/0/nav_use_brackets',
       'layout/portrait/1/widgets/0/mapWidget_showOpenStreet',
-      'layout/portrait/1/widgets/0/mapWidget_showTerrain',
       'layout/portrait/1/widgets/0/nav_use_brackets',
       'layout/portrait/2/widgets/0/nav_use_brackets',
-      'layout/portrait/2/widgets/6/showWind',
       'layout/portrait/2/widgets/6/newWindArrow'
+    ])
+    expect(plan.held.map((entry) => entry.path)).toEqual([
+      'layout/portrait/0/widgets/0/mapWidget_showTerrain',
+      'layout/portrait/1/widgets/0/mapWidget_showTerrain',
+      'layout/portrait/2/widgets/6/showWind'
     ])
   })
 
@@ -112,7 +154,7 @@ describe('le plan sur les fichiers réels', () => {
       expect(entry.lastReadTier, entry.path).toBeLessThan(plan.tier)
       expect(entry.droppedAtTier).toBe(entry.lastReadTier + 1)
     }
-    const terrain = plan.entries.filter((entry) => entry.key === 'mapWidget_showTerrain')
+    const terrain = plan.held.filter((entry) => entry.key === 'mapWidget_showTerrain')
     // Lu jusqu'au palier 12, plus après : le reliquat traîne depuis huit paliers.
     expect(terrain.map((entry) => entry.lastReadTier)).toEqual([12, 12])
     expect(terrain.map((entry) => entry.shortName)).toEqual(['WXCAssistant', 'WCompMap'])
@@ -132,11 +174,16 @@ describe('le plan sur les fichiers réels', () => {
     expect(concerned).toHaveLength(1)
   })
 
-  it('retient les quatre reliquats de la sauvegarde 0.9.12.3, sur ses trois paliers', () => {
+  it('trouve les quatre reliquats de la sauvegarde 0.9.12.3, et n’en propose aucun', () => {
+    // Les mesures d'aller-retour ont été prises sur 1.0.3-beta, palier 20, et sur elle
+    // seule. Visés sur 15, 16 ou 17, les quatre reliquats sont reconnus, nommés, et
+    // laissés en place : deux parce que leur retrait éteint l'ombrage du relief, deux
+    // parce que personne n'a mesuré ce qu'il ferait à ces paliers-là.
     for (const tier of [15, 16, 17]) {
       const plan = planOf(BACKUP_2025, tier)
-      expect(plan.entries, `palier ${tier}`).toHaveLength(4)
-      expect(plan.widgetCount).toBe(2)
+      expect(plan.entries, `palier ${tier}`).toEqual([])
+      expect(plan.held.map((entry) => entry.removal.verdict), `palier ${tier}`)
+        .toEqual(['unmeasured', 'live', 'unmeasured', 'live'])
     }
   })
 
@@ -255,12 +302,47 @@ function crowdedDocument(): JsonNode {
 }`)
 }
 
+/**
+ * Un relevé d'aller-retour **de laboratoire**, pour les tests qui n'éprouvent pas le
+ * relevé mais la fidélité du retrait : sur des clés inventées, l'appareil n'a évidemment
+ * rien mesuré, et sans cela `planCleanup` ne proposerait plus rien. Chaque entrée déclare
+ * la même valeur avec et sans — c'est la définition même de « sans effet ».
+ */
+function laboratory(cases: Record<string, { widgets: string[]; values: string[] }>): MigrationTable {
+  const migrations: MigrationsFile['migrations'] = {}
+  for (const [key, { widgets, values }] of Object.entries(cases)) {
+    const measured: Record<string, { present: string; absent: string; verdict: 'inert' }> = {}
+    for (const value of values) measured[value] = { present: 'x', absent: 'x', verdict: 'inert' }
+    migrations[key] = {
+      successor: `${key}_moderne`, widgets, measure: 'laboratoire', values: measured
+    }
+  }
+  return new MigrationTable({
+    _source: 'laboratoire',
+    _methode: 'laboratoire',
+    _limite: 'laboratoire',
+    _measuredTiers: '0-9',
+    _measuredVersionCode: 0,
+    _measuredVersionName: 'laboratoire',
+    migrations
+  })
+}
+
+/** Les deux reliquats de `formes-preservees.xcfg`, déclarés sans effet. */
+const SHAPES_LAB = laboratory({
+  _decimale_nulle: { widgets: ['WFreeText'], values: ['3.0'] },
+  _clef_doublee: { widgets: ['WFreeText'], values: ['2'] }
+})
+
+/** Le seul reliquat de la base encombrée, déclaré sans effet. */
+const CROWDED_LAB = laboratory({ legacyKey: { widgets: ['WFake'], values: ['true'] } })
+
 describe('un « gap » ou un « blind » n’entre jamais dans un plan', () => {
   const crowded = crowdedDatabase()
 
   it('n’emporte qu’un réglage là où dix-neuf ne sont pas reconnus', () => {
     const document = crowdedDocument()
-    const plan = planCleanup(crowded, readLayout(document), 2)
+    const plan = planCleanup(crowded, readLayout(document), 2, CROWDED_LAB)
     expect(plan.examinedCount).toBe(20)
     expect(plan.entries.map((entry) => entry.key)).toEqual(['legacyKey'])
   })
@@ -268,7 +350,7 @@ describe('un « gap » ou un « blind » n’entre jamais dans un plan', () => {
   it('ne retient rien du tout quand le seul reliquat n’est pas du palier visé', () => {
     // Au palier 0, `legacyKey` est encore lue : elle n'est pas un reliquat, elle sert.
     const document = crowdedDocument()
-    const plan = planCleanup(crowded, readLayout(document), 0)
+    const plan = planCleanup(crowded, readLayout(document), 0, CROWDED_LAB)
     expect(plan.entries).toEqual([])
   })
 
@@ -283,7 +365,7 @@ describe('un « gap » ou un « blind » n’entre jamais dans un plan', () => {
     }
     const blinded = new VersionDatabase(crowded.index, undatable)
     const document = crowdedDocument()
-    const plan = planCleanup(blinded, readLayout(document), 2)
+    const plan = planCleanup(blinded, readLayout(document), 2, CROWDED_LAB)
     expect(plan.entries).toEqual([])
     expect(plan.withheldCount).toBe(1)
   })
@@ -413,19 +495,23 @@ function removedLines(before: string, after: string, keys: string[]): string[] {
 }
 
 describe('appliquer un plan', () => {
-  it('retire les neuf reliquats et rien d’autre, à la ligne près', () => {
+  it('retire les six réglages proposés et rien d’autre, à la ligne près', () => {
     const source = readFileSync(BACKUP_2026, 'utf8')
     const document = parseJson(source)
     const plan = planCleanup(db, readLayout(document), 20)
     const outcome = applyCleanup(plan)
 
-    expect(outcome.keyCount).toBe(9)
-    expect(outcome.occurrenceCount).toBe(9)
+    expect(outcome.keyCount).toBe(6)
+    expect(outcome.occurrenceCount).toBe(6)
     expect(outcome.widgetCount).toBe(4)
     expect(outcome.stale).toEqual([])
 
     const keys = [...new Set(plan.entries.map((entry) => entry.key))]
-    expect(removedLines(source, serializeJson(document), keys)).toHaveLength(9)
+    expect(removedLines(source, serializeJson(document), keys)).toHaveLength(6)
+    // Les trois laissés en place n'ont pas bougé d'une ligne.
+    const after = serializeJson(document)
+    expect(after).toContain('"showWind": true')
+    expect(after.match(/"mapWidget_showTerrain": true/g)).toHaveLength(2)
   })
 
   it('remet tout : le fichier ressort à l’octet près', () => {
@@ -433,14 +519,14 @@ describe('appliquer un plan', () => {
     const document = parseJson(source)
     const outcome = applyCleanup(planCleanup(db, readLayout(document), 20))
     expect(serializeJson(document)).not.toBe(source)
-    expect(revertCleanup(outcome)).toBe(9)
+    expect(revertCleanup(outcome)).toBe(6)
     expect(serializeJson(document)).toBe(source)
   })
 
   it('laisse intacts 3.0, 1.0E7, -0.0 et l’entier au-delà de 2^53', () => {
     const source = readFileSync(FORMES_PRESERVEES, 'utf8')
     const document = parseJson(source)
-    const plan = planCleanup(shapesDatabase(), readLayout(document), 1)
+    const plan = planCleanup(shapesDatabase(), readLayout(document), 1, SHAPES_LAB)
     expect(plan.entries.map((entry) => entry.key)).toEqual(['_decimale_nulle', '_clef_doublee'])
 
     const outcome = applyCleanup(plan)
@@ -459,7 +545,7 @@ describe('appliquer un plan', () => {
   it('emporte les DEUX occurrences d’une clé doublée, et les remet à leur rang', () => {
     const source = readFileSync(FORMES_PRESERVEES, 'utf8')
     const document = parseJson(source)
-    const plan = planCleanup(shapesDatabase(), readLayout(document), 1)
+    const plan = planCleanup(shapesDatabase(), readLayout(document), 1, SHAPES_LAB)
     const doubled = plan.entries.find((entry) => entry.key === '_clef_doublee')
     expect(doubled?.occurrences).toBe(2)
 
@@ -482,7 +568,7 @@ describe('appliquer un plan', () => {
       plan.entries.filter((entry) => entry.key !== 'nav_use_brackets').map((entry) => entry.path)
     )
     const outcome = applyCleanup(plan, selected)
-    expect(outcome.keyCount).toBe(6)
+    expect(outcome.keyCount).toBe(3)
     for (const entry of kept) {
       expect(getMember(entry.node, entry.key), entry.path).toBeDefined()
     }
@@ -494,7 +580,7 @@ describe('appliquer un plan', () => {
     applyCleanup(plan)
     const again = applyCleanup(plan)
     expect(again.keyCount).toBe(0)
-    expect(again.stale).toHaveLength(9)
+    expect(again.stale).toHaveLength(6)
   })
 
   it('n’agit pas sur un document que le plan ne décrit plus', () => {

@@ -196,24 +196,45 @@ const versions: DomainCatalog<'versions'> = {
 
   'cleanup.title': 'Remove what an older release left behind',
 
+  /** The heading when nothing is offered: all that is left is to say what was found. */
+  'cleanup.foundTitle': 'What an older release left behind',
+
   'cleanup.lead': {
-    one: '{count} setting in this file is no longer used by the release you are targeting, across {instances}: {list}.',
-    other: '{count} settings in this file are no longer used by the release you are targeting, across {instances}: {list}.'
+    one: '{count} setting in this file comes from an older release of XCTrack, across {instances}: {list}.',
+    other: '{count} settings in this file come from an older release of XCTrack, across {instances}: {list}.'
   },
 
-  'cleanup.calm': 'Nothing is urgent and nothing is broken: XCTrack carries them along without reading them, and leaving them there changes nothing on your pages. Removing them makes the file smaller, that is all.',
+  /**
+   * ⚠️ This sentence stated two false things until 22 August 2026 — “XCTrack carries them
+   * along without reading them” and “removing them makes the file smaller, that is all”.
+   * A round trip on an AIR³ 7.2 showed the opposite: the instrument reads them, derives
+   * its present-day settings from them, then erases them. It now reassures only about
+   * what was measured, setting by setting.
+   */
+  'cleanup.calm': 'XCTrack reads these settings one last time when it opens the file, derives its present-day settings from them, then erases them. These ones were measured on the device: it derives the same thing whether they are there or not. Removing them makes the file smaller and changes nothing on your pages.',
 
   'cleanup.seeList': {
     one: 'See this setting, and untick what you would rather keep',
     other: 'See these {count} settings, and untick what you would rather keep'
   },
 
-  'cleanup.caveat': 'The names below are the ones XCTrack writes. The application no longer shows them in its menus: that is precisely what tells us it no longer uses them.',
+  'cleanup.caveat': 'The names below are the ones XCTrack writes. The application no longer shows them in its menus: it replaces them, the first time it reads the file, with the settings that succeeded them.',
+
+  /* ------------------------------------------- ce qui est trouvé et laissé en place */
+
+  'cleanup.heldTitle': {
+    one: '{count} setting found, and left in place',
+    other: '{count} settings found, and left in place'
+  },
+  'cleanup.heldLead': 'These are not offered. XCTrack reads them one last time when it opens the file, to derive its present-day settings: removing them before it has done so would change what your instrument shows, or we cannot say that it would not. There is nothing for you to do: they will go on their own as soon as your device has read this file.',
+  /** `{successor}`, `{present}` and `{absent}` are XCTrack names and values: copied as they stand. */
+  'cleanup.heldLive': 'measured on the device: without it, {successor} goes from {present} to {absent}',
+  'cleanup.heldUnmeasured': 'what it would become without it has never been measured on a device',
 
   /* ------------------------------------------- ce que porte chaque réglage périmé */
 
-  'cleanup.usedUntil': 'used up to XCTrack {release}',
-  'cleanup.noLongerRead': 'no longer read by the release you are targeting',
+  'cleanup.usedUntil': 'written by XCTrack up to release {release}',
+  'cleanup.noLongerRead': 'replaced since, without our being able to say when',
   'cleanup.noteWithValue': 'set to {value}, {since}',
   'cleanup.noteRepeated': {
     one: '{note}, written {count} time on this widget',

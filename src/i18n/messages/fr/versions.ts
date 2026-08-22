@@ -261,24 +261,45 @@ const versions = {
 
   'cleanup.title': 'Enlever ce qu’une ancienne version a laissé',
 
+  /** Le titre quand rien n'est proposé : il ne reste qu'à dire ce qui a été trouvé. */
+  'cleanup.foundTitle': 'Ce qu’une ancienne version a laissé',
+
   'cleanup.lead': {
-    one: '{count} réglage de ce fichier n’est plus utilisé par la version visée, sur {instances} : {list}.',
-    other: '{count} réglages de ce fichier ne sont plus utilisés par la version visée, sur {instances} : {list}.'
+    one: '{count} réglage de ce fichier vient d’une version plus ancienne de XCTrack, sur {instances} : {list}.',
+    other: '{count} réglages de ce fichier viennent d’une version plus ancienne de XCTrack, sur {instances} : {list}.'
   },
 
-  'cleanup.calm': 'Rien ne presse et rien n’est cassé : XCTrack les transporte sans les lire, et les laisser là ne change rien à vos pages. Les enlever allège le fichier, c’est tout.',
+  /**
+   * ⚠️ Cette phrase a affirmé deux choses fausses jusqu'au 22 août 2026 — « XCTrack les
+   * transporte sans les lire » et « les enlever allège le fichier, c'est tout ». Un
+   * aller-retour sur un AIR³ 7.2 a montré l'inverse : l'instrument les lit, en tire ses
+   * réglages d'aujourd'hui, puis les efface. Elle ne rassure donc plus que sur ce qui a
+   * été mesuré, réglage par réglage.
+   */
+  'cleanup.calm': 'XCTrack lit ces réglages une dernière fois à l’ouverture, en tire ses réglages d’aujourd’hui, puis les efface. Ceux-ci ont été mesurés sur l’appareil : il en tire la même chose qu’ils soient là ou non. Les enlever allège le fichier sans rien changer à vos pages.',
 
   'cleanup.seeList': {
     one: 'Voir ce réglage, et décocher ce que vous préférez garder',
     other: 'Voir ces {count} réglages, et décocher ce que vous préférez garder'
   },
 
-  'cleanup.caveat': 'Les noms ci-dessous sont ceux qu’écrit XCTrack. L’application ne les montre plus dans ses menus : c’est justement ce qui indique qu’elle ne s’en sert plus.',
+  'cleanup.caveat': 'Les noms ci-dessous sont ceux qu’écrit XCTrack. L’application ne les montre plus dans ses menus : elle les remplace, à la première lecture, par les réglages qui leur ont succédé.',
+
+  /* ------------------------------------------- ce qui est trouvé et laissé en place */
+
+  'cleanup.heldTitle': {
+    one: '{count} réglage trouvé, et laissé en place',
+    other: '{count} réglages trouvés, et laissés en place'
+  },
+  'cleanup.heldLead': 'Ceux-là ne sont pas proposés. XCTrack les lit une dernière fois à l’ouverture pour en tirer ses réglages d’aujourd’hui : les enlever avant qu’il ne l’ait fait changerait ce que votre instrument affiche, ou nous ne savons pas dire que non. Vous n’avez rien à faire : ils partiront d’eux-mêmes dès que votre appareil aura lu ce fichier.',
+  /** `{successor}`, `{present}` et `{absent}` sont des noms et des valeurs de XCTrack : recopiés tels quels. */
+  'cleanup.heldLive': 'mesuré sur l’appareil : sans lui, {successor} passe de {present} à {absent}',
+  'cleanup.heldUnmeasured': 'ce qu’il deviendrait sans lui n’a jamais été mesuré sur un appareil',
 
   /* ------------------------------------------- ce que porte chaque réglage périmé */
 
-  'cleanup.usedUntil': 'utilisé jusqu’à XCTrack {release}',
-  'cleanup.noLongerRead': 'plus lu par la version visée',
+  'cleanup.usedUntil': 'écrit par XCTrack jusqu’à la version {release}',
+  'cleanup.noLongerRead': 'remplacé depuis, sans qu’on sache dire quand',
   'cleanup.noteWithValue': 'réglé sur {value}, {since}',
   /** `{note}` porte ce qui précède : la valeur et depuis quand le réglage ne sert plus. */
   'cleanup.noteRepeated': {

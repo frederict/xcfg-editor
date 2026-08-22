@@ -195,24 +195,46 @@ const versions: DomainCatalog<'versions'> = {
 
   'cleanup.title': 'Entfernen, was eine ältere Version hinterlassen hat',
 
+  /** Die Überschrift, wenn nichts angeboten wird: es bleibt nur zu sagen, was gefunden wurde. */
+  'cleanup.foundTitle': 'Was eine ältere Version hinterlassen hat',
+
   'cleanup.lead': {
-    one: '{count} Einstellung dieser Datei wird von der angepeilten Version nicht mehr benutzt, verteilt auf {instances}: {list}.',
-    other: '{count} Einstellungen dieser Datei werden von der angepeilten Version nicht mehr benutzt, verteilt auf {instances}: {list}.'
+    one: '{count} Einstellung dieser Datei stammt aus einer älteren Version von XCTrack, verteilt auf {instances}: {list}.',
+    other: '{count} Einstellungen dieser Datei stammen aus einer älteren Version von XCTrack, verteilt auf {instances}: {list}.'
   },
 
-  'cleanup.calm': 'Nichts eilt und nichts ist kaputt: XCTrack schleppt sie mit, ohne sie zu lesen, und sie dort zu lassen ändert nichts an Ihren Seiten. Sie zu entfernen macht die Datei kleiner, mehr nicht.',
+  /**
+   * ⚠️ Dieser Satz hat bis zum 22. August 2026 zwei falsche Dinge behauptet — „XCTrack
+   * schleppt sie mit, ohne sie zu lesen“ und „sie zu entfernen macht die Datei kleiner,
+   * mehr nicht“. Ein Hin und Zurück auf einem AIR³ 7.2 hat das Gegenteil gezeigt: das
+   * Gerät liest sie, leitet daraus seine heutigen Einstellungen ab und löscht sie dann.
+   * Der Satz beruhigt jetzt nur noch über das, was gemessen wurde, Einstellung für
+   * Einstellung.
+   */
+  'cleanup.calm': 'XCTrack liest diese Einstellungen beim Öffnen ein letztes Mal, leitet daraus seine heutigen Einstellungen ab und löscht sie dann. Diese hier wurden auf dem Gerät gemessen: es leitet dasselbe ab, ob sie da sind oder nicht. Sie zu entfernen macht die Datei kleiner und ändert nichts an Ihren Seiten.',
 
   'cleanup.seeList': {
     one: 'Diese Einstellung ansehen und abwählen, was Sie lieber behalten',
     other: 'Diese {count} Einstellungen ansehen und abwählen, was Sie lieber behalten'
   },
 
-  'cleanup.caveat': 'Die Namen unten sind die, die XCTrack schreibt. Die Anwendung zeigt sie in ihren Menüs nicht mehr: genau das zeigt an, dass sie sie nicht mehr benutzt.',
+  'cleanup.caveat': 'Die Namen unten sind die, die XCTrack schreibt. Die Anwendung zeigt sie in ihren Menüs nicht mehr: sie ersetzt sie beim ersten Lesen durch die Einstellungen, die ihnen nachgefolgt sind.',
+
+  /* ------------------------------------------- ce qui est trouvé et laissé en place */
+
+  'cleanup.heldTitle': {
+    one: '{count} Einstellung gefunden und stehen gelassen',
+    other: '{count} Einstellungen gefunden und stehen gelassen'
+  },
+  'cleanup.heldLead': 'Diese werden nicht angeboten. XCTrack liest sie beim Öffnen ein letztes Mal, um daraus seine heutigen Einstellungen abzuleiten: sie vorher zu entfernen würde ändern, was Ihr Gerät anzeigt — oder wir können nicht sagen, dass es das nicht täte. Sie müssen nichts tun: sie verschwinden von selbst, sobald Ihr Gerät diese Datei gelesen hat.',
+  /** `{successor}`, `{present}` und `{absent}` sind Namen und Werte von XCTrack: unverändert übernommen. */
+  'cleanup.heldLive': 'auf dem Gerät gemessen: ohne sie springt {successor} von {present} auf {absent}',
+  'cleanup.heldUnmeasured': 'was ohne sie daraus würde, wurde nie auf einem Gerät gemessen',
 
   /* ------------------------------------------- ce que porte chaque réglage périmé */
 
-  'cleanup.usedUntil': 'benutzt bis XCTrack {release}',
-  'cleanup.noLongerRead': 'von der angepeilten Version nicht mehr gelesen',
+  'cleanup.usedUntil': 'von XCTrack bis Version {release} geschrieben',
+  'cleanup.noLongerRead': 'seither ersetzt, ohne dass wir sagen könnten wann',
   'cleanup.noteWithValue': 'auf {value} gesetzt, {since}',
   'cleanup.noteRepeated': {
     one: '{note}, {count}-mal auf diesem Widget geschrieben',

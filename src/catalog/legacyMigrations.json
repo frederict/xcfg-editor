@@ -1,0 +1,53 @@
+{
+  "_source": "AIR3 7.2, XCTrack 1.0.3-beta (versionCode 100030) — imports mesures les 21 et 22 aout 2026",
+  "_methode": "Chaque reglage a ete porte sur l'appareil dans un fichier de pages, importe, puis relu dans l'export que l'appareil a reecrit. La colonne 'present' est ce que l'instrument a ecrit avec le reglage ; la colonne 'absent' vient du releve des 75 gadgets (widgetDefaults.json), ou le gadget ne portait que ses huit cles universelles. Les deux se comparent : egales, le retrait ne change rien ; differentes, le retrait change ce que l'instrument affiche.",
+  "_limite": "Un verdict 'inert' vaut contre ce point de comparaison-la, et contre lui seul. Quand 'requires' est present, les DEUX colonnes ont ete prises dans ce voisinage-la et non sur un gadget nu : c'est le cas de newWindArrow, dont l'absence a ete lue sur un compas portant showWind:true. Ce qui n'est pas dans cette table n'a jamais ete mesure : le nettoyage s'en abstient.",
+  "_measuredTiers": "20",
+  "_measuredVersionCode": 100030,
+  "_measuredVersionName": "1.0.3-beta",
+  "migrations": {
+    "showWind": {
+      "successor": "windStyle",
+      "widgets": ["WCompass"],
+      "measure": "2026-08-22 — trois WCompass poses a la palette cote a cote, ne differant que par ce reglage : absent -> NONE, false -> NONE, true -> ARROW.",
+      "values": {
+        "false": { "present": "NONE", "absent": "NONE", "verdict": "inert" },
+        "true": { "present": "ARROW", "absent": "NONE", "verdict": "live" }
+      }
+    },
+    "newWindArrow": {
+      "successor": "windStyle",
+      "widgets": ["WCompass"],
+      "requires": { "showWind": "true" },
+      "measure": "2026-08-22 — un WCompass portant showWind:true et newWindArrow:false ressort ARROW ; le compas C de la meme planche, portant showWind:true SEUL, ressort ARROW lui aussi. La valeur true n'a jamais ete isolee.",
+      "values": {
+        "false": { "present": "ARROW", "absent": "ARROW", "verdict": "inert" }
+      }
+    },
+    "nav_use_brackets": {
+      "successor": "nav_label",
+      "widgets": ["WCompMap", "WThermalAssistant", "WXCAssistant"],
+      "measure": "2026-08-21 (F3 et F5) puis 2026-08-22 (trois occurrences) — true comme false ressortent DISTANCE_BRACKETS, qui est aussi ce que XCTrack ecrit sur un gadget nu.",
+      "values": {
+        "false": { "present": "DISTANCE_BRACKETS", "absent": "DISTANCE_BRACKETS", "verdict": "inert" },
+        "true": { "present": "DISTANCE_BRACKETS", "absent": "DISTANCE_BRACKETS", "verdict": "inert" }
+      }
+    },
+    "mapWidget_showOpenStreet": {
+      "successor": "mapWidget_mapAppearance.theme",
+      "widgets": ["WCompMap", "WXCAssistant"],
+      "measure": "2026-08-22 — deux gadgets cartographiques portant false (aux cotes de mapWidget_showTerrain:true) ressortent theme None, ce que XCTrack ecrit aussi sur un gadget nu. La valeur true n'a jamais ete portee sur l'appareil.",
+      "values": {
+        "false": { "present": "None", "absent": "None", "verdict": "inert" }
+      }
+    },
+    "mapWidget_showTerrain": {
+      "successor": "mapWidget_mapAppearance.terrain",
+      "widgets": ["WCompMap", "WXCAssistant"],
+      "measure": "2026-08-22 — deux gadgets cartographiques portant true ressortent terrain Light, la ou XCTrack ecrit terrain None sur un gadget nu : le retrait eteint l'ombrage du relief. La valeur false n'a jamais ete portee sur l'appareil.",
+      "values": {
+        "true": { "present": "Light", "absent": "None", "verdict": "live" }
+      }
+    }
+  }
+}

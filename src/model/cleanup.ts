@@ -1,5 +1,10 @@
+import {
+  MEASURED_MIGRATIONS, type MigrationTable, type RemovalCase
+} from '../catalog/legacyMigrations'
 import type { VersionDatabase } from '../catalog/widgetVersions'
-import { decode, extractMember, restoreMember, type MemberOccurrence } from '../core/access'
+import {
+  decode, extractMember, getMember, restoreMember, type MemberOccurrence
+} from '../core/access'
 import type { JsonNode } from '../core/jsonDocument'
 import type { Layout } from './layout'
 import type { Orientation } from './mutations'
@@ -18,8 +23,8 @@ import { widgetOptionKeys } from './widget'
  *
  * Les deux risques ne sont pas de même poids, et tout ce qui suit en découle :
  *
- * - **ne rien supprimer ne casse rien.** XCTrack conserve les clés qu'il ne connaît
- *   plus ; un réglage périmé laissé en place est un octet inutile, pas une panne ;
+ * - **ne rien supprimer ne casse rien.** Un réglage périmé laissé en place est quelques
+ *   octets ; l'instrument le consommera de lui-même à la première lecture ;
  * - **supprimer à tort casse une configuration de vol.** Un réglage valide effacé, c'est
  *   un gadget qui ne s'affiche plus comme le pilote l'avait réglé, et il le découvre en
  *   l'air.
@@ -30,6 +35,23 @@ import { widgetOptionKeys } from './widget'
  * portent quand même. C'est un reliquat mesuré, pas déduit. Autrement dit, et c'est la
  * formule que les trois modules concernés répètent mot pour mot : **un outil de nettoyage
  * n'a le droit de proposer une suppression que sur `'legacy'`**.
+ *
+ * ⚠️ **`'legacy'` ne suffit pourtant pas, et c'est le défaut le plus grave que ce module
+ * ait porté.** Le 22 août 2026, sur un AIR³ 7.2, trois `WCompass` ne différant que par
+ * `showWind` ont montré que XCTrack **lit** ces réglages : absent → `windStyle: NONE`,
+ * `false` → `NONE`, **`true` → `ARROW`**. Il ne les transporte pas, il les consomme — il
+ * en dérive le réglage d'aujourd'hui, puis les efface. D'où le fait qui gouverne tout ce
+ * qui suit : **si le fichier porte encore le réglage, c'est que l'instrument ne l'a pas
+ * encore lu**, donc que le nettoyage mord exactement dans l'état où le réglage sert
+ * encore. « Périmé » veut dire « remplacé depuis », jamais « sans effet ».
+ *
+ * Troisième serrure, donc : `catalog/legacyMigrations.ts`, qui porte pour chaque couple
+ * *(réglage, valeur)* ce que l'appareil écrit **avec** et **sans**. Égaux, le retrait est
+ * sans effet et se propose ; différents ou jamais mesurés, l'entrée passe dans `held` et
+ * l'interface dit pourquoi. Sur la sauvegarde de référence, cela fait **6 réglages
+ * proposés et 3 laissés en place** là où les neuf partaient auparavant, dont
+ * `showWind: true` et deux `mapWidget_showTerrain: true` — ce dernier éteignant l'ombrage
+ * du relief sur deux cartes.
  *
  * Tout le reste est écarté, y compris ce que le diagnostic qualifie pourtant de
  * « suppression défendable » :
@@ -115,6 +137,11 @@ export interface CleanupEntry {
   droppedAtTier: number
   /** Occurrences de la clé sur ce gadget. Plus d'une : le fichier la porte en double. */
   occurrences: number
+  /**
+   * Ce que le retrait ferait, mesuré sur l'appareil (`catalog/legacyMigrations.ts`).
+   * Seul `'inert'` entre dans `entries` ; `'live'` et `'unmeasured'` vont dans `held`.
+   */
+  removal: RemovalCase
 }
 
 export interface CleanupPlan {
@@ -122,7 +149,14 @@ export interface CleanupPlan {
   tier: number
   /** Ce qui partirait, dans l'ordre du fichier. Vide : il n'y a rien à faire. */
   entries: CleanupEntry[]
-  /** Gadgets distincts concernés — « 9 réglages sur 5 gadgets ». */
+  /**
+   * Reliquats **reconnus et laissés en place** : leur retrait changerait ce que
+   * l'instrument affiche (`removal.verdict === 'live'`), ou nul ne l'a mesuré
+   * (`'unmeasured'`). Ils ne sont pas tus — l'interface les nomme et dit pourquoi, parce
+   * qu'un réglage trouvé et passé sous silence est un renseignement volé au pilote.
+   */
+  held: CleanupEntry[]
+  /** Gadgets distincts concernés — « 6 réglages sur 4 gadgets ». */
   widgetCount: number
   /** Réglages de gadgets examinés, clés de structure exclues. */
   examinedCount: number
@@ -141,9 +175,11 @@ export interface CleanupPlan {
  * l'ordre de dessin — pour que les deux listes se lisent dans le même ordre.
  */
 export function planCleanup(
-  db: VersionDatabase, layout: Layout, tier: number
+  db: VersionDatabase, layout: Layout, tier: number,
+  migrations: MigrationTable = MEASURED_MIGRATIONS
 ): CleanupPlan {
   const entries: CleanupEntry[] = []
+  const held: CleanupEntry[] = []
   const widgets = new Set<string>()
   let examinedCount = 0
   let withheldCount = 0
@@ -164,8 +200,14 @@ export function planCleanup(
             withheldCount += 1
             continue
           }
-          widgets.add(base)
-          entries.push({
+          // Troisième serrure, et la plus récente : que ferait le retrait ? L'instrument
+          // lit ces réglages une dernière fois avant de les effacer, et le fichier ne
+          // les porte encore que parce qu'il ne les a PAS lus. Voir l'en-tête.
+          const removal = migrations.removalVerdict(
+            widget.shortName, key, rawValue(widget.node, key), tier,
+            (neighbour) => rawValue(widget.node, neighbour)
+          )
+          const entry: CleanupEntry = {
             path: `${base}/${key}`,
             node: widget.node,
             orientation,
@@ -176,8 +218,15 @@ export function planCleanup(
             key,
             lastReadTier: bounds.max,
             droppedAtTier: bounds.max + 1,
-            occurrences: countOccurrences(widget.node, key)
-          })
+            occurrences: countOccurrences(widget.node, key),
+            removal
+          }
+          if (removal.verdict !== 'inert') {
+            held.push(entry)
+            continue
+          }
+          widgets.add(base)
+          entries.push(entry)
         }
       })
     })
@@ -186,10 +235,24 @@ export function planCleanup(
   return {
     tier,
     entries,
+    held,
     widgetCount: widgets.size,
     examinedCount,
     withheldCount
   }
+}
+
+/**
+ * Le texte source de la valeur d'un réglage — `true`, `false`, `1000`, ou le contenu
+ * décodé d'une chaîne. `undefined` quand le gadget ne porte pas ce réglage, ou qu'il
+ * porte une structure : un objet n'a pas de valeur à comparer au relevé.
+ */
+function rawValue(node: JsonNode, key: string): string | undefined {
+  const member = getMember(node, key)
+  if (member === undefined) return undefined
+  if (member.kind === 'literal') return member.raw
+  if (member.kind === 'string') return decode(member.raw)
+  return undefined
 }
 
 /**

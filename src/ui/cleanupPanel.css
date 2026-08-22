@@ -134,6 +134,55 @@
   opacity: 0.85;
 }
 
+/*
+ * Ce qui a été trouvé et n'est PAS proposé. Pas d'ambre, pas de case : rien n'est à
+ * décider ici, et le pilote n'a rien à faire. Un filet et un retrait suffisent à séparer
+ * ce bloc de la liste au-dessus, sans lui donner l'air d'une alerte : le fichier n'a rien
+ * d'anormal, c'est l'instrument qui s'en occupera.
+ */
+.vclean__held {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.2rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--app-line, #d3d7dc);
+}
+
+.vclean__held-title {
+  margin: 0;
+  font-family: var(--font-title, Georgia, serif);
+  font-size: 0.9rem;
+}
+
+.vclean__held-lead {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.vclean__held-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.vclean__held-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+/* La ligne de repérage passe la ligne à elle seule : elle situe ce qui suit. */
+.vclean__held-item > .vclean__place {
+  flex-basis: 100%;
+  margin: 0;
+}
+
 .vclean__act {
   display: flex;
   flex-wrap: wrap;

@@ -27,10 +27,25 @@ import './cleanupPanel.css'
  *    pas de coche verte : un pilote dont la configuration va bien n'a pas à lire un
  *    message sur l'état de sa configuration. Le diagnostic, lui, dit déjà ce qu'il sait.
  *
- * 2. **Le ton n'alarme pas, parce qu'il n'y a pas lieu.** XCTrack conserve les réglages
- *    qu'il ne connaît plus et ne s'en sert pas : les laisser ne casse rien. Écrire
- *    « votre fichier contient des erreurs » serait faux, et ferait cliquer par peur
- *    quelqu'un qui n'a aucune raison de cliquer.
+ * 2. **Le ton n'alarme pas, parce qu'il n'y a pas lieu.** Laisser un réglage périmé ne
+ *    casse rien : l'instrument le consommera de lui-même. Écrire « votre fichier contient
+ *    des erreurs » serait faux, et ferait cliquer par peur quelqu'un qui n'a aucune raison
+ *    de cliquer.
+ *
+ *    ⚠️ **Mais le contraire a été écrit ici, et il était faux.** Cet écran a affirmé que
+ *    « XCTrack les transporte sans les lire » et que « les enlever allège le fichier,
+ *    c'est tout ». Mesuré le 22 août 2026 sur un AIR³ 7.2 : enlever `showWind: true` fait
+ *    passer le compas de `windStyle: ARROW` à `NONE`, et la flèche de vent disparaît.
+ *    Rassurer sans avoir mesuré est la faute que ce module ne doit plus commettre : la
+ *    phrase d'apaisement ne porte désormais que sur les réglages dont
+ *    `catalog/legacyMigrations.ts` atteste, avec et sans, que l'appareil en tire la même
+ *    chose.
+ *
+ * 2 bis. **Ce qui n'est pas proposé est quand même montré.** Un réglage périmé dont le
+ *    retrait changerait l'instrument — ou dont personne ne sait dire ce qu'il changerait —
+ *    n'est pas escamoté : il paraît sous « … trouvés, et laissés en place », sans case à
+ *    cocher, avec la raison. Le taire donnerait à croire que le fichier est propre, et
+ *    priverait le pilote du seul renseignement utile : il n'a rien à faire.
  *
  * 3. **Le nom technique du réglage est montré tel quel** — `mapWidget_showTerrain`, et
  *    non un libellé français. Ce n'est pas un défaut de traduction : le catalogue de
@@ -194,7 +209,22 @@ function gadgetSummary(tr: Translator, entries: CleanupEntry[], language: string
 }
 
 /**
- * Construit la section. Elle est vide — sans un mot — tant qu'il n'y a rien à enlever.
+ * Pourquoi ce réglage-là n'est pas proposé, dans les mots du pilote. Les noms et valeurs
+ * de XCTrack (`windStyle`, `ARROW`) sont recopiés tels quels : ce sont des identifiants,
+ * et le pilote les retrouvera dans son fichier.
+ */
+function heldReason(tr: Translator, entry: CleanupEntry): string {
+  const { verdict, successor, present, absent } = entry.removal
+  if (verdict === 'live' && successor !== undefined
+    && present !== undefined && absent !== undefined) {
+    return tr.t('cleanup.heldLive', { successor, present, absent })
+  }
+  return tr.t('cleanup.heldUnmeasured')
+}
+
+/**
+ * Construit la section. Elle est vide — sans un mot — tant qu'il n'y a **rien à dire** :
+ * ni réglage à enlever, ni réglage trouvé et laissé en place.
  */
 export function buildCleanupSection(options: CleanupSectionOptions): CleanupSection {
   const { db, tr, onChange } = options
@@ -261,6 +291,9 @@ export function buildCleanupSection(options: CleanupSectionOptions): CleanupSect
     root.append(undo)
     // Le geste vient d'avoir lieu : c'est là que doit être le clavier, et pas ailleurs.
     undo.focus()
+    // Ce qui n'a pas été proposé reste sous les yeux : le fichier n'est pas « propre »
+    // pour autant, et le pilote doit pouvoir le lire sans rouvrir la boîte.
+    if (plan.held.length > 0) root.append(renderHeld())
   }
 
   function renderList(): HTMLElement {
@@ -338,6 +371,25 @@ export function buildCleanupSection(options: CleanupSectionOptions): CleanupSect
     go.disabled = count === 0
   }
 
+  /** Ce qui a été trouvé et n'est pas proposé : nommé, expliqué, sans case à cocher. */
+  function renderHeld(): HTMLElement {
+    const block = el('section', 'vclean__held')
+    block.append(el('h4', 'vclean__held-title',
+      tr.t('cleanup.heldTitle', { count: plan.held.length })))
+    block.append(el('p', 'vclean__held-lead', tr.t('cleanup.heldLead')))
+
+    const list = el('ul', 'vclean__held-list')
+    for (const entry of plan.held) {
+      const item = el('li', 'vclean__held-item')
+      item.append(el('p', 'vclean__place', placeOf(tr, entry, language)))
+      item.append(el('span', 'vclean__key', entry.key))
+      item.append(el('span', 'vclean__note', heldReason(tr, entry)))
+      list.append(item)
+    }
+    block.append(list)
+    return block
+  }
+
   function render(): void {
     root.textContent = ''
     root.classList.remove('vclean--done')
@@ -346,24 +398,29 @@ export function buildCleanupSection(options: CleanupSectionOptions): CleanupSect
       renderDone(undoable)
       return
     }
-    if (plan.entries.length === 0) return
+    if (plan.entries.length === 0 && plan.held.length === 0) return
 
-    root.append(el('h3', 'vclean__title', tr.t('cleanup.title')))
+    root.append(el('h3', 'vclean__title',
+      plan.entries.length === 0 ? tr.t('cleanup.foundTitle') : tr.t('cleanup.title')))
 
-    const lead = el('p', 'vclean__lead')
-    lead.textContent = tr.t('cleanup.lead', {
-      count: plan.entries.length,
-      instances: tr.t('common.widgetCount', { count: plan.widgetCount }),
-      list: gadgetSummary(tr, plan.entries, language)
-    })
-    root.append(lead)
+    if (plan.entries.length > 0) {
+      const lead = el('p', 'vclean__lead')
+      lead.textContent = tr.t('cleanup.lead', {
+        count: plan.entries.length,
+        instances: tr.t('common.widgetCount', { count: plan.widgetCount }),
+        list: gadgetSummary(tr, plan.entries, language)
+      })
+      root.append(lead)
 
-    root.append(el('p', 'vclean__calm', tr.t('cleanup.calm')))
+      root.append(el('p', 'vclean__calm', tr.t('cleanup.calm')))
 
-    root.append(renderList())
-    action.append(go, tally)
-    root.append(action)
-    renderAction()
+      root.append(renderList())
+      action.append(go, tally)
+      root.append(action)
+      renderAction()
+    }
+
+    if (plan.held.length > 0) root.append(renderHeld())
   }
 
   function rebuild(next: Layout, nextTier: number, forget: boolean): void {
