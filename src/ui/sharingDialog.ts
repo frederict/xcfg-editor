@@ -1264,16 +1264,16 @@ export function renderSharingDialog(options: SharingDialogOptions): SharingDialo
   for (const offer of offersList) {
     const item = el('li', 'sharing__page')
     const label = el('label', 'sharing__pageLabel')
-    const box2 = el('input', 'sharing__pageBox')
-    box2.type = 'checkbox'
-    box2.checked = true
-    box2.addEventListener('change', () => {
-      if (box2.checked) chosenPages.add(refKey(offer.ref))
+    const tick = el('input', 'sharing__pageBox')
+    tick.type = 'checkbox'
+    tick.checked = true
+    tick.addEventListener('change', () => {
+      if (tick.checked) chosenPages.add(refKey(offer.ref))
       else chosenPages.delete(refKey(offer.ref))
       rebuildOutcome()
       refreshConfirm()
     })
-    label.append(box2, el('span', 'sharing__pageName', pageOfferLabel(offer, language, tr)))
+    label.append(tick, el('span', 'sharing__pageName', pageOfferLabel(offer, language, tr)))
     item.append(label)
     pageList.append(item)
   }
