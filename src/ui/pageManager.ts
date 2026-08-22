@@ -381,7 +381,11 @@ export function operationAdvice(
     }
   }
 
-  /* Supprimer la dernière page visible au sol laisse un appareil qui ne montre plus rien. */
+  /*
+   * Supprimer la dernière page qu'une navigation affiche laisse un appareil qui ne montre
+   * plus rien. Ce commentaire disait « visible au sol » ; c'est le critère faux, celui de
+   * la CLASSE, que `navigablePageCount` a cessé d'appliquer le 22 août 2026.
+   */
   if (operation.kind === 'remove') {
     const remaining = pages.filter((_, index) => index !== operation.index)
     if (remaining.length === 0) {
