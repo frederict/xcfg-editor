@@ -106,6 +106,7 @@ type View =
   | { kind: 'overview' }
   | { kind: 'detail'; orientation: Orientation; index: number }
   | { kind: 'preferences' }
+  | { kind: 'manual' }
 
 /**
  * Le traducteur de **notre prose**, dans la langue que le pilote a choisie — jamais celle
@@ -2726,21 +2727,63 @@ let versionToken = 0
  * 16 ko compressés, qu'un pilote qui n'ouvre jamais l'aide n'a aucune raison de
  * télécharger. Le verrou `manualPending` évite qu'un double clic n'ouvre deux boîtes.
  */
-let manualPending = false
+let viewBeforeManual: View | undefined
+
+/**
+ * Aller lire le manuel, en retenant d'où l'on vient.
+ *
+ * Contrairement aux réglages, il **ne demande aucun fichier ouvert** : c'est même là qu'il
+ * sert le plus, à qui découvre l'outil et n'a rien à ouvrir encore.
+ */
 function openManual(): void {
-  if (manualPending) return
-  manualPending = true
-  void import('./manualDialog')
-    .then(async (module) => { await module.openManualDialog(translator()) })
-    .catch((error: unknown) => {
-      tellProblem(
-        translator().t('app.manualFailedTitle'),
-        translator().t('app.fileUntouchedRetry'),
-        formatTechnicalDetail(error)
-      )
-    })
-    .finally(() => { manualPending = false })
+  if (view.kind === 'manual') return
+  viewBeforeManual = view
+  view = { kind: 'manual' }
+  render()
+  window.scrollTo({ top: 0 })
 }
+
+/**
+ * La vue du manuel : un hôte posé tout de suite, la page dedans quand elle arrive.
+ *
+ * Le fragment et sa feuille sont un morceau chargé à la demande — un par langue, et seul
+ * celui du pilote part sur le réseau.
+ */
+function buildManualView(): HTMLElement {
+  const tr = translator()
+  const host = el('section', 'manual-host')
+  host.append(el('p', 'hint-note', tr.t('app.loadingManual')))
+
+  const token = ++manualToken
+  const back = (): void => {
+    // La vue d'où l'on venait peut avoir disparu entre-temps — fichier refermé, page
+    // supprimée. La vue d'ensemble reste le refuge.
+    const previous = viewBeforeManual
+    viewBeforeManual = undefined
+    view = previous !== undefined && viewExists(previous) ? previous : { kind: 'overview' }
+    render()
+    window.scrollTo({ top: 0 })
+  }
+
+  void import('./manualPage')
+    .then(async (module) => await module.buildManualPage(translator(), back))
+    .then((page) => {
+      if (token !== manualToken) return
+      host.textContent = ''
+      host.append(page)
+    })
+    .catch((error: unknown) => {
+      if (token !== manualToken) return
+      host.textContent = ''
+      host.append(problem(
+        tr.t('app.manualFailedTitle'), tr.t('app.manualFailedMessage'),
+        undefined, formatTechnicalDetail(error)
+      ))
+    })
+  return host
+}
+
+let manualToken = 0
 
 function openVersionDialog(): void {
   if (!session || versionDialog !== undefined) return
@@ -3145,6 +3188,7 @@ function render(): void {
   tools.hidden = session === undefined
     || session.container.parseError !== undefined
     || view.kind === 'preferences'
+    || view.kind === 'manual'
   fileName.textContent = session?.container.fileName ?? ''
   // L'infobulle que la feuille de style promet depuis toujours, et qui manquait : le nom
   // est tronqué par l'ellipse, et plus court encore sous 1 120 px. Sans elle, un pilote
@@ -3162,6 +3206,13 @@ function render(): void {
       tr.t('app.openFailedHint'),
       failure
     ))
+    return
+  }
+
+  // Le manuel se lit sans fichier ouvert : son branchement précède donc celui de
+  // l'accueil, contrairement aux réglages qui n'ont de sens qu'avec un document.
+  if (view.kind === 'manual') {
+    content.append(buildManualView())
     return
   }
 

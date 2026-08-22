@@ -277,6 +277,9 @@ const app: DomainCatalog<'app'> = {
   'app.fileNotAtFault': 'The file itself is not at fault: it stays open and intact.',
   'app.backToPages': 'Back to the pages',
 
+  'app.manualBack': 'Close the manual',
+  'app.loadingManual': 'Loading the manual…',
+  'app.manualFailedMessage': 'Nothing in your file has changed. Try again.',
   'app.manualFailedTitle': 'The manual could not be opened',
   'app.fileUntouchedRetry': 'Your file has not moved. Try again.',
 

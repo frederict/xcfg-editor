@@ -456,6 +456,9 @@ const app = {
   'app.fileNotAtFault': 'Le fichier, lui, n’est pas en cause : il reste ouvert et intact.',
   'app.backToPages': 'Revenir aux pages',
 
+  'app.manualBack': 'Fermer le manuel',
+  'app.loadingManual': 'Chargement du manuel…',
+  'app.manualFailedMessage': 'Rien n’a bougé dans votre fichier. Réessayez.',
   'app.manualFailedTitle': 'Le manuel n’a pas pu s’ouvrir',
   'app.fileUntouchedRetry': 'Votre fichier n’a pas bougé. Réessayez.',
 

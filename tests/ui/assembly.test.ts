@@ -47,7 +47,7 @@ const LAZY_MODULES: Array<{ specifier: string; carries: string }> = [
   { specifier: './sharingDialog', carries: 'l’anonymisation et sa feuille de style' },
   { specifier: './libraryPanel', carries: 'la bibliothèque et sa feuille de style' },
   { specifier: '../library', carries: 'le magasin IndexedDB et l’import/export d’archive' },
-  { specifier: './manualDialog', carries: 'le manuel et sa feuille de style, 16 ko compressés' }
+  { specifier: './manualPage', carries: 'le manuel et sa feuille de style, un fragment par langue' }
 ]
 
 /**

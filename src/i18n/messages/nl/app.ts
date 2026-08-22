@@ -283,6 +283,9 @@ const app: DomainCatalog<'app'> = {
   'app.fileNotAtFault': 'Aan het bestand ligt het niet: het blijft geopend en ongewijzigd.',
   'app.backToPages': 'Terug naar de pagina’s',
 
+  'app.manualBack': 'Handleiding sluiten',
+  'app.loadingManual': 'Handleiding laden…',
+  'app.manualFailedMessage': 'Er is niets veranderd in uw bestand. Probeer opnieuw.',
   'app.manualFailedTitle': 'De handleiding kon niet worden geopend',
   'app.fileUntouchedRetry': 'Je bestand is niet gewijzigd. Probeer het opnieuw.',
 

@@ -288,6 +288,9 @@ const app: DomainCatalog<'app'> = {
   'app.fileNotAtFault': 'An der Datei liegt es nicht: sie bleibt geöffnet und unversehrt.',
   'app.backToPages': 'Zurück zu den Seiten',
 
+  'app.manualBack': 'Handbuch schließen',
+  'app.loadingManual': 'Handbuch wird geladen…',
+  'app.manualFailedMessage': 'An Ihrer Datei hat sich nichts geändert. Versuchen Sie es erneut.',
   'app.manualFailedTitle': 'Das Handbuch ließ sich nicht öffnen',
   'app.fileUntouchedRetry': 'Ihre Datei ist unverändert. Versuchen Sie es erneut.',
 

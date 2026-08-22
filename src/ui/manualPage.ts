@@ -2,7 +2,11 @@ import '../../docs-app/manuel.css'
 import { UI_FALLBACK_LANGUAGE, type Translator, type UiLanguage } from '../i18n'
 
 /**
- * Le manuel d'utilisation, en modale, dans la langue du pilote.
+ * Le manuel d'utilisation, en pleine page, dans la langue du pilote.
+ *
+ * **Une page, pas une modale.** Treize chapitres ne se lisent pas dans une boîte : on y
+ * revient, on cherche, on garde sa place. Une vue à part rend le défilement au navigateur
+ * et laisse le manuel occuper toute la largeur qu'il mérite.
  *
  * Le fragment est importé en `?raw` : c'est du **texte du projet**, figé au moment de la
  * construction, dans lequel rien de ce que le pilote ouvre n'entre jamais. C'est ce qui
@@ -29,40 +33,33 @@ function manualLoader(language: UiLanguage): (() => Promise<string>) | undefined
     ?? MANUALS[`../../docs-app/manuel.${UI_FALLBACK_LANGUAGE}.html`]
 }
 
-export async function openManualDialog(tr: Translator): Promise<void> {
+export async function buildManualPage(
+  tr: Translator, onClose: () => void
+): Promise<HTMLElement> {
   const load = manualLoader(tr.language)
   if (load === undefined) throw new Error(`aucun manuel pour ${tr.language}`)
   const manual = await load()
-  const dialog = document.createElement('dialog')
-  dialog.className = 'modal modal--manual'
-  dialog.setAttribute('aria-label', tr.t('app.manualTitle'))
 
-  const box = document.createElement('div')
-  box.className = 'modal__box'
+  const page = document.createElement('section')
+  page.className = 'manual-page'
+
   const head = document.createElement('div')
-  head.className = 'modal__head'
-  // Le fragment commence à `h2` : le titre de la boîte est son `h1`, et la hiérarchie
-  // reste continue pour qui parcourt la page au lecteur d'écran.
+  head.className = 'manual-page__head'
   const title = document.createElement('h1')
-  title.className = 'modal__title'
+  title.className = 'manual-page__title'
   title.textContent = tr.t('app.manualTitle')
-  const close = document.createElement('button')
-  close.type = 'button'
-  close.className = 'btn'
-  close.textContent = tr.t('app.close')
-  const dismiss = (): void => { dialog.close(); dialog.remove() }
-  close.addEventListener('click', dismiss)
-  head.append(title, close)
+  const back = document.createElement('button')
+  back.type = 'button'
+  back.className = 'btn'
+  back.textContent = tr.t('app.manualBack')
+  back.addEventListener('click', onClose)
+  head.append(title, back)
 
   // Le fragment porte lui-même `class="manual"`, qui est la racine de sa feuille de
   // style : l'envelopper d'un second conteneur de même classe dupliquerait ses marges.
   const body = document.createElement('div')
   body.innerHTML = manual
 
-  box.append(head, body)
-  dialog.append(box)
-  dialog.addEventListener('cancel', (event) => { event.preventDefault(); dismiss() })
-  document.body.append(dialog)
-  dialog.showModal()
-  close.focus()
+  page.append(head, body)
+  return page
 }

@@ -233,5 +233,29 @@
  * feuille voyage déjà avec lui dans le même morceau chargé à la demande. La largeur est
  * celle de la bibliothèque — un texte suivi se lit mal au-delà.
  */
-.modal--manual { max-width: min(52rem, 94vw); width: min(52rem, 94vw); }
-.modal--manual .modal__box { max-height: 82vh; overflow-y: auto; }
+/*
+ * La page qui porte le manuel.
+ *
+ * Une **vue**, plus une modale : treize chapitres ne se lisent pas dans une boîte. Le
+ * défilement revient au navigateur — donc la position se garde, la recherche du navigateur
+ * fonctionne, et l'impression aussi.
+ *
+ * La largeur reste bornée : un texte suivi se lit mal au-delà d'une cinquantaine de
+ * caractères par ligne, quelle que soit la place disponible.
+ */
+.manual-page { max-width: 52rem; margin: 0 auto; padding: 0 1rem 4rem; }
+
+.manual-page__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1.2rem 0 0.9rem;
+  border-bottom: 1px solid var(--app-line, #d8dde2);
+  margin-bottom: 1.4rem;
+}
+
+.manual-page__title { margin: 0; font-size: 1.55rem; line-height: 1.15; }
+
+.manual-host { display: block; }
