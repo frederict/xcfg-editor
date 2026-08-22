@@ -136,8 +136,14 @@
   </ul>
 
   <p>L’extension du fichier dit autre chose : <span class="manual__file">.xcfg</span> est
-  le fichier seul, <span class="manual__file">.xczfg</span> est une archive qui emporte en
-  plus des fichiers annexes. Les deux s’ouvrent ici.</p>
+  le fichier seul, <span class="manual__file">.xczfg</span> est une archive, qui
+  <em>peut</em> emporter en plus des fichiers annexes. Les deux s’ouvrent ici.</p>
+
+  <p><strong>Peut, et souvent ne le fait pas.</strong> Une archive exportée
+  « avec les médias » ne contient parfois que le
+  <span class="manual__file">.xcfg</span>, sans un seul fichier annexe. N’en supposez rien : la ligne <span class="manual__ui">Format</span> du
+  bandeau, sous la barre du haut, dit ce que <em>cette</em> archive-ci contient et combien
+  de fichiers annexes elle porte.</p>
 
   <div class="manual__warning">
     <span class="manual__boxTitle">Un export « pages » n’est pas anonyme</span>
@@ -544,6 +550,13 @@
   le bandeau du bas, <strong>dans l’ordre où le fichier les porte</strong>. La poignée en
   haut du bandeau change sa hauteur ; le bouton de repli le referme.</p>
 
+  <p><strong>Choisir un gadget cadre la page.</strong> Le bandeau prend de la place en bas,
+  la barre de tête en prend en haut, et sur une fenêtre courte il n’existe qu’une seule
+  position de défilement — à quelques pixels près — où la page tient tout entière entre les
+  deux. L’outil s’y place pour vous à chaque sélection, sans toucher à votre zoom. Quand la
+  page n’y tient pas — fenêtre trop basse, reçu d’enregistrement affiché, bandeau tiré haut
+  à la poignée —, il vous amène au moins le gadget que vous venez de choisir.</p>
+
   <p><strong>Le repli tient.</strong> Le bandeau arrive replié et se déplie tout seul à
   votre première sélection, parce qu’il a alors quelque chose à montrer. Mais dès que vous
   touchez au bouton <span class="manual__ui">Replier</span>, c’est vous qui décidez :
@@ -893,9 +906,15 @@
 
   <p>La boîte se ferme, et la barre du haut affiche une ligne qui nomme le fichier produit,
   sa taille, et ce que l’outil en a fait : il en a demandé l’enregistrement à votre
-  navigateur. Une seconde ligne dit où le retrouver — vos téléchargements. Le reçu reste
-  sous vos yeux jusqu’à ce que vous le fermiez, que vous enregistriez de nouveau, ou que
-  vous ouvriez un autre fichier.</p>
+  navigateur. Une seconde ligne dit où le retrouver — vos téléchargements.</p>
+
+  <p><strong>Rien ne l’efface tout seul.</strong> Il ne disparaît pas pendant que vous le
+  lisez, ni pendant que vous êtes parti vérifier dans vos téléchargements : sans un geste de
+  votre part, il reste. Passé le temps de le lire — une vingtaine de secondes —, le premier
+  geste que vous ferez ailleurs sur la page le referme. Vous pouvez aussi le fermer
+  vous-même, enregistrer de nouveau, ou ouvrir un autre fichier. Cette place-là compte : la
+  barre du haut vous suit quand vous faites défiler, et sur un écran court chacun de ses
+  pixels est un pixel que votre page n’a pas.</p>
 
   <div class="manual__measured">
     <span class="manual__boxTitle">Cette page ne peut pas savoir que le fichier est arrivé</span>

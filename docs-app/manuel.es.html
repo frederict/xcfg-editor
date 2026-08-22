@@ -116,8 +116,14 @@
   </ul>
 
   <p>La extensión del archivo dice otra cosa: <span class="manual__file">.xcfg</span> es el
-  archivo solo, <span class="manual__file">.xczfg</span> es un archivo comprimido que lleva
-  además archivos anexos. Los dos se abren aquí.</p>
+  archivo solo, <span class="manual__file">.xczfg</span> es un archivo comprimido que
+  <em>puede</em> llevar además archivos anexos. Los dos se abren aquí.</p>
+
+  <p><strong>Puede, y a menudo no lo hace.</strong> Un archivo exportado «con los medios»
+  a veces no contiene más que el <span class="manual__file">.xcfg</span>, sin un solo
+  archivo anexo. No suponga nada: la línea <span class="manual__ui">Formato</span> de la
+  franja, bajo la barra superior, dice lo que contiene <em>este</em> archivo comprimido y
+  cuántos archivos anexos lleva.</p>
 
   <div class="manual__warning">
     <span class="manual__boxTitle">Una exportación «pages» no es anónima</span>
@@ -514,6 +520,13 @@
   <strong>en el orden en que el archivo los lleva</strong>. El tirador de lo alto de la banda
   cambia su altura; el botón de plegado la cierra.</p>
 
+  <p><strong>Elegir un widget encuadra la página.</strong> La banda ocupa sitio abajo, la
+  barra de cabecera lo ocupa arriba, y en una ventana baja no existe más que una posición de
+  desplazamiento — con unos pocos píxeles de margen — en la que la página cabe entera entre
+  las dos. La herramienta se coloca ahí por usted en cada selección, sin tocar su zoom.
+  Cuando la página no cabe — ventana demasiado baja, recibo de guardado visible, banda tirada
+  hacia arriba por el tirador —, le trae al menos el widget que acaba de elegir.</p>
+
   <p><strong>El plegado se mantiene.</strong> La banda llega plegada y se despliega sola en
   su primera selección, porque entonces tiene algo que mostrar. Pero en cuanto toque usted el
   botón <span class="manual__ui">Plegar</span>, manda usted: ninguna selección la volverá a
@@ -859,8 +872,14 @@
 
   <p>El cuadro se cierra y la barra superior muestra una línea que nombra el archivo
   producido, su tamaño y lo que la herramienta ha hecho: ha pedido a su navegador que lo
-  guarde. Una segunda línea dice dónde buscarlo — entre sus descargas. El recibo permanece a
-  la vista hasta que lo cierre, vuelva a guardar o abra otro archivo.</p>
+  guarde. Una segunda línea dice dónde buscarlo — entre sus descargas.</p>
+
+  <p><strong>Nada lo borra solo.</strong> No desaparece mientras usted lo lee, ni mientras se
+  ha ido a comprobar sus descargas: sin un gesto suyo, se queda. Pasado el tiempo de
+  leerlo — una veintena de segundos —, el primer gesto que haga en otro sitio de la página lo
+  cierra. También puede cerrarlo usted mismo, volver a guardar o abrir otro archivo. Ese
+  sitio cuenta: la barra superior le sigue cuando se desplaza, y en una pantalla baja cada
+  uno de sus píxeles es un píxel que su página no tiene.</p>
 
   <div class="manual__measured">
     <span class="manual__boxTitle">Esta página no puede saber que el archivo ha llegado</span>

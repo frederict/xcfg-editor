@@ -117,8 +117,13 @@
   </ul>
 
   <p>The file extension says something else: <span class="manual__file">.xcfg</span> is
-  the file on its own, <span class="manual__file">.xczfg</span> is an archive that carries
-  extra files with it. Both open here.</p>
+  the file on its own, <span class="manual__file">.xczfg</span> is an archive, which
+  <em>may</em> carry extra files with it. Both open here.</p>
+
+  <p><strong>May, and often does not.</strong> An archive exported “with media” sometimes
+  holds nothing but the <span class="manual__file">.xcfg</span>, without a single extra
+  file. Assume nothing: the <span class="manual__ui">Format</span> line of the strip, under
+  the top bar, says what <em>this</em> archive holds and how many extra files it carries.</p>
 
   <div class="manual__warning">
     <span class="manual__boxTitle">A “pages” export is not anonymous</span>
@@ -515,6 +520,13 @@
   <strong>in the order the file carries them</strong>. The handle at the top of the bar
   changes its height; the fold button closes it.</p>
 
+  <p><strong>Choosing a widget frames the page.</strong> The bottom bar takes room below,
+  the header bar takes room above, and on a short window there is only one scroll
+  position — give or take a few pixels — where the page fits whole between the two. The tool
+  goes there for you on every selection, without touching your zoom. When the page does not
+  fit — window too short, save receipt showing, bar pulled high by its handle — it brings
+  you at least the widget you have just chosen.</p>
+
   <p><strong>The fold holds.</strong> The bar arrives folded and unfolds on its own at your
   first selection, because it then has something to show. But as soon as you touch the
   <span class="manual__ui">Fold away</span> button, you are the one deciding: no selection
@@ -860,8 +872,14 @@
 
   <p>The dialog closes, and the top bar shows a line naming the file produced, its size, and
   what the tool did with it: it asked your browser to save it. A second line says where to
-  look for it — your downloads. The receipt stays in front of you until you dismiss it, save
-  again, or open another file.</p>
+  look for it — your downloads.</p>
+
+  <p><strong>Nothing clears it on its own.</strong> It does not vanish while you are reading
+  it, nor while you are away checking your downloads: without a gesture from you, it stays.
+  Once there has been time to read it — some twenty seconds — the first thing you do
+  elsewhere on the page closes it. You can also dismiss it yourself, save again, or open
+  another file. That room matters: the top bar follows you as you scroll, and on a short
+  screen every one of its pixels is a pixel your page does not have.</p>
 
   <div class="manual__measured">
     <span class="manual__boxTitle">This page cannot know that the file arrived</span>
