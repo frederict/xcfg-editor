@@ -85,6 +85,18 @@ export interface LibraryEntry {
 }
 
 /**
+ * Ce qu'une entrée apporte quand elle revient d'une archive : **tout sauf les deux champs
+ * qu'une archive ne transporte pas**.
+ *
+ * Les deux absences sont des décisions de vie privée, écrites dans `transfer.ts` : la
+ * vignette est une image, qui échappe à toute inspection du JSON ; l'`identity` est le
+ * relevé, qui portait en clair le nom du pilote et sa voile. Le type le dit plutôt que de
+ * laisser un appelant croire qu'il peut les fournir — `restore` recalcule l'un et refuse
+ * l'autre.
+ */
+export type RestorableEntry = Omit<LibraryEntry, 'identity' | 'preview'>
+
+/**
  * L'identifiant rendu pour un enregistrement dont on n'a même pas pu lire le sien. Ce
  * n'est pas de la prose mais un **identifiant de repli** : il apparaît dans la ligne
  * technique que le pilote recopie s'il signale le problème, et il ne désigne aucune entrée
@@ -154,16 +166,28 @@ export interface Library {
   setPreview(id: string, bytes: Uint8Array, ref: Omit<PreviewRef, 'byteLength'>, expectedRevision: number): Promise<LibraryEntry>
   previewOf(id: string): Promise<Uint8Array | undefined>
   /**
-   * Réinstalle une entrée **telle quelle** — identifiant, dates et empreinte d'origine
-   * comprises. Réservé à l'import d'une bibliothèque exportée (`transfer.ts`) : c'est la
-   * seule opération qui doit pouvoir rétablir un passé, et non créer un présent.
-   * Refuse d'écraser un identifiant déjà présent.
+   * Réinstalle une entrée **telle quelle** — identifiant, nom, note, dates, révision et
+   * empreinte d'origine comprises. Réservé à l'import d'une bibliothèque exportée
+   * (`transfer.ts`) : c'est la seule opération qui doit pouvoir rétablir un passé, et non
+   * créer un présent. Refuse d'écraser un identifiant déjà présent.
+   *
+   * **Une exception, et une seule : `identity` est recalculée depuis `bytes`**, exactement
+   * comme `add` la calcule. Ce n'est pas une perte — `validateRecord` dit pourquoi :
+   * « c'est une description, pas une donnée dont dépend l'intégrité ; elle est recalculable
+   * à tout moment depuis les octets ». C'est ce qui permet à l'archive de ne pas la
+   * **transporter** (voir `transfer.ts`, § « L'archive n'emporte aucun relevé »), et c'est
+   * même un gain : l'entrée rétablie est décrite par le catalogue d'aujourd'hui, pas par
+   * celui de la version qui a écrit l'archive.
+   *
+   * Corollaire : des octets que `openContainer` refuse font échouer la restitution de
+   * **cette** entrée. Ils ne pouvaient de toute façon pas venir d'un `add`, qui ouvre le
+   * conteneur avant de ranger quoi que ce soit.
    *
    * **Aucune vignette n'entre par ici**, et ce n'est pas un oubli : l'archive n'en
    * transporte pas (voir `transfer.ts`, § « L'archive n'emporte AUCUNE vignette »).
    * L'entrée rétablie n'en a donc pas, et l'éditeur la refabrique en local.
    */
-  restore(entry: LibraryEntry, bytes: Uint8Array): Promise<void>
+  restore(entry: RestorableEntry, bytes: Uint8Array): Promise<void>
   /**
    * Prévient à chaque changement, **y compris ceux d'un autre onglet**. Rend la fonction
    * de désabonnement.
@@ -452,8 +476,14 @@ export function createLibrary(options: LibraryOptions): Library {
     },
 
     async restore(entry, bytes) {
+      // Le relevé est refait ici, pas transporté : c'est lui qui portait en clair le nom
+      // du pilote, sa voile et ses fichiers de balises dans le manifeste de l'archive.
+      const container = await openOrFail(bytes, entry.fileName)
+      const restored: LibraryEntry = {
+        ...entry, identity: describeContainer(container, options.describe ?? {})
+      }
       const blobs: BlobWrite[] = [{ key: blobKey(entry.id), bytes: bytes.slice() }]
-      await write(entry, blobs, { kind: 'absent' })
+      await write(restored, blobs, { kind: 'absent' })
       announce({ kind: 'imported', id: entry.id })
     },
 

@@ -159,6 +159,82 @@ describe('export et import de la bibliothèque entière', () => {
   })
 
   /**
+   * **La seconde décision de vie privée du module**, et elle a la même forme que celle de
+   * la vignette : l'archive est ce qui **sort** du navigateur, donc ce qu'on n'y met pas
+   * ne peut pas fuir avec elle.
+   *
+   * Le manifeste portait l'`identity` de chaque entrée, donc le **relevé** :
+   * `PersonalFinding.value` est la valeur elle-même, `freeTexts[].text` le texte écrit par
+   * le pilote, `externalResources[].name` ses fichiers de balises. Mesuré avant
+   * correction : 39 886 octets à la racine du ZIP, alignant pour toute la bibliothèque
+   * d'un coup et **sans rien extraire** `"value":"Amélie Exemple"`, le nom de la voile et
+   * `coupe-exemple-2026.CompeGPS.wpt`.
+   *
+   * Le test ne cite aucune de ces chaînes en dur : il **relit** les valeurs que le corpus
+   * porte réellement et exige qu'aucune ne soit dans le manifeste. Une donnée personnelle
+   * d'un genre neuf sera donc couverte le jour où elle apparaîtra, sans qu'on ait à y
+   * penser — et le décompte plancher empêche le test de passer à vide si le corpus cesse
+   * d'en porter.
+   */
+  it('n’emporte aucun relevé : pas une valeur personnelle dans le manifeste', async () => {
+    const source = await remplie()
+    const entrees = (await source.read()).entries
+
+    // Ce que le corpus porte vraiment, relu sur les fiches vivantes.
+    const attendues = new Set<string>()
+    for (const entree of entrees) {
+      const lu = entree.identity.read
+      for (const trouvaille of lu.personalData) {
+        if (trouvaille.value !== undefined && trouvaille.value !== '') attendues.add(trouvaille.value)
+        for (const valeur of trouvaille.values ?? []) attendues.add(valeur)
+      }
+      for (const texte of lu.freeTexts) attendues.add(texte.text)
+      for (const ressource of lu.externalResources) attendues.add(ressource.name)
+    }
+    // Le plancher : sans lui, ce test serait vert sur un corpus qui ne porte plus rien —
+    // c'est le défaut des quatre boucles à vide que la seconde revue a relevées.
+    expect(attendues.size).toBeGreaterThanOrEqual(10)
+
+    const { archive } = await exportLibrary(source)
+    const manifeste = new TextDecoder().decode(
+      (await readZip(archive)).find((m) => m.name === 'bibliotheque.json')!.data)
+
+    for (const valeur of attendues) {
+      expect(manifeste, `« ${valeur} » se lit dans le manifeste`).not.toContain(valeur)
+    }
+    // Et la borne franche, qui dit la règle plutôt que ses conséquences : le relevé
+    // n'entre pas du tout dans l'archive.
+    expect(manifeste).not.toContain('identity')
+    expect(manifeste).not.toContain('personalData')
+  })
+
+  /**
+   * ⚠️ **La contrepartie exacte du test ci-dessus.** Retirer le relevé de l'archive ne
+   * vaut que si le pilote le retrouve : l'archive est sa seule sauvegarde contre la purge
+   * de son navigateur, et le manuel le lui dit. Le relevé est recalculé depuis les octets
+   * par `Library.restore`, et ce test exige l'**égalité stricte** avec celui de l'entrée
+   * d'origine — pas « à peu près ».
+   */
+  it('et la restitution ne perd rien : le relevé revient identique, recalculé', async () => {
+    const source = await remplie()
+    const avant = (await source.read()).entries
+
+    const { archive } = await exportLibrary(source)
+    const cible = nouvelle()
+    await importLibrary(cible, archive)
+    const apres = (await cible.read()).entries
+
+    expect(apres).toHaveLength(avant.length)
+    for (const attendue of avant) {
+      const restauree = apres.find((e) => e.id === attendue.id)!
+      // Le relevé d'abord — c'est lui qui ne voyage plus.
+      expect(restauree.identity, attendue.name).toEqual(attendue.identity)
+      // Puis tout le reste, champ par champ : ce que l'archive garde, elle le rend.
+      expect(restauree, attendue.name).toEqual(attendue)
+    }
+  })
+
+  /**
    * **La décision de vie privée de ce module**, gardée par un test parce qu'elle est
    * invisible à la relecture : une vignette est une IMAGE des pages du pilote, elle
    * échappe donc à l'anonymisation, qui ne travaille que sur le document JSON. L'archive

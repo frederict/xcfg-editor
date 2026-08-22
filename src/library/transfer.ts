@@ -55,21 +55,71 @@ import { newRecordId, UNKNOWN_RECORD_ID, type Library, type LibraryEntry } from 
  * l'import** — une fiche qui en annoncerait une mentirait, et l'entrée rétablie afficherait
  * un cadre vide pour toujours. L'éditeur la refabrique tout seul, en local, à partir des
  * octets rétablis : ce qui est perdu se retrouve en une seconde, et sans voyager.
+ *
+ * ## L'archive n'emporte aucun relevé, et c'est la même décision
+ *
+ * Le manifeste a longtemps porté l'`identity` complète de chaque entrée. Elle porte le
+ * **relevé de données personnelles** — `PersonalFinding.value` est la valeur elle-même —,
+ * les **textes libres** du pilote et les **noms de ses fichiers de balises**. Mesuré sur
+ * quatre entrées : un `bibliotheque.json` de 39 886 octets qui alignait, pour toute la
+ * bibliothèque d'un coup et **sans rien extraire**, `"value":"Amélie Exemple"`, le nom de
+ * la voile et `coupe-exemple-2026.CompeGPS.wpt`.
+ *
+ * Rien n'y était révélé qui ne soit déjà dans les `.xcfg` de l'archive — c'est une
+ * sauvegarde, c'est son métier. Ce qui changeait est la **facilité** : au lieu d'ouvrir
+ * chaque configuration et d'y chercher, on ouvrait un index. Le raisonnement est celui de
+ * la vignette, un cran plus loin : ce qu'on ne met pas dans l'archive ne peut pas fuir
+ * avec elle.
+ *
+ * **Et cela ne coûte rien**, parce que le relevé est **recalculable depuis les octets**,
+ * qui sont dans l'archive à côté. `validateRecord` le dit depuis toujours (« une
+ * description, pas une donnée dont dépend l'intégrité ») ; `Library.restore` le fait
+ * maintenant, comme `add` le fait. L'entrée rétablie est même mieux décrite qu'avant :
+ * par le catalogue d'aujourd'hui, non par celui de la version qui a écrit l'archive.
+ *
+ * ### Ce que le manifeste garde, et pourquoi
+ *
+ * Tout ce qui n'est **pas** recalculable, c'est-à-dire tout ce qui vient du pilote et de
+ * lui seul : `name` (« Comp Annecy »), `note`, `fileName` — le nom d'origine, réclamé au
+ * moment de réexporter —, `addedAt`/`updatedAt`, `revision`, `byteLength` et `sha256`.
+ * Les retirer ne protégerait personne : ils sont la sauvegarde. `sha256` reste
+ * indispensable — c'est lui qui refuse une entrée dont les octets ont bougé.
+ *
+ * Reste au passif, dit plutôt que tu : `addedAt` est aussi inscrit dans les **dates DOS**
+ * des membres, donc la chronologie de rangement se lit dans un `unzip -l`. C'est la même
+ * information que le manifeste porte de toute façon, et l'horodatage est ce qui rend
+ * l'archive reproductible d'un export à l'autre.
  */
 
 export const LIBRARY_FORMAT = 'xcfg-editor.library'
-export const LIBRARY_FORMAT_VERSION = 1
+
+/**
+ * ## Pourquoi 2, et pourquoi le numéro devait bouger
+ *
+ * Le format 1 portait l'`identity` complète dans le manifeste ; le 2 ne la porte plus. La
+ * différence est invisible **dans ce sens-ci** — un importeur d'aujourd'hui ouvre les deux,
+ * puisqu'il recalcule le relevé au lieu de le lire. Elle ne l'est pas dans l'autre : un
+ * importeur d'hier lit une fiche sans `identity`, et `validateRecord` exige ce champ. Il
+ * rétablirait des entrées **cassées**, une par une, sans dire pourquoi.
+ *
+ * Le garde-fou de version existe exactement pour ça : à 2, l'ancien importeur refuse
+ * l'archive entière avec « écrite par une version postérieure », qui est vrai et
+ * actionnable. Un refus net vaut mieux qu'une bibliothèque à moitié rétablie.
+ */
+export const LIBRARY_FORMAT_VERSION = 2
 
 const MANIFEST_NAME = 'bibliotheque.json'
 
 /**
- * Une fiche du manifeste : l'entrée, plus l'endroit où ses octets sont dans l'archive.
- *
- * `entry` est écrite **sans son `preview`** : l'archive ne transporte aucune image, voir
- * le commentaire de tête. Aucun autre champ n'est retiré.
+ * L'entrée telle qu'elle voyage : **sans sa vignette et sans son relevé**. Voir les deux
+ * paragraphes du commentaire de tête — ce sont les deux seuls retraits, et les deux tiennent
+ * au même fait, qu'une archive sort du navigateur.
  */
+export type TransferredEntry = Omit<LibraryEntry, 'preview' | 'identity'>
+
+/** Une fiche du manifeste : l'entrée allégée, plus l'endroit où ses octets sont dans l'archive. */
 interface ManifestItem {
-  entry: LibraryEntry
+  entry: TransferredEntry
   file: string
 }
 
@@ -139,10 +189,12 @@ export async function exportLibrary(
       ...stamp
     })
 
-    // La fiche part sans la vignette : ni les octets de l'image, ni la ligne qui
-    // l'annonce. Voir le § « L'archive n'emporte AUCUNE vignette ».
-    const { preview: _preview, ...withoutPreview } = entry
-    items.push({ entry: withoutPreview, file })
+    // Deux retraits, deux paragraphes du commentaire de tête. La vignette : ni les octets
+    // de l'image, ni la ligne qui l'annonce. Le relevé (`identity`) : c'est lui qui portait
+    // en clair le nom du pilote, sa voile, ses textes libres et ses fichiers de balises —
+    // et il se recalcule depuis les octets rangés à côté.
+    const { preview: _preview, identity: _identity, ...transferred } = entry
+    items.push({ entry: transferred, file })
   }
 
   const manifest: Manifest = {
@@ -278,7 +330,7 @@ function readManifest(text: string): Manifest {
  */
 async function store(
   library: Library,
-  entry: LibraryEntry,
+  entry: TransferredEntry,
   bytes: Uint8Array,
   results: ImportResult[],
   source: { id: string; name: string }
@@ -321,7 +373,12 @@ export async function importLibrary(
   }
 
   const manifest = readManifest(new TextDecoder().decode(manifestMember.data))
-  const existing = new Map((await library.read()).entries.map((entry) => [entry.id, entry]))
+  // Ce que l'import a besoin de savoir d'une place déjà occupée : son empreinte, et rien
+  // d'autre. Le type le dit — la carte reçoit aussi bien une entrée rangée qu'une entrée
+  // rétablie à l'instant, qui n'a pas encore de relevé.
+  const existing = new Map<string, { sha256: string }>(
+    (await library.read()).entries.map((entry) => [entry.id, entry])
+  )
   const suffix = options.duplicateSuffix ?? ' (importé)'
   const results: ImportResult[] = []
 
@@ -360,13 +417,20 @@ export async function importLibrary(
     }
 
     /*
-     * Une fiche venue d'ailleurs peut annoncer une vignette — une archive écrite à la
-     * main, ou par une version de cet éditeur qui en écrivait encore. On ne la croit
-     * pas : l'image n'est pas dans l'archive, et une entrée qui en annoncerait une sans
-     * l'avoir montrerait un cadre vide sans que rien ne l'explique.
+     * Une fiche venue d'ailleurs peut porter les deux champs que le format ne transporte
+     * plus — une archive écrite à la main, ou par une version antérieure de cet éditeur.
+     * Ni l'un ni l'autre n'est cru :
+     *
+     * - la **vignette**, parce que l'image n'est pas dans l'archive et qu'une entrée qui
+     *   en annoncerait une sans l'avoir montrerait un cadre vide sans que rien ne
+     *   l'explique ;
+     * - le **relevé**, parce qu'il est recalculé depuis les octets par `restore` — les
+     *   laisser passer les rendrait à la bibliothèque, ce que tout ce module vient
+     *   d'éviter, et une archive d'ailleurs pourrait décrire une entrée autrement que ce
+     *   qu'elle est.
      */
-    const restored: LibraryEntry = { ...entry }
-    delete restored.preview
+    const { preview: _preview, identity: _identity, ...restored } =
+      entry as TransferredEntry & Partial<Pick<LibraryEntry, 'preview' | 'identity'>>
 
     if (clash === undefined) {
       const written = await store(library, restored, member.data, results, entry)
@@ -377,7 +441,7 @@ export async function importLibrary(
     }
 
     const id = (options.newId ?? newRecordId)()
-    const renamed: LibraryEntry = { ...restored, id, name: `${entry.name}${suffix}` }
+    const renamed: TransferredEntry = { ...restored, id, name: `${entry.name}${suffix}` }
     const written = await store(library, renamed, member.data, results, entry)
     if (!written) continue
     results.push({ sourceId: entry.id, name: renamed.name, outcome: 'duplicated', id })
