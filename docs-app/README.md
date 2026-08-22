@@ -69,6 +69,53 @@ raison :
 | `.manual__warning` | Le seul encadré coloré, réservé aux données personnelles. |
 | `.manual__boxTitle` | Le titre d'un encadré. Volontairement pas un élément de titre : il ne doit pas entrer dans le sommaire. |
 | `.manual__steps` | Une suite de gestes numérotés, quand l'ordre compte. |
+| `.manual__figure` | Un `<figure>` : une capture de l'écran dont le chapitre parle, et son `<figcaption>`. Il n'y en a que **deux** dans tout le manuel — voir la section suivante. |
+
+## Les deux figures, et pourquoi elles ne sont pas dans `docs-app/`
+
+Le manuel porte **deux images**, pas treize : illustrer chaque chapitre en ferait un
+catalogue. Elles sont aux deux endroits où une image dit en une seconde ce que trois
+paragraphes expliquent :
+
+| Chapitre | Fichier | Ce qu'elle montre |
+|---|---|---|
+| 10, `m-enregistrer` | `manuel/trois-issues.<langue>.png` | les trois cartes de la boîte d'enregistrement, l'une sous l'autre : l'échelle de ce qui part |
+| 11, `m-bibliotheque` | `manuel/bibliotheque-entree.<langue>.png` | une entrée rangée, sa vignette aux **barres grises**, son compte de données personnelles |
+
+**Chaque langue a la sienne.** Une capture française dans le manuel allemand serait un
+mensonge illustré : le lecteur y chercherait des mots qu'il ne trouve pas à l'écran.
+
+### ⚠ Elles vivent dans `public/manuel/`, et il n'y a pas le choix
+
+Le fragment est importé **en `?raw`** : Vite ne le regarde pas, ne réécrit aucune URL, et
+n'emporte donc dans `dist/` aucune image citée dedans. **Mesuré** le 22 août 2026 :
+`vite build` n'émet que `index.html` et `assets/` — `docs-app/` et `captures/` restent au
+dépôt. Une image rangée à côté du fragment donnerait un `<img>` cassé en production, et
+seulement en production.
+
+`public/` est le seul répertoire que Vite recopie **tel quel** à la racine de `dist/`.
+D'où `public/manuel/`, et un `src` **relatif au document** (`manuel/…`, sans `./` ni `/`) :
+l'application est servie depuis un sous-chemin sur GitHub Pages, et elle n'a aucune route
+côté client — le document est toujours à la racine de l'application.
+
+### Le poids, et comment il est tenu
+
+Dix images, **162 ko en tout**. Un pilote en télécharge **deux**, celles de sa langue, soit
+**31 ko** — et seulement s'il descend jusqu'au chapitre 10, grâce à `loading="lazy"`. Le
+premier écran, lui, ne paie toujours rien.
+
+Elles sont prises **à leur taille naturelle**, sous la mesure de 40 rem de la colonne de
+texte : 596 et 625 points de large. Agrandir une capture ne rend pas son texte lisible,
+seulement flou ; la CSS la laisse rétrécir et jamais grandir.
+
+### Comment les refaire
+
+Viewport de **700 × 1400** points, à cette largeur-là et pas une autre : c'est elle qui
+donne une boîte de 596 px et une entrée de 625 px, donc des images qui tiennent dans la
+colonne sans être réduites. Fixtures anonymisées, comme partout —
+`formes-preservees.xcfg` pour les deux (c'est la seule dont la vignette porte des barres
+grises). La recette longue, avec l'état exact et les pièges, est celle des captures du
+`README.md` français : ces deux figures en sont des recadrages, pris au même endroit.
 
 ## Les cinq langues
 

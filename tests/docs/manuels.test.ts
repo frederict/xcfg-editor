@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { UI_LANGUAGES, type UiLanguage } from '../../src/i18n/languages'
 
@@ -144,6 +146,50 @@ describe('le manuel dans les cinq langues', () => {
     for (const language of UI_LANGUAGES) {
       for (const name of manualClasses(manual(language))) {
         expect(allowed.has(name), `manuel.${language}.html → .${name}`).toBe(true)
+      }
+    }
+  })
+
+  /**
+   * Les figures du manuel, et le seul répertoire qui les publie.
+   *
+   * Le fragment est importé **en `?raw`** : Vite ne le regarde pas et ne réécrit aucune
+   * URL. Une image rangée à côté du fragment, ou dans `captures/`, ne serait donc jamais
+   * copiée dans `dist/` — mesuré : `vite build` n'émet qu'`index.html` et `assets/`. Le
+   * manuel montrerait deux cadres cassés **en production, et seulement là**, ce qui est la
+   * panne qu'aucune relecture n'attrape.
+   *
+   * D'où `public/`, le seul répertoire que Vite recopie tel quel, et d'où ce test : il
+   * échoue le jour où une figure est déplacée, renommée, ou ajoutée sans son fichier.
+   */
+  it('ne montre que des figures publiées par `public/`, dans les cinq langues', () => {
+    const missing: string[] = []
+    for (const language of UI_LANGUAGES) {
+      for (const match of manual(language).matchAll(/<img[^>]+src="([^"]+)"/g)) {
+        const src = match[1] ?? ''
+        expect(src.startsWith('manuel/'), `manuel.${language}.html → ${src}`).toBe(true)
+        // `process.cwd()` est la racine du dépôt : Vitest s'y lance, et c'est aussi
+        // depuis là que `vite build` recopie `public/`.
+        if (!existsSync(resolve(process.cwd(), 'public', src))) missing.push(src)
+      }
+    }
+    expect(missing, 'figures citées sans fichier dans public/').toEqual([])
+  })
+
+  /**
+   * Une figure française dans le manuel allemand serait un mensonge illustré : le lecteur
+   * y chercherait des mots qui ne sont nulle part à son écran. Les dix fichiers existent,
+   * un par langue et par figure ; ce test dit que chaque manuel prend les siens.
+   */
+  it('prend la figure de SA langue, et le même nombre partout', () => {
+    const reference = [...manual('fr').matchAll(/<img[^>]+src="manuel\/([^".]+)\./g)]
+      .map((match) => match[1] ?? '')
+    expect(reference.length, 'le manuel français a perdu ses figures').toBeGreaterThan(0)
+    for (const language of UI_LANGUAGES) {
+      const names = [...manual(language).matchAll(/<img[^>]+src="manuel\/([^".]+)\.([a-z]{2})\.png"/g)]
+      expect(names.map((m) => m[1]), `manuel.${language}.html : figures`).toEqual(reference)
+      for (const [, name, tag] of names) {
+        expect(tag, `manuel.${language}.html → ${name}`).toBe(language)
       }
     }
   })

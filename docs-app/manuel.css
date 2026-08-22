@@ -477,3 +477,45 @@
 .manual-page__title { margin: 0; font-family: var(--font-title); font-size: 1.7rem; font-weight: 600; line-height: 1.15; }
 
 .manual-host { display: block; }
+
+/*
+ * Une figure : une capture de l'écran dont le chapitre parle.
+ *
+ * ## Deux, pas treize
+ *
+ * Un manuel illustré à chaque chapitre est un catalogue. Il n'y en a que deux, aux deux
+ * endroits où une image dit en une seconde ce que trois paragraphes expliquent : les
+ * **trois issues** du chapitre 10, qui forment une échelle, et l'**entrée de
+ * bibliothèque** du chapitre 11, dont la vignette montre le masquage à l'œuvre.
+ *
+ * ## Pourquoi la largeur ne se force pas
+ *
+ * Les deux images sont prises à leur **taille naturelle** — 596 et 625 points de large,
+ * sous la mesure de 40 rem (640 px) de la colonne de texte. D'où `width: auto` avec
+ * `max-width: 100%`, et non `width: 100%` : celui-ci les étirerait à 640 px, c'est-à-dire
+ * agrandirait une capture d'écran, ce qui ne rend jamais son texte plus lisible — cela
+ * rend ses lettres floues. Vérifié à l'écran : 596 × 362 affichés 640 × 390 avant la
+ * correction. Elles rétrécissent en revanche sur un écran étroit, et c'est ce qu'il faut.
+ *
+ * `loading="lazy"` s'écrit dans le HTML et non ici : un pilote qui ouvre l'aide en 3G au
+ * décollage ne paie ces 30 ko que s'il descend jusqu'au chapitre 10.
+ */
+.manual__figure {
+  margin: 1.3rem 0;
+}
+
+.manual__figure img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--app-line);
+  border-radius: 8px;
+}
+
+.manual__figure figcaption {
+  margin-top: 0.5rem;
+  color: var(--app-ink-soft);
+  font-size: 13.5px;
+  line-height: 1.45;
+}
