@@ -661,7 +661,7 @@ function preferenceItem(
 
   if (outcome.treatment === 'replace' || outcome.treatment === 'drop') {
     swap.append(
-      el('span', 'sharing__from', outcome.before),
+      el('span', 'sharing__from', prose.value(outcome.before)),
       el('span', 'sharing__arrow', '→'),
       el('span', 'sharing__to', outcome.treatment === 'drop'
         ? tr.t('sharing.droppedLine')
@@ -669,7 +669,7 @@ function preferenceItem(
     )
   } else {
     // Rien ne change : pas de flèche, et la valeur ne se barre pas — le style s'en charge.
-    swap.append(el('span', 'sharing__from', outcome.before))
+    swap.append(el('span', 'sharing__from', prose.value(outcome.before)))
   }
 
   item.append(swap)

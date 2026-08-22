@@ -80,12 +80,12 @@ import type { Translator } from '../i18n'
  * reçoit `localStorage`. Voir `src/i18n/CLAUDE.md` pour la décision et son alternative
  * écartée — rendre des clés que l'appelant traduirait.
  *
- * ⚠️ **Transition.** Les constantes françaises `PERSONAL_KIND_LABELS`,
- * `PERSONAL_BASIS_LABELS`, `PERSONAL_CAVEAT`, `personalHomeLabel` et `personalValueText`
- * sont **héritées** : quatre écrans les emploient encore. Elles disparaîtront quand ces
- * écrans seront passés à `personalProse`. En attendant, `personalData.test.ts` vérifie
- * que le catalogue français dit **exactement** ce qu'elles disent : aucune dérive n'est
- * possible pendant la transition, et le jour de la bascule il n'y a rien à relire.
+ * Les six constantes françaises qui doublaient cette prose pendant la transition —
+ * `PERSONAL_KIND_LABELS`, `PERSONAL_BASIS_LABELS`, `PERSONAL_CAVEAT`, `personalHomeLabel`,
+ * `personalValueText` — ont disparu avec le dernier écran qui les employait. Le dernier
+ * était `sharing.ts`, dont `PreferenceOutcome.before` portait une phrase française jusque
+ * dans la boîte de partage d'un pilote néerlandais ; il range maintenant les **faits**
+ * (`PersonalValue`) et laisse la langue les mettre en mots.
  *
  * ## Le poids
  *
@@ -113,62 +113,9 @@ export type PersonalBasis = CatalogPersonalData['basis']
 /** Où la donnée vit — donc ce qui décide si elle voyage avec un export « pages ». */
 export type PersonalHome = 'layout' | 'preferences'
 
-/**
- * Le mot affiché pour chaque nature, **en français seulement**.
- *
- * ⚠️ Hérité : employer `personalProse(tr).kind(kind)`. Voir « La prose de ce module ».
- */
-export const PERSONAL_KIND_LABELS: Record<PersonalKind, string> = {
-  identity: 'identité',
-  credential: 'identifiant',
-  contact: 'contact',
-  device: 'appareil',
-  location: 'position',
-  file: 'fichier',
-  freeText: 'texte libre',
-  equipment: 'matériel',
-  sharing: 'partage'
-}
-
-/**
- * Ce que chaque base dit au pilote. Lu dans l'application, ou jugé par nous.
- *
- * ## Trois calques de l'anglais, remplacés par ce qu'ils voulaient dire
- *
- * - *scope* était devenu « **portée** lue dans l'application » : un pilote y lit la
- *   portée d'un émetteur, ou une portée de musique. C'est un attribut que XCTrack déclare
- *   lui-même sur ce réglage, et c'est ça qu'il faut dire ;
- * - « champ de saisie **masqué** dans l'application » se lit « champ caché ». Il n'est
- *   pas caché : il se saisit en points, comme un mot de passe ;
- * - « jugement de **l'extraction** » ne dit ni qui juge, ni quoi. C'est **nous**.
- *
- * Ce que ces trois mots portent, et qu'il ne faut pas perdre : la **provenance de
- * l'affirmation** — lue dans XCTrack, ou jugée par cet éditeur. C'est la distinction
- * mesuré / supposé, appliquée aux données personnelles.
- *
- * ⚠️ Hérité, en français seulement : employer `personalProse(tr).basis(basis)`.
- */
-export const PERSONAL_BASIS_LABELS: Record<PersonalBasis, string> = {
-  scope: 'XCTrack le déclare lui-même',
-  inputType: 'XCTrack le saisit en points, comme un mot de passe',
-  declared: 'c’est notre jugement, pas celui de XCTrack'
-}
-
 /** Vrai si l'affirmation est **lue** dans l'APK, faux si elle est jugée par nous. */
 export function isReadFromApk(basis: PersonalBasis): boolean {
   return basis !== 'declared'
-}
-
-/**
- * L'emplacement dit dans les mots du pilote, avec sa conséquence — c'est la conséquence
- * qui compte, pas le nom de la section.
- *
- * ⚠️ Hérité, en français seulement : employer `personalProse(tr).home(home)`.
- */
-export function personalHomeLabel(home: PersonalHome): string {
-  return home === 'layout'
-    ? 'Disposition — part avec les pages'
-    : 'Préférences — reste chez vous dans un export « pages »'
 }
 
 /* ------------------------------------------------------------------ ce qu'on trouve */
@@ -228,6 +175,19 @@ export interface PersonalFinding {
   scope?: PreferenceScope | null
   location?: PersonalLocation
 }
+
+/**
+ * Ce qu'une donnée **porte**, sans un mot de prose autour : de quoi dire sa valeur dans
+ * n'importe quelle langue.
+ *
+ * C'est ce que `personalProse(tr).value()` lit, et rien de plus. L'extraire du constat
+ * entier permet à `sharing.ts` de ranger dans son inventaire **les faits** plutôt qu'une
+ * phrase française — sans quoi la colonne « avant » de la boîte de partage resterait en
+ * français au milieu d'une boîte néerlandaise.
+ */
+export type PersonalValue = Pick<
+  PersonalFinding, 'filled' | 'value' | 'values' | 'entryCount'
+>
 
 /**
  * Les chiffres, **nommés**. Aucun n'est « le » chiffre : chacun répond à une question
@@ -522,22 +482,6 @@ export function collectPersonalData(document: JsonNode, layout?: Layout): Person
   return { findings, counts: countOf(findings), knowledge: PERSONAL_KNOWLEDGE }
 }
 
-/**
- * Ce que la donnée porte, en toutes lettres — **jamais le contenu d'une structure**.
- *
- * Les quatre écrans passent par ici, de sorte qu'aucun ne peut déballer par accident un
- * `Navigation.State` ou un `Sensors.Configuration` que le voisin résume. Un emplacement
- * vide se dit comme tel plutôt que par une chaîne vide, qui passerait pour un affichage
- * raté.
- */
-export function personalValueText(finding: PersonalFinding): string {
-  if (!finding.filled) return 'emplacement présent, mais vide'
-  if (finding.values !== undefined) return finding.values.join(', ')
-  if (finding.value !== undefined) return finding.value
-  const count = finding.entryCount ?? 0
-  return `structure de ${String(count)} entrée${count > 1 ? 's' : ''}, non montrée`
-}
-
 /** Ce que l'inventaire porte pour un emplacement donné, dans l'ordre du fichier. */
 export function findingsIn(
   inventory: PersonalInventory, home: PersonalHome
@@ -572,7 +516,7 @@ export interface PersonalProse {
   /** Pourquoi cette donnée est dite personnelle — layout et réglages, dans les cinq langues. */
   reason(finding: PersonalFinding): string
   /** Ce que la donnée porte — **jamais le contenu d'une structure**. */
-  value(finding: PersonalFinding): string
+  value(carried: PersonalValue): string
   /** Ce qu'un relevé ne peut pas promettre. */
   caveat(): string
 }
@@ -600,14 +544,14 @@ export function personalProse(tr: Translator): PersonalProse {
     // rechargée — l'inventaire est alors recalculé depuis les octets.
     reason: (finding) => finding.legacyReason ?? tr.t(finding.reasonKey),
 
-    value: (finding) => {
-      if (!finding.filled) return tr.t('personal.emptySlot')
+    value: (carried) => {
+      if (!carried.filled) return tr.t('personal.emptySlot')
       // `join(', ')` et non `format.list` : ce sont des **données** alignées — des noms de
       // fichiers de balises —, pas une énumération dans une phrase. « coupe.wpt et
       // autre.wpt » ferait lire une prose là où il y a une colonne.
-      if (finding.values !== undefined) return finding.values.join(', ')
-      if (finding.value !== undefined) return finding.value
-      return tr.t('personal.hiddenStructure', { count: finding.entryCount ?? 0 })
+      if (carried.values !== undefined) return carried.values.join(', ')
+      if (carried.value !== undefined) return carried.value
+      return tr.t('personal.hiddenStructure', { count: carried.entryCount ?? 0 })
     },
 
     // `{version}` part en `string` et `{count}` en `number` : c'est la règle du socle, et
@@ -618,18 +562,3 @@ export function personalProse(tr: Translator): PersonalProse {
     })
   }
 }
-
-/**
- * Ce qu'un relevé ne peut pas promettre, dit une fois pour toutes.
- *
- * Les quatre écrans le répétaient chacun à sa façon. La phrase est ici pour qu'ils la
- * disent avec les mêmes mots : le format de XCTrack change à chaque version, la liste des
- * clés surveillées se périme, et **un inventaire vide ne prouve pas une absence**.
- *
- * ⚠️ Hérité, en français seulement : employer `personalProse(tr).caveat()`.
- */
-export const PERSONAL_CAVEAT =
-  'Cet inventaire porte sur les réglages connus de XCTrack ' +
-  `${PERSONAL_KNOWLEDGE.versionName ?? '?'} : ${PERSONAL_KNOWLEDGE.keyCount} réglages ` +
-  'et onze champs de texte libre des gadgets. Le format change à chaque version — ' +
-  'un inventaire vide ne prouve donc pas une absence.'

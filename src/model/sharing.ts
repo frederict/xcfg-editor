@@ -11,10 +11,10 @@ import {
 import {
   collectPersonalData,
   findingsIn,
-  personalValueText,
   type PersonalFinding,
   type PersonalHome,
-  type PersonalKind
+  type PersonalKind,
+  type PersonalValue
 } from './personalData'
 // `import type` : effacé à la compilation. Ce module **ne dépend pas** de `src/i18n/` à
 // l'exécution — il rend des clés de message, et `sharingProse(tr)` les traduit pour qui
@@ -709,10 +709,11 @@ export interface PreferenceOutcome {
   /** La nature du réglage, dans le vocabulaire de `personalData.ts`. */
   kind: PersonalKind
   /**
-   * Ce que la ligne portait, en toutes lettres. Passe par `personalValueText`, donc **le
-   * contenu d'une structure n'est jamais montré** — on en dit la taille.
+   * Ce que la ligne portait — **les faits, pas la phrase**. `personalProse(tr).value()`
+   * la dit dans la langue du pilote, et **le contenu d'une structure n'est jamais
+   * montré** : on en dit la taille.
    */
-  before: string
+  before: PersonalValue
   /** Le texte posé à la place. Présent pour `replace` seulement, vide compris. */
   after?: string
   /** Pourquoi ce traitement — `sharingProse(tr).reason()` en rend la phrase. */
@@ -751,7 +752,13 @@ export function changedPreferenceCount(outcomes: readonly PreferenceOutcome[]): 
 function applyPreferenceRule(
   key: string, value: JsonNode, finding: PersonalFinding
 ): { kept?: JsonNode; outcome: PreferenceOutcome } {
-  const before = personalValueText(finding)
+  // Les faits, recopiés tels quels : la phrase est faite à l'affichage, par la langue.
+  const before: PersonalValue = {
+    filled: finding.filled,
+    ...(finding.value === undefined ? {} : { value: finding.value }),
+    ...(finding.values === undefined ? {} : { values: finding.values }),
+    ...(finding.entryCount === undefined ? {} : { entryCount: finding.entryCount })
+  }
   const base = { key, kind: finding.kind, before }
 
   // Un emplacement présent mais vide n'est pas une donnée : il n'y a rien à remplacer, et

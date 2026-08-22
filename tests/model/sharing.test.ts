@@ -31,7 +31,7 @@ import {
   UNKNOWN_FORMAT
 } from '../../src/model/sharing'
 import PERSONAL_KEYS from '../../src/model/personalKeys.json'
-import { collectPersonalData } from '../../src/model/personalData'
+import { collectPersonalData, personalProse } from '../../src/model/personalData'
 import { makeTranslator } from '../../src/i18n/translate'
 import fr from '../../src/i18n/messages/fr'
 import nl from '../../src/i18n/messages/nl'
@@ -269,6 +269,8 @@ const shortName = (path: string): string => path.split('/').pop() ?? path
  */
 const FRENCH = sharingProse(makeTranslator('fr', fr))
 const DUTCH = sharingProse(makeTranslator('nl', nl))
+const FRENCH_VALUE = personalProse(makeTranslator('fr', fr)).value
+const DUTCH_VALUE = personalProse(makeTranslator('nl', nl)).value
 
 describe('buildExportFileName — la forme retenue', () => {
   const WHEN = new Date(2026, 7, 21, 15, 32, 7)
@@ -794,8 +796,10 @@ describe('anonymizeBackup — les réglages traversent, le pilote non', () => {
       expect(outcome.reasonKey).not.toBe('sharingReason.unknownPreference')
     }
     expect(result.preferences[0]).toMatchObject({
-      key: 'Pilot.Name', treatment: 'replace', before: 'Amélie Exemple', after: 'Pilote'
+      key: 'Pilot.Name', treatment: 'replace', after: 'Pilote'
     })
+    // `before` porte les **faits**, pas la phrase : la langue les met en mots.
+    expect(FRENCH_VALUE(result.preferences[0]!.before)).toBe('Amélie Exemple')
     expect(result.preferences[2]).toMatchObject({
       key: 'Navigation.WaypointFiles', treatment: 'drop'
     })
@@ -892,8 +896,10 @@ describe('anonymizeBackup — le fichier de référence, en chiffres', () => {
     // L'inventaire en dit la taille et le danger, jamais le contenu.
     const state = result.preferences.find((one) => one.key === 'Navigation.State')!
     expect(state.treatment).toBe('drop')
-    expect(state.before).toContain('non montrée')
-    expect(state.before).not.toContain('lat')
+    expect(FRENCH_VALUE(state.before)).toContain('non montrée')
+    expect(FRENCH_VALUE(state.before)).not.toContain('lat')
+    // Et la même taille, dite en néerlandais : rien de français ne survit à la bascule.
+    expect(DUTCH_VALUE(state.before)).toContain('niet getoond')
   })
 })
 

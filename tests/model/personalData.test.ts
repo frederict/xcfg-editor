@@ -6,15 +6,12 @@ import {
   collectPersonalData,
   findingsIn,
   isReadFromApk,
-  personalHomeLabel,
   personalProse,
-  personalValueText,
   NEVER_EXPORTED_PERSONAL_KEYS,
-  PERSONAL_BASIS_LABELS,
-  PERSONAL_CAVEAT,
-  PERSONAL_KIND_LABELS,
   PERSONAL_KNOWLEDGE,
-  SECURE_PERSONAL_KEYS
+  SECURE_PERSONAL_KEYS,
+  type PersonalBasis,
+  type PersonalKind
 } from '../../src/model/personalData'
 import PERSONAL_KEYS from '../../src/model/personalKeys.json'
 import { makeTranslator } from '../../src/i18n/translate'
@@ -25,6 +22,17 @@ import fr from '../../src/i18n/messages/fr'
 import nl from '../../src/i18n/messages/nl'
 import CATALOG_BASE from '../../src/catalog/preferenceCatalog/base.json'
 import { BACKUP_2026, FORMES_PRESERVEES, PAGES_2026 } from '../fixtures/paths'
+
+/** Les neuf natures et les trois bases, énumérées pour que rien ne soit oublié. */
+const KINDS: readonly PersonalKind[] = [
+  'identity', 'credential', 'contact', 'device', 'location',
+  'file', 'freeText', 'equipment', 'sharing'
+]
+const BASES: readonly PersonalBasis[] = ['scope', 'inputType', 'declared']
+
+/** La prose, dans deux langues : ce module ne connaît ni l'une ni l'autre. */
+const FRENCH = personalProse(makeTranslator('fr', fr))
+const DUTCH = personalProse(makeTranslator('nl', nl))
 
 function documentOf(path: string) {
   return parseJson(readFileSync(path, 'utf-8'))
@@ -82,14 +90,20 @@ describe('données personnelles — le relevé des clés vient du catalogue, pas
     expect(inventory.counts.layout).toBe(FREE_TEXT_KEYS.length)
     for (const finding of inventory.findings) {
       expect(finding.reasonKey).not.toBe('personalReason.unknown')
-      expect(PERSONAL_KIND_LABELS[finding.kind]).toBeDefined()
+      expect(FRENCH.kind(finding.kind)).not.toBe('')
     }
   })
 
-  it('le vocabulaire couvre les neuf natures et les trois bases', () => {
-    expect(Object.keys(PERSONAL_KIND_LABELS)).toHaveLength(9)
-    expect(Object.keys(PERSONAL_BASIS_LABELS)).toHaveLength(3)
-    expect(PERSONAL_CAVEAT).toContain('ne prouve donc pas une absence')
+  it('le vocabulaire couvre les neuf natures et les trois bases, en cinq langues', () => {
+    expect(KINDS).toHaveLength(9)
+    expect(BASES).toHaveLength(3)
+    for (const kind of KINDS) {
+      expect(FRENCH.kind(kind).length, kind).toBeGreaterThan(2)
+      expect(DUTCH.kind(kind), kind).not.toBe('')
+    }
+    for (const basis of BASES) expect(FRENCH.basis(basis).length, basis).toBeGreaterThan(5)
+    expect(FRENCH.caveat()).toContain('ne prouve donc pas une absence')
+    expect(DUTCH.caveat()).not.toBe(FRENCH.caveat())
   })
 
   it('les trois bases disent d’où vient l’affirmation, sans calquer l’anglais', () => {
@@ -97,12 +111,10 @@ describe('données personnelles — le relevé des clés vient du catalogue, pas
     // de saisie masqué » se lit « champ caché » alors qu'il se saisit en points ; et
     // « jugement de l'extraction » ne disait ni qui juge, ni quoi. Ce que les trois
     // portent, et qu'il ne faut pas perdre : lu dans XCTrack, ou jugé par nous.
-    expect(PERSONAL_BASIS_LABELS.scope).toBe('XCTrack le déclare lui-même')
-    expect(PERSONAL_BASIS_LABELS.inputType).toContain('comme un mot de passe')
-    expect(PERSONAL_BASIS_LABELS.declared).toBe('c’est notre jugement, pas celui de XCTrack')
-    for (const label of Object.values(PERSONAL_BASIS_LABELS)) {
-      expect(label).not.toMatch(/portée|masqué|extraction/)
-    }
+    expect(FRENCH.basis('scope')).toBe('XCTrack le déclare lui-même')
+    expect(FRENCH.basis('inputType')).toContain('comme un mot de passe')
+    expect(FRENCH.basis('declared')).toBe('c’est notre jugement, pas celui de XCTrack')
+    for (const basis of BASES) expect(FRENCH.basis(basis)).not.toMatch(/portée|masqué|extraction/)
     // La distinction reste calculable, et c'est elle que les écrans hiérarchisent.
     expect(isReadFromApk('scope')).toBe(true)
     expect(isReadFromApk('inputType')).toBe(true)
@@ -148,8 +160,8 @@ describe('données personnelles — où ça vit décide de ce qui voyage', () =>
       value: '+32 470 00 00 00'
     })
     expect(phone?.location).toMatchObject({ shortName: 'WButtonPhone', keyPath: 'contact/phoneNumber' })
-    expect(personalHomeLabel('layout')).toContain('part avec les pages')
-    expect(personalHomeLabel('preferences')).toContain('reste chez vous')
+    expect(FRENCH.home('layout')).toContain('part avec les pages')
+    expect(FRENCH.home('preferences')).toContain('reste chez vous')
   })
 })
 
@@ -225,7 +237,7 @@ describe('données personnelles — un emplacement vide n’est pas une donnée'
       total: 2, layout: 2, preferences: 0, filled: 0, empty: 2, read: 0, judged: 2
     })
     expect(inventory.findings.every((finding) => finding.value === undefined)).toBe(true)
-    expect(personalValueText(inventory.findings[0]!)).toBe('emplacement présent, mais vide')
+    expect(FRENCH.value(inventory.findings[0]!)).toBe('emplacement présent, mais vide')
   })
 
   it('la même fiche renseignée bascule tout entière du côté « renseigné »', () => {
@@ -234,7 +246,7 @@ describe('données personnelles — un emplacement vide n’est pas une donnée'
     const contact = inventory.findings.filter((finding) => finding.kind === 'contact')
     expect(contact).toHaveLength(2)
     expect(contact.every((finding) => finding.filled)).toBe(true)
-    expect(personalValueText(contact[0]!)).toBe('Jean Exemple')
+    expect(FRENCH.value(contact[0]!)).toBe('Jean Exemple')
   })
 
   it('une préférence à chaîne vide ou à liste vide est un emplacement, pas une donnée', () => {
@@ -255,7 +267,7 @@ describe('données personnelles — on ne déballe jamais une structure', () => 
     const inventory = collectPersonalData(documentOf(BACKUP_2026))
     const state = inventory.findings.find((finding) => finding.key === 'Navigation.State')!
 
-    const shown = personalValueText(state)
+    const shown = FRENCH.value(state)
     expect(shown).toContain('structure')
     expect(shown).not.toContain('lon')
     expect(state.value).toBeUndefined()
@@ -266,7 +278,7 @@ describe('données personnelles — on ne déballe jamais une structure', () => 
     const inventory = collectPersonalData(documentOf(BACKUP_2026))
     const sensors = inventory.findings.find((f) => f.key === 'Sensors.Configuration')!
     expect(sensors.kind).toBe('device')
-    expect(personalValueText(sensors)).toContain('structure')
+    expect(FRENCH.value(sensors)).toContain('structure')
   })
 
   /**
@@ -280,7 +292,7 @@ describe('données personnelles — on ne déballe jamais une structure', () => 
     expect(waypoints.values).toEqual([
       'coupe-exemple-2026.CompeGPS.wpt', 'cities5000-Exemple.wpt', 'xctrack-internal.wpt'
     ])
-    expect(personalValueText(waypoints)).toContain('coupe-exemple-2026')
+    expect(FRENCH.value(waypoints)).toContain('coupe-exemple-2026')
   })
 })
 
@@ -346,29 +358,21 @@ describe('données personnelles — la prose est traduisible, et ne dérive pas'
   const frenchTranslator = makeTranslator('fr', fr)
   const prose = personalProse(frenchTranslator)
 
-  it('dit en français exactement ce que les constantes héritées disent', () => {
-    for (const kind of Object.keys(PERSONAL_KIND_LABELS) as (keyof typeof PERSONAL_KIND_LABELS)[]) {
-      expect(prose.kind(kind), kind).toBe(PERSONAL_KIND_LABELS[kind])
-    }
-    for (const basis of Object.keys(PERSONAL_BASIS_LABELS) as (keyof typeof PERSONAL_BASIS_LABELS)[]) {
-      expect(prose.basis(basis), basis).toBe(PERSONAL_BASIS_LABELS[basis])
-    }
-    expect(prose.home('layout')).toBe(personalHomeLabel('layout'))
-    expect(prose.home('preferences')).toBe(personalHomeLabel('preferences'))
-    expect(prose.caveat()).toBe(PERSONAL_CAVEAT)
-  })
-
-  it('dit la même valeur que la fonction héritée, sur un fichier réel', () => {
-    // Y compris les deux cas particuliers : l'emplacement vide et la structure qu'on ne
-    // déballe pas.
-    const inventory = collectPersonalData(documentOf(BACKUP_2026))
-    expect(inventory.findings.length).toBeGreaterThan(0)
-    for (const finding of inventory.findings) {
-      expect(prose.value(finding), finding.key).toBe(personalValueText(finding))
-    }
-    const pages = collectPersonalData(documentOf(PAGES_2026))
-    for (const finding of pages.findings) {
-      expect(prose.value(finding), finding.key).toBe(personalValueText(finding))
+  it('ne laisse aucun mot français derrière lui quand on bascule la langue', () => {
+    // Les six constantes françaises qui doublaient cette prose pendant la transition ont
+    // disparu avec leur dernier appelant. Ce qui les remplace doit tout dire, partout.
+    expect(collectPersonalData(documentOf(BACKUP_2026)).findings.length).toBeGreaterThan(0)
+    for (const path of [BACKUP_2026, PAGES_2026]) {
+      const inventory = collectPersonalData(documentOf(path))
+      for (const finding of inventory.findings) {
+        expect(prose.value(finding), finding.key).not.toBe('')
+        // Une valeur écrite par le pilote est **recopiée** telle quelle dans les cinq
+        // langues : seules les deux phrases — emplacement vide, structure non montrée —
+        // changent avec elle.
+        const carried = finding.filled &&
+          (finding.value !== undefined || finding.values !== undefined)
+        expect(DUTCH.value(finding) === prose.value(finding), finding.key).toBe(carried)
+      }
     }
   })
 
