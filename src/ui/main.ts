@@ -2103,7 +2103,9 @@ function runPageOperation(
 
   // L'annonce se calcule sur l'état d'AVANT, et se garde : la reconstruction du
   // carrousel emporte la zone d'annonce que le module vient de remplir.
-  const text = operationAnnouncement(session.layout[orientation], operation, orientation)
+  const text = operationAnnouncement(
+    session.layout[orientation], operation, orientation, translator()
+  )
 
   try {
     applyPageOperation(session.container.document, orientation, operation)
@@ -2178,6 +2180,7 @@ function fillPagesDialog(dialog: HTMLDialogElement): void {
       pages: current.layout[orientation],
       orientation,
       ctx,
+      tr,
       // Voir le texte ci-dessus : on s'en tient à ce que l'appareil sait faire.
       allowClassChange: false,
       onOperation: (operation, description) => {
@@ -2998,6 +3001,7 @@ function installDeviceSelector(initialDevice: Device): void {
   tools.textContent = ''
   const selector = buildDeviceSelector({
     initialDevice,
+    tr: translator(),
     onChange: (device) => {
       if (!session) return
       session.device = device
