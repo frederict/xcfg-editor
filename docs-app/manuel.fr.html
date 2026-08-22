@@ -32,10 +32,13 @@
     <p>Une sauvegarde XCTrack porte votre nom, votre voile, vos capteurs appairés, vos
     fichiers de waypoints — jusqu’au nom de la compétition à laquelle vous participez. Ne
     l’envoyez jamais telle quelle : ni à un autre pilote, ni sur un forum, ni dans un
-    signalement. Au moment d’enregistrer, choisissez
-    <span class="manual__ui">Version partageable, sans données personnelles</span>, et
-    relisez la liste des remplacements que l’outil vous montre avant de télécharger.
-    Le chapitre&nbsp;10 explique tout cela en détail.</p>
+    signalement. Au moment d’enregistrer, deux des trois issues produisent un fichier
+    partageable : <span class="manual__ui">Tous vos réglages, sans ce qui vous désigne</span>
+    garde vos réglages et remplace ce qui vous nomme,
+    <span class="manual__ui">Version partageable, sans données personnelles</span> ne
+    transporte que vos pages. Relisez dans les deux cas la liste des remplacements que
+    l’outil vous montre avant de télécharger. Le chapitre&nbsp;10 explique tout cela en
+    détail.</p>
   </div>
 
   <nav class="manual__toc">
@@ -797,12 +800,24 @@
   <span class="manual__ui">Enregistrer cette configuration</span>, qui vous demande une
   seule chose : <strong>que faut-il enregistrer ?</strong></p>
 
+  <p>Trois réponses, rangées dans l’ordre de ce qui part : tout, tout sauf ce qui vous
+  désigne, vos pages seules. Descendre d’un cran veut toujours dire « donner moins ».
+  Chaque issue porte, sous sa carte, l’inventaire de ce qu’elle fera — il apparaît quand
+  vous la cochez, et <strong>avant</strong> tout téléchargement.</p>
+
   <h3>Le nom du fichier est réglé d’avance</h3>
 
   <p>Il est horodaté et <strong>ne reprend rien du nom d’origine</strong>, qui contient
   souvent un prénom. Il ressemble à
   <span class="manual__file">xctrack_2026-08-21-153207_backup.xcfg</span>. Comme la date est
   écrite à l’envers, l’ordre alphabétique de vos fichiers est leur ordre chronologique.</p>
+
+  <p>Le nom porte aussi le <strong>format</strong> du fichier produit et la mention
+  <span class="manual__file">-anon</span> quand des valeurs ont été remplacées :
+  <span class="manual__file">…_backup-anon.xcfg</span> est une sauvegarde entière,
+  <span class="manual__file">…_pages-anon.xcfg</span> ne porte que des pages. Ne les
+  confondez pas : un <span class="manual__file">backup</span> réimporte des réglages, un
+  <span class="manual__file">pages</span> non.</p>
 
   <h3>Issue 1 — « Votre configuration, telle qu’elle est »</h3>
 
@@ -815,15 +830,68 @@
   <p>C’est l’issue à choisir pour remettre le fichier sur <em>votre</em> instrument. La
   boîte vous rappelle alors ce qu’il porte de vous.</p>
 
-  <h3>Issue 2 — « Version partageable, sans données personnelles »</h3>
+  <h3>Issue 2 — « Tous vos réglages, sans ce qui vous désigne »</h3>
+
+  <p>Le fichier reste une <strong>sauvegarde entière</strong>. Votre vario et ses sons, vos
+  unités, votre thème, vos seuils d’espaces aériens, vos touches : tout y est. Ce qui vous
+  désigne est remplacé par une valeur neutre, ou retiré ligne par ligne.</p>
+
+  <p><strong>C’est l’issue à choisir pour demander de l’aide sur un réglage</strong> — sur
+  un forum, dans un message à un autre pilote. L’autre version partageable, elle, ne
+  transporte aucun réglage : elle ne peut donc pas porter votre question.</p>
+
+  <p>Chaque ligne traitée est montrée avec son verdict et sa raison, groupée par ce qui lui
+  arrive :</p>
+
+  <ul>
+    <li><span class="manual__ui">Remplacés par une valeur neutre</span> — votre nom devient
+    « Pilote », votre voile « Voile », le thème de carte que vous avez installé revient à la
+    valeur d’usine de XCTrack. La ligne garde sa place et son type ;</li>
+    <li><span class="manual__ui">Retirés du fichier</span> — la ligne entière part, parce
+    que sa valeur est une structure : votre tâche en cours et ses coordonnées, vos capteurs
+    appairés et leurs adresses Bluetooth, vos fichiers de waypoints, vos cartes hors-ligne,
+    vos messages rapides de Livetracking. Écrire une structure de remplacement reviendrait à
+    fabriquer une forme que XCTrack n’écrit jamais ; une ligne absente, elle, est l’état
+    d’une installation neuve ;</li>
+    <li><span class="manual__ui">Conservés tels quels, et voici pourquoi</span> — ce que
+    l’outil a <em>refusé</em> de toucher, dit aussi clairement que le reste : vos choix de
+    diffusion Livetrack, la catégorie de votre voile. Ce sont des réglages, pas des données :
+    ils ne portent ni nom, ni numéro, ni adresse, et c’est souvent d’eux qu’on vient
+    parler ;</li>
+    <li><span class="manual__ui">Présents dans le fichier, mais vides</span> — l’emplacement
+    existe et ne porte rien. Il n’y a rien à y remplacer.</li>
+  </ul>
+
+  <p>Sur la sauvegarde de référence de ce projet, cela donne <strong>16 réglages personnels
+  : 3 remplacés, 4 retirés, 4 conservés, 5 vides</strong>.</p>
+
+  <p>Ce que le destinataire n’aura pas, ce sont les lignes retirées — et aucune n’est un
+  réglage : ce sont des fichiers et des appareils qui vivent chez vous, dont il n’aurait
+  rien pu faire.</p>
+
+  <p>Cette issue n’apparaît pas sur un fichier qui ne porte aucune préférence — un export
+  « pages », par exemple. Elle y produirait exactement le même fichier que l’issue&nbsp;3,
+  sous le même nom, et deux cartes indiscernables valent moins qu’une carte de moins.</p>
+
+  <div class="manual__warning">
+    <span class="manual__boxTitle">Cette issue repose sur une liste, et une liste se périme</span>
+    <p>Elle traite les 44 réglages personnels connus de XCTrack et les onze champs de texte
+    des gadgets. Le format change à chaque version : <strong>un réglage personnel apparu
+    depuis ne serait pas dans la liste, et partirait en clair.</strong> L’issue&nbsp;3, plus
+    bas, ne dépend d’aucune liste — elle ne transporte aucun réglage du tout.</p>
+  </div>
+
+  <h3>Issue 3 — « Version partageable, sans données personnelles »</h3>
 
   <p>C’est un export « pages » dont les textes que vous avez écrits sont remplacés par des
   textes neutres. La disposition est conservée ; les préférences ne partent pas.</p>
 
-  <p><strong>C’est l’issue à choisir dès que le fichier sort de chez vous</strong> : un
-  autre pilote, un forum, une issue GitHub, une pièce jointe à un message.</p>
+  <p><strong>C’est l’issue la plus sûre</strong>, et la seule qui ne dépende d’aucune liste
+  de réglages : les préférences n’en sont pas retirées, elles n’y sont jamais mises.
+  Choisissez-la quand vous partagez une <em>mise en page</em> — et l’issue&nbsp;2 quand
+  votre question porte sur un <em>réglage</em>.</p>
 
-  <p>Avant le téléchargement, l’outil vous montre trois choses :</p>
+  <p>Avant le téléchargement, l’outil vous montre :</p>
 
   <ul>
     <li><span class="manual__ui">Ce qui ne partira pas</span> — les sections entières qui
@@ -842,6 +910,18 @@
   votre mise en page : un titre devient « Titre 1 », un numéro de téléphone devient un
   numéro au même gabarit mais non composable, une adresse web devient une adresse d’un
   domaine réservé qui ne mène nulle part.</p>
+
+  <h3>Ce qui a l’air d’un texte que vous auriez écrit</h3>
+
+  <p>Sous chacune des deux issues partageables, l’outil ajoute un dernier paragraphe. Il y
+  signale les textes qui <em>ne sont dans aucune de ses listes</em> et qui ressemblent
+  pourtant à quelque chose que vous auriez écrit : une phrase, un mot accentué, une adresse
+  web ou électronique, un chemin de fichier, une adresse d’appareil, un numéro.</p>
+
+  <p><strong>Il les signale, il ne les remplace pas.</strong> Remplacer sur un soupçon
+  abîmerait des réglages légitimes — et vous seul savez si vous avez écrit ce texte. Sur les
+  fichiers réels de nos essais, ce paragraphe ne signale rien : ce que XCTrack écrit
+  lui-même est fait de mots choisis dans des listes, jamais de phrases.</p>
 
   <div class="manual__warning">
     <span class="manual__boxTitle">L’inventaire est la vérification, pas notre promesse</span>
@@ -995,9 +1075,11 @@
     <span class="manual__file">.xcfg</span> porte votre nom, votre voile, vos capteurs, vos
     fichiers de waypoints, parfois vos coordonnées.</p>
     <p>Si un fichier est indispensable pour comprendre le problème, produisez-en d’abord une
-    <span class="manual__ui">Version partageable, sans données personnelles</span> avec cet
-    outil, relisez l’inventaire des remplacements qu’il vous montre, et n’envoyez que
-    celle-là.</p>
+    version partageable avec cet outil — <span class="manual__ui">Version partageable, sans
+    données personnelles</span> si le problème porte sur une page,
+    <span class="manual__ui">Tous vos réglages, sans ce qui vous désigne</span> s’il porte
+    sur un réglage. Relisez l’inventaire des remplacements qu’il vous montre, et n’envoyez
+    que celui-là.</p>
   </div>
 
 </div>
