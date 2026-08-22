@@ -305,6 +305,13 @@ author can check is worth nothing.
   Each outcome carries its inventory: every line touched, where it sits and why, shown
   *before* the download. The name of the file produced is timestamped and **keeps nothing
   of the original name**, which often contains a first name.
+
+  Where the browser allows it — Chrome, Edge, Opera — you are the one who says where the
+  file lands, and the tool then reports that the write was **confirmed**. Everywhere else —
+  Firefox, Safari, every phone browser — it falls back to an ordinary download, of which
+  this page sees nothing: it then says what it *asked* the browser to do, and where to check
+  for yourself. And if you close the system dialog without saving anything, it says
+  *cancelled*, never *failed*.
 - **Store several configurations under a name**, inside your browser, and come back to
   one of them: one for competition, one for hike-and-fly, one for the school. The bytes
   stored are those of your file, checked by hash when read back. Nothing is sent

@@ -1016,9 +1016,21 @@
 
   <h3>Una vez guardado: el recibo</h3>
 
-  <p>El cuadro se cierra y la barra superior muestra una línea que nombra el archivo
-  producido, su tamaño y lo que la herramienta ha hecho: ha pedido a su navegador que lo
-  guarde. Una segunda línea dice dónde buscarlo — entre sus descargas.</p>
+  <p>El cuadro se cierra y la barra superior muestra un recibo. Lo que dice depende de lo
+  que su navegador permite, y hay dos casos.</p>
+
+  <p><strong>En Chrome, Edge y Opera</strong>, un cuadro de su propio sistema le pregunta
+  dónde poner el archivo, con el nombre que la herramienta propone — y que usted sigue
+  siendo libre de cambiar. El recibo dice entonces que su navegador ha
+  <strong>confirmado la escritura</strong>, en el lugar que usted eligió: no hay nada que
+  buscar en otra parte. Si cierra ese cuadro sin guardar nada, el recibo también lo dice, y
+  dice <em>cancelado</em> — no es una avería, no se ha escrito nada y su configuración no se
+  ha movido.</p>
+
+  <p><strong>En todo lo demás</strong> — Firefox, Safari y todos los navegadores de
+  teléfono — el archivo sale por una descarga ordinaria. El recibo nombra entonces el
+  archivo producido, su tamaño y lo que la herramienta ha hecho: ha pedido a su navegador
+  que lo guarde. Una segunda línea dice dónde buscarlo — entre sus descargas.</p>
 
   <p><strong>Nada lo borra solo.</strong> No desaparece mientras usted lo lee, ni mientras se
   ha ido a comprobar sus descargas: sin un gesto suyo, se queda. Pasado el tiempo de
@@ -1034,8 +1046,15 @@
   pantalla que tiene delante. Nada tiene que proteger en la que ha dejado atrás.</p>
 
   <div class="manual__measured">
-    <span class="manual__boxTitle">Esta página no puede saber que el archivo ha llegado</span>
-    <p>El recibo dice lo que la herramienta ha hecho — un archivo fabricado, nombrado y su
+    <span class="manual__boxTitle">Lo que esta página sabe de su archivo, y lo que no sabe</span>
+    <p>Allí donde su navegador escribe el archivo él mismo, la escritura queda
+    <strong>confirmada</strong>, y el recibo puede decirlo. <strong>Medido en Chrome el 22 de
+    agosto de 2026: el archivo de destino permanece vacío mientras la escritura no se cierra,
+    y después lleva exactamente los bytes esperados</strong> — releídos fuera del navegador,
+    en el disco. Eso no dice nada más: lo que sea del archivo después, en una carpeta
+    sincronizada o en una llave que se retira, ya no es asunto de esta página.</p>
+    <p>En el camino de la descarga ordinaria, nada de todo eso. El recibo dice lo que la
+    herramienta ha hecho — un archivo fabricado, nombrado y su
     guardado pedido al navegador —, nunca lo que el navegador ha hecho después con él.
     <strong>Medido en Chrome, dos veces: tres guardados seguidos en una pestaña, tres
     archivos llegados; el mismo gesto en otra pestaña, ninguno de los tres</strong> — ni

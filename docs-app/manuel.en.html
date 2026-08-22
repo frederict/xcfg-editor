@@ -1015,9 +1015,20 @@
 
   <h3>Once saved: the receipt</h3>
 
-  <p>The dialog closes, and the top bar shows a line naming the file produced, its size, and
-  what the tool did with it: it asked your browser to save it. A second line says where to
-  look for it — your downloads.</p>
+  <p>The dialog closes, and the top bar shows a receipt. What it says depends on what your
+  browser allows, and there are two cases.</p>
+
+  <p><strong>On Chrome, Edge and Opera</strong>, a dialog from your own system asks where to
+  put the file, under the name the tool suggests — which you remain free to change. The
+  receipt then says that your browser <strong>confirmed the write</strong>, in the place you
+  chose: there is nothing to go looking for elsewhere. If you close that dialog without
+  saving anything, the receipt says so too, and says <em>cancelled</em> — that is not a
+  breakdown, nothing was written, and your configuration has not moved.</p>
+
+  <p><strong>Everywhere else</strong> — Firefox, Safari, and every phone browser — the file
+  leaves through an ordinary download. The receipt then names the file produced, its size,
+  and what the tool did with it: it asked your browser to save it. A second line says where
+  to look for it — your downloads.</p>
 
   <p><strong>Nothing clears it on its own.</strong> It does not vanish while you are reading
   it, nor while you are away checking your downloads: without a gesture from you, it stays.
@@ -1033,8 +1044,15 @@
   you. It has nothing to protect on the one you left behind.</p>
 
   <div class="manual__measured">
-    <span class="manual__boxTitle">This page cannot know that the file arrived</span>
-    <p>The receipt says what the tool did — a file produced, named, and its saving asked of
+    <span class="manual__boxTitle">What this page knows about your file, and what it does not</span>
+    <p>Where your browser writes the file itself, the write is
+    <strong>confirmed</strong>, and the receipt may say so. <strong>Measured on Chrome on
+    22 August 2026: the target file stays empty until the write is closed, then carries
+    exactly the bytes expected</strong> — read back outside the browser, on the disk. That
+    says nothing more: what becomes of the file afterwards, in a synced folder or on a stick
+    someone pulls out, is no longer this page’s business.</p>
+    <p>On the ordinary download path, none of that. The receipt says what the tool did — a
+    file produced, named, and its saving asked of
     the browser — never what the browser did with it afterwards. <strong>Measured on Chrome,
     twice: three saves in a row in one tab, three files arrived; the same gesture in another
     tab, none of the three</strong> — not even the first. That refusal is reported to the

@@ -1037,6 +1037,12 @@ function viewSignature(): string {
  * 42 mots en français, 41 en allemand et en néerlandais, 40 en anglais, 39 en espagnol.
  * Le français est le plus long des cinq ; c'est lui qui décide.
  *
+ * ⚠ Ce compte est celui du reçu **du repli**, et il reste le plus long des trois : les
+ * deux autres — l'écriture confirmée, l'annulation — tiennent en une seule phrase, sans
+ * la ligne qui dit où regarder. Le délai est donc calculé sur le pire cas, ce qui est le
+ * bon sens : un même nombre ne peut pas suivre trois reçus, et le raccourcir au plus
+ * court volerait du temps de lecture à celui qui en demande le plus.
+ *
  * Supposé : 130 mots par minute. C'est une vitesse de lecture lente, choisie exprès —
  * l'usage courant place la lecture silencieuse d'un texte suivi entre 200 et 260 mots par
  * minute, mais ce reçu-ci n'est pas un texte suivi : il contient un nom de fichier

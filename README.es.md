@@ -314,6 +314,13 @@ de fidelidad que solo el autor puede comprobar no vale nada.
   Cada salida lleva su inventario: cada línea tocada, su sitio y su razón, mostrados *antes*
   de la descarga. El nombre del archivo producido lleva marca de tiempo y **no retoma nada
   del nombre de origen**, que a menudo contiene un nombre de pila.
+
+  Allí donde el navegador lo permite — Chrome, Edge, Opera —, es usted quien designa dónde
+  se posa el archivo, y la herramienta dice después que la escritura ha sido
+  **confirmada**. En todo lo demás — Firefox, Safari, todos los navegadores de teléfono —
+  vuelve a una descarga ordinaria, de la que esta página no ve nada: dice entonces lo que ha
+  *pedido* al navegador, y dónde comprobarlo usted mismo. Y si cierra el cuadro de su
+  sistema sin guardar nada, dice *cancelado*, nunca *fallido*.
 - **Guardar varias configuraciones bajo un nombre**, en su navegador, y volver a una de
   ellas: una para la competición, una para el vivac, una para la escuela. Los bytes guardados
   son los de su archivo, comprobados por huella en cada lectura. No se envía nada a ninguna

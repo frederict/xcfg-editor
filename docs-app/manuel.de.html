@@ -1073,9 +1073,22 @@
 
   <h3>Nach dem Speichern: die Bestätigung</h3>
 
-  <p>Das Fenster schließt sich, und die obere Leiste zeigt eine Zeile, die die erzeugte
-  Datei nennt, ihre Größe und das, was das Werkzeug getan hat: es hat Ihren Browser gebeten,
-  sie zu speichern. Eine zweite Zeile sagt, wo Sie sie finden — bei Ihren Downloads.</p>
+  <p>Das Fenster schließt sich, und die obere Leiste zeigt eine Bestätigung. Was sie sagt,
+  hängt davon ab, was Ihr Browser zulässt, und es gibt zwei Fälle.</p>
+
+  <p><strong>Auf Chrome, Edge und Opera</strong> fragt ein Fenster Ihres Systems, wohin die
+  Datei gelegt werden soll — unter dem Namen, den das Werkzeug vorschlägt und den Sie
+  weiterhin ändern dürfen. Die Bestätigung sagt dann, dass Ihr Browser das
+  <strong>Schreiben bestätigt</strong> hat, an der von Ihnen gewählten Stelle: anderswo ist
+  nichts zu suchen. Schließen Sie dieses Fenster, ohne etwas zu speichern, sagt die
+  Bestätigung auch das, und zwar <em>abgebrochen</em> — das ist keine Störung, es wurde
+  nichts geschrieben, und Ihre Konfiguration ist unverändert.</p>
+
+  <p><strong>Überall sonst</strong> — Firefox, Safari und jeder Telefon-Browser — verlässt
+  die Datei das Werkzeug über einen gewöhnlichen Download. Die Bestätigung nennt dann die
+  erzeugte Datei, ihre Größe und das, was das Werkzeug getan hat: es hat Ihren Browser
+  gebeten, sie zu speichern. Eine zweite Zeile sagt, wo Sie sie finden — bei Ihren
+  Downloads.</p>
 
   <p><strong>Nichts löscht sie von selbst.</strong> Sie verschwindet nicht, während Sie
   lesen, und auch nicht, während Sie bei Ihren Downloads nachsehen: ohne Ihr Zutun bleibt
@@ -1093,8 +1106,16 @@
   zurückgelassenen hat sie nichts zu schützen.</p>
 
   <div class="manual__measured">
-    <span class="manual__boxTitle">Diese Seite kann nicht wissen, ob die Datei angekommen ist</span>
-    <p>Die Bestätigung sagt, was das Werkzeug getan hat — eine Datei erzeugt, benannt und den
+    <span class="manual__boxTitle">Was diese Seite von Ihrer Datei weiß, und was nicht</span>
+    <p>Wo Ihr Browser die Datei selbst schreibt, ist das Schreiben
+    <strong>bestätigt</strong>, und die Bestätigung darf es sagen. <strong>Am 22. August 2026
+    auf Chrome gemessen: die Zieldatei bleibt leer, solange das Schreiben nicht geschlossen
+    ist, und trägt danach genau die erwarteten Bytes</strong> — außerhalb des Browsers auf
+    der Platte nachgelesen. Mehr sagt das nicht: was aus der Datei danach wird, in einem
+    synchronisierten Ordner oder auf einem abgezogenen Stick, geht diese Seite nichts mehr
+    an.</p>
+    <p>Auf dem Weg des gewöhnlichen Downloads nichts davon. Die Bestätigung sagt, was das
+    Werkzeug getan hat — eine Datei erzeugt, benannt und den
     Browser um ihre Speicherung gebeten —, nie, was der Browser danach damit gemacht hat.
     <strong>Auf Chrome zweimal gemessen: drei Speichervorgänge nacheinander in einem Tab,
     drei angekommene Dateien; dieselbe Handlung in einem anderen Tab, keine der drei</strong>

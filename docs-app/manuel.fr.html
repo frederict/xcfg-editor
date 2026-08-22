@@ -1055,9 +1055,20 @@
 
   <h3>Une fois enregistré : le reçu</h3>
 
-  <p>La boîte se ferme, et la barre du haut affiche une ligne qui nomme le fichier produit,
-  sa taille, et ce que l’outil en a fait : il en a demandé l’enregistrement à votre
-  navigateur. Une seconde ligne dit où le retrouver — vos téléchargements.</p>
+  <p>La boîte se ferme, et la barre du haut affiche un reçu. Ce qu’il dit dépend de ce que
+  votre navigateur permet, et il y a deux cas.</p>
+
+  <p><strong>Sur Chrome, Edge et Opera</strong>, une boîte de votre système vous demande où
+  poser le fichier, sous le nom que l’outil propose — et que vous restez libre de changer.
+  Le reçu dit alors que votre navigateur a <strong>confirmé l’écriture</strong>, à l’endroit
+  que vous avez choisi : il n’y a rien à aller chercher ailleurs. Si vous refermez la boîte
+  sans rien enregistrer, le reçu le dit aussi, et dit bien <em>annulé</em> — ce n’est pas une
+  panne, rien n’a été écrit, et votre configuration n’a pas bougé.</p>
+
+  <p><strong>Partout ailleurs</strong> — Firefox, Safari, et tous les navigateurs de
+  téléphone —, le fichier part par un téléchargement ordinaire. Le reçu nomme alors le
+  fichier produit, sa taille, et ce que l’outil en a fait : il en a demandé l’enregistrement
+  à votre navigateur. Une seconde ligne dit où le retrouver — vos téléchargements.</p>
 
   <p><strong>Rien ne l’efface tout seul.</strong> Il ne disparaît pas pendant que vous le
   lisez, ni pendant que vous êtes parti vérifier dans vos téléchargements : sans un geste de
@@ -1075,8 +1086,15 @@
   derrière vous.</p>
 
   <div class="manual__measured">
-    <span class="manual__boxTitle">Cette page ne peut pas savoir que le fichier est arrivé</span>
-    <p>Le reçu dit ce que l’outil a fait — un fichier fabriqué, nommé, et son enregistrement
+    <span class="manual__boxTitle">Ce que cette page sait de votre fichier, et ce qu’elle ne sait pas</span>
+    <p>Là où votre navigateur écrit le fichier lui-même, l’écriture est
+    <strong>confirmée</strong>, et le reçu peut le dire. <strong>Mesuré le 22 août 2026 sur
+    Chrome : le fichier visé reste vide tant que l’écriture n’est pas close, puis porte
+    exactement les octets attendus</strong> — relus hors du navigateur, sur le disque. Cela
+    ne dit rien de plus : ce que le fichier devient ensuite, dans un dossier synchronisé ou
+    sur une clé qu’on retire, ne regarde plus cette page.</p>
+    <p>Sur le chemin du téléchargement ordinaire, rien de tout cela. Le reçu dit ce que
+    l’outil a fait — un fichier fabriqué, nommé, et son enregistrement
     demandé au navigateur —, jamais ce que le navigateur en a fait ensuite. <strong>Mesuré
     sur Chrome, deux fois : trois enregistrements de suite dans un onglet, trois fichiers
     arrivés ; le même geste dans un autre onglet, aucun des trois</strong> — pas même le

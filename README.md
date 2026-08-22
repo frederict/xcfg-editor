@@ -380,6 +380,13 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
   Chaque issue porte son inventaire : chaque ligne touchée, son emplacement et sa raison,
   montrés *avant* le téléchargement. Le nom du fichier produit est horodaté et **ne
   reprend rien du nom d'origine**, qui contient souvent un prénom.
+
+  Là où le navigateur le permet — Chrome, Edge, Opera —, c'est vous qui désignez où le
+  fichier se pose, et l'outil dit ensuite que l'écriture a été **confirmée**. Partout
+  ailleurs — Firefox, Safari, tous les navigateurs de téléphone —, il retombe sur un
+  téléchargement ordinaire, dont cette page ne voit rien : elle dit alors ce qu'elle a
+  *demandé* au navigateur, et où aller le vérifier. Et si vous refermez la boîte du système
+  sans rien enregistrer, elle dit *annulé*, jamais *échoué*.
 - **Ranger plusieurs configurations sous un nom**, dans votre navigateur, et revenir à
   l'une d'elles : une pour la compétition, une pour le vol-bivouac, une pour l'école. Les
   octets rangés sont ceux de votre fichier, vérifiés par empreinte à la relecture. Rien
@@ -835,6 +842,13 @@ montré avant le téléchargement, pas après.*
 <!--
   REFAIRE CETTE CAPTURE — captures/enregistrer-et-partager.<langue>.png (920 × 2480)
 
+  VÉRIFIÉE ET GARDÉE le 2026-08-22, au soir : le chantier du reçu d'enregistrement — la
+               boîte du système qui laisse le pilote poser lui-même son fichier — ne touche
+               PAS ce cadre. Ce qu'il change vit après la fermeture de cette boîte-ci : le
+               reçu de la barre de tête, et lui seul. Aucune ligne de `sharingDialog.ts`,
+               aucun intitulé, aucune hauteur. Les trois péremptions signalées plus bas
+               restent, elles, entières.
+
   DETTE PAYÉE le 2026-08-22, en fin de journée : le « Fermer » en haut à droite de la
                boîte n'avait aucun filet — il se lisait comme un mot posé là. Toutes les
                commandes discrètes de l'outil ont repris le filet plein de `.btn` ; c'est
@@ -1016,6 +1030,16 @@ plutôt que par la visite guidée, et son sommaire reste à gauche pendant toute
   Aucun `<span class="manual__ui">` ajouté ni retiré. Et surtout : tout cela est au
   chapitre 8, quand le cadre s'arrête au milieu du chapitre 1. Le sommaire, lui, ne liste
   que les `<h2>` : il ne bouge pas.
+
+  VÉRIFIÉE ET GARDÉE UNE QUATRIÈME FOIS le 2026-08-22, au soir : le chapitre 10 a gagné
+  trois paragraphes — le reçu ne dit plus la même chose selon que le navigateur écrit le
+  fichier lui-même ou le remet à un téléchargement ordinaire — et l'encadré mesuré de fin
+  de chapitre a changé de titre et gagné un paragraphe. AUCUN titre de chapitre ni de
+  section : `<h2>` et `<h3>` comptés dans les cinq manuels, la liste des titres est
+  identique à celle d'avant, caractère pour caractère. Aucun `<span class="manual__ui">`
+  ajouté ni retiré non plus — 149 en français, 152 en anglais, 155 en allemand, 153 en
+  espagnol, 152 en néerlandais, les mêmes qu'avant. Le sommaire ne bouge pas, et le cadre
+  s'arrête toujours au milieu du chapitre 1.
 
   VÉRIFIÉE ET GARDÉE UNE TROISIÈME FOIS le 2026-08-22, au soir : le chapitre 5 a gagné un
   paragraphe — « Gérer les pages » renvoie désormais vers l'issue qui n'envoie qu'une

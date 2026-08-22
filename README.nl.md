@@ -324,6 +324,13 @@ een belofte van getrouwheid die alleen de auteur kan nagaan, is niets waard.
   Elke uitweg draagt haar inventaris: elke aangeraakte regel, haar plaats en haar reden,
   getoond *vóór* de download. De naam van het gemaakte bestand draagt een tijdstempel en
   **neemt niets van de oorspronkelijke naam over**, die vaak een voornaam bevat.
+
+  Waar de browser het toelaat — Chrome, Edge, Opera — bepaalt u zelf waar het bestand
+  terechtkomt, en het gereedschap meldt daarna dat het wegschrijven is **bevestigd**. Overal
+  elders — Firefox, Safari, elke telefoonbrowser — valt het terug op een gewone download,
+  waarvan deze pagina niets ziet: ze zegt dan wat ze de browser heeft *gevraagd*, en waar u
+  het zelf kunt nagaan. En sluit u het venster van uw systeem zonder iets op te slaan, dan
+  zegt ze *geannuleerd*, nooit *mislukt*.
 - **Meerdere configuraties onder een naam opbergen**, in uw browser, en naar een ervan
   terugkeren: een voor de wedstrijd, een voor de vliegbivak, een voor de school. De
   opgeborgen bytes zijn die van uw bestand, bij het herlezen met de vingerafdruk nagekeken.

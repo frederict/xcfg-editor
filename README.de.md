@@ -332,6 +332,13 @@ Absicht — ein Treueversprechen, das nur der Autor nachprüfen kann, ist nichts
   Jeder Weg trägt sein Verzeichnis: jede angerührte Zeile, ihr Ort und ihr Grund, gezeigt
   *vor* dem Herunterladen. Der Name der erzeugten Datei trägt einen Zeitstempel und
   **übernimmt nichts vom ursprünglichen Namen**, der oft einen Vornamen enthält.
+
+  Wo der Browser es zulässt — Chrome, Edge, Opera —, bestimmen Sie selbst, wohin die Datei
+  gelegt wird, und das Werkzeug meldet danach, dass das Schreiben **bestätigt** wurde.
+  Überall sonst — Firefox, Safari, jeder Telefon-Browser — fällt es auf einen gewöhnlichen
+  Download zurück, von dem diese Seite nichts sieht: sie sagt dann, worum sie den Browser
+  *gebeten* hat, und wo Sie selbst nachsehen können. Und wenn Sie das Fenster Ihres Systems
+  schließen, ohne etwas zu speichern, sagt sie *abgebrochen*, nie *fehlgeschlagen*.
 - **Mehrere Konfigurationen unter einem Namen ablegen**, in Ihrem Browser, und zu einer
   davon zurückkehren: eine für den Wettkampf, eine für das Biwakfliegen, eine für die
   Schule. Die abgelegten Bytes sind die Ihrer Datei, beim Wiedereinlesen anhand der
