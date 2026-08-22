@@ -41,6 +41,11 @@ la plaque qui la porte — est identique dans toutes.*
                sur cet écran, et le cadrage ci-dessous reste bon. Non refaite le jour même,
                et volontairement : d'autres chantiers écrivaient encore dans cet écran.
 
+  ⚠ ET POUR UNE SECONDE RAISON, le même jour : « ← Vue d'ensemble », « Zoom 100 % » et
+               « Masquer la liste » sont, sur cette image, trois mots sans contour. Les
+               commandes discrètes ont repris le filet plein de `.btn` — le cadrage ne
+               bouge pas, ces trois boutons ne changent que d'aspect.
+
   Écran ...... l'éditeur entier, mode consultation, panneau des gadgets ouvert.
   Langues .... UN SEUL exemplaire, en français, employé par les cinq README. Le sujet
                est une géométrie, pas un texte : la page, la règle, la plaque. Les
@@ -552,6 +557,12 @@ montré avant le téléchargement, pas après.*
 
 <!--
   REFAIRE CETTE CAPTURE — captures/enregistrer-et-partager.<langue>.png (920 × 2480)
+
+  ⚠ PÉRIMÉE DEPUIS LE 2026-08-22 : le « Fermer » en haut à droite de la boîte n'a, sur
+               ces images, aucun filet — il se lit comme un mot posé là. Toutes les
+               commandes discrètes de l'outil ont repris le filet plein de `.btn` : c'est
+               le seul objet de ce cadre qui change, et la recette ci-dessous reste bonne.
+
   Écran ...... la boîte d'enregistrement, ses trois issues : « Votre configuration,
                telle qu'elle est », « Tous vos réglages, sans ce qui vous désigne » et
                « Version partageable, sans données personnelles ».
