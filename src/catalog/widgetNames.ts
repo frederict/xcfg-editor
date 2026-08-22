@@ -84,3 +84,28 @@ export function readableName(shortName: string, language: string): string {
   }
   return WIDGET_NAMES[shortName] ?? shortName
 }
+
+/**
+ * Le libellé d'une **classe de page** — `WPThermalAssistant`, `WPXCAssistant`,
+ * `WPCompetition`, `WPEmpty` — dans la langue demandée.
+ *
+ * XCTrack range ses classes de page dans le même paquet de ressources que ses gadgets
+ * (`org/xcontest/XCTrack/widget/wp/…`, clés `wp<Nom>Title`), et
+ * `tools/extract-widget-labels.py` les relève avec eux : `WIDGET_LABELS` les porte donc
+ * déjà, en 32 langues. Cet accesseur existe pour le **dire** — un appelant qui écrirait
+ * `readableName('WPEmpty', …)` laisserait croire qu'une page est un gadget — et pour
+ * couper le repli qui n'a pas de sens ici : `WIDGET_NAMES` est une table de noms de
+ * gadgets, aucune classe de page n'y figure.
+ *
+ * Repli : la langue demandée, puis l'anglais (la locale par défaut de l'APK, celle
+ * qu'Android sert quand la traduction manque), puis le nom court tel quel — une classe
+ * qu'aucune version relevée ne documente reste nommée.
+ *
+ * ⚠️ Axe `labels` : la langue du **fichier ouvert**, jamais celle de notre interface.
+ * Voir `src/i18n/axes.ts`.
+ */
+export function pageClassLabel(shortName: string, language: string): string {
+  const labels = WIDGET_LABELS[shortName]
+  if (labels === undefined) return shortName
+  return labels[language] ?? labels.en ?? shortName
+}
