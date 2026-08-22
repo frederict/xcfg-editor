@@ -224,11 +224,19 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
 - **Dire ce que votre fichier révèle de vous** avant que vous ne le partagiez. Un export
   `backup` porte votre nom, votre voile, vos capteurs appairés, vos fichiers de waypoints
   — jusqu'au nom de la compétition à laquelle vous participez. Au moment d'enregistrer,
-  l'outil propose donc deux issues : **« Votre configuration, telle qu'elle est »**,
-  restituée à l'octet près, ou une
-  **version partageable** — un export `pages` dont les textes que vous avez écrits sont
-  remplacés, avec l'inventaire de chaque remplacement, son emplacement et sa raison,
-  montré *avant* le téléchargement. Le nom du fichier produit est horodaté et **ne
+  l'outil propose donc **trois issues**, rangées dans l'ordre de ce qui part — descendre
+  d'un cran veut toujours dire « donner moins » :
+
+  1. **« Votre configuration, telle qu'elle est »**, restituée à l'octet près ;
+  2. **« Tous vos réglages, sans ce qui vous désigne »** — une sauvegarde entière, dont
+     les lignes qui vous identifient sont remplacées, retirées, ou conservées et dites
+     comme telles. C'est celle qui permet de demander de l'aide sur ses réglages de vario
+     sans publier son nom ;
+  3. **« Version partageable, sans données personnelles »** — un export `pages`, sans
+     aucune préférence.
+
+  Chaque issue porte son inventaire : chaque ligne touchée, son emplacement et sa raison,
+  montrés *avant* le téléchargement. Le nom du fichier produit est horodaté et **ne
   reprend rien du nom d'origine**, qui contient souvent un prénom.
 - **Ranger plusieurs configurations sous un nom**, dans votre navigateur, et revenir à
   l'une d'elles : une pour la compétition, une pour le vol-bivouac, une pour l'école. Les
@@ -358,7 +366,7 @@ quatre gadgets, chacun avec la dernière version de XCTrack qui le lisait encore
 -->
 
 
-![La boîte « Enregistrer cette configuration » : les deux issues, puis l'inventaire des
+![La boîte « Enregistrer cette configuration » : les trois issues, puis l'inventaire des
 cinq textes remplacés — chacun avec sa page, son gadget, l'ancienne valeur barrée, la
 nouvelle, et la raison du remplacement.](captures/enregistrer-et-partager.png)
 
@@ -367,23 +375,26 @@ montré avant le téléchargement, pas après.*
 
 <!--
   REFAIRE CETTE CAPTURE — captures/enregistrer-et-partager.png (1100 × 1880)
-  Écran ...... la boîte d'enregistrement, ses deux issues : « Votre configuration,
-               telle qu'elle est » et « version partageable ».
+  Écran ...... la boîte d'enregistrement, ses trois issues : « Votre configuration,
+               telle qu'elle est », « Tous vos réglages, sans ce qui vous désigne » et
+               « Version partageable, sans données personnelles ».
   Fichier .... tests/fixtures/formes/formes-preservees.xcfg — c'est la fixture qui
                porte un téléphone et une fiche de contact, donc la seule où
                l'inventaire des remplacements a quelque chose à montrer. (Sur
                2026-08-20_backup-00.xcfg, la boîte dit à juste titre n'avoir aucun
                texte à remplacer : c'est un autre état, tout aussi vrai, mais il
                n'illustre pas l'inventaire.)
-  État ....... deuxième issue cochée, inventaire déplié : chaque remplacement avec son
-               emplacement et sa raison, AVANT le téléchargement.
+  État ....... troisième issue cochée, inventaire déplié : chaque remplacement avec son
+               emplacement et sa raison, AVANT le téléchargement. (Sur cette fixture,
+               la deuxième issue n'est pas proposée : le fichier ne porte pas de
+               préférences, elle rendrait le même résultat que la troisième.)
   Refaire .... banc d'essai dédié :
                    npm run dev -- --port 5176
                    http://localhost:5176/src/ui/sharingDialog.demo.html
                bouton « formes préservées (téléphone + contact) », puis cocher
                « Version partageable, sans données personnelles ».
-  Cadrage .... viewport de 1100 × 1880 points CSS, émulation comme ci-dessus : la boîte
-               fait alors 1 651 px de contenu et ne défile plus.
+  Cadrage .... viewport de 1100 × 1880 points CSS, émulation comme ci-dessus. ⚠ Ce
+               cadrage date de l'époque où la boîte portait deux cartes : le remesurer.
   À vérifier . les seuls noms et numéros qui figurent sur cette capture — « Jean
                Exemple », « +32 470 00 00 00 » — sont les valeurs anonymisées écrites
                dans la fixture, et l'écran les montre barrées, remplacées. Aucune donnée
@@ -472,9 +483,11 @@ beaucoup de temps.
 
 ⚠️ **N'attachez jamais votre propre `.xcfg`.** Il porte votre nom, vos capteurs, vos
 fichiers de waypoints, parfois vos coordonnées — et une issue GitHub est publique. Si un
-fichier est indispensable pour comprendre le problème, produisez-en d'abord une **version
-partageable** avec l'outil lui-même (bouton d'enregistrement), et relisez l'inventaire des
-remplacements qu'il vous montre avant d'envoyer quoi que ce soit.
+fichier est indispensable pour comprendre le problème, produisez-en d'abord une version
+expurgée avec l'outil lui-même (bouton d'enregistrement), et relisez l'inventaire qu'il
+vous montre avant d'envoyer quoi que ce soit. Laquelle choisir dépend de votre question :
+**« Version partageable »** si elle porte sur vos pages, **« Tous vos réglages, sans ce
+qui vous désigne »** si elle porte sur un réglage général — vario, capteurs, unités.
 
 ## Installer et lancer
 
@@ -686,7 +699,8 @@ Aucun chiffre commun n'est inventé : chaque écran **nomme** ce qu'il compte. S
 16 clés de préférences (11 renseignées, 5 vides) et disent qu'ils ne comptent pas les
 textes des gadgets ; la bibliothèque annonce « 16 données personnelles · 0 part avec les
 pages » ; la boîte d'enregistrement dit n'avoir aucun texte à remplacer **et** rappelle les
-16 clés de préférences qu'elle écarte en bloc.
+16 réglages de préférences en jeu — écartés en bloc par la troisième issue, traités ligne
+par ligne par la deuxième.
 
 Les 44 clés surveillées sont extraites du catalogue vers `src/model/personalKeys.json`
 (7,3 Ko) par le même script, et non recopiées : `tests/model/personalData.test.ts` vérifie
