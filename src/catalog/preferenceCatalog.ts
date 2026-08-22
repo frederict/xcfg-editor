@@ -38,8 +38,13 @@ import type { MessageKey } from '../i18n'
  * ## Un fichier par langue, chargé à la demande
  *
  * Comme `widgetOptions/`, le catalogue est coupé en une part invariante (`base.json`,
- * 128 Ko : préférences, écrans, valeurs, défauts, portées) et un fichier de textes par
- * langue (~18 Ko, **repli anglais déjà fusionné**). Rien n'est importé statiquement :
+ * 127 Kio **à la source** — 98 Ko compacts, 96 Kio dans le morceau livré : préférences,
+ * écrans, valeurs, défauts, portées) et un fichier de textes par langue (~18 Ko,
+ * **repli anglais déjà fusionné**). Les trois nombres mesurent trois choses ; c'est le
+ * premier qu'on lit en ouvrant le fichier, et c'est pourquoi c'est lui qui est cité ici.
+ * `src/model/personalData.ts` cite le troisième, en le disant.
+ *
+ * Rien n'est importé statiquement :
  * `loadPreferenceCatalog()` fait deux `import()`, dont Vite tire deux morceaux séparés.
  * Un pilote qui n'ouvre jamais la page des préférences ne télécharge ni l'un ni l'autre.
  *
@@ -63,10 +68,10 @@ import type { MessageKey } from '../i18n'
  *   ce catalogue parle ; rien de plus. Elle vit à côté, dans `preferenceVersions.ts` :
  *   vingt-deux paliers de schéma bâtis sur cinquante-cinq relevés d'APK, qui disent
  *   d'une clé si telle version la lit et, sinon, ce qu'on peut en conclure.
- * - **Les huit `Unit.*` et les quinze `Keys.*` n'ont pas de domaine de valeurs ici**, et
- *   ce n'est pas un oubli : leurs écrans n'en portent aucun. Ce qui a pu en être relevé
- *   — le vocabulaire des unités, la table des codes de touche Android — vit dans
- *   `preferenceDomains.ts`, avec ce qui reste inconnu marqué comme tel.
+ * - **Les huit `Unit.*` et les quinze `Keys.*` porteurs d'un code de touche n'ont pas de
+ *   domaine de valeurs ici**, et ce n'est pas un oubli : leurs écrans n'en portent aucun.
+ *   Ce qui a pu en être relevé — le vocabulaire des unités, la table des codes de touche
+ *   Android — vit dans `preferenceDomains.ts`, avec ce qui reste inconnu marqué comme tel.
  */
 
 /* ------------------------------------------------------------------ formes des données */

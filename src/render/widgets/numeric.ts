@@ -155,8 +155,11 @@ const FALLBACK_SPEC: NumericSpec = { quantity: 'none', unit: '', example: '--' }
  * exactement les grandeurs que ces trois jetons nomment. Les autres sont marqués comme
  * déduits, faute d'un fichier impérial dans le corpus.
  *
- * **`SYS_UNIT`** — les 278 occurrences du corpus ne valent que celui-là : « unité du
- * système », pas une unité concrète. L'afficher littéralement produirait « SYS_UNIT » à
+ * **`SYS_UNIT`** — les 220 occurrences de `_units` du corpus élargi qui portent ce jeton
+ * (231 occurrences en tout, dont 11 `METER`) ne valent que celui-là : « unité du
+ * système », pas une unité concrète. Recompté le 22 août 2026 sur les 21 `.xcfg` réels du
+ * dépôt privé, `jq` sur `_units` ; les cinq fixtures versionnées en portent 74. Le
+ * docblock a dit « 278 » jusque-là, sans qu'aucun relevé ne le donne. L'afficher littéralement produirait « SYS_UNIT » à
  * côté de la quasi-totalité des widgets d'altitude et de vitesse.
  *
  * **Un jeton inconnu reste écrit tel quel.** Lui substituer la préférence du fichier
@@ -207,7 +210,9 @@ const SIGN_COLORED_TYPES = new Set(['WVerticalSpeed', 'WThermalAltGain'])
  *
  * **L'appareil fait la même chose, et c'est maintenant mesuré** (textMetrics.ts) : sur
  * `ecran-landscape3-17widgets.png`, `WAltitude` (« 99 m ») et `WSpeed` (« 0 km/h »)
- * occupent deux widgets de taille identique (187 × 148 et 187 × 149 px) — la vitesse
+ * occupent deux widgets de taille identique (187 × 148 et 187 × 149 px — ⚠️ largeur non
+ * aimantée, que la grille de rendu de `canvas.ts` contredit : voir son § « Trois relevés
+ * du dépôt que cette loi contredit », NON TRANCHÉ) — la vitesse
  * s'affiche en chiffres de 73 px de haut, l'altitude en chiffres de 66 px, soit 10 % de
  * moins pour un contenu plus large. XCTrack réduit donc bien la valeur au contenu, et
  * pas seulement à la place verticale. C'est aussi pourquoi la comparaison de notre rendu

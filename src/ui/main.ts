@@ -112,7 +112,7 @@ interface Session {
 /**
  * Les trois surfaces qui occupent le cadre, l'une après l'autre — jamais deux ensemble.
  *
- * `preferences` est une **vue** et non une modale : consulter 216 réglages répartis sur
+ * `preferences` est une **vue** et non une modale : consulter 217 réglages répartis sur
  * 23 lignes de menu est une lecture longue, avec un filtre et des replis, et la page que
  * `preferencesPage.ts` construit se dessine sur 66 rem. Une boîte modale la contraindrait
  * pour rien — et il n'y a, dans cette vue, aucun rendu d'écran d'instrument à qui elle

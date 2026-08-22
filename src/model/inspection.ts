@@ -523,7 +523,7 @@ function drawsRoadMap(widget: Widget): boolean {
  * (`docs/reference/edition-native-exploration.md` § 6).
  *
  * `mapWidget_openStreetTheme` ne figure ni dans le corpus ni dans l'inventaire des
- * 18 options non appariées ; elle est ajoutée ici sur la foi de la chaîne
+ * options non appariées (9 couples widget × clé, cinq noms distincts) ; elle est ajoutée ici sur la foi de la chaîne
  * `Failed upgrading mapWidget from mapWidget_openStreetTheme` trouvée dans
  * `classes3.dex` de l'APK 1.0.3-beta5, qui prouve que la migration existe dans le code.
  */
@@ -823,7 +823,7 @@ function roadMapFindings(input: InspectionInput): Finding[] {
  * Règle 7 — **mesurée** : la migration a été observée sur l'AIR³. Elle se déclenche sur
  * les 21 fichiers du corpus, y compris le dernier, parce que les trois pages portrait
  * du propriétaire n'ont pas été rééditées depuis février 2022. Ce n'est pas du bruit : c'est le
- * message rassurant qui manquait aux « 18 options non appariées » du backlog — le
+ * message rassurant qui manquait aux « options non appariées » du backlog — le
  * pilote voyait `mapWidget_showOpenStreet` en clé brute sans savoir quoi en penser.
  *
  * Un constat par widget, avec les clés dans son message : une ligne par clé ferait

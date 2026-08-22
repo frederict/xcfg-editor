@@ -25,19 +25,25 @@ import rawBase from './widgetOptions/base.json'
  *
  * ## Une seule part invariante, un fichier par langue
  *
- * Le catalogue d'un seul tenant pesait 380 Ko minifiés, dont **326 Ko de traductions
- * en 34 langues** — 78 % du poids — alors que l'éditeur n'en affiche jamais qu'une.
+ * Le catalogue d'un seul tenant pesait 380 Ko minifiés, dont **314 Ko de traductions
+ * en 34 langues** — 83 % du poids — alors que l'éditeur n'en affiche jamais qu'une.
  * Il est donc coupé à la génération, mais **pas comme celui de la palette** :
  *
- * - `widgetOptions/base.json` — 65 Ko compacts : options, widgets, non-résolues,
+ * - `widgetOptions/base.json` — 67 Ko compacts : options, widgets, non-résolues,
  *   clés du corpus non appariées. Importé **statiquement**, en un seul morceau. Il
- *   n'est recopié dans aucun fichier de langue : ici la part invariante est treize
- *   fois plus grosse que la part traduite, la dupliquer 34 fois coûterait 2,2 Mo et
- *   ferait retélécharger 65 Ko à chaque changement de langue. `widgetCatalog.ts`
- *   tranche l'inverse parce que sa part invariante, elle, tient en 5 Ko.
+ *   n'est recopié dans aucun fichier de langue : la dupliquer 34 fois coûterait
+ *   2,3 Mo et ferait retélécharger 67 Ko à chaque changement de langue.
  * - `widgetOptions/<langue>.json` — 20 Ko : les seuls textes d'une langue, chargés
  *   par un `import()` dont le chemin est calculé. Vite en fait 34 morceaux séparés
  *   et n'en télécharge qu'un.
+ *
+ * **Ce qui tranche entre les deux découpages est la taille absolue de la part
+ * invariante, pas un rapport.** Ici elle pèse 67 Ko, trois fois et demie la part
+ * traduite (20 Ko) : la recopier serait ruineux. Dans `widgetCatalog.ts` elle pèse
+ * 13 Ko, moins que ses 14 Ko de textes : l'y recopier coûte 13 Ko par langue, et
+ * épargne un second `import()`. Le docblock a longtemps dit « treize fois » et
+ * « 5 Ko » ; ni l'un ni l'autre n'a jamais été mesuré. `tests/docs/chiffres.test.ts`
+ * tient maintenant les cinq nombres de ce paragraphe.
  *
  * D'où **deux API**, et la frontière entre elles est celle de la langue :
  *
@@ -54,7 +60,7 @@ import rawBase from './widgetOptions/base.json'
  * ## Le repli anglais est déjà dans le fichier
  *
  * Il n'est pas décoratif : des 34 langues, **l'anglais est la seule complète** sur les
- * 248 ressources ; `hi` n'en traduit que 4, `hr` 40. Plutôt que de charger un second
+ * 257 ressources ; `hi` n'en traduit que 4, `hr` 43. Plutôt que de charger un second
  * fichier à l'exécution, chaque fichier de langue porte déjà le texte anglais là où sa
  * langue manque. `resourceText()` lit donc une table simple, sans repli à faire — il
  * rend exactement ce que rendait l'ancien `texts[langue] ?? texts.en`.

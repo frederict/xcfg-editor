@@ -7,13 +7,20 @@
  *   `Exemples/2026-08-20_pages-00.xcfg`, recadrée : décalage horizontal 248 px, échelle
  *   1:1, vérifié sur les filets de séparation (colonnes 150-152 et 526 pour les
  *   frontières normalisées 3125 et 6042, lignes 346-348 et 544-546 pour 4828 et 7586).
+ *   ⚠️ Les deux **colonnes** ne sont pas aimantées : la grille de rendu de `canvas.ts`
+ *   donne 154 et 530. Les lignes, elles, concordent. Voir son § « Trois relevés du dépôt
+ *   que cette loi contredit » — NON TRANCHÉ.
  * - `docs/reference/captures-air3/ecran-landscape3-17widgets.png` — `landscape[3]` de
  *   `Exemples/2026-08-20_backup-00.xcfg`, pleine page.
  *
  * Les deux appareils tournaient avec `Display.WidgetTitleSize: 140` (relevé dans les
- * préférences de `2026-08-20_backup-00.xcfg`, le seul fichier du corpus qui les porte —
- * `2026-08-20_pages-00.xcfg` ne contient que des pages, l'appareil garde donc ses
- * propres réglages d'affichage en le chargeant).
+ * préférences de `2026-08-20_backup-00.xcfg`). La règle est celle du **format**, pas celle
+ * d'un fichier : tout export `backup` porte les réglages d'affichage, aucun export `pages`
+ * n'en porte — `2026-08-20_pages-00.xcfg` ne contient que des pages, l'appareil garde donc
+ * ses propres réglages en le chargeant. Trois des cinq fixtures d'export portent la clé, et
+ * dix-sept des vingt et un fichiers réels. Le docblock a dit « le seul fichier du corpus
+ * qui les porte » jusqu'au 22 août 2026, et c'est cette exclusivité qui servait d'argument
+ * à la phrase suivante ; `tests/docs/chiffres.test.ts` tient maintenant le compte.
  *
  * **Le fait central, contraire à ce que faisait notre rendu** : la hauteur du TITRE ne
  * dépend pas de la taille du widget. Elle vaut 15-17 px de haut (hauteur de casse 15,

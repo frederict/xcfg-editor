@@ -65,7 +65,9 @@ import type { Translator } from '../i18n'
  *   `counts.preferences`, `counts.layout`, `counts.filled` — au lieu d'aligner un total
  *   qui ne voudrait rien dire.
  * - **Il ne montre jamais le contenu d'une structure.** `Navigation.State` porte la tâche
- *   en cours avec ses coordonnées — 1 332 caractères dans le backup de référence, et elle
+ *   en cours avec ses coordonnées — un pavé de 2 322 caractères tel qu'il est écrit dans
+ *   le backup de référence (1 222 une fois minifié ; le docblock a dit « 1 332 » jusqu'au
+ *   22 août 2026, valeur qu'aucune convention de mesure ne donne) —, et elle
  *   est `PUBLIC`, donc elle voyage. On en dit la taille et le danger, jamais le contenu.
  *
  * ## La prose de ce module : elle reçoit un traducteur, elle ne le lit pas
@@ -92,8 +94,9 @@ import type { Translator } from '../i18n'
  * `personalKeys.json` — les 44 clés marquées du catalogue avec leur nature, leur base et
  * la **clé de message** de leur raison — est importé **statiquement**, parce que trois des quatre appelants
  * (l'avertissement d'import, la bibliothèque, la boîte de partage) n'ont pas le catalogue
- * sous la main et ne doivent pas le charger : `preferenceCatalog/base.json` pèse 96 Ko et
- * reste chargé à la demande. Le fichier est **extrait du catalogue** par
+ * sous la main et ne doivent pas le charger : `preferenceCatalog/base.json` pèse 96 Kio
+ * **dans le morceau livré** (127 Kio à la source, voir `preferenceCatalog.ts` qui cite
+ * celle-là) et reste chargé à la demande. Le fichier est **extrait du catalogue** par
  * `tools/extract-preferences.py`, pas recopié à la main, et `personalData.test.ts` vérifie
  * à chaque exécution qu'il en est la copie exacte : une liste écrite à la main dériverait
  * du catalogue au premier APK, en silence.

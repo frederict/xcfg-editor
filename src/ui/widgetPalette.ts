@@ -56,7 +56,7 @@ import { aspectRatioOf } from './views'
  *
  * | Clé | Valeur | D'où elle vient |
  * |---|---|---|
- * | `CLASS` | `org.xcontest.XCTrack.widget.w.<Type>` | les 105 widgets du corpus portent tous ce préfixe |
+ * | `CLASS` | `org.xcontest.XCTrack.widget.w.<Type>` | les 105 widgets de la configuration de référence portent tous ce préfixe |
  * | `X1` `Y1` `X2` `Y2` | 6 × 6 cellules, centré, aimanté | mesuré sur une boussole neuve (§ 3.4) |
  * | `_border` | `false` | idem |
  * | `_bg` | `100` | idem |

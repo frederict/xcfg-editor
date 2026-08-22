@@ -103,8 +103,13 @@ export function hasMember(node: JsonNode, key: string): boolean {
  *
  * XCTrack range les clés d'un widget dans l'ordre où son code les déclare. Cet ordre
  * n'est pas déductible du document, et il n'est pas stable d'une version à l'autre.
- * Relevé sur 22 fichiers réels (corpus historique 2022→2026, 8 versions de XCTrack,
- * 2313 objets porteurs de `CLASS`) :
+ * Relevé sur les **21 fichiers réels** du corpus historique (2022→2026, 8 versions de
+ * XCTrack, 2313 objets porteurs de `CLASS`) — le même corpus que nomment les dix-sept
+ * autres commentaires du dépôt. Ce docblock a dit « 22 » jusqu'au 22 août 2026 : c'est le
+ * `fileCount` de `widgetVersions`, qui compte en plus le `backup.xcfg` enfermé dans
+ * l'archive `.xczfg`, et ce compte-là ne peut pas cohabiter avec les 2313 objets de la
+ * ligne suivante — ils valent sur 21 fichiers, l'archive en ajoutant 113. Recompté le
+ * 22 août 2026.
  *
  * - sur 41 ajouts de clé observés entre deux versions d'un même type de widget,
  *   **40 se font au milieu de l'objet** et un seul en queue (`_units` sur `WAltitude`).

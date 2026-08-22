@@ -37,7 +37,9 @@ import widgets from './widgets'
  * Il portait d'abord les 54 messages qui **arbitraient du vocabulaire** ou qui
  * **démontraient une construction** — pluriel, phrase à repères nommés, formateur,
  * énumération. Les lots d'extraction ont versé le reste, domaine par domaine : il porte
- * aujourd'hui les **1 145 messages** de l'application, dont 127 au pluriel.
+ * aujourd'hui **toute la prose** de l'application. Le compte exact bouge à chaque lot et
+ * n'est donc pas répété ici — voir `src/i18n/catalog.ts`, qui le donne avec sa date et la
+ * commande qui le recalcule.
  * `src/i18n/CLAUDE.md` dit comment en ajouter un.
  *
  * Chaque clé ne doit apparaître que dans **un** domaine : la fusion ci-dessous en

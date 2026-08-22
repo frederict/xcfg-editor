@@ -39,7 +39,7 @@ import { defaultValueAt } from '../catalog/widgetDefaults'
  *
  * ## Le poids que cela déplace, et où il tombe
  *
- * `widgetDefaults.json` fait 14 Ko bruts (9,7 Ko minifiés, 3,1 Ko compressés). Il vivait
+ * `widgetDefaults.json` fait 14 Kio bruts (9,9 Kio compactés, 3,1 Ko compressés). Il vivait
  * dans un morceau chargé à la demande, dépendance des seuls `ui/properties.ts` et
  * `ui/widgetPalette.ts`. Le moteur de rendu étant dans le morceau principal, ce module
  * fait entrer la table dans le chargement initial : voir le rapport de tâche pour les

@@ -61,15 +61,29 @@ import type { FrenchMessages } from './messages/fr'
  * — les neuf fichiers de domaine d'une langue sont bien fondus dans le sien, et le
  * découpage n'a donc rien changé au nombre de requêtes.
  *
- * Les lots d'extraction ont versé la prose des écrans : chaque catalogue porte les
- * **1 145 messages** relevés à cette mesure, soit
- * 1 272 formes, les 127 pluriels comptant double. Il pèse de 31,6 ko compressés (fr,
- * 116 ko bruts) à 35,3 ko (de, 129 ko) — l'anglais, l'espagnol et le néerlandais entre
- * les deux —, et le pilote en télécharge **un**.
+ * Les lots d'extraction ont versé la prose des écrans, et **le compte bouge encore** :
+ * plusieurs lots écrivent en parallèle, si bien qu'un nombre écrit ici est faux le
+ * lendemain. Il est donc daté, et la commande qui le recalcule est donnée — c'est un
+ * instantané, pas un invariant, et aucun test ne le tient.
  *
- * Les quatre autres pèsent 135 ko compressés à eux quatre, et c'est exactement ce
+ * **Relevé le 22 août 2026**, `npm run build` puis, sur le catalogue français réuni :
+ *
+ * ```sh
+ * # clés, formes (un pluriel compte pour ses deux formes), pluriels
+ * node -e '…' # voir `tests/docs/chiffres.test.ts`, qui refait le compte à chaque essai
+ * ```
+ *
+ * Ce jour-là : **1 211 clés**, 1 343 formes, 132 pluriels. Chaque catalogue pèse de
+ * 31,9 ko compressés (fr, 118 ko bruts) à 35,7 ko (de, 131 ko) — l'anglais, l'espagnol et
+ * le néerlandais entre les deux —, et le pilote en télécharge **un**.
+ *
+ * Les quatre autres pèsent 137 ko compressés à eux quatre, et c'est exactement ce
  * qu'une extraction en un seul fichier ferait télécharger pour rien. L'estimation d'avant
  * l'extraction — « de l'ordre de 25 ko par langue » — est remplacée par cette mesure.
+ *
+ * ⚠️ Le docblock a porté « 1 145 messages, 1 272 formes, 127 pluriels » sans date jusqu'au
+ * 22 août 2026, alors que le catalogue en portait déjà 1 202 : c'est le mode de
+ * vieillissement le plus courant du dépôt, et un chiffre nu n'a aucun moyen de le dire.
  */
 
 /**

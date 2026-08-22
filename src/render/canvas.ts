@@ -44,8 +44,8 @@ const SVG_NS = 'http://www.w3.org/2000/svg'
  * ```
  *
  * `N = 51` sur le grand côté de la dalle (1280 px), `29` sur le petit (720 px). Vérifiée
- * sans exception sur 9 valeurs X et 16 valeurs Y distinctes, par relevé `uiautomator`
- * **et** par détection des filets sur les captures
+ * sur 9 valeurs X et 16 valeurs Y distinctes, par relevé `uiautomator` **et** par
+ * détection des filets sur les captures
  * (`docs/reference/2026-08-21-validation-bout-en-bout.md` § 4.1) :
  *
  * | norme | sans grille (ce que nous dessinions) | appareil | écart |
@@ -66,6 +66,29 @@ const SVG_NS = 'http://www.w3.org/2000/svg'
  * multiples de 1/48 en X et de 1/29 en Y. En Y, 1/29 EST la grille de rendu et
  * l'aimantation ne déplace rien (écart mesuré : 0,03 px). En X, 1/48 ne tombe jamais sur
  * 1/51.
+ *
+ * ## ⚠️ Trois relevés du dépôt que cette loi contredit — NON TRANCHÉ
+ *
+ * Le docblock a dit « vérifiée **sans exception** » jusqu'au 22 août 2026. C'est faux, et
+ * la contradiction est interne au dépôt : trois autres modules citent comme relevés
+ * d'appareil des largeurs qui sont exactement le calcul **sans** grille.
+ *
+ * | ce qu'affirme le module | la loi 1/51 donne |
+ * |---|---|
+ * | `widgets/numeric.ts` — deux widgets « de taille identique (187 × 148 px) », X 833→2292 | **201** |
+ * | `widgets/statusLine.ts` — « 507 × 99 px sur un écran 1280 × 720 », X 6042→10000 | **502** |
+ * | `textMetrics.ts` — filets aux « colonnes 150-152 et 526 », X 3125 et 6042, décalage 248 | **154** et **530** |
+ *
+ * Les trois concordent au pixel près avec le calcul non aimanté (186,8 · 506,6 · 152,0 et
+ * 525,4) et divergent de cette loi de 4 à 14 px. Deux lectures restent ouvertes : ou la
+ * loi 1/51 est fausse en X, ou ces trois relevés sont antérieurs à sa découverte et ont
+ * été pris sur un rendu, pas sur l'appareil. **Nous ne savons pas laquelle**, et le
+ * trancher demande de rouvrir les captures, ce qui n'a pas été fait. En attendant :
+ * l'éditeur dessine 201 px là où `numeric.ts` affirme que l'instrument en montre 187, et
+ * les trois modules portent chacun un renvoi vers ce paragraphe.
+ *
+ * En Y il n'y a aucune contradiction : 4828 → 348 et 7586 → 546 avec ou sans grille.
+ * L'écart n'existe qu'en X, ce qui est cohérent avec l'explication ci-dessus.
  *
  * ## Ce qui est mesuré, et ce qui est déduit
  *

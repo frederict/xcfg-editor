@@ -951,8 +951,12 @@ export function anonymizeBackup(source: JsonNode): BackupAnonymization {
  * La longueur au-delà de laquelle une valeur suspecte est montrée tronquée.
  *
  * On la montre pour qu'elle soit **reconnue** par celui qui l'a écrite, pas pour être lue
- * en entier : `Navigation.State` fait 1 332 caractères dans le fichier de référence, et un
- * inventaire qui déroulerait des pavés pareils ne serait plus lu du tout.
+ * en entier : `Navigation.State` occupe 2 322 caractères dans le fichier de référence
+ * (1 222 une fois minifié), et un inventaire qui déroulerait des pavés pareils ne serait
+ * plus lu du tout. Le seuil ne dépend pas de la convention retenue — les deux mesures sont
+ * un ordre de grandeur au-dessus de 120 —, mais le chiffre cité, lui, doit être vrai : le
+ * docblock a dit « 1 332 » jusqu'au 22 août 2026, valeur qu'aucune convention ne donne.
+ * `tests/docs/chiffres.test.ts` tient les deux.
  */
 export const SUSPECT_VALUE_LIMIT = 120
 

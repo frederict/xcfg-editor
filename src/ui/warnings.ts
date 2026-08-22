@@ -659,8 +659,14 @@ const DRAWN_THEME = 'WhiteHCTheme'
 /**
  * La visionneuse dessine toujours `WhiteHCTheme`, quel que soit le thème déclaré : aucun
  * rendu ne consulte `RenderSettings.theme`, et aucun ne consulte le `_theme` propre à un
- * widget — que le corpus élargi montre pourtant employé (46 widgets, `WhiteEInkTheme`
- * pour l'essentiel) et que le manuel décrit comme une fonctionnalité.
+ * widget — que le corpus élargi montre pourtant employé (46 widgets, dont 43
+ * `WhiteEInkTheme` et 3 `WhiteHCTheme`) et que le manuel décrit comme une fonctionnalité.
+ *
+ * ⚠️ **Ce compte se mesure hors de ce dépôt.** « Corpus élargi » veut dire les 21 `.xcfg`
+ * réels du dépôt privé : recompté le 22 août 2026, 2 150 widgets y portent la clé
+ * `_theme`, dont 46 avec une valeur non vide. Les cinq fixtures versionnées, elles, en
+ * portent 519 et **toutes vides** — un lecteur du dépôt public ne peut donc pas refaire
+ * cette mesure, et c'est le seul chiffre de ce fichier dans ce cas.
  *
  * Pour une visionneuse dont la promesse tient en « telles qu'elles apparaîtront sur
  * l'instrument », c'est un écart qu'il faut dire. Le taire serait pire que l'avoir : un
@@ -668,8 +674,14 @@ const DRAWN_THEME = 'WhiteHCTheme'
  *
  * **On se contente de le dire.** Deviner l'apparence des quatre autres thèmes
  * contredirait le deuxième principe du projet — 28 libellés sur 37 étaient faux quand ils
- * venaient d'une traduction plausible. Il faut d'abord les observer sur l'appareil ; le
- * protocole est au point 11 de `docs/plans/2026-08-20-feuille-de-route.md`.
+ * venaient d'une traduction plausible. Le compte est vérifiable : la table faite main de
+ * `src/catalog/widgetNames.ts` avant le commit `0d5d953` portait 37 entrées, dont 28
+ * diffèrent des libellés officiels de `widgetLabels.json` (`WAltitude` « Altitude » contre
+ * « Altitude GPS », `WXCAssistant` « Assistant XC » contre « Carte XC »…). Il faut d'abord
+ * observer les thèmes sur l'appareil ; le protocole est au point 11 de
+ * `docs/plans/2026-08-20-feuille-de-route.md` — ⚠️ **ce document vit dans le dépôt privé**,
+ * comme tous les renvois `docs/` de `src/` (`README.md` : « ces relevés ne sont pas
+ * publiés »). Un lecteur d'un clone GitHub ne peut pas le suivre.
  */
 function themeWarning(input: WarningInput): Warning | undefined {
   const tr = input.tr

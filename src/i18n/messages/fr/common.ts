@@ -12,7 +12,7 @@
  *
  * | Clé | Ce que c'est | Anglais |
  * |---|---|---|
- * | `provenance.apkSurvey` | notre extraction des 47 APK | *survey* |
+ * | `provenance.apkSurvey` | notre extraction des 55 APK | *survey* |
  * | `provenance.factoryValueCatalogue` | le catalogue des valeurs d'usine | *catalogue* |
  * | `provenance.measuredOnDevice` | ce qui a été observé sur l'AIR³ | *measured* |
  *

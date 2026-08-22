@@ -33,8 +33,9 @@ import frenchWidgets from '../i18n/messages/fr/widgets'
  * dispose, et elle est gratuite.
  *
  * **Conservation.** Une clé que le catalogue ignore reste éditable, sous son nom brut,
- * avec un contrôle déduit de son type JSON. Le corpus en compte 18 (`showWind`,
- * `nav_use_brackets`, `mapWidget_showTerrain`…) : des vestiges que l'application
+ * avec un contrôle déduit de son type JSON. Le corpus en compte **9**, sous cinq noms
+ * distincts (`showWind`, `nav_use_brackets`, `mapWidget_showTerrain`,
+ * `mapWidget_showOpenStreet`, `newWindArrow`) : des vestiges que l'application
  * n'expose plus mais qu'elle relit toujours. Partir du catalogue les ferait disparaître
  * du panneau ; partir du fichier les montre toutes. Rien n'est masqué, rien n'est
  * supprimé à l'écriture.
@@ -1092,7 +1093,9 @@ function buildPanel(options: PropertiesPanelOptions, live: LivePanel): Propertie
   /*
    * Deux filtres qui se composent, et non deux filtres qui se remplacent : chercher
    * « couleur » **parmi** ce qui diffère du défaut est exactement la question qu'on se
-   * pose devant un `WXCAssistant` de 63 réglages.
+   * pose devant un `WXCAssistant` de 63 réglages — recompté le 22 août 2026 sur
+ * `landscape[3]` de la configuration de référence, et c'est bien le widget le plus
+ * fourni du fichier.
    */
   let query = ''
   let onlyCustom = false

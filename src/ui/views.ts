@@ -483,7 +483,9 @@ export const DOCK_HEIGHT_MAX = 640
 
 /**
  * Hauteur par défaut du corps, mesurée sur le contenu et non choisie : c'est la falaise.
- * Sur les quinze widgets de la page 1 paysage de la configuration de référence, en
+ * Sur les quinze widgets de la page **2** paysage de la configuration de référence
+ * (la page 1 en porte quatorze — le docblock disait « page 1 » jusqu'au 22 août 2026,
+ * les quinze mesures énumérées ci-dessous montrant qu'il s'agissait bien de la page 2), en
  * fenêtre de 1500 px de large (panneau de 1041 px, deux à trois colonnes), les réglages
  * demandent 123, 123, 159 ×4, 191, 194 ×2, 195, 200, 230, 257, 610 et 1306 px. Un corps
  * de 288 px — 266 px utiles sous ses marges — en montre treize sur quinze **sans aucun

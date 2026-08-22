@@ -9,7 +9,9 @@ import { widgetBoolean } from '../defaults'
  *
  * **Refait sur `docs/reference/captures-air3/2026-08-21_barre-etat-reelle.png`** — la
  * barre d'état seule d'un AIR³ 7.2, 500 × 100 px, découpe 1:1 du widget réel
- * (6042..10000 × 0..1379, soit 507 × 99 px sur un écran 1280 × 720). Le recoupement avec
+ * (6042..10000 × 0..1379, soit 507 × 99 px sur un écran 1280 × 720 — ⚠️ largeur non
+ * aimantée : la grille de rendu de `canvas.ts` donne 502, voir son § « Trois relevés du
+ * dépôt que cette loi contredit », NON TRANCHÉ). Le recoupement avec
  * `2026-08-21_polices-reference.png`, qui montre la même barre non recadrée à gauche,
  * donne les mêmes tailles au pixel près. Ce que le rendu précédent ratait :
  *
