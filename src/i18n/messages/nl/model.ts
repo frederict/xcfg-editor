@@ -42,8 +42,8 @@ const model: DomainCatalog<'model'> = {
 
   /* ---- waarom een **instelling** persoonlijk heet — zie `fr/model.ts` */
 
-  'personalReason.pilotName': 'de naam van de piloot, precies zoals ingevoerd',
-  'personalReason.gliderName': 'het scherm van de piloot — model en maat herkennen een piloot in een club',
+  'personalReason.pilotName': 'uw naam, precies zoals ingevoerd',
+  'personalReason.gliderName': 'uw scherm — model en maat herkennen een piloot in een club',
   'personalReason.gliderProducer': 'fabrikant van het scherm',
   'personalReason.gliderModel': 'model van het scherm',
   'personalReason.gliderCategory': 'klasse van het scherm',
@@ -67,7 +67,7 @@ const model: DomainCatalog<'model'> = {
   'personalReason.mapTheme': 'kaartthema dat u hebt geïnstalleerd',
   'personalReason.guessedPosition': 'de vermoede positie van het toestel — in de praktijk het thuisadres',
   'personalReason.lastNetLocation': 'de laatste positie waarmee het QNH is opgevraagd',
-  'personalReason.replayFile': 'een van de spoorbestanden van de piloot',
+  'personalReason.replayFile': 'een van uw spoorbestanden',
   'personalReason.speechText': 'tekst die u hebt ingevoerd',
   'personalReason.secureScope': 'bereik SECURE: XCTrack bewaart ze bij zijn versleutelde voorkeuren',
   'personalReason.maskedField': 'verborgen invoerveld (`textPassword`)',

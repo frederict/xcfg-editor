@@ -81,8 +81,8 @@ const model = {
    * **pourquoi c'est personnel**, celles-là **ce qu'on en fait** au moment du partage.
    * =============================================================================== */
 
-  'personalReason.pilotName': 'le nom du pilote, saisi tel quel',
-  'personalReason.gliderName': 'la voile du pilote — modèle et taille identifient un pilote dans un club',
+  'personalReason.pilotName': 'votre nom, saisi tel quel',
+  'personalReason.gliderName': 'votre voile — modèle et taille identifient un pilote dans un club',
   'personalReason.gliderProducer': 'constructeur de la voile',
   'personalReason.gliderModel': 'modèle de la voile',
   'personalReason.gliderCategory': 'catégorie de la voile',
@@ -106,7 +106,7 @@ const model = {
   'personalReason.mapTheme': 'thème de carte que vous avez installé',
   'personalReason.guessedPosition': 'la position présumée de l’appareil — le domicile, en pratique',
   'personalReason.lastNetLocation': 'la dernière position ayant servi à interroger le QNH',
-  'personalReason.replayFile': 'un fichier de trace du pilote',
+  'personalReason.replayFile': 'un de vos fichiers de trace',
   'personalReason.speechText': 'texte que vous avez saisi',
   'personalReason.secureScope': 'portée SECURE : XCTrack la range dans ses préférences chiffrées',
   'personalReason.maskedField': 'champ de saisie masqué (`textPassword`)',

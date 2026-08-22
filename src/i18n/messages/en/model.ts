@@ -42,8 +42,8 @@ const model: DomainCatalog<'model'> = {
 
   /* ---- why a **setting** is called personal — see `fr/model.ts` */
 
-  'personalReason.pilotName': 'the pilot’s name, exactly as typed',
-  'personalReason.gliderName': 'the pilot’s glider — model and size identify a pilot in a club',
+  'personalReason.pilotName': 'your name, exactly as typed',
+  'personalReason.gliderName': 'your glider — model and size identify a pilot in a club',
   'personalReason.gliderProducer': 'glider manufacturer',
   'personalReason.gliderModel': 'glider model',
   'personalReason.gliderCategory': 'glider category',
@@ -67,7 +67,7 @@ const model: DomainCatalog<'model'> = {
   'personalReason.mapTheme': 'map theme you installed',
   'personalReason.guessedPosition': 'the device’s presumed position — home, in practice',
   'personalReason.lastNetLocation': 'the last position used to ask for the QNH',
-  'personalReason.replayFile': 'one of the pilot’s track files',
+  'personalReason.replayFile': 'one of your track files',
   'personalReason.speechText': 'text you typed',
   'personalReason.secureScope': 'SECURE scope: XCTrack keeps it among its encrypted preferences',
   'personalReason.maskedField': 'masked input field (`textPassword`)',

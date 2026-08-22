@@ -322,12 +322,14 @@ describe('données personnelles — les raisons disent « vous »', () => {
     const inventory = collectPersonalData(documentOf(BACKUP_2026))
     const french = personalProse(makeTranslator('fr', fr))
     for (const finding of inventory.findings) {
-      // ⚠️ Les raisons **des réglages** viennent du catalogue extrait et disent encore
-      // « le nom du pilote », « la voile du pilote » : trois formulations relevées, non
-      // corrigées ici — l'extraction déplace du texte, elle ne le rejuge pas. Ce test ne
-      // porte donc que sur celles du `layout`, qui sont écrites dans le code.
-      if (finding.home !== 'layout') continue
-      expect(french.reason(finding), finding.key).not.toContain('le pilote')
+      // Les raisons **des réglages** entrent maintenant dans le test : les trois qui
+      // disaient « le nom du pilote », « la voile du pilote » et « un fichier de trace
+      // du pilote » sont corrigées. La forme cherchée est bien « du pilote » — c'est
+      // celle des trois, et l'ancienne, qui ne cherchait que « le pilote », passait par
+      // accident.
+      for (const said of ['le pilote', 'du pilote']) {
+        expect(french.reason(finding), `${finding.key} — ${said}`).not.toContain(said)
+      }
     }
   })
 

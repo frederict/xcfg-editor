@@ -42,8 +42,8 @@ const model: DomainCatalog<'model'> = {
 
   /* ---- por qué un **ajuste** se considera personal — véase `fr/model.ts` */
 
-  'personalReason.pilotName': 'el nombre del piloto, tal cual lo escribió',
-  'personalReason.gliderName': 'la vela del piloto — modelo y talla identifican a un piloto en un club',
+  'personalReason.pilotName': 'su nombre, tal cual lo escribió',
+  'personalReason.gliderName': 'su vela — modelo y talla identifican a un piloto en un club',
   'personalReason.gliderProducer': 'fabricante de la vela',
   'personalReason.gliderModel': 'modelo de la vela',
   'personalReason.gliderCategory': 'categoría de la vela',
@@ -67,7 +67,7 @@ const model: DomainCatalog<'model'> = {
   'personalReason.mapTheme': 'tema de mapa que usted instaló',
   'personalReason.guessedPosition': 'la posición supuesta del dispositivo — en la práctica, el domicilio',
   'personalReason.lastNetLocation': 'la última posición usada para consultar el QNH',
-  'personalReason.replayFile': 'uno de los archivos de traza del piloto',
+  'personalReason.replayFile': 'uno de sus archivos de traza',
   'personalReason.speechText': 'texto que usted escribió',
   'personalReason.secureScope': 'ámbito SECURE: XCTrack lo guarda entre sus preferencias cifradas',
   'personalReason.maskedField': 'campo de entrada oculto (`textPassword`)',
