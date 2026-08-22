@@ -785,6 +785,31 @@ présenter la lecture comme un constat.
 Ces deux bases sont **lues mais pas encore branchées** : ni le diagnostic « Version et
 compatibilité », ni l'écran des réglages ne s'en servent à ce jour.
 
+### Les cinq noms de navigation — le seul catalogue sans script
+
+`src/catalog/navigationLabels.json` porte les noms que XCTrack donne aux cinq navigations
+d'une page (`TaskBackToTakeoff`, `TaskTriangleClosing`, `TaskToWaypoint`,
+`TaskCompetition`, `TaskToLivePilot`), dans les 34 locales de l'APK. C'est ce que la ligne
+« Affichée pour : … » de chaque vignette du carrousel affiche.
+
+Deux réserves, qui se disent plutôt que de se deviner :
+
+- **l'appariement classe ↔ clé de ressource est déduit, pas relevé.** Les textes viennent
+  des clés `navTakeoff`, `navTriangleClosing`, `navWaypoint2`, `navCompetition` et
+  `navLivePilot` ; le lien avec le nom de classe écrit dans le fichier ne se lit nulle
+  part, le bytecode étant obfusqué. Il repose sur la correspondance des noms et sur le
+  fait que la boîte de visibilité n'en propose que cinq ;
+- **aucun script ne régénère ce fichier.** Les autres catalogues du dossier se refont
+  depuis un APK décompressé (`tools/extract-*.py`) ; celui-ci a été transcrit à la main
+  depuis le relevé complet de la version 1.0.3-beta5, avec la même règle que
+  `extract-widget-labels.py` — la locale par défaut de l'APK devient `en`. C'est une dette,
+  et elle est écrite ici pour qu'elle se voie.
+
+`navLivePilot` n'est traduit que dans **17 des 34 locales** — le néerlandais n'en fait pas
+partie. XCTrack sert alors sa locale par défaut, et cet outil fait pareil : un pilote
+néerlandais lit « Live pilot » des deux côtés. Rien n'est traduit maison pour combler le
+trou ; `hasNavigationLabel()` permet de savoir que le repli a joué.
+
 ## Licence
 
 MIT — voir [LICENSE](LICENSE).
