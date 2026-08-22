@@ -91,6 +91,9 @@ const preferences: DomainCatalog<'preferences'> = {
     '{name} is the name Android’s key table gives code {code}. That table names a code, not a button: it does not say which of your keys emits it, and we have not measured this one by hand.',
   'preferences.keyFromNowhere':
     'Code {code} appears in no key table we have read. No name is given to it here: inventing one would be the worst of services.',
+  'preferences.intentGloss':
+    'An “intent” is the message by which one Android application makes another react. This key therefore does not drive XCTrack: it sends a signal, and it is another application, set up on the device, that answers it.',
+
   'preferences.keyNamingOrigin':
     'A name in plain words is what the key is called on the case, measured by hand: there are such names only for the models we have had in our hands. A name in KEYCODE_ comes from Android’s key table, which names the code and not the button. A missing name is therefore a missing measurement, never a key that would not exist.',
 

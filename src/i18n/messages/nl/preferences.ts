@@ -82,6 +82,9 @@ const preferences: DomainCatalog<'preferences'> = {
     '{name} is de naam die de toetsentabel van Android aan code {code} geeft. Die tabel benoemt een code, geen knop: zij zegt niet welke van uw toetsen hem uitzendt, en deze hebben wij niet met de hand gemeten.',
   'preferences.keyFromNowhere':
     'Code {code} staat in geen enkele toetsentabel die wij gelezen hebben. Er wordt hier geen naam aan gegeven: er een verzinnen zou de slechtste dienst zijn.',
+  'preferences.intentGloss':
+    'Een ‘intent’ is het bericht waarmee de ene Android-toepassing een andere laat reageren. Deze toets bestuurt dus niet XCTrack: zij zendt een signaal uit, en het is een andere toepassing, op het toestel ingesteld, die daarop antwoordt.',
+
   'preferences.keyNamingOrigin':
     'Een naam in gewone woorden is die welke de toets op de behuizing draagt, met de hand gemeten: die bestaat alleen voor de modellen die wij in handen hebben gehad. Een naam met KEYCODE_ komt uit de toetsentabel van Android, die de code benoemt en niet de knop. Een ontbrekende naam is dus een ontbrekende meting, nooit een toets die niet zou bestaan.',
 

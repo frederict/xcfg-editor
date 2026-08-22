@@ -17,6 +17,9 @@ const widgets: DomainCatalog<'widgets'> = {
 
   'properties.widgetTitle': 'Widget: {name}',
 
+  'properties.classTitle':
+    'De naam die het bestand aan deze widget geeft. Hij verandert niet van taal tot taal: het is wat u zou lezen bij het openen van het bestand, en het woord om aan te halen bij een melding.',
+
   'properties.settingCount': {
     one: '{count} instelling',
     other: '{count} instellingen'
@@ -182,6 +185,9 @@ const widgets: DomainCatalog<'widgets'> = {
   'palette.onlyPresentHelp':
     'Deze types worden gekopieerd van een widget die XCTrack zelf heeft geschreven: al hun ' +
     'instellingen blijven behouden, ook die welke deze editor niet kan tonen.',
+  'palette.intentGloss':
+    'Een ‘intent’ is het bericht waarmee de ene Android-toepassing een andere laat reageren: deze widget doet uit zichzelf niets, hij zendt een signaal uit dat een andere, op het toestel ingestelde toepassing ontvangt.',
+
   'palette.legend':
     'Volle rand: de widget wordt gekopieerd van een exemplaar dat al in het bestand staat, ' +
     'met al zijn instellingen. Stippelrand: hij wordt aangemaakt met enkel zijn ' +

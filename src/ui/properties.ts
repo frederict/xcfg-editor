@@ -1047,7 +1047,15 @@ function buildPanel(options: PropertiesPanelOptions, live: LivePanel): Propertie
     el('h2', 'props__title', tr.t('properties.widgetTitle', { name: form.label })),
     el('p', 'props__count', tr.t('properties.settingCount', { count: form.fields.length }))
   )
-  if (form.className !== '') head.append(el('p', 'props__class', form.className))
+  if (form.className !== '') {
+    // Le nom de classe reste — c'est ce que le fichier écrit de ce gadget, et le seul mot
+    // à citer pour signaler un problème. Mais il paraissait nu : un pilote-testeur a lu
+    // « WSpeed » le 2026-08-22 sans que rien ne dise ce que c'était, « aucune bulle,
+    // aucune explication ». La bulle le dit, elle ne remplace rien.
+    const written = el('p', 'props__class', form.className)
+    written.title = tr.t('properties.classTitle')
+    head.append(written)
+  }
   root.append(head)
 
   const list = el('div', 'props__list')

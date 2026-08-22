@@ -211,6 +211,20 @@ describe('description du formulaire', () => {
       .toBe(`Gadget : ${form.label}`)
   })
 
+  it('dit ce qu’est le nom de classe, qui paraissait nu', () => {
+    // « WSpeed », « WQNH » : un pilote-testeur les a lus le 2026-08-22 en tête du panneau
+    // sans que rien ne dise ce que c'était — « aucune bulle, aucune explication ». Le nom
+    // reste : c'est le seul mot qui relie ce panneau à ce que le fichier écrit, et le
+    // seul à citer pour signaler un problème. La bulle le dit.
+    const form = buildPropertyForm(compass(document()))
+    const panel = renderProperties({ form })
+    const written = panel.element.querySelector<HTMLElement>('.props__class')
+    expect(written?.textContent).toBe(form.className)
+    expect(written?.title).toContain('Le nom que le fichier donne à ce gadget')
+    // Et il ne se traduit pas : la bulle le dit dans la langue de l'interface, pas lui.
+    expect(written?.textContent).not.toBe(form.label)
+  })
+
   it('suit la langue demandée, et retombe sur l’anglais', () => {
     const form = buildPropertyForm(compass(document()), 'de')
     expect(fieldAt(form, '_border').label).toBe('Zeichne Rahmen')

@@ -897,6 +897,21 @@ describe('une liaison de touche se lit, et en trois morceaux', () => {
     expect(said).toContain('jamais une touche qui n’existerait pas')
   })
 
+  it('explique « intention » sous le libellé de XCTrack, sans le réécrire', () => {
+    // « Lance une intention Android » est la chrome française de XCTrack, extraite de
+    // l'APK : c'est ce que le pilote lira sur son appareil, et le réécrire lui donnerait
+    // un terme introuvable là-bas. Un pilote-testeur, le 2026-08-22 : « en français ça ne
+    // veut rien dire du tout ». La glose se pose à côté.
+    const { page } = editable(BACKUP_2026)
+    const row = rowElement(page, 'Keys.IntentLaunch')
+    expect(row.querySelector('.prefs__label')?.textContent)
+      .toContain('Lance une intention Android')
+    const gloss = row.querySelector('.prefs__gloss')?.textContent ?? ''
+    expect(gloss).toContain('une application Android en fait réagir une autre')
+    // Et nulle part ailleurs : la table ne grossit que là où un pilote a buté.
+    expect(rowElement(page, 'Keys.Menu').querySelector('.prefs__gloss')).toBeNull()
+  })
+
   it('laisse « aucune touche » tel quel, sans le découper en trois', () => {
     const { page } = editable(BACKUP_2026)
     const row = rowElement(page, 'Keys.Menu')

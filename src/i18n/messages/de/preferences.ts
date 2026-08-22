@@ -85,6 +85,9 @@ const preferences: DomainCatalog<'preferences'> = {
     '{name} ist der Name, den die Tastentabelle von Android dem Code {code} gibt. Diese Tabelle benennt einen Code, keine Taste: sie sagt nicht, welche Ihrer Tasten ihn sendet, und wir haben diese hier nicht von Hand gemessen.',
   'preferences.keyFromNowhere':
     'Der Code {code} steht in keiner Tastentabelle, die wir gelesen haben. Hier wird ihm kein Name gegeben: einen zu erfinden wäre der schlechteste Dienst.',
+  'preferences.intentGloss':
+    'Ein „Intent“ ist die Nachricht, mit der eine Android-Anwendung eine andere reagieren lässt. Diese Taste steuert also nicht XCTrack: sie sendet ein Signal, und es ist eine andere, auf dem Gerät eingerichtete Anwendung, die darauf antwortet.',
+
   'preferences.keyNamingOrigin':
     'Ein ausgeschriebener Name ist der, den die Taste am Gehäuse trägt, von Hand gemessen: solche Namen gibt es nur für die Modelle, die wir in der Hand hatten. Ein Name mit KEYCODE_ stammt aus der Tastentabelle von Android, die den Code benennt und nicht die Taste. Ein fehlender Name ist also eine fehlende Messung, nie eine Taste, die es nicht gäbe.',
 

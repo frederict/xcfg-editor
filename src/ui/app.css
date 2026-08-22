@@ -2583,6 +2583,19 @@ body.is-dragging .veil {
   overflow: hidden;
 }
 
+/*
+ * Notre phrase sous la description de XCTrack, quand son libellé emploie un mot qu'un
+ * pilote ne peut pas connaître (« intention »). Elle n'est **pas** bornée à deux lignes
+ * comme la description : une glose coupée n'explique rien. L'italique dit qu'elle est de
+ * nous et non de l'appareil — c'est le seul endroit de la palette qui parle en notre nom.
+ */
+.palette__gloss {
+  font-size: 11.5px;
+  line-height: 1.35;
+  font-style: italic;
+  color: var(--app-ink-soft);
+}
+
 .palette__marks {
   display: flex;
   flex-direction: column;

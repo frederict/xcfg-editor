@@ -82,6 +82,9 @@ const preferences: DomainCatalog<'preferences'> = {
     '{name} es el nombre que la tabla de teclas de Android da al código {code}. Esa tabla nombra un código, no un botón: no dice cuál de sus teclas lo emite, y esta no la hemos medido a mano.',
   'preferences.keyFromNowhere':
     'El código {code} no figura en ninguna tabla de teclas que hayamos leído. Aquí no se le da ningún nombre: inventarlo sería el peor de los servicios.',
+  'preferences.intentGloss':
+    'Una «intención» (intent, en inglés) es el mensaje con el que una aplicación de Android hace reaccionar a otra. Esta tecla no gobierna pues XCTrack: envía una señal, y es otra aplicación, configurada en el aparato, la que responde.',
+
   'preferences.keyNamingOrigin':
     'Un nombre en palabras es el que lleva la tecla en la carcasa, medido a mano: solo existe para los modelos que hemos tenido entre las manos. Un nombre en KEYCODE_ viene de la tabla de teclas de Android, que nombra el código y no el botón. Un nombre que falta es pues una medición que falta, nunca una tecla que no existiría.',
 

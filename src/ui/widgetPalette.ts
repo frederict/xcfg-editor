@@ -959,6 +959,18 @@ function elsewhereMark(entry: PaletteEntry, tr: Translator): string {
 }
 
 /**
+ * Les gadgets dont le **libellé de XCTrack** emploie un mot qu'un pilote ne peut pas
+ * connaître, et que nous éclairons à côté sans jamais le remplacer.
+ *
+ * La table reste minuscule à dessein : un mot n'y entre que si un pilote a buté dessus.
+ * Le seul jusqu'ici est *intention*, calque littéral d'*intent* — le mécanisme par lequel
+ * une application Android en fait réagir une autre.
+ */
+const GLOSSED_WIDGETS: Readonly<Record<string, 'palette.intentGloss' | undefined>> = {
+  WButtonIntentLauncher: 'palette.intentGloss'
+}
+
+/**
  * Une ligne : la vignette, le libellé officiel, le nom court qui lève toute ambiguïté, la
  * description du catalogue, et les marques — Pro, présence, nombre d'exemplaires.
  */
@@ -1013,6 +1025,14 @@ function buildRow(
   if (entry.description !== undefined) {
     text.append(el('span', 'palette__desc', entry.description))
   }
+  // Notre glose, **après** la description de XCTrack et jamais à sa place : le nom du
+  // gadget reste ce que l'appareil affiche — « Lanceur d'intention » —, et la phrase qui
+  // éclaire le mot se voit être de nous. Un pilote-testeur l'a demandée le 2026-08-22 :
+  // « "Intention" est la traduction littérale d'intent. En français ça ne veut rien dire
+  // du tout. » Le libellé ne se réécrit pas pour autant : c'est celui qu'il lira sur son
+  // appareil, et lui en donner un autre le rendrait introuvable là-bas.
+  const gloss = GLOSSED_WIDGETS[entry.shortName]
+  if (gloss !== undefined) text.append(el('span', 'palette__gloss', tr.t(gloss)))
   row.append(text)
 
   const marks = el('span', 'palette__marks')

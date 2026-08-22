@@ -43,6 +43,13 @@ const widgets = {
    */
   'properties.widgetTitle': 'Gadget : {name}',
 
+  /**
+   * Ce que dit la pastille du nom de classe — « WSpeed », « WQNH » —, qui paraissait nue.
+   * Elle ne se traduit pas : c'est ce que le fichier écrit, à l'octet près.
+   */
+  'properties.classTitle':
+    'Le nom que le fichier donne à ce gadget. Il ne change pas d’une langue à l’autre : c’est ce que vous liriez en ouvrant le fichier, et c’est le mot à citer pour signaler un problème.',
+
   /** Voir l'en-tête : jumelle de `preferences.settingCount`, délibérément. */
   'properties.settingCount': {
     one: '{count} réglage',
@@ -252,6 +259,15 @@ const widgets = {
   'palette.onlyPresentHelp':
     'Ces types-là seront copiés d’un gadget que XCTrack a lui-même écrit : tous leurs ' +
     'réglages sont conservés, y compris ceux que cet éditeur ne sait pas présenter.',
+  /**
+   * ⚠️ **Notre glose, jamais un libellé réécrit.** « Lanceur d'intention » est ce que
+   * XCTrack affiche en français : c'est le nom que le pilote retrouvera sur son appareil.
+   * Un pilote-testeur a dit le 2026-08-22 : « en français ça ne veut rien dire du tout ».
+   * La phrase l'explique à côté ; elle ne le remplace pas.
+   */
+  'palette.intentGloss':
+    'Une « intention » (intent, en anglais) est le message par lequel une application Android en fait réagir une autre : ce gadget ne fait rien de lui-même, il envoie un signal qu’une autre application, réglée sur l’appareil, reçoit.',
+
   'palette.legend':
     'Liseré plein : le gadget sera copié d’un exemplaire déjà présent dans le fichier, avec ' +
     'tous ses réglages. Liseré pointillé : il sera créé avec ses seuls réglages de base, ' +

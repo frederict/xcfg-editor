@@ -165,6 +165,15 @@ const preferences = {
     '{name} est le nom que la table des touches d’Android donne au code {code}. Cette table nomme un code, pas un bouton : elle ne dit pas laquelle de vos touches l’émet, et nous n’avons pas relevé celle-ci à la main.',
   'preferences.keyFromNowhere':
     'Le code {code} ne figure dans aucune table de touches que nous ayons lue. Aucun nom ne lui est donné ici : en inventer un serait le pire des services.',
+  /**
+   * ⚠️ **Notre glose, jamais un libellé réécrit.** « Lance une intention Android » est ce
+   * que XCTrack affiche en français, extrait de l'APK — c'est le mot que le pilote
+   * retrouvera sur son appareil. Un pilote-testeur a dit le 2026-08-22 : « en français ça
+   * ne veut rien dire du tout ». La phrase l'explique à côté ; elle ne le remplace pas.
+   */
+  'preferences.intentGloss':
+    'Une « intention » (intent, en anglais) est le message par lequel une application Android en fait réagir une autre. Cette touche ne pilote donc pas XCTrack : elle envoie un signal, et c’est une autre application, réglée sur l’appareil, qui y répond.',
+
   'preferences.keyNamingOrigin':
     'Un nom en toutes lettres est celui que porte la touche sur le boîtier, relevé à la main : il n’y en a que pour les modèles que nous avons eus entre les mains. Un nom en KEYCODE_ vient de la table des touches d’Android, qui nomme le code et non le bouton. Un nom qui manque est donc une mesure qui manque, jamais une touche qui n’existerait pas.',
 

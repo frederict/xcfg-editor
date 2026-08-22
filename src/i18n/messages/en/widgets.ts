@@ -17,6 +17,9 @@ const widgets: DomainCatalog<'widgets'> = {
 
   'properties.widgetTitle': 'Widget: {name}',
 
+  'properties.classTitle':
+    'The name the file gives this widget. It does not change from one language to another: it is what you would read on opening the file, and it is the word to quote when reporting a problem.',
+
   'properties.settingCount': {
     one: '{count} setting',
     other: '{count} settings'
@@ -180,6 +183,9 @@ const widgets: DomainCatalog<'widgets'> = {
   'palette.onlyPresentHelp':
     'These types will be copied from a widget XCTrack wrote itself: all their settings are ' +
     'kept, including the ones this editor cannot present.',
+  'palette.intentGloss':
+    'An “intent” is the message by which one Android application makes another react: this widget does nothing by itself, it sends a signal that another application, set up on the device, receives.',
+
   'palette.legend':
     'Solid edge: the widget will be copied from a copy already present in the file, with all ' +
     'its settings. Dotted edge: it will be created with its basic settings only, XCTrack ' +

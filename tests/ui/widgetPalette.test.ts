@@ -371,6 +371,23 @@ describe('le badge Pro et la description', () => {
     expect(entryFor(view.entries, 'WCompass').description)
       .toBe(CATALOG.widgetDescription('WCompass'))
   })
+
+  it('éclaire « intention » à côté du libellé, sans le réécrire', () => {
+    // Un pilote-testeur, le 2026-08-22 : « "Intention" est la traduction littérale
+    // d'intent. En français ça ne veut rien dire du tout. » Le libellé reste celui de
+    // XCTrack — c'est celui qu'il retrouvera sur son appareil —, et notre phrase se pose
+    // à côté, après la description du catalogue.
+    const view = palette(EMPTY)
+    const row = view.element
+      .querySelector<HTMLElement>('.palette__entry[data-widget="WButtonIntentLauncher"]')!
+    expect(row.querySelector('.palette__name')?.textContent).toBe('Lanceur d\'intention')
+    const gloss = row.querySelector('.palette__gloss')?.textContent ?? ''
+    expect(gloss).toContain('une application Android en fait réagir une autre')
+    // Et sur les autres lignes, rien : la table ne grossit que là où un pilote a buté.
+    const other = view.element
+      .querySelector<HTMLElement>('.palette__entry[data-widget="WCompass"]')!
+    expect(other.querySelector('.palette__gloss')).toBeNull()
+  })
 })
 
 describe('deux types, un seul libellé', () => {

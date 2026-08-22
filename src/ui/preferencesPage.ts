@@ -313,6 +313,11 @@ export interface PreferenceRow {
   /** Vrai si `label` est un vrai libellé et non la clé faute de mieux. */
   labelled: boolean
   help?: string
+  /**
+   * **Notre** phrase sous un libellé de XCTrack qui emploie un mot que le pilote n'a aucun
+   * moyen de connaître. Voir `GLOSSED_KEYS`.
+   */
+  gloss?: string
   control: PreferenceControl | null
   scope: PreferenceScope | null
   state: PreferenceState
@@ -953,6 +958,23 @@ interface RowContext {
   hardware?: HardwareKeySurvey | null
 }
 
+/**
+ * Les réglages dont le **libellé de XCTrack** emploie un mot qu'un pilote ne peut pas
+ * connaître, et pour lesquels l'APK ne donne aucune légende.
+ *
+ * ⚠️ **Le libellé ne se réécrit pas.** « Lance une intention Android » est la chrome
+ * française de XCTrack, extraite de l'APK : c'est le mot que le pilote lira sur son
+ * appareil, et le traduire autrement lui donnerait un terme introuvable là-bas. Ce que
+ * nous pouvons faire — ce que le pilote-testeur du 2026-08-22 demandait, « en français ça
+ * ne veut rien dire du tout » — c'est **l'expliquer à côté**, dans notre voix et dans la
+ * langue de l'interface.
+ *
+ * La table reste minuscule à dessein : un mot n'y entre que si un pilote a buté dessus.
+ */
+const GLOSSED_KEYS: Readonly<Record<string, 'preferences.intentGloss' | undefined>> = {
+  'Keys.IntentLaunch': 'preferences.intentGloss'
+}
+
 function buildRow(key: string, ctx: RowContext): PreferenceRow {
   const { catalog, file, tr } = ctx
   const entry = catalog.preference(key)
@@ -971,6 +993,8 @@ function buildRow(key: string, ctx: RowContext): PreferenceRow {
   }
 
   const help = catalog.help(key)
+  const gloss = GLOSSED_KEYS[key]
+  if (gloss !== undefined) row.gloss = tr.t(gloss)
   if (entry?.personal !== undefined) row.personal = entry.personal
 
   if (node === undefined) {
@@ -1965,6 +1989,9 @@ function buildRowElement(row: PreferenceRow, ctx: PageContext): HTMLElement {
   if (restoreSlot !== undefined) element.append(restoreSlot)
   fillRestore()
   if (row.help !== undefined) element.append(el('p', 'prefs__help', row.help))
+  // Notre glose, **après** l'aide de XCTrack et jamais à sa place : le libellé reste ce
+  // que l'appareil affiche, et la phrase qui l'éclaire se voit être de nous.
+  if (row.gloss !== undefined) element.append(el('p', 'prefs__help prefs__gloss', row.gloss))
   // Ce que notre relevé de touches physiques dit de ce code-là. Sous la ligne, en toutes
   // lettres et non en infobulle : un propos sur le matériel se découvre avant le vol, pas
   // au survol. Il n'existe que là où le modèle du fichier a été relevé — voir `bindingNote`.
