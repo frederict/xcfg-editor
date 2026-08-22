@@ -40,7 +40,7 @@ import {
 import { renderWidgetList, type WidgetList } from './widgetList'
 // Type seul : effacé à la compilation, il ne ramène pas la palette dans le morceau
 // principal — même parti que `PropertyField` juste au-dessus.
-import type { PaletteSources } from './widgetPalette'
+import type { ForeignWidget, PaletteSources } from './widgetPalette'
 /*
  * Les quatre modules assemblés ici ne sont **jamais** importés autrement que par
  * `import()` : chacun traîne son catalogue derrière lui — celui des préférences pèse
@@ -1599,13 +1599,17 @@ function loadProWidgets(language: string): Promise<void> {
  */
 function paletteSources(current: Session, page: Page | undefined): PaletteSources {
   const onPage: JsonNode[] = []
-  const elsewhere: JsonNode[] = []
+  // Chaque modèle voyage avec sa page. Sans elle, la palette dit « ailleurs » — un pilote
+  // qui a neuf pages ne sait alors pas ce qu'il prend, et c'est ce qu'il a signalé.
+  const elsewhere: ForeignWidget[] = []
   if (page) for (const widget of page.widgets) onPage.push(widget.node)
   for (const orientation of ['landscape', 'portrait'] as const) {
-    for (const other of current.layout[orientation]) {
-      if (other === page) continue
-      for (const widget of other.widgets) elsewhere.push(widget.node)
-    }
+    current.layout[orientation].forEach((other, index) => {
+      if (other === page) return
+      for (const widget of other.widgets) {
+        elsewhere.push({ node: widget.node, page: { orientation, rank: index + 1 } })
+      }
+    })
   }
   return { onPage, elsewhere }
 }
@@ -1801,6 +1805,10 @@ function applyDockHeight(): void {
   dockElement.classList.toggle('dock--sized', dockHeight !== undefined)
   if (dockGrip) {
     dockGrip.setAttribute('aria-valuemin', String(DOCK_HEIGHT_MIN))
+    // `ceiling` et non le plafond de fenêtre de `app.css` : celui-ci ne borne que la
+    // hauteur **par défaut**, jamais une hauteur réglée à la poignée (`.dock--sized`) —
+    // c'est le pilote qui arbitre entre voir sa page et voir ses réglages. Annoncer le
+    // plafond du défaut ferait donc mentir la poignée sur ce qu'elle peut atteindre.
     dockGrip.setAttribute('aria-valuemax', String(ceiling))
     dockGrip.setAttribute('aria-valuenow', String(height))
     dockGrip.setAttribute('aria-valuetext', translator().t('dock.heightPixels', { count: height }))
