@@ -167,7 +167,79 @@ const model: DomainCatalog<'model'> = {
   'suspectClue.letters': 'Deze tekst bevat letters met accenten of tekens buiten het ' +
     'eenvoudige Latijnse alfabet: hij is geschreven, niet uit een lijst gekozen.',
   'suspectClue.sentence': 'Deze tekst bevat een spatie: hij leest als een zin, niet als een ' +
-    'waarde die je uit een lijst kiest.'
+    'waarde die je uit een lijst kiest.',
+
+  /* -------- de controle vóór het vliegen — zie `fr/model.ts` over de drie veronderstellingen */
+
+  'inspection.landscape': 'Liggend',
+  'inspection.portrait': 'Staand',
+  'inspection.wherePage': '{orientation}, pagina {page}',
+  'inspection.whereWidget': '{orientation}, pagina {page}, widget {rank}',
+
+  'ruleTitle.unreachableWidget': 'Widget niet aan te raken',
+  'ruleTitle.pageNeverShown': 'Pagina die nooit wordt getoond',
+  'ruleTitle.thermalPages': 'Meerdere pagina’s met thermiekassistent',
+  'ruleTitle.widgetTooSmall': 'Widget misschien te klein om te lezen',
+  'ruleTitle.proWidget': 'Pro-widget zonder aangegeven licentie',
+  'ruleTitle.roadMaps': 'Twee wegenkaarten op dezelfde pagina',
+  'ruleTitle.obsoleteKey': 'Instelling van een eerdere versie',
+
+  'ruleSummary.unreachableWidget': 'Geen enkel punt van deze widgets ontsnapt aan de ' +
+    'widgets die erna worden getekend, en het is de voorste widget die de aanraking ' +
+    'krijgt. Ze kunnen volkomen zichtbaar blijven: een widget die geen achtergrond tekent ' +
+    'pikt de aanrakingen net zo goed in als een dekkende.',
+  'ruleSummary.pageNeverShown': 'XCTrack zegt het in zijn eigen instellingenvenster: een ' +
+    'pagina waarvoor geen enkel navigatietype is aangevinkt, wordt in geen enkele ' +
+    'vliegcontext getoond.',
+  'ruleSummary.thermalPages': 'De inventarisatie van het toestel zegt dat de klasse ' +
+    '‘thermiekassistent’ het doel is van het automatisch omschakelen. Ze zegt niet welke ' +
+    'wordt bedoeld wanneer een stand er meerdere draagt: deze editor veronderstelt de ' +
+    'laatste, en die veronderstelling is nooit nagegaan.',
+  'ruleSummary.widgetTooSmall': 'De drempel komt uit ISO 9241-303 en geldt voor het ' +
+    'werkelijke fysieke formaat van het gekozen schermmodel, niet voor pixels: een ander ' +
+    'model verandert die millimeters.',
+  'ruleSummary.proWidget': 'Dit bestand geeft ‘proUpTo: 0’ aan en draagt widgets die voor ' +
+    'de Pro-licentie zijn voorbehouden.',
+  'ruleSummary.roadMaps': 'XCTrack waarschuwt in zijn eigen instellingen dat er door een ' +
+    'beperking van zijn kaartbibliotheek maar één wegenkaart per pagina mogelijk is.',
+  'ruleSummary.obsoleteKey': 'Deze widgets dragen instellingen die door een eerdere versie ' +
+    'van XCTrack zijn geschreven. Er valt vóór het vliegen niets aan te doen; om te weten ' +
+    'wat een bepaalde versie ermee doet, en ze eventueel te verwijderen, zie ‘Versie en ' +
+    'compatibiliteit’ in het menu ‘Bestand’.',
+
+  'inspection.unreachable': '‘{name}’ wordt volledig bedekt door widgets die erna zijn geplaatst. Geen enkele klik kan hem dus bereiken, niet hier en niet in het bewerkingsscherm van XCTrack, dat eveneens de voorste widget voorrang geeft. Hij kan volkomen zichtbaar blijven — een widget die niets tekent pikt de aanrakingen net zo goed in als een dekkende. Om hem in te stellen gaat u via de widgetlijst van de pagina.',
+  'inspection.unreachableToVerify': 'Wat er met deze widget tijdens de vlucht gebeurt, is ' +
+    'niet waargenomen: XCTrack leidt de aanraking misschien anders door dan bij het ' +
+    'bewerken. De vraag telt vooral voor actieknoppen, die alleen bestaan om in de vlucht ' +
+    'te worden aangeraakt.',
+
+  'inspection.pageNeverShown': {
+    one: 'Deze pagina is voor geen enkel navigatietype ingeschakeld: XCTrack zal haar in geen enkele vliegcontext tonen, en haar {count} widget zal nooit dienen. Dat is de instelling ‘Uitgeschakeld’ van het toestel — bewust, of vergeten. Niet te verwarren met een pagina die alleen tot bepaalde navigaties beperkt is, wat een normale instelling is.',
+    other: 'Deze pagina is voor geen enkel navigatietype ingeschakeld: XCTrack zal haar in geen enkele vliegcontext tonen, en haar {count} widgets zullen nooit dienen. Dat is de instelling ‘Uitgeschakeld’ van het toestel — bewust, of vergeten. Niet te verwarren met een pagina die alleen tot bepaalde navigaties beperkt is, wat een normale instelling is.'
+  },
+
+  'inspection.thermalPages': 'Deze stand draagt meerdere pagina’s met thermiekassistent, en XCTrack richt zich maar op één daarvan wanneer het vanzelf omschakelt in een bocht. Welke? Deze editor veronderstelt de laatste, hier pagina {target} — zonder het te hebben nagegaan. Deze blijft hoe dan ook bereikbaar via ‘volgende pagina’.',
+  'inspection.thermalPagesToVerify': 'Er is niets waargenomen van wat XCTrack doet wanneer ' +
+    'meerdere pagina’s met thermiekassistent naast elkaar bestaan: geen enkel bestand van ' +
+    'de inventarisatie draagt er twee. Er een verdubbelen op het toestel, een bocht ' +
+    'indraaien en kijken welke pagina verschijnt, zou de vraag in één vlucht beslechten.',
+
+  'inspection.tooSmall': '‘{name}’ is op dit toestel maar {height} hoog. Als de tekst die hij toont daar de helft van inneemt, meet die ongeveer {value} — onder de {minimum} die ISO 9241-303 als absoluut minimum geeft op {distance} cm. Zal die op armlengte, in de volle zon, met handschoenen nog leesbaar zijn? Na te gaan op het toestel.',
+  'inspection.tooSmallToVerify': 'Het deel van de hoogte van de widget dat het teken van de waarde werkelijk inneemt (hier verondersteld op {ratio}) is maar op één widget en één schermafdruk gemeten. De afdrukken van het bord met de 75 widgets zouden volstaan om het type per type te meten, zonder het toestel aan te raken.',
+
+  'inspection.proWidget': '‘{name}’ is een Pro-widget, en dit bestand geeft ‘proUpTo: 0’ aan. Wat zal XCTrack met deze widget doen op een toestel zonder Pro-licentie: hem vervangen door een kader ‘Pro-widget’, hem gewoon tonen, of er niets aan veranderen? Wij weten het niet.',
+  'inspection.proWidgetToVerify': 'De betekenis van `info.proUpTo` staat niet vast: 0 ' +
+    'betekent misschien ‘geen licentie’, misschien een einddatum in seconden. Alle ' +
+    '21 bestanden van de inventarisatie dragen 0, over twee installaties heen — geen ' +
+    'andere waarde is ooit waargenomen. Een proef op de AIR³ met een Pro-widget zou het ' +
+    'beslechten.',
+
+  'inspection.roadMaps': '‘{name}’ vraagt eveneens om een wegenkaart, en widget {first} van deze pagina vraagt er al om een. XCTrack waarschuwt in zijn eigen instellingen dat er door een beperking van zijn kaartbibliotheek maar één wegenkaart per pagina mogelijk is. Wat er in de plaats verschijnt, is niet te voorspellen.',
+
+  'inspection.obsoleteKey': {
+    one: '‘{name}’ draagt een instelling die door een eerdere versie van XCTrack is geschreven ({detail}). Er gaat niets verloren: XCTrack 1.0.3 zet ze bij het lezen om — dat is op het toestel nagegaan — en zal ze onder haar nieuwe naam terugschrijven zodra deze widget de volgende keer wordt ingesteld.',
+    other: '‘{name}’ draagt instellingen die door een eerdere versie van XCTrack zijn geschreven ({detail}). Er gaat niets verloren: XCTrack 1.0.3 zet ze bij het lezen om — dat is op het toestel nagegaan — en zal ze onder hun nieuwe namen terugschrijven zodra deze widget de volgende keer wordt ingesteld.'
+  }
 }
 
 export default model

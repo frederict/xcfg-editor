@@ -160,7 +160,77 @@ const model: DomainCatalog<'model'> = {
   'suspectClue.letters': 'Este texto lleva letras acentuadas o signos fuera del alfabeto ' +
     'latino simple: fue escrito, no elegido en una lista.',
   'suspectClue.sentence': 'Este texto lleva un espacio: se lee como una frase, no como un ' +
-    'valor que se elige en una lista.'
+    'valor que se elige en una lista.',
+
+  /* ---------- el control antes de volar — véase `fr/model.ts` sobre las tres suposiciones */
+
+  'inspection.landscape': 'Horizontal',
+  'inspection.portrait': 'Vertical',
+  'inspection.wherePage': '{orientation}, página {page}',
+  'inspection.whereWidget': '{orientation}, página {page}, widget {rank}',
+
+  'ruleTitle.unreachableWidget': 'Widget imposible de tocar',
+  'ruleTitle.pageNeverShown': 'Página que nunca se mostrará',
+  'ruleTitle.thermalPages': 'Varias páginas de asistente de térmica',
+  'ruleTitle.widgetTooSmall': 'Widget quizá demasiado pequeño para leerlo',
+  'ruleTitle.proWidget': 'Widget Pro sin licencia declarada',
+  'ruleTitle.roadMaps': 'Dos mapas de carreteras en la misma página',
+  'ruleTitle.obsoleteKey': 'Ajuste de una versión anterior',
+
+  'ruleSummary.unreachableWidget': 'Ningún punto de estos widgets escapa a los que se ' +
+    'dibujan después de ellos, y es el widget más adelantado el que recibe la pulsación. ' +
+    'Pueden seguir siendo perfectamente visibles: un widget que no pinta ningún fondo roba ' +
+    'las pulsaciones igual que uno opaco.',
+  'ruleSummary.pageNeverShown': 'XCTrack lo dice en su propio cuadro de ajustes: una página ' +
+    'sin ningún tipo de navegación marcado no se muestra en ningún contexto de vuelo.',
+  'ruleSummary.thermalPages': 'El muestreo del dispositivo dice que la clase «asistente de ' +
+    'térmica» es la que apunta el cambio automático. No dice cuál se apunta cuando una ' +
+    'orientación lleva varias: este editor supone la última, y esa suposición nunca se ha ' +
+    'verificado.',
+  'ruleSummary.widgetTooSmall': 'El umbral procede de la norma ISO 9241-303 y se aplica al ' +
+    'tamaño físico real de la pantalla del modelo elegido, no a píxeles: cambiar de modelo ' +
+    'cambia esos milímetros.',
+  'ruleSummary.proWidget': 'Este archivo declara «proUpTo: 0» y lleva widgets reservados a ' +
+    'la licencia Pro.',
+  'ruleSummary.roadMaps': 'XCTrack avisa en sus propios ajustes de que solo es posible un ' +
+    'mapa de carreteras por página, por una limitación de su biblioteca de mapas.',
+  'ruleSummary.obsoleteKey': 'Estos widgets llevan ajustes escritos por una versión ' +
+    'anterior de XCTrack. No hay nada que hacer al respecto antes de volar; para saber qué ' +
+    'hace con ellos una versión dada, y llegado el caso quitarlos, véase «Versión y ' +
+    'compatibilidad» en el menú «Archivo».',
+
+  'inspection.unreachable': '«{name}» está enteramente cubierto por widgets colocados después de él. Ningún clic puede alcanzarlo, ni aquí ni en la pantalla de edición de XCTrack, que también da el mando al widget más adelantado. Puede seguir siendo perfectamente visible: un widget que no pinta nada roba las pulsaciones igual que uno opaco. Para ajustarlo, pase por la lista de widgets de la página.',
+  'inspection.unreachableToVerify': 'No se ha observado qué le ocurre a este widget en ' +
+    'vuelo: puede que XCTrack encamine la pulsación de otro modo que en edición. La ' +
+    'pregunta importa sobre todo para los botones de acción, que solo existen para ser ' +
+    'tocados en vuelo.',
+
+  'inspection.pageNeverShown': {
+    one: 'Esta página no está activada para ningún tipo de navegación: XCTrack no la mostrará en ningún contexto de vuelo, y su {count} widget no servirá nunca. Es el ajuste «Desactivado» del dispositivo: voluntario, u olvidado. No confundir con una página solo restringida a ciertas navegaciones, que es un ajuste normal.',
+    other: 'Esta página no está activada para ningún tipo de navegación: XCTrack no la mostrará en ningún contexto de vuelo, y sus {count} widgets no servirán nunca. Es el ajuste «Desactivado» del dispositivo: voluntario, u olvidado. No confundir con una página solo restringida a ciertas navegaciones, que es un ajuste normal.'
+  },
+
+  'inspection.thermalPages': 'Esta orientación lleva varias páginas de asistente de térmica, y XCTrack solo apunta a una cuando cambia por sí mismo en espiral. ¿A cuál? Este editor supone la última, aquí la página {target}, sin haberlo verificado. Esta, en todo caso, sigue siendo accesible con «página siguiente».',
+  'inspection.thermalPagesToVerify': 'No se ha observado nada de lo que hace XCTrack cuando ' +
+    'coexisten varias páginas de asistente de térmica: ningún archivo del muestreo lleva ' +
+    'dos. Duplicar una en el dispositivo, entrar en espiral y mirar qué página aparece ' +
+    'zanjaría la cuestión en un solo vuelo.',
+
+  'inspection.tooSmall': '«{name}» solo mide {height} de alto en este dispositivo. Si el texto que muestra ocupa la mitad, medirá unos {value}, por debajo de los {minimum} que la norma ISO 9241-303 da como mínimo absoluto a {distance} cm. ¿Seguirá siendo legible con el brazo extendido, a pleno sol, con guantes? Por comprobar en el dispositivo.',
+  'inspection.tooSmallToVerify': 'La parte de la altura del widget que ocupa realmente el glifo del valor (supuesta aquí en {ratio}) solo se ha medido en un widget y en una sola captura. Las capturas del muestrario de los 75 widgets bastarían para medirla tipo por tipo, sin tocar el dispositivo.',
+
+  'inspection.proWidget': '«{name}» es un widget Pro, y este archivo declara «proUpTo: 0». ¿Qué hará XCTrack con este widget en un dispositivo sin licencia Pro: sustituirlo por un marco «widget Pro», mostrarlo normalmente, o no cambiar nada? No lo sabemos.',
+  'inspection.proWidgetToVerify': 'El sentido de `info.proUpTo` no está establecido: 0 ' +
+    'quizá signifique «sin licencia», quizá una fecha de fin en segundos. Los 21 archivos ' +
+    'del muestreo llevan todos 0, en dos instalaciones; nunca se ha observado otro valor. ' +
+    'Una prueba en el AIR³ con un widget Pro lo zanjaría.',
+
+  'inspection.roadMaps': '«{name}» pide también un mapa de carreteras, y el widget {first} de esta página ya pide uno. XCTrack avisa en sus propios ajustes de que solo es posible un mapa de carreteras por página, por una limitación de su biblioteca de mapas. Lo que se mostrará en su lugar no es previsible.',
+
+  'inspection.obsoleteKey': {
+    one: '«{name}» lleva un ajuste escrito por una versión anterior de XCTrack ({detail}). No se pierde nada: XCTrack 1.0.3 lo convierte al leerlo —está verificado en el dispositivo— y lo reescribirá con su nuevo nombre la primera vez que se ajuste este widget.',
+    other: '«{name}» lleva ajustes escritos por una versión anterior de XCTrack ({detail}). No se pierde nada: XCTrack 1.0.3 los convierte al leerlos —está verificado en el dispositivo— y los reescribirá con sus nuevos nombres la primera vez que se ajuste este widget.'
+  }
 }
 
 export default model

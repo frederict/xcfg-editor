@@ -206,7 +206,95 @@ const model = {
   'suspectClue.letters': 'Ce texte porte des lettres accentuées ou des signes hors de ' +
     'l’alphabet latin simple : il a été écrit, pas choisi dans une liste.',
   'suspectClue.sentence': 'Ce texte porte une espace : il se lit comme une phrase, pas ' +
-    'comme une valeur à choisir dans une liste.'
+    'comme une valeur à choisir dans une liste.',
+
+  /* ================================= le contrôle avant vol : `src/model/inspection.ts` ===
+   *
+   * Sept règles, leur titre, ce qu'elles valent en général, et ce qu'elles disent d'un
+   * gadget donné.
+   *
+   * ⚠️ **Trois des sept sont des suppositions déclarées** (`certainty: 'hypothesis'`) :
+   * `unreachableWidget`, `thermalPages`, `widgetTooSmall` et `proWidget` sortent en doute,
+   * et leur `…ToVerify` dit **ce qui lèverait le doute sur l'instrument**. C'est la
+   * distinction mesuré / supposé qui fait la valeur de ce projet : une traduction qui
+   * transformerait une question en verdict la ferait perdre. Chaque `…ToVerify` doit donc
+   * rester au conditionnel, et nommer l'essai qui trancherait.
+   * =============================================================================== */
+
+  /* ------------------------------------------------------ où porte le constat */
+
+  'inspection.landscape': 'Paysage',
+  'inspection.portrait': 'Portrait',
+  'inspection.wherePage': '{orientation}, page {page}',
+  'inspection.whereWidget': '{orientation}, page {page}, gadget {rank}',
+
+  /* ---------------------------------------- le titre de chacune des sept règles */
+
+  'ruleTitle.unreachableWidget': 'Gadget impossible à toucher',
+  'ruleTitle.pageNeverShown': 'Page qui ne s’affichera jamais',
+  'ruleTitle.thermalPages': 'Plusieurs pages d’assistant de thermique',
+  'ruleTitle.widgetTooSmall': 'Gadget peut-être trop petit pour être lu',
+  'ruleTitle.proWidget': 'Gadget Pro sans licence déclarée',
+  'ruleTitle.roadMaps': 'Deux cartes routières sur la même page',
+  'ruleTitle.obsoleteKey': 'Réglage d’une version antérieure',
+
+  /* ------------- ce que la règle regarde, et d'où vient ce qu'elle affirme */
+
+  'ruleSummary.unreachableWidget': 'Aucun point de ces gadgets n’échappe à ceux qui sont ' +
+    'dessinés après eux, et c’est le gadget le plus en avant qui reçoit l’appui. Ils ' +
+    'peuvent rester parfaitement visibles : un gadget qui ne peint aucun fond prend les ' +
+    'appuis tout autant qu’un gadget opaque.',
+  'ruleSummary.pageNeverShown': 'XCTrack le dit dans sa propre boîte de réglage : une page ' +
+    'dont aucun type de navigation n’est coché n’est affichée dans aucun contexte de vol.',
+  'ruleSummary.thermalPages': 'Le relevé de l’instrument dit que la classe « assistant de ' +
+    'thermique » est celle que vise le basculement automatique. Il ne dit pas laquelle est ' +
+    'visée quand une orientation en porte plusieurs : cet éditeur suppose la dernière, et ' +
+    'cette supposition n’a jamais été vérifiée.',
+  'ruleSummary.widgetTooSmall': 'Le seuil vient de l’ISO 9241-303 et s’applique à la taille ' +
+    'physique réelle de la dalle du gabarit d’écran choisi, pas à des pixels : changer de ' +
+    'gabarit change ces millimètres.',
+  'ruleSummary.proWidget': 'Ce fichier déclare « proUpTo: 0 » et porte des gadgets réservés ' +
+    'à la licence Pro.',
+  'ruleSummary.roadMaps': 'XCTrack prévient dans ses propres réglages qu’une seule carte ' +
+    'routière est possible par page, à cause d’une limitation de sa bibliothèque de cartes.',
+  'ruleSummary.obsoleteKey': 'Ces gadgets portent des réglages qu’une version antérieure de ' +
+    'XCTrack a écrits. Il n’y a rien à y faire avant de voler ; pour savoir ce qu’une ' +
+    'version donnée en fait, et éventuellement les enlever, voir « Version et ' +
+    'compatibilité » dans le menu « Fichier ».',
+
+  /* ------------------------------ ce que chaque constat dit du gadget concerné */
+
+  'inspection.unreachable': '« {name} » est entièrement recouvert par des gadgets placés après lui. Aucun clic ne peut donc l’atteindre, ni ici ni dans l’écran d’édition de XCTrack, qui donne lui aussi la main au gadget le plus en avant. Il peut rester parfaitement visible — un gadget qui ne peint rien vole les appuis tout autant qu’un gadget opaque. Pour le régler, passez par la liste des gadgets de la page.',
+  'inspection.unreachableToVerify': 'Ce qu’il advient de ce gadget en vol n’a pas été ' +
+    'observé : XCTrack route peut-être l’appui autrement qu’en édition. La question compte ' +
+    'surtout pour les boutons d’action, qui n’existent que pour être touchés en vol.',
+
+  'inspection.pageNeverShown': {
+    one: 'Cette page n’est activée pour aucun type de navigation : XCTrack ne l’affichera dans aucun contexte de vol, et son {count} gadget ne servira jamais. C’est le réglage « Désactivé » de l’instrument — volontaire, ou oublié. À distinguer d’une page seulement restreinte à certaines navigations, qui est un réglage normal.',
+    other: 'Cette page n’est activée pour aucun type de navigation : XCTrack ne l’affichera dans aucun contexte de vol, et ses {count} gadgets ne serviront jamais. C’est le réglage « Désactivé » de l’instrument — volontaire, ou oublié. À distinguer d’une page seulement restreinte à certaines navigations, qui est un réglage normal.'
+  },
+
+  'inspection.thermalPages': 'Cette orientation porte plusieurs pages d’assistant de thermique, et XCTrack n’en vise qu’une lorsqu’il bascule tout seul en spirale. Laquelle ? Cet éditeur suppose la dernière, ici la page {target} — sans l’avoir vérifié. Celle-ci reste en tout cas atteignable par « page suivante ».',
+  'inspection.thermalPagesToVerify': 'Rien n’a été observé de ce que fait XCTrack quand ' +
+    'plusieurs pages d’assistant de thermique coexistent : aucun fichier du corpus n’en ' +
+    'porte deux. En dupliquer une sur l’instrument, entrer en spirale et regarder quelle ' +
+    'page arrive trancherait la question en un vol.',
+
+  'inspection.tooSmall': '« {name} » ne fait que {height} de haut sur cet appareil. Si le texte qu’il affiche en occupe la moitié, il mesurera environ {value} — sous les {minimum} que l’ISO 9241-303 donne pour minimum absolu à {distance} cm. Sera-t-elle encore lisible à bout de bras, en plein soleil, avec des gants ? À vérifier sur l’instrument.',
+  'inspection.tooSmallToVerify': 'La part de la hauteur du gadget qu’occupe réellement le glyphe de la valeur (ici supposée {ratio}) n’a été mesurée que sur un seul gadget, une seule capture. Les captures de la planche des 75 gadgets suffiraient à la mesurer type par type, sans toucher à l’appareil.',
+
+  'inspection.proWidget': '« {name} » est un gadget Pro, et ce fichier déclare « proUpTo: 0 ». Que fera XCTrack de ce gadget sur un appareil sans licence Pro : le remplacer par un cadre « gadget Pro », l’afficher normalement, ou ne rien y changer ? Nous ne le savons pas.',
+  'inspection.proWidgetToVerify': 'Le sens de `info.proUpTo` n’est pas établi : 0 vaut ' +
+    'peut-être « pas de licence », peut-être une date de fin en secondes. Les 21 fichiers ' +
+    'du corpus portent tous 0, sur deux installations — aucune autre valeur n’a jamais été ' +
+    'observée. Un essai sur l’AIR³ avec un gadget Pro trancherait.',
+
+  'inspection.roadMaps': '« {name} » demande lui aussi une carte routière, et le gadget {first} de cette page en demande déjà une. XCTrack prévient dans ses propres réglages qu’une seule carte routière est possible par page, à cause d’une limitation de sa bibliothèque de cartes. Ce qui s’affichera à la place n’est pas prévisible.',
+
+  'inspection.obsoleteKey': {
+    one: '« {name} » porte un réglage écrit par une version antérieure de XCTrack ({detail}). Rien n’est perdu : XCTrack 1.0.3 le convertit à la lecture — c’est vérifié sur l’instrument — et le réécrira sous son nouveau nom la première fois que ce gadget sera réglé.',
+    other: '« {name} » porte des réglages écrits par une version antérieure de XCTrack ({detail}). Rien n’est perdu : XCTrack 1.0.3 les convertit à la lecture — c’est vérifié sur l’instrument — et les réécrira sous leur nouveau nom la première fois que ce gadget sera réglé.'
+  }
 } as const
 
 export default model

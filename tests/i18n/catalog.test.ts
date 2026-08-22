@@ -158,7 +158,18 @@ const IDENTICAL_ON_PURPOSE: ReadonlySet<string> = new Set<string>([
   ...UI_LANGUAGES.map((language) => `${language}/sharing.choiceLabel`),
   ...UI_LANGUAGES.map((language) => `${language}/warnings.box`),
   'en/sharing.orientationPortrait',
-  'en/warnings.where'
+  'en/warnings.where',
+  /*
+   * Domaine `model` (`src/model/`, `src/library/`, `src/catalog/`). Deux causes :
+   *
+   * - « Portrait » et « page » : le mot que l'anglais emploie réellement se trouve être
+   *   celui du français. L'allemand dit « Hochformat » et « Seite », le néerlandais
+   *   « Staand » et « pagina », l'espagnol « Vertical » et « página » — la coïncidence
+   *   n'est donc pas générale, d'où l'exception nominative ;
+   * - le repérage d'un constat de page, qui ne porte que ces deux mots-là.
+   */
+  'en/inspection.portrait',
+  'en/inspection.wherePage'
 ])
 
 /**
@@ -187,7 +198,18 @@ const PLURAL_WITHOUT_VISIBLE_COUNT: ReadonlySet<string> = new Set<string>([
   'pages.rankShift',
   'pages.thermalAlreadyPresent',
   'pages.thermalMultiple',
-  'sharing.droppedIntro'
+  'sharing.droppedIntro',
+  /*
+   * Le cinquième vient du domaine `model` :
+   *
+   * - `inspection.obsoleteKey` — le nombre de clés périmées accorde **cinq** mots de la
+   *   phrase (« un réglage écrit » / « des réglages écrits », « le convertit » / « les
+   *   convertit », « son nouveau nom » / « leur nouveau nom ») sans jamais s'écrire : les
+   *   clés elles-mêmes sont listées juste après, avec leur nouveau nom. Écrire « 2 » en
+   *   plus de `mapWidget_showOpenStreet → mapWidget_mapAppearance,
+   *   mapWidget_showTerrain → mapWidget_mapAppearance` ferait compter deux fois.
+   */
+  'inspection.obsoleteKey'
 ])
 
 describe('catalogues de messages', () => {

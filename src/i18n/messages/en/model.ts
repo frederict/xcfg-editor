@@ -153,7 +153,75 @@ const model: DomainCatalog<'model'> = {
   'suspectClue.letters': 'This text carries accented letters or signs outside the plain ' +
     'Latin alphabet: it was written, not picked from a list.',
   'suspectClue.sentence': 'This text carries a space: it reads like a sentence, not like a ' +
-    'value to pick from a list.'
+    'value to pick from a list.',
+
+  /* ---------------- the pre-flight check — see `fr/model.ts` for the three assumptions */
+
+  'inspection.landscape': 'Landscape',
+  'inspection.portrait': 'Portrait',
+  'inspection.wherePage': '{orientation}, page {page}',
+  'inspection.whereWidget': '{orientation}, page {page}, widget {rank}',
+
+  'ruleTitle.unreachableWidget': 'Widget impossible to touch',
+  'ruleTitle.pageNeverShown': 'Page that will never be shown',
+  'ruleTitle.thermalPages': 'Several thermal assistant pages',
+  'ruleTitle.widgetTooSmall': 'Widget perhaps too small to read',
+  'ruleTitle.proWidget': 'Pro widget with no declared licence',
+  'ruleTitle.roadMaps': 'Two road maps on the same page',
+  'ruleTitle.obsoleteKey': 'Setting from an earlier release',
+
+  'ruleSummary.unreachableWidget': 'No point of these widgets escapes the ones drawn after ' +
+    'them, and it is the frontmost widget that takes the tap. They may stay perfectly ' +
+    'visible: a widget that paints no background steals taps just as much as an opaque one.',
+  'ruleSummary.pageNeverShown': 'XCTrack says so in its own settings dialog: a page with no ' +
+    'navigation type ticked is shown in no flight context at all.',
+  'ruleSummary.thermalPages': 'The survey of the instrument says the “thermal assistant” ' +
+    'class is the one automatic switching targets. It does not say which one is targeted ' +
+    'when an orientation carries several: this editor assumes the last, and that ' +
+    'assumption has never been verified.',
+  'ruleSummary.widgetTooSmall': 'The threshold comes from ISO 9241-303 and applies to the ' +
+    'real physical size of the chosen screen template, not to pixels: changing template ' +
+    'changes those millimetres.',
+  'ruleSummary.proWidget': 'This file declares “proUpTo: 0” and carries widgets reserved ' +
+    'for the Pro licence.',
+  'ruleSummary.roadMaps': 'XCTrack warns in its own settings that only one road map is ' +
+    'possible per page, because of a limitation in its map library.',
+  'ruleSummary.obsoleteKey': 'These widgets carry settings written by an earlier release of ' +
+    'XCTrack. There is nothing to do about it before flying; to learn what a given release ' +
+    'does with them, and possibly remove them, see “Version and compatibility” in the ' +
+    '“File” menu.',
+
+  'inspection.unreachable': '“{name}” is entirely covered by widgets placed after it. No click can therefore reach it, neither here nor in XCTrack’s own editing screen, which also hands control to the frontmost widget. It may stay perfectly visible — a widget that paints nothing steals taps just as much as an opaque one. To set it up, go through the page’s widget list.',
+  'inspection.unreachableToVerify': 'What becomes of this widget in flight has not been ' +
+    'observed: XCTrack may route the tap differently from the editor. The question matters ' +
+    'above all for action buttons, which exist only to be touched in flight.',
+
+  'inspection.pageNeverShown': {
+    one: 'This page is enabled for no navigation type: XCTrack will show it in no flight context, and its {count} widget will never serve. That is the instrument’s “Disabled” setting — deliberate, or forgotten. Not to be confused with a page merely restricted to certain navigations, which is a normal setting.',
+    other: 'This page is enabled for no navigation type: XCTrack will show it in no flight context, and its {count} widgets will never serve. That is the instrument’s “Disabled” setting — deliberate, or forgotten. Not to be confused with a page merely restricted to certain navigations, which is a normal setting.'
+  },
+
+  'inspection.thermalPages': 'This orientation carries several thermal assistant pages, and XCTrack targets only one when it switches over by itself in a turn. Which one? This editor assumes the last, here page {target} — without having verified it. This one stays reachable through “next page” in any case.',
+  'inspection.thermalPagesToVerify': 'Nothing has been observed of what XCTrack does when ' +
+    'several thermal assistant pages coexist: no file in the corpus carries two. ' +
+    'Duplicating one on the instrument, entering a turn and watching which page comes up ' +
+    'would settle the question in a single flight.',
+
+  'inspection.tooSmall': '“{name}” is only {height} high on this device. If the text it displays takes up half of that, it will measure about {value} — below the {minimum} that ISO 9241-303 gives as an absolute minimum at {distance} cm. Will it still be readable at arm’s length, in full sun, with gloves on? To be checked on the instrument.',
+  'inspection.tooSmallToVerify': 'The share of the widget’s height actually taken up by the glyph of the value (assumed here to be {ratio}) has been measured on a single widget, in a single screenshot. The screenshots of the 75-widget board would be enough to measure it type by type, without touching the device.',
+
+  'inspection.proWidget': '“{name}” is a Pro widget, and this file declares “proUpTo: 0”. What will XCTrack do with this widget on a device without a Pro licence: replace it with a “Pro widget” frame, show it normally, or leave it alone? We do not know.',
+  'inspection.proWidgetToVerify': 'The meaning of `info.proUpTo` is not established: 0 may ' +
+    'mean “no licence”, or an expiry date in seconds. All 21 files in the corpus carry 0, ' +
+    'across two installations — no other value has ever been observed. A trial on the AIR³ ' +
+    'with a Pro widget would settle it.',
+
+  'inspection.roadMaps': '“{name}” asks for a road map too, and widget {first} of this page already asks for one. XCTrack warns in its own settings that only one road map is possible per page, because of a limitation in its map library. What will be drawn instead is not predictable.',
+
+  'inspection.obsoleteKey': {
+    one: '“{name}” carries a setting written by an earlier release of XCTrack ({detail}). Nothing is lost: XCTrack 1.0.3 converts it on reading — that is verified on the instrument — and will rewrite it under its new name the first time this widget is configured.',
+    other: '“{name}” carries settings written by an earlier release of XCTrack ({detail}). Nothing is lost: XCTrack 1.0.3 converts them on reading — that is verified on the instrument — and will rewrite them under their new names the first time this widget is configured.'
+  }
 }
 
 export default model

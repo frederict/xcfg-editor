@@ -168,7 +168,77 @@ const model: DomainCatalog<'model'> = {
     'außerhalb des einfachen lateinischen Alphabets: er wurde geschrieben, nicht aus einer ' +
     'Liste gewählt.',
   'suspectClue.sentence': 'Dieser Text enthält ein Leerzeichen: er liest sich wie ein Satz, ' +
-    'nicht wie ein Wert, den man aus einer Liste wählt.'
+    'nicht wie ein Wert, den man aus einer Liste wählt.',
+
+  /* ------------- die Vorflugkontrolle — siehe `fr/model.ts` zu den drei Annahmen */
+
+  'inspection.landscape': 'Querformat',
+  'inspection.portrait': 'Hochformat',
+  'inspection.wherePage': '{orientation}, Seite {page}',
+  'inspection.whereWidget': '{orientation}, Seite {page}, Widget {rank}',
+
+  'ruleTitle.unreachableWidget': 'Widget nicht antippbar',
+  'ruleTitle.pageNeverShown': 'Seite, die nie angezeigt wird',
+  'ruleTitle.thermalPages': 'Mehrere Seiten mit Thermikassistent',
+  'ruleTitle.widgetTooSmall': 'Widget vielleicht zu klein zum Ablesen',
+  'ruleTitle.proWidget': 'Pro-Widget ohne angegebene Lizenz',
+  'ruleTitle.roadMaps': 'Zwei Straßenkarten auf derselben Seite',
+  'ruleTitle.obsoleteKey': 'Einstellung einer früheren Version',
+
+  'ruleSummary.unreachableWidget': 'Kein Punkt dieser Widgets entgeht denen, die nach ihnen ' +
+    'gezeichnet werden, und den Fingerdruck erhält das vorderste Widget. Sie können ' +
+    'durchaus sichtbar bleiben: ein Widget ohne eigenen Hintergrund nimmt den Druck ' +
+    'genauso auf wie ein deckendes.',
+  'ruleSummary.pageNeverShown': 'XCTrack sagt es im eigenen Einstellungsdialog: eine Seite, ' +
+    'bei der kein Navigationstyp angehakt ist, wird in keinem Flugkontext angezeigt.',
+  'ruleSummary.thermalPages': 'Die Erhebung am Gerät sagt, dass die Klasse ' +
+    '„Thermikassistent“ das Ziel des automatischen Umschaltens ist. Sie sagt nicht, welche ' +
+    'gemeint ist, wenn eine Ausrichtung mehrere davon trägt: dieser Editor nimmt die letzte ' +
+    'an, und diese Annahme wurde nie überprüft.',
+  'ruleSummary.widgetTooSmall': 'Der Schwellenwert stammt aus der ISO 9241-303 und gilt für ' +
+    'die tatsächliche physische Größe des gewählten Bildschirmmusters, nicht für Pixel: ein ' +
+    'anderes Muster ändert diese Millimeter.',
+  'ruleSummary.proWidget': 'Diese Datei gibt „proUpTo: 0“ an und trägt Widgets, die der ' +
+    'Pro-Lizenz vorbehalten sind.',
+  'ruleSummary.roadMaps': 'XCTrack warnt in den eigenen Einstellungen, dass wegen einer ' +
+    'Beschränkung seiner Kartenbibliothek nur eine Straßenkarte pro Seite möglich ist.',
+  'ruleSummary.obsoleteKey': 'Diese Widgets tragen Einstellungen, die eine frühere Version ' +
+    'von XCTrack geschrieben hat. Vor dem Fliegen ist daran nichts zu tun; um zu erfahren, ' +
+    'was eine bestimmte Version damit macht, und sie gegebenenfalls zu entfernen, siehe ' +
+    '„Version und Kompatibilität“ im Menü „Datei“.',
+
+  'inspection.unreachable': '„{name}“ ist vollständig von Widgets verdeckt, die nach ihm gesetzt wurden. Kein Klick erreicht es daher, weder hier noch im Bearbeitungsbildschirm von XCTrack, der ebenfalls dem vordersten Widget den Vorrang gibt. Es kann durchaus sichtbar bleiben — ein Widget, das nichts zeichnet, stiehlt den Fingerdruck genauso wie ein deckendes. Zum Einstellen gehen Sie über die Widget-Liste der Seite.',
+  'inspection.unreachableToVerify': 'Was mit diesem Widget im Flug geschieht, wurde nicht ' +
+    'beobachtet: XCTrack leitet den Fingerdruck möglicherweise anders weiter als beim ' +
+    'Bearbeiten. Die Frage zählt vor allem für Aktionstasten, die nur dafür da sind, im ' +
+    'Flug berührt zu werden.',
+
+  'inspection.pageNeverShown': {
+    one: 'Diese Seite ist für keinen Navigationstyp aktiviert: XCTrack wird sie in keinem Flugkontext anzeigen, und ihr {count} Widget wird nie dienen. Das ist die Einstellung „Deaktiviert“ am Gerät — gewollt oder vergessen. Nicht zu verwechseln mit einer Seite, die nur auf bestimmte Navigationen beschränkt ist, was eine normale Einstellung ist.',
+    other: 'Diese Seite ist für keinen Navigationstyp aktiviert: XCTrack wird sie in keinem Flugkontext anzeigen, und ihre {count} Widgets werden nie dienen. Das ist die Einstellung „Deaktiviert“ am Gerät — gewollt oder vergessen. Nicht zu verwechseln mit einer Seite, die nur auf bestimmte Navigationen beschränkt ist, was eine normale Einstellung ist.'
+  },
+
+  'inspection.thermalPages': 'Diese Ausrichtung trägt mehrere Seiten mit Thermikassistent, und XCTrack zielt beim selbsttätigen Umschalten im Kreisflug nur auf eine davon. Auf welche? Dieser Editor nimmt die letzte an, hier Seite {target} — ohne es überprüft zu haben. Diese hier bleibt jedenfalls über „nächste Seite“ erreichbar.',
+  'inspection.thermalPagesToVerify': 'Es wurde nichts darüber beobachtet, was XCTrack tut, ' +
+    'wenn mehrere Seiten mit Thermikassistent nebeneinander bestehen: keine Datei der ' +
+    'Erhebung trägt zwei davon. Eine am Gerät zu verdoppeln, in den Kreisflug zu gehen und ' +
+    'zu schauen, welche Seite erscheint, würde die Frage in einem Flug klären.',
+
+  'inspection.tooSmall': '„{name}“ ist auf diesem Gerät nur {height} hoch. Wenn der angezeigte Text die Hälfte davon einnimmt, misst er etwa {value} — unter den {minimum}, die die ISO 9241-303 als absolutes Mindestmaß auf {distance} cm angibt. Wird er auf Armeslänge, in praller Sonne, mit Handschuhen noch lesbar sein? Am Gerät zu prüfen.',
+  'inspection.tooSmallToVerify': 'Der Anteil der Widget-Höhe, den das Zeichen des Werts tatsächlich einnimmt (hier mit {ratio} angenommen), wurde nur an einem einzigen Widget und einer einzigen Bildschirmaufnahme gemessen. Die Aufnahmen der Tafel mit den 75 Widgets würden genügen, ihn Typ für Typ zu messen, ohne das Gerät anzufassen.',
+
+  'inspection.proWidget': '„{name}“ ist ein Pro-Widget, und diese Datei gibt „proUpTo: 0“ an. Was macht XCTrack mit diesem Widget auf einem Gerät ohne Pro-Lizenz: es durch einen Rahmen „Pro-Widget“ ersetzen, es normal anzeigen oder nichts daran ändern? Wir wissen es nicht.',
+  'inspection.proWidgetToVerify': 'Die Bedeutung von `info.proUpTo` steht nicht fest: 0 ' +
+    'heißt vielleicht „keine Lizenz“, vielleicht ein Ablaufdatum in Sekunden. Alle ' +
+    '21 Dateien der Erhebung tragen 0, über zwei Installationen hinweg — kein anderer Wert ' +
+    'wurde je beobachtet. Ein Versuch am AIR³ mit einem Pro-Widget würde es klären.',
+
+  'inspection.roadMaps': '„{name}“ verlangt ebenfalls eine Straßenkarte, und Widget {first} dieser Seite verlangt bereits eine. XCTrack warnt in den eigenen Einstellungen, dass wegen einer Beschränkung seiner Kartenbibliothek nur eine Straßenkarte pro Seite möglich ist. Was stattdessen erscheint, ist nicht vorhersehbar.',
+
+  'inspection.obsoleteKey': {
+    one: '„{name}“ trägt eine Einstellung, die eine frühere Version von XCTrack geschrieben hat ({detail}). Nichts geht verloren: XCTrack 1.0.3 wandelt sie beim Lesen um — das ist am Gerät überprüft — und schreibt sie unter ihrem neuen Namen zurück, sobald dieses Widget das nächste Mal eingestellt wird.',
+    other: '„{name}“ trägt Einstellungen, die eine frühere Version von XCTrack geschrieben hat ({detail}). Nichts geht verloren: XCTrack 1.0.3 wandelt sie beim Lesen um — das ist am Gerät überprüft — und schreibt sie unter ihren neuen Namen zurück, sobald dieses Widget das nächste Mal eingestellt wird.'
+  }
 }
 
 export default model

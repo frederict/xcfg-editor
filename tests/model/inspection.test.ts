@@ -11,14 +11,14 @@ import {
   DEFAULT_READING_DISTANCE_MM,
   MINIMUM_CHARACTER_ANGLE_ARCMIN,
   OBSOLETE_WIDGET_KEYS,
-  RULE_SUMMARIES,
-  RULE_TITLES,
   characterHeightMm,
   describeLocation,
   findingsOfRule,
   inspectLayout,
   minimumWidgetHeightMm,
   remainingArea,
+  ruleSummary,
+  ruleTitle,
   subtractRectangle,
   unreachableWidgetRanks,
   widgetHeightMm,
@@ -26,7 +26,29 @@ import {
   type InspectionRuleId,
   type Rectangle
 } from '../../src/model/inspection'
+import { makeTranslator } from '../../src/i18n/translate'
+import frenchMessages from '../../src/i18n/messages/fr'
+import dutchMessages from '../../src/i18n/messages/nl'
 import { BACKUP_2026 } from '../fixtures/paths'
+
+/**
+ * Ce module ne connaît aucune langue : il **reçoit** un traducteur. Les tests en tiennent
+ * deux, pour vérifier que les sept règles parlent bien les cinq langues et qu'aucune
+ * phrase française ne survit quand le pilote bascule.
+ */
+const tr = makeTranslator('fr', frenchMessages)
+const dutch = makeTranslator('nl', dutchMessages)
+
+/** Les sept identifiants de règle, dans l'ordre où `inspectLayout` les rend. */
+const RULE_IDS: readonly InspectionRuleId[] = [
+  'unreachable-widget',
+  'page-never-shown',
+  'thermal-page-not-auto-target',
+  'widget-too-small',
+  'pro-widget-without-licence',
+  'road-maps-on-same-page',
+  'obsolete-key'
+]
 
 const AIR3 = DEVICES[0]!
 
@@ -79,6 +101,7 @@ function inspect(
     layout: readLayout(document),
     device: options.device ?? AIR3,
     language: 'fr',
+    tr,
     isProWidget: options.isProWidget,
     readingDistanceMm: options.readingDistanceMm
   })
@@ -90,7 +113,8 @@ function inspectOnePage(widgets: string[], spec: Omit<PageSpec, 'widgets'> = {})
 }
 
 const rules = (findings: Finding[]): InspectionRuleId[] => findings.map((f) => f.ruleId)
-const locations = (findings: Finding[]): string[] => findings.map((f) => describeLocation(f.location))
+const locations = (findings: Finding[]): string[] =>
+  findings.map((f) => describeLocation(f.location, tr))
 
 /** Aire totale d'une région, pour vérifier une soustraction sans dépendre du découpage. */
 function totalArea(region: readonly Rectangle[]): number {
@@ -429,7 +453,10 @@ describe('règle 4 — lisibilité', () => {
     expect(locations(findings)).toEqual(['Paysage, page 1, gadget 1'])
     expect(findings[0]!.certainty).toBe('hypothesis')
     expect(findings[0]!.toVerify).toBeDefined()
-    expect(findings[0]!.message).toContain('3,0 mm')
+    // La virgule décimale et l'espace insécable étroit devant l'unité viennent d'`Intl`,
+    // jamais d'un `.replace('.', ',')` écrit à la main.
+    expect(findings[0]!.message).toContain(tr.format.millimeters(3, 1))
+    expect(findings[0]!.message).toMatch(/3,0.mm/)
   })
 
   it('le seuil suit la distance de lecture passée en paramètre', () => {
@@ -642,11 +669,15 @@ describe('ce que ce module refuse de signaler', () => {
     expect(JSON.stringify(readLayout(document).landscape.length)).toBe('5')
   })
 
-  it('chaque règle a un titre en français', () => {
-    for (const [id, title] of Object.entries(RULE_TITLES)) {
-      expect(title.length, id).toBeGreaterThan(5)
+  it('chaque règle a un titre, et il n’est pas le même dans deux langues', () => {
+    expect(RULE_IDS).toHaveLength(7)
+    for (const id of RULE_IDS) {
+      expect(ruleTitle(id, tr).length, id).toBeGreaterThan(5)
+      // Le bandeau donnait « Gadget impossible à toucher — te bevestigen op het
+      // instrument » : un titre français au milieu d'une phrase néerlandaise.
+      expect(ruleTitle(id, dutch), id).not.toBe(ruleTitle(id, tr))
+      expect(ruleTitle(id, dutch).toLowerCase(), id).not.toContain('gadget')
     }
-    expect(Object.keys(RULE_TITLES)).toHaveLength(7)
   })
 
   /**
@@ -661,11 +692,12 @@ describe('ce que ce module refuse de signaler', () => {
       layout: readLayout(document),
       device: deviceFor(readString(getMember(document, 'info')!, 'device')),
       language: 'fr',
+      tr,
       isProWidget: (name) => name === 'WButtonBrightness'
     })
 
-    expect(Object.keys(RULE_SUMMARIES)).toEqual(Object.keys(RULE_TITLES))
-    for (const [id, summary] of Object.entries(RULE_SUMMARIES)) {
+    for (const id of RULE_IDS) {
+      const summary = ruleSummary(id, tr)
       expect(summary.length, id).toBeGreaterThan(40)
       for (const finding of findings) {
         expect(finding.message, `${id} / ${finding.ruleId}`).not.toContain(summary)
@@ -680,6 +712,7 @@ describe('ce que ce module refuse de signaler', () => {
       layout: readLayout(document),
       device: deviceFor(readString(getMember(document, 'info')!, 'device')),
       language: 'fr',
+      tr,
       isProWidget: (name) => name === 'WButtonBrightness'
     })
     for (const finding of findings) {
@@ -704,6 +737,7 @@ describe('la configuration réelle — 2026-08-20_backup-00.xcfg', () => {
       layout,
       device: deviceFor(readString(getMember(document, 'info')!, 'device')),
       language: 'fr',
+      tr,
       isProWidget: catalog.isProWidget
     })
   })

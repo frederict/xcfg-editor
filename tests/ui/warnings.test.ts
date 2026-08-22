@@ -811,6 +811,7 @@ describe('contrôle avant vol — le ton des quatre doutes assumés', () => {
       document: ALL_SEVEN,
       layout: readLayout(ALL_SEVEN),
       language: 'fr',
+      tr,
       device: DEVICES[0]!,
       isProWidget
     })

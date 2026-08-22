@@ -6,9 +6,9 @@ import type { JsonNode } from '../core/jsonDocument'
 import { findDuplicateKeys } from '../core/parseJson'
 import type { Orientation } from '../model/grid'
 import {
-  RULE_SUMMARIES,
-  RULE_TITLES,
   describeLocation,
+  ruleSummary,
+  ruleTitle,
   inspectLayout,
   type Finding,
   type InspectionRuleId
@@ -833,9 +833,10 @@ export interface PreflightInput {
    * Notre prose, dans la langue du pilote — le même axe que celui de `WarningInput.tr`,
    * et jamais celui de `language`, qui suit le fichier ouvert.
    *
-   * ⚠️ Les titres et les résumés des sept règles (`RULE_TITLES`, `RULE_SUMMARIES`) et le
+   * ⚠️ Les titres et les résumés des sept règles (`ruleTitle`, `ruleSummary`) et le
    * `message` de chaque constat viennent de `src/model/inspection.ts` : ce sont la prose
-   * du domaine `model`, et ce module ne fait que les habiller.
+   * du domaine `model`, que ce module lui demande **dans cette langue-ci** et se contente
+   * d'habiller.
    */
   tr: Translator
 }
@@ -874,13 +875,13 @@ export function preflightWarnings(input: PreflightInput): Warning[] {
       // donner à quelqu'un : il se lit à l'import, avec le reste.
       moment: 'import',
       title: doubt
-        ? tr.t('warnings.hypothesisTitle', { title: RULE_TITLES[ruleId] })
-        : RULE_TITLES[ruleId],
+        ? tr.t('warnings.hypothesisTitle', { title: ruleTitle(ruleId, tr) })
+        : ruleTitle(ruleId, tr),
       detail: doubt
-        ? `${RULE_SUMMARIES[ruleId]} ${tr.t('warnings.hypothesisLead')} ${first.toVerify ?? ''}`.trim()
-        : RULE_SUMMARIES[ruleId],
+        ? `${ruleSummary(ruleId, tr)} ${tr.t('warnings.hypothesisLead')} ${first.toVerify ?? ''}`.trim()
+        : ruleSummary(ruleId, tr),
       items: group.map((finding) => tr.t('warnings.preflightItem', {
-        where: describeLocation(finding.location),
+        where: describeLocation(finding.location, tr),
         message: finding.message
       }))
     })

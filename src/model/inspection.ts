@@ -5,6 +5,9 @@ import type { JsonNode } from '../core/jsonDocument'
 import type { Layout, Page } from './layout'
 import type { Orientation } from './grid'
 import type { Widget } from './widget'
+// `import type` : effacé à la compilation. Ce module **ne dépend pas** de `src/i18n/` à
+// l'exécution — il reçoit un traducteur dans son entrée. Voir « La prose de ce module ».
+import type { MessageKey, Translator } from '../i18n'
 
 /**
  * Le contrôle avant vol : ce qui, dans **cette** configuration, ne se comportera pas
@@ -50,6 +53,19 @@ import type { Widget } from './widget'
  * sa valeur. Le tri est dans `preflightWarnings` (`src/ui/warnings.ts`), avec son
  * pourquoi. Ce module, lui, rend tous ses constats : il ne sait pas dans quelle
  * interface ils seront lus.
+ *
+ * ## La prose de ce module : elle est reçue, jamais lue
+ *
+ * `InspectionInput.tr` porte la langue du pilote. Les titres (`ruleTitle`), les résumés
+ * (`ruleSummary`), le `message` et le `toVerify` de chaque constat, jusqu'au repérage
+ * « Paysage, page 5, gadget 9 », en sortent — de `src/i18n/` ce fichier ne prend que des
+ * **types**, effacés à la compilation, et il reste le module pur qu'il était.
+ *
+ * ⚠️ **Ce que la traduction ne doit pas perdre.** Trois des sept règles sortent en
+ * `certainty: 'hypothesis'` et se formulent **en question**, jamais en verdict ; leur
+ * `toVerify` nomme l'essai qui trancherait sur l'instrument. C'est la distinction mesuré /
+ * supposé, et c'est elle qui fait la valeur du projet : une traduction qui affirmerait ce
+ * que le français demande la ferait perdre sans que rien ne casse.
  */
 
 /* ============================================================== la forme d'un constat */
@@ -105,7 +121,7 @@ export interface Finding {
   severity: InspectionSeverity
   certainty: InspectionCertainty
   location: InspectionLocation
-  /** Une phrase pour le pilote, en français, qui se lit sans connaître le format. */
+  /** Une phrase pour le pilote, dans sa langue, qui se lit sans connaître le format. */
   message: string
   /**
    * Ce qui reste à vérifier sur l'AIR³ pour lever le doute. Présent sur tout constat
@@ -115,20 +131,47 @@ export interface Finding {
 }
 
 /**
- * Le titre de chaque règle, pour que l'interface groupe sans réinventer les mots. Une
- * seule source pour la langue du produit.
+ * Les clés de titre et de résumé de ce module, et elles seules. `MessageKey` tout entier
+ * serait trop large : `t()` exigerait alors les repères de la plus exigeante des phrases du
+ * catalogue. Même motif que `LayoutReasonKey` dans `personalData.ts`.
  */
-export const RULE_TITLES: Record<InspectionRuleId, string> = {
-  'unreachable-widget': 'Gadget impossible à toucher',
-  'page-never-shown': 'Page qui ne s’affichera jamais',
-  // L'identifiant date du temps où la règle affirmait laquelle des pages était éclipsée.
-  // Ce qu'elle sait vraiment, c'est qu'il y en a plusieurs — le titre le dit, l'identifiant
-  // reste, parce qu'il ne se lit nulle part.
-  'thermal-page-not-auto-target': 'Plusieurs pages d’assistant de thermique',
-  'widget-too-small': 'Gadget peut-être trop petit pour être lu',
-  'pro-widget-without-licence': 'Gadget Pro sans licence déclarée',
-  'road-maps-on-same-page': 'Deux cartes routières sur la même page',
-  'obsolete-key': 'Réglage d’une version antérieure'
+type RuleTitleKey = Extract<MessageKey, `ruleTitle.${string}`>
+type RuleSummaryKey = Extract<MessageKey, `ruleSummary.${string}`>
+
+/**
+ * La clé de catalogue de chaque règle, titre et résumé. Une seule source pour les mots du
+ * produit, dans les cinq langues.
+ *
+ * ⚠️ L'identifiant `thermal-page-not-auto-target` date du temps où la règle affirmait
+ * laquelle des pages était éclipsée. Ce qu'elle sait vraiment, c'est qu'il y en a
+ * plusieurs — le titre le dit, l'identifiant reste, parce qu'il ne se lit nulle part.
+ */
+const RULE_MESSAGE_KEYS: Readonly<Record<InspectionRuleId, RuleTitleKey>> = {
+  'unreachable-widget': 'ruleTitle.unreachableWidget',
+  'page-never-shown': 'ruleTitle.pageNeverShown',
+  'thermal-page-not-auto-target': 'ruleTitle.thermalPages',
+  'widget-too-small': 'ruleTitle.widgetTooSmall',
+  'pro-widget-without-licence': 'ruleTitle.proWidget',
+  'road-maps-on-same-page': 'ruleTitle.roadMaps',
+  'obsolete-key': 'ruleTitle.obsoleteKey'
+}
+
+const RULE_SUMMARY_KEYS: Readonly<Record<InspectionRuleId, RuleSummaryKey>> = {
+  'unreachable-widget': 'ruleSummary.unreachableWidget',
+  'page-never-shown': 'ruleSummary.pageNeverShown',
+  'thermal-page-not-auto-target': 'ruleSummary.thermalPages',
+  'widget-too-small': 'ruleSummary.widgetTooSmall',
+  'pro-widget-without-licence': 'ruleSummary.proWidget',
+  'road-maps-on-same-page': 'ruleSummary.roadMaps',
+  'obsolete-key': 'ruleSummary.obsoleteKey'
+}
+
+/**
+ * Le titre de chaque règle, pour que l'interface groupe sans réinventer les mots, dans la
+ * langue du pilote.
+ */
+export function ruleTitle(ruleId: InspectionRuleId, tr: Translator): string {
+  return tr.t(RULE_MESSAGE_KEYS[ruleId])
 }
 
 /**
@@ -141,36 +184,11 @@ export const RULE_TITLES: Record<InspectionRuleId, string> = {
  * `src/ui/warnings.ts` — pose ce résumé une fois en tête et les messages en dessous ;
  * recopier l'un dans l'autre ferait relire au pilote la même phrase à chaque ligne.
  *
- * Même raison d'être que `RULE_TITLES` juste au-dessus : une seule source pour la langue
- * du produit, plutôt qu'une reformulation par écran.
+ * Même raison d'être que `ruleTitle` juste au-dessus : une seule source pour les mots du
+ * produit, plutôt qu'une reformulation par écran.
  */
-export const RULE_SUMMARIES: Record<InspectionRuleId, string> = {
-  'unreachable-widget':
-    'Aucun point de ces gadgets n’échappe à ceux qui sont dessinés après eux, et c’est le ' +
-    'gadget le plus en avant qui reçoit l’appui. Ils peuvent rester parfaitement visibles : ' +
-    'un gadget qui ne peint aucun fond prend les appuis tout autant qu’un gadget opaque.',
-  'page-never-shown':
-    'XCTrack le dit dans sa propre boîte de réglage : une page dont aucun type de ' +
-    'navigation n’est coché n’est affichée dans aucun contexte de vol.',
-  'thermal-page-not-auto-target':
-    'Le relevé de l’instrument dit que la classe « assistant de thermique » est celle que ' +
-    'vise le basculement automatique. Il ne dit pas laquelle est visée quand une ' +
-    'orientation en porte plusieurs : cet éditeur suppose la dernière, et cette ' +
-    'supposition n’a jamais été vérifiée.',
-  'widget-too-small':
-    'Le seuil vient de l’ISO 9241-303 et s’applique à la taille physique réelle de la ' +
-    'dalle du gabarit d’écran choisi, pas à des pixels : changer de gabarit change ces ' +
-    'millimètres.',
-  'pro-widget-without-licence':
-    'Ce fichier déclare « proUpTo: 0 » et porte des gadgets réservés à la licence Pro.',
-  'road-maps-on-same-page':
-    'XCTrack prévient dans ses propres réglages qu’une seule carte routière est possible ' +
-    'par page, à cause d’une limitation de sa bibliothèque de cartes.',
-  'obsolete-key':
-    'Ces gadgets portent des réglages qu’une version antérieure de XCTrack a écrits. Il ' +
-    'n’y a rien à y faire avant de voler ; pour savoir ce qu’une version donnée en fait, ' +
-    'et éventuellement les enlever, voir « Version et compatibilité » dans le menu ' +
-    '« Fichier ».'
+export function ruleSummary(ruleId: InspectionRuleId, tr: Translator): string {
+  return tr.t(RULE_SUMMARY_KEYS[ruleId])
 }
 
 export interface InspectionInput {
@@ -180,6 +198,11 @@ export interface InspectionInput {
   device: Device
   /** Langue des libellés de widgets — déjà résolue par l'appelant, comme dans `warnings.ts`. */
   language: string
+  /**
+   * **Notre prose**, dans la langue du pilote — l'autre axe que `language`, qui suit le
+   * fichier ouvert. Passé, jamais lu : ce module ne connaît pas la langue courante.
+   */
+  tr: Translator
   /**
    * `catalog.isProWidget` d'un `WidgetCatalog` déjà chargé. Absent : la règle Pro n'est
    * pas évaluée du tout, plutôt que de deviner. Injecté plutôt qu'importé : le
@@ -191,16 +214,18 @@ export interface InspectionInput {
   readingDistanceMm?: number
 }
 
-const ORIENTATION_LABELS: Record<Orientation, string> = {
-  landscape: 'Paysage',
-  portrait: 'Portrait'
-}
-
 const SCALE = 10000
 
-function where(location: InspectionLocation): string {
-  const page = `${ORIENTATION_LABELS[location.orientation]}, page ${location.pageRank}`
-  return location.widgetRank === undefined ? page : `${page}, gadget ${location.widgetRank}`
+function where(location: InspectionLocation, tr: Translator): string {
+  const orientation = tr.t(
+    location.orientation === 'landscape' ? 'inspection.landscape' : 'inspection.portrait'
+  )
+  if (location.widgetRank === undefined) {
+    return tr.t('inspection.wherePage', { orientation, page: location.pageRank })
+  }
+  return tr.t('inspection.whereWidget', {
+    orientation, page: location.pageRank, rank: location.widgetRank
+  })
 }
 
 /* ==================================================== 1. widget inatteignable au clic */
@@ -439,9 +464,13 @@ export function widgetHeightMm(
   return ((widget.y2 - widget.y1) / SCALE) * physicalSize(device, orientation).heightMm
 }
 
-/** Un nombre en millimètres, à un dixième, écrit à la française. */
-function mm(value: number): string {
-  return value.toFixed(1).replace('.', ',')
+/**
+ * Des millimètres, à un dixième, dans la langue du pilote — jamais un `.replace('.', ',')`
+ * écrit à la main : la virgule décimale, l'espace avant l'unité et le mot « mm » lui-même
+ * viennent d'`Intl`.
+ */
+function mm(value: number, tr: Translator): string {
+  return tr.format.millimeters(value, 1)
 }
 
 /* ================================================= 6. les cartes routières */
@@ -576,19 +605,11 @@ function unreachableWidgetFindings(input: InspectionInput): Finding[] {
         severity: 'likely-error',
         certainty: 'hypothesis',
         location: { orientation, pageRank, widgetRank: rank },
-        message:
-          `« ${name} » est entièrement recouvert par des gadgets placés après lui. Aucun ` +
-          'clic ne peut donc l’atteindre, ni ici ni dans l’écran d’édition de XCTrack, qui ' +
-          'donne lui aussi la main au gadget le plus en avant. Il peut rester parfaitement ' +
-          'visible — un gadget qui ne peint rien vole les appuis tout autant qu’un gadget ' +
-          'opaque. Pour le régler, passez par la liste des gadgets de la page.',
-        // Les astérisques d'emphase n'ont rien à faire ici : ce texte est posé tel quel
-        // dans la page, jamais interprété comme du Markdown, et le pilote lirait
-        // « **en vol** ».
-        toVerify:
-          'Ce qu’il advient de ce gadget en vol n’a pas été observé : XCTrack route ' +
-          'peut-être l’appui autrement qu’en édition. La question compte surtout pour les ' +
-          'boutons d’action, qui n’existent que pour être touchés en vol.'
+        message: input.tr.t('inspection.unreachable', { name }),
+        // Les astérisques d'emphase n'ont rien à faire dans ces messages : le texte est
+        // posé tel quel dans la page, jamais interprété comme du Markdown, et le pilote
+        // lirait « **en vol** ».
+        toVerify: input.tr.t('inspection.unreachableToVerify')
       })
     }
   }
@@ -612,12 +633,7 @@ function pageNeverShownFindings(input: InspectionInput): Finding[] {
       severity: 'to-know',
       certainty: 'documented',
       location: { orientation, pageRank },
-      message:
-        `Cette page n’est activée pour aucun type de navigation : XCTrack ne l’affichera ` +
-        `dans aucun contexte de vol, et ses ${count} gadget${count > 1 ? 's' : ''} ne ` +
-        'serviront jamais. C’est le réglage « Désactivé » de l’instrument — volontaire, ' +
-        'ou oublié. À distinguer d’une page seulement restreinte à certaines ' +
-        'navigations, qui est un réglage normal.'
+      message: input.tr.t('inspection.pageNeverShown', { count })
     })
   }
   return findings
@@ -661,16 +677,8 @@ function thermalPageFindings(input: InspectionInput): Finding[] {
         severity: 'to-know',
         certainty: 'hypothesis',
         location: { orientation, pageRank: rank },
-        message:
-          'Cette orientation porte plusieurs pages d’assistant de thermique, et XCTrack ' +
-          `n’en vise qu’une lorsqu’il bascule tout seul en spirale. Laquelle ? Cet éditeur ` +
-          `suppose la dernière, ici la page ${target} — sans l’avoir vérifié. Celle-ci ` +
-          'reste en tout cas atteignable par « page suivante ».',
-        toVerify:
-          'Rien n’a été observé de ce que fait XCTrack quand plusieurs pages d’assistant ' +
-          'de thermique coexistent : aucun fichier du corpus n’en porte deux. En ' +
-          'dupliquer une sur l’instrument, entrer en spirale et regarder quelle page ' +
-          'arrive trancherait la question en un vol.'
+        message: input.tr.t('inspection.thermalPages', { target }),
+        toVerify: input.tr.t('inspection.thermalPagesToVerify')
       })
     }
   }
@@ -697,20 +705,20 @@ function tooSmallFindings(input: InspectionInput): Finding[] {
         severity: 'to-know',
         certainty: 'hypothesis',
         location: { orientation, pageRank, widgetRank: index + 1 },
-        message:
-          `« ${name} » ne fait que ${mm(heightMm)} mm de haut sur cet appareil. Si le ` +
-          `texte qu’il affiche en occupe la moitié, il mesurera environ ` +
-          `${mm(heightMm * ASSUMED_VALUE_HEIGHT_RATIO)} mm — sous les ` +
-          `${mm(minimumCharacterMm)} mm que l’ISO 9241-303 donne pour minimum absolu à ` +
-          `${Math.round(distanceMm / 10)} cm. Sera-t-elle encore lisible à bout de bras, ` +
-          'en plein soleil, avec des gants ? À vérifier sur l’instrument.',
+        // Les trois hauteurs partent en `string` déjà mises en forme — virgule décimale
+        // et unité viennent d'`Intl` —, la distance en `number`, parce qu'elle se compte.
+        message: input.tr.t('inspection.tooSmall', {
+          name,
+          height: mm(heightMm, input.tr),
+          value: mm(heightMm * ASSUMED_VALUE_HEIGHT_RATIO, input.tr),
+          minimum: mm(minimumCharacterMm, input.tr),
+          distance: Math.round(distanceMm / 10)
+        }),
         // La fraction se dit en pour-cent et non en `0.48` : le point décimal anglais
-        // n'a pas sa place dans une phrase française, et c'est un entier qui sort ici.
-        toVerify:
-          'La part de la hauteur du gadget qu’occupe réellement le glyphe de la valeur ' +
-          `(ici supposée ${Math.round(ASSUMED_VALUE_HEIGHT_RATIO * 100)} %) n’a été ` +
-          'mesurée que sur un seul gadget, une seule capture. Les captures de la planche des 75 gadgets ' +
-          'suffiraient à la mesurer type par type, sans toucher à l’appareil.'
+        // n'a pas sa place dans une phrase française, et `format.percent` s'en charge.
+        toVerify: input.tr.t('inspection.tooSmallToVerify', {
+          ratio: input.tr.format.percent(ASSUMED_VALUE_HEIGHT_RATIO)
+        })
       })
     })
   }
@@ -746,16 +754,8 @@ function proWidgetFindings(input: InspectionInput): Finding[] {
         severity: 'to-know',
         certainty: 'hypothesis',
         location: { orientation, pageRank, widgetRank: index + 1 },
-        message:
-          `« ${name} » est un gadget Pro, et ce fichier déclare « proUpTo: 0 ». Que ` +
-          'fera XCTrack de ce gadget sur un appareil sans licence Pro : le remplacer par ' +
-          'un cadre « gadget Pro », l’afficher normalement, ou ne rien y changer ? Nous ' +
-          'ne le savons pas.',
-        toVerify:
-          'Le sens de `info.proUpTo` n’est pas établi : 0 vaut peut-être « pas de ' +
-          'licence », peut-être une date de fin en secondes. Les 21 fichiers du corpus ' +
-          'portent tous 0, sur deux installations — aucune autre valeur n’a jamais été ' +
-          'observée. Un essai sur l’AIR³ avec un gadget Pro trancherait.'
+        message: input.tr.t('inspection.proWidget', { name }),
+        toVerify: input.tr.t('inspection.proWidgetToVerify')
       })
     })
   }
@@ -797,12 +797,7 @@ function roadMapFindings(input: InspectionInput): Finding[] {
         severity: 'likely-error',
         certainty: 'documented',
         location: { orientation, pageRank, widgetRank: rank },
-        message:
-          `« ${name} » demande lui aussi une carte routière, et le gadget ${first} de ` +
-          `cette page en demande déjà une. XCTrack ` +
-          'prévient dans ses propres réglages qu’une seule carte routière est possible ' +
-          'par page, à cause d’une limitation de sa bibliothèque de cartes. Ce qui ' +
-          's’affichera à la place n’est pas prévisible.'
+        message: input.tr.t('inspection.roadMaps', { name, first })
       })
     }
   }
@@ -830,19 +825,14 @@ function obsoleteKeyFindings(input: InspectionInput): Finding[] {
       const detail = keys
         .map((key) => `${key} → ${OBSOLETE_WIDGET_KEYS[key]}`)
         .join(', ')
-      const several = keys.length > 1
       findings.push({
         ruleId: 'obsolete-key',
         severity: 'to-know',
         certainty: 'measured',
         location: { orientation, pageRank, widgetRank: index + 1 },
-        message:
-          `« ${name} » porte ${several ? 'des réglages écrits' : 'un réglage écrit'} ` +
-          `par une version antérieure de XCTrack (${detail}). Rien n’est perdu : XCTrack ` +
-          `1.0.3 ${several ? 'les convertit' : 'le convertit'} à la lecture — c’est ` +
-          `vérifié sur l’instrument — et ${several ? 'les réécrira' : 'le réécrira'} sous ` +
-          `${several ? 'leur nouveau nom' : 'son nouveau nom'} la première fois que ce ` +
-          'gadget sera réglé.'
+        // Le pluriel accorde cinq mots de la phrase sans jamais écrire le nombre :
+        // `inspection.obsoleteKey` figure à ce titre dans `PLURAL_WITHOUT_VISIBLE_COUNT`.
+        message: input.tr.t('inspection.obsoleteKey', { count: keys.length, name, detail })
       })
     })
   }
@@ -872,7 +862,7 @@ export function findingsOfRule(
   return findings.filter((finding) => finding.ruleId === ruleId)
 }
 
-/** « Paysage, page 5, widget 9 » — la localisation, écrite pour être lue. */
-export function describeLocation(location: InspectionLocation): string {
-  return where(location)
+/** « Paysage, page 5, gadget 9 » — la localisation, écrite pour être lue. */
+export function describeLocation(location: InspectionLocation, tr: Translator): string {
+  return where(location, tr)
 }
