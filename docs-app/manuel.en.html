@@ -972,9 +972,90 @@
     holds is the archive you export.</p>
   </div>
 
-  <p>Finally: <strong>this library has no wastebasket.</strong> A deletion is final, and
-  “Undo” can do nothing about it. That is why deleting asks for a confirmation in a box of
-  its own.</p>
+  <h3>What keeps your library, and what can erase it</h3>
+
+  <p>One single thing keeps it: <strong>the data store your browser holds for this
+  site</strong>. Its technical name is IndexedDB, and you will never have to type it. It
+  lives under the address of this site, in this browser, on this device. There is no
+  account, no server, no synchronisation: <strong>no copy exists anywhere else</strong>.
+  Three editor settings — the language, the height of the bottom bar, and the devices you
+  added yourself — are stored beside it, and follow exactly the same rules.</p>
+
+  <p>One single protection exists: the <span class="manual__ui">Stop the browser from
+  erasing my library</span> button. It asks the browser to treat this site as durable.
+  <strong>No browser commits to it.</strong></p>
+
+  <div class="manual__note">
+    <span class="manual__boxTitle">What the browsers do — according to their makers</span>
+    <p>These three behaviours are the ones Google, Mozilla and Apple document themselves.
+    We have not measured them: we know what our button asks for, not what your browser will
+    do with it.</p>
+    <ul>
+      <li><strong>Chrome</strong> grants it without asking to a site that is installed or
+      often visited; otherwise it refuses, without saying why.</li>
+      <li><strong>Firefox</strong> puts the question to you.</li>
+      <li><strong>Safari</strong> erases the data of a site left unvisited for
+      <strong>seven days</strong>, granted or not.</li>
+    </ul>
+  </div>
+
+  <p><strong>What will certainly erase it, and is in your hands:</strong></p>
+
+  <ul>
+    <li>Clearing the site data from your browser — the gesture that takes everything away,
+    the three settings included.</li>
+    <li>Working in a private window: nothing there survives closing it.</li>
+    <li>Changing browser, or changing profile within the same browser: the library does not
+    follow. It is not lost, it stayed where you made it.</li>
+    <li>The <span class="manual__ui">Erase the whole library</span> button, described just
+    below.</li>
+  </ul>
+
+  <p><strong>What can erase it without asking you:</strong></p>
+
+  <ul>
+    <li><strong>Safari</strong>, and its seven days without a visit.</li>
+    <li><strong>A disk filling up.</strong> When room runs short, the browser takes back the
+    room of unprotected sites, the least visited first.</li>
+    <li><strong>A cleaning tool</strong> — CCleaner and its like. They treat this store as
+    cache, and do not tell an image that will download itself again from your competition
+    configuration.</li>
+  </ul>
+
+  <p><strong>And updates?</strong> An ordinary update of your browser or of your system
+  <strong>does not touch</strong> site data: that is a commitment every browser holds to.
+  What breaks is elsewhere, and those are not updates, they are replacements: reinstalling
+  the browser, moving from the stable channel to the beta one, migrating to a new machine,
+  restoring a damaged profile.</p>
+
+  <p>All of this has the same way out, and it takes one gesture:
+  <span class="manual__ui">Export the library</span>. One file, on your disk, that none of
+  this reaches. Which is precisely why <span class="manual__ui">Erase the whole
+  library</span> offers you the export before the door.</p>
+
+  <h3>Erasing the whole library</h3>
+
+  <p>At the foot of the panel, <span class="manual__ui">Erase the whole library</span>
+  empties everything at once — the gesture you make before giving back a borrowed computer,
+  or when changing machine.</p>
+
+  <p>The confirmation gives figures rather than an “are you sure”: how many configurations
+  leave this browser, how much room goes with them, and how many unreadable entries there
+  are, if any. It offers two ways out, and <span class="manual__ui">Export the archive
+  first, then erase everything</span> is the first one;
+  <span class="manual__ui">Erase everything without exporting</span> comes after.</p>
+
+  <p>This gesture erases <strong>the library, and the library alone</strong>. The three
+  editor settings — the language, the height of the bottom bar, your devices — stay in
+  place: none of them carries a configuration, a page or a waypoint file. To leave nothing
+  at all behind, clear this site’s data from your browser; that is outside this application,
+  and it is the only gesture that takes those away too.</p>
+
+  <p>Finally, and this holds for one entry as much as for the whole library:
+  <strong>this library has no wastebasket.</strong> A deletion is final, “Undo” can do
+  nothing about it, and since nothing was ever sent anywhere else, there is no copy to get
+  back — not here, not with anyone. That is why every deletion asks for a confirmation in a
+  box of its own.</p>
 
   <!-- =================================================================== 12 -->
 

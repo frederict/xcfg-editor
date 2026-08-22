@@ -1003,9 +1003,92 @@
     garantie. La seule sauvegarde qui tienne est l’archive que vous exportez.</p>
   </div>
 
-  <p>Enfin : <strong>cette bibliothèque n’a pas de corbeille.</strong> Une suppression est
-  définitive, et « Annuler » n’y peut rien. C’est pourquoi la suppression demande une
-  confirmation dans un cadre à part.</p>
+  <h3>Ce qui fait tenir votre bibliothèque, et ce qui peut l’effacer</h3>
+
+  <p>Une seule chose la fait tenir : <strong>la réserve de données que votre navigateur
+  garde pour ce site</strong>. Son nom technique est IndexedDB, et vous n’aurez jamais à le
+  taper. Elle vit sous l’adresse de ce site, dans ce navigateur, sur cet appareil. Il n’y a
+  ni compte, ni serveur, ni synchronisation : <strong>aucune copie n’existe ailleurs</strong>.
+  Trois réglages de l’éditeur — la langue, la hauteur du bandeau du bas, et les appareils
+  que vous avez ajoutés vous-même — sont rangés à côté, et suivent exactement les mêmes
+  règles.</p>
+
+  <p>Une seule protection existe : le bouton <span class="manual__ui">Empêcher le navigateur
+  d’effacer ma bibliothèque</span>. Il demande au navigateur de traiter ce site comme
+  durable. <strong>Aucun navigateur ne s’y engage.</strong></p>
+
+  <div class="manual__note">
+    <span class="manual__boxTitle">Ce que font les navigateurs — d’après leurs éditeurs</span>
+    <p>Ces trois comportements sont ceux que Google, Mozilla et Apple documentent eux-mêmes.
+    Nous ne les avons pas mesurés : nous savons ce que notre bouton demande, pas ce que
+    votre navigateur en fera.</p>
+    <ul>
+      <li><strong>Chrome</strong> accorde sans rien demander à un site installé ou souvent
+      visité ; sinon il refuse, sans dire pourquoi.</li>
+      <li><strong>Firefox</strong> vous pose la question.</li>
+      <li><strong>Safari</strong> efface les données d’un site qu’on n’a pas visité depuis
+      <strong>sept jours</strong>, accordé ou non.</li>
+    </ul>
+  </div>
+
+  <p><strong>Ce qui l’efface à coup sûr, et qui dépend de vous :</strong></p>
+
+  <ul>
+    <li>Vider les données du site depuis votre navigateur — le geste qui emporte tout, y
+    compris les trois réglages.</li>
+    <li>Travailler en navigation privée : rien n’y survit à la fermeture de la fenêtre.</li>
+    <li>Changer de navigateur, ou de profil dans le même navigateur : la bibliothèque ne
+    suit pas. Elle n’est pas perdue, elle est restée là où vous l’aviez faite.</li>
+    <li>Le bouton <span class="manual__ui">Effacer toute la bibliothèque</span>, décrit
+    juste en dessous.</li>
+  </ul>
+
+  <p><strong>Ce qui peut l’effacer sans vous demander votre avis :</strong></p>
+
+  <ul>
+    <li><strong>Safari</strong>, et ses sept jours sans visite.</li>
+    <li><strong>Un disque qui se remplit.</strong> Quand la place manque, le navigateur
+    reprend celle des sites non protégés, les moins visités d’abord.</li>
+    <li><strong>Un outil de nettoyage</strong> — CCleaner et ses semblables. Ils traitent
+    cette réserve comme du cache, et ne font pas la différence entre une image qui se
+    retéléchargera toute seule et votre configuration de compétition.</li>
+  </ul>
+
+  <p><strong>Et les mises à jour ?</strong> Une mise à jour ordinaire de votre navigateur ou
+  de votre système <strong>ne touche pas</strong> aux données des sites : c’est un
+  engagement que tous les navigateurs tiennent. Ce qui casse est ailleurs, et ce ne sont pas
+  des mises à jour, ce sont des remplacements : réinstaller le navigateur, passer du canal
+  stable au canal bêta, migrer vers une machine neuve, restaurer un profil abîmé.</p>
+
+  <p>Tout ceci a la même issue, et elle tient en un geste :
+  <span class="manual__ui">Exporter la bibliothèque</span>. Un fichier, sur votre disque,
+  que rien de tout cela n’atteint. C’est d’ailleurs pourquoi
+  <span class="manual__ui">Effacer toute la bibliothèque</span> vous propose l’export avant
+  la porte.</p>
+
+  <h3>Effacer toute la bibliothèque</h3>
+
+  <p>Au pied du panneau, <span class="manual__ui">Effacer toute la bibliothèque</span> vide
+  tout d’un coup — le geste qu’on fait avant de rendre un ordinateur prêté, ou en changeant
+  de machine.</p>
+
+  <p>La confirmation donne des chiffres plutôt qu’un « êtes-vous sûr » : combien de
+  configurations quittent ce navigateur, quelle place part avec elles, et combien d’entrées
+  illisibles s’il y en a. Elle offre deux issues, et
+  <span class="manual__ui">Exporter l’archive d’abord, puis tout effacer</span> est la
+  première ; <span class="manual__ui">Tout effacer sans exporter</span> vient après.</p>
+
+  <p>Ce geste efface <strong>la bibliothèque, et elle seule</strong>. Les trois réglages de
+  l’éditeur — la langue, la hauteur du bandeau du bas, vos appareils — restent en place :
+  aucun ne porte de configuration, de page ni de fichier de waypoints. Pour ne plus rien
+  laisser du tout, videz les données de ce site depuis votre navigateur ; c’est hors de
+  cette application, et c’est le seul geste qui les emporte aussi.</p>
+
+  <p>Enfin, et cela vaut pour une entrée comme pour la bibliothèque entière :
+  <strong>cette bibliothèque n’a pas de corbeille.</strong> Une suppression est définitive,
+  « Annuler » n’y peut rien, et comme rien n’a jamais été envoyé ailleurs, il n’existe
+  aucune copie à récupérer — ni ici, ni chez personne. C’est pourquoi chaque suppression
+  demande une confirmation dans un cadre à part.</p>
 
   <!-- =================================================================== 12 -->
 
