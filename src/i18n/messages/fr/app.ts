@@ -460,6 +460,7 @@ const app = {
 
   /* ================================= `main.ts` — les boîtes, et ce qu'elles chargent */
 
+  'app.repository': 'Le projet sur GitHub — signaler un problème, proposer une amélioration',
   'app.manualTitle': 'Manuel d’utilisation',
   'app.close': 'Fermer',
   'app.loading': 'Chargement…',

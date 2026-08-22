@@ -269,6 +269,7 @@ const app: DomainCatalog<'app'> = {
   'app.pageOperationFailed': 'This change could not be made: your pages have not moved. ' +
     'Technical detail: {detail}',
 
+  'app.repository': 'The project on GitHub — report a problem, suggest an improvement',
   'app.manualTitle': 'User manual',
   'app.close': 'Close',
   'app.loading': 'Loading…',

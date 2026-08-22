@@ -439,12 +439,17 @@ describe('assemblage — la barre de tête garde le fréquent et range le reste'
   )
 
   it('la barre ne porte que le fréquent et ce qui dit l’état du document', () => {
-    // Nom du fichier, annuler/rétablir, la langue, les réglages, l'interrupteur de mode,
-    // le menu, enregistrer. Rien d'autre : six commandes passaient sur deux lignes sous
-    // 1100 px. Le globe est le septième et le seul muet — 30 px, la largeur d'une flèche
-    // d'annulation : c'est ce qui lui permet d'entrer sans repousser le repli.
+    // Nom du fichier, annuler/rétablir, la langue, le dépôt, les réglages, l'interrupteur
+    // de mode, le menu, enregistrer. Rien d'autre : six commandes passaient sur deux
+    // lignes sous 1100 px. Le globe est le septième et le lien du dépôt le huitième — tous
+    // deux muets, 30 px chacun, la largeur d'une flèche d'annulation.
+    //
+    // ⚠ La largeur de repli est à REMESURER : elle était de 954 px avec sept éléments, et
+    // ce huitième la remonte nécessairement. Le lien du dépôt est le premier candidat au
+    // repli s'il faut en sortir un — c'est la seule commande de la barre qui mène hors de
+    // l'application, et les cinq README comme les cinq manuels portent la même adresse.
     expect(barre).toContain(
-      'fileName, undoButton, redoButton, languageButton, preferencesButton, editToggle,'
+      'fileName, undoButton, redoButton, languageButton, repositoryLink, preferencesButton,'
     )
   })
 

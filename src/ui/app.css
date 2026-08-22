@@ -122,6 +122,14 @@ body {
 
 .btn__glyph { width: 18px; height: 18px; display: block; }
 
+/* Les pictogrammes de la barre sont tracés au trait ; celui de GitHub est une marque, qui
+   se dessine pleine. Il n'hérite donc pas du `stroke` des autres. */
+.btn__glyph--solid { stroke: none; }
+
+/* Le lien vers le dépôt est un `<a>`, pas un `<button>` : il lui faut la mise en boîte que
+   `.btn` donne aux boutons, sans quoi il se poserait sur la ligne de base du texte. */
+.app-bar__repo { display: inline-flex; align-items: center; justify-content: center; }
+
 /* --------------------------------------------------------------------- barre de tête */
 
 .app-bar {

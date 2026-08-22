@@ -465,6 +465,35 @@ preferencesButton.addEventListener('click', () => { openPreferences() })
  * Il n'est **jamais éteint ni caché** — comme la bibliothèque et le manuel : c'est sans
  * fichier ouvert, sur l'écran d'accueil, qu'il sert le plus.
  */
+/** L'adresse du dépôt public, citée aussi par les cinq README et les cinq manuels. */
+const REPOSITORY_URL = 'https://github.com/frederict/xcfg-editor'
+
+/**
+ * Le chat de GitHub, tracé plein — c'est la marque, elle ne se redessine pas au trait
+ * comme les autres pictogrammes de la barre. Chemin officiel, simplifié à 24 unités.
+ */
+function githubGlyph(): SVGSVGElement {
+  const ns = 'http://www.w3.org/2000/svg'
+  const svg = document.createElementNS(ns, 'svg')
+  svg.setAttribute('viewBox', '0 0 24 24')
+  svg.setAttribute('aria-hidden', 'true')
+  svg.setAttribute('focusable', 'false')
+  svg.classList.add('btn__glyph', 'btn__glyph--solid')
+  const path = document.createElementNS(ns, 'path')
+  path.setAttribute('d',
+    'M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 ' +
+    '0-.24-.01-.87-.01-1.71-2.78.62-3.37-1.37-3.37-1.37-.45-1.19-1.11-1.5-1.11-1.5' +
+    '-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.89 1.56 2.34 1.11 2.91.85' +
+    '.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.03 1.03-2.75' +
+    '-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05a9.3 9.3 0 0 1 5 0c1.91-1.33 ' +
+    '2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.94' +
+    '-2.34 4.81-4.57 5.06.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.6.69.49' +
+    'A10.03 10.03 0 0 0 22 12.25C22 6.58 17.52 2 12 2z')
+  path.setAttribute('fill', 'currentColor')
+  svg.append(path)
+  return svg
+}
+
 function globeGlyph(): SVGSVGElement {
   const ns = 'http://www.w3.org/2000/svg'
   const svg = document.createElementNS(ns, 'svg')
@@ -493,6 +522,25 @@ const languageButton = el('button', 'btn btn--icon app-bar__lang')
 languageButton.type = 'button'
 languageButton.append(globeGlyph())
 languageButton.addEventListener('click', () => { openLanguageDialog() })
+
+/**
+ * Le lien vers le dépôt, dans la barre.
+ *
+ * **Un `<a>`, pas un bouton** : c'est un lien vers ailleurs, et il doit se comporter comme
+ * tel — clic milieu, « ouvrir dans un nouvel onglet », copier l'adresse. Un bouton qui
+ * appelle `window.open` prive le pilote de ces trois gestes sans rien lui apporter.
+ *
+ * `rel="noreferrer"` autant que `noopener` : le second protège l'onglet ouvert, le premier
+ * évite d'annoncer à GitHub d'où vient la visite.
+ *
+ * Le nom accessible dit **où l'on va**, pas ce qu'on voit : « GitHub » seul laisserait un
+ * lecteur d'écran annoncer un mot sans destination.
+ */
+const repositoryLink = el('a', 'btn btn--icon app-bar__repo')
+repositoryLink.href = REPOSITORY_URL
+repositoryLink.target = '_blank'
+repositoryLink.rel = 'noopener noreferrer'
+repositoryLink.append(githubGlyph())
 
 /* ------------------------------------------------- menu des commandes secondaires */
 
@@ -670,8 +718,8 @@ const brandName = el('span', 'brand__name')
 brand.append(brandName, brandRole)
 const actions = el('div', 'app-bar__actions')
 actions.append(
-  fileName, undoButton, redoButton, languageButton, preferencesButton, editToggle,
-  menu.root, fileInput, exportButton
+  fileName, undoButton, redoButton, languageButton, repositoryLink, preferencesButton,
+  editToggle, menu.root, fileInput, exportButton
 )
 bar.append(brand, actions)
 
@@ -718,6 +766,10 @@ function installChromeProse(tr: Translator): void {
   const named = tr.t('app.uiLanguageNamed', { name: UI_LANGUAGE_ENDONYMS[currentUiLanguage] })
   languageButton.setAttribute('aria-label', named)
   languageButton.title = `${named}\n${tr.t('app.uiLanguageHint')}`
+  // Le lien du dépôt ne porte qu'un dessin : sans nom accessible, un lecteur d'écran
+  // n'annoncerait que « lien ». Il suit la langue comme le reste de la barre.
+  repositoryLink.setAttribute('aria-label', tr.t('app.repository'))
+  repositoryLink.title = tr.t('app.repository')
 
   menu.setLabel(tr.t('menu.file'))
   openItem.textContent = tr.t('menu.openFile')
