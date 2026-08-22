@@ -229,6 +229,30 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
   **meurt avec l'onglet** : le navigateur vous retient au départ tant que le travail n'est
   pas enregistré, avec son propre texte, et cesse de le faire dès que le fichier entier
   l'est.
+- **Relire ce que vous avez changé**, à tout moment et une dernière fois avant
+  d'enregistrer. « Annuler » nomme le **dernier** geste, un par un ; une demi-heure de
+  travail ne se relit pas comme ça. « Ce que vous avez changé », dans le menu Fichier,
+  nomme **l'écart** : les pages ajoutées, retirées, déplacées ou modifiées, les gadgets qui
+  ont bougé, changé de taille ou de réglage, et les lignes de réglages généraux qui ne
+  disent plus la même chose. La **même** liste, repliée, ouvre la boîte d'enregistrement —
+  un seul calcul pour les deux écrans, parce que deux comptes qui se contrediraient
+  vaudraient moins que pas de compte du tout.
+
+  ⚠️ **Ce n'est pas la liste de vos gestes, et c'est voulu.** Un gadget déplacé dix fois
+  qui revient à sa place n'y figure pas ; un rang qui a seulement glissé parce qu'on a
+  retiré la page du dessus n'est pas compté comme un déplacement ; les gadgets d'une page
+  ajoutée ou retirée ne sont pas comptés en plus de leur page. Le relevé compare **deux
+  états** — le document que le fichier a livré, et celui que vous avez sous les yeux —, et
+  quand ils sont les mêmes il le dit. C'est aussi la réponse à la question qu'un pilote
+  d'essai a posée en toutes lettres : « l'outil a-t-il modifié quelque chose que je ne lui
+  ai pas demandé ? ».
+
+  Un réglage général y est nommé par sa **ligne du fichier**, `Pilot.Name`, jamais par sa
+  valeur : ce relevé s'affiche sur votre écran et peut nommer ce que vous avez écrit, il
+  n'a aucune raison d'en montrer le contenu. Le titre en clair est dans « Réglages ».
+  Et il dit ce que **votre document** a changé, pas ce que le fichier produit emportera :
+  ça, c'est l'affaire des trois issues d'enregistrement, et chacune le dit sous son
+  intitulé.
 - **Régler les réglages généraux** — les 217 préférences qui vivent hors des pages :
   unités, touches, capteurs, son, espaces aériens. Dans l'arborescence des 23 lignes du
   menu de l'instrument. En consultation, **aucun contrôle de formulaire n'est
@@ -1005,6 +1029,53 @@ plutôt que par la visite guidée, et son sommaire reste à gauche pendant toute
   CAPTURE AJOUTÉE — le manuel est arrivé après l'écriture des cinq recettes d'origine et
   n'en avait aucune. C'est le premier écran qu'un lecteur du README voudra reconnaître :
   il porte l'avertissement sur le partage, qui est l'argument central du projet.
+-->
+
+<!--
+  RECETTE À PRODUIRE — captures/ce-que-vous-avez-change.<langue>.png (1100 × 760)
+  ⚠ L'IMAGE N'EXISTE PAS ENCORE, et aucun README ne la montre : cette recette est écrite
+  d'avance, pendant que l'écran est frais, plutôt que six mois plus tard par quelqu'un qui
+  devra le redécouvrir. Le jour où elle est prise, ajouter l'appel d'image dans les cinq
+  README et la ligne correspondante dans `LOCALISED_SHOTS` (`tests/docs/manuels.test.ts`),
+  qui compte les captures et refuse qu'une langue montre celle d'une autre.
+
+  Écran ...... la boîte « Ce que vous avez changé », ouverte par le menu « Fichier ».
+  Langues .... CINQ exemplaires : .fr, .en, .nl, .de, .es. Le texte EST le sujet — ce qui
+               est compté, et la phrase qui dit que rien n'est compté deux fois.
+  Fichier .... tests/fixtures/exports/2026-08-20_backup-00.xcfg. Il déclare le français :
+               « Barre d'état » reste donc en français dans les cinq captures, comme sur
+               l'écran des réglages généraux. C'est la séparation des deux axes, et elle
+               se voit ici à l'œil nu.
+  ⚠ Vie privée. Cette boîte peut nommer des lignes que le pilote a écrites — un titre de
+               gadget, un texte libre, `Pilot.Name`. Elle ne montre JAMAIS leur valeur,
+               mais la fixture reste obligatoire : une configuration réelle y ferait
+               apparaître les noms de ses propres réglages, et une image ne s'anonymise
+               pas après coup.
+  État ....... trois écarts, un par famille, pour que les trois sections soient à l'image
+               sans que la liste dépasse le cadre :
+                 1. un gadget modifié — page 1 PAYSAGE, sélectionner « Barre d'état »
+                    (rang 1 sur 14) et cocher la première case de son panneau ;
+                 2. une page ajoutée — « Modifier les pages », insérer une page libre
+                    au dernier rang du paysage ;
+                 3. un réglage général modifié — « Réglages », chercher `Pilot.Name`,
+                    écrire n'importe quoi qui ne soit pas un vrai nom.
+               Le chapeau doit alors lire « 1 page ajoutée, 1 page modifiée, 1 gadget
+               modifié et 1 réglage général ».
+  Refaire .... npm run dev -- --port <un port libre, JAMAIS 5175>, déposer la fixture,
+               faire les trois gestes ci-dessus, puis menu « Fichier » →
+               « Ce que vous avez changé ».
+               Pour les quatre autres langues : changer la langue au globe et rouvrir la
+               boîte. Le document reste ouvert, les trois écarts avec lui.
+  Cadrage .... viewport de 1100 × 760 points CSS. La boîte fait 832 px de large
+               (`.modal--changes`, min(52rem, 94vw)) et se centre. ⚠ L'ALLEMAND DÉBORDE,
+               comme partout ailleurs : mesurer avant de supposer, et lui donner un cadre
+               plus haut s'il le demande, plutôt que de rogner sa dernière phrase.
+  À vérifier . la phrase du bas — « Ce relevé compare deux états ; il ne compte pas vos
+               gestes… » — DOIT être dans le cadre. C'est elle qui dit pourquoi le compte
+               ne ressemble pas à l'historique, et une capture qui la coupe montre un
+               relevé qu'on croira être un journal.
+               Vérifier aussi qu'AUCUNE valeur de réglage n'est lisible : on doit lire
+               `Pilot.Name`, jamais ce qui est écrit dedans.
 -->
 
 ## Ce qu'il ne sait pas faire, et ce qui reste incertain

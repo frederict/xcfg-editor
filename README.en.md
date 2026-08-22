@@ -158,6 +158,27 @@ author can check is worth nothing.
   carries its own “Undo this step”, above the carousel. And this memory **dies with the
   tab**: the browser holds you back on the way out for as long as the work is not saved,
   with its own wording, and stops doing so as soon as the whole file is.
+- **Read back what you changed**, at any time and one last time before saving. “Undo”
+  names the **last** gesture, one at a time; half an hour of work cannot be read back that
+  way. “What you changed”, in the File menu, names **the gap**: pages added, removed,
+  moved or changed, widgets that moved, were resized or re-tuned, and the general setting
+  lines that no longer say the same thing. The **same** list, folded, opens the save box —
+  one calculation for both screens, because two counts that contradicted each other would
+  be worth less than no count at all.
+
+  ⚠️ **This is not the list of your gestures, and that is deliberate.** A widget moved ten
+  times that came back to its place is not in it; a rank that merely shifted because the
+  page above it was removed does not count as a move; the widgets of a page that was added
+  or removed are not counted on top of their page. The list compares **two states** — the
+  document the file delivered, and the one in front of you — and when they are the same it
+  says so. That is also the answer to the question a test pilot spelled out: “did the tool
+  change something I did not ask it to?”.
+
+  A general setting is named there by its **file line**, `Pilot.Name`, never by its value:
+  this list appears on your screen and may name what you wrote, but it has no reason to
+  show the content. The plain title is in “Settings”. And it says what **your document**
+  changed, not what the file you produce will carry: that is the business of the three
+  saving outcomes, and each of them says so under its own title.
 - **Set the general settings** — the 217 preferences that live outside the pages: units,
   buttons, sensors, sound, airspaces. In the tree of the 23 lines of the instrument's
   menu. In view-only mode, **no form control is built at all**; in editing mode, 77 of

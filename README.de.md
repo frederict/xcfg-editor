@@ -170,6 +170,31 @@ Absicht — ein Treueversprechen, das nur der Autor nachprüfen kann, ist nichts
   Schritt rückgängig machen“ über dem Karussell. Und dieses Gedächtnis **stirbt mit dem
   Tab**: der Browser hält Sie beim Verlassen zurück, solange die Arbeit nicht gespeichert
   ist, mit seinem eigenen Text, und hört damit auf, sobald die ganze Datei es ist.
+- **Nachlesen, was Sie geändert haben**, jederzeit und ein letztes Mal vor dem Speichern.
+  „Rückgängig“ benennt den **letzten** Handgriff, einen nach dem anderen; eine halbe Stunde
+  Arbeit lässt sich so nicht nachlesen. „Was Sie geändert haben“, im Menü Datei, benennt
+  **den Abstand**: die hinzugefügten, entfernten, verschobenen oder geänderten Seiten, die
+  Widgets, die sich bewegt haben, deren Größe oder Einstellung sich geändert hat, und die
+  Zeilen der allgemeinen Einstellungen, die nicht mehr dasselbe sagen. Dieselbe Liste,
+  zusammengeklappt, eröffnet den Speichern-Dialog — **eine** Berechnung für beide
+  Bildschirme, denn zwei Zählungen, die einander widersprächen, wären weniger wert als gar
+  keine.
+
+  ⚠️ **Das ist nicht die Liste Ihrer Handgriffe, und das ist so gewollt.** Ein zehnmal
+  verschobenes Widget, das an seinen Platz zurückgekehrt ist, steht nicht darin; ein Rang,
+  der nur nachgerückt ist, weil die Seite darüber entfernt wurde, zählt nicht als
+  Verschiebung; die Widgets einer hinzugefügten oder entfernten Seite werden nicht
+  zusätzlich zu ihrer Seite gezählt. Die Aufstellung vergleicht **zwei Zustände** — das
+  Dokument, das die Datei geliefert hat, und das vor Ihnen — und wenn sie gleich sind, sagt
+  sie es. Das ist auch die Antwort auf die Frage, die ein Testpilot wörtlich gestellt hat:
+  „hat das Werkzeug etwas geändert, worum ich es nicht gebeten habe?“.
+
+  Eine allgemeine Einstellung wird dort nach ihrer **Dateizeile** benannt, `Pilot.Name`,
+  nie nach ihrem Wert: diese Aufstellung erscheint auf Ihrem Bildschirm und darf benennen,
+  was Sie geschrieben haben, doch sie hat keinen Grund, den Inhalt zu zeigen. Den Titel im
+  Klartext gibt es unter „Einstellungen“. Und sie sagt, was sich an **Ihrem Dokument**
+  geändert hat, nicht was die erzeugte Datei mitnehmen wird: das ist Sache der drei
+  Speicher-Ausgänge, und jeder von ihnen sagt es unter seiner eigenen Überschrift.
 - **Die allgemeinen Einstellungen setzen** — die 217 Einstellungen, die außerhalb der
   Seiten leben: Einheiten, Tasten, Sensoren, Ton, Lufträume. In der Baumstruktur der
   23 Zeilen des Gerätemenüs. Beim Ansehen wird **kein einziges Formularelement gebaut**;

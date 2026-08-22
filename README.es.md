@@ -165,6 +165,27 @@ de fidelidad que solo el autor puede comprobar no vale nada.
   carrusel. Y esta memoria **muere con la pestaña**: el navegador le retiene al salir
   mientras el trabajo no está guardado, con su propio texto, y deja de hacerlo en cuanto lo
   está el archivo entero.
+- **Releer lo que ha cambiado**, en cualquier momento y una última vez antes de guardar.
+  «Deshacer» nombra el **último** gesto, uno a uno; media hora de trabajo no se relee así.
+  «Lo que ha cambiado», en el menú Archivo, nombra **la diferencia**: las páginas añadidas,
+  retiradas, desplazadas o modificadas, los widgets que se han movido, cambiado de tamaño o
+  de ajuste, y las líneas de ajustes generales que ya no dicen lo mismo. La **misma** lista,
+  plegada, abre el cuadro de guardado: un solo cálculo para las dos pantallas, porque dos
+  recuentos que se contradijeran valdrían menos que ningún recuento.
+
+  ⚠️ **No es la lista de sus gestos, y es a propósito.** Un widget desplazado diez veces que
+  vuelve a su sitio no figura en ella; un rango que solo se ha desplazado porque se retiró
+  la página de encima no cuenta como un movimiento; los widgets de una página añadida o
+  retirada no se cuentan además de su página. El recuento compara **dos estados** —el
+  documento que entregó el archivo y el que tiene delante— y cuando son el mismo lo dice.
+  Es también la respuesta a la pregunta que un piloto de pruebas formuló con todas las
+  letras: «¿ha modificado la herramienta algo que yo no le he pedido?».
+
+  Un ajuste general se nombra allí por su **línea del archivo**, `Pilot.Name`, nunca por su
+  valor: este recuento aparece en su pantalla y puede nombrar lo que usted ha escrito, pero
+  no tiene ninguna razón para mostrar el contenido. El título en claro está en «Ajustes». Y
+  dice lo que ha cambiado **su documento**, no lo que llevará el archivo producido: eso es
+  cosa de las tres salidas de guardado, y cada una lo dice bajo su propio título.
 - **Ajustar los ajustes generales** — las 217 preferencias que viven fuera de las páginas:
   unidades, botones, sensores, sonido, espacios aéreos. En el árbol de las 23 líneas del
   menú del instrumento. En consulta, **no se construye ningún control de formulario**; en

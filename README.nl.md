@@ -169,6 +169,30 @@ een belofte van getrouwheid die alleen de auteur kan nagaan, is niets waard.
   ongedaan maken’, boven het carrousel. En dit geheugen **sterft met het tabblad**: de
   browser houdt u bij het vertrekken tegen zolang het werk niet is opgeslagen, met zijn
   eigen tekst, en houdt daarmee op zodra het hele bestand dat wel is.
+- **Teruglezen wat u hebt gewijzigd**, op elk moment en een laatste keer vóór het opslaan.
+  ‘Ongedaan maken’ noemt de **laatste** handeling, één voor één; een half uur werk laat
+  zich zo niet teruglezen. ‘Wat u hebt gewijzigd’, in het menu Bestand, noemt **het
+  verschil**: de toegevoegde, verwijderde, verplaatste of gewijzigde pagina’s, de widgets
+  die zijn verplaatst, van formaat of van instelling zijn veranderd, en de regels van de
+  algemene instellingen die niet meer hetzelfde zeggen. Dezelfde lijst, ingeklapt, opent
+  het opslagvenster — **één** berekening voor beide schermen, want twee tellingen die
+  elkaar zouden tegenspreken zijn minder waard dan geen telling.
+
+  ⚠️ **Dit is niet de lijst van uw handelingen, en dat is met opzet.** Een widget dat tien
+  keer is verplaatst en op zijn plaats is teruggekeerd, staat er niet in; een rang die
+  alleen is opgeschoven omdat de pagina erboven is verwijderd, telt niet als verplaatsing;
+  de widgets van een toegevoegde of verwijderde pagina worden niet bovenop hun pagina
+  geteld. De opgave vergelijkt **twee toestanden** — het document dat het bestand heeft
+  geleverd en het document dat u voor u hebt — en als ze gelijk zijn, zegt ze dat. Dat is
+  ook het antwoord op de vraag die een testpiloot letterlijk stelde: ‘heeft het gereedschap
+  iets gewijzigd waar ik niet om heb gevraagd?’.
+
+  Een algemene instelling wordt daar genoemd naar haar **bestandsregel**, `Pilot.Name`,
+  nooit naar haar waarde: deze opgave verschijnt op uw scherm en mag noemen wat u hebt
+  geschreven, maar heeft geen enkele reden om de inhoud te tonen. De titel in gewone
+  woorden staat onder ‘Instellingen’. En ze zegt wat **uw document** heeft gewijzigd, niet
+  wat het gemaakte bestand zal meenemen: dat is de zaak van de drie opslag-uitkomsten, en
+  elk daarvan zegt het onder zijn eigen kop.
 - **De algemene instellingen instellen** — de 217 voorkeuren die buiten de pagina’s leven:
   eenheden, knoppen, sensoren, geluid, luchtruim. In de boomstructuur van de 23 regels van
   het instrumentmenu. In kijkmodus wordt er **geen enkel formulierveld gebouwd**; in
