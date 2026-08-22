@@ -18,7 +18,8 @@
  * | `plural.ts` | une seule règle de pluriel, `Intl.PluralRules`, pour remplacer les huit copies de `count > 1` |
  * | `format.ts` | nombres, parts, tailles, millimètres, pouces, dates — tous par `Intl` |
  * | `catalog.ts` | le type du catalogue, dérivé du français ; le chargement d'une langue et d'une seule |
- * | `messages/*.ts` | un catalogue par langue, un morceau téléchargeable par langue |
+ * | `domains.ts` | **le découpage en neuf domaines** — un lot d'extraction par fichier, pour travailler à plusieurs |
+ * | `messages/<langue>/` | neuf fichiers de domaine plus leur assemblage ; un morceau téléchargeable par langue |
  * | `translate.ts` | `t()`, l'interpolation à repères nommés |
  * | `preference.ts` | détection au navigateur, mémorisation du choix, repli français |
  *
@@ -48,6 +49,15 @@ export {
 export { pluralCategory, pluralForm, type PluralForms } from './plural'
 
 export { formatters, type Formatters } from './format'
+
+export {
+  DOMAINS,
+  DOMAIN_PREFIXES,
+  keyPrefix,
+  type Domain,
+  type DomainCatalog,
+  type FrenchDomains
+} from './domains'
 
 export {
   loadMessages,

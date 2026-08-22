@@ -31,12 +31,23 @@ import type { FrenchMessages } from './messages/fr'
  * souvent le verbe en tête. Un repère nommé se déplace dans la phrase ; un fragment
  * concaténé, non.
  *
- * ## Un fichier par langue, chargé à la demande
+ * ## Un dossier par langue, un morceau par langue
  *
  * Cette application se télécharge depuis GitHub Pages. Charger cinq catalogues pour en
  * afficher un serait quatre cinquièmes de gaspillage à chaque premier écran. Chaque
  * langue est donc un module à part, atteint par un `import()` — Vite en fait cinq
  * morceaux séparés et n'en télécharge qu'un.
+ *
+ * Depuis le découpage par domaine (`src/i18n/domains.ts`), une langue est un **dossier**
+ * de neuf fichiers plus un `index.ts` qui les réunit. Ces neuf fichiers ne sont importés
+ * que par cet `index.ts`, donc par personne d'autre : Vite les fond dans le morceau de la
+ * langue, et le nombre de morceaux ne change pas.
+ *
+ * **On ne charge PAS un domaine à la demande, et c'est délibéré.** Neuf morceaux par
+ * langue au lieu d'un, ce sont neuf requêtes, neuf en-têtes et neuf occasions qu'un écran
+ * s'affiche avant sa prose ; à l'échelle de ce catalogue — quelques dizaines de
+ * kilo-octets pour la langue entière — le gain de trafic ne paierait ni la complexité ni
+ * le clignotement. Le découpage sert le **travail en parallèle**, pas le réseau.
  *
  * Le chemin n'est **pas** calculé (`./messages/${code}`) comme dans
  * `src/catalog/widgetCatalog.ts`, mais énuméré dans `LOADERS`. Deux raisons : cinq
@@ -45,15 +56,24 @@ import type { FrenchMessages } from './messages/fr'
  * compile pas. Avec un chemin calculé, elle ne casserait qu'à l'exécution, chez le
  * pilote qui a précisément choisi cette langue-là.
  *
- * **Mesuré** (Vite 8, `minify: true`, sur une entrée qui n'importe que `src/i18n/`) : cinq
- * morceaux distincts, un par langue. Le socle pèse 1 765 octets compressés ; chaque
- * catalogue de ce socle — 21 messages — en pèse 742 à 826, et le pilote en télécharge
- * **un**. À l'échelle des 627 unités de message du dépôt, l'ordre de grandeur est de 25 ko
+ * **Mesuré après le découpage** (Vite 8.2.2, `minify: true`, sur une entrée qui n'importe
+ * que `src/i18n/`) : **cinq** morceaux distincts, un par langue — les neuf fichiers de
+ * domaine d'une langue sont bien fondus dans le sien. Le socle pèse 1 735 octets
+ * compressés ; chaque catalogue de ce socle — 21 messages, neuf domaines dont trois
+ * vides — en pèse 783 (en) à 869 (nl), et le pilote en télécharge **un**. Le découpage a
+ * coûté une quarantaine d'octets compressés par langue, ce que valent trois objets vides
+ * répandus dans l'assemblage.
+ *
+ * À l'échelle des 627 unités de message du dépôt, l'ordre de grandeur est de 25 ko
  * compressés par langue : c'est ce qu'une extraction en un seul fichier ferait
  * télécharger cinq fois, pour en afficher une.
  */
 
-/** Toutes les clés de message, dérivées du catalogue français. */
+/**
+ * Toutes les clés de message, dérivées du catalogue français — les neuf domaines réunis.
+ * Le jeu de clés reste **plat** : `t('library.entryCount')` ne dit pas de quel fichier il
+ * vient. Voir `src/i18n/domains.ts`.
+ */
 export type MessageKey = keyof FrenchMessages
 
 /**
