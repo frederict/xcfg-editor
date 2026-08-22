@@ -2,7 +2,7 @@ import { readZip, writeZip, type ZipEntry } from '../core/zip'
 import { technicalDetail } from '../core/technicalDetail'
 import { sameDigest, sha256Hex } from './digest'
 import { LibraryError, type LibraryProse } from './errors'
-import { UNKNOWN_RECORD_ID, type Library, type LibraryEntry } from './library'
+import { newRecordId, UNKNOWN_RECORD_ID, type Library, type LibraryEntry } from './library'
 
 /**
  * Sortir la bibliothèque du navigateur, et l'y remettre.
@@ -197,7 +197,15 @@ export interface ImportReport {
 }
 
 export interface ImportOptions {
-  /** Générateur d'identifiants pour les entrées rétablies en double. */
+  /**
+   * Générateur d'identifiants pour les entrées rétablies en double. Par défaut
+   * `newRecordId`, celui-là même que `createLibrary` emploie : les tests l'injectent pour
+   * être déterministes, l'écran n'a rien à passer.
+   *
+   * ⚠️ Il a valu `` `${entry.id}-2` ``, et c'était un défaut : au deuxième import de la
+   * même archive, `uuid-2` était déjà pris et `restore` — qui exige `absent` — levait.
+   * L'archive entière s'arrêtait là, à rebours de ce que promet l'en-tête ci-dessous.
+   */
   newId?: () => string
   /**
    * Suffixe ajouté au nom d'une entrée rétablie en double. Il est **passé** par l'écran,
@@ -250,8 +258,46 @@ function readManifest(text: string): Manifest {
  * - empreinte fausse ou octets absents : **rien n'est écrit**, et le rapport le dit.
  *
  * L'import ne s'arrête jamais à la première entrée fautive : une archive dont un membre
- * est abîmé doit rendre tout le reste.
+ * est abîmé doit rendre tout le reste. **Une entrée qu'on n'arrive pas à écrire est donc
+ * refusée, jamais levée** — un identifiant déjà pris est un cas d'entrée, pas une panne
+ * d'archive, et c'est la seule façon de tenir la phrase précédente. Ce qui reste levé,
+ * c'est ce qui rend l'archive entière illisible : pas de ZIP, pas de manifeste, format
+ * d'une version future.
  */
+/**
+ * Écrit une entrée, ou dit pourquoi elle n'a pas pu l'être — **sans jamais lever**.
+ *
+ * `restore` exige que la place soit `absent` et lève un conflit sinon. Laisser ce conflit
+ * remonter abandonnait le reste de l'archive : l'entrée suivante, parfaitement saine,
+ * n'était jamais lue. Le pilote reçoit maintenant la même chose que pour une empreinte
+ * fausse — une ligne refusée dans le rapport, et tout le reste rangé.
+ *
+ * ⚠️ Seules les pannes de `LibraryError` sont converties. Une panne inattendue continue de
+ * remonter : la convertir en « entrée refusée » ferait passer pour un cas d'espèce ce qui
+ * est un bogue, et le rapport dirait au pilote que son archive est fautive.
+ */
+async function store(
+  library: Library,
+  entry: LibraryEntry,
+  bytes: Uint8Array,
+  results: ImportResult[],
+  source: { id: string; name: string }
+): Promise<boolean> {
+  try {
+    await library.restore(entry, bytes)
+    return true
+  } catch (error) {
+    if (!(error instanceof LibraryError)) throw error
+    // ⚠️ `source.id` et non `entry.id` : sur une entrée dupliquée, `entry` porte déjà
+    // l'identifiant neuf, et le rapport doit nommer celui de l'archive — c'est le seul
+    // que le pilote puisse retrouver dans le fichier qu'il vient de déposer.
+    results.push({
+      sourceId: source.id, name: source.name, outcome: 'rejected', reason: error.prose
+    })
+    return false
+  }
+}
+
 export async function importLibrary(
   library: Library, archive: Uint8Array, options: ImportOptions = {}
 ): Promise<ImportReport> {
@@ -323,15 +369,17 @@ export async function importLibrary(
     delete restored.preview
 
     if (clash === undefined) {
-      await library.restore(restored, member.data)
+      const written = await store(library, restored, member.data, results, entry)
+      if (!written) continue
       results.push({ sourceId: entry.id, name: entry.name, outcome: 'imported', id: entry.id })
       existing.set(entry.id, restored)
       continue
     }
 
-    const id = (options.newId ?? (() => `${entry.id}-2`))()
+    const id = (options.newId ?? newRecordId)()
     const renamed: LibraryEntry = { ...restored, id, name: `${entry.name}${suffix}` }
-    await library.restore(renamed, member.data)
+    const written = await store(library, renamed, member.data, results, entry)
+    if (!written) continue
     results.push({ sourceId: entry.id, name: renamed.name, outcome: 'duplicated', id })
     existing.set(id, renamed)
   }

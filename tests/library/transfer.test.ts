@@ -209,6 +209,66 @@ describe('import par-dessus une bibliothèque existante', () => {
     const restee = entries.find((e) => e.name === 'Autre chose')!
     expect(Buffer.from(await cible.bytesOf(restee.id)).equals(Buffer.from(FICHIERS[1]![2]))).toBe(true)
   })
+
+  /*
+   * Les deux essais suivants sont ceux qui manquaient : tous les autres injectent un
+   * `newId`, donc aucun n'éprouvait le générateur par défaut. Il rendait
+   * `` `${entry.id}-2` ``, et la deuxième collision sur le même identifiant tombait sur
+   * un `uuid-2` déjà pris — `restore` exige `absent`, elle levait, et l'archive entière
+   * s'arrêtait là.
+   */
+  it('deux imports conflictuels de suite passent, sans identifiant injecté', async () => {
+    const source = nouvelle()
+    await source.add({ name: 'Comp Annecy', bytes: FICHIERS[0]![2], fileName: 'a.xcfg' })
+    const { archive } = await exportLibrary(source)
+
+    // La cible a déjà `id-1`, portant d'autres octets : chaque import est un conflit.
+    const cible = nouvelle()
+    await cible.add({ name: 'Autre chose', bytes: FICHIERS[1]![2], fileName: 'b.xcfg' })
+
+    const premier = await importLibrary(cible, archive)
+    const second = await importLibrary(cible, archive)
+    expect(premier.results.map((r) => r.outcome)).toEqual(['duplicated'])
+    expect(second.results.map((r) => r.outcome)).toEqual(['duplicated'])
+
+    // Trois entrées, trois identifiants distincts, et les octets d'origine des deux copies.
+    const entries = (await cible.read()).entries
+    expect(entries).toHaveLength(3)
+    expect(new Set(entries.map((e) => e.id)).size).toBe(3)
+    for (const copie of entries.filter((e) => e.name !== 'Autre chose')) {
+      expect(Buffer.from(await cible.bytesOf(copie.id)).equals(Buffer.from(FICHIERS[0]![2]))).toBe(true)
+    }
+  })
+
+  it('un identifiant déjà pris refuse SON entrée, pas le reste de l’archive', async () => {
+    const source = await remplie()
+    const { archive } = await exportLibrary(source)
+
+    // La cible porte déjà les quatre identifiants, avec d'autres octets : quatre conflits.
+    // Les octets sont décalés d'un cran pour qu'aucune paire ne coïncide — deux entrées
+    // aux mêmes octets sortiraient en `already-present` et cet essai ne prouverait rien.
+    const cible = nouvelle()
+    for (let rang = 0; rang < 4; rang++) {
+      await cible.add({ name: `Local ${rang}`, bytes: FICHIERS[(rang + 1) % 4]![2], fileName: 'x.xcfg' })
+    }
+
+    // Un générateur fautif : il rend deux fois le même identifiant neuf. La deuxième
+    // entrée qui l'emploie ne peut pas s'écrire.
+    let servi = 0
+    const report = await importLibrary(cible, archive, {
+      newId: () => (++servi <= 2 ? 'collision' : `neuf-${servi}`)
+    })
+
+    const outcomes = report.results.map((r) => r.outcome)
+    expect(outcomes.filter((o) => o === 'rejected')).toHaveLength(1)
+    expect(outcomes.filter((o) => o === 'duplicated')).toHaveLength(3)
+    // Le rapport nomme l'identifiant de l'ARCHIVE, le seul que le pilote y retrouvera.
+    const refus = report.results.find((r) => r.outcome === 'rejected')!
+    expect(refus.sourceId).toMatch(/^id-\d$/)
+    expect(libraryProseText(refus.reason!, FRENCH)).toContain('identifiant')
+    // Quatre entrées locales, trois copies écrites : la quatrième n'a rien laissé.
+    expect((await cible.read()).entries).toHaveLength(7)
+  })
 })
 
 describe('import d’une archive abîmée', () => {

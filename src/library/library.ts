@@ -254,7 +254,15 @@ function defaultChannel(name: string): BroadcastChannel | null {
   }
 }
 
-function defaultId(): string {
+/**
+ * Un identifiant neuf, unique dans une bibliothèque locale.
+ *
+ * **Exporté** parce qu'`importLibrary` en a besoin pour le même usage — nommer une entrée
+ * rétablie en double — et qu'un second générateur écrit sur place a coûté une archive
+ * entière : le sien rendait `` `${entry.id}-2` ``, qui entre en collision avec lui-même au
+ * deuxième import de la même archive.
+ */
+export function newRecordId(): string {
   const uuid = (globalThis as { crypto?: { randomUUID?: () => string } }).crypto?.randomUUID
   if (uuid !== undefined) return uuid.call(globalThis.crypto)
   // Repli sans `randomUUID` (contextes non sécurisés) : l'identifiant n'a pas à être
@@ -265,7 +273,7 @@ function defaultId(): string {
 export function createLibrary(options: LibraryOptions): Library {
   const store = options.store
   const now = options.now ?? (() => new Date())
-  const newId = options.newId ?? defaultId
+  const newId = options.newId ?? newRecordId
   const channelName = options.channelName ?? 'xcfg-editor.library'
   const channel = options.channel === undefined ? defaultChannel(channelName) : options.channel
 
