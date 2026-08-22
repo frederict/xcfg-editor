@@ -440,7 +440,15 @@ const sharing = {
   'warnings.where': '{orientation}, page {page}',
   'warnings.structureNoClass': '{where} : cette page ne dit pas son type',
   'warnings.structureNavigations': '{where} : cet outil ne sait pas dire quand cette page s’affiche — la valeur « navigations » n’est ni « all », ni « none », ni une liste',
-  'warnings.structureMissingKeys': '{where}, gadget {rank} : clé {keys} absente',
+  /**
+   * Le pluriel réel — « CLASS, X1 » — accordait au singulier, et « clé » est le mot du
+   * format, pas celui du pilote : ce que le fichier porte, ce sont des lignes. Le nombre
+   * ne s'écrit pas, les lignes manquantes étant nommées juste après.
+   */
+  'warnings.structureMissingKeys': {
+    one: '{where}, gadget {rank} : la ligne {keys} manque',
+    other: '{where}, gadget {rank} : les lignes {keys} manquent'
+  },
   'warnings.structureDuplicate': 'Ligne en double : {path}',
 
   /* ---------------------------------- 7. géométrie : défauts, et montages volontaires */

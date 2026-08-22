@@ -218,7 +218,15 @@ const PLURAL_WITHOUT_VISIBLE_COUNT: ReadonlySet<string> = new Set<string>([
    *   une liste de deux noms ferait compter deux fois. C'est une ligne technique, celle
    *   que le pilote recopie s'il signale le problème.
    */
-  'libraryError.recordBadFields'
+  'libraryError.recordBadFields',
+  /*
+   * Le septième vient du domaine `sharing` :
+   *
+   * - `warnings.structureMissingKeys` — « la ligne X1 manque » / « les lignes CLASS, X1
+   *   manquent » : les lignes absentes sont **nommées** dans la phrase même, et écrire
+   *   « 2 » devant deux noms ferait compter deux fois.
+   */
+  'warnings.structureMissingKeys'
 ])
 
 describe('catalogues de messages', () => {

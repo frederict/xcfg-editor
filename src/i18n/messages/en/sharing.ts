@@ -268,7 +268,10 @@ const sharing: DomainCatalog<'sharing'> = {
   'warnings.where': '{orientation}, page {page}',
   'warnings.structureNoClass': '{where}: this page does not say its type',
   'warnings.structureNavigations': '{where}: this tool cannot say when this page shows up — the “navigations” value is neither “all”, nor “none”, nor a list',
-  'warnings.structureMissingKeys': '{where}, widget {rank}: key {keys} absent',
+  'warnings.structureMissingKeys': {
+    one: '{where}, widget {rank}: line {keys} is missing',
+    other: '{where}, widget {rank}: lines {keys} are missing'
+  },
   'warnings.structureDuplicate': 'Duplicate line: {path}',
 
   'warnings.geometryTitle': 'Geometry defects',

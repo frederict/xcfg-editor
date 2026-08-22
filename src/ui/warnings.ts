@@ -397,7 +397,7 @@ function structureWarning(input: WarningInput): Warning | undefined {
           // `join(', ')` et non `format.list` : ce sont des **noms de clés alignés**, pas
           // une énumération dans une phrase — « CLASS et X1 » ferait lire une prose.
           items.push(tr.t('warnings.structureMissingKeys', {
-            where, rank: position + 1, keys: missing.join(', ')
+            where, rank: position + 1, count: missing.length, keys: missing.join(', ')
           }))
         }
       })
