@@ -76,8 +76,9 @@ author can check is worth nothing.
 
 ## What the tool can do
 
-- **Open** a `.xcfg` or an `.xczfg` (the ZIP archive XCTrack writes when the
-  configuration carries resources with it).
+- **Open** a `.xcfg` or an `.xczfg` (the ZIP archive XCTrack writes when you export “with
+  media”). The archive does not always hold an extra file: the strip says what yours holds,
+  and how many it carries.
 - **Draw the pages** to the geometry of the instrument, on eight screen templates
   (AIR³ 7.2, 7.3, 7.35, and five common ratios), in landscape and in portrait.
 - **Flag what is wrong** before you discover it in flight. Seven rules, sorted into the

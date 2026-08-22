@@ -81,7 +81,8 @@ een belofte van getrouwheid die alleen de auteur kan nagaan, is niets waard.
 ## Wat het gereedschap kan
 
 - **Openen** van een `.xcfg` of een `.xczfg` (het ZIP-archief dat XCTrack schrijft wanneer
-  de configuratie bijlagen meedraagt).
+  men ‘met media’ exporteert). Het archief bevat niet altijd een bijkomend bestand: de
+  strook zegt wat het uwe bevat, en hoeveel het er draagt.
 - **De pagina’s tekenen** op de meetkunde van het instrument, op acht schermsjablonen
   (AIR³ 7.2, 7.3, 7.35, en vijf gangbare verhoudingen), liggend en staand.
 - **Melden wat er mis is** voordat u het tijdens de vlucht ontdekt. Zeven regels, verdeeld

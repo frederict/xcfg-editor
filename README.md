@@ -123,8 +123,9 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
 
 ## Ce que l'outil sait faire
 
-- **Ouvrir** un `.xcfg` ou un `.xczfg` (l'archive ZIP que XCTrack écrit quand la
-  configuration embarque des ressources).
+- **Ouvrir** un `.xcfg` ou un `.xczfg` (l'archive ZIP que XCTrack écrit quand on exporte
+  « avec les médias »). L'archive ne contient pas toujours de fichier annexe : le bandeau
+  dit ce que la vôtre contient, et combien elle en porte.
 - **Dessiner les pages** à la géométrie de l'instrument, sur huit gabarits d'écran
   (AIR³ 7.2, 7.3, 7.35, et cinq ratios courants), en paysage et en portrait.
 - **Signaler ce qui cloche** avant que vous ne le découvriez en vol. Sept règles, rangées

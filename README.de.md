@@ -80,8 +80,9 @@ Absicht — ein Treueversprechen, das nur der Autor nachprüfen kann, ist nichts
 
 ## Was das Werkzeug kann
 
-- **Öffnen** einer `.xcfg` oder `.xczfg` (das ZIP-Archiv, das XCTrack schreibt, wenn die
-  Konfiguration Betriebsmittel mitführt).
+- **Öffnen** einer `.xcfg` oder `.xczfg` (das ZIP-Archiv, das XCTrack schreibt, wenn man
+  „mit Medien“ exportiert). Das Archiv enthält nicht immer eine zusätzliche Datei: die
+  Leiste sagt, was Ihres enthält und wie viele es mitführt.
 - **Die Seiten zeichnen** in der Geometrie des Geräts, auf acht Bildschirmvorlagen
   (AIR³ 7.2, 7.3, 7.35 und fünf gängige Seitenverhältnisse), im Quer- und im Hochformat.
 - **Melden, was nicht stimmt**, bevor Sie es im Flug entdecken. Sieben Regeln, verteilt auf

@@ -81,7 +81,8 @@ de fidelidad que solo el autor puede comprobar no vale nada.
 ## Lo que la herramienta sabe hacer
 
 - **Abrir** un `.xcfg` o un `.xczfg` (el archivo comprimido ZIP que XCTrack escribe cuando
-  la configuración lleva recursos).
+  se exporta «con los medios»). El archivo comprimido no siempre lleva un archivo anexo: la
+  franja dice lo que contiene el suyo, y cuántos lleva.
 - **Dibujar las páginas** con la geometría del instrumento, sobre ocho plantillas de
   pantalla (AIR³ 7.2, 7.3, 7.35 y cinco proporciones corrientes), en horizontal y en
   vertical.
