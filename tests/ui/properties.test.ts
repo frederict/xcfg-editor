@@ -940,8 +940,17 @@ describe('ce que la consultation dit quand le fichier vient d’une autre versio
     expect(box.dataset.trust).toBe('indicative')
     const note = box.querySelector('.props__defaults-note')!.textContent!
     expect(note).toContain('0.9.12.3')
-    expect(note).toContain('91230')
     expect(note).toContain('indicative')
+    /*
+     * Le NOM de la version, pas son numéro interne. « la version 0.9.12.3 (versionCode
+     * 91230) » ouvrait une parenthèse au milieu de la phrase sur un nombre que XCTrack ne
+     * montre nulle part au pilote : c'est l'un des trois exemples qu'un pilote-testeur a
+     * cités le 2026-08-22 pour dire qu'il saute ces lignes. Le nom, lui, est celui qu'il
+     * lit sur son instrument. Le numéro reste dans « Version et compatibilité », l'écran
+     * dont c'est le sujet.
+     */
+    expect(note).not.toContain('91230')
+    expect(note).not.toContain('versionCode')
     // La comparaison n'est pas supprimée pour autant : elle reste faite, et dite.
     expect(box.dataset.comparable).not.toBe('0')
   })

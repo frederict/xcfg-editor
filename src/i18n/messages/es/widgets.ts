@@ -47,8 +47,8 @@ const widgets: DomainCatalog<'widgets'> = {
   /* ------------------------------------- de dónde viene el relevo, y cuánto vale */
 
   'properties.surveyReference':
-    'Valores de fábrica relevados en XCTrack {version} (versionCode {code})',
-  'properties.fileVersionNamed': 'la versión {name} (versionCode {code})',
+    'Valores de fábrica relevados en XCTrack {version}',
+  'properties.fileVersionNamed': 'la versión {name}',
   'properties.fileVersionCoded': 'la versión {code}',
 
   'properties.surveyExact': '{survey} — la versión misma de este archivo.',

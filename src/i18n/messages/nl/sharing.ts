@@ -227,7 +227,7 @@ const sharing: DomainCatalog<'sharing'> = {
   'warnings.assumedUnits': 'Hoogte: {altitude} · Snelheid: {speed} · Vario: {vario}',
   'warnings.assumedTitles': 'Titels: {percent} %, {font}',
   'warnings.assumedLanguageTitle': 'Taal van de opschriften onbepaald',
-  'warnings.assumedLanguageDetail': 'Dit bestand geeft geen weergavetaal aan (Display.Language leeg of sectie preferences afwezig): op het toestel volgt XCTrack dan de taal van het Android-systeem — nooit het Engels als terugval. Bij gebrek aan beter worden de opschriften hier getoond in {language} — de taal die u voor deze interface hebt gekozen, of anders die van uw browser.',
+  'warnings.assumedLanguageDetail': 'Dit bestand geeft geen weergavetaal aan: op het toestel volgt XCTrack dan de taal van het Android-systeem — nooit het Engels als terugval. Bij gebrek aan beter worden de opschriften hier getoond in {language} — de taal die u voor deze interface hebt gekozen, of anders die van uw browser. De regel die ze zou dragen, Display.Language, is leeg of afwezig in het bestand.',
 
   'warnings.personalLayoutTitle': 'Uw pagina’s dragen teksten van u',
   'warnings.personalTitle': 'Dit bestand noemt u bij naam',
@@ -256,13 +256,15 @@ const sharing: DomainCatalog<'sharing'> = {
   'warnings.externalDetail': 'Deze namen wijzen bestanden aan die op het oorspronkelijke ' +
     'toestel aanwezig zijn, niet in deze configuratie. Een configuratie die u van een ' +
     'andere piloot krijgt wijst bestanden aan die alleen hij heeft: XCTrack zal ze op uw ' +
-    'SD-kaart zoeken en ze niet vinden. Dit gereedschap somt ze op, het verbetert ze niet.',
-  'warnings.externalMapTheme': 'Kaartthema: {file} (Mapsforge.ThemeFile)',
-  'warnings.externalWaypoints': 'Waypoints: {file} (Navigation.WaypointFiles)',
-  'warnings.externalAirspace': 'Luchtruim: {file} (Airspace.Files)',
+    'SD-kaart zoeken en ze niet vinden. Dit gereedschap somt ze op, het verbetert ze niet. ' +
+    'De drie regels van het bestand die zulke namen kunnen dragen: Mapsforge.ThemeFile, ' +
+    'Navigation.WaypointFiles en Airspace.Files.',
+  'warnings.externalMapTheme': 'Kaartthema: {file}',
+  'warnings.externalWaypoints': 'Waypoints: {file}',
+  'warnings.externalAirspace': 'Luchtruim: {file}',
 
   'warnings.versionUnknownTitle': 'XCTrack-versie onbekend',
-  'warnings.versionUnknownDetail': 'Dit bestand zegt niet uit welke versie van XCTrack het komt (info.versionCode afwezig). Het verschil met de referentieversie van dit gereedschap ({reference}) kan dus niet worden gemeten; wat wordt weergegeven kan sindsdien van betekenis zijn veranderd.',
+  'warnings.versionUnknownDetail': 'Dit bestand zegt niet uit welke versie van XCTrack het komt. Het verschil met de referentieversie van dit gereedschap ({reference}) kan dus niet worden gemeten; wat wordt weergegeven kan sindsdien van betekenis zijn veranderd. De regel die het zou zeggen, info.versionCode, ontbreekt.',
   'warnings.versionOlderTitle': 'Bestand ouder dan het gereedschap',
   'warnings.versionNewerTitle': 'Bestand nieuwer dan het gereedschap',
   'warnings.versionGapDetail': 'Dit bestand komt uit versie {name}, terwijl deze editor zich op versie {reference} instelt om het te tekenen. Het formaat verandert bij elke versie: instellingen kunnen anders worden getekend dan ze op het toestel zullen zijn. Het bestand wordt daarom niet gewijzigd — het komt eruit zoals het erin ging, zonder één herschreven komma. Wat het bestand over zijn versie schrijft: versionCode {code}.',

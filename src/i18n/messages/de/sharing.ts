@@ -229,7 +229,7 @@ const sharing: DomainCatalog<'sharing'> = {
   'warnings.assumedUnits': 'Höhe: {altitude} · Geschwindigkeit: {speed} · Vario: {vario}',
   'warnings.assumedTitles': 'Titel: {percent} %, {font}',
   'warnings.assumedLanguageTitle': 'Sprache der Beschriftungen unbestimmt',
-  'warnings.assumedLanguageDetail': 'Diese Datei gibt keine Anzeigesprache an (Display.Language leer oder Abschnitt preferences fehlt): auf dem Gerät folgt XCTrack dann der Sprache des Android-Systems — niemals ersatzweise dem Englischen. In Ermangelung von Besserem werden die Beschriftungen hier in {language} angezeigt — der Sprache, die Sie für diese Oberfläche gewählt haben, sonst der Ihres Browsers.',
+  'warnings.assumedLanguageDetail': 'Diese Datei gibt keine Anzeigesprache an: auf dem Gerät folgt XCTrack dann der Sprache des Android-Systems — niemals ersatzweise dem Englischen. In Ermangelung von Besserem werden die Beschriftungen hier in {language} angezeigt — der Sprache, die Sie für diese Oberfläche gewählt haben, sonst der Ihres Browsers. Die Zeile, die sie tragen würde, Display.Language, ist leer oder fehlt in der Datei.',
 
   'warnings.personalLayoutTitle': 'Ihre Seiten enthalten Texte von Ihnen',
   'warnings.personalTitle': 'Diese Datei nennt Sie beim Namen',
@@ -259,13 +259,14 @@ const sharing: DomainCatalog<'sharing'> = {
     'Gerät vorhanden sind, nicht in dieser Konfiguration. Eine von einem anderen Piloten ' +
     'erhaltene Konfiguration verweist auf Dateien, die nur er besitzt: XCTrack wird sie auf ' +
     'Ihrer SD-Karte suchen und nicht finden. Dieses Werkzeug listet sie auf, es berichtigt ' +
-    'sie nicht.',
-  'warnings.externalMapTheme': 'Kartendesign: {file} (Mapsforge.ThemeFile)',
-  'warnings.externalWaypoints': 'Wegpunkte: {file} (Navigation.WaypointFiles)',
-  'warnings.externalAirspace': 'Luftraum: {file} (Airspace.Files)',
+    'sie nicht. Die drei Zeilen der Datei, die solche Namen tragen können: ' +
+    'Mapsforge.ThemeFile, Navigation.WaypointFiles und Airspace.Files.',
+  'warnings.externalMapTheme': 'Kartendesign: {file}',
+  'warnings.externalWaypoints': 'Wegpunkte: {file}',
+  'warnings.externalAirspace': 'Luftraum: {file}',
 
   'warnings.versionUnknownTitle': 'XCTrack-Version unbekannt',
-  'warnings.versionUnknownDetail': 'Diese Datei sagt nicht, aus welcher Version von XCTrack sie stammt (info.versionCode fehlt). Der Abstand zur Bezugsversion dieses Werkzeugs ({reference}) lässt sich also nicht messen; was angezeigt wird, kann seither seine Bedeutung geändert haben.',
+  'warnings.versionUnknownDetail': 'Diese Datei sagt nicht, aus welcher Version von XCTrack sie stammt. Der Abstand zur Bezugsversion dieses Werkzeugs ({reference}) lässt sich also nicht messen; was angezeigt wird, kann seither seine Bedeutung geändert haben. Die Zeile, die es sagen würde, info.versionCode, fehlt.',
   'warnings.versionOlderTitle': 'Datei älter als das Werkzeug',
   'warnings.versionNewerTitle': 'Datei neuer als das Werkzeug',
   'warnings.versionGapDetail': 'Diese Datei stammt aus Version {name}, während sich dieser Editor zum Zeichnen auf Version {reference} einstellt. Das Format ändert sich mit jeder Version: Einstellungen können anders gezeichnet werden, als sie es auf dem Gerät sein werden. Die Datei wird deswegen nicht verändert — sie kommt so heraus, wie sie hineingegangen ist, ohne ein einziges neu geschriebenes Komma. Was die Datei zu ihrer Version schreibt: versionCode {code}.',

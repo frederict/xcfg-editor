@@ -47,8 +47,8 @@ const widgets: DomainCatalog<'widgets'> = {
   /* ------------------------------------------ where the survey comes from, and its worth */
 
   'properties.surveyReference':
-    'Factory values surveyed on XCTrack {version} (versionCode {code})',
-  'properties.fileVersionNamed': 'version {name} (versionCode {code})',
+    'Factory values surveyed on XCTrack {version}',
+  'properties.fileVersionNamed': 'version {name}',
   'properties.fileVersionCoded': 'version {code}',
 
   'properties.surveyExact': '{survey} — the very version this file comes from.',

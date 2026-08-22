@@ -1211,24 +1211,26 @@ function buildDefaultsSummary(
 }
 
 /**
- * D'où vient le fichier ouvert, dit comme on peut le dire : par son nom quand il en donne
- * un, par son seul `versionCode` sinon. Les deux sont des **identifiants** — ils se passent
- * en `string`, jamais en `number`, sinon « 100 030 » ne se retrouverait dans aucun fichier.
+ * D'où vient le fichier ouvert, dit comme on peut le dire : par son **nom** — celui que le
+ * pilote lit sur son instrument —, et par son seul `versionCode` quand le fichier ne donne
+ * pas de nom. Le code reste alors un **identifiant** : il se passe en `string`, jamais en
+ * `number`, sinon « 100 030 » ne se retrouverait dans aucun fichier.
+ *
+ * ⚠️ Le code ne DOUBLE plus le nom. « la version 1.0.3-beta (versionCode 100030) » ouvrait
+ * une parenthèse au milieu de la phrase, sur un numéro que XCTrack ne montre nulle part au
+ * pilote ; un pilote-testeur a rangé cette ligne parmi celles qu'il saute, le 2026-08-22.
+ * Le numéro n'est pas perdu : « Version et compatibilité » est l'écran dont c'est le sujet.
  */
 function fileVersion(options: PropertiesPanelOptions, tr: Translator): string {
   const name = options.fileVersionName
-  const code = String(options.fileVersionCode)
   return name === undefined
-    ? tr.t('properties.fileVersionCoded', { code })
-    : tr.t('properties.fileVersionNamed', { name, code })
+    ? tr.t('properties.fileVersionCoded', { code: String(options.fileVersionCode) })
+    : tr.t('properties.fileVersionNamed', { name })
 }
 
-/** La référence du relevé : « Valeurs d'usine relevées sur XCTrack 1.0.3-beta (…) ». */
+/** La référence du relevé : « Valeurs d'usine relevées sur XCTrack 1.0.3-beta ». */
 function surveyReference(tr: Translator): string {
-  return tr.t('properties.surveyReference', {
-    version: DEFAULTS_VERSION_NAME,
-    code: String(DEFAULTS_VERSION_CODE)
-  })
+  return tr.t('properties.surveyReference', { version: DEFAULTS_VERSION_NAME })
 }
 
 /**

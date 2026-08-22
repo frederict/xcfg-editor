@@ -478,6 +478,47 @@ describe('les guillemets ne se coupent pas en fin de ligne', () => {
     }
   })
 
+  /**
+   * **Un nom de ligne du fichier ne s'ouvre pas entre parenthèses au milieu d'une phrase.**
+   *
+   * C'est la forme exacte sur laquelle un pilote-testeur a buté deux fois, le 2026-08-22 :
+   * « (Display.Language vide ou section preferences absente) », « (Mapsforge.ThemeFile) »,
+   * « (info.versionCode absent) », « (versionCode 100030) ». Chacune coupait la phrase
+   * juste après son sujet, sur un mot que XCTrack ne montre nulle part au pilote — et il
+   * abandonnait la ligne entière avant d'avoir lu ce qui le concernait.
+   *
+   * Le nom lui-même n'est pas interdit, et ce test ne le dit pas : c'est souvent le seul
+   * renseignement exact de la phrase, et le seul par lequel on va vérifier dans le
+   * fichier. Ce qui est interdit, c'est de le mettre en travers du chemin. Il se pose en
+   * fin de phrase — « Tel qu'il s'écrit dans le fichier : … » —, ou il est le sujet de sa
+   * propre proposition — « Le sens de info.proUpTo n'est pas établi ».
+   */
+  it('n’ouvre pas une parenthèse sur un nom de ligne du fichier', () => {
+    /** Les noms que les écrans citent aujourd'hui, dans les cinq langues. */
+    const fileNames = [
+      'Display.Language', 'Mapsforge.ThemeFile', 'Navigation.WaypointFiles',
+      'Airspace.Files', 'info.versionCode', 'info.proUpTo', 'versionCode', 'proUpTo',
+      'mapWidget_', 'nav_use_brackets', 'nav_label', 'newWindArrow', 'windStyle'
+    ]
+    // Les écrans concernés : les remarques sur le fichier, et le panneau d'un gadget.
+    const owned = ['warnings.', 'inspection.', 'ruleSummary.', 'properties.', 'model.']
+    let seen = 0
+    for (const language of UI_LANGUAGES) {
+      for (const [key, text] of valuesOf(language)) {
+        if (!owned.some((prefix) => key.startsWith(prefix))) continue
+        for (const name of fileNames) {
+          for (const opening of ['(', '( ']) {
+            expect(text, `${language} / ${key}`).not.toContain(opening + name)
+          }
+          if (text.includes(name)) seen += 1
+        }
+      }
+    }
+    // Le garde-fou du garde-fou : si plus aucun de ces noms n'est cité nulle part, ce
+    // test passerait au vert en ne vérifiant rien.
+    expect(seen).toBeGreaterThan(10)
+  })
+
   it('aucune langue ne colle une espace à l’intérieur de ses propres guillemets', () => {
     // „ … “ en allemand, “ … ” en anglais, ‘ … ’ en néerlandais : l'ouvrant colle au mot
     // qui suit, le fermant au mot qui précède.

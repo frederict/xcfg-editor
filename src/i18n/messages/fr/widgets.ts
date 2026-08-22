@@ -83,8 +83,8 @@ const widgets = {
 
   /** `{version}` et `{code}` sont des identifiants : ils se passent en `string`. */
   'properties.surveyReference':
-    'Valeurs d’usine relevées sur XCTrack {version} (versionCode {code})',
-  'properties.fileVersionNamed': 'la version {name} (versionCode {code})',
+    'Valeurs d’usine relevées sur XCTrack {version}',
+  'properties.fileVersionNamed': 'la version {name}',
   'properties.fileVersionCoded': 'la version {code}',
 
   'properties.surveyExact': '{survey} — la version même de ce fichier.',
