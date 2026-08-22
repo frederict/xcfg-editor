@@ -202,6 +202,30 @@ déjà remplacés.
    ne le rejuge pas. Un mot qui vous paraît faux se signale, il ne se corrige pas dans le
    même commit.
 
+## 7 bis. Deux pièges du travail à plusieurs
+
+### `git add` puis `git commit` n'est pas atomique
+
+Dans un dépôt où plusieurs agents écrivent, un `git add` suivi d'un `git commit` **happe
+tout ce qu'un autre a mis à l'index entre les deux**. C'est arrivé trois fois en une nuit :
+des fichiers d'autrui se sont retrouvés dans le commit d'un voisin, avec son message.
+
+La forme atomique contourne l'index :
+
+```sh
+git commit -- src/ui/monFichier.ts src/i18n/messages/fr/monDomaine.ts   # ✓
+git add … && git commit                                                 # ✗ course
+```
+
+Si l'accident se produit : `git reset --soft HEAD^`, puis `git restore --staged` sur ce qui
+n'est pas à vous, puis recommitez avec la forme atomique. Rien n'est perdu.
+
+### Un nom de repère est une valeur, et le test le lit
+
+`tests/i18n/catalog.test.ts` interdit certains mots dans **toute valeur française** — et le
+nom d'un repère en fait partie. Écrire `'{widget} est masqué'` échoue, parce que « widget »
+y figure. Nommez le repère autrement : `{name}`, `{instances}`. Deux lots ont buté dessus.
+
 ## 8. Avant de commiter
 
 ```sh
