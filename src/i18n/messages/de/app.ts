@@ -8,6 +8,9 @@ const app: DomainCatalog<'app'> = {
   'zoom.resetTo': 'Zoom {level}',
   'zoom.label': 'Zoom',
 
+  'pageKind.shortNameTitle':
+    'Der Name, den die Datei dieser Seitenart gibt. Er ändert sich nicht von einer Sprache zur anderen: er ist das, was Sie beim Öffnen der Datei lesen würden.',
+
   'pageKind.free': 'Leere Seite',
   'pageKind.freeNote': 'Auf dem Gerät leer angelegt, bereit für Ihre eigenen Widgets.',
   'pageKind.competition': 'Wettkampfseite',

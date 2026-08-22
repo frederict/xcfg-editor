@@ -52,6 +52,13 @@ const app = {
    *
    * Famille de valeurs fermée : son propre préfixe, comme `factoryValue` et `provenance`.
    */
+  /**
+   * Ce que dit la pastille du nom de classe — « WPEmpty », « WPCompetition » —, qui
+   * paraissait nue à côté d'un titre déjà traduit.
+   */
+  'pageKind.shortNameTitle':
+    'Le nom que le fichier donne à ce type de page. Il ne change pas d’une langue à l’autre : c’est ce que vous liriez en ouvrant le fichier.',
+
   'pageKind.free': 'Page libre',
   'pageKind.freeNote': 'Créée vide sur l’instrument, prête pour vos propres gadgets.',
   'pageKind.competition': 'Page de compétition',

@@ -624,6 +624,23 @@ function scaleRuler(widthMm: number, tr: Translator): HTMLElement {
  * unité absolue (96 points par pouce). L'affichage réel dépend de la densité de l'écran
  * de l'utilisateur, d'où le facteur de zoom — et la règle graduée pour le régler.
  */
+/**
+ * La pastille du nom de classe, et la bulle qui dit ce que c'est.
+ *
+ * Le nom reste : c'est le seul endroit de l'outil qui relie la page qu'on regarde à ce que
+ * le fichier écrit d'elle. Mais il paraissait **nu** — un pilote-testeur a lu « WPEmpty »
+ * le 2026-08-22 « sans aucune bulle, aucune explication », à côté d'un titre qui dit déjà
+ * « Page libre » et d'une fenêtre annexe qui dit « Vide » : « trois noms pour une chose,
+ * dont un qui ne sert à rien ». Il sert — encore faut-il dire à quoi.
+ *
+ * ⚠️ Le nom, lui, ne se traduit pas : c'est ce que le fichier porte, à l'octet près.
+ */
+function shortNameChip(kind: PageKind, tr: Translator): HTMLElement {
+  const chip = el('span', 'chip chip--quiet', kind.shortName)
+  chip.title = tr.t('pageKind.shortNameTitle')
+  return chip
+}
+
 export function buildDetail(options: DetailOptions): HTMLElement {
   const { page, index, pageCount, orientation, ctx, tr, zoom, editing, inspecting } = options
   const kind = pageKind(page.className, tr)
@@ -685,7 +702,7 @@ export function buildDetail(options: DetailOptions): HTMLElement {
     // titre qui dit déjà « Page libre » en français : un pilote-testeur l'a lu deux fois le
     // 2026-08-22, « c'est maintenant la 1re pastille de la page ». Un fait qu'on ne cherche
     // qu'en le cherchant se met au bout, à la même voix que le gabarit d'écran.
-    el('span', 'chip chip--quiet', kind.shortName)
+    shortNameChip(kind, tr)
   )
   root.append(facts)
   root.append(el('p', 'detail__note', kind.note))

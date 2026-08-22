@@ -231,6 +231,22 @@ describe('le nom de classe du fichier : une fois, là où il sert', () => {
     expect(last.className).toContain('chip--quiet')
     expect(chips[0]!.className).toContain('chip--count')
   })
+
+  /**
+   * Le même pilote-testeur, le 2026-08-22 : « aucune bulle, aucune explication », à côté
+   * d'un titre qui dit déjà « Page libre » et d'une fenêtre annexe qui dit « Vide » —
+   * « trois noms pour une chose, dont un qui ne sert à rien ». Il sert : il relie la page
+   * qu'on regarde à ce que le fichier écrit d'elle. Encore faut-il le dire.
+   */
+  it('dit ce qu’est ce nom, au lieu de le poser nu', () => {
+    const { root } = scene(undefined)
+    const chips = [...root.querySelectorAll<HTMLElement>('.detail__facts .chip')]
+    const last = chips[chips.length - 1]!
+
+    expect(last.title).toContain('Le nom que le fichier donne à ce type de page')
+    // Et il ne se traduit pas : la bulle le dit, le nom reste ce que le fichier porte.
+    expect(last.title).toContain('ne change pas d’une langue à l’autre')
+  })
 })
 
 describe('le bouton du zoom dit sa destination, pas son geste', () => {
