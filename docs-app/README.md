@@ -6,8 +6,9 @@ relecture possibles sans toucher à `src/`.
 
 | Fichier | Ce que c'est |
 |---|---|
-| `manuel.fr.html` | Le manuel, en français. Un **fragment** : ni `<html>`, ni `<head>`, ni `<body>`. |
-| `manuel.css` | Sa mise en page. Toutes les règles sont portées sous `.manual`, sans exception. |
+| `manuel.fr.html` | Le manuel, en français. Un **fragment** : ni `<html>`, ni `<head>`, ni `<body>`. C'est la **source de vérité** : les quatre autres en sont des traductions. |
+| `manuel.en.html`, `manuel.nl.html`, `manuel.de.html`, `manuel.es.html` | Le même manuel dans les quatre autres langues du socle `src/i18n/`. Même structure, mêmes ancres, mêmes classes. |
+| `manuel.css` | Sa mise en page, **partagée par les cinq**. Toutes les règles sont portées sous `.manual`, sans exception. |
 
 ## Pourquoi du HTML nu
 
@@ -52,17 +53,65 @@ raison :
 | `.manual__boxTitle` | Le titre d'un encadré. Volontairement pas un élément de titre : il ne doit pas entrer dans le sommaire. |
 | `.manual__steps` | Une suite de gestes numérotés, quand l'ordre compte. |
 
-## Traduire
+## Les cinq langues
 
-Recopier `manuel.fr.html` sous `manuel.<langue>.html` et traduire. Rien d'autre.
+Les cinq langues du socle `src/i18n/` sont `fr`, `en`, `nl`, `de`, `es`, et le manuel existe
+dans les cinq. Le texte est écrit pour cela : sections courtes, aucun jeu de mots, aucun
+renvoi implicite (les renvois nomment le chapitre par son numéro).
 
-Le texte est écrit pour cela : sections courtes, aucun jeu de mots, aucun renvoi implicite
-(les renvois nomment le chapitre par son numéro). Les cinq langues du socle `src/i18n/` sont
-`fr`, `en`, `nl`, `de`, `es`.
+### Ce qui doit être identique d'une langue à l'autre
 
-⚠ Ce qui est entre `<span class="manual__ui">` est **l'intitulé exact de l'écran**. Il ne se
-traduit qu'avec l'interface, et jamais avant elle : un manuel qui nomme un bouton autrement
-que l'écran est pire qu'un manuel absent.
+- **Les `id` d'ancre des treize chapitres** — `m-outil`, `m-ouvrir`, `m-voir`, `m-gabarit`,
+  `m-modifier`, `m-gadget`, `m-usine`, `m-generaux`, `m-version`, `m-enregistrer`,
+  `m-bibliotheque`, `m-mesure`, `m-avis`. Ce sont des **identifiants**, pas de la prose :
+  ils restent en français dans les cinq fichiers, et un lien profond marche partout. Le
+  sommaire y pointe par `href="#m-…"`.
+- **Le nombre et l'ordre des `<h2>`** : celui du sommaire, puis les treize chapitres.
+- **Les classes**, sans exception ni ajout.
+- **L'encadré des données personnelles avant le sommaire.** Il ne descend jamais.
+
+`tests/docs/manuels.test.ts` vérifie ces quatre points à chaque exécution de la suite, plus
+la présence de l'adresse des issues GitHub dans le chapitre 13 de chaque langue.
+
+### ⚠ Les intitulés d'écran ne se traduisent pas : ils se recopient
+
+Ce qui est entre `<span class="manual__ui">` est **l'intitulé exact de l'écran**. Il se
+recopie **caractère pour caractère** du catalogue `src/i18n/messages/<langue>/`, il ne se
+retraduit jamais à la main : un manuel qui nomme un bouton autrement que l'écran est pire
+qu'un manuel absent.
+
+Deux pièges relevés en versant les quatre traductions :
+
+1. **Un même libellé français peut être deux libellés ailleurs.** « Définir cette valeur »
+   est `properties.setValue` dans le panneau d'un gadget et `preferences.adoptLabel` dans
+   les réglages généraux : identiques en français, distincts dans les quatre autres langues
+   (*Set this value* / *Write this value*). Le chapitre 7 doit donc **nommer les deux**
+   hors du français.
+2. **Un libellé peut ne pas dire la même chose.** « Rang 4 sur 6 » (`editor.rank`) devient
+   *Layer 4 of 6*, « ← Vue d'ensemble » (`view.backToOverview`) devient *← All pages*.
+   Traduire le français aurait donné un mot que le pilote ne trouve nulle part.
+
+Les intitulés qui viennent de **XCTrack** et non de cet éditeur — « Exporter la
+configuration », « Remplacer tout », les types de page — ne sont dans aucun catalogue. Ils
+suivent l'axe `labels` (la langue du fichier), pas l'axe de notre prose : les écrire, c'est
+faire un pari, et le pari se dit dans le message de commit plutôt que de passer pour une
+mesure.
+
+## Comment l'application sert la bonne langue
+
+Le fragment est importé en `?raw` et le module `src/ui/manualDialog.ts` n'est atteint que
+par `import()` : ses 16 ko compressés ne pèsent rien sur le premier écran.
+
+**Cinq langues ne font pas 80 ko.** Les cinq fragments ne doivent jamais être importés
+ensemble : ce serait faire payer 64 ko de manuels illisibles à un pilote qui charge la page
+en 3G au décollage. Chacun part dans **son propre morceau**, et seul celui de la langue
+affichée est téléchargé — un `import.meta.glob` **paresseux** (sans `eager`) sur
+`./manuel.*.html` rend un objet de chargeurs, un par fichier, que Vite émet en morceaux
+séparés. Le poids sur le premier écran reste **zéro**, et le poids à l'ouverture du manuel
+reste **un seul** fragment.
+
+Le repli est le français, comme partout dans `src/i18n/` : c'est la langue d'écriture, pas
+une traduction. Un repli anglais serait un repli sur une traduction.
 
 ## Le vocabulaire, arrêté
 
@@ -86,9 +135,12 @@ est-il encore vrai ? »**.
 
 Trois pièges relevés en écrivant la première version :
 
-1. **Ne décrire que ce qui est branché.** `src/model/inspection.ts` (les sept contrôles avant
-   vol) est écrit et testé, mais **aucun écran ne l'appelle** : le manuel n'en parle donc pas.
-   Vérifier `grep -rn "model/inspection" src/` avant d'ajouter un paragraphe dessus.
+1. **Ne décrire que ce qui est branché.** Le manuel ne parle que de ce qu'un écran appelle
+   vraiment. Vérifier avant d'ajouter un paragraphe : `grep -rn "model/inspection" src/ui/`.
+   *(Mis à jour le 22 août 2026 : `src/model/inspection.ts` n'était appelé par aucun écran
+   quand cette règle a été écrite, et le manuel se taisait donc sur les sept contrôles avant
+   vol. `src/ui/main.ts` appelle désormais `preflightWarnings`, et le chapitre 3 les décrit.
+   La règle reste bonne ; c'était son exemple qui avait vieilli.)*
 2. **Ne pas recopier un chiffre calculé à l'exécution.** Le nombre de versions relevées, le
    nombre de réglages d'un fichier, le nombre de gadgets d'une page sont affichés par l'écran
    lui-même : les figer ici les périme au premier relevé ajouté.

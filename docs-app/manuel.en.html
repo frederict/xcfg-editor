@@ -1,0 +1,1070 @@
+<!--
+  The user manual, in English.
+
+  This file is a FRAGMENT: no <html>, no <head>, no <body>. It is dropped into the body of
+  a modal dialog that already carries the top-level title, so the manual starts at <h2>.
+
+  The source of truth is `manuel.fr.html`: same structure, same anchor ids, same classes.
+
+  Anything inside <span class="manual__ui"> is the EXACT label of the screen. It is copied
+  character for character from the catalogue in `src/i18n/messages/en/`, never retranslated
+  by hand: a manual that names a button differently from the screen is worse than no manual.
+-->
+
+<div class="manual">
+
+  <div class="manual__warning">
+    <span class="manual__boxTitle">Read this before giving your file to anyone</span>
+    <p>An XCTrack backup carries your name, your glider, your paired sensors, your waypoint
+    files — down to the name of the competition you are flying. Never send it as it is:
+    not to another pilot, not to a forum, not with a bug report. When you save, two of the
+    three outcomes produce a shareable file:
+    <span class="manual__ui">All your settings, minus what identifies you</span> keeps your
+    settings and replaces what names you,
+    <span class="manual__ui">Shareable version, no personal data</span> carries nothing but
+    your pages. In both cases, read through the list of replacements the tool shows you
+    before you download. Chapter&nbsp;10 explains all of this in detail.</p>
+  </div>
+
+  <nav class="manual__toc">
+    <h2>What this manual contains</h2>
+    <ol>
+      <li><a href="#m-outil">What this tool does, and what it does not do</a></li>
+      <li><a href="#m-ouvrir">Getting the file off the instrument and opening it here</a></li>
+      <li><a href="#m-voir">Looking at your pages without changing anything</a></li>
+      <li><a href="#m-gabarit">The screen template and the zoom</a></li>
+      <li><a href="#m-modifier">Changing your pages</a></li>
+      <li><a href="#m-gadget">The settings of a widget</a></li>
+      <li><a href="#m-usine">The three gestures around a factory value</a></li>
+      <li><a href="#m-generaux">XCTrack’s general settings</a></li>
+      <li><a href="#m-version">The release you are targeting, compatibility and the cleanup</a></li>
+      <li><a href="#m-enregistrer">Saving, and choosing what you hand over</a></li>
+      <li><a href="#m-bibliotheque">The configuration library</a></li>
+      <li><a href="#m-mesure">What is measured, and what is not</a></li>
+      <li><a href="#m-avis">Giving feedback, reporting what is wrong</a></li>
+    </ol>
+  </nav>
+
+  <!-- ==================================================================== 1 -->
+
+  <h2 id="m-outil"><span class="manual__rank">1.</span>What this tool does, and what it does not do</h2>
+
+  <p>Here you open a file exported by your instrument. Your pages appear exactly as the
+  device draws them, at their real size. You change them, and you get back a fresh file to
+  put on the instrument.</p>
+
+  <h3>Three things worth knowing straight away</h3>
+
+  <p><strong>This tool does not talk to your instrument.</strong> There is no cable, no
+  Bluetooth, no synchronisation. It produces a file that you transfer yourself, by SD card
+  or by cable. Until you have made that transfer, your device knows nothing of what you
+  changed here.</p>
+
+  <p><strong>Nothing is simulated.</strong> The values you see in the widgets — an
+  altitude, a speed, a sink rate — are fixed examples, written once and for all. They are
+  there to judge the size and the placement of a widget, never to predict what it will
+  show in flight.</p>
+
+  <p><strong>Your file does not leave your machine.</strong> Everything happens in your
+  browser: there is no server, no account, nothing sent. The page is made of static files,
+  it has no one to talk to.</p>
+
+  <h3>What does not move in your file</h3>
+
+  <p>A file opened and then saved again without having been changed comes back out
+  <strong>identical, byte for byte</strong>. And when you do change something, only what
+  you changed changes: moving a widget rewrites its four coordinates and nothing else, the
+  rest of the file comes out untouched.</p>
+
+  <p>This is what matters most, and here is why. XCTrack’s format is undocumented and
+  gains settings with every release. An editor that rebuilt the file from what it managed
+  to read would lose the rest without a word. This one carries through, exactly as it is,
+  <strong>everything it does not understand</strong>: your particular settings survive,
+  including the ones this editor shows nowhere.</p>
+
+  <h3>What it will never do for you</h3>
+
+  <ul>
+    <li>It does not rearrange your pages and does not suggest a better layout.</li>
+    <li>It flags what looks doubtful to it, but corrects nothing on its own.</li>
+    <li>The only time it offers to take something out of your file is the cleanup in
+    chapter&nbsp;9 — and you have to see the list and click.</li>
+  </ul>
+
+  <!-- ==================================================================== 2 -->
+
+  <h2 id="m-ouvrir"><span class="manual__rank">2.</span>Getting the file off the instrument and opening it here</h2>
+
+  <h3>On the instrument</h3>
+
+  <p>Go into XCTrack’s settings, then
+  <span class="manual__ui">Export configuration</span>. The file lands on the SD card. Get
+  it onto your computer or your phone.</p>
+
+  <h3>Two formats, two contents</h3>
+
+  <p>XCTrack can write two sorts of export, and the difference matters:</p>
+
+  <ul>
+    <li>a <strong>“backup”</strong> export carries your whole configuration: the pages
+    <em>and</em> the device settings (vario, units, sensors, airspaces, your name, your
+    glider…);</li>
+    <li>a <strong>“pages”</strong> export carries nothing but the widget pages. Imported
+    back, it replaces the screens and touches nothing else.</li>
+  </ul>
+
+  <p>The file extension says something else: <span class="manual__file">.xcfg</span> is
+  the file on its own, <span class="manual__file">.xczfg</span> is an archive that carries
+  extra files with it. Both open here.</p>
+
+  <div class="manual__warning">
+    <span class="manual__boxTitle">A “pages” export is not anonymous</span>
+    <p>You often read that a “pages” export contains nothing personal. That is wrong. The
+    title you wrote on a widget, the contents of a free-text widget, the name and the
+    phone number stored in a call button all travel <em>with the pages</em>. The “pages”
+    format is a coarse sort, it is not a cleanup.</p>
+  </div>
+
+  <h3>Opening the file here</h3>
+
+  <ol class="manual__steps">
+    <li>Drop the file anywhere on the page — a frame appears saying
+    <span class="manual__ui">Drop the file to open it</span>;</li>
+    <li>or click the drop area on the welcome screen;</li>
+    <li>or, if a file is already open, take the
+    <span class="manual__ui">File</span> menu at the top right, then
+    <span class="manual__ui">Open a file…</span>.</li>
+  </ol>
+
+  <p>A file always opens <strong>in view-only mode</strong>: you look at it before you
+  change it.</p>
+
+  <h3>Opening a file when the previous one has been changed</h3>
+
+  <p>Only one file is open at a time: opening another closes this one. As long as you have
+  changed nothing, that happens without a word — there is nothing to lose.</p>
+
+  <p>As soon as you have changed something, the tool <strong>stops and asks you</strong>,
+  under the title <span class="manual__ui">Your changes are not saved</span>. The box
+  reminds you of the names of both files and <strong>names your most recent
+  change</strong>, using the very label of the undo step — for example “Set Volume —
+  Vario”. Two outcomes:</p>
+
+  <ul>
+    <li><span class="manual__ui">Keep my changes</span> — this is the default choice, the
+    one the Enter key takes and the one the Escape key takes. Nothing has been touched:
+    you get back your page, the widget you had selected and your undo history, all
+    intact.</li>
+    <li><span class="manual__ui">Open “…” and lose them</span> — the other file takes the
+    place, and what you had changed is recoverable nowhere.</li>
+  </ul>
+
+  <p class="manual__note">To lose nothing: keep your changes, then
+  <span class="manual__ui">Save the changes</span> at the top of the page, or store the
+  configuration in the library (chapter 11). Loading an entry from the library asks the
+  same question, with the extra outcome
+  <span class="manual__ui">Store first, then load</span>.</p>
+
+  <h3>If the file refuses to open</h3>
+
+  <p>Two distinct screens can appear.
+  <span class="manual__ui">This file could not be opened</span> means the tool could make
+  nothing of it: check that it really is an XCTrack export.
+  <span class="manual__ui">This file could not be read</span> means it was recognised but
+  is damaged or incomplete. In both cases your file has not been changed, and
+  <span class="manual__ui">Save a copy</span> gives it back to you exactly as it went in.
+  The <span class="manual__ui">Technical detail</span> panel contains the text to copy
+  into a bug report.</p>
+
+  <p><strong>An unreadable file never replaces work in progress.</strong> If you drop a
+  damaged file while the open file carries unsaved changes, the tool does not open it at
+  all: it tells you so in a box —
+  <span class="manual__ui">This file could not be read</span>, with its
+  <span class="manual__ui">Technical detail</span> — and your file stays open exactly as
+  it was. No confirmation is asked of you in that case, since there is nothing to
+  decide.</p>
+
+  <!-- ==================================================================== 3 -->
+
+  <h2 id="m-voir"><span class="manual__rank">3.</span>Looking at your pages without changing anything</h2>
+
+  <p>As long as you have not pressed
+  <span class="manual__ui">Edit the pages</span>, nothing you do writes anything at all.
+  You can open everything, read everything, browse everything.</p>
+
+  <h3>The overview</h3>
+
+  <p>It shows <strong>all</strong> your pages, in two sections:
+  <span class="manual__ui">Landscape</span> then <span class="manual__ui">Portrait</span>.
+  A file always describes both; your instrument switches from one to the other.</p>
+
+  <p>Pages are numbered from 1. A page has no name: <strong>its position is its only
+  identity</strong>, and it is what decides what appears when you press “next page” in
+  flight.</p>
+
+  <p>What decides when your instrument shows a page is not its <em>type</em>, but the
+  <strong>navigations it is enabled for</strong> — the five icons in XCTrack’s “Enable /
+  Disable” box. The <span class="manual__ui">Manage the pages</span> window says so page
+  by page: <span class="manual__ui">Shown for every navigation</span>,
+  <span class="manual__ui">Shown for no navigation</span>, or the list of the ones that
+  bring it up. A page enabled for no navigation is skipped when you scroll — observed on
+  an AIR³ — and the pre-flight check flags it for you.</p>
+
+  <p>An earlier version of this tool marked certain pages “hidden outside flight”
+  according to their type, and counted how many your device would show on the ground.
+  <strong>That was wrong</strong>: a trial on the instrument showed that the thermal
+  assistant page does come back into the scroll on the ground. The mark and the count have
+  been removed.</p>
+
+  <h3>The information bar</h3>
+
+  <p>Above the pages, a few facts read from the file:
+  <span class="manual__ui">Format</span> (file or archive),
+  <span class="manual__ui">Device named by the file</span> (or
+  <span class="manual__ui">not declared</span>),
+  <span class="manual__ui">XCTrack labels</span> (the language the widget names are shown
+  in, and where it comes from). If the file carries no preferences, a
+  <span class="manual__ui">Drawing settings</span> line says so: the theme and the units
+  used to draw are then factory values, not yours.</p>
+
+  <h3>What the tool flags when it opens a file</h3>
+
+  <p>Two blocks can appear, and they do not carry the same weight.</p>
+
+  <p><span class="manual__ui">Worth checking in this file</span> stays unfolded: it
+  describes a fault. For instance a widget of zero width or height, a widget entirely
+  hidden under another one that will therefore never show anything, or a part of the file
+  the tool did not recognise.</p>
+
+  <p>The folded line below it gathers what merely <em>informs</em> without asking for
+  anything: the export type, the language of the labels, the external files your
+  configuration points to (map theme, waypoints, airspaces — they are on the original
+  device, not in the file), the gap between the release that wrote the file and the one
+  this editor is set to, or a display theme the editor cannot draw. Click the line to
+  unfold it.</p>
+
+  <div class="manual__note">
+    <span class="manual__boxTitle">Overlaps are not flagged</span>
+    <p>Two widgets covering each other is common and often deliberate — it is even a
+    competition technique. Flagging them would be noise, and a noisy warning teaches you
+    to ignore the others. Only a widget covered <em>entirely</em> is flagged.</p>
+  </div>
+
+  <h3>The pre-flight check</h3>
+
+  <p>Alongside the findings that speak about the <em>file</em>, the same two blocks carry
+  seven checks that speak about your <em>pages in flight</em>:</p>
+
+  <ul>
+    <li>a widget entirely covered by the ones drawn after it, which a press therefore
+    cannot reach — even though it is still visible;</li>
+    <li>a page that will never be shown, because no navigation type is ticked for it;</li>
+    <li>several thermal assistant pages in the same orientation: the instrument aims at
+    only one of them when it switches to spiralling on its own, and which one remains a
+    guess of this tool;</li>
+    <li>a widget perhaps too small to be read at arm’s length;</li>
+    <li>a Pro widget in a file that declares no licence;</li>
+    <li>two road maps on the same page, which XCTrack announces as impossible;</li>
+    <li>a setting written by an earlier release of XCTrack.</li>
+  </ul>
+
+  <p>They are worked out on what you have in front of you: changing the
+  <span class="manual__ui">Screen template</span> recomputes the millimetres, and moving a
+  widget recomputes the covering.</p>
+
+  <div class="manual__note">
+    <span class="manual__boxTitle">“To be confirmed on the instrument” means what it
+    says</span>
+    <p>Four of these seven checks rest on a guess that nobody has yet verified on an AIR³:
+    their title then carries the words
+    <span class="manual__ui">to be confirmed on the instrument</span>, and their
+    explanation says what would settle the question. They never rise into the unfolded
+    block — a guess has no business being displayed in the same tone as a
+    measurement.</p>
+  </div>
+
+  <p>What the tool can already say some other way is not said twice: an action button
+  deliberately slipped under a map is announced once, as an arrangement that works, and
+  not a second time as a fault.</p>
+
+  <h3>Opening a page and reading a widget</h3>
+
+  <p>Click a thumbnail. The page appears on its own, at its real size.
+  <span class="manual__ui">Previous page</span> and
+  <span class="manual__ui">Next page</span> take you from one to the next — the left and
+  right arrow keys do the same. <span class="manual__ui">← All pages</span> and the
+  <em>Escape</em> key take you back.</p>
+
+  <p>Hover over a widget: its name and its dimensions in millimetres appear under the
+  page. Click it: the bottom bar shows
+  <span class="manual__ui">Widgets on the page</span> and all its settings,
+  <strong>read-only</strong>. Nothing there can be changed: this is view-only mode.
+  <em>Escape</em> deselects.</p>
+
+  <p>The <span class="manual__ui">Widgets on the page</span> list is ordered from the back
+  to the front. It doubles as a way in: a widget marked
+  <span class="manual__ui">unreachable here</span> is entirely covered by another one, no
+  click on the page reaches it, and this list is the only path to it. On the instrument it
+  stays where it is — a button covered this way still answers to your finger.</p>
+
+  <!-- ==================================================================== 4 -->
+
+  <h2 id="m-gabarit"><span class="manual__rank">4.</span>The screen template and the zoom</h2>
+
+  <h3>Choosing the template</h3>
+
+  <p>The <span class="manual__ui">Screen template</span> menu, under the top bar, decides
+  the geometry and the size in millimetres. It offers the three known AIR³ models, five
+  common screen ratios, a <span class="manual__ui">Responsive</span> mode where you give a
+  width and a height in pixels yourself, and
+  <span class="manual__ui">Add a device…</span> to record yours once and for all.</p>
+
+  <p>On opening, the tool keeps the template the file declares. If it recognises nothing,
+  it takes the AIR³&nbsp;7.2 and says so in the information bar.</p>
+
+  <div class="manual__note">
+    <p>This choice is a display setting: <strong>it is never written into your
+    file</strong>. Changing it changes nothing. All that counts is the screen ratio, which
+    decides the geometry, and the diagonal in inches, which decides the size in
+    millimetres — the pixels have no effect at all, since widget positions are expressed
+    as fractions of the screen.</p>
+  </div>
+
+  <h3>Setting the zoom once and for all</h3>
+
+  <p>The page is drawn at its real physical size. But your screen does not necessarily
+  have the density the browser assumes. The <span class="manual__ui">Zoom</span> slider
+  corrects that, and <span class="manual__ui">Zoom 100%</span> puts it back to its
+  starting value.</p>
+
+  <ol class="manual__steps">
+    <li>Hold a real ruler against your screen, next to the graduated ruler shown above the
+    page.</li>
+    <li>Drag the zoom slider until the two coincide.</li>
+    <li>That is it: the millimetres announced for each widget are now the real ones.</li>
+  </ol>
+
+  <p>It is that one setting that makes the question “will this text be readable at arm’s
+  length, with gloves on?” useful. It is answered in millimetres, not in pixels.</p>
+
+  <!-- ==================================================================== 5 -->
+
+  <h2 id="m-modifier"><span class="manual__rank">5.</span>Changing your pages</h2>
+
+  <p>Press <span class="manual__ui">Edit the pages</span>, at the top right. The word
+  <span class="manual__ui">editing</span> appears next to the name of the application, and
+  an editing bar is added under the page. To come back out, press
+  <span class="manual__ui">View only</span>: nothing is undone.</p>
+
+  <p>Nothing goes to your disk until you have pressed
+  <span class="manual__ui">Save the changes</span> — see chapter&nbsp;10.</p>
+
+  <h3>Moving and resizing</h3>
+
+  <p>Click a widget: it is selected, and the move starts straight away. That is more
+  direct than on the device, which asks you to aim at a small target.</p>
+
+  <p>On the selected widget, <strong>nine handles</strong> appear: four corner brackets,
+  four segments in the middle of the sides, and a dotted ellipse in the centre. The
+  brackets and the segments resize; the ellipse moves. The central ellipse is also the
+  only handle of a widget that others cover.</p>
+
+  <p>During the gesture you see two rectangles: the one your finger or your mouse is
+  drawing, and the one where the widget will actually land. The gap between the two is the
+  snap to the device’s grid — the number of cells is written in the editing bar, for
+  example <span class="manual__ui">Grid 48 × 29</span>. A widget pushed against an edge
+  sticks to the edge. A gesture that goes too far is brought back into the page: it never
+  fails.</p>
+
+  <p>While you resize, the size is shown in millimetres. The
+  <span class="manual__ui">Widgets on the page</span> list follows the gesture: as soon as
+  it is finished, it carries the new size and the locator thumbnail shows the new
+  rectangle. The <span class="manual__ui">unreachable here</span> marks follow too —
+  spreading a widget out can wall another one in, shrinking it can free one.</p>
+
+  <h3>The bar of the selected widget</h3>
+
+  <p>It sits above the widget, or below it if there is no room, and never hides it. It
+  carries its stacking position — for example
+  <span class="manual__ui">Layer 4 of 6</span> — four stacking buttons (send to back, send
+  backward, bring forward, bring to front), then
+  <span class="manual__ui">Duplicate</span> and
+  <span class="manual__ui">Delete</span>.</p>
+
+  <p>The copy of a widget lands just in front of the original, offset by one cell. Deleting
+  asks for no confirmation: <span class="manual__ui">Undo</span> undoes it entirely.</p>
+
+  <h3>Adding a widget</h3>
+
+  <p>The <span class="manual__ui">Add a widget</span> button opens the complete list,
+  grouped by family, in the order of XCTrack’s own screen. Each line shows a preview, the
+  official name of the widget and the name it carries in the file. The
+  <span class="manual__ui">Search for a widget</span> field filters on both.</p>
+
+  <p>One click drops the widget in the middle of the page. The border of the preview says
+  what is going to happen:</p>
+
+  <ul>
+    <li><strong>solid border</strong> — this type already exists in your file: the widget
+    will be <em>copied</em> from that example, with all its settings, including the ones
+    this editor cannot present;</li>
+    <li><strong>dotted border</strong> — this type is new to your file: the widget will be
+    created with its basic settings only, XCTrack adding the others when it reads the
+    file.</li>
+  </ul>
+
+  <p>The <span class="manual__ui">Already in the file</span> tickbox keeps only the types
+  of the first case. Some lines carry a <span class="manual__ui">Pro</span> badge: XCTrack
+  reserves those widgets for the Pro licence.</p>
+
+  <p>Two preview notes do not mean the same thing.
+  <span class="manual__ui">nothing at rest</span> is a fact about the device: this widget
+  paints nothing until data has arrived, and yet it takes up its space.
+  <span class="manual__ui">preview not drawn</span> is a limit of this editor: it has no
+  dedicated drawing for that type, and prefers to show an honest frame rather than a
+  misleading approximation.</p>
+
+  <h3>Managing the pages</h3>
+
+  <p>The <span class="manual__ui">Manage the pages</span> button opens the two carousels,
+  landscape and portrait. You can:</p>
+
+  <ul>
+    <li><strong>insert</strong> a page: the <span class="manual__ui">+</span> button
+    between two thumbnails unfolds a panel where you choose the type — thermal assistant,
+    XC assistant, competition, or blank;</li>
+    <li><strong>duplicate</strong> a page: the copy lands just after it;</li>
+    <li><strong>delete</strong> a page: the first click shows the consequences and changes
+    the button into <span class="manual__ui">Confirm deletion</span>, the second one
+    deletes;</li>
+    <li><strong>reorder</strong>: drag one thumbnail onto another, or use the two
+    arrows.</li>
+  </ul>
+
+  <p>Before each gesture, the tool says what is going to shift: “Pages 3 to 5 become 4 to
+  6”. It also warns you if you are about to create a second thermal assistant page — this
+  tool assumes that XCTrack only switches automatically to the last one, without having
+  checked it — or to leave nothing but pages enabled for no navigation, in which case your
+  instrument would have no page left to show in that orientation.</p>
+
+  <p><strong>The type of a page cannot be changed here.</strong> XCTrack fixes it when the
+  page is created, and the effect of changing it afterwards has not been checked on the
+  device: we would rather not offer it than offer it without knowing.</p>
+
+  <h3>Undo and redo</h3>
+
+  <p>The two boxed arrows, at the top right, undo and redo. Hover over them: they say what
+  they are going to do — “Undo: Move GPS altitude”. From the keyboard, <em>Ctrl+Z</em>
+  undoes and <em>Ctrl+Shift+Z</em> redoes (<em>Cmd</em> on a Mac).</p>
+
+  <p>Everything is covered: gestures on widgets, additions, deletions, stacking, and all
+  page operations. <strong>The last hundred steps</strong> are kept; beyond that, the
+  oldest are forgotten. A gesture with no effect produces no step.</p>
+
+  <p>One exception: the library is not covered. Deleting a stored configuration cannot be
+  undone.</p>
+
+  <h3>The keyboard gestures</h3>
+
+  <ul>
+    <li><strong>Arrows</strong> — move by one cell</li>
+    <li><strong>Shift + arrows</strong> — resize by one cell</li>
+    <li><strong>Ctrl + up / down arrow</strong> — bring forward or send backward one
+    layer</li>
+    <li><strong>Ctrl + Shift + up / down arrow</strong> — bring to front, send to back</li>
+    <li><strong>Ctrl + D</strong> — duplicate</li>
+    <li><strong>Delete</strong> — remove</li>
+    <li><strong>Escape</strong> — abandon the gesture under way, otherwise deselect</li>
+  </ul>
+
+  <!-- ==================================================================== 6 -->
+
+  <h2 id="m-gadget"><span class="manual__rank">6.</span>The settings of a widget</h2>
+
+  <p>Choose a widget, on the page or in the list: its settings appear in the bottom bar,
+  <strong>in the order the file carries them</strong>. The handle at the top of the bar
+  changes its height; the fold button closes it.</p>
+
+  <p><strong>The fold holds.</strong> The bar arrives folded and unfolds on its own at your
+  first selection, because it then has something to show. But as soon as you touch the
+  <span class="manual__ui">Fold away</span> button, you are the one deciding: no selection
+  will reopen it, and it leaves you the whole page for as long as you want. Folded, its
+  header bar still names the widget you chose, and its button says what unfolding would
+  give you — <span class="manual__ui">Unfold the settings</span>, or
+  <span class="manual__ui">Widget list</span> if nothing is selected.</p>
+
+  <p>Beyond a dozen settings, a <span class="manual__ui">Filter the settings</span> field
+  appears. It searches in the label <em>and</em> in the name the setting carries in the
+  file. The <span class="manual__ui">?</span> button next to a setting unfolds the
+  explanation XCTrack gives of it.</p>
+
+  <h3>In view-only mode: what has been set</h3>
+
+  <p>Outside editing mode, a bar announces how many settings differ from what XCTrack puts
+  on a fresh widget, and the <span class="manual__ui">Only what differs</span> button keeps
+  only those. Each line carries its mark: <span class="manual__ui">set by you</span>,
+  <span class="manual__ui">factory value</span>, or
+  <span class="manual__ui">factory value unknown</span> when our survey says nothing about
+  that setting.</p>
+
+  <h3>The settings the widget does not write</h3>
+
+  <p>At the end of the panel, a block gathers the settings that are <em>not</em> in your
+  file for this widget. XCTrack applies to them the value from its own code — the one
+  written next to them. That is not the same thing as a setting written at that value: see
+  the next chapter.</p>
+
+  <!-- ==================================================================== 7 -->
+
+  <h2 id="m-usine"><span class="manual__rank">7.</span>The three gestures around a factory value</h2>
+
+  <p>The factory value is what XCTrack applies when nothing is written in the file. Three
+  gestures revolve around it. <strong>They are not equivalent</strong>, and this is the
+  most important thing in this manual after personal data.</p>
+
+  <h3>“Set this value” and “Write this value” — writing an absent factory value</h3>
+
+  <p>The setting is not in the file. This button writes it in, at its factory value. It is
+  offered on both screens, but under two different names: it is
+  <span class="manual__ui">Set this value</span> in the panel of a widget, and
+  <span class="manual__ui">Write this value</span> in the general settings.</p>
+
+  <p>On a widget, it changes nothing about what your device does today: it was already
+  applying that value. What it changes is for later — the value is now
+  <strong>pinned</strong>, and an XCTrack update that changed that factory value will no
+  longer change your setting.</p>
+
+  <h3>“Remove” — silencing the file on a setting</h3>
+
+  <p>This button exists only in the general settings, and only when the value written in
+  the file <strong>already</strong> equals the factory value. It then removes the line: the
+  file says nothing more about that setting.</p>
+
+  <p>It never appears on a value you chose. Silencing the file on a deliberate setting
+  would deprive you of that setting, and a discreet button must not do that in one
+  click.</p>
+
+  <div class="manual__measured">
+    <span class="manual__boxTitle">“Remove” is not a return to the factory value</span>
+    <p>Removing a general setting from the file does not put your device back to the
+    factory value. It will keep the one it already has. See the box in
+    chapter&nbsp;8.</p>
+  </div>
+
+  <h3>“Restore the factory value” — the only one that erases a choice</h3>
+
+  <p>This gesture replaces a value <em>you chose</em> with the one a fresh XCTrack applies.
+  It is the only one of the three that erases a deliberate setting: the other two only
+  touch values that already equalled the factory one, or that were not written at all.</p>
+
+  <p>So it does not hide. It takes its own line under the setting, and shows both values
+  side by side <em>before</em> the click: “this factory value, this value in this file.
+  Restoring changes what the device does in flight.” If the factory value was surveyed on
+  an XCTrack release other than that of your file, the sentence says so too.</p>
+
+  <p>It <strong>writes</strong> the factory value rather than erasing the line. The setting
+  then moves to the “factory value” state, from where
+  <span class="manual__ui">Remove</span> becomes available. If you want to go all the way,
+  that is a second deliberate click, and you see the two effects separately.</p>
+
+  <h3>When no button is offered</h3>
+
+  <p>It happens that none of the three is offered, and that is deliberate. Writing a
+  guessed value would be worse than offering nothing. The cases:</p>
+
+  <ul>
+    <li>the factory value has not been surveyed;</li>
+    <li>XCTrack works it out at start-up from the language and the country of the device —
+    that is the case for the units;</li>
+    <li>XCTrack publishes two that contradict each other: its code and its settings screen
+    do not say the same thing. The tool then shows both and does not choose;</li>
+    <li>the surveyed factory value is a compound value, and this editor only writes simple
+    values.</li>
+  </ul>
+
+  <!-- ==================================================================== 8 -->
+
+  <h2 id="m-generaux"><span class="manual__rank">8.</span>XCTrack’s general settings</h2>
+
+  <p>The <span class="manual__ui">Settings</span> button in the top bar opens everything
+  that is set <strong>outside</strong> the widget pages: units, buttons, sensors, sound,
+  airspaces, Livetracking. These are the 217 settings XCTrack knows, presented in the order
+  of the twenty screens of its menu.</p>
+
+  <p>To change them, press
+  <span class="manual__ui">Edit the settings</span>. In view-only mode, <strong>no input
+  field is built at all</strong>: this is not a greying-out, there is simply nothing to
+  touch.</p>
+
+  <div class="manual__note">
+    <p>These settings exist only in a “backup” export. If you have opened a “pages” export,
+    the page will tell you: this is not a loss, your file simply does not contain them.</p>
+  </div>
+
+  <h3>Finding your way</h3>
+
+  <p>A bar at the top counts what you have set, what is still at the factory value, and
+  what is missing from the file. Three commands help you sort:</p>
+
+  <ul>
+    <li><span class="manual__ui">Filter the settings</span> searches in the label, in the
+    name of the setting and in its value; accents and capitals make no difference;</li>
+    <li><span class="manual__ui">Only what I have set</span> keeps only what differs from
+    the factory;</li>
+    <li><span class="manual__ui">Hide personal values</span> replaces with dots the values
+    that identify you — useful if someone is looking at your screen.</li>
+  </ul>
+
+  <h3>The measured box, not to be missed</h3>
+
+  <div class="manual__measured">
+    <span class="manual__boxTitle">An absent setting is not put back to the factory value</span>
+    <p>On a <span class="manual__ui">Replace everything</span> import, your device keeps
+    the setting it already has: <strong>what the file does not say is not touched</strong>.
+    The import is a merge, not a replacement.</p>
+    <p>This is a measurement, not a guess. The protocol: a display setting was removed from
+    a backup, the backup was re-imported with “Replace everything”, then the configuration
+    was exported again. The setting had come back to the value the device already carried,
+    and not to the factory value. A second setting, changed in the same round, proved that
+    the import had indeed written the rest.</p>
+    <p>Two limits, which must be said: the measurement covers the “Replace everything”
+    mode, the two other import modes have not been tested; and the case of a brand-new
+    device has not been tested — on a device that has never touched that setting, the
+    factory value necessarily applies, but that is a deduction.</p>
+  </div>
+
+  <p>Careful: on the <em>widget</em> side it is the other way round. XCTrack fills in, when
+  it reads the file, the settings a widget does not carry, and the factory value does apply
+  there. The two situations were measured separately, and they do not give the same
+  result.</p>
+
+  <h3>What can be set, and what cannot</h3>
+
+  <p>Most lines can be set: tickbox, list, slider, number, text, colour. Some stay on
+  display <strong>with no control</strong>, and each one says why:</p>
+
+  <ul>
+    <li>the ones that open a dialog on the device — the buttons to press, the acoustic
+    vario table: “a key to press on the instrument, a table to build” cannot be entered
+    here;</li>
+    <li>the ones whose value is compound: the page shows it as it is, without opening it,
+    and never rewrites it;</li>
+    <li>the ones XCTrack names nowhere in readable form: with no label, the tool does not
+    offer to change them;</li>
+    <li>the ones that record the state of the application rather than a setting.</li>
+  </ul>
+
+  <p>Three blocks at the end of the page gather these cases:
+  <span class="manual__ui">Settings with no label</span>,
+  <span class="manual__ui">What the application has remembered (not settings)</span>, and
+  <span class="manual__ui">Lines this catalogue does not know</span> — those last ones were
+  written by another release of XCTrack. All of them come back out untouched.</p>
+
+  <h3>The personal data panel</h3>
+
+  <p>A folded panel, at the top of the page, inventories what <em>these settings</em>
+  reveal about you, with the nature of each one and where the tool gets it from. It counts
+  the general settings only; the texts you wrote inside the widgets are inventoried
+  elsewhere, when you save.</p>
+
+  <!-- ==================================================================== 9 -->
+
+  <h2 id="m-version"><span class="manual__rank">9.</span>The release you are targeting, compatibility and the cleanup</h2>
+
+  <p><span class="manual__ui">File</span> menu, then
+  <span class="manual__ui">Version and compatibility…</span>.</p>
+
+  <p>XCTrack’s format changes with every release. This screen asks you for
+  <span class="manual__ui">The XCTrack release you are targeting</span> — the one on the
+  device you will import this file back into — and then tells you what your file carries
+  that this release no longer reads, and what it expects that the file does not have.</p>
+
+  <p>This is a <strong>statement of fact</strong>: nothing moves until you decide it
+  should.</p>
+
+  <h3>Choosing your release</h3>
+
+  <p>You choose by the name your device shows, “1.0.3-beta”. The release your file declares
+  is already preselected, and a sentence says where that preselection comes from — and if
+  it is arbitrary, it says that too.</p>
+
+  <p>Since several releases often accept exactly the same settings, the tool <strong>names
+  the ones it cannot tell apart from yours</strong>: choosing between two neighbours then
+  has no effect, and it is better to say so than to leave you guessing.</p>
+
+  <h3>The three words of the diagnosis</h3>
+
+  <p>Every remark carries one of these words, and it governs what to do:</p>
+
+  <ul>
+    <li><strong>outdated</strong> — XCTrack no longer reads this setting, and real files
+    written by that very release carry it anyway. We have seen it happen, we are not
+    assuming it. <em>Removing it is defensible.</em></li>
+    <li><strong>blind spot</strong> — the gap is ours, not your file’s: our reading of the
+    releases has a hole at that point. <em>We do not touch it.</em></li>
+    <li><strong>unknown</strong> — no release we have been able to read carries this
+    setting, and no real file shows it. <em>We conclude nothing.</em></li>
+  </ul>
+
+  <p>The diagnosis sorts the gaps into eight families, and each one spells out what to do.
+  The one that matters most is perhaps this one:
+  <span class="manual__ui">Our reading has a hole: the setting did exist</span> — “Never
+  remove them. These are valid settings, and taking them for outdated ones would erase
+  yours.”</p>
+
+  <h3>Why the tool refuses to touch certain settings</h3>
+
+  <div class="manual__measured">
+    <p>It all rests on a simple imbalance: <strong>removing nothing breaks nothing,
+    removing wrongly breaks a flight configuration.</strong></p>
+    <p>A database that took every observed setting for a valid setting would protect
+    exactly the leftovers a cleanup is meant to take out. A database that took every unread
+    setting for a withdrawn setting would delete perfectly valid settings. So the tool
+    distinguishes three things: what it has <em>read</em> in the releases, what a real file
+    <em>carries</em>, and why the two differ.</p>
+  </div>
+
+  <p>The sorting is deliberately narrow. Of the eight families of gap,
+  <strong>only one</strong> is offered for deletion: the one a real file attests to. And
+  even there, an outdated setting the tool cannot say since which release has stopped being
+  used stays in place — we do not offer to delete what we would not be able to explain.</p>
+
+  <h3>Removing what an older release left behind</h3>
+
+  <p>XCTrack keeps the settings it no longer knows: a backup from this year still drags
+  along switches from three years ago. The
+  <span class="manual__ui">Remove what an older release left behind</span> section, under
+  the diagnosis and only in editing mode, offers to take them out. If there is nothing to
+  remove, the section does not appear at all.</p>
+
+  <p>It starts by reassuring you, and it is true: “Nothing is urgent and nothing is broken:
+  XCTrack carries them along without reading them, and leaving them there changes nothing
+  on your pages. Removing them makes the file smaller, that is all.”</p>
+
+  <ol class="manual__steps">
+    <li>Unfold <span class="manual__ui">See these 9 settings, and untick what you would
+    rather keep</span> — the number is the one from your file. Everything is ticked to
+    start with; each line says up to which XCTrack release the setting was still read, and
+    its value when that value is simple.</li>
+    <li>Untick what you want to keep. The count updates, and the button says exactly how
+    many settings it is going to remove.</li>
+    <li>Click the button. The panel is replaced by a message and by
+    <span class="manual__ui">Put these 9 settings back</span>.</li>
+  </ol>
+
+  <p>Going back is complete: put back, the file comes out byte for byte. The gesture is also
+  recorded in the history, so <span class="manual__ui">Undo</span> undoes it like everything
+  else.</p>
+
+  <p>And nothing has gone anywhere until you have saved: “Your device knows nothing of it
+  yet: the file only changes when you save it.”</p>
+
+  <!-- =================================================================== 10 -->
+
+  <h2 id="m-enregistrer"><span class="manual__rank">10.</span>Saving, and choosing what you hand over</h2>
+
+  <p>The save button, at the top right, says what is going to happen:
+  <span class="manual__ui">Save a copy</span> when you have touched nothing,
+  <span class="manual__ui">Save the changes</span> when the document has changed. It is
+  also the only visible sign that work is under way.</p>
+
+  <p>It opens the
+  <span class="manual__ui">Save this configuration</span> box, which asks you one single
+  thing: <strong>what should be saved?</strong></p>
+
+  <p>Three answers, ordered by how much travels: everything, everything except what
+  identifies you, your pages alone. Going down a step always means “giving less”. Each
+  outcome carries, under its card, the inventory of what it will do — it appears when you
+  tick it, and <strong>before</strong> any download.</p>
+
+  <h3>The file name is settled in advance</h3>
+
+  <p>It is timestamped and <strong>keeps nothing of the original name</strong>, which often
+  contains a first name. It looks like
+  <span class="manual__file">xctrack_2026-08-21-153207_backup.xcfg</span>. Since the date is
+  written back to front, the alphabetical order of your files is their chronological
+  order.</p>
+
+  <p>The name also carries the <strong>format</strong> of the file produced and the word
+  <span class="manual__file">-anon</span> when values have been replaced:
+  <span class="manual__file">…_backup-anon.xcfg</span> is a whole backup,
+  <span class="manual__file">…_pages-anon.xcfg</span> carries pages only. Do not mix them
+  up: a <span class="manual__file">backup</span> imports settings back, a
+  <span class="manual__file">pages</span> does not.</p>
+
+  <h3>Outcome 1 — “Your configuration, exactly as it is”</h3>
+
+  <p>This is your file. If you have changed nothing, it comes back out exactly as it went
+  in, without a single comma rewritten — and its SHA-256 hash is that of the original file,
+  you can check for yourself. If you have changed something, everything you did not touch
+  is copied out identically, down to the numbers and the original spacing.</p>
+
+  <p>This is the outcome to choose to put the file back on <em>your</em> instrument. The box
+  then reminds you what it carries of you.</p>
+
+  <h3>Outcome 2 — “All your settings, minus what identifies you”</h3>
+
+  <p>The file stays a <strong>whole backup</strong>. Your vario and its sounds, your units,
+  your theme, your airspace thresholds, your buttons: it is all there. What identifies you
+  is replaced with a neutral value, or removed line by line.</p>
+
+  <p><strong>This is the outcome to choose to ask for help with a setting</strong> — on a
+  forum, in a message to another pilot. The other shareable version carries no setting at
+  all: it cannot carry your question.</p>
+
+  <p>Every line dealt with is shown with its verdict and its reason, grouped by what happens
+  to it:</p>
+
+  <ul>
+    <li><span class="manual__ui">Replaced with a neutral value</span> — your name becomes
+    “Pilot”, your glider “Glider”, the map theme you installed goes back to XCTrack’s
+    factory value. The line keeps its place and its type;</li>
+    <li><span class="manual__ui">Removed from the file</span> — the whole line goes, because
+    its value is a structure: your current task and its coordinates, your paired sensors and
+    their Bluetooth addresses, your waypoint files, your offline maps, your Livetracking
+    quick messages. Writing a replacement structure would amount to making up a shape
+    XCTrack never writes; an absent line, on the other hand, is the state of a fresh
+    installation;</li>
+    <li><span class="manual__ui">Kept exactly as they are, and here is why</span> — what the
+    tool <em>refused</em> to touch, said as plainly as the rest: your Livetrack broadcasting
+    choices, the category of your glider. These are settings, not data: they carry no name,
+    no number, no address, and they are often exactly what you have come to talk
+    about;</li>
+    <li><span class="manual__ui">Present in the file, but empty</span> — the slot exists and
+    carries nothing. There is nothing to replace in it.</li>
+  </ul>
+
+  <p>On this project’s reference backup, that gives <strong>16 personal settings: 3
+  replaced, 4 removed, 4 kept, 5 empty</strong>.</p>
+
+  <p>What the recipient will not get is the removed lines — and none of them is a setting:
+  they are files and devices that live at your place, which they could have done nothing
+  with.</p>
+
+  <p>This outcome does not appear on a file that carries no preferences — a “pages” export,
+  for instance. It would produce there exactly the same file as outcome&nbsp;3, under the
+  same name, and two indistinguishable cards are worth less than one card fewer.</p>
+
+  <div class="manual__warning">
+    <span class="manual__boxTitle">This outcome rests on a list, and a list goes out of date</span>
+    <p>It deals with the 44 known personal settings of XCTrack and the eleven text fields of
+    the widgets. The format changes with every release: <strong>a personal setting that has
+    appeared since would not be on the list, and would go out in the clear.</strong>
+    Outcome&nbsp;3, further down, depends on no list at all — it carries no setting
+    whatsoever.</p>
+  </div>
+
+  <h3>Outcome 3 — “Shareable version, no personal data”</h3>
+
+  <p>This is a “pages” export whose texts written by you are replaced with neutral ones. The
+  layout is kept; the preferences do not travel.</p>
+
+  <p><strong>This is the safest outcome</strong>, and the only one that depends on no list of
+  settings: the preferences are not taken out of it, they are never put into it. Choose it
+  when you are sharing a <em>layout</em> — and outcome&nbsp;2 when your question is about a
+  <em>setting</em>.</p>
+
+  <p>Before the download, the tool shows you:</p>
+
+  <ul>
+    <li><span class="manual__ui">What will not travel</span> — the whole sections that stay
+    with you and, spelled out, what the recipient will have to set for themselves: their
+    units, their theme, their vario, their airspaces, their Livetracking, their
+    sensors;</li>
+    <li><span class="manual__ui">The archive attachments</span>, if your file is an
+    <span class="manual__file">.xczfg</span> — they do not travel, and the shareable version
+    is always written as a plain <span class="manual__file">.xcfg</span>;</li>
+    <li><span class="manual__ui">Your texts inside the widgets</span> — the inventory, line
+    by line: where the text sits, what value it carried, what it is replaced with, and
+    why.</li>
+  </ul>
+
+  <p>Replacements keep the <em>shape</em> of what they replace, so as not to break your
+  layout: a title becomes “Title 1”, a phone number becomes a number of the same pattern but
+  impossible to dial, a web address becomes an address in a reserved domain that leads
+  nowhere.</p>
+
+  <h3>What looks like a text you would have written</h3>
+
+  <p>Under each of the two shareable outcomes, the tool adds one last paragraph. In it, it
+  flags the texts that are <em>on none of its lists</em> and yet look like something you
+  would have written: a sentence, an accented word, a web or email address, a file path, a
+  device address, a number.</p>
+
+  <p><strong>It flags them, it does not replace them.</strong> Replacing on suspicion would
+  damage legitimate settings — and only you know whether you wrote that text. On the real
+  files of our trials, this paragraph flags nothing: what XCTrack writes itself is made of
+  words picked from lists, never of sentences.</p>
+
+  <div class="manual__warning">
+    <span class="manual__boxTitle">The inventory is the check, not our promise</span>
+    <p>The list of text fields dealt with is fixed, and XCTrack’s format changes with every
+    release: a text field that has appeared since would go out in the clear. <strong>Read
+    through the inventory before you send the file.</strong> An empty inventory does not
+    prove an absence — it only proves that the tool found nothing among what it knows how to
+    look for.</p>
+  </div>
+
+  <h3>Putting the file back on the instrument</h3>
+
+  <ol class="manual__steps">
+    <li>Copy the downloaded file onto the instrument’s SD card, or transfer it by
+    cable.</li>
+    <li>On the instrument, open XCTrack’s configuration sharing screen and start the
+    import.</li>
+    <li>The <span class="manual__ui">Replace everything</span> mode is the one our
+    measurements cover. Remember what it does exactly: what the file does not say is not
+    touched (chapter&nbsp;8).</li>
+    <li>Keep a backup of your previous configuration before importing. This tool can do
+    nothing for you once the import is done.</li>
+  </ol>
+
+  <!-- =================================================================== 11 -->
+
+  <h2 id="m-bibliotheque"><span class="manual__rank">11.</span>The configuration library</h2>
+
+  <p><span class="manual__ui">File</span> menu, then
+  <span class="manual__ui">Library…</span>. There you store several configurations under a
+  name — one for competition, one for hike-and-fly, one for the school — and you come back
+  to one of them whenever you want.</p>
+
+  <p>Everything stays in this browser. Nothing is sent anywhere, there is no account and no
+  server, and another device does not see your library. The bytes stored are those of your
+  file, never a rewritten copy: they are checked by digest every time they are read
+  back.</p>
+
+  <h3>Storing, finding, taking back out</h3>
+
+  <ul>
+    <li><span class="manual__ui">Store the open configuration</span> asks for a name — “the
+    one you will recognise in six months” — and an optional note.</li>
+    <li><span class="manual__ui">Store a file…</span> stores a
+    <span class="manual__file">.xcfg</span> taken from the disk, without opening it.</li>
+    <li><span class="manual__ui">Load</span> brings a configuration back into the editor. If
+    the open document carries unsaved changes, the tool stops and offers to store it
+    first.</li>
+    <li><span class="manual__ui">Take the file back out</span> gives you back the stored
+    bytes, exactly as they went in.</li>
+    <li><span class="manual__ui">Check the digest</span> recomputes the digest and compares
+    it with the one recorded when the entry was stored.</li>
+    <li><span class="manual__ui">Identity card</span> shows everything the entry carries,
+    carefully separating <em>what the file declares</em> from <em>what this editor
+    assumes</em>.</li>
+  </ul>
+
+  <p>Each entry also shows its personal data count, in the form “16 pieces of personal data
+  · 2 travel with the pages”. Both numbers are always given, zero included.</p>
+
+  <h3>This is not a backup</h3>
+
+  <div class="manual__warning">
+    <span class="manual__boxTitle">Export your library</span>
+    <p>Clearing the site data erases the library, and some browsers erase by themselves the
+    data of a site not visited for a few days.
+    <span class="manual__ui">Export the library</span> turns it into a ZIP archive from
+    which each configuration can be extracted with any unzipping tool.
+    <span class="manual__ui">Import a library…</span> reads it back, without ever
+    overwriting an existing entry.</p>
+    <p>The <span class="manual__ui">Stop the browser from erasing my library</span> button
+    asks the browser for durable storage. That is never a guarantee. The only backup that
+    holds is the archive you export.</p>
+  </div>
+
+  <p>Finally: <strong>this library has no wastebasket.</strong> A deletion is final, and
+  “Undo” can do nothing about it. That is why deleting asks for a confirmation in a box of
+  its own.</p>
+
+  <!-- =================================================================== 12 -->
+
+  <h2 id="m-mesure"><span class="manual__rank">12.</span>What is measured, and what is not</h2>
+
+  <p>This section is not a legal precaution. It is the most useful piece of information this
+  manual can give you.</p>
+
+  <h3>Where everything the tool knows comes from</h3>
+
+  <p>The format of XCTrack files <strong>is not documented</strong>, and it changes with
+  every release of the application. Everything this tool knows about it comes from two
+  sources: real files observed over four years and eight releases, and the reading of the
+  application itself. Nothing comes from a specification, because there is none.</p>
+
+  <p>That is what makes the tool valuable — and it is why it is built to <em>carry
+  through</em> what it does not understand rather than to model the format.</p>
+
+  <h3>Three things not to confuse</h3>
+
+  <ul>
+    <li><strong>What has been observed on the device.</strong> One AIR³ 7.2, one release of
+    XCTrack. The widget drawings, the snapping grid, the behaviour of an import. The tool
+    says so when that is the case.</li>
+    <li><strong>What has been read in the application.</strong> The names and descriptions
+    of the widgets, the factory values, the list of settings. That is solid, but it is not
+    the same thing as a measurement on a device that flies.</li>
+    <li><strong>What is deduced.</strong> For example: the snapping grid was measured on a
+    single device; on all the other templates it is extrapolated, and gives a plausible
+    order of magnitude and nothing more.</li>
+  </ul>
+
+  <h3>What the rendering is worth</h3>
+
+  <p>The widget drawings are reconstructed from what was observed on a single device and a
+  single release. A widget whose drawing has not been reproduced is shown in an honest
+  generic shape rather than in a misleading approximation. And if your file asks for a
+  display theme the editor cannot draw, it tells you: the colours you see are not those of
+  your device, but the geometry is right.</p>
+
+  <h3>Two languages on screen, and that is not a mistake</h3>
+
+  <p>The interface of this editor and this manual exist in five languages: French, English,
+  Dutch, German, Spanish. The <strong>names of widgets and settings</strong>, on the other
+  hand, do not follow that choice: they come from XCTrack, in the thirty-odd languages the
+  application carries, and they follow the language of <em>your file</em>. So you can read
+  the interface in Spanish and see your widgets named in French, if that is how your
+  instrument names them. That is deliberate: those are the words you will find again in
+  flight.</p>
+
+  <h3>What the interface does not do yet</h3>
+
+  <ul>
+    <li>The library shows no image preview: the space is reserved, the thumbnail is an empty
+    frame that says so.</li>
+    <li>The sorting of the general settings does not offer everything: what the catalogue has
+    not surveyed is not offered for setting, rather than being guessed.</li>
+  </ul>
+
+  <!-- =================================================================== 13 -->
+
+  <h2 id="m-avis"><span class="manual__rank">13.</span>Giving feedback, reporting what is wrong</h2>
+
+  <p>This tool is written for pilots, and it only improves through what they say about it.
+  Suggestions and corrections go through GitHub issues:</p>
+
+  <p><a href="https://github.com/frederict/xcfg-editor/issues">https://github.com/frederict/xcfg-editor/issues</a></p>
+
+  <p>Everything helps: a badly drawn widget, a setting the editor does not show, an obscure
+  word, an XCTrack release missing from the list, a file that refuses to open, a sentence in
+  this manual that cost you time.</p>
+
+  <p>Saying <strong>which device</strong>, <strong>which XCTrack release</strong> and
+  <strong>what you expected</strong> saves a great deal of time.</p>
+
+  <p><strong>Write in your own language.</strong> The interface and this manual exist in
+  French, English, Dutch, German and Spanish: an issue written in any of those five
+  languages will be read. There is no need to switch to English to report something — and a
+  translation that rings false, or that names a button differently from the screen, is
+  exactly the kind of thing worth reporting.</p>
+
+  <div class="manual__warning">
+    <span class="manual__boxTitle">Never attach your own file</span>
+    <p>A GitHub issue is public, and forever. Your
+    <span class="manual__file">.xcfg</span> carries your name, your glider, your sensors,
+    your waypoint files, sometimes your contact details.</p>
+    <p>If a file is indispensable to understand the problem, first produce a shareable
+    version with this tool — <span class="manual__ui">Shareable version, no personal
+    data</span> if the problem is about a page,
+    <span class="manual__ui">All your settings, minus what identifies you</span> if it is
+    about a setting. Read through the inventory of replacements it shows you, and send that
+    one only.</p>
+  </div>
+
+</div>

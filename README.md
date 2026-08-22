@@ -1,5 +1,8 @@
 # Éditeur de configuration XCTrack
 
+**Français** · [English](README.en.md) · [Nederlands](README.nl.md) ·
+[Deutsch](README.de.md) · [Español](README.es.md)
+
 Un éditeur web pour les fichiers `.xcfg` de **XCTrack**, l'application de vol des
 parapentistes. On ouvre un export de son instrument, on voit ses pages telles que
 l'appareil les dessine, on les modifie, on réexporte.
@@ -242,14 +245,18 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
   l'une d'elles : une pour la compétition, une pour le vol-bivouac, une pour l'école. Les
   octets rangés sont ceux de votre fichier, vérifiés par empreinte à la relecture. Rien
   n'est envoyé nulle part.
-- **Parler votre langue** : les noms et descriptions des gadgets sont ceux de XCTrack
-  lui-même, extraits de l'application — 33 langues pour les gadgets, 34 pour leurs
-  options, 35 pour les libellés des réglages généraux. Ces trois chiffres ne sont pas un
-  choix de notre part : c'est ce que l'APK porte.
+- **Parler votre langue, sur deux axes qui ne se confondent pas.** *Notre* prose —
+  l'interface, le manuel, ce README — existe en cinq langues : français, anglais,
+  néerlandais, allemand, espagnol. Les noms et descriptions *de XCTrack* sont ceux de
+  l'application elle-même, extraits de l'APK — 33 langues pour les gadgets, 34 pour leurs
+  options, 35 pour les libellés des réglages généraux —, et ils suivent la langue du
+  fichier ouvert, pas celle de l'interface. Ces trois chiffres ne sont pas un choix de
+  notre part : c'est ce que l'APK porte.
 - **S'expliquer sur place** : un manuel d'utilisation en treize chapitres s'ouvre depuis
-  l'écran d'accueil et depuis le menu « Fichier », sans quitter la page. Il est écrit
-  pour un pilote, pas pour un informaticien, et s'ouvre sur ce qu'il ne faut surtout pas
-  faire — envoyer sa sauvegarde telle quelle.
+  l'écran d'accueil et depuis le menu « Fichier », sans quitter la page — **dans les cinq
+  langues**, et seule celle qui est affichée est téléchargée. Il est écrit pour un
+  pilote, pas pour un informaticien, et s'ouvre sur ce qu'il ne faut surtout pas faire —
+  envoyer sa sauvegarde telle quelle.
 
 ### En images
 
@@ -459,15 +466,16 @@ Autant le dire tout de suite.
   XCTrack remplit la liste en code, n'ont qu'un champ texte plutôt qu'une liste inventée.
 - **Aucun aperçu d'image dans la bibliothèque.** La place est réservée dans les données,
   la vignette est un cadre vide qui le dit.
-- **Les textes de l'interface sont en français, et en français seulement.** Un socle de
-  traduction en cinq langues (français, anglais, néerlandais, allemand, espagnol) existe
-  dans le code — `src/i18n/` — et **tous les écrans en emploient déjà le pluriel et les
-  formateurs** : nombres, dates et tailles suivent donc votre langue. Les phrases, elles,
-  restent écrites en français dans le code, et c'est ce qui reste à faire. Les libellés
-  de XCTrack,
-  eux, suivent déjà votre langue : ce sont deux choses distinctes, et les confondre
-  ferait lire à un pilote tchèque des noms de gadgets en anglais alors que son instrument
-  les lui montre en tchèque.
+- **L'interface existe en cinq langues, les captures d'écran de ce fichier en une
+  seule.** L'interface, le manuel et ce README sont traduits en français, anglais,
+  néerlandais, allemand et espagnol (`src/i18n/`). Les images, elles, montrent
+  l'interface **française** : les refaire dans cinq langues, ce serait trente captures à
+  reprendre à chaque écran qui bouge, et elles vieilliraient. La géométrie et les gestes
+  se lisent quand même. Les libellés de XCTrack — noms de gadgets, d'options, de
+  préférences — ne suivent pas le choix de langue de l'interface mais **celui du
+  fichier** : ce sont deux axes distincts, et les confondre ferait lire à un pilote
+  tchèque des noms de gadgets en anglais alors que son instrument les lui montre en
+  tchèque.
 
 ## Donner votre avis, signaler ce qui cloche
 
@@ -477,9 +485,13 @@ L'outil est écrit pour des pilotes, et il ne s'améliore que par ce qu'ils en d
 **<https://github.com/frederict/xcfg-editor/issues>**
 
 Tout est utile : un gadget mal dessiné, un réglage que l'éditeur ne montre pas, un mot
-obscur, une version de XCTrack absente de la liste, un fichier qui refuse de s'ouvrir.
-Dire quel appareil, quelle version de XCTrack et ce que vous attendiez fait gagner
-beaucoup de temps.
+obscur, une version de XCTrack absente de la liste, un fichier qui refuse de s'ouvrir —
+et, depuis que l'interface existe en cinq langues, **une traduction qui sonne faux ou qui
+nomme un bouton autrement que l'écran**. Dire quel appareil, quelle version de XCTrack et
+ce que vous attendiez fait gagner beaucoup de temps.
+
+**Écrivez dans votre langue** — français, anglais, néerlandais, allemand ou espagnol.
+Inutile de passer à l'anglais pour signaler quelque chose.
 
 ⚠️ **N'attachez jamais votre propre `.xcfg`.** Il porte votre nom, vos capteurs, vos
 fichiers de waypoints, parfois vos coordonnées — et une issue GitHub est publique. Si un

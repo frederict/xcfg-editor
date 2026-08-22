@@ -1,0 +1,1094 @@
+<!--
+  De handleiding, in het Nederlands.
+
+  Dit bestand is een FRAGMENT: geen <html>, geen <head>, geen <body>. Het wordt in het
+  lichaam van een modaal venster geplaatst dat de titel van het eerste niveau al draagt —
+  de handleiding begint dus bij <h2>.
+
+  `manuel.fr.html` is de bron van waarheid: dit bestand is er een vertaling van, met
+  dezelfde structuur, dezelfde ankers en dezelfde klassen. Wat tussen
+  <span class="manual__ui"> staat, is het EXACTE opschrift van het scherm: het wordt teken
+  voor teken overgenomen uit de catalogus `src/i18n/messages/nl/`, nooit opnieuw vertaald.
+-->
+
+<div class="manual">
+
+  <div class="manual__warning">
+    <span class="manual__boxTitle">Lees dit voordat u uw bestand aan wie dan ook geeft</span>
+    <p>Een XCTrack-back-up draagt uw naam, uw scherm, uw gekoppelde sensoren, uw
+    waypointbestanden — tot en met de naam van de wedstrijd waaraan u deelneemt. Stuur hem
+    nooit zoals hij is: niet naar een andere piloot, niet naar een forum, niet in een
+    melding. Bij het opslaan maken twee van de drie uitwegen een deelbaar bestand:
+    <span class="manual__ui">Al uw instellingen, zonder wat u herkenbaar maakt</span>
+    houdt uw instellingen en vervangt wat u bij naam noemt,
+    <span class="manual__ui">Deelbare versie, zonder persoonlijke gegevens</span> draagt
+    alleen uw pagina’s mee. Lees in beide gevallen de lijst van vervangingen door die het
+    gereedschap u toont, vóór u downloadt. Hoofdstuk&nbsp;10 legt dit alles in detail
+    uit.</p>
+  </div>
+
+  <nav class="manual__toc">
+    <h2>Wat deze handleiding bevat</h2>
+    <ol>
+      <li><a href="#m-outil">Wat dit gereedschap doet, en wat het niet doet</a></li>
+      <li><a href="#m-ouvrir">Het bestand uit het instrument halen en hier openen</a></li>
+      <li><a href="#m-voir">Uw pagina’s bekijken zonder iets te wijzigen</a></li>
+      <li><a href="#m-gabarit">Het schermsjabloon en de zoom</a></li>
+      <li><a href="#m-modifier">Uw pagina’s bewerken</a></li>
+      <li><a href="#m-gadget">De instellingen van een widget</a></li>
+      <li><a href="#m-usine">De drie handelingen rond een fabriekswaarde</a></li>
+      <li><a href="#m-generaux">De algemene instellingen van XCTrack</a></li>
+      <li><a href="#m-version">De beoogde versie, de compatibiliteit en het opruimen</a></li>
+      <li><a href="#m-enregistrer">Opslaan, en kiezen wat u weggeeft</a></li>
+      <li><a href="#m-bibliotheque">De bibliotheek met configuraties</a></li>
+      <li><a href="#m-mesure">Wat gemeten is, en wat niet</a></li>
+      <li><a href="#m-avis">Uw mening geven, melden wat er mis is</a></li>
+    </ol>
+  </nav>
+
+  <!-- ==================================================================== 1 -->
+
+  <h2 id="m-outil"><span class="manual__rank">1.</span>Wat dit gereedschap doet, en wat het niet doet</h2>
+
+  <p>U opent hier een bestand dat uw instrument heeft geëxporteerd. Uw pagina’s verschijnen
+  precies zoals het toestel ze tekent, op ware grootte. U bewerkt ze, en u krijgt daarna een
+  nieuw bestand dat u zelf op het instrument terugzet.</p>
+
+  <h3>Drie dingen die u meteen moet weten</h3>
+
+  <p><strong>Dit gereedschap praat niet met uw instrument.</strong> Er is geen kabel, geen
+  bluetooth, geen synchronisatie. Het maakt een bestand dat u zelf overzet, via SD-kaart of
+  kabel. Zolang u die overdracht niet hebt gedaan, weet uw toestel niets van wat u hier hebt
+  veranderd.</p>
+
+  <p><strong>Er wordt niets gesimuleerd.</strong> De waarden die u in de widgets ziet — een
+  hoogte, een snelheid, een daalsnelheid — zijn vaste voorbeelden, één keer voorgoed
+  opgeschreven. Ze dienen om de grootte en de plaats van een widget te beoordelen, nooit om
+  te voorspellen wat hij tijdens de vlucht zal tonen.</p>
+
+  <p><strong>Uw bestand verlaat uw machine niet.</strong> Alles gebeurt in uw browser: er is
+  geen server, geen account, en er wordt niets verstuurd. De pagina bestaat uit statische
+  bestanden, ze heeft niemand om tegen te praten.</p>
+
+  <h3>Wat er in uw bestand niet verandert</h3>
+
+  <p>Een bestand dat u opent en zonder wijziging opnieuw opslaat, komt er <strong>byte voor
+  byte identiek</strong> uit. En wanneer u iets wijzigt, verandert alleen wat u hebt
+  gewijzigd: een widget verplaatsen herschrijft alleen zijn vier coördinaten, de rest van het
+  bestand komt er ongeschonden uit.</p>
+
+  <p>Dat is wat het zwaarst weegt, en dit is waarom. Het formaat van XCTrack is niet
+  gedocumenteerd en krijgt er bij elke versie instellingen bij. Een editor die het bestand
+  zou heropbouwen uit wat hij heeft kunnen lezen, zou de rest zwijgend verliezen. Deze draagt
+  <strong>alles wat hij niet begrijpt</strong> onveranderd mee: uw eigen instellingen
+  overleven, ook die welke nergens in deze editor worden getoond.</p>
+
+  <h3>Wat het nooit in uw plaats zal doen</h3>
+
+  <ul>
+    <li>Het herschikt uw pagina’s niet en stelt geen betere indeling voor.</li>
+    <li>Het meldt wat het twijfelachtig vindt, maar verbetert niets uit zichzelf.</li>
+    <li>De enige keer dat het voorstelt om iets uit uw bestand weg te halen, is het opruimen
+    van hoofdstuk&nbsp;9 — en dan moet u de lijst zien en klikken.</li>
+  </ul>
+
+  <!-- ==================================================================== 2 -->
+
+  <h2 id="m-ouvrir"><span class="manual__rank">2.</span>Het bestand uit het instrument halen en hier openen</h2>
+
+  <h3>Op het instrument</h3>
+
+  <p>Ga naar de instellingen van XCTrack en kies
+  <span class="manual__ui">Configuratie exporteren</span>. Het bestand belandt op de
+  SD-kaart. Haal het op met uw computer of uw telefoon.</p>
+
+  <h3>Twee formaten, twee inhouden</h3>
+
+  <p>XCTrack kan twee soorten exports schrijven, en het verschil is belangrijk:</p>
+
+  <ul>
+    <li>een <strong>‘backup’</strong>-export draagt uw hele configuratie: de pagina’s
+    <em>én</em> de instellingen van het toestel (vario, eenheden, sensoren, luchtruim, uw
+    naam, uw scherm…);</li>
+    <li>een <strong>‘pages’</strong>-export draagt alleen de widgetpagina’s. Bij het
+    inlezen vervangt hij de schermen en raakt hij niets anders aan.</li>
+  </ul>
+
+  <p>De extensie van het bestand zegt iets anders: <span class="manual__file">.xcfg</span> is
+  het bestand alleen, <span class="manual__file">.xczfg</span> is een archief dat er
+  bijlagen bij draagt. Beide openen hier.</p>
+
+  <div class="manual__warning">
+    <span class="manual__boxTitle">Een ‘pages’-export is niet anoniem</span>
+    <p>Men leest vaak dat een ‘pages’-export niets persoonlijks bevat. Dat klopt niet. De
+    titel die u op een widget hebt geschreven, de inhoud van een widget met vrije tekst, de
+    naam en het telefoonnummer die in een belknop zijn opgeborgen: die reizen <em>mee met de
+    pagina’s</em>. Het ‘pages’-formaat is een grove schifting, geen schoonmaak.</p>
+  </div>
+
+  <h3>Het bestand hier openen</h3>
+
+  <ol class="manual__steps">
+    <li>Laat het bestand ergens op de pagina los — er verschijnt een kader met de tekst
+    <span class="manual__ui">Laat het bestand los om het te openen</span>;</li>
+    <li>of klik op de neerzetzone van het startscherm;</li>
+    <li>of, als er al een bestand open is, neem het menu
+    <span class="manual__ui">Bestand</span> rechtsboven en dan
+    <span class="manual__ui">Een bestand openen…</span>.</li>
+  </ol>
+
+  <p>Een bestand opent altijd <strong>in kijkmodus</strong>: eerst bekijken, dan pas
+  bewerken.</p>
+
+  <h3>Een bestand openen terwijl het vorige gewijzigd is</h3>
+
+  <p>Er is één bestand tegelijk open: een ander openen sluit dit. Zolang u niets hebt
+  veranderd, gebeurt dat zonder een woord — er valt niets te verliezen.</p>
+
+  <p>Zodra u iets hebt gewijzigd, <strong>houdt het gereedschap halt en vraagt het u iets</strong>,
+  onder de titel <span class="manual__ui">Je wijzigingen zijn niet opgeslagen</span>. Het
+  venster herinnert u aan de namen van de twee bestanden en <strong>noemt uw laatste
+  wijziging</strong>, met het opschrift van het ongedaan maken zelf — bijvoorbeeld ‘Volume
+  instellen — Vario’. Twee uitwegen:</p>
+
+  <ul>
+    <li><span class="manual__ui">Mijn wijzigingen houden</span> — dat is de standaardkeuze,
+    die van de Enter-toets en die van de Escape-toets. Er is niets aangeraakt: u vindt uw
+    pagina terug, de widget die u had geselecteerd en uw geschiedenis van ongedaan maken,
+    alles ongeschonden.</li>
+    <li><span class="manual__ui">‘…’ openen en ze kwijtraken</span> — het andere bestand
+    neemt de plaats in, en wat u had veranderd is nergens meer terug te halen.</li>
+  </ul>
+
+  <p class="manual__note">Om niets te verliezen: houd uw wijzigingen, en gebruik dan
+  <span class="manual__ui">De wijzigingen opslaan</span> boven aan de pagina, of berg de
+  configuratie op in de bibliotheek (hoofdstuk 11). Een item uit de bibliotheek laden stelt
+  dezelfde vraag, met daarbovenop de uitweg
+  <span class="manual__ui">Eerst opbergen, dan laden</span>.</p>
+
+  <h3>Als het bestand weigert open te gaan</h3>
+
+  <p>Er kunnen twee verschillende schermen verschijnen.
+  <span class="manual__ui">Dit bestand kon niet worden geopend</span> betekent dat het
+  gereedschap er niets uit heeft kunnen halen: ga na of het wel degelijk een XCTrack-export
+  is. <span class="manual__ui">Dit bestand kon niet worden gelezen</span> betekent dat het
+  herkend is, maar beschadigd of onvolledig. In beide gevallen is uw bestand niet gewijzigd,
+  en <span class="manual__ui">Een kopie opslaan</span> geeft het u terug zoals het is
+  binnengekomen. Het luik <span class="manual__ui">Technisch detail</span> bevat de tekst die
+  u in een melding kunt overnemen.</p>
+
+  <p><strong>Een onleesbaar bestand vervangt nooit werk dat bezig is.</strong> Laat u een
+  beschadigd bestand los terwijl het geopende bestand niet-opgeslagen wijzigingen draagt, dan
+  opent het gereedschap het helemaal niet: het zegt het u in een venster —
+  <span class="manual__ui">Dit bestand kon niet worden gelezen</span>, met zijn
+  <span class="manual__ui">Technisch detail</span> — en uw bestand blijft precies open zoals
+  het was. Er wordt u in dat geval niets ter bevestiging gevraagd, want er valt niets te
+  beslissen.</p>
+
+  <!-- ==================================================================== 3 -->
+
+  <h2 id="m-voir"><span class="manual__rank">3.</span>Uw pagina’s bekijken zonder iets te wijzigen</h2>
+
+  <p>Zolang u niet op <span class="manual__ui">De pagina’s bewerken</span> hebt gedrukt,
+  schrijft niets van wat u doet ook maar iets weg. U mag alles openen, alles lezen, alles
+  doorlopen.</p>
+
+  <h3>Het overzicht</h3>
+
+  <p>Het toont <strong>al</strong> uw pagina’s, in twee secties:
+  <span class="manual__ui">Liggend</span> en dan <span class="manual__ui">Staand</span>. Een
+  bestand beschrijft altijd allebei; uw instrument wisselt van de ene naar de andere.</p>
+
+  <p>De pagina’s zijn genummerd vanaf 1. Een pagina heeft geen naam: <strong>haar rang is
+  haar enige identiteit</strong>, en die bepaalt wat er verschijnt wanneer u tijdens de
+  vlucht op ‘volgende pagina’ drukt.</p>
+
+  <p>Het is niet het <em>type</em> van een pagina dat bepaalt wanneer uw instrument haar
+  toont, maar de <strong>navigaties waarvoor ze is ingeschakeld</strong> — de vijf
+  pictogrammen in het venster waarin XCTrack de navigaties in- en uitschakelt. Het venster
+  <span class="manual__ui">Pagina’s beheren</span> zegt het pagina per pagina:
+  <span class="manual__ui">Getoond voor alle navigaties</span>,
+  <span class="manual__ui">Voor geen enkele navigatie getoond</span>, of de lijst van de
+  navigaties die haar laten verschijnen. Een pagina die voor geen enkele navigatie is
+  ingeschakeld, wordt overgeslagen wanneer u doorbladert — vastgesteld op een AIR³ — en de
+  controle vóór de vlucht meldt haar u.</p>
+
+  <p>Een eerdere versie van dit gereedschap merkte bepaalde pagina’s aan als ‘verborgen
+  buiten de vlucht’ op grond van hun type, en telde hoeveel uw toestel er op de grond zou
+  tonen. <strong>Dat was fout</strong>: een proef op het instrument heeft aangetoond dat de
+  pagina van de thermiekassistent wel degelijk in het doorbladeren op de grond terugkomt. Het
+  merkteken en de telling zijn weggehaald.</p>
+
+  <h3>De informatiebalk</h3>
+
+  <p>Boven de pagina’s staan enkele feiten die in het bestand zijn gelezen:
+  <span class="manual__ui">Formaat</span> (bestand of archief),
+  <span class="manual__ui">Toestel volgens het bestand</span> (of
+  <span class="manual__ui">niet vermeld</span>),
+  <span class="manual__ui">XCTrack-labels</span> (de taal waarin de widgetnamen worden getoond, en
+  waar die vandaan komt). Draagt het bestand geen enkele voorkeur, dan zegt een regel
+  <span class="manual__ui">Tekeninstellingen</span> dat: het thema en de eenheden die voor
+  het tekenen worden gebruikt, zijn dan fabriekswaarden en niet de uwe.</p>
+
+  <h3>Wat het gereedschap bij het openen meldt</h3>
+
+  <p>Er kunnen twee blokken verschijnen, en ze wegen niet even zwaar.</p>
+
+  <p><span class="manual__ui">Na te kijken in dit bestand</span> blijft uitgeklapt: het
+  beschrijft een gebrek. Bijvoorbeeld een widget met breedte of hoogte nul, een widget die
+  volledig onder een andere verborgen zit en dus nooit iets zal tonen, een deel van het
+  bestand dat het gereedschap niet heeft herkend.</p>
+
+  <p>De ingeklapte regel eronder verzamelt wat <em>inlicht</em> zonder iets te eisen: het
+  soort export, de taal van de opschriften, de externe bestanden die uw configuratie aanwijst
+  (kaartthema, waypoints, luchtruim — die staan op het oorspronkelijke toestel, niet in het
+  bestand), het verschil tussen de versie die het bestand heeft geschreven en de versie
+  waarop deze editor is ingesteld, of nog een weergavethema dat de editor niet kan tekenen.
+  Klik op de regel om ze uit te klappen.</p>
+
+  <div class="manual__note">
+    <span class="manual__boxTitle">Overlappingen worden niet gemeld</span>
+    <p>Twee widgets die elkaar overlappen, dat komt vaak voor en is meestal gewild — het is
+    zelfs een wedstrijdtechniek. Ze melden zou ruis zijn, en een waarschuwing van ruis leert
+    de andere te negeren. Alleen een widget die <em>volledig</em> bedekt is, wordt
+    gemeld.</p>
+  </div>
+
+  <h3>De controle vóór de vlucht</h3>
+
+  <p>Bij de vaststellingen over het <em>bestand</em> komen, in dezelfde twee blokken, zeven
+  controles over uw <em>pagina’s tijdens de vlucht</em>:</p>
+
+  <ul>
+    <li>een widget die volledig bedekt is door de widgets die na hem zijn getekend, en die
+    een vingerdruk dus niet kan bereiken — ook al blijft hij zichtbaar;</li>
+    <li>een pagina die nooit zal verschijnen, omdat er voor haar geen enkel navigatietype is
+    aangevinkt;</li>
+    <li>meerdere pagina’s met een thermiekassistent in dezelfde richting: het instrument
+    mikt er maar op één wanneer het vanzelf overschakelt zodra u gaat kringen, en welke dat
+    is blijft een veronderstelling van dit gereedschap;</li>
+    <li>een widget die misschien te klein is om op armlengte te lezen;</li>
+    <li>een Pro-widget in een bestand dat geen licentie vermeldt;</li>
+    <li>twee wegenkaarten op dezelfde pagina, wat XCTrack als onmogelijk aankondigt;</li>
+    <li>een instelling die door een oudere versie van XCTrack is geschreven.</li>
+  </ul>
+
+  <p>Ze worden berekend op wat u voor ogen hebt: van
+  <span class="manual__ui">Schermsjabloon</span> veranderen laat de millimeters opnieuw
+  berekenen, en een widget verplaatsen laat de bedekkingen opnieuw berekenen.</p>
+
+  <div class="manual__note">
+    <span class="manual__boxTitle">‘Te bevestigen op het instrument’ betekent wat het
+    zegt</span>
+    <p>Vier van deze zeven controles berusten op een veronderstelling die nog niemand op een
+    AIR³ heeft nagegaan: hun opschrift draagt dan de vermelding
+    <span class="manual__ui">te bevestigen op het instrument</span>, en hun uitleg zegt wat
+    de vraag zou beslechten. Ze komen nooit in het uitgeklapte blok terecht — een
+    veronderstelling hoort niet op dezelfde toon te klinken als een meting.</p>
+  </div>
+
+  <p>Wat het gereedschap elders al zegt, wordt niet herhaald: een actieknop die u met opzet
+  onder een kaart hebt geschoven, wordt één keer aangekondigd, als een montage die werkt, en
+  geen tweede keer als een gebrek.</p>
+
+  <h3>Een pagina openen en een widget lezen</h3>
+
+  <p>Klik op een miniatuur. De pagina verschijnt alleen, op ware grootte.
+  <span class="manual__ui">Vorige pagina</span> en
+  <span class="manual__ui">Volgende pagina</span> laten u van de ene naar de andere gaan — de
+  pijltjestoetsen links en rechts doen hetzelfde.
+  <span class="manual__ui">← Alle pagina’s</span> en de <em>Escape</em>-toets brengen u
+  terug.</p>
+
+  <p>Ga met de muis over een widget: zijn naam en zijn afmetingen in millimeter verschijnen
+  onder de pagina. Klik erop: de balk onderaan toont
+  <span class="manual__ui">Widgets van de pagina</span> en al zijn instellingen,
+  <strong>alleen-lezen</strong>. Daar is niets te wijzigen: dit is de kijkmodus.
+  <em>Escape</em> heft de selectie op.</p>
+
+  <p>De lijst <span class="manual__ui">Widgets van de pagina</span> is gerangschikt van
+  achtergrond naar voorgrond. Ze dient ook als vangnet: een widget met de vermelding
+  <span class="manual__ui">hier onbereikbaar</span> is volledig bedekt door een andere, geen
+  enkele klik op de pagina bereikt hem, en deze lijst is de enige weg ernaartoe. Op het
+  instrument blijft hij op zijn plaats — een knop die zo bedekt is, blijft op de vinger
+  reageren.</p>
+
+  <!-- ==================================================================== 4 -->
+
+  <h2 id="m-gabarit"><span class="manual__rank">4.</span>Het schermsjabloon en de zoom</h2>
+
+  <h3>Het sjabloon kiezen</h3>
+
+  <p>Het menu <span class="manual__ui">Schermsjabloon</span>, onder de bovenste balk, bepaalt
+  de meetkunde en de grootte in millimeter. Het biedt de drie bekende AIR³-toestellen, vijf
+  gangbare schermverhoudingen, een modus
+  <span class="manual__ui">Responsive</span> waarin u zelf een breedte en een hoogte in
+  pixels opgeeft, en <span class="manual__ui">Een apparaat toevoegen…</span> om het uwe één
+  keer voorgoed te bewaren.</p>
+
+  <p>Bij het openen neemt het gereedschap het sjabloon over dat het bestand vermeldt. Herkent
+  het niets, dan neemt het de AIR³&nbsp;7.2 en zegt het in de informatiebalk.</p>
+
+  <div class="manual__note">
+    <p>Deze keuze is een weergave-instelling: <strong>ze wordt nooit in uw bestand
+    geschreven</strong>. Ze veranderen wijzigt niets. Alleen de schermverhoudingen tellen,
+    die de meetkunde bepalen, en de diagonaal in duim, die de grootte in millimeter bepaalt —
+    de pixels hebben geen enkel effect, want de posities van de widgets worden uitgedrukt in
+    breuken van het scherm.</p>
+  </div>
+
+  <h3>De zoom één keer voorgoed instellen</h3>
+
+  <p>De pagina wordt op haar werkelijke fysieke grootte getekend. Maar uw scherm heeft niet
+  noodzakelijk de dichtheid die de browser veronderstelt. De schuifregelaar
+  <span class="manual__ui">Zoom</span> verhelpt dat, en
+  <span class="manual__ui">Zoom 100 %</span> zet hem terug op zijn beginwaarde.</p>
+
+  <ol class="manual__steps">
+    <li>Leg een echte lat op uw scherm, tegen de meetlat die boven de pagina wordt
+    getoond.</li>
+    <li>Sleep de zoomregelaar tot de twee samenvallen.</li>
+    <li>Klaar: de millimeters die voor elke widget worden vermeld, zijn voortaan de echte.</li>
+  </ol>
+
+  <p>Het is die instelling die de vraag ‘zal deze tekst op armlengte leesbaar zijn, met
+  handschoenen aan?’ bruikbaar maakt. Ze wordt in millimeter beantwoord, niet in pixels.</p>
+
+  <!-- ==================================================================== 5 -->
+
+  <h2 id="m-modifier"><span class="manual__rank">5.</span>Uw pagina’s bewerken</h2>
+
+  <p>Druk rechtsboven op <span class="manual__ui">De pagina’s bewerken</span>. De vermelding
+  <span class="manual__ui">bewerken</span> verschijnt naast de naam van de toepassing, en
+  onder de pagina komt er een bewerkbalk bij. Om er weer uit te gaan drukt u op
+  <span class="manual__ui">Alleen bekijken</span>: er wordt niets ongedaan gemaakt.</p>
+
+  <p>Er komt niets op uw schijf terecht zolang u niet op
+  <span class="manual__ui">De wijzigingen opslaan</span> hebt gedrukt — zie
+  hoofdstuk&nbsp;10.</p>
+
+  <h3>Verplaatsen en van formaat veranderen</h3>
+
+  <p>Klik op een widget: hij is geselecteerd, en het verplaatsen begint meteen. Dat is
+  directer dan op het toestel, waar u op een klein doel moet mikken.</p>
+
+  <p>Op de geselecteerde widget verschijnen <strong>negen grepen</strong>: vier winkelhaken
+  op de hoeken, vier segmenten midden op de zijden, en een gestippelde ellips in het midden.
+  De winkelhaken en de segmenten veranderen het formaat; de ellips verplaatst. De ellips in
+  het midden is ook de enige greep van een widget die door andere bedekt wordt.</p>
+
+  <p>Tijdens de beweging ziet u twee rechthoeken: die van uw vinger of uw muis, en die waar
+  de widget werkelijk terecht zal komen. Het verschil tussen beide is het aantrekken van het
+  raster van het toestel — het aantal cellen staat in de bewerkbalk, bijvoorbeeld
+  <span class="manual__ui">Raster 48 × 29</span>. Een widget die tegen een rand wordt geduwd,
+  kleeft aan die rand. Een te ruime beweging wordt binnen de pagina teruggebracht: ze mislukt
+  nooit.</p>
+
+  <p>Tijdens het wijzigen van het formaat verschijnt de grootte in millimeter. De lijst
+  <span class="manual__ui">Widgets van de pagina</span> volgt de beweging: zodra ze afgelopen
+  is, draagt de lijst de nieuwe grootte en toont de oriëntatieminiatuur de nieuwe rechthoek.
+  De vermeldingen <span class="manual__ui">hier onbereikbaar</span> volgen ook — een widget
+  uitrekken kan een andere inmetselen, hem inkrimpen kan er een vrijmaken.</p>
+
+  <h3>De balk van de geselecteerde widget</h3>
+
+  <p>Ze komt boven de widget te staan, of eronder als er geen plaats is, en bedekt hem nooit.
+  Ze draagt zijn laag — bijvoorbeeld
+  <span class="manual__ui">Laag 4 van 6</span> —, vier knoppen voor de stapeling
+  (achtergrond, naar achteren, naar voren, voorgrond), en dan
+  <span class="manual__ui">Dupliceren</span> en
+  <span class="manual__ui">Verwijderen</span>.</p>
+
+  <p>De kopie van een widget komt vlak vóór het origineel te staan, één cel verschoven. Een
+  verwijdering vraagt geen bevestiging: <span class="manual__ui">Ongedaan maken</span> draait
+  ze volledig terug.</p>
+
+  <h3>Een widget toevoegen</h3>
+
+  <p>De knop <span class="manual__ui">Een widget toevoegen</span> opent de volledige lijst,
+  gegroepeerd per familie, in de volgorde van het scherm van XCTrack. Elke regel toont een
+  voorbeeld, de officiële naam van de widget en de naam die hij in het bestand draagt. Het
+  veld <span class="manual__ui">Widget zoeken</span> filtert op allebei.</p>
+
+  <p>Eén klik zet de widget in het midden van de pagina. De rand van het voorbeeld zegt wat
+  er gaat gebeuren:</p>
+
+  <ul>
+    <li><strong>volle rand</strong> — dit type bestaat al in uw bestand: de widget wordt van
+    dat exemplaar <em>gekopieerd</em>, met al zijn instellingen, ook die welke deze editor
+    niet kan tonen;</li>
+    <li><strong>gestippelde rand</strong> — dit type is nieuw voor uw bestand: de widget
+    wordt aangemaakt met alleen zijn basisinstellingen, waarna XCTrack de andere bij het
+    lezen toevoegt.</li>
+  </ul>
+
+  <p>Het vakje <span class="manual__ui">Al in het bestand</span> houdt alleen de types van
+  het eerste geval over. Sommige regels dragen een plaatje
+  <span class="manual__ui">Pro</span>: XCTrack houdt die widgets voor de Pro-licentie
+  voor.</p>
+
+  <p>Twee opmerkingen bij een voorbeeld betekenen niet hetzelfde.
+  <span class="manual__ui">niets in rust</span> is een feit van het toestel: deze widget
+  tekent niets zolang er geen gegevens zijn binnengekomen, en toch neemt hij zijn plaats in.
+  <span class="manual__ui">voorbeeld niet getekend</span> is een grens van deze editor: hij
+  heeft voor dat type geen eigen tekening, en toont liever een eerlijk kader dan een
+  misleidende benadering.</p>
+
+  <h3>Pagina’s beheren</h3>
+
+  <p>De knop <span class="manual__ui">Pagina’s beheren</span> opent de twee carrousels,
+  liggend en staand. U kunt:</p>
+
+  <ul>
+    <li>een pagina <strong>invoegen</strong>: de knop <span class="manual__ui">+</span>
+    tussen twee miniaturen klapt een luik uit waarin u het type kiest — thermiekassistent,
+    XC-assistent, wedstrijd, of leeg;</li>
+    <li>een pagina <strong>dupliceren</strong>: de kopie komt er vlak achter;</li>
+    <li>een pagina <strong>verwijderen</strong>: de eerste klik toont de gevolgen en verandert
+    de knop in <span class="manual__ui">Verwijderen bevestigen</span>, de tweede
+    verwijdert;</li>
+    <li><strong>de volgorde wijzigen</strong>: sleep een miniatuur op een andere, of gebruik
+    de twee pijlen.</li>
+  </ul>
+
+  <p>Vóór elke handeling zegt het gereedschap wat er gaat verschuiven: de pagina’s 3 tot 5
+  worden 4 tot 6. Het waarschuwt u ook als u op het punt staat een tweede pagina met
+  thermiekassistent te maken — dit gereedschap veronderstelt dat XCTrack alleen naar de
+  laatste vanzelf overschakelt, zonder dat te hebben nagegaan —, of om alleen nog pagina’s
+  over te houden die voor geen enkele navigatie zijn ingeschakeld, waarna uw instrument in
+  die richting geen pagina meer zou hebben om te tonen.</p>
+
+  <p><strong>Het type van een pagina verandert u hier niet.</strong> XCTrack legt het bij het
+  aanmaken vast, en het effect van een wijziging achteraf is niet op het toestel nagegaan: we
+  bieden het liever niet aan dan het aan te bieden zonder het te weten.</p>
+
+  <h3>Ongedaan maken en opnieuw doen</h3>
+
+  <p>De twee omkaderde pijlen rechtsboven draaien terug en doen opnieuw. Ga er met de muis
+  overheen: ze zeggen wat ze gaan doen — ‘Ongedaan maken: GPS-hoogte verplaatsen’. Op het
+  toetsenbord maakt <em>Ctrl+Z</em> ongedaan en doet <em>Ctrl+Shift+Z</em> opnieuw
+  (<em>Cmd</em> op de Mac).</p>
+
+  <p>Alles is gedekt: handelingen op de widgets, toevoegingen, verwijderingen, stapeling, en
+  alle paginabewerkingen. <strong>De laatste honderd stappen</strong> worden bewaard;
+  daarboven worden de oudste vergeten. Een handeling zonder effect levert geen stap op.</p>
+
+  <p>Eén uitzondering: de bibliotheek valt er niet onder. Een opgeborgen configuratie
+  verwijderen is niet ongedaan te maken.</p>
+
+  <h3>De handelingen met het toetsenbord</h3>
+
+  <ul>
+    <li><strong>Pijltjestoetsen</strong> — één cel verplaatsen</li>
+    <li><strong>Shift + pijltjestoetsen</strong> — één cel van formaat veranderen</li>
+    <li><strong>Ctrl + pijl omhoog / omlaag</strong> — één laag naar voren of naar achteren</li>
+    <li><strong>Ctrl + Shift + pijl omhoog / omlaag</strong> — voorgrond, achtergrond</li>
+    <li><strong>Ctrl + D</strong> — dupliceren</li>
+    <li><strong>Delete</strong> — verwijderen</li>
+    <li><strong>Escape</strong> — de lopende beweging afbreken, anders de selectie opheffen</li>
+  </ul>
+
+  <!-- ==================================================================== 6 -->
+
+  <h2 id="m-gadget"><span class="manual__rank">6.</span>De instellingen van een widget</h2>
+
+  <p>Kies een widget, op de pagina of in de lijst: zijn instellingen verschijnen in de balk
+  onderaan, <strong>in de volgorde waarin het bestand ze draagt</strong>. De greep boven aan
+  de balk verandert haar hoogte; de inklapknop sluit ze.</p>
+
+  <p><strong>Het inklappen houdt stand.</strong> De balk komt ingeklapt binnen en klapt bij
+  uw eerste selectie vanzelf uit, omdat ze dan iets te tonen heeft. Maar zodra u de knop
+  <span class="manual__ui">Inklappen</span> aanraakt, beslist u: geen enkele selectie zal ze
+  nog heropenen, en ze laat u de hele pagina zolang u wilt. Ingeklapt blijft haar kopbalk de
+  gekozen widget noemen, en haar knop zegt wat uitklappen u zou geven —
+  <span class="manual__ui">Instellingen uitklappen</span>, of
+  <span class="manual__ui">Lijst met widgets</span> als er niets is geselecteerd.</p>
+
+  <p>Vanaf een twaalftal instellingen verschijnt er een veld
+  <span class="manual__ui">Instellingen filteren</span>. Het zoekt in het opschrift <em>én</em>
+  in de naam die de instelling in het bestand draagt. De knop
+  <span class="manual__ui">?</span> naast een instelling klapt de uitleg uit die XCTrack
+  erover geeft.</p>
+
+  <h3>In kijkmodus: wat er is ingesteld</h3>
+
+  <p>Buiten de bewerkmodus meldt een balk hoeveel instellingen afwijken van wat XCTrack op
+  een nieuwe widget zet, en de knop
+  <span class="manual__ui">Alleen wat afwijkt</span> houdt alleen die over. Elke regel draagt
+  haar merkteken: <span class="manual__ui">door u ingesteld</span>,
+  <span class="manual__ui">fabriekswaarde</span>, of
+  <span class="manual__ui">fabriekswaarde onbekend</span> wanneer onze opname niets over die
+  instelling zegt.</p>
+
+  <h3>De instellingen die de widget niet schrijft</h3>
+
+  <p>Achter in het paneel verzamelt een blok de instellingen die voor deze widget <em>niet</em>
+  in uw bestand staan. XCTrack past er de waarde uit zijn eigen code op toe — die ernaast
+  staat geschreven. Dat is niet hetzelfde als een instelling die op die waarde is gezet: zie
+  het volgende hoofdstuk.</p>
+
+  <!-- ==================================================================== 7 -->
+
+  <h2 id="m-usine"><span class="manual__rank">7.</span>De drie handelingen rond een fabriekswaarde</h2>
+
+  <p>De fabriekswaarde is wat XCTrack toepast wanneer er niets in het bestand staat. Drie
+  handelingen draaien om haar. <strong>Ze zijn niet gelijkwaardig</strong>, en dat is het
+  belangrijkste van deze handleiding na de persoonlijke gegevens.</p>
+
+  <h3>‘Deze waarde vastleggen’ / ‘Deze waarde schrijven’ — een ontbrekende fabriekswaarde
+  schrijven</h3>
+
+  <p>De instelling staat niet in het bestand. Deze knop schrijft ze erin, op haar
+  fabriekswaarde. Ze heet <span class="manual__ui">Deze waarde vastleggen</span> in het
+  paneel van een widget <em>en</em> <span class="manual__ui">Deze waarde schrijven</span> in
+  de algemene instellingen.</p>
+
+  <p>Op een widget verandert dat niets aan wat uw toestel vandaag doet: het paste die waarde
+  al toe. Wat het wel verandert, is voor later — de waarde ligt voortaan
+  <strong>vast</strong>, en een update van XCTrack die die fabriekswaarde zou wijzigen, zal
+  uw instelling niet meer veranderen.</p>
+
+  <h3>‘Verwijderen’ — het bestand over een instelling laten zwijgen</h3>
+
+  <p>Deze knop bestaat alleen in de algemene instellingen, en alleen wanneer de waarde die in
+  het bestand staat <strong>al</strong> gelijk is aan de fabriekswaarde. Ze haalt dan de
+  regel weg: het bestand zegt niets meer over die instelling.</p>
+
+  <p>Ze verschijnt nooit bij een waarde die u zelf hebt gekozen. Het bestand laten zwijgen
+  over een bewuste instelling zou u die instelling ontnemen, en een onopvallende knop mag dat
+  niet met één klik doen.</p>
+
+  <div class="manual__measured">
+    <span class="manual__boxTitle">‘Verwijderen’ is geen terugkeer naar de
+    fabriekswaarde</span>
+    <p>Een algemene instelling uit het bestand halen zet uw toestel niet terug op de
+    fabriekswaarde. Het houdt de waarde die het al heeft. Zie het kader van
+    hoofdstuk&nbsp;8.</p>
+  </div>
+
+  <h3>‘Fabriekswaarde terugzetten’ — de enige die een keuze wist</h3>
+
+  <p>Deze handeling vervangt een waarde <em>die u hebt gekozen</em> door de waarde die een
+  nieuwe XCTrack toepast. Het is de enige van de drie die een bewuste instelling wist: de
+  twee andere raken alleen waarden aan die al gelijk waren aan de fabriekswaarde, of die
+  helemaal niet geschreven waren.</p>
+
+  <p>Ze verbergt zich dus niet. Ze neemt haar eigen regel onder de instelling in, en toont de
+  twee waarden die tegenover elkaar staan <em>vóór</em> de klik: ‘die fabriekswaarde, die
+  waarde in dit bestand. Terugzetten verandert wat het toestel tijdens de vlucht doet.’ Is de
+  fabriekswaarde op een andere versie van XCTrack opgenomen dan die van uw bestand, dan zegt
+  de zin dat er ook bij.</p>
+
+  <p>Ze <strong>schrijft</strong> de fabriekswaarde in plaats van de regel te wissen. De
+  instelling gaat dan naar de toestand ‘fabriekswaarde’, van waaruit
+  <span class="manual__ui">Verwijderen</span> wordt aangeboden. Wilt u helemaal doorgaan, dan
+  is dat een tweede bewuste klik, en ziet u de twee gevolgen apart.</p>
+
+  <h3>Wanneer er geen enkele knop wordt aangeboden</h3>
+
+  <p>Het gebeurt dat geen van de drie wordt aangeboden, en dat is gewild. Een geraden waarde
+  schrijven zou erger zijn dan niets aanbieden. De gevallen:</p>
+
+  <ul>
+    <li>de fabriekswaarde is niet opgenomen;</li>
+    <li>XCTrack berekent haar bij het opstarten volgens de taal en het land van het toestel —
+    dat is het geval bij de eenheden;</li>
+    <li>XCTrack publiceert er twee die elkaar tegenspreken: zijn code en zijn
+    instellingenscherm zeggen niet hetzelfde. Het gereedschap toont er dan twee en kiest
+    niet;</li>
+    <li>de opgenomen fabriekswaarde is een samengestelde waarde, en deze editor schrijft
+    alleen eenvoudige waarden.</li>
+  </ul>
+
+  <!-- ==================================================================== 8 -->
+
+  <h2 id="m-generaux"><span class="manual__rank">8.</span>De algemene instellingen van XCTrack</h2>
+
+  <p>De knop <span class="manual__ui">Instellingen</span> in de bovenste balk opent alles wat
+  <strong>buiten</strong> de widgetpagina’s wordt ingesteld: eenheden, knoppen, sensoren,
+  geluid, luchtruim, Livetracking. Dat zijn de 217 instellingen die XCTrack kent, getoond in
+  de volgorde van de twintig schermen van zijn menu.</p>
+
+  <p>Om ze te wijzigen drukt u op
+  <span class="manual__ui">De instellingen bewerken</span>. In kijkmodus wordt er
+  <strong>geen enkel invoerveld gebouwd</strong>: het is niet grijs gemaakt, er is gewoon
+  niets aan te raken.</p>
+
+  <div class="manual__note">
+    <p>Deze instellingen bestaan alleen in een ‘backup’-export. Hebt u een ‘pages’-export
+    geopend, dan zegt de pagina u dat: het is geen verlies, uw bestand bevat ze eenvoudigweg
+    niet.</p>
+  </div>
+
+  <h3>De weg vinden</h3>
+
+  <p>Een balk bovenaan telt wat u hebt ingesteld, wat op de fabriekswaarde blijft, en wat in
+  het bestand ontbreekt. Drie bedieningen helpen bij het schiften:</p>
+
+  <ul>
+    <li><span class="manual__ui">Instellingen filteren</span> zoekt in het opschrift, in de
+    naam van de instelling en in haar waarde; accenten en hoofdletters doen er niet toe;</li>
+    <li><span class="manual__ui">Alleen wat ik heb ingesteld</span> houdt alleen over wat van
+    de fabriekswaarde afwijkt;</li>
+    <li><span class="manual__ui">Persoonlijke waarden verbergen</span> vervangt de waarden
+    die u herkenbaar maken door puntjes — handig als iemand op uw scherm meekijkt.</li>
+  </ul>
+
+  <h3>Het gemeten kader, niet te missen</h3>
+
+  <div class="manual__measured">
+    <span class="manual__boxTitle">Een ontbrekende instelling wordt niet op de fabriekswaarde
+    gezet</span>
+    <p>Bij het inlezen met <span class="manual__ui">Alles vervangen</span> houdt uw toestel
+    de instelling die het al heeft: <strong>wat het bestand niet zegt, wordt niet
+    aangeraakt</strong>. Het inlezen is een samenvoeging, geen vervanging.</p>
+    <p>Dit is een meting, geen veronderstelling. Het protocol: een weergave-instelling is uit
+    een back-up gehaald, de back-up is met ‘Alles vervangen’ opnieuw ingelezen, en daarna is
+    de configuratie opnieuw geëxporteerd. De instelling was teruggekeerd naar de waarde die
+    het toestel al droeg, en niet naar de fabriekswaarde. Een tweede instelling, in dezelfde
+    ronde gewijzigd, heeft bewezen dat het inlezen de rest wel degelijk had geschreven.</p>
+    <p>Twee grenzen, die gezegd moeten worden: de meting gaat over de modus ‘Alles
+    vervangen’, de twee andere inleesmodi zijn niet beproefd; en het geval van een nieuw
+    toestel is niet getest — op een toestel dat die instelling nooit heeft aangeraakt, geldt
+    de fabriekswaarde noodzakelijk, maar dat is een afleiding.</p>
+  </div>
+
+  <p>Let op: aan de kant van de <em>widget</em> is het omgekeerd. XCTrack vult bij het lezen
+  de instellingen aan die een widget niet draagt, en daar geldt de fabriekswaarde wel. De
+  twee situaties zijn apart gemeten, en ze geven niet hetzelfde resultaat.</p>
+
+  <h3>Wat instelbaar is, en wat niet</h3>
+
+  <p>De meeste regels zijn instelbaar: aankruisvakje, lijst, schuifregelaar, getal, tekst,
+  kleur. Sommige blijven <strong>zonder bediening</strong> staan, en elke zegt waarom:</p>
+
+  <ul>
+    <li>die welke op het toestel een venster openen — de in te drukken knoppen, de tabel van
+    de akoestische vario: ‘een op het instrument in te drukken knop, een op te bouwen tabel’
+    voert men hier niet in;</li>
+    <li>die waarvan de waarde samengesteld is: de pagina toont ze zoals ze is, zonder ze te
+    openen, en herschrijft ze nooit;</li>
+    <li>die welke XCTrack nergens leesbaar benoemt: zonder opschrift stelt het gereedschap
+    niet voor ze te wijzigen;</li>
+    <li>die welke de toestand van de toepassing opslaan in plaats van een instelling.</li>
+  </ul>
+
+  <p>Drie blokken achter in de pagina verzamelen deze gevallen:
+  <span class="manual__ui">Instellingen zonder opschrift</span>,
+  <span class="manual__ui">Wat de toepassing heeft onthouden (geen instellingen)</span>, en
+  <span class="manual__ui">Regels die deze catalogus niet kent</span> — die laatste zijn door
+  een andere versie van XCTrack geschreven. Alle komen er ongeschonden uit.</p>
+
+  <h3>Het luik met de persoonlijke gegevens</h3>
+
+  <p>Een ingeklapt luik boven aan de pagina inventariseert wat <em>deze instellingen</em> over
+  u prijsgeven, met de aard van elk gegeven en waar het gereedschap het vandaan heeft. Het
+  telt alleen de algemene instellingen; de teksten die u in de widgets hebt geschreven,
+  worden elders geïnventariseerd, op het ogenblik van opslaan.</p>
+
+  <!-- ==================================================================== 9 -->
+
+  <h2 id="m-version"><span class="manual__rank">9.</span>De beoogde versie, de compatibiliteit en het opruimen</h2>
+
+  <p>Menu <span class="manual__ui">Bestand</span>, dan
+  <span class="manual__ui">Versie en compatibiliteit…</span>.</p>
+
+  <p>Het formaat van XCTrack verandert bij elke versie. Dit scherm vraagt u
+  <span class="manual__ui">De XCTrack-versie waarop u mikt</span> — die van het toestel
+  waarop u dit bestand opnieuw zult inlezen — en zegt u daarna wat uw bestand bevat dat die
+  versie niet meer leest, en wat zij verwacht en het niet heeft.</p>
+
+  <p>Het is een <strong>vaststelling</strong>: er beweegt niets zolang u er niet toe
+  beslist.</p>
+
+  <h3>Uw versie kiezen</h3>
+
+  <p>U kiest op de naam die uw toestel toont, ‘1.0.3-beta’. De versie die uw bestand vermeldt
+  is al voorgeselecteerd, en een zin zegt waar die voorselectie vandaan komt — en als ze
+  willekeurig is, zegt ze dat ook.</p>
+
+  <p>Omdat meerdere versies vaak precies dezelfde instellingen aanvaarden,
+  <strong>noemt het gereedschap de versies die het niet van de uwe kan onderscheiden</strong>:
+  kiezen tussen twee buren heeft dan geen effect, en dat kan men beter zeggen dan u laten
+  raden.</p>
+
+  <h3>De drie woorden van de diagnose</h3>
+
+  <p>Elke opmerking draagt een van deze woorden, en het bepaalt wat u moet doen:</p>
+
+  <ul>
+    <li><strong>verouderd</strong> — XCTrack leest deze instelling niet meer, en echte
+    bestanden die door die versie zijn geschreven dragen ze toch. Wij hebben dat zien
+    gebeuren, wij veronderstellen het niet. <em>Ze weghalen valt te verdedigen.</em></li>
+    <li><strong>blinde vlek</strong> — het gebrek ligt bij ons, niet in uw bestand: onze
+    lezing van de versies heeft daar een gat. <em>Wij raken er niet aan.</em></li>
+    <li><strong>onbekend</strong> — geen enkele versie die wij hebben kunnen lezen draagt deze
+    instelling, en geen enkel echt bestand toont ze. <em>Wij besluiten niets.</em></li>
+  </ul>
+
+  <p>De diagnose deelt de verschillen in acht families in, en elke draagt met zoveel woorden
+  wat u moet doen. Die welke het zwaarst weegt is misschien deze:
+  <span class="manual__ui">Onze lezing heeft een gat: de instelling bestond wel
+  degelijk</span> — ‘Nooit verwijderen. Dit zijn geldige instellingen, en ze voor verouderde
+  instellingen aanzien zou de uwe wissen.’</p>
+
+  <h3>Waarom het gereedschap weigert bepaalde instellingen aan te raken</h3>
+
+  <div class="manual__measured">
+    <p>Alles berust op een eenvoudige onevenwichtigheid: <strong>niets weghalen maakt niets
+    stuk, ten onrechte weghalen maakt een vluchtconfiguratie stuk.</strong></p>
+    <p>Een gegevensbank die elke waargenomen instelling voor een geldige instelling zou
+    houden, zou juist de restanten beschermen die een opruiming moet weghalen. Een
+    gegevensbank die elke niet-gelezen instelling voor een verwijderde instelling zou houden,
+    zou volkomen geldige instellingen wissen. Het gereedschap onderscheidt daarom drie dingen:
+    wat het in de versies heeft <em>gelezen</em>, wat een echt bestand <em>draagt</em>, en
+    waarom die twee verschillen.</p>
+  </div>
+
+  <p>De schifting is met opzet nauw. Van de acht families verschillen wordt er
+  <strong>maar één</strong> ter verwijdering voorgesteld: die welke een echt bestand
+  bevestigt. En zelfs daar blijft een verouderde instelling waarvan het gereedschap niet kan
+  zeggen vanaf welke versie ze niet meer dient, gewoon staan — men stelt niet voor te
+  verwijderen wat men niet zou kunnen uitleggen.</p>
+
+  <h3>Weghalen wat een oudere versie heeft achtergelaten</h3>
+
+  <p>XCTrack bewaart de instellingen die het niet meer kent: een back-up van dit jaar sleept
+  nog schakelaars van drie jaar geleden mee. De sectie
+  <span class="manual__ui">Weghalen wat een oudere versie heeft achtergelaten</span>, onder de
+  diagnose en alleen in bewerkmodus, stelt voor ze weg te halen. Valt er niets weg te halen,
+  dan verschijnt de sectie helemaal niet.</p>
+
+  <p>Ze begint met u gerust te stellen, en dat is terecht: ‘Er is geen haast bij en er is
+  niets stuk: XCTrack sleept ze mee zonder ze te lezen, en ze laten staan verandert niets aan
+  uw pagina’s. Ze weghalen maakt het bestand lichter, meer niet.’</p>
+
+  <ol class="manual__steps">
+    <li>Klap <span class="manual__ui">Deze 9 instellingen bekijken, en afvinken wat u liever
+    houdt</span> uit — het aantal is dat van uw bestand. Alles is bij de start aangevinkt;
+    elke regel zegt tot welke versie van XCTrack de instelling nog werd gelezen, en haar
+    waarde wanneer die eenvoudig is.</li>
+    <li>Vink af wat u wilt houden. De telling wordt bijgewerkt, en de knop zegt precies
+    hoeveel instellingen hij zal weghalen.</li>
+    <li>Klik op de knop. Het paneel wordt vervangen door een bericht en door
+    <span class="manual__ui">Deze 9 instellingen terugzetten</span>.</li>
+  </ol>
+
+  <p>De terugkeer is volledig: teruggezet komt het bestand er byte voor byte uit. De
+  handeling wordt ook in de geschiedenis opgeslagen, dus
+  <span class="manual__ui">Ongedaan maken</span> draait ze terug zoals de rest.</p>
+
+  <p>En er is niets vertrokken zolang u niet hebt opgeslagen: ‘Uw toestel weet er nog niets
+  van: het bestand verandert pas wanneer u het opslaat.’</p>
+
+  <!-- =================================================================== 10 -->
+
+  <h2 id="m-enregistrer"><span class="manual__rank">10.</span>Opslaan, en kiezen wat u weggeeft</h2>
+
+  <p>De opslaanknop rechtsboven zegt wat er gaat gebeuren:
+  <span class="manual__ui">Een kopie opslaan</span> wanneer u niets hebt aangeraakt,
+  <span class="manual__ui">De wijzigingen opslaan</span> wanneer het document is veranderd.
+  Het is ook het enige zichtbare teken dat er werk aan de gang is.</p>
+
+  <p>Hij opent het venster
+  <span class="manual__ui">Deze configuratie opslaan</span>, dat u maar één ding vraagt:
+  <strong>wat moet er worden opgeslagen?</strong></p>
+
+  <p>Drie antwoorden, gerangschikt in de volgorde van wat vertrekt: alles, alles behalve wat
+  u herkenbaar maakt, uw pagina’s alleen. Een trap lager gaan betekent altijd ‘minder
+  weggeven’. Elke uitweg draagt onder haar kaart de inventaris van wat ze zal doen — die
+  verschijnt zodra u haar aanvinkt, en <strong>vóór</strong> elke download.</p>
+
+  <h3>De naam van het bestand ligt op voorhand vast</h3>
+
+  <p>Hij draagt een tijdstempel en <strong>neemt niets van de oorspronkelijke naam over</strong>,
+  die vaak een voornaam bevat. Hij ziet eruit als
+  <span class="manual__file">xctrack_2026-08-21-153207_backup.xcfg</span>. Omdat de datum
+  achterstevoren is geschreven, is de alfabetische volgorde van uw bestanden hun
+  chronologische volgorde.</p>
+
+  <p>De naam draagt ook het <strong>formaat</strong> van het gemaakte bestand en de vermelding
+  <span class="manual__file">-anon</span> wanneer er waarden zijn vervangen:
+  <span class="manual__file">…_backup-anon.xcfg</span> is een volledige back-up,
+  <span class="manual__file">…_pages-anon.xcfg</span> draagt alleen pagina’s. Verwar ze niet:
+  een <span class="manual__file">backup</span> leest instellingen opnieuw in, een
+  <span class="manual__file">pages</span> niet.</p>
+
+  <h3>Uitweg 1 — ‘Uw configuratie, precies zoals ze is’</h3>
+
+  <p>Dat is uw bestand. Hebt u niets gewijzigd, dan komt het er precies zo uit als het erin
+  ging, zonder één herschreven komma — en zijn SHA-256-vingerafdruk is die van het
+  oorspronkelijke bestand, u kunt het zelf nagaan. Hebt u wel iets gewijzigd, dan wordt alles
+  wat u niet hebt aangeraakt onveranderd overgenomen, tot en met de getallen en de
+  oorspronkelijke witruimte.</p>
+
+  <p>Dit is de uitweg voor wie het bestand op <em>zijn eigen</em> instrument terugzet. Het
+  venster herinnert u er dan aan wat het bestand over u draagt.</p>
+
+  <h3>Uitweg 2 — ‘Al uw instellingen, zonder wat u herkenbaar maakt’</h3>
+
+  <p>Het bestand blijft een <strong>volledige back-up</strong>. Uw vario en zijn tonen, uw
+  eenheden, uw thema, uw luchtruimdrempels, uw knoppen: alles zit erin. Wat u herkenbaar
+  maakt wordt door een neutrale waarde vervangen, of regel voor regel verwijderd.</p>
+
+  <p><strong>Dit is de uitweg om hulp te vragen over een instelling</strong> — op een forum,
+  in een bericht aan een andere piloot. De andere deelbare versie draagt namelijk geen enkele
+  instelling mee: ze kan uw vraag dus niet dragen.</p>
+
+  <p>Elke behandelde regel wordt getoond met haar uitspraak en haar reden, gegroepeerd naar
+  wat er met haar gebeurt:</p>
+
+  <ul>
+    <li><span class="manual__ui">Vervangen door een neutrale waarde</span> — uw naam wordt
+    ‘Pilote’, uw scherm ‘Voile’, het kaartthema dat u hebt geïnstalleerd keert terug naar de
+    fabriekswaarde van XCTrack. De regel houdt haar plaats en haar type;</li>
+    <li><span class="manual__ui">Uit het bestand verwijderd</span> — de hele regel vertrekt,
+    omdat haar waarde een structuur is: uw huidige taak en haar coördinaten, uw gekoppelde
+    sensoren en hun bluetoothadressen, uw waypointbestanden, uw offlinekaarten, uw
+    snelberichten voor Livetracking. Een vervangende structuur schrijven zou neerkomen op het
+    fabriceren van een vorm die XCTrack nooit schrijft; een ontbrekende regel is daarentegen
+    de toestand van een nieuwe installatie;</li>
+    <li><span class="manual__ui">Onveranderd behouden, en hier staat waarom</span> — wat het
+    gereedschap heeft <em>geweigerd</em> aan te raken, even duidelijk gezegd als de rest: uw
+    keuzes voor het uitzenden via Livetrack, de categorie van uw scherm. Dat zijn
+    instellingen, geen gegevens: ze dragen geen naam, geen nummer, geen adres, en het is vaak
+    juist daarover dat men komt praten;</li>
+    <li><span class="manual__ui">Aanwezig in het bestand, maar leeg</span> — de plaats bestaat
+    en draagt niets. Er valt niets te vervangen.</li>
+  </ul>
+
+  <p>Op de referentieback-up van dit project geeft dat <strong>16 persoonlijke instellingen:
+  3 vervangen, 4 verwijderd, 4 behouden, 5 leeg</strong>.</p>
+
+  <p>Wat de ontvanger niet krijgt, zijn de verwijderde regels — en geen van die regels is een
+  instelling: het zijn bestanden en toestellen die bij u thuis leven, en waarmee hij niets had
+  kunnen aanvangen.</p>
+
+  <p>Deze uitweg verschijnt niet bij een bestand dat geen enkele voorkeur draagt — een
+  ‘pages’-export bijvoorbeeld. Ze zou daar precies hetzelfde bestand maken als
+  uitweg&nbsp;3, onder dezelfde naam, en twee niet van elkaar te onderscheiden kaarten zijn
+  minder waard dan één kaart minder.</p>
+
+  <div class="manual__warning">
+    <span class="manual__boxTitle">Deze uitweg berust op een lijst, en een lijst
+    veroudert</span>
+    <p>Ze behandelt de 44 bekende persoonlijke instellingen van XCTrack en de elf tekstvelden
+    van de widgets. Het formaat verandert bij elke versie: <strong>een sindsdien verschenen
+    persoonlijke instelling zou niet op de lijst staan, en zou onversleuteld vertrekken.</strong>
+    Uitweg&nbsp;3, verderop, hangt van geen enkele lijst af — ze draagt helemaal geen
+    instelling mee.</p>
+  </div>
+
+  <h3>Uitweg 3 — ‘Deelbare versie, zonder persoonlijke gegevens’</h3>
+
+  <p>Dat is een ‘pages’-export waarvan de teksten die u hebt geschreven door neutrale worden
+  vervangen. De opmaak blijft behouden; de voorkeuren vertrekken niet.</p>
+
+  <p><strong>Dit is de veiligste uitweg</strong>, en de enige die van geen enkele lijst met
+  instellingen afhangt: de voorkeuren worden er niet uit gehaald, ze worden er nooit in gezet.
+  Kies haar wanneer u een <em>opmaak</em> deelt — en uitweg&nbsp;2 wanneer uw vraag over een
+  <em>instelling</em> gaat.</p>
+
+  <p>Vóór de download toont het gereedschap u:</p>
+
+  <ul>
+    <li><span class="manual__ui">Wat niet vertrekt</span> — de hele secties die bij u blijven
+    en, met zoveel woorden, wat de ontvanger zelf zal moeten instellen: zijn eenheden, zijn
+    thema, zijn vario, zijn luchtruim, zijn Livetracking, zijn sensoren;</li>
+    <li><span class="manual__ui">De bijlagen van het archief</span>, als uw bestand een
+    <span class="manual__file">.xczfg</span> is — die vertrekken niet, en de deelbare versie
+    wordt altijd als kaal <span class="manual__file">.xcfg</span> geschreven;</li>
+    <li><span class="manual__ui">Uw teksten in de widgets</span> — de inventaris, regel voor
+    regel: waar de tekst staat, welke waarde hij droeg, waardoor die wordt vervangen, en
+    waarom.</li>
+  </ul>
+
+  <p>De vervangingen behouden de <em>vorm</em> van wat ze vervangen, om uw opmaak niet stuk te
+  maken: een titel wordt ‘Titre 1’, een telefoonnummer wordt een nummer van hetzelfde
+  formaat maar dat niet te bellen valt, een webadres wordt een adres van een gereserveerd
+  domein dat nergens naartoe leidt.</p>
+
+  <h3>Wat eruitziet als een tekst die u zou hebben geschreven</h3>
+
+  <p>Onder elk van de twee deelbare uitwegen voegt het gereedschap een laatste paragraaf toe.
+  Daarin meldt het de teksten die <em>op geen van zijn lijsten staan</em> en die er toch
+  uitzien als iets dat u zou hebben geschreven: een zin, een woord met een accent, een web- of
+  e-mailadres, een bestandspad, een toesteladres, een nummer.</p>
+
+  <p><strong>Het meldt ze, het vervangt ze niet.</strong> Vervangen op een vermoeden zou
+  legitieme instellingen beschadigen — en alleen u weet of u die tekst hebt geschreven. Op de
+  echte bestanden van onze proeven meldt deze paragraaf niets: wat XCTrack zelf schrijft
+  bestaat uit woorden die uit lijsten zijn gekozen, nooit uit zinnen.</p>
+
+  <div class="manual__warning">
+    <span class="manual__boxTitle">De inventaris is de controle, niet onze belofte</span>
+    <p>De lijst van de behandelde tekstvelden ligt vast, en het formaat van XCTrack verandert
+    bij elke versie: een sindsdien verschenen tekstveld zou onversleuteld vertrekken.
+    <strong>Lees de inventaris door vóór u het bestand verstuurt.</strong> Een lege inventaris
+    bewijst geen afwezigheid — hij bewijst alleen dat het gereedschap niets heeft gevonden
+    binnen wat het kan zoeken.</p>
+  </div>
+
+  <h3>Het bestand op het instrument terugzetten</h3>
+
+  <ol class="manual__steps">
+    <li>Kopieer het gedownloade bestand naar de SD-kaart van het instrument, of zet het over
+    via kabel.</li>
+    <li>Open op het instrument het scherm voor het delen van de configuratie van XCTrack en
+    start het inlezen.</li>
+    <li>De modus <span class="manual__ui">Alles vervangen</span> is die waarop onze metingen
+    betrekking hebben. Denk eraan wat hij precies doet: wat het bestand niet zegt, wordt niet
+    aangeraakt (hoofdstuk&nbsp;8).</li>
+    <li>Houd een back-up van uw vorige configuratie bij vóór u inleest. Dit gereedschap kan
+    niets meer voor u doen zodra het inlezen gebeurd is.</li>
+  </ol>
+
+  <!-- =================================================================== 11 -->
+
+  <h2 id="m-bibliotheque"><span class="manual__rank">11.</span>De bibliotheek met configuraties</h2>
+
+  <p>Menu <span class="manual__ui">Bestand</span>, dan
+  <span class="manual__ui">Bibliotheek…</span>. Daar bergt u meerdere configuraties onder een
+  naam op — een voor de wedstrijd, een voor de vliegbivak, een voor de school — en u keert
+  terug naar een ervan wanneer u wilt.</p>
+
+  <p>Alles blijft in deze browser. Er wordt niets ergens naartoe gestuurd, er is geen account
+  en geen server, en een ander toestel ziet uw bibliotheek niet. De opgeborgen bytes zijn die
+  van uw bestand, nooit een herschreven kopie: ze worden bij elke herlezing met de
+  vingerafdruk nagekeken.</p>
+
+  <h3>Opbergen, terugvinden, er weer uit halen</h3>
+
+  <ul>
+    <li><span class="manual__ui">De geopende configuratie opbergen</span> vraagt om een naam
+    — ‘de naam die u over zes maanden zult herkennen’ — en om een optionele notitie.</li>
+    <li><span class="manual__ui">Een bestand opbergen…</span> bergt een
+    <span class="manual__file">.xcfg</span> van de schijf op, zonder het te openen.</li>
+    <li><span class="manual__ui">Laden</span> haalt een configuratie terug in de editor.
+    Draagt het geopende document niet-opgeslagen wijzigingen, dan houdt het gereedschap halt
+    en stelt het voor dat document eerst op te bergen.</li>
+    <li><span class="manual__ui">Het bestand er weer uit halen</span> geeft u de opgeborgen
+    bytes terug, precies zoals ze zijn binnengekomen.</li>
+    <li><span class="manual__ui">De vingerafdruk nakijken</span> berekent de vingerafdruk
+    opnieuw en vergelijkt hem met die welke bij het opbergen is genoteerd.</li>
+    <li><span class="manual__ui">Identiteitskaart</span> toont alles wat het item draagt, en
+    scheidt daarbij zorgvuldig <em>wat het bestand aangeeft</em> van <em>wat deze editor
+    veronderstelt</em>.</li>
+  </ul>
+
+  <p>Elk item toont ook zijn telling van persoonlijke gegevens, in de vorm ‘16 persoonlijke
+  gegevens · 2 gaan mee met de pagina’s’. De twee getallen worden altijd gezegd, nul
+  inbegrepen.</p>
+
+  <h3>Dit is geen reservekopie</h3>
+
+  <div class="manual__warning">
+    <span class="manual__boxTitle">Exporteer uw bibliotheek</span>
+    <p>De sitegegevens wissen wist de bibliotheek, en sommige browsers wissen uit zichzelf de
+    gegevens van een site die enkele dagen niet is bezocht.
+    <span class="manual__ui">De bibliotheek exporteren</span> maakt er een ZIP-archief van
+    waaruit elke configuratie met om het even welk uitpakprogramma te halen valt.
+    <span class="manual__ui">Een bibliotheek importeren…</span> leest ze weer in, zonder ooit
+    een bestaand item te overschrijven.</p>
+    <p>De knop <span class="manual__ui">De browser beletten mijn bibliotheek te wissen</span>
+    vraagt de browser om duurzame opslag. Dat is nooit een garantie. De enige reservekopie die
+    standhoudt, is het archief dat u exporteert.</p>
+  </div>
+
+  <p>Tot slot: <strong>deze bibliotheek heeft geen prullenbak.</strong> Een verwijdering is
+  definitief, en ‘ongedaan maken’ kan er niets aan doen. Daarom vraagt de verwijdering om een
+  bevestiging in een apart kader.</p>
+
+  <!-- =================================================================== 12 -->
+
+  <h2 id="m-mesure"><span class="manual__rank">12.</span>Wat gemeten is, en wat niet</h2>
+
+  <p>Deze sectie is geen juridische voorzorg. Het is de nuttigste inlichting die deze
+  handleiding u kan geven.</p>
+
+  <h3>Waar alles vandaan komt wat het gereedschap weet</h3>
+
+  <p>Het formaat van de XCTrack-bestanden is <strong>niet gedocumenteerd</strong>, en het
+  verandert bij elke versie van de toepassing. Alles wat dit gereedschap erover weet komt uit
+  twee bronnen: echte bestanden die over vier jaar en acht versies zijn waargenomen, en het
+  lezen van de toepassing zelf. Niets komt uit een specificatie, want die bestaat niet.</p>
+
+  <p>Dat is wat het gereedschap waardevol maakt — en daarom is het gebouwd om wat het niet
+  begrijpt <em>mee te dragen</em> in plaats van het formaat te modelleren.</p>
+
+  <h3>Drie dingen die men niet mag verwarren</h3>
+
+  <ul>
+    <li><strong>Wat op het toestel is waargenomen.</strong> Eén AIR³ 7.2, één versie van
+    XCTrack. De tekeningen van de widgets, het raster waarop alles wordt uitgelijnd, het
+    gedrag bij het inlezen. Het gereedschap zegt het wanneer dat het geval is.</li>
+    <li><strong>Wat in de toepassing is gelezen.</strong> De namen en beschrijvingen van de
+    widgets, de fabriekswaarden, de lijst van de instellingen. Dat is stevig, maar het is niet
+    hetzelfde als een meting op een toestel dat vliegt.</li>
+    <li><strong>Wat afgeleid is.</strong> Bijvoorbeeld: het uitlijnraster is op één enkel
+    toestel gemeten; op alle andere sjablonen is het geëxtrapoleerd, en geeft het een
+    aannemelijke orde van grootte en niets meer.</li>
+  </ul>
+
+  <h3>Wat de tekening waard is</h3>
+
+  <p>De tekeningen van de widgets zijn heropgebouwd naar wat op één enkel toestel en één
+  enkele versie is waargenomen. Een widget waarvan de tekening niet is nagemaakt, verschijnt
+  in een eerlijke algemene vorm in plaats van in een misleidende benadering. En vraagt uw
+  bestand om een weergavethema dat de editor niet kan tekenen, dan zegt hij het u: de kleuren
+  die u ziet zijn niet die van uw toestel, maar de meetkunde klopt wel.</p>
+
+  <h3>Twee talen op het scherm, en dat is geen fout</h3>
+
+  <p>De interface van deze editor en deze handleiding bestaan in vijf talen: Frans, Engels,
+  Nederlands, Duits, Spaans. De <strong>namen van de widgets en van de instellingen</strong>
+  volgen die keuze niet: ze komen van XCTrack, in de dertig en zoveel talen die de toepassing
+  draagt, en ze volgen de taal van <em>uw bestand</em>. U kunt dus de interface in het Spaans
+  lezen en uw widgets in het Frans benoemd zien, als uw instrument ze zo benoemt. Dat is
+  gewild: dat zijn de woorden die u tijdens de vlucht terugvindt.</p>
+
+  <h3>Wat de interface nog niet doet</h3>
+
+  <ul>
+    <li>De bibliotheek toont geen voorbeeldafbeelding: de plaats is voorbehouden, de miniatuur
+    is een leeg kader dat het zegt.</li>
+    <li>Het schiften van de algemene instellingen biedt niet alles aan: wat de catalogus niet
+    heeft opgenomen, wordt niet ter instelling aangeboden, liever dan het te raden.</li>
+  </ul>
+
+  <!-- =================================================================== 13 -->
+
+  <h2 id="m-avis"><span class="manual__rank">13.</span>Uw mening geven, melden wat er mis is</h2>
+
+  <p>Dit gereedschap is voor piloten geschreven, en het wordt alleen beter door wat zij
+  erover zeggen. Suggesties en verbeteringen lopen via de GitHub-issues:</p>
+
+  <p><a href="https://github.com/frederict/xcfg-editor/issues">https://github.com/frederict/xcfg-editor/issues</a></p>
+
+  <p>Alles is nuttig: een slecht getekende widget, een instelling die de editor niet toont,
+  een duister woord, een versie van XCTrack die niet in de lijst staat, een bestand dat
+  weigert open te gaan, een zin uit deze handleiding die u tijd heeft gekost.</p>
+
+  <p>Zeggen <strong>welk toestel</strong>, <strong>welke versie van XCTrack</strong> en
+  <strong>wat u verwachtte</strong> bespaart heel veel tijd.</p>
+
+  <p><strong>Schrijf in uw eigen taal.</strong> De interface en deze handleiding bestaan in
+  het Frans, Engels, Nederlands, Duits en Spaans: een issue die in een van die vijf talen is
+  geschreven, wordt gelezen. U hoeft niet naar het Engels over te schakelen om iets te melden
+  — en een vertaling die vals klinkt, of die een knop anders noemt dan het scherm, is precies
+  het soort dingen dat gemeld moet worden.</p>
+
+  <div class="manual__warning">
+    <span class="manual__boxTitle">Voeg nooit uw eigen bestand bij</span>
+    <p>Een GitHub-issue is openbaar, en voorgoed. Uw
+    <span class="manual__file">.xcfg</span> draagt uw naam, uw scherm, uw sensoren, uw
+    waypointbestanden, soms uw contactgegevens.</p>
+    <p>Is een bestand onmisbaar om het probleem te begrijpen, maak er dan eerst een deelbare
+    versie van met dit gereedschap — <span class="manual__ui">Deelbare versie, zonder
+    persoonlijke gegevens</span> als het probleem over een pagina gaat,
+    <span class="manual__ui">Al uw instellingen, zonder wat u herkenbaar maakt</span> als het
+    over een instelling gaat. Lees de inventaris van de vervangingen door die het u toont, en
+    verstuur alleen dat bestand.</p>
+  </div>
+
+</div>

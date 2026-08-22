@@ -1,0 +1,1121 @@
+<!--
+  Das Handbuch, auf Deutsch.
+
+  Diese Datei ist ein FRAGMENT: ohne die Rahmenelemente einer ganzen Seite. Sie wird in
+  den Körper eines Dialogs der Anwendung gelegt, der die Überschrift erster Ebene bereits
+  trägt — das Handbuch beginnt deshalb bei <h2>.
+
+  Die Quelle der Wahrheit ist `manuel.fr.html`: jede Änderung dort gehört auch hierher.
+  Was in <span class="manual__ui"> steht, ist die genaue Beschriftung des Bildschirms und
+  wird Zeichen für Zeichen aus dem Katalog `src/i18n/messages/de/` übernommen — niemals
+  hier neu übersetzt.
+-->
+
+<div class="manual">
+
+  <div class="manual__warning">
+    <span class="manual__boxTitle">Zu lesen, bevor Sie Ihre Datei irgendjemandem geben</span>
+    <p>Eine XCTrack-Sicherung enthält Ihren Namen, Ihren Schirm, Ihre gekoppelten Sensoren,
+    Ihre Wegpunktdateien — bis hin zum Namen des Wettkampfs, an dem Sie teilnehmen. Geben
+    Sie sie niemals so weiter, wie sie ist: weder an eine andere Pilotin oder einen anderen
+    Piloten, noch in ein Forum, noch in eine Fehlermeldung. Beim Speichern erzeugen zwei
+    der drei Wege eine teilbare Datei:
+    <span class="manual__ui">Alle Ihre Einstellungen, ohne das, was Sie erkennbar
+    macht</span> behält Ihre Einstellungen und ersetzt, was Sie benennt,
+    <span class="manual__ui">Teilbare Fassung, ohne persönliche Daten</span> überträgt nur
+    Ihre Seiten. Lesen Sie in beiden Fällen die Liste der Ersetzungen durch, die das
+    Werkzeug Ihnen zeigt, bevor Sie herunterladen. Kapitel&nbsp;10 erklärt das alles im
+    Einzelnen.</p>
+  </div>
+
+  <nav class="manual__toc">
+    <h2>Was in diesem Handbuch steht</h2>
+    <ol>
+      <li><a href="#m-outil">Was dieses Werkzeug tut, und was es nicht tut</a></li>
+      <li><a href="#m-ouvrir">Die Datei aus dem Gerät holen und hier öffnen</a></li>
+      <li><a href="#m-voir">Seine Seiten ansehen, ohne etwas zu ändern</a></li>
+      <li><a href="#m-gabarit">Die Bildschirmvorlage und der Zoom</a></li>
+      <li><a href="#m-modifier">Seine Seiten bearbeiten</a></li>
+      <li><a href="#m-gadget">Die Einstellungen eines Widgets</a></li>
+      <li><a href="#m-usine">Die drei Handgriffe rund um einen Werkswert</a></li>
+      <li><a href="#m-generaux">Die allgemeinen Einstellungen von XCTrack</a></li>
+      <li><a href="#m-version">Angepeilte Version, Kompatibilität und Aufräumen</a></li>
+      <li><a href="#m-enregistrer">Speichern, und wählen, was man aus der Hand gibt</a></li>
+      <li><a href="#m-bibliotheque">Die Bibliothek der Konfigurationen</a></li>
+      <li><a href="#m-mesure">Was gemessen ist, und was nicht</a></li>
+      <li><a href="#m-avis">Ihre Meinung sagen, melden, was nicht stimmt</a></li>
+    </ol>
+  </nav>
+
+  <!-- ==================================================================== 1 -->
+
+  <h2 id="m-outil"><span class="manual__rank">1.</span>Was dieses Werkzeug tut, und was es nicht tut</h2>
+
+  <p>Sie öffnen hier eine Datei, die Ihr Gerät exportiert hat. Ihre Seiten erscheinen genau
+  so, wie das Gerät sie zeichnet, in Originalgröße. Sie bearbeiten sie und bekommen
+  anschließend eine frische Datei, die Sie zurück auf das Gerät bringen.</p>
+
+  <h3>Drei Dinge, die man besser gleich weiß</h3>
+
+  <p><strong>Dieses Werkzeug spricht nicht mit Ihrem Gerät.</strong> Es gibt weder Kabel
+  noch Bluetooth noch eine Synchronisierung. Es erzeugt eine Datei, die Sie selbst
+  übertragen — per SD-Karte oder per Kabel. Solange Sie diese Übertragung nicht gemacht
+  haben, weiß Ihr Gerät nichts von dem, was Sie hier geändert haben.</p>
+
+  <p><strong>Nichts wird simuliert.</strong> Die Werte, die Sie in den Widgets sehen — eine
+  Höhe, eine Geschwindigkeit, ein Sinken — sind feste Beispiele, ein für alle Mal
+  hingeschrieben. Sie dienen dazu, Größe und Platz eines Widgets zu beurteilen, niemals
+  dazu vorherzusagen, was es im Flug anzeigen wird.</p>
+
+  <p><strong>Ihre Datei verlässt Ihren Rechner nicht.</strong> Alles geschieht in Ihrem
+  Browser: es gibt keinen Server, kein Konto, keinen Versand. Die Seite besteht aus
+  statischen Dateien, sie hat niemanden, mit dem sie sprechen könnte.</p>
+
+  <h3>Was sich in Ihrer Datei nicht bewegt</h3>
+
+  <p>Eine Datei, die geöffnet und ohne Änderung wieder gespeichert wird, kommt
+  <strong>Byte für Byte identisch</strong> heraus. Und wenn Sie etwas ändern, ändert sich
+  nur das, was Sie geändert haben: ein verschobenes Widget schreibt nur seine vier
+  Koordinaten neu, der Rest der Datei geht unversehrt hinaus.</p>
+
+  <p>Das ist das Wichtigste, und hier ist der Grund. Das Format von XCTrack ist nicht
+  dokumentiert und bekommt mit jeder Version neue Einstellungen. Ein Editor, der die Datei
+  aus dem wiederaufbaut, was er lesen konnte, würde den Rest verlieren, ohne ein Wort zu
+  sagen. Dieser überträgt unverändert <strong>alles, was er nicht versteht</strong>: Ihre
+  besonderen Einstellungen überleben, auch die, die dieser Editor nirgends zeigt.</p>
+
+  <h3>Was es nie an Ihrer Stelle tun wird</h3>
+
+  <ul>
+    <li>Es ordnet Ihre Seiten nicht um und schlägt keine bessere Anordnung vor.</li>
+    <li>Es meldet, was ihm zweifelhaft erscheint, korrigiert aber nichts von selbst.</li>
+    <li>Das einzige Mal, dass es Ihnen anbietet, etwas aus Ihrer Datei zu entfernen, ist
+    das Aufräumen aus Kapitel&nbsp;9 — und dazu muss man die Liste sehen und klicken.</li>
+  </ul>
+
+  <!-- ==================================================================== 2 -->
+
+  <h2 id="m-ouvrir"><span class="manual__rank">2.</span>Die Datei aus dem Gerät holen und hier öffnen</h2>
+
+  <h3>Auf dem Gerät</h3>
+
+  <p>Gehen Sie in die Einstellungen von XCTrack, dann
+  <span class="manual__ui">Konfiguration exportieren</span>. Die Datei landet auf der
+  SD-Karte. Holen Sie sie auf Ihren Rechner oder Ihr Telefon.</p>
+
+  <h3>Zwei Formate, zwei Inhalte</h3>
+
+  <p>XCTrack kann zwei Arten von Exporten schreiben, und der Unterschied ist wichtig:</p>
+
+  <ul>
+    <li>ein <strong>„backup“</strong>-Export enthält Ihre gesamte Konfiguration: die Seiten
+    <em>und</em> die Einstellungen des Geräts (Vario, Einheiten, Sensoren, Lufträume, Ihr
+    Name, Ihr Schirm …);</li>
+    <li>ein <strong>„pages“</strong>-Export enthält nur die Widget-Seiten. Wieder
+    eingelesen, ersetzt er die Bildschirme und rührt sonst nichts an.</li>
+  </ul>
+
+  <p>Die Dateiendung sagt etwas anderes: <span class="manual__file">.xcfg</span> ist die
+  Datei allein, <span class="manual__file">.xczfg</span> ist ein Archiv, das zusätzlich
+  Anhänge mitführt. Beide lassen sich hier öffnen.</p>
+
+  <div class="manual__warning">
+    <span class="manual__boxTitle">Ein „pages“-Export ist nicht anonym</span>
+    <p>Man liest oft, ein „pages“-Export enthalte nichts Persönliches. Das stimmt nicht.
+    Der Titel, den Sie auf ein Widget geschrieben haben, der Inhalt eines Freitext-Widgets,
+    Name und Telefonnummer in einer Anruf-Schaltfläche reisen <em>mit den Seiten</em>. Das
+    Format „pages“ ist eine grobe Auswahl, keine Bereinigung.</p>
+  </div>
+
+  <h3>Die Datei hier öffnen</h3>
+
+  <ol class="manual__steps">
+    <li>Lassen Sie die Datei irgendwo auf der Seite los — ein Rahmen erscheint und sagt
+    <span class="manual__ui">Datei loslassen, um sie zu öffnen</span>;</li>
+    <li>oder klicken Sie auf das Ablagefeld des Startbildschirms;</li>
+    <li>oder nehmen Sie, wenn schon eine Datei offen ist, oben rechts das Menü
+    <span class="manual__ui">Datei</span> und dann
+    <span class="manual__ui">Datei öffnen…</span>.</li>
+  </ol>
+
+  <p>Eine Datei öffnet sich immer <strong>zum Ansehen</strong>: man schaut sie an, bevor
+  man sie bearbeitet.</p>
+
+  <h3>Eine Datei öffnen, während die vorige geändert ist</h3>
+
+  <p>Es ist immer nur eine Datei offen: eine andere zu öffnen schließt diese. Solange Sie
+  nichts geändert haben, geschieht das ohne ein Wort — es gibt nichts zu verlieren.</p>
+
+  <p>Sobald Sie etwas geändert haben, <strong>hält das Werkzeug an und fragt</strong>,
+  unter der Überschrift
+  <span class="manual__ui">Ihre Änderungen sind nicht gespeichert</span>. Der Dialog nennt
+  Ihnen die Namen beider Dateien und <strong>benennt Ihre letzte Änderung</strong>, mit
+  genau der Beschriftung des Rückgängig-Schritts — zum Beispiel „Lautstärke einstellen —
+  Vario“. Zwei Wege:</p>
+
+  <ul>
+    <li><span class="manual__ui">Meine Änderungen behalten</span> — das ist die Vorgabe, die
+    der Eingabetaste und die der Esc-Taste. Nichts wurde angerührt: Sie finden Ihre Seite,
+    das ausgewählte Widget und Ihre Rückgängig-Chronik unversehrt wieder.</li>
+    <li><span class="manual__ui">„…“ öffnen und sie verlieren</span> — die andere Datei
+    nimmt den Platz ein, und was Sie geändert hatten, ist nirgends wiederherstellbar.</li>
+  </ul>
+
+  <p class="manual__note">Damit nichts verloren geht: behalten Sie Ihre Änderungen, dann
+  <span class="manual__ui">Änderungen speichern</span> oben auf der Seite, oder legen Sie
+  die Konfiguration in der Bibliothek ab (Kapitel 11). Einen Eintrag der Bibliothek zu
+  laden stellt dieselbe Frage, dort zusätzlich mit dem Weg
+  <span class="manual__ui">Erst ablegen, dann laden</span>.</p>
+
+  <h3>Wenn sich die Datei nicht öffnen lässt</h3>
+
+  <p>Zwei verschiedene Bildschirme können erscheinen.
+  <span class="manual__ui">Diese Datei ließ sich nicht öffnen</span> heißt, dass das
+  Werkzeug nichts aus ihr machen konnte: prüfen Sie, ob es wirklich ein XCTrack-Export ist.
+  <span class="manual__ui">Diese Datei ließ sich nicht lesen</span> heißt, dass sie erkannt
+  wurde, aber beschädigt oder unvollständig ist. In beiden Fällen wurde Ihre Datei nicht
+  verändert, und <span class="manual__ui">Kopie speichern</span> gibt sie Ihnen so zurück,
+  wie sie hereingekommen ist. Der Bereich
+  <span class="manual__ui">Technische Einzelheit</span> enthält den Text, den Sie in eine
+  Meldung übernehmen können.</p>
+
+  <p><strong>Eine unlesbare Datei ersetzt niemals eine laufende Arbeit.</strong> Wenn Sie
+  eine beschädigte Datei ablegen, während die offene Datei ungespeicherte Änderungen
+  trägt, öffnet das Werkzeug sie gar nicht: es sagt es Ihnen in einem Dialog —
+  <span class="manual__ui">Diese Datei ließ sich nicht lesen</span>, mit ihrer
+  <span class="manual__ui">Technische Einzelheit</span> — und Ihre Datei bleibt genau so
+  offen, wie sie war. In diesem Fall wird keine Bestätigung verlangt, denn es gibt nichts
+  zu entscheiden.</p>
+
+  <!-- ==================================================================== 3 -->
+
+  <h2 id="m-voir"><span class="manual__rank">3.</span>Seine Seiten ansehen, ohne etwas zu ändern</h2>
+
+  <p>Solange Sie nicht auf <span class="manual__ui">Seiten bearbeiten</span> gedrückt
+  haben, schreibt nichts von dem, was Sie tun, irgendetwas. Sie dürfen alles öffnen, alles
+  lesen, alles durchgehen.</p>
+
+  <h3>Die Übersicht</h3>
+
+  <p>Sie zeigt <strong>alle</strong> Ihre Seiten, in zwei Abschnitten:
+  <span class="manual__ui">Querformat</span> und dann
+  <span class="manual__ui">Hochformat</span>. Eine Datei beschreibt immer beide; Ihr Gerät
+  wechselt von einem zum anderen.</p>
+
+  <p>Die Seiten sind ab 1 nummeriert. Eine Seite hat keinen Namen: <strong>ihre Position
+  ist ihre einzige Identität</strong>, und sie entscheidet darüber, was erscheint, wenn Sie
+  im Flug auf „nächste Seite“ drücken.</p>
+
+  <p>Nicht die <em>Klasse</em> einer Seite entscheidet, wann Ihr Gerät sie zeigt, sondern
+  die <strong>Navigationen, für die sie aktiviert ist</strong> — die fünf Symbole im
+  Kästchen „Ein-/Ausschalten“ von XCTrack. Das Fenster
+  <span class="manual__ui">Seiten verwalten</span> sagt es Seite für Seite:
+  <span class="manual__ui">Für alle Navigationen angezeigt</span>,
+  <span class="manual__ui">Für keine Navigation angezeigt</span>, oder die Liste derer, die
+  sie erscheinen lassen. Eine Seite, die für keine Navigation aktiviert ist, wird beim
+  Durchblättern übersprungen — am AIR³ festgestellt —, und die Vorflugkontrolle weist Sie
+  darauf hin.</p>
+
+  <p>Eine frühere Fassung dieses Werkzeugs kennzeichnete bestimmte Seiten nach ihrer Klasse
+  als am Boden ausgeblendet und zählte, wie viele Ihr Gerät am Boden zeigen würde.
+  <strong>Das war falsch</strong>: ein Versuch am Gerät hat gezeigt, dass die Seite des
+  Thermikassistenten am Boden sehr wohl wieder im Durchblättern auftaucht. Kennzeichnung
+  und Zählung wurden entfernt.</p>
+
+  <h3>Die Infoleiste</h3>
+
+  <p>Über den Seiten stehen einige Angaben, die aus der Datei gelesen sind:
+  <span class="manual__ui">Format</span> (Datei oder Archiv),
+  <span class="manual__ui">Gerät laut Datei</span> (oder
+  <span class="manual__ui">nicht angegeben</span>),
+  <span class="manual__ui">XCTrack-Beschriftungen</span> (die Sprache, in der die Widget-Namen
+  angezeigt werden, und woher sie kommt). Enthält die Datei keine Einstellungen, sagt es
+  eine Zeile <span class="manual__ui">Zeicheneinstellungen</span>: Design und Einheiten,
+  mit denen gezeichnet wird, sind dann Werkswerte, nicht Ihre.</p>
+
+  <h3>Was das Werkzeug beim Öffnen meldet</h3>
+
+  <p>Zwei Blöcke können erscheinen, und sie wiegen nicht gleich schwer.</p>
+
+  <p><span class="manual__ui">In dieser Datei zu prüfen</span> bleibt aufgeklappt: dieser
+  Block beschreibt einen Mangel. Zum Beispiel ein Widget mit Breite oder Höhe null, ein
+  Widget, das vollständig unter einem anderen liegt und deshalb nie etwas anzeigen wird,
+  oder einen Teil der Datei, den das Werkzeug nicht erkannt hat.</p>
+
+  <p>Die zugeklappte Zeile darunter sammelt, was <em>informiert</em>, ohne etwas zu
+  verlangen: die Art des Exports, die Sprache der Beschriftungen, die äußeren Dateien, die
+  Ihre Konfiguration benennt (Kartendesign, Wegpunkte, Lufträume — sie liegen auf dem
+  ursprünglichen Gerät, nicht in der Datei), den Abstand zwischen der Version, die die
+  Datei geschrieben hat, und der, auf die dieser Editor eingestellt ist, oder auch ein
+  Anzeigedesign, das der Editor nicht zeichnen kann. Klicken Sie die Zeile an, um sie
+  aufzuklappen.</p>
+
+  <div class="manual__note">
+    <span class="manual__boxTitle">Überlappungen werden nicht gemeldet</span>
+    <p>Zwei Widgets, die sich überdecken, sind alltäglich und oft gewollt — es ist sogar
+    eine Wettkampftechnik. Sie zu melden wäre Lärm, und eine lärmende Warnung erzieht dazu,
+    die anderen zu übergehen. Gemeldet wird nur ein <em>vollständig</em> überdecktes
+    Widget.</p>
+  </div>
+
+  <h3>Die Vorflugkontrolle</h3>
+
+  <p>Zu den Feststellungen über die <em>Datei</em> treten in denselben zwei Blöcken sieben
+  Kontrollen, die von Ihren <em>Seiten im Flug</em> sprechen:</p>
+
+  <ul>
+    <li>ein Widget, das von den nach ihm gezeichneten vollständig überdeckt ist und das ein
+    Fingerdruck deshalb nicht erreichen kann — auch wenn es sichtbar bleibt;</li>
+    <li>eine Seite, die nie erscheinen wird, weil für sie keine Navigation angekreuzt
+    ist;</li>
+    <li>mehrere Seiten des Thermikassistenten in derselben Ausrichtung: das Gerät steuert
+    nur eine davon an, wenn es beim Kreisen von selbst umschaltet, und welche das ist,
+    bleibt eine Annahme dieses Werkzeugs;</li>
+    <li>ein Widget, das vielleicht zu klein ist, um mit ausgestrecktem Arm gelesen zu
+    werden;</li>
+    <li>ein Pro-Widget in einer Datei, die keine Lizenz angibt;</li>
+    <li>zwei Straßenkarten auf derselben Seite, was XCTrack als unmöglich ankündigt;</li>
+    <li>eine Einstellung, die von einer früheren XCTrack-Version geschrieben wurde.</li>
+  </ul>
+
+  <p>Sie werden auf dem berechnet, was Sie vor Augen haben: eine andere
+  <span class="manual__ui">Bildschirmvorlage</span> berechnet die Millimeter neu, und ein
+  verschobenes Widget die Überdeckungen.</p>
+
+  <div class="manual__note">
+    <span class="manual__boxTitle">„Am Gerät zu bestätigen“ meint genau das, was es
+    sagt</span>
+    <p>Vier dieser sieben Kontrollen beruhen auf einer Annahme, die noch niemand an einem
+    AIR³ überprüft hat: ihre Überschrift trägt dann den Zusatz
+    <span class="manual__ui">am Gerät zu bestätigen</span>, und ihre Erklärung sagt, was die
+    Frage entscheiden würde. Sie steigen nie in den aufgeklappten Block auf — eine Annahme
+    darf nicht im selben Ton auftreten wie eine Messung.</p>
+  </div>
+
+  <p>Was das Werkzeug schon auf andere Weise sagen kann, wird nicht wiederholt: eine
+  absichtlich unter eine Karte geschobene Schaltfläche wird einmal angekündigt, als
+  funktionierender Aufbau, und nicht ein zweites Mal als Mangel.</p>
+
+  <h3>Eine Seite öffnen und ein Widget lesen</h3>
+
+  <p>Klicken Sie eine Miniatur an. Die Seite erscheint allein, in Originalgröße.
+  <span class="manual__ui">Vorige Seite</span> und
+  <span class="manual__ui">Nächste Seite</span> führen Sie von einer zur anderen — die
+  Pfeiltasten links und rechts tun dasselbe.
+  <span class="manual__ui">← Alle Seiten</span> und die <em>Esc</em>-Taste bringen Sie
+  zurück.</p>
+
+  <p>Fahren Sie über ein Widget: sein Name und seine Maße in Millimetern erscheinen unter
+  der Seite. Klicken Sie es an: die untere Leiste zeigt
+  <span class="manual__ui">Widgets der Seite</span> und alle seine Einstellungen,
+  <strong>nur zum Lesen</strong>. Dort lässt sich nichts ändern: das ist das Ansehen.
+  <em>Esc</em> hebt die Auswahl auf.</p>
+
+  <p>Die Liste <span class="manual__ui">Widgets der Seite</span> ist vom Hintergrund zum
+  Vordergrund geordnet. Sie dient auch als Auffangnetz: ein Widget, das
+  <span class="manual__ui">hier nicht erreichbar</span> heißt, ist von einem anderen
+  vollständig überdeckt, kein Klick auf der Seite erreicht es, und diese Liste ist der
+  einzige Weg dorthin. Auf dem Gerät bleibt es an seinem Platz — eine so überdeckte
+  Schaltfläche antwortet weiterhin auf den Finger.</p>
+
+  <!-- ==================================================================== 4 -->
+
+  <h2 id="m-gabarit"><span class="manual__rank">4.</span>Die Bildschirmvorlage und der Zoom</h2>
+
+  <h3>Die Vorlage wählen</h3>
+
+  <p>Das Menü <span class="manual__ui">Bildschirmvorlage</span> unter der oberen Leiste
+  entscheidet über die Geometrie und über die Größe in Millimetern. Es bietet die drei
+  bekannten AIR³, fünf gängige Bildschirmverhältnisse, einen Modus
+  <span class="manual__ui">Responsive</span>, in dem Sie Breite und Höhe in Pixeln selbst
+  angeben, und <span class="manual__ui">Gerät hinzufügen…</span>, um Ihr eigenes ein für
+  alle Mal zu hinterlegen.</p>
+
+  <p>Beim Öffnen übernimmt das Werkzeug die Vorlage, die die Datei angibt. Erkennt es
+  nichts, nimmt es das AIR³&nbsp;7.2 und sagt es in der Infoleiste.</p>
+
+  <div class="manual__note">
+    <p>Diese Wahl ist eine Anzeigeeinstellung: <strong>sie wird nie in Ihre Datei
+    geschrieben</strong>. Sie zu ändern ändert nichts. Es zählen nur die Verhältnisse des
+    Bildschirms, die über die Geometrie entscheiden, und die Diagonale in Zoll, die über die
+    Größe in Millimetern entscheidet — die Pixel haben keine Wirkung, denn die Positionen
+    der Widgets sind als Bruchteile des Bildschirms ausgedrückt.</p>
+  </div>
+
+  <h3>Den Zoom ein für alle Mal einstellen</h3>
+
+  <p>Die Seite wird in ihrer wirklichen physischen Größe gezeichnet. Aber Ihr Bildschirm
+  hat nicht unbedingt die Dichte, die der Browser annimmt. Der Regler
+  <span class="manual__ui">Zoom</span> gleicht das aus, und
+  <span class="manual__ui">Zoom 100 %</span> setzt ihn auf seinen Ausgangswert zurück.</p>
+
+  <ol class="manual__steps">
+    <li>Legen Sie ein echtes Lineal auf Ihren Bildschirm, an das Maßband, das über der Seite
+    angezeigt wird.</li>
+    <li>Ziehen Sie den Zoomregler, bis beide übereinstimmen.</li>
+    <li>Fertig: die Millimeter, die für jedes Widget genannt werden, sind ab jetzt die
+    echten.</li>
+  </ol>
+
+  <p>Erst diese Einstellung macht die Frage brauchbar: „Wird dieser Text mit ausgestrecktem
+  Arm und mit Handschuhen lesbar sein?“ Sie wird in Millimetern beantwortet, nicht in
+  Pixeln.</p>
+
+  <!-- ==================================================================== 5 -->
+
+  <h2 id="m-modifier"><span class="manual__rank">5.</span>Seine Seiten bearbeiten</h2>
+
+  <p>Drücken Sie oben rechts auf <span class="manual__ui">Seiten bearbeiten</span>. Der
+  Vermerk <span class="manual__ui">Bearbeiten</span> erscheint neben dem Namen der
+  Anwendung, und unter der Seite kommt eine Bearbeitungsleiste hinzu. Zum Verlassen drücken
+  Sie <span class="manual__ui">Nur ansehen</span>: nichts wird rückgängig gemacht.</p>
+
+  <p>Nichts geht auf Ihre Festplatte, solange Sie nicht auf
+  <span class="manual__ui">Änderungen speichern</span> gedrückt haben — siehe
+  Kapitel&nbsp;10.</p>
+
+  <h3>Verschieben und Größe ändern</h3>
+
+  <p>Klicken Sie ein Widget an: es ist ausgewählt, und das Verschieben beginnt sofort. Das
+  ist direkter als auf dem Gerät, wo man ein kleines Ziel treffen muss.</p>
+
+  <p>Auf dem ausgewählten Widget erscheinen <strong>neun Griffe</strong>: vier Winkel an den
+  Ecken, vier Segmente in der Mitte der Seiten und eine gepunktete Ellipse in der Mitte. Die
+  Winkel und die Segmente ändern die Größe; die Ellipse verschiebt. Die mittlere Ellipse ist
+  außerdem der einzige Griff eines Widgets, das andere überdecken.</p>
+
+  <p>Während des Handgriffs sehen Sie zwei Rechtecke: das Ihres Fingers oder Ihrer Maus und
+  das, auf dem das Widget wirklich landen wird. Der Abstand zwischen beiden ist das
+  Einrasten am Raster des Geräts — die Zahl der Zellen steht in der Bearbeitungsleiste, zum
+  Beispiel <span class="manual__ui">Raster 48 × 29</span>. Ein Widget, das gegen einen Rand
+  geschoben wird, klebt am Rand. Ein zu weiter Handgriff wird in die Seite zurückgeholt: er
+  scheitert nie.</p>
+
+  <p>Beim Ändern der Größe erscheint das Maß in Millimetern. Die Liste
+  <span class="manual__ui">Widgets der Seite</span> folgt dem Handgriff: sobald er beendet
+  ist, trägt sie die neue Größe, und die Übersichtsminiatur zeigt das neue Rechteck. Auch
+  die Vermerke <span class="manual__ui">hier nicht erreichbar</span> folgen mit — ein Widget
+  auszubreiten kann ein anderes einmauern, es zu verkleinern kann eines freilegen.</p>
+
+  <h3>Die Leiste des ausgewählten Widgets</h3>
+
+  <p>Sie legt sich über das Widget oder darunter, wenn kein Platz ist, und verdeckt es nie.
+  Sie trägt seine Position im Stapel — zum Beispiel
+  <span class="manual__ui">Ebene 4 von 6</span> —, vier Schaltflächen für den Stapel
+  (Hintergrund, nach hinten, nach vorn, Vordergrund), dann
+  <span class="manual__ui">Duplizieren</span> und
+  <span class="manual__ui">Löschen</span>.</p>
+
+  <p>Die Kopie eines Widgets landet direkt vor dem Original, um eine Zelle versetzt. Ein
+  Löschen verlangt keine Bestätigung: <span class="manual__ui">Rückgängig</span> macht es
+  vollständig zunichte.</p>
+
+  <h3>Ein Widget hinzufügen</h3>
+
+  <p>Die Schaltfläche <span class="manual__ui">Widget hinzufügen</span> öffnet die
+  vollständige Liste, nach Familie gruppiert, in der Reihenfolge des XCTrack-Bildschirms.
+  Jede Zeile zeigt eine Vorschau, den offiziellen Namen des Widgets und den Namen, den es in
+  der Datei trägt. Das Feld <span class="manual__ui">Widget suchen</span> filtert über
+  beide.</p>
+
+  <p>Ein Klick setzt das Widget in die Mitte der Seite. Der Rand der Vorschau sagt, was
+  geschehen wird:</p>
+
+  <ul>
+    <li><strong>durchgezogener Rand</strong> — diese Art gibt es in Ihrer Datei bereits: das
+    Widget wird von diesem Exemplar <em>kopiert</em>, mit allen seinen Einstellungen, auch
+    denen, die dieser Editor nicht darstellen kann;</li>
+    <li><strong>gepunkteter Rand</strong> — diese Art ist für Ihre Datei neu: das Widget
+    wird nur mit seinen Grundeinstellungen angelegt, und XCTrack ergänzt die übrigen beim
+    Lesen.</li>
+  </ul>
+
+  <p>Das Kästchen <span class="manual__ui">Schon in der Datei</span> behält nur die Arten
+  des ersten Falls. Manche Zeilen tragen ein Abzeichen
+  <span class="manual__ui">Pro</span>: XCTrack behält diese Widgets der Pro-Lizenz vor.</p>
+
+  <p>Zwei Vermerke an der Vorschau bedeuten nicht dasselbe.
+  <span class="manual__ui">nichts im Ruhezustand</span> ist eine Tatsache des Geräts: dieses
+  Widget malt nichts, solange keine Daten eingetroffen sind, und belegt dennoch seinen
+  Platz. <span class="manual__ui">Vorschau nicht gezeichnet</span> ist eine Grenze dieses
+  Editors: er hat für diese Art keine eigene Zeichnung und zeigt lieber einen ehrlichen
+  Rahmen als eine irreführende Annäherung.</p>
+
+  <h3>Seiten verwalten</h3>
+
+  <p>Die Schaltfläche <span class="manual__ui">Seiten verwalten</span> öffnet die beiden
+  Karussells, Querformat und Hochformat. Sie können:</p>
+
+  <ul>
+    <li>eine Seite <strong>einfügen</strong>: die Schaltfläche
+    <span class="manual__ui">+</span> zwischen zwei Miniaturen klappt einen Bereich auf, in
+    dem Sie die Klasse wählen — Thermikassistent, XC-Assistent, Wettkampf oder Leer;</li>
+    <li>eine Seite <strong>duplizieren</strong>: die Kopie landet direkt dahinter;</li>
+    <li>eine Seite <strong>löschen</strong>: der erste Klick zeigt die Folgen und ändert die
+    Schaltfläche in <span class="manual__ui">Löschen bestätigen</span>, der zweite
+    löscht;</li>
+    <li><strong>umordnen</strong>: ziehen Sie eine Miniatur auf eine andere, oder nehmen Sie
+    die beiden Pfeile.</li>
+  </ul>
+
+  <p>Vor jedem Handgriff sagt das Werkzeug, was sich verschieben wird: „Aus den Seiten 3 bis
+  5 werden 4 bis 6“. Es warnt Sie auch, wenn Sie im Begriff sind, eine zweite Seite des
+  Thermikassistenten anzulegen — dieses Werkzeug nimmt an, dass XCTrack automatisch nur zur
+  letzten umschaltet, ohne es überprüft zu haben —, oder nur noch Seiten übrig zu lassen,
+  die für keine Navigation aktiviert sind; dann hätte Ihr Gerät in dieser Ausrichtung keine
+  Seite mehr zu zeigen.</p>
+
+  <p><strong>Die Klasse einer Seite lässt sich hier nicht ändern.</strong> XCTrack legt sie
+  beim Anlegen fest, und die Wirkung einer nachträglichen Änderung wurde am Gerät nicht
+  überprüft: wir bieten es lieber nicht an, als es anzubieten, ohne es zu wissen.</p>
+
+  <h3>Rückgängig machen und wiederholen</h3>
+
+  <p>Die beiden gerahmten Pfeile oben rechts machen zunichte und stellen wieder her. Fahren
+  Sie mit der Maus darüber: sie sagen, was sie tun werden — „Rückgängig: GPS-Höhe
+  verschieben“. Auf der Tastatur macht <em>Strg+Z</em> rückgängig und
+  <em>Strg+Umschalt+Z</em> wiederholt (<em>Cmd</em> auf dem Mac).</p>
+
+  <p>Alles ist abgedeckt: Handgriffe an den Widgets, Hinzufügen, Löschen, Stapelreihenfolge
+  und sämtliche Seitenoperationen. <strong>Die letzten hundert Schritte</strong> werden
+  aufbewahrt; darüber hinaus werden die ältesten vergessen. Ein Handgriff ohne Wirkung
+  erzeugt keinen Schritt.</p>
+
+  <p>Eine Ausnahme: die Bibliothek ist nicht betroffen. Eine abgelegte Konfiguration zu
+  löschen lässt sich nicht rückgängig machen.</p>
+
+  <h3>Die Handgriffe auf der Tastatur</h3>
+
+  <ul>
+    <li><strong>Pfeiltasten</strong> — um eine Zelle verschieben</li>
+    <li><strong>Umschalt + Pfeiltasten</strong> — um eine Zelle in der Größe ändern</li>
+    <li><strong>Strg + Pfeil auf / ab</strong> — eine Ebene nach vorn oder nach hinten</li>
+    <li><strong>Strg + Umschalt + Pfeil auf / ab</strong> — Vordergrund, Hintergrund</li>
+    <li><strong>Strg + D</strong> — duplizieren</li>
+    <li><strong>Entf</strong> — löschen</li>
+    <li><strong>Esc</strong> — den laufenden Handgriff abbrechen, sonst die Auswahl
+    aufheben</li>
+  </ul>
+
+  <!-- ==================================================================== 6 -->
+
+  <h2 id="m-gadget"><span class="manual__rank">6.</span>Die Einstellungen eines Widgets</h2>
+
+  <p>Wählen Sie ein Widget aus, auf der Seite oder in der Liste: seine Einstellungen
+  erscheinen in der unteren Leiste, <strong>in der Reihenfolge, in der die Datei sie
+  trägt</strong>. Der Griff oben an der Leiste ändert ihre Höhe; die Schaltfläche zum
+  Zuklappen schließt sie.</p>
+
+  <p><strong>Das Zuklappen hält.</strong> Die Leiste kommt zugeklappt und klappt bei Ihrer
+  ersten Auswahl von selbst auf, weil sie dann etwas zu zeigen hat. Aber sobald Sie die
+  Schaltfläche <span class="manual__ui">Zuklappen</span> anrühren, entscheiden Sie: keine
+  Auswahl öffnet sie wieder, und sie lässt Ihnen die ganze Seite, solange Sie wollen.
+  Zugeklappt benennt ihre Kopfleiste weiterhin das gewählte Widget, und ihre Schaltfläche
+  sagt, was ein Aufklappen Ihnen brächte —
+  <span class="manual__ui">Einstellungen aufklappen</span>, oder
+  <span class="manual__ui">Widget-Liste</span>, wenn nichts ausgewählt ist.</p>
+
+  <p>Ab einem guten Dutzend Einstellungen erscheint ein Feld
+  <span class="manual__ui">Einstellungen filtern</span>. Es sucht in der Beschriftung
+  <em>und</em> in dem Namen, den die Einstellung in der Datei trägt. Die Schaltfläche
+  <span class="manual__ui">?</span> neben einer Einstellung klappt die Erklärung auf, die
+  XCTrack dazu gibt.</p>
+
+  <h3>Beim Ansehen: was eingestellt wurde</h3>
+
+  <p>Außerhalb des Bearbeitungsmodus sagt eine Leiste, wie viele Einstellungen von dem
+  abweichen, was XCTrack auf ein frisches Widget legt, und die Schaltfläche
+  <span class="manual__ui">Nur was abweicht</span> behält nur diese. Jede Zeile trägt ihren
+  Vermerk: <span class="manual__ui">von Ihnen eingestellt</span>,
+  <span class="manual__ui">Werkswert</span>, oder
+  <span class="manual__ui">Werkswert unbekannt</span>, wenn unsere Erhebung zu dieser
+  Einstellung nichts sagt.</p>
+
+  <h3>Die Einstellungen, die das Widget nicht schreibt</h3>
+
+  <p>Am Ende des Bereichs sammelt ein Block die Einstellungen, die für dieses Widget
+  <em>nicht</em> in Ihrer Datei stehen. XCTrack wendet darauf den Wert aus seinem eigenen
+  Code an — den, der daneben steht. Das ist nicht dasselbe wie eine Einstellung, die auf
+  diesen Wert gesetzt ist: siehe das nächste Kapitel.</p>
+
+  <!-- ==================================================================== 7 -->
+
+  <h2 id="m-usine"><span class="manual__rank">7.</span>Die drei Handgriffe rund um einen Werkswert</h2>
+
+  <p>Der Werkswert ist das, was XCTrack anwendet, wenn nichts in der Datei steht. Drei
+  Handgriffe drehen sich um ihn. <strong>Sie sind nicht gleichwertig</strong>, und das ist
+  das Wichtigste in diesem Handbuch nach den persönlichen Daten.</p>
+
+  <h3>„Diesen Wert festlegen“ / „Diesen Wert schreiben“ — einen fehlenden Werkswert schreiben</h3>
+
+  <p>Die Einstellung steht nicht in der Datei. Diese Schaltfläche schreibt sie hinein, mit
+  ihrem Werkswert. Sie heißt <span class="manual__ui">Diesen Wert festlegen</span> im
+  Bereich eines Widgets und <span class="manual__ui">Diesen Wert schreiben</span> in den
+  allgemeinen Einstellungen — dieselbe Handlung, an zwei Bildschirmen.</p>
+
+  <p>Auf einem Widget ändert das nichts an dem, was Ihr Gerät heute tut: es wandte diesen
+  Wert bereits an. Was sich ändert, gilt für später — der Wert ist ab jetzt
+  <strong>festgeschrieben</strong>, und ein XCTrack-Update, das diesen Werkswert ändern
+  würde, ändert Ihre Einstellung nicht mehr.</p>
+
+  <h3>„Entfernen“ — die Datei zu einer Einstellung schweigen lassen</h3>
+
+  <p>Diese Schaltfläche gibt es nur in den allgemeinen Einstellungen, und nur dann, wenn der
+  in der Datei geschriebene Wert <strong>bereits</strong> der Werkswert ist. Sie entfernt
+  dann die Zeile: die Datei sagt zu dieser Einstellung nichts mehr.</p>
+
+  <p>Bei einem Wert, den Sie gewählt haben, erscheint sie nie. Die Datei zu einer bewussten
+  Einstellung schweigen zu lassen hieße, Ihnen diese Einstellung zu nehmen, und das darf
+  eine unauffällige Schaltfläche nicht mit einem Klick tun.</p>
+
+  <div class="manual__measured">
+    <span class="manual__boxTitle">„Entfernen“ ist keine Rückkehr zum Werkswert</span>
+    <p>Eine allgemeine Einstellung aus der Datei zu entfernen setzt Ihr Gerät nicht auf den
+    Werkswert zurück. Es behält den, den es bereits hat. Siehe den Kasten in
+    Kapitel&nbsp;8.</p>
+  </div>
+
+  <h3>„Werkswert wiederherstellen“ — der einzige, der eine Wahl löscht</h3>
+
+  <p>Dieser Handgriff ersetzt einen Wert, <em>den Sie gewählt haben</em>, durch den, den ein
+  frisches XCTrack anwendet. Er ist der einzige der drei, der eine bewusste Einstellung
+  löscht: die beiden anderen rühren nur Werte an, die ohnehin schon dem Werkswert
+  entsprachen oder überhaupt nicht geschrieben waren. In den allgemeinen Einstellungen heißt
+  die Schaltfläche
+  <span class="manual__ui">Den Werkswert wiederherstellen</span>, im Bereich eines Widgets
+  <span class="manual__ui">Werkswert wiederherstellen</span>.</p>
+
+  <p>Sie versteckt sich deshalb nicht. Sie nimmt ihre eigene Zeile unter der Einstellung ein
+  und zeigt beide Werte <em>vor</em> dem Klick: „dieser Werkswert, dieser Wert in dieser
+  Datei. Wiederherstellen ändert, was das Gerät im Flug tut.“ Wurde der Werkswert an einer
+  anderen XCTrack-Version erhoben als der Ihrer Datei, sagt der Satz auch das.</p>
+
+  <p>Sie <strong>schreibt</strong> den Werkswert, statt die Zeile zu löschen. Die
+  Einstellung geht damit in den Zustand „Werkswert“ über, aus dem heraus
+  <span class="manual__ui">Entfernen</span> angeboten wird. Wenn Sie ganz gehen wollen, ist
+  das ein zweiter, bewusster Klick, und Sie sehen die beiden Wirkungen getrennt.</p>
+
+  <h3>Wenn keine Schaltfläche angeboten wird</h3>
+
+  <p>Es kommt vor, dass keiner der drei angeboten wird, und das ist gewollt. Einen geratenen
+  Wert zu schreiben wäre schlimmer, als nichts anzubieten. Die Fälle:</p>
+
+  <ul>
+    <li>der Werkswert wurde nicht erhoben;</li>
+    <li>XCTrack berechnet ihn beim Start nach Sprache und Land des Geräts — so ist es bei
+    den Einheiten;</li>
+    <li>XCTrack veröffentlicht zwei, die einander widersprechen: sein Code und sein
+    Einstellungsbildschirm sagen nicht dasselbe. Das Werkzeug zeigt dann beide und wählt
+    nicht;</li>
+    <li>der erhobene Werkswert ist ein zusammengesetzter Wert, und dieser Editor schreibt
+    nur einfache Werte.</li>
+  </ul>
+
+  <!-- ==================================================================== 8 -->
+
+  <h2 id="m-generaux"><span class="manual__rank">8.</span>Die allgemeinen Einstellungen von XCTrack</h2>
+
+  <p>Die Schaltfläche <span class="manual__ui">Einstellungen</span> in der oberen Leiste
+  öffnet alles, was sich <strong>außerhalb</strong> der Widget-Seiten einstellen lässt:
+  Einheiten, Tasten, Sensoren, Ton, Lufträume, Livetracking. Es sind die 217 Einstellungen,
+  die XCTrack kennt, dargestellt in der Reihenfolge der zwanzig Bildschirme seines
+  Menüs.</p>
+
+  <p>Zum Ändern drücken Sie
+  <span class="manual__ui">Einstellungen bearbeiten</span>. Beim Ansehen wird
+  <strong>kein einziges Eingabefeld gebaut</strong>: das ist keine Ausgrauung, es gibt
+  schlicht nichts anzurühren.</p>
+
+  <div class="manual__note">
+    <p>Diese Einstellungen gibt es nur in einem „backup“-Export. Wenn Sie einen
+    „pages“-Export geöffnet haben, sagt die Seite es Ihnen: das ist kein Verlust, Ihre Datei
+    enthält sie einfach nicht.</p>
+  </div>
+
+  <h3>Sich zurechtfinden</h3>
+
+  <p>Eine Leiste am Kopf zählt, was Sie eingestellt haben, was auf dem Werkswert steht und
+  was in der Datei fehlt. Drei Bedienelemente helfen beim Sortieren:</p>
+
+  <ul>
+    <li><span class="manual__ui">Einstellungen filtern</span> sucht in der Beschriftung, im
+    Namen der Einstellung und in ihrem Wert; Umlaute und Großschreibung spielen keine
+    Rolle;</li>
+    <li><span class="manual__ui">Nur was ich gesetzt habe</span> behält nur das, was vom
+    Werkswert abweicht;</li>
+    <li><span class="manual__ui">Persönliche Werte verbergen</span> ersetzt die Werte, die
+    Sie erkennbar machen, durch Punkte — nützlich, wenn jemand auf Ihren Bildschirm
+    schaut.</li>
+  </ul>
+
+  <h3>Der gemessene Kasten, den man nicht übergehen sollte</h3>
+
+  <div class="manual__measured">
+    <span class="manual__boxTitle">Eine fehlende Einstellung wird nicht auf den Werkswert zurückgesetzt</span>
+    <p>Beim Import <span class="manual__ui">Alles ersetzen</span> behält Ihr Gerät die
+    Einstellung, die es bereits hat: <strong>was die Datei nicht angibt, wird nicht
+    angerührt</strong>. Der Import ist eine Zusammenführung, kein Ersetzen.</p>
+    <p>Das ist eine Messung, keine Annahme. Der Ablauf: eine Anzeigeeinstellung wurde aus
+    einer Sicherung entfernt, die Sicherung wurde mit „Alles ersetzen“ neu importiert, dann
+    wurde die Konfiguration wieder exportiert. Die Einstellung stand wieder auf dem Wert,
+    den das Gerät ohnehin trug, und nicht auf dem Werkswert. Eine zweite Einstellung, im
+    selben Durchgang geändert, hat bewiesen, dass der Import den Rest tatsächlich
+    geschrieben hatte.</p>
+    <p>Zwei Grenzen, die gesagt sein müssen: die Messung betrifft den Modus „Alles
+    ersetzen“, die beiden anderen Importmodi wurden nicht erprobt; und der Fall eines
+    fabrikneuen Geräts wurde nicht getestet — auf einem Gerät, das diese Einstellung nie
+    angerührt hat, gilt notwendigerweise der Werkswert, aber das ist eine Ableitung.</p>
+  </div>
+
+  <p>Achtung: auf der Seite des <em>Widgets</em> ist es umgekehrt. XCTrack ergänzt beim
+  Wiedereinlesen die Einstellungen, die ein Widget nicht trägt, und dort gilt der Werkswert
+  sehr wohl. Die beiden Fälle wurden getrennt gemessen, und sie ergeben nicht dasselbe.</p>
+
+  <h3>Was sich einstellen lässt, und was nicht</h3>
+
+  <p>Die meisten Zeilen lassen sich einstellen: Kästchen, Liste, Regler, Zahl, Text, Farbe.
+  Manche bleiben <strong>ohne Bedienelement</strong> stehen, und jede sagt warum:</p>
+
+  <ul>
+    <li>die, die auf dem Gerät einen Dialog öffnen — die zu drückenden Tasten, die Tabelle
+    des akustischen Varios: „eine Taste, die man am Gerät drückt, eine Tabelle, die man
+    baut“ gibt man hier nicht ein;</li>
+    <li>die, deren Wert zusammengesetzt ist: die Seite zeigt ihn so, wie er ist, ohne ihn zu
+    öffnen, und schreibt ihn nie neu;</li>
+    <li>die, die XCTrack nirgends lesbar benennt: ohne Beschriftung bietet das Werkzeug
+    nicht an, sie zu ändern;</li>
+    <li>die, die den Zustand der Anwendung festhalten statt einer Einstellung.</li>
+  </ul>
+
+  <p>Drei Blöcke am Ende der Seite sammeln diese Fälle:
+  <span class="manual__ui">Einstellungen ohne Beschriftung</span>,
+  <span class="manual__ui">Was die Anwendung sich gemerkt hat (keine Einstellungen)</span>
+  und <span class="manual__ui">Zeilen, die dieser Katalog nicht kennt</span> — letztere
+  wurden von einer anderen XCTrack-Version geschrieben. Alle kommen unversehrt wieder
+  heraus.</p>
+
+  <h3>Der Bereich der persönlichen Daten</h3>
+
+  <p>Ein zugeklappter Bereich am Kopf der Seite verzeichnet, was <em>diese Einstellungen
+  hier</em> über Sie verraten, mit der Art jeder einzelnen und der Herkunft dieses Wissens.
+  Er zählt nur die allgemeinen Einstellungen; die Texte, die Sie in die Widgets geschrieben
+  haben, werden anderswo verzeichnet, beim Speichern.</p>
+
+  <!-- ==================================================================== 9 -->
+
+  <h2 id="m-version"><span class="manual__rank">9.</span>Angepeilte Version, Kompatibilität und Aufräumen</h2>
+
+  <p>Menü <span class="manual__ui">Datei</span>, dann
+  <span class="manual__ui">Version und Kompatibilität…</span>.</p>
+
+  <p>Das Format von XCTrack ändert sich mit jeder Version. Dieser Bildschirm fragt Sie nach
+  <span class="manual__ui">Die XCTrack-Version, die Sie anpeilen</span> — der des Geräts,
+  auf das Sie diese Datei wieder importieren werden — und sagt Ihnen dann, was Ihre Datei
+  enthält, das diese Version nicht mehr liest, und was sie erwartet und die Datei nicht
+  hat.</p>
+
+  <p>Es ist eine <strong>Feststellung</strong>: nichts bewegt sich, solange Sie es nicht
+  entscheiden.</p>
+
+  <h3>Seine Version wählen</h3>
+
+  <p>Sie wählen über den Namen, den Ihr Gerät anzeigt, „1.0.3-beta“. Die Version, die Ihre
+  Datei angibt, ist bereits vorausgewählt, und ein Satz sagt, woher diese Vorauswahl kommt —
+  und wenn sie willkürlich ist, sagt er auch das.</p>
+
+  <p>Da mehrere Versionen oft genau dieselben Einstellungen annehmen,
+  <strong>benennt das Werkzeug die, die es von Ihrer nicht unterscheiden kann</strong>: die
+  Wahl zwischen zwei Nachbarinnen bleibt dann ohne Wirkung, und es ist besser, das zu sagen,
+  als Sie raten zu lassen.</p>
+
+  <h3>Die drei Wörter der Diagnose</h3>
+
+  <p>Jede Bemerkung trägt eines dieser Wörter, und es bestimmt, was zu tun ist:</p>
+
+  <ul>
+    <li><strong>veraltet</strong> — XCTrack liest diese Einstellung nicht mehr, und echte
+    Dateien, die von eben dieser Version geschrieben wurden, tragen sie trotzdem. Wir haben
+    es geschehen sehen, wir vermuten es nicht. <em>Ein Entfernen lässt sich vertreten.</em></li>
+    <li><strong>blinder Fleck</strong> — der Mangel liegt bei uns, nicht in Ihrer Datei:
+    unsere Lesung der Versionen hat an dieser Stelle eine Lücke. <em>Wir rühren sie nicht
+    an.</em></li>
+    <li><strong>unbekannt</strong> — keine Version, die wir lesen konnten, enthält diese
+    Einstellung, und keine echte Datei zeigt sie. <em>Wir schließen daraus nichts.</em></li>
+  </ul>
+
+  <p>Die Diagnose ordnet die Abweichungen in acht Familien, und jede sagt in klaren Worten,
+  was zu tun ist. Vier sagen ausdrücklich, nichts zu löschen. Die vielleicht wichtigste ist
+  diese:
+  <span class="manual__ui">Unsere Lesung hat eine Lücke: die Einstellung gab es sehr
+  wohl</span> — „Niemals entfernen. Das sind gültige Einstellungen, und sie für veraltete zu
+  halten würde Ihre löschen.“</p>
+
+  <h3>Warum das Werkzeug sich weigert, bestimmte Einstellungen anzurühren</h3>
+
+  <div class="manual__measured">
+    <p>Alles beruht auf einem einfachen Ungleichgewicht: <strong>nichts zu entfernen macht
+    nichts kaputt, zu Unrecht zu entfernen macht eine Flugkonfiguration kaputt.</strong></p>
+    <p>Eine Datenbasis, die jede beobachtete Einstellung für eine gültige hielte, würde genau
+    die Überbleibsel schützen, die ein Aufräumen wegnehmen soll. Eine Datenbasis, die jede
+    nicht gelesene Einstellung für eine entfernte hielte, würde vollkommen gültige
+    Einstellungen löschen. Das Werkzeug unterscheidet deshalb drei Dinge: was es in den
+    Versionen <em>gelesen</em> hat, was eine echte Datei <em>trägt</em>, und warum beides
+    auseinandergeht.</p>
+  </div>
+
+  <p>Die Auswahl ist absichtlich eng. Von den acht Familien der Abweichung wird
+  <strong>eine einzige</strong> zum Löschen vorgeschlagen: die, die eine echte Datei
+  bestätigt. Und selbst dort bleibt eine veraltete Einstellung, bei der das Werkzeug nicht
+  sagen kann, seit welcher Version sie nicht mehr dient, an ihrem Platz — man schlägt nicht
+  vor zu löschen, was man nicht erklären könnte.</p>
+
+  <h3>Entfernen, was eine ältere Version hinterlassen hat</h3>
+
+  <p>XCTrack behält die Einstellungen, die es nicht mehr kennt: eine Sicherung aus diesem
+  Jahr schleppt noch Schalter von vor drei Jahren mit. Der Abschnitt
+  <span class="manual__ui">Entfernen, was eine ältere Version hinterlassen hat</span>, unter
+  der Diagnose und nur im Bearbeitungsmodus, bietet an, sie zu entfernen. Ist nichts zu
+  entfernen, erscheint der Abschnitt gar nicht.</p>
+
+  <p>Er beginnt damit, Sie zu beruhigen, und das zu Recht: „Nichts eilt und nichts ist
+  kaputt: XCTrack schleppt sie mit, ohne sie zu lesen, und sie dort zu lassen ändert nichts
+  an Ihren Seiten. Sie zu entfernen macht die Datei kleiner, mehr nicht.“</p>
+
+  <ol class="manual__steps">
+    <li>Klappen Sie <span class="manual__ui">Diese 9 Einstellungen ansehen und abwählen, was
+    Sie lieber behalten</span> auf — die Zahl ist die Ihrer Datei. Am Anfang ist alles
+    angehakt; jede Zeile sagt, bis zu welcher XCTrack-Version die Einstellung noch gelesen
+    wurde, und ihren Wert, wenn er einfach ist.</li>
+    <li>Wählen Sie ab, was Sie behalten wollen. Die Zählung wird aktualisiert, und die
+    Schaltfläche sagt genau, wie viele Einstellungen sie entfernen wird.</li>
+    <li>Klicken Sie die Schaltfläche. Der Bereich wird durch eine Meldung ersetzt und durch
+    <span class="manual__ui">Diese 9 Einstellungen zurücklegen</span>.</li>
+  </ol>
+
+  <p>Die Umkehr ist vollständig: zurückgelegt kommt die Datei Byte für Byte wieder heraus.
+  Der Handgriff wird außerdem in der Chronik aufgezeichnet, also macht
+  <span class="manual__ui">Rückgängig</span> ihn wie alles andere zunichte.</p>
+
+  <p>Und nichts ist hinausgegangen, solange Sie nicht gespeichert haben: „Ihr Gerät weiß
+  noch nichts davon: die Datei ändert sich erst, wenn Sie sie speichern.“</p>
+
+  <!-- =================================================================== 10 -->
+
+  <h2 id="m-enregistrer"><span class="manual__rank">10.</span>Speichern, und wählen, was man aus der Hand gibt</h2>
+
+  <p>Die Schaltfläche zum Speichern, oben rechts, sagt, was geschehen wird:
+  <span class="manual__ui">Kopie speichern</span>, wenn Sie nichts angerührt haben,
+  <span class="manual__ui">Änderungen speichern</span>, wenn sich das Dokument geändert hat.
+  Sie ist zugleich das einzige sichtbare Zeichen dafür, dass eine Arbeit läuft.</p>
+
+  <p>Sie öffnet den Dialog
+  <span class="manual__ui">Diese Konfiguration speichern</span>, der Ihnen nur eine einzige
+  Frage stellt: <strong>was soll gespeichert werden?</strong></p>
+
+  <p>Drei Antworten, geordnet nach dem, was hinausgeht: alles, alles außer dem, was Sie
+  erkennbar macht, nur Ihre Seiten. Eine Stufe hinunterzugehen heißt immer „weniger aus der
+  Hand geben“. Jeder Weg trägt unter seiner Karte das Verzeichnis dessen, was er tun wird —
+  es erscheint, wenn Sie ihn anhaken, und <strong>vor</strong> jedem Herunterladen.</p>
+
+  <h3>Der Dateiname ist im Voraus geregelt</h3>
+
+  <p>Er trägt einen Zeitstempel und <strong>übernimmt nichts vom ursprünglichen
+  Namen</strong>, der oft einen Vornamen enthält. Er sieht so aus:
+  <span class="manual__file">xctrack_2026-08-21-153207_backup.xcfg</span>. Da das Datum
+  rückwärts geschrieben ist, ist die alphabetische Reihenfolge Ihrer Dateien zugleich ihre
+  zeitliche.</p>
+
+  <p>Der Name trägt auch das <strong>Format</strong> der erzeugten Datei und den Vermerk
+  <span class="manual__file">-anon</span>, wenn Werte ersetzt wurden:
+  <span class="manual__file">…_backup-anon.xcfg</span> ist eine vollständige Sicherung,
+  <span class="manual__file">…_pages-anon.xcfg</span> enthält nur Seiten. Verwechseln Sie
+  die beiden nicht: ein <span class="manual__file">backup</span> importiert Einstellungen
+  wieder, ein <span class="manual__file">pages</span> nicht.</p>
+
+  <h3>Weg 1 — „Ihre Konfiguration, genau so wie sie ist“</h3>
+
+  <p>Das ist Ihre Datei. Wenn Sie nichts geändert haben, kommt sie genau so wieder heraus,
+  wie sie hineingegangen ist, ohne ein einziges neu geschriebenes Komma — und ihre
+  SHA-256-Prüfsumme ist die der ursprünglichen Datei, Sie können das nachprüfen. Wenn Sie
+  etwas geändert haben, wird alles, was Sie nicht angerührt haben, unverändert übernommen,
+  bis hin zu den Zahlen und den ursprünglichen Abständen.</p>
+
+  <p>Das ist der Weg, den Sie wählen, um die Datei auf <em>Ihr</em> Gerät zurückzubringen.
+  Der Dialog erinnert Sie dann daran, was sie von Ihnen enthält.</p>
+
+  <h3>Weg 2 — „Alle Ihre Einstellungen, ohne das, was Sie erkennbar macht“</h3>
+
+  <p>Die Datei bleibt eine <strong>vollständige Sicherung</strong>. Ihr Vario und seine
+  Töne, Ihre Einheiten, Ihr Design, Ihre Luftraumschwellen, Ihre Tasten: alles ist da. Was
+  Sie erkennbar macht, wird durch einen neutralen Wert ersetzt oder Zeile für Zeile
+  entfernt.</p>
+
+  <p><strong>Das ist der Weg, den Sie wählen, um zu einer Einstellung um Hilfe zu
+  bitten</strong> — in einem Forum, in einer Nachricht an eine andere Pilotin oder einen
+  anderen Piloten. Die andere teilbare Fassung überträgt keine einzige Einstellung: sie kann
+  Ihre Frage also gar nicht mittragen.</p>
+
+  <p>Jede behandelte Zeile wird mit ihrem Urteil und ihrem Grund gezeigt, gruppiert nach
+  dem, was mit ihr geschieht:</p>
+
+  <ul>
+    <li><span class="manual__ui">Durch einen neutralen Wert ersetzt</span> — aus Ihrem Namen
+    wird „Pilot“, aus Ihrem Schirm „Schirm“, das Kartendesign, das Sie installiert haben,
+    geht auf den Werkswert von XCTrack zurück. Die Zeile behält ihren Platz und ihren
+    Typ;</li>
+    <li><span class="manual__ui">Aus der Datei entfernt</span> — die ganze Zeile geht, weil
+    ihr Wert eine Struktur ist: Ihre laufende Aufgabe und ihre Koordinaten, Ihre gekoppelten
+    Sensoren und deren Bluetooth-Adressen, Ihre Wegpunktdateien, Ihre Offline-Karten, Ihre
+    Livetracking-Kurznachrichten. Eine Ersatzstruktur zu schreiben liefe darauf hinaus, eine
+    Gestalt zu erfinden, die XCTrack nie schreibt; eine fehlende Zeile dagegen ist der
+    Zustand einer frischen Installation;</li>
+    <li><span class="manual__ui">Unverändert behalten, und hier steht warum</span> — was das
+    Werkzeug anzurühren <em>abgelehnt</em> hat, ebenso deutlich gesagt wie der Rest: Ihre
+    Livetrack-Verbreitungswahl, die Kategorie Ihres Schirms. Das sind Einstellungen, keine
+    Daten: sie tragen weder Namen noch Nummer noch Adresse, und oft kommt man gerade
+    ihretwegen;</li>
+    <li><span class="manual__ui">In der Datei vorhanden, aber leer</span> — der Platz
+    existiert und trägt nichts. Dort gibt es nichts zu ersetzen.</li>
+  </ul>
+
+  <p>Auf der Referenzsicherung dieses Projekts ergibt das <strong>16 persönliche
+  Einstellungen: 3 ersetzt, 4 entfernt, 4 behalten, 5 leer</strong>.</p>
+
+  <p>Was die Gegenseite nicht bekommt, sind die entfernten Zeilen — und keine davon ist eine
+  Einstellung: es sind Dateien und Geräte, die bei Ihnen zu Hause leben und mit denen sie
+  nichts hätte anfangen können.</p>
+
+  <p>Dieser Weg erscheint nicht bei einer Datei, die keine Einstellungen enthält — bei einem
+  „pages“-Export zum Beispiel. Er erzeugte dort genau dieselbe Datei wie Weg&nbsp;3, unter
+  demselben Namen, und zwei nicht unterscheidbare Karten sind weniger wert als eine Karte
+  weniger.</p>
+
+  <div class="manual__warning">
+    <span class="manual__boxTitle">Dieser Weg beruht auf einer Liste, und eine Liste veraltet</span>
+    <p>Er behandelt die 44 bekannten persönlichen Einstellungen von XCTrack und die elf
+    Textfelder der Widgets. Das Format ändert sich mit jeder Version: <strong>eine seither
+    hinzugekommene persönliche Einstellung stünde nicht auf der Liste und ginge im Klartext
+    hinaus.</strong> Weg&nbsp;3, weiter unten, hängt von gar keiner Liste ab — er überträgt
+    überhaupt keine Einstellung.</p>
+  </div>
+
+  <h3>Weg 3 — „Teilbare Fassung, ohne persönliche Daten“</h3>
+
+  <p>Das ist ein „pages“-Export, dessen von Ihnen geschriebene Texte durch neutrale ersetzt
+  werden. Der Seitenaufbau bleibt erhalten; die Einstellungen gehen nicht mit.</p>
+
+  <p><strong>Das ist der Weg, der am wenigsten aus der Hand gibt</strong>, und der einzige,
+  der von keiner Liste von Einstellungen abhängt: die Einstellungen werden ihm nicht
+  entnommen, sie kommen nie hinein. Wählen Sie ihn, wenn Sie einen <em>Seitenaufbau</em>
+  teilen — und Weg&nbsp;2, wenn Ihre Frage eine <em>Einstellung</em> betrifft.</p>
+
+  <p>Vor dem Herunterladen zeigt Ihnen das Werkzeug:</p>
+
+  <ul>
+    <li><span class="manual__ui">Was nicht mitgeht</span> — die ganzen Abschnitte, die bei
+    Ihnen bleiben, und, in klaren Worten, was die Gegenseite selbst einstellen muss: ihre
+    Einheiten, ihr Design, ihr Vario, ihre Lufträume, ihr Livetracking, ihre Sensoren;</li>
+    <li><span class="manual__ui">Die Anhänge des Archivs</span>, wenn Ihre Datei ein
+    <span class="manual__file">.xczfg</span> ist — sie gehen nicht mit, und die teilbare
+    Fassung wird immer als nacktes <span class="manual__file">.xcfg</span>
+    geschrieben;</li>
+    <li><span class="manual__ui">Ihre Texte in den Widgets</span> — das Verzeichnis, Zeile für Zeile:
+    wo der Text steht, welchen Wert er trug, wodurch er ersetzt wird und warum.</li>
+  </ul>
+
+  <p>Die Ersetzungen behalten die <em>Gestalt</em> dessen, was sie ersetzen, um Ihren
+  Seitenaufbau nicht zu zerstören: aus einem Titel wird „Titel 1“, aus einer Telefonnummer
+  eine Nummer desselben Zuschnitts, die aber nicht wählbar ist, aus einer Webadresse eine
+  Adresse einer reservierten Domain, die nirgendwohin führt.</p>
+
+  <h3>Was wie ein von Ihnen geschriebener Text aussieht</h3>
+
+  <p>Unter jedem der beiden teilbaren Wege fügt das Werkzeug einen letzten Absatz hinzu.
+  Dort meldet es die Texte, die <em>auf keiner seiner Listen stehen</em> und doch nach etwas
+  aussehen, das Sie geschrieben hätten: ein Satz, ein Wort mit Umlaut, eine Web- oder
+  E-Mail-Adresse, ein Dateipfad, eine Geräteadresse, eine Nummer.</p>
+
+  <p><strong>Es meldet sie, es ersetzt sie nicht.</strong> Auf einen Verdacht hin zu
+  ersetzen würde rechtmäßige Einstellungen beschädigen — und nur Sie wissen, ob Sie diesen
+  Text geschrieben haben. Bei den echten Dateien unserer Versuche meldet dieser Absatz
+  nichts: was XCTrack selbst schreibt, besteht aus Wörtern, die aus Listen gewählt sind, nie
+  aus Sätzen.</p>
+
+  <div class="manual__warning">
+    <span class="manual__boxTitle">Das Verzeichnis ist die Prüfung, nicht unser Versprechen</span>
+    <p>Die Liste der behandelten Textfelder ist fest, und das Format von XCTrack ändert sich
+    mit jeder Version: ein seither hinzugekommenes Textfeld ginge im Klartext hinaus.
+    <strong>Lesen Sie das Verzeichnis durch, bevor Sie die Datei versenden.</strong> Ein
+    leeres Verzeichnis beweist keine Abwesenheit — es beweist nur, dass das Werkzeug unter
+    dem, was es zu suchen weiß, nichts gefunden hat.</p>
+  </div>
+
+  <h3>Die Datei zurück auf das Gerät bringen</h3>
+
+  <ol class="manual__steps">
+    <li>Kopieren Sie die heruntergeladene Datei auf die SD-Karte des Geräts, oder übertragen
+    Sie sie per Kabel.</li>
+    <li>Öffnen Sie am Gerät den Bildschirm von XCTrack zum Teilen der Konfiguration und
+    starten Sie den Import.</li>
+    <li>Der Modus <span class="manual__ui">Alles ersetzen</span> ist der, auf den sich unsere
+    Messungen beziehen. Denken Sie daran, was er genau tut: was die Datei nicht angibt, wird
+    nicht angerührt (Kapitel&nbsp;8).</li>
+    <li>Bewahren Sie vor dem Import eine Sicherung Ihrer bisherigen Konfiguration auf. Ist
+    der Import einmal gemacht, kann dieses Werkzeug nichts mehr für Sie tun.</li>
+  </ol>
+
+  <!-- =================================================================== 11 -->
+
+  <h2 id="m-bibliotheque"><span class="manual__rank">11.</span>Die Bibliothek der Konfigurationen</h2>
+
+  <p>Menü <span class="manual__ui">Datei</span>, dann
+  <span class="manual__ui">Bibliothek…</span>. Dort legen Sie mehrere Konfigurationen unter
+  einem Namen ab — eine für den Wettkampf, eine für das Biwakfliegen, eine für die Schule —
+  und kehren zu einer davon zurück, wann Sie wollen.</p>
+
+  <p>Alles bleibt in diesem Browser. Nichts wird irgendwohin gesendet, es gibt weder Konto
+  noch Server, und ein anderes Gerät sieht Ihre Bibliothek nicht. Die abgelegten Bytes sind
+  die Ihrer Datei, nie eine neu geschriebene Kopie: sie werden bei jedem Wiedereinlesen
+  anhand der Prüfsumme geprüft.</p>
+
+  <h3>Ablegen, wiederfinden, herausgeben</h3>
+
+  <ul>
+    <li><span class="manual__ui">Geöffnete Konfiguration ablegen</span> verlangt einen Namen
+    — „den, den Sie in sechs Monaten wiedererkennen“ — und eine freiwillige Notiz.</li>
+    <li><span class="manual__ui">Eine Datei ablegen…</span> legt eine
+    <span class="manual__file">.xcfg</span> von der Festplatte ab, ohne sie zu öffnen.</li>
+    <li><span class="manual__ui">Laden</span> holt eine Konfiguration in den Editor zurück.
+    Trägt das offene Dokument ungespeicherte Änderungen, hält das Werkzeug an und bietet
+    Ihnen an, es zuerst abzulegen.</li>
+    <li><span class="manual__ui">Die Datei wieder herausgeben</span> gibt Ihnen die
+    abgelegten Bytes so zurück, wie sie hereingekommen sind.</li>
+    <li><span class="manual__ui">Prüfsumme prüfen</span> berechnet die Prüfsumme neu und
+    vergleicht sie mit der, die beim Ablegen gesetzt wurde.</li>
+    <li><span class="manual__ui">Steckbrief</span> zeigt alles, was der Eintrag enthält, und
+    trennt dabei sorgfältig <em>Was die Datei angibt</em> von <em>Was dieser Editor
+    annimmt</em>.</li>
+  </ul>
+
+  <p>Jeder Eintrag zeigt außerdem seine Zählung persönlicher Daten, in der Form
+  „16 persönliche Angaben · 2 gehen mit den Seiten mit“. Beide Zahlen werden immer genannt,
+  die Null eingeschlossen.</p>
+
+  <h3>Das ist keine Sicherung</h3>
+
+  <div class="manual__warning">
+    <span class="manual__boxTitle">Exportieren Sie Ihre Bibliothek</span>
+    <p>Die Daten der Website zu löschen löscht die Bibliothek, und manche Browser löschen
+    von sich aus die Daten einer Website, die seit einigen Tagen nicht besucht wurde.
+    <span class="manual__ui">Bibliothek exportieren</span> macht daraus ein ZIP-Archiv, aus
+    dem sich jede Konfiguration mit einem beliebigen Entpacker herausholen lässt.
+    <span class="manual__ui">Eine Bibliothek importieren…</span> liest es wieder ein, ohne je
+    einen bestehenden Eintrag zu überschreiben.</p>
+    <p>Die Schaltfläche <span class="manual__ui">Den Browser daran hindern, meine Bibliothek
+    zu löschen</span> bittet den Browser um dauerhafte Ablage. Das ist nie eine Garantie. Die
+    einzige Sicherung, die trägt, ist das Archiv, das Sie exportieren.</p>
+  </div>
+
+  <p>Und zuletzt: <strong>diese Bibliothek hat keinen Papierkorb.</strong> Ein Löschen ist
+  endgültig, und „Rückgängig“ kann daran nichts ändern. Deshalb verlangt das Löschen eine
+  Bestätigung in einem eigenen Rahmen.</p>
+
+  <!-- =================================================================== 12 -->
+
+  <h2 id="m-mesure"><span class="manual__rank">12.</span>Was gemessen ist, und was nicht</h2>
+
+  <p>Dieser Abschnitt ist keine rechtliche Vorsichtsmaßnahme. Er ist die nützlichste
+  Auskunft, die dieses Handbuch Ihnen geben kann.</p>
+
+  <h3>Woher alles kommt, was das Werkzeug weiß</h3>
+
+  <p>Das Format der XCTrack-Dateien ist <strong>nicht dokumentiert</strong>, und es ändert
+  sich mit jeder Version der Anwendung. Alles, was dieses Werkzeug darüber weiß, kommt aus
+  zwei Quellen: aus echten Dateien, über vier Jahre und acht Versionen beobachtet, und aus
+  der Lesung der Anwendung selbst. Nichts kommt aus einer Spezifikation, denn es gibt
+  keine.</p>
+
+  <p>Genau das macht den Wert des Werkzeugs aus — und deshalb ist es darauf gebaut, das, was
+  es nicht versteht, zu <em>übertragen</em>, statt das Format nachzubilden.</p>
+
+  <h3>Drei Dinge, die man nicht verwechseln darf</h3>
+
+  <ul>
+    <li><strong>Was am Gerät beobachtet wurde.</strong> Ein AIR³ 7.2, eine Version von
+    XCTrack. Die Zeichnungen der Widgets, das Einrastraster, das Verhalten eines Imports. Das
+    Werkzeug sagt es, wenn es so ist.</li>
+    <li><strong>Was in der Anwendung gelesen wurde.</strong> Die Namen und Beschreibungen der
+    Widgets, die Werkswerte, die Liste der Einstellungen. Das ist solide, aber es ist nicht
+    dasselbe wie eine Messung an einem Gerät, das fliegt.</li>
+    <li><strong>Was abgeleitet ist.</strong> Zum Beispiel: das Einrastraster wurde an einem
+    einzigen Gerät gemessen; auf allen anderen Vorlagen ist es hochgerechnet und liefert eine
+    plausible Größenordnung und nicht mehr.</li>
+  </ul>
+
+  <h3>Was die Darstellung wert ist</h3>
+
+  <p>Die Zeichnungen der Widgets sind nach dem wiederaufgebaut, was an einem einzigen Gerät
+  und einer einzigen Version beobachtet wurde. Ein Widget, dessen Zeichnung nicht
+  nachgebildet wurde, erscheint in einer ehrlichen allgemeinen Form statt in einer
+  irreführenden Annäherung. Und wenn Ihre Datei ein Anzeigedesign verlangt, das der Editor
+  nicht zeichnen kann, sagt er es Ihnen: die Farben, die Sie sehen, sind nicht die Ihres
+  Geräts, die Geometrie aber stimmt.</p>
+
+  <h3>Zwei Sprachen auf dem Bildschirm, und das ist kein Fehler</h3>
+
+  <p>Die Oberfläche dieses Editors und dieses Handbuch gibt es in fünf Sprachen:
+  Französisch, Englisch, Niederländisch, Deutsch, Spanisch. Die <strong>Namen der Widgets
+  und der Einstellungen</strong> folgen dieser Wahl dagegen nicht: sie kommen von XCTrack,
+  in den gut dreißig Sprachen, die die Anwendung mitbringt, und richten sich nach der
+  Sprache <em>Ihrer Datei</em>. Sie können die Oberfläche also auf Spanisch lesen und Ihre
+  Widgets auf Französisch benannt sehen, wenn Ihr Gerät sie so benennt. Das ist gewollt: es
+  sind die Wörter, die Sie im Flug wiederfinden.</p>
+
+  <h3>Was die Oberfläche noch nicht kann</h3>
+
+  <ul>
+    <li>Die Bibliothek zeigt keine Bildvorschau: der Platz ist vorgesehen, die Miniatur ist
+    ein leerer Rahmen, der es sagt.</li>
+    <li>Die Auswahl bei den allgemeinen Einstellungen bietet nicht alles an: was der Katalog
+    nicht erhoben hat, wird nicht zum Einstellen angeboten, statt geraten zu werden.</li>
+  </ul>
+
+  <!-- =================================================================== 13 -->
+
+  <h2 id="m-avis"><span class="manual__rank">13.</span>Ihre Meinung sagen, melden, was nicht stimmt</h2>
+
+  <p>Dieses Werkzeug ist für Pilotinnen und Piloten geschrieben, und es wird nur besser
+  durch das, was sie darüber sagen. Vorschläge und Korrekturen laufen über die
+  GitHub-Issues:</p>
+
+  <p><a href="https://github.com/frederict/xcfg-editor/issues">https://github.com/frederict/xcfg-editor/issues</a></p>
+
+  <p>Alles ist nützlich: ein schlecht gezeichnetes Widget, eine Einstellung, die der Editor
+  nicht zeigt, ein dunkles Wort, eine XCTrack-Version, die in der Liste fehlt, eine Datei,
+  die sich nicht öffnen lässt, ein Satz dieses Handbuchs, der Sie Zeit gekostet hat.</p>
+
+  <p><strong>Welches Gerät</strong>, <strong>welche XCTrack-Version</strong> und
+  <strong>was Sie erwartet hatten</strong> zu nennen spart viel Zeit.</p>
+
+  <p><strong>Schreiben Sie in Ihrer Sprache.</strong> Die Oberfläche und dieses Handbuch
+  gibt es auf Französisch, Englisch, Niederländisch, Deutsch und Spanisch: eine Issue, die
+  in einer dieser fünf Sprachen geschrieben ist, wird gelesen. Sie müssen für eine Meldung
+  nicht auf Englisch wechseln — und eine Übersetzung, die schief klingt oder eine
+  Schaltfläche anders benennt als der Bildschirm, ist genau die Art von Sache, die gemeldet
+  werden sollte.</p>
+
+  <div class="manual__warning">
+    <span class="manual__boxTitle">Hängen Sie niemals Ihre eigene Datei an</span>
+    <p>Eine GitHub-Issue ist öffentlich, und das für immer. Ihre
+    <span class="manual__file">.xcfg</span> enthält Ihren Namen, Ihren Schirm, Ihre
+    Sensoren, Ihre Wegpunktdateien, manchmal Ihre Koordinaten.</p>
+    <p>Wenn eine Datei unentbehrlich ist, um das Problem zu verstehen, erzeugen Sie zuerst
+    mit diesem Werkzeug eine teilbare Fassung —
+    <span class="manual__ui">Teilbare Fassung, ohne persönliche Daten</span>, wenn das
+    Problem eine Seite betrifft,
+    <span class="manual__ui">Alle Ihre Einstellungen, ohne das, was Sie erkennbar
+    macht</span>, wenn es eine Einstellung betrifft. Lesen Sie das Verzeichnis der
+    Ersetzungen durch, das es Ihnen zeigt, und senden Sie nur diese Datei.</p>
+  </div>
+
+</div>
