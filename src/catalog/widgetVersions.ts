@@ -19,9 +19,9 @@
  * ## Trois tables, parce que « je ne l'ai pas vue » n'est pas « elle n'existe pas »
  *
  * C'est la distinction dont tout dépend, et elle n'est pas théorique. **XCTrack
- * conserve les clés qu'il ne connaît plus** : un fichier écrit par 1.0.3 porte encore
- * `showWind` sur les boussoles qu'on n'a pas retouchées depuis que `windStyle` l'a
- * remplacé. Une base qui prendrait toute clé observée pour une clé existante
+ * transporte les clés qu'il n'a pas encore relues** : un fichier écrit par 1.0.3 porte
+ * encore `showWind` sur les boussoles qu'on n'a pas retouchées depuis que `windStyle` l'a
+ * remplacé — parce qu'il ne relit une page que lorsqu'il l'affiche. Une base qui prendrait toute clé observée pour une clé existante
  * protégerait précisément les reliquats qu'un nettoyage doit ôter ; une base qui
  * prendrait toute clé non extraite pour une clé retirée supprimerait des réglages
  * valides. Il faut donc les deux tables, et la raison de l'écart.
@@ -177,8 +177,9 @@ export interface VersionSchema {
  *
  * - `gap` — la clé existait ; c'est le relevé qui l'a manquée (elle apparaît dans des
  *   paliers postérieurs).
- * - `legacy` — la clé n'existe plus ; **XCTrack conserve les clés qu'il ne connaît
- *   plus**, et le fichier en traîne une. C'est ce qu'un nettoyage ôte.
+ * - `legacy` — la clé n'existe plus sous ce nom ; une autre lui a succédé, et le fichier
+ *   traîne encore l'ancienne parce que l'instrument ne l'a pas encore relue. C'est ce
+ *   qu'un nettoyage ôte — ⚠️ **mais pas n'importe laquelle** : voir ci-dessous.
  * - `blind` — aucun palier ne la porte : rien à conclure.
  *
  * La preuve du cas `legacy` tient en une observation : dans un même fichier de 1.0.3,
@@ -201,8 +202,12 @@ const ATTESTATION_KINDS: AttestationKind[] = ['gap', 'legacy', 'blind']
  * - `blind` — attestée quelque part, retrouvée dans aucun palier. L'extraction est
  *   aveugle de bout en bout sur cette clé ; on ne peut rien conclure de son silence.
  * - `legacy` — l'extraction ne la lit que dans des paliers **antérieurs**, et un
- *   fichier réel de ce palier-ci la porte quand même. XCTrack conserve les clés qu'il
- *   ne connaît plus : c'est un reliquat, et c'est exactement ce qu'un nettoyage ôte.
+ *   fichier réel de ce palier-ci la porte quand même. C'est un reliquat, et c'est là que
+ *   le nettoyage regarde. ⚠️ **Reliquat ne veut pas dire sans effet** : mesuré sur un
+ *   AIR³ 7.2 le 22 août 2026, XCTrack lit ces clés une dernière fois pour en dériver
+ *   celles d'aujourd'hui (`showWind` → `windStyle`) avant de les effacer. Ce que le
+ *   retrait ferait est une **autre** question, à laquelle cette base ne répond pas :
+ *   c'est `catalog/legacyMigrations.ts` qui la porte, et le nettoyage l'interroge.
  * - `absent` — ni lue, ni attestée, alors que le widget, lui, est connu du palier.
  * - `unknown` — palier inconnu, ou widget absent de toute la base : on ne sait pas.
  *

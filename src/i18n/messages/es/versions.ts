@@ -28,7 +28,8 @@ const versions: DomainCatalog<'versions'> = {
 
   /* ----------------------------------------- les huit cas : titre, constat, et verdict */
 
-  'versions.titleLegacy': 'Ajustes obsoletos: la versión elegida ya no los lee',
+  /** ⚠️ Voir le commentaire du français : « ya no los lee » était faux. */
+  'versions.titleLegacy': 'Ajustes obsoletos: la versión elegida ya no los escribe',
   'versions.evidenceLegacy': 'Leemos estos ajustes en versiones más antiguas, ya no en esta — y archivos reales escritos por esa misma versión los llevan de todos modos. XCTrack conserva sin leerlos los ajustes que ya no conoce: aquí lo hemos visto ocurrir, no lo suponemos.',
   'versions.verdictLegacy': 'Aquí quitarlos se sostiene. Es el único caso que un archivo real viene a confirmar.',
 

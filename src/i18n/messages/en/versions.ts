@@ -27,7 +27,8 @@ const versions: DomainCatalog<'versions'> = {
 
   /* ----------------------------------------- les huit cas : titre, constat, et verdict */
 
-  'versions.titleLegacy': 'Outdated settings: the release you are targeting no longer reads them',
+  /** ⚠️ Voir le commentaire du français : « no longer reads them » était faux. */
+  'versions.titleLegacy': 'Outdated settings: the release you are targeting no longer writes them',
   'versions.evidenceLegacy': 'We read these settings in older releases, no longer in this one — and real files written by that very release carry them anyway. XCTrack keeps the settings it no longer knows without reading them: here we have seen it happen, we are not assuming it.',
   'versions.verdictLegacy': 'Removing them is defensible here. This is the only case a real file comes to confirm.',
 

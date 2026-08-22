@@ -60,7 +60,12 @@ const versions = {
 
   /* ----------------------------------------- les huit cas : titre, constat, et verdict */
 
-  'versions.titleLegacy': 'Réglages périmés : la version visée ne les lit plus',
+  /**
+   * ⚠️ « … ne les lit plus » était faux : la version visée les lit une dernière fois, en
+   * tire ses réglages d'aujourd'hui, puis les efface. Mesuré le 22 août 2026 sur un
+   * AIR³ 7.2. Voir `cleanup.calm` et `catalog/legacyMigrations.ts`.
+   */
+  'versions.titleLegacy': 'Réglages périmés : la version visée ne les écrit plus',
   'versions.evidenceLegacy': 'Nous lisons ces réglages dans des versions plus anciennes, plus dans celle-ci — et de vrais fichiers écrits par cette version-là les portent quand même. XCTrack garde sans les lire les réglages qu’il ne connaît plus : ici, nous l’avons vu se produire, nous ne le supposons pas.',
   'versions.verdictLegacy': 'Une suppression se défend ici. C’est le seul cas qu’un vrai fichier vient confirmer.',
 

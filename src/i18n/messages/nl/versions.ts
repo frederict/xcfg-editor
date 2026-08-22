@@ -25,7 +25,8 @@ const versions: DomainCatalog<'versions'> = {
 
   /* ----------------------------------------- les huit cas : titre, constat, et verdict */
 
-  'versions.titleLegacy': 'Verouderde instellingen: de gekozen versie leest ze niet meer',
+  /** ⚠️ Voir le commentaire du français : « leest ze niet meer » était faux. */
+  'versions.titleLegacy': 'Verouderde instellingen: de gekozen versie schrijft ze niet meer',
   'versions.evidenceLegacy': 'Wij lezen deze instellingen in oudere versies, niet meer in deze — en echte bestanden die door die versie zijn geschreven, dragen ze toch. XCTrack bewaart de instellingen die het niet meer kent zonder ze te lezen: hier hebben wij het zien gebeuren, wij veronderstellen het niet.',
   'versions.verdictLegacy': 'Ze verwijderen is hier te verdedigen. Dit is het enige geval dat een echt bestand komt bevestigen.',
 
