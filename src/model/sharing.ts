@@ -1,5 +1,5 @@
 import type { JsonNode } from '../core/jsonDocument'
-import { decode, encode, getMember, readString } from '../core/access'
+import { decode, encode, getMember, readString, setString } from '../core/access'
 import { readLayout } from './layout'
 import { cloneNode } from './mutations'
 import {
@@ -551,6 +551,7 @@ export function anonymizeDocument(
   // appartient. Voir `keepPages`.
   const droppedPages = selection === undefined ? [] : keepPages(derived.document, selection)
   const replacements = replaceFreeTextsInPlace(derived.document)
+  neutralizeTimeCreatedInPlace(derived.document)
   return {
     document: derived.document,
     droppedRootKeys: derived.droppedRootKeys,
@@ -560,6 +561,70 @@ export function anonymizeDocument(
     suspects: findPersonalSuspects(derived.document),
     droppedPages
   }
+}
+
+/* ============================== l'horodatage d'export, et le fuseau qu'il emporte ==== */
+
+/**
+ * L'horodatage neutre posé à la place de `info.timeCreated` par les **deux** issues
+ * anonymisantes.
+ *
+ * ## Ce que la clé porte, et ce que l'éditeur en fait
+ *
+ * XCTrack écrit `"2026-08-20 08:16:35+0100"` : l'heure locale de l'appareil **et le
+ * décalage horaire du pilote**. L'éditeur, lui, ne l'écrit ni ne la lit jamais — un
+ * `grep timeCreated` sur `src/` ne rend que ce fichier-ci. Elle traverse donc l'ouverture
+ * et le réexport à l'octet près, ce qui est exactement ce qu'on veut d'un export **non**
+ * anonymisé, et ce que `tests/model/sharing.test.ts` reprouve depuis ce changement.
+ *
+ * ⚠️ Les sept fixtures portent toutes `+0100`, y compris celles de juillet et d'août, où
+ * la Belgique est à `+0200`. Nous ne savons pas si l'appareil ignore l'heure d'été ou si
+ * l'anonymisation des fixtures a normalisé le décalage : **non vérifié**. Cela ne change
+ * rien à ce qui suit — un décalage constant reste une bande de longitude.
+ *
+ * ## Pourquoi elle ne devait pas traverser les deux anonymisations
+ *
+ * Un fuseau est une localisation grossière, et un horodatage à la seconde se recoupe avec
+ * une trace de vol publiée le même jour. Ce n'est pas grand chose, et c'est quand même une
+ * donnée personnelle : l'issue s'appelle « Version partageable, **sans données
+ * personnelles** », et l'autre « Tous vos réglages, **sans ce qui vous désigne** ».
+ *
+ * Ce n'était pas une décision, c'était un angle mort, et il se montre : `scope.ts` énumère
+ * ce que `info` garde et argumente longuement sur `proUpTo` sans jamais nommer
+ * `timeCreated` ; `findPersonalSuspects` écarte `info` du balayage à soupçons pour une
+ * raison écrite au sujet de `device`. La seule clé d'`info` que le raisonnement du projet
+ * n'avait pas examinée était donc aussi celle qui porte une localisation, et elle était
+ * mise hors de portée du filet par une exclusion écrite pour sa voisine.
+ *
+ * ## Remplacer, comme les neuf autres valeurs neutres — jamais effacer
+ *
+ * Retirer la clé produirait un fichier que XCTrack n'écrit jamais : c'est l'argument qui
+ * fait garder `proUpTo` (`scope.ts`), et il vaut ici aussi. On pose donc une valeur de
+ * **même nature** — un horodatage syntaxiquement valide — et **manifestement fausse**,
+ * comme `+00 000 00 00 00` l'est pour un numéro de téléphone : l'origine des temps, en
+ * UTC. Un destinataire ne s'y trompera pas, et rien ne peut en être déduit.
+ *
+ * Elle ne dépend d'aucune langue, comme les neuf autres valeurs que l'anonymisation
+ * écrit : ce que le fichier produit contient ne dépend pas de qui a cliqué.
+ *
+ * ⚠️ **Non vérifié sur l'appareil** : nous n'avons pas relu un fichier ainsi modifié sur
+ * un AIR³. Le risque est jugé faible parce que rien, dans les 21 fichiers du corpus ni
+ * dans ce que l'APK expose, ne montre XCTrack **relire** cette clé — mais la mesure
+ * manque, et c'est le renseignement utile pour qui reprendra.
+ */
+export const NEUTRAL_TIME_CREATED = '1970-01-01 00:00:00+0000'
+
+/**
+ * Pose l'horodatage neutre, s'il y a un `info.timeCreated` à remplacer. Rend `true`
+ * quand quelque chose a changé — un fichier qui n'en porte pas repart intact.
+ */
+function neutralizeTimeCreatedInPlace(document: JsonNode): boolean {
+  const info = getMember(document, 'info')
+  if (info === undefined || info.kind !== 'object') return false
+  const current = readString(info, 'timeCreated')
+  if (current === undefined || current === NEUTRAL_TIME_CREATED) return false
+  setString(info, 'timeCreated', encode(NEUTRAL_TIME_CREATED))
+  return true
 }
 
 /* ================= la sauvegarde entière, données personnelles remplacées ligne par ligne */
@@ -936,6 +1001,7 @@ export function anonymizeBackup(source: JsonNode): BackupAnonymization {
   const document = cloneNode(source)
   const preferences = treatPreferencesInPlace(document)
   const replacements = replaceFreeTextsInPlace(document)
+  neutralizeTimeCreatedInPlace(document)
   return {
     document,
     replacements,
@@ -1084,9 +1150,16 @@ function scanForSuspects(
  *
  * ## Trois exclusions, et chacune a sa raison
  *
- * - **`info`** n'est pas parcouru. Ses quatre clés sont connues et délibérément
- *   conservées (`scope.ts`), et `device` vaut `"AIR3 AIR3-7.2 8.1.0"` — trois champs
- *   collés par des espaces, donc une fausse alerte à chaque fichier.
+ * - **`info`** n'est pas parcouru. Ses **six** clés sont connues et délibérément
+ *   conservées (`scope.ts`) — le docblock a dit « quatre » jusqu'au 22 août 2026, en
+ *   oubliant `timeCreated` et `exportType` —, et deux d'entre elles déclencheraient une
+ *   fausse alerte à chaque fichier : `device` vaut `"AIR3 AIR3-7.2 8.1.0"`, trois champs
+ *   collés par des espaces, et un `versionName` comme `"0.9.12.3"` a exactement la forme
+ *   d'un numéro de téléphone pour `SUSPECT_SHAPES`. Restreindre l'exclusion à `device`
+ *   seule, comme la rédaction précédente le laissait croire, ferait donc apparaître un
+ *   soupçon sur la version de XCTrack. La clé d'`info` qui portait vraiment une donnée
+ *   personnelle, `timeCreated`, n'est plus laissée au filet : elle est **remplacée**
+ *   avant lui — voir `NEUTRAL_TIME_CREATED`.
  * - **Les réglages déclarés personnels** ne sont pas parcourus **du tout**, contenu
  *   compris : ils ont déjà leur règle, et déballer une structure comme `Navigation.State`
  *   pour en montrer les chaînes est précisément ce que `personalData.ts` interdit.

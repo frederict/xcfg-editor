@@ -109,6 +109,14 @@ export interface PagesDerivation {
  * destinataire quelle version de XCTrack a écrit ces clés, et le format change à chaque
  * version. `device` situe la résolution d'origine, dont dépend la lecture du rendu.
  *
+ * **`timeCreated` reste aussi — mais l'anonymisation, elle, le neutralise.** Cette
+ * dérivation-ci est un changement de **format**, pas un traitement de données
+ * personnelles : elle recopie `info` en entier, horodatage compris, et c'est ce qui fait
+ * qu'un `pages` dérivé d'un `pages` ressort à l'octet près. La clé porte pourtant le
+ * **fuseau horaire du pilote**, et ce docblock l'a passée sous silence jusqu'au 22 août
+ * 2026 en énumérant les quatre autres. Ce qui s'en occupe est `NEUTRAL_TIME_CREATED`
+ * (`sharing.ts`), appliqué par les deux issues anonymisantes et par elles seules.
+ *
  * **`proUpTo` reste, et ce n'est pas une évidence.** C'est un attribut de licence, donc
  * lié à l'achat du pilote et non à ses pages. L'argument qui tranche n'est pas un
  * jugement de notre part, c'est une observation : `2026-08-20_pages-00.xcfg`, écrit par

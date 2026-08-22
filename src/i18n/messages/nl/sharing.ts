@@ -185,7 +185,10 @@ const sharing: DomainCatalog<'sharing'> = {
   'sharing.backupCostIntro': 'Al uw instellingen gaan mee — vario en zijn tonen, eenheden, ' +
     'thema, luchtruimdrempels, knoppen. Wat hij niet krijgt, zijn uw eigen hulpbronnen:',
   'sharing.backupCostOutro': 'Geen van deze regels is een instelling: het zijn bestanden ' +
-    'en toestellen die bij u thuis leven, en waarmee hij niets had kunnen aanvangen.',
+    'en toestellen die bij u thuis leven, en waarmee hij niets had kunnen aanvangen. ' +
+    'Ook het tijdstip waarop u deze export hebt gemaakt wordt teruggezet: het droeg uw ' +
+    'tijdzone, en een tijdstip op de seconde nauwkeurig valt te kruisen met een vlucht ' +
+    'die dezelfde dag is gepubliceerd.',
 
   'sharing.backupCostSensors': 'uw gekoppelde sensoren: hij koppelt de zijne, de enige die ' +
     'hij kan gebruiken;',
@@ -200,7 +203,8 @@ const sharing: DomainCatalog<'sharing'> = {
     'instellen:',
   'sharing.anonymousCostOutro': 'Hij krijgt de opmaak van uw pagina’s, niet uw voorkeuren. ' +
     'Dat is meestal wat men wil — zijn eenheden zijn niet noodzakelijk de uwe — maar men ' +
-    'moet het weten vóór het versturen.',
+    'moet het weten vóór het versturen. Ook het tijdstip van de export wordt ' +
+    'teruggezet: het droeg uw tijdzone.',
 
   'sharing.anonymousCostUnits': 'de eenheden — hoogtes, afstanden, snelheden: hij houdt de ' +
     'zijne;',

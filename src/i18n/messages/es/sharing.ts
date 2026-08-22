@@ -184,7 +184,10 @@ const sharing: DomainCatalog<'sharing'> = {
     'tema, umbrales de espacios aéreos, botones. Lo que no tendrá son los recursos propios ' +
     'de su aparato:',
   'sharing.backupCostOutro': 'Ninguna de estas líneas es un ajuste: son archivos y ' +
-    'aparatos que viven en su casa, y con los que él no habría podido hacer nada.',
+    'aparatos que viven en su casa, y con los que él no habría podido hacer nada. ' +
+    'La hora a la que hizo esta exportación también se pone a cero: llevaba su huso ' +
+    'horario, y una hora con precisión de segundos se cruza con un vuelo publicado el ' +
+    'mismo día.',
 
   'sharing.backupCostSensors': 'sus sensores emparejados: él empareja los suyos, que son ' +
     'los únicos que puede utilizar;',
@@ -199,7 +202,8 @@ const sharing: DomainCatalog<'sharing'> = {
     'él mismo:',
   'sharing.anonymousCostOutro': 'Recibe la disposición de sus páginas, no sus preferencias. ' +
     'Es lo que se quiere la mayoría de las veces — sus unidades no son forzosamente las de ' +
-    'usted — pero hay que saberlo antes de enviar.',
+    'usted — pero hay que saberlo antes de enviar. La hora de la exportación también se ' +
+    'pone a cero: llevaba su huso horario.',
 
   'sharing.anonymousCostUnits': 'las unidades — altitudes, distancias, velocidades: ' +
     'conservará las suyas;',

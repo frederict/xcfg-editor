@@ -179,7 +179,9 @@ const sharing: DomainCatalog<'sharing'> = {
     'theme, airspace thresholds, buttons. What they will not get is what belongs to your ' +
     'own device:',
   'sharing.backupCostOutro': 'Not one of these lines is a setting: they are files and ' +
-    'devices that live at your place, and that they could have done nothing with.',
+    'devices that live at your place, and that they could have done nothing with. ' +
+    'The time at which you made this export is reset too: it carried your time zone, and ' +
+    'a time down to the second cross-checks against a flight track published the same day.',
 
   'sharing.backupCostSensors': 'your paired sensors: they pair their own, which are the ' +
     'only ones they can use;',
@@ -194,7 +196,7 @@ const sharing: DomainCatalog<'sharing'> = {
     'to set up themselves:',
   'sharing.anonymousCostOutro': 'They get the layout of your pages, not your preferences. ' +
     'That is what one usually wants — their units are not necessarily yours — but it has ' +
-    'to be known before sending.',
+    'to be known before sending. The export time is reset too: it carried your time zone.',
 
   'sharing.anonymousCostUnits': 'the units — altitudes, distances, speeds: they will keep ' +
     'their own;',

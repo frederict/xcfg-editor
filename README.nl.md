@@ -276,6 +276,12 @@ een belofte van getrouwheid die alleen de auteur kan nagaan, is niets waard.
      de regels die u herkenbaar maken worden vervangen, verwijderd, of behouden en als
      zodanig benoemd. Dat is de uitweg waarmee u hulp kunt vragen over uw vario-instellingen
      zonder uw naam te publiceren;
+
+     **Beide deelbare versies zetten ook het tijdstip van de export terug.** XCTrack
+     schrijft in elk bestand het precieze moment waarop u het hebt gemaakt, *met uw
+     tijdzone*: ‘2026-08-20 08:16:35+0100’. De tijdzone zegt ruwweg waar u was, en een
+     tijdstip op de seconde nauwkeurig valt te kruisen met een vlucht die dezelfde dag is
+     gepubliceerd. Uw eigen bestand, dat van uitweg 1, behoudt het zijne ongewijzigd;
   3. **‘Deelbare versie, zonder persoonlijke gegevens’** — een `pages`-export, zonder ook maar
      één voorkeur. Het is ook de uitweg om **één enkele pagina te versturen**: onder
      ‘Welke pagina’s vertrekken’ draagt elke pagina een vakje, aan het begin allemaal

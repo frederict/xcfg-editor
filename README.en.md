@@ -261,6 +261,12 @@ author can check is worth nothing.
      that identify you are replaced, removed, or kept and said to be kept. This is the
      one that lets you ask for help with your vario settings without publishing your
      name;
+
+     **Both shareable versions also reset the export time.** XCTrack writes into every file
+     the exact moment you created it, *with your time zone* — “2026-08-20 08:16:35+0100”:
+     the zone roughly says where you were, and a time down to the second cross-checks
+     against a flight track published the same day. Your own file, the one from outcome 1,
+     keeps its own untouched;
   3. **“Shareable version, no personal data”** — a `pages` export, with no preference at
      all. It is also the one that lets you **send a single page**: under “Which pages
      travel”, every page carries a tick box, all ticked to begin with. Untick the ones

@@ -306,7 +306,10 @@ const sharing = {
     'thème, seuils d’espaces aériens, touches. Ce qu’il n’aura pas, ce sont vos ressources ' +
     'à vous :',
   'sharing.backupCostOutro': 'Aucune de ces lignes n’est un réglage : ce sont des fichiers ' +
-    'et des appareils qui vivent chez vous, et dont il n’aurait rien pu faire.',
+    'et des appareils qui vivent chez vous, et dont il n’aurait rien pu faire. ' +
+    'L’heure à laquelle vous avez fait cet export est aussi remise à zéro : elle portait ' +
+    'votre fuseau horaire, et l’heure à la seconde près se recoupe avec une trace de vol ' +
+    'publiée le même jour.',
 
   /**
    * Les cinq lignes, et aucune n'est un réglage : ce sont des ressources de votre
@@ -325,7 +328,8 @@ const sharing = {
     'régler lui-même :',
   'sharing.anonymousCostOutro': 'Il reçoit la disposition de vos pages, pas vos ' +
     'préférences. C’est le plus souvent ce qu’on veut — ses unités ne sont pas forcément ' +
-    'les vôtres — mais il faut le savoir avant d’envoyer.',
+    'les vôtres — mais il faut le savoir avant d’envoyer. L’heure de l’export est ' +
+    'remise à zéro, elle aussi : elle portait votre fuseau horaire.',
 
   /**
    * Ce que l'anonymisation coûte **au destinataire**. C'est la partie qu'on serait tenté

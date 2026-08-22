@@ -269,6 +269,12 @@ de fidelidad que solo el autor puede comprobar no vale nada.
      líneas que le identifican se reemplazan, se retiran, o se conservan y se dicen como
      tales. Es la que permite pedir ayuda sobre los ajustes del vario sin publicar su
      nombre;
+
+     **Las dos versiones compartibles ponen también a cero la hora de la exportación.**
+     XCTrack escribe en cada archivo el momento exacto en que lo creó, *con su huso
+     horario*: «2026-08-20 08:16:35+0100». El huso dice a grandes rasgos dónde estaba
+     usted, y una hora con precisión de segundos se cruza con un vuelo publicado el mismo
+     día. Su propio archivo, el de la salida 1, conserva la suya intacta;
   3. **«Versión compartible, sin datos personales»** — una exportación `pages`, sin ninguna
      preferencia. Es también la que permite **enviar una sola página**: bajo «Qué páginas
      salen», cada página lleva una casilla, todas marcadas al principio. Desmarque las que

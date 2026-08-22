@@ -284,6 +284,12 @@ Absicht — ein Treueversprechen, das nur der Autor nachprüfen kann, ist nichts
      Sicherung, deren Sie kenntlich machende Zeilen ersetzt, entfernt oder behalten und als
      solche benannt werden. Mit dieser lässt sich zu den eigenen Vario-Einstellungen um
      Hilfe bitten, ohne den eigenen Namen zu veröffentlichen;
+
+     **Beide teilbaren Fassungen setzen außerdem die Uhrzeit des Exports zurück.** XCTrack
+     schreibt in jede Datei den genauen Zeitpunkt ihrer Erstellung, *samt Ihrer Zeitzone* —
+     „2026-08-20 08:16:35+0100“: die Zeitzone sagt grob, wo Sie waren, und eine
+     sekundengenaue Uhrzeit lässt sich mit einem am selben Tag veröffentlichten Flug
+     abgleichen. Ihre eigene Datei, die aus Weg 1, behält ihre unverändert;
   3. **„Teilbare Fassung, ohne persönliche Daten“** — ein `pages`-Export, ohne jede
      Einstellung. Sie ist auch der Weg, um **nur eine Seite zu verschicken**: unter
      „Welche Seiten mitgehen“ trägt jede Seite ein Kästchen, anfangs alle angekreuzt.

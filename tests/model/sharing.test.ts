@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { parseJson } from '../../src/core/parseJson'
 import { serializeJson } from '../../src/core/serializeJson'
-import { getMember } from '../../src/core/access'
+import { getMember, readString } from '../../src/core/access'
+import type { JsonNode } from '../../src/core/jsonDocument'
 import { openContainer, exportContainer } from '../../src/core/container'
 import { readZip } from '../../src/core/zip'
 import { sha256Hex } from '../../src/library/digest'
@@ -27,6 +28,7 @@ import {
   NEUTRAL_INTENT_ACTION,
   NEUTRAL_PHONE_NUMBER,
   NEUTRAL_TEST_EVENT,
+  NEUTRAL_TIME_CREATED,
   NEUTRAL_URL,
   replaceFreeTexts,
   RULED_PREFERENCE_KEYS,
@@ -928,19 +930,34 @@ describe('anonymizeBackup — le fichier de référence, en chiffres', () => {
   })
 })
 
-describe('anonymizeBackup — sans rien à remplacer, le fichier ressort à l’octet près', () => {
+describe('anonymizeBackup — sans rien à remplacer, seul l’horodatage bouge', () => {
   for (const path of [PAGES_2026, PAGES_2025]) {
-    it(`${shortName(path)} : même empreinte SHA-256 qu’à l’entrée`, async () => {
-      // La preuve demandée : le traitement n'écrit rien quand il n'y a rien à écrire.
-      // Sans elle, « la fidélité tient » ne serait qu'une intention.
+    /**
+     * ⚠️ **Ce test disait « même empreinte SHA-256 qu'à l'entrée » jusqu'au 22 août 2026**,
+     * et c'était vrai : rien à remplacer, rien d'écrit. Depuis, l'anonymisation neutralise
+     * `info.timeCreated`, qui porte le **fuseau horaire du pilote**.
+     *
+     * La propriété reste donc la même, formulée plus précisément : sur un fichier sans une
+     * seule donnée personnelle déclarée, la sortie diffère de l'entrée **d'une seule
+     * valeur**, et on sait laquelle. Reconstruire le texte attendu par un `replace` de
+     * l'horodatage source vers l'horodatage neutre le prouve à l'octet près — indentation,
+     * ordre des clés, `3.0`, tout le reste est intact.
+     */
+    it(`${shortName(path)} : un seul octet-à-octet change, l’horodatage`, async () => {
       const text = readFileSync(path, 'utf8')
       const result = anonymizeBackup(parseJson(text))
       expect(result.preferences).toEqual([])
       expect(result.replacements).toEqual([])
+
+      const stamp = /"timeCreated": "([^"]+)"/.exec(text)![1]!
+      expect(stamp).not.toBe(NEUTRAL_TIME_CREATED)
+      const expected = text.replace(stamp, NEUTRAL_TIME_CREATED)
       const produced = serializeJson(result.document)
-      expect(produced).toBe(text)
+      expect(produced).toBe(expected)
       expect(await sha256Hex(new TextEncoder().encode(produced)))
-        .toBe(await sha256Hex(new TextEncoder().encode(text)))
+        .toBe(await sha256Hex(new TextEncoder().encode(expected)))
+      // Et la longueur ne bouge pas : les deux horodatages ont la même forme.
+      expect(produced.length).toBe(text.length)
     })
   }
 
@@ -1241,4 +1258,99 @@ describe('anonymizeDocument — une page seule, sur les fichiers réels', () => 
       }
     })
   }
+})
+
+/**
+ * # L'horodatage d'export, et le fuseau horaire qu'il emporte
+ *
+ * `info.timeCreated` vaut `"2026-08-20 08:16:35+0100"` : l'heure locale du pilote **et son
+ * décalage horaire**. Il traversait les **deux** anonymisations sans un mot jusqu'au
+ * 22 août 2026, et il était en plus mis hors de portée du filet à soupçons par l'exclusion
+ * d'`info`, écrite pour `device`.
+ *
+ * Trois propriétés à tenir ensemble, et c'est leur conjonction qui compte :
+ *
+ * 1. **anonymiser neutralise l'horodatage**, dans les deux issues et sur tous les fichiers ;
+ * 2. **le reste d'`info` ne bouge pas** — `versionCode`, `versionName`, `device`,
+ *    `proUpTo`, `exportType` sont ce qui rend un fichier lisible par le destinataire ;
+ * 3. **ouvrir puis réexporter sans modifier ne touche à rien**, horodatage compris. C'est
+ *    la promesse centrale du projet, et elle ne souffre aucune exception : ce chemin-là ne
+ *    passe pas par l'anonymisation.
+ */
+describe('info.timeCreated — le fuseau ne part plus avec le fichier partagé', () => {
+  const stampOf = (document: JsonNode): string | undefined => {
+    const info = getMember(document, 'info')
+    return info === undefined ? undefined : readString(info, 'timeCreated')
+  }
+
+  for (const path of [BACKUP_2026, PAGES_2026, BACKUP_2025, FORMES_PRESERVEES, GSON_2022]) {
+    it(`${shortName(path)} : les deux issues posent l’horodatage neutre`, () => {
+      const text = readFileSync(path, 'utf8')
+      const source = parseJson(text)
+      // La source porte bien un horodatage réel, sans quoi le test ne prouverait rien.
+      expect(stampOf(source)).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[+-]\d{4}$/)
+      expect(stampOf(source)).not.toBe(NEUTRAL_TIME_CREATED)
+
+      expect(stampOf(anonymizeBackup(parseJson(text)).document)).toBe(NEUTRAL_TIME_CREATED)
+      expect(stampOf(anonymizeDocument(parseJson(text)).document)).toBe(NEUTRAL_TIME_CREATED)
+    })
+  }
+
+  it('ne laisse plus aucun décalage horaire dans le texte produit', () => {
+    // Le fuseau est la donnée : on le cherche dans les octets, pas dans l'arbre.
+    const text = readFileSync(BACKUP_2026, 'utf8')
+    expect(text).toContain('+0100')
+    for (const produced of [
+      serializeJson(anonymizeBackup(parseJson(text)).document),
+      serializeJson(anonymizeDocument(parseJson(text)).document)
+    ]) {
+      expect(produced).not.toContain('08:16:35')
+      expect(produced).toContain(NEUTRAL_TIME_CREATED)
+    }
+  })
+
+  it('ne touche à rien d’autre dans `info`', () => {
+    const source = parseJson(readFileSync(BACKUP_2026, 'utf8'))
+    const before = getMember(source, 'info')!
+    const after = getMember(anonymizeBackup(source).document, 'info')!
+    for (const key of ['device', 'exportType', 'proUpTo', 'versionCode', 'versionName']) {
+      expect(serializeJson(getMember(after, key)!), key)
+        .toBe(serializeJson(getMember(before, key)!))
+    }
+    // Et la clé garde sa place : `info` a toujours ses six entrées, dans le même ordre.
+    expect(after.kind === 'object' ? after.entries.map(([raw]) => raw) : [])
+      .toEqual(before.kind === 'object' ? before.entries.map(([raw]) => raw) : ['différent'])
+  })
+
+  /**
+   * ⚠️ **La fidélité à l'octet près n'est pas entamée**, et c'est la condition à laquelle
+   * ce changement était acceptable. Le chemin « ouvrir puis réexporter sans modifier » ne
+   * passe pas par l'anonymisation : l'horodatage y ressort tel quel, et l'empreinte
+   * SHA-256 du fichier entier est la même.
+   */
+  for (const path of FIXTURES.filter((one) => one.endsWith('.xcfg'))) {
+    it(`${shortName(path)} : ouvrir puis réexporter garde l’horodatage à l’octet près`, async () => {
+      const text = readFileSync(path, 'utf8')
+      const document = parseJson(text)
+      const produced = serializeJson(document)
+      expect(stampOf(document)).toBe(stampOf(parseJson(text)))
+      expect(produced).toBe(text)
+      expect(await sha256Hex(new TextEncoder().encode(produced)))
+        .toBe(await sha256Hex(new TextEncoder().encode(text)))
+    })
+  }
+
+  it('laisse la source intacte : anonymiser ne modifie jamais le document ouvert', () => {
+    const text = readFileSync(BACKUP_2026, 'utf8')
+    const document = parseJson(text)
+    anonymizeBackup(document)
+    anonymizeDocument(document)
+    expect(serializeJson(document)).toBe(text)
+  })
+
+  it('n’ajoute pas la clé à un fichier qui n’en porte pas', () => {
+    // Un `info` sans `timeCreated` reste sans `timeCreated` : on remplace, on n'invente pas.
+    const document = parseJson('{\n  "info": {\n    "exportType": "pages"\n  },\n  "layout": {}\n}')
+    expect(stampOf(anonymizeBackup(document).document)).toBeUndefined()
+  })
 })

@@ -185,7 +185,9 @@ const sharing: DomainCatalog<'sharing'> = {
     'Betriebsmittel:',
   'sharing.backupCostOutro': 'Keine dieser Zeilen ist eine Einstellung: es sind Dateien ' +
     'und Geräte, die bei Ihnen zu Hause sind und mit denen die Gegenseite nichts hätte ' +
-    'anfangen können.',
+    'anfangen können. Auch die Uhrzeit, zu der Sie diesen Export erstellt haben, wird ' +
+    'zurückgesetzt: sie enthielt Ihre Zeitzone, und eine sekundengenaue Uhrzeit lässt ' +
+    'sich mit einem am selben Tag veröffentlichten Flug abgleichen.',
 
   'sharing.backupCostSensors': 'Ihre gekoppelten Sensoren: die Gegenseite koppelt ihre ' +
     'eigenen, die einzigen, die sie benutzen kann;',
@@ -200,7 +202,8 @@ const sharing: DomainCatalog<'sharing'> = {
     'einstellen muss:',
   'sharing.anonymousCostOutro': 'Sie bekommt den Aufbau Ihrer Seiten, nicht Ihre ' +
     'Einstellungen. Das ist meist genau das, was man will — ihre Einheiten sind nicht ' +
-    'unbedingt Ihre —, aber man muss es vor dem Versenden wissen.',
+    'unbedingt Ihre —, aber man muss es vor dem Versenden wissen. Auch die Uhrzeit des ' +
+    'Exports wird zurückgesetzt: sie enthielt Ihre Zeitzone.',
 
   'sharing.anonymousCostUnits': 'die Einheiten — Höhen, Entfernungen, Geschwindigkeiten: ' +
     'sie behält ihre eigenen;',

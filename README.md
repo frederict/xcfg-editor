@@ -332,6 +332,12 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
      les lignes qui vous identifient sont remplacées, retirées, ou conservées et dites
      comme telles. C'est celle qui permet de demander de l'aide sur ses réglages de vario
      sans publier son nom ;
+
+     **Les deux versions partageables remettent aussi à zéro l'heure de l'export.**
+     XCTrack inscrit dans chaque fichier le moment exact où vous l'avez créé, *avec votre
+     fuseau horaire* — « 2026-08-20 08:16:35+0100 » : le fuseau dit grossièrement où vous
+     étiez, et l'heure à la seconde près se recoupe avec une trace de vol publiée le même
+     jour. Votre fichier à vous, celui de l'issue 1, garde la sienne intacte ;
   3. **« Version partageable, sans données personnelles »** — un export `pages`, sans
      aucune préférence. C'est aussi celle qui permet de **n'envoyer qu'une page** : sous
      « Quelles pages partent », chaque page porte une case, toutes cochées au départ.
@@ -803,6 +809,14 @@ montré avant le téléchargement, pas après.*
   avant de fixer le cadre : la mesure de 2 480 px datait de la boîte sans choix de pages,
   et le NÉERLANDAIS n'avait plus que 6 px de marge sous le plafond. Reprendre la méthode
   ci-dessus — mesurer le contenu dans les cinq langues, diviser par 0,88.
+
+  PÉREMPTION SIGNALÉE le 2026-08-22 au soir, NON RÉPARÉE. Les deux paragraphes « Ce que le
+  destinataire n'aura pas » — celui de la deuxième issue et celui de la troisième —
+  portent maintenant UNE PHRASE DE PLUS, dans les cinq langues : l'heure de l'export est
+  remise à zéro parce qu'elle emportait le fuseau horaire du pilote. Trois lignes de plus
+  environ sur l'issue 2, une sur l'issue 3, à 920 px de large. ⚠ Cela s'AJOUTE à la
+  reprise déjà demandée ci-dessus, et la hauteur est donc à remesurer une seule fois, à
+  la fin : le néerlandais n'avait plus que 6 px sous le plafond avant ces deux ajouts.
 
   PÉREMPTION SIGNALÉE le 2026-08-22 au soir, NON RÉPARÉE. Le NOM DE FICHIER de la barre de
   tête se coupe maintenant en TROIS et non en deux : le rang et l'extension ne cèdent plus
