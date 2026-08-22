@@ -338,9 +338,14 @@ const preferences = {
 
   /* -------------------------------------------- d'où vient ce que la page affirme */
 
-  /** `{code}` est un `versionCode` : il passe en `string`, jamais en nombre mis en forme. */
+  /**
+   * ⚠️ Le `versionCode` du relevé n'est plus cité ici. Il ouvrait une parenthèse au milieu
+   * de la phrase — « (versionCode 91230) » — sur un numéro que XCTrack ne montre nulle
+   * part au pilote ; le NOM de version, lui, est celui qu'il lit sur son instrument.
+   * Le numéro reste dans « Version et compatibilité », l'écran dont c'est le sujet.
+   */
   'preferences.catalogReference':
-    'Libellés et valeurs d’usine extraits de XCTrack {version} (versionCode {code})',
+    'Libellés et valeurs d’usine extraits de XCTrack {version}',
   'preferences.catalogNoteExact': '{reference} — la version même de ce fichier.{fallback}',
   'preferences.catalogNoteUnstated':
     '{reference}. Ce fichier ne dit pas de quelle version il vient : les libellés et les valeurs d’usine changent d’une version à l’autre, la lecture est donc indicative.{fallback}',
@@ -352,7 +357,7 @@ const preferences = {
     other: ' {count} textes manquent dans cette langue et sont affichés en anglais.'
   },
   'preferences.fileVersionNumber': 'la version {code}',
-  'preferences.fileVersionNamed': 'la version {name} (versionCode {code})',
+  'preferences.fileVersionNamed': 'la version {name}',
 
   /* ======================================================== ce qui désigne quelqu'un */
 

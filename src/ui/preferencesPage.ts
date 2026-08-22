@@ -2384,11 +2384,11 @@ function fillSummaryBox(
  */
 function catalogNote(options: PreferencesPageOptions): string {
   const { catalog, tr } = options
-  // `version` et `code` partent en `string` : un nom de version et un `versionCode` sont
-  // des identifiants — « 100 030 » ne se retrouve dans aucun fichier XCTrack.
+  // `version` part en `string` : un nom de version est un identifiant, il ne se met pas en
+  // forme. Le `versionCode` du relevé n'est plus cité — il ouvrait une parenthèse au milieu
+  // de la phrase sur un numéro que XCTrack ne montre nulle part au pilote.
   const reference = tr.t('preferences.catalogReference', {
-    version: catalogVersionText(catalog),
-    code: String(catalog.meta.versionCode ?? 0)
+    version: catalogVersionText(catalog)
   })
   const fallback = catalog.fallbackStringCount === 0
     ? ''
@@ -2428,13 +2428,20 @@ export function catalogTrust(options: PreferencesPageOptions): CatalogTrust {
   return options.fileVersionCode === options.catalog.meta.versionCode ? 'exact' : 'indicative'
 }
 
-/** La version du fichier, nommée quand elle a un nom, chiffrée sinon. */
+/**
+ * La version du fichier, nommée quand elle a un nom, chiffrée sinon.
+ *
+ * ⚠️ Le `versionCode` ne DOUBLE plus le nom. « la version 0.9.12.3 (versionCode 91230) »
+ * ouvrait une parenthèse au milieu de la phrase sur un numéro que XCTrack ne montre nulle
+ * part au pilote ; c'est l'un des trois exemples qu'un pilote-testeur a cités le 2026-08-22
+ * pour dire qu'il saute ces lignes. Il reste, seul, quand le fichier ne donne pas de nom —
+ * et dans « Version et compatibilité », l'écran dont c'est le sujet.
+ */
 function fileVersionText(options: PreferencesPageOptions): string {
   const name = options.fileVersionName
-  const code = String(options.fileVersionCode)
   return name === undefined
-    ? options.tr.t('preferences.fileVersionNumber', { code })
-    : options.tr.t('preferences.fileVersionNamed', { name: releaseName(name), code })
+    ? options.tr.t('preferences.fileVersionNumber', { code: String(options.fileVersionCode) })
+    : options.tr.t('preferences.fileVersionNamed', { name: releaseName(name) })
 }
 
 /**

@@ -500,8 +500,11 @@ describe('les guillemets ne se coupent pas en fin de ligne', () => {
       'Airspace.Files', 'info.versionCode', 'info.proUpTo', 'versionCode', 'proUpTo',
       'mapWidget_', 'nav_use_brackets', 'nav_label', 'newWindArrow', 'windStyle'
     ]
-    // Les écrans concernés : les remarques sur le fichier, et le panneau d'un gadget.
-    const owned = ['warnings.', 'inspection.', 'ruleSummary.', 'properties.', 'model.']
+    // Les remarques sur le fichier, le panneau d'un gadget, et les réglages généraux —
+    // les trois écrans où le pilote-testeur a nommé une de ces lignes.
+    const owned = [
+      'warnings.', 'inspection.', 'ruleSummary.', 'properties.', 'model.', 'preferences.'
+    ]
     let seen = 0
     for (const language of UI_LANGUAGES) {
       for (const [key, text] of valuesOf(language)) {

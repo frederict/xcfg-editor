@@ -234,7 +234,7 @@ const preferences: DomainCatalog<'preferences'> = {
   },
 
   'preferences.catalogReference':
-    'Etiquetas y valores de fábrica extraídos de XCTrack {version} (versionCode {code})',
+    'Etiquetas y valores de fábrica extraídos de XCTrack {version}',
   'preferences.catalogNoteExact': '{reference} — la versión misma de este archivo.{fallback}',
   'preferences.catalogNoteUnstated':
     '{reference}. Este archivo no dice de qué versión viene: las etiquetas y los valores ' +
@@ -247,7 +247,7 @@ const preferences: DomainCatalog<'preferences'> = {
     other: ' Faltan {count} textos en este idioma y se muestran en inglés.'
   },
   'preferences.fileVersionNumber': 'la versión {code}',
-  'preferences.fileVersionNamed': 'la versión {name} (versionCode {code})',
+  'preferences.fileVersionNamed': 'la versión {name}',
 
   'preferences.personalMarkTitle': 'Dato personal — {reason} ({basis}).',
   'preferences.privacyNone':

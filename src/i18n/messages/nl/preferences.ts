@@ -238,7 +238,7 @@ const preferences: DomainCatalog<'preferences'> = {
   },
 
   'preferences.catalogReference':
-    'Opschriften en fabriekswaarden gehaald uit XCTrack {version} (versionCode {code})',
+    'Opschriften en fabriekswaarden gehaald uit XCTrack {version}',
   'preferences.catalogNoteExact': '{reference} — precies de versie van dit bestand.{fallback}',
   'preferences.catalogNoteUnstated':
     '{reference}. Dit bestand zegt niet van welke versie het komt: opschriften en ' +
@@ -251,7 +251,7 @@ const preferences: DomainCatalog<'preferences'> = {
     other: ' {count} teksten ontbreken in deze taal en worden in het Engels getoond.'
   },
   'preferences.fileVersionNumber': 'versie {code}',
-  'preferences.fileVersionNamed': 'versie {name} (versionCode {code})',
+  'preferences.fileVersionNamed': 'versie {name}',
 
   'preferences.personalMarkTitle': 'Persoonsgegeven — {reason} ({basis}).',
   'preferences.privacyNone':
