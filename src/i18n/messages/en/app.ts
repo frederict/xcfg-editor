@@ -52,9 +52,9 @@ const app: DomainCatalog<'app'> = {
 
   'view.rulerCentimeters': '{value} cm',
 
-  'view.hoverHint': 'Hover a widget for its name and size.',
-  'view.hoverHintSelectable': 'Hover a widget for its name and size; click it to see its ' +
-    'settings.',
+  'view.pointHint': 'Point at a widget, with a finger or the mouse, for its name and size.',
+  'view.pointHintSelectable': 'Point at a widget, with a finger or the mouse, for its name ' +
+    'and size; pick it to see its settings.',
 
   'view.selectedPin': 'selected',
 
@@ -165,7 +165,8 @@ const app: DomainCatalog<'app'> = {
   'landing.dropOrPick': 'or click to pick it — .xcfg or .xczfg',
 
   'landing.stepDeviceTitle': 'On the instrument',
-  'landing.stepDeviceText': 'Settings, then “Export configuration”. The file lands on the SD card.',
+  'landing.stepDeviceText': '“Settings”, then “Export configuration”. The file lands on the ' +
+    'SD card.',
   'landing.stepHereTitle': 'Here',
   'landing.stepHereText': 'The pages appear numbered in the order “next page” scrolls through ' +
     'them in flight.',
@@ -201,7 +202,10 @@ const app: DomainCatalog<'app'> = {
 
   'app.overviewTitle': 'Pages of the configuration',
 
-  'app.seeDetail': 'See the detail ({count})',
+  'app.seeDetail': {
+    one: 'See the detail ({count})',
+    other: 'See the details ({count})'
+  },
   'app.attentionTitle': 'Worth checking in this file',
   'app.revealsTitle': 'What this file reveals about you',
 
@@ -307,8 +311,8 @@ const app: DomainCatalog<'app'> = {
     'drop another file anywhere on this page, or pick one from the “File” menu, top right.',
 
   'app.unreadableTitle': 'This file could not be read',
-  'app.unreadableMessage': 'Check that this is the .xcfg or .xczfg file produced by ' +
-    '“Settings → Export configuration” on the instrument, and that it is complete.',
+  'app.unreadableMessage': 'Check that this is the .xcfg or .xczfg file produced on the ' +
+    'instrument by “Settings”, then “Export configuration”, and that it is complete.',
   'app.unreadableHint': 'Its bytes are kept intact: “Save a copy” gives it back exactly as it ' +
     'went in, without the slightest rewrite.',
   'app.unreadableIncoming': '“{incoming}” gave nothing usable. “{kept}” stays open, and ' +

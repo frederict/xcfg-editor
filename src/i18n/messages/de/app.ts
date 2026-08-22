@@ -52,9 +52,9 @@ const app: DomainCatalog<'app'> = {
 
   'view.rulerCentimeters': '{value} cm',
 
-  'view.hoverHint': 'Mit dem Zeiger über ein Widget fahren, um Name und Maße zu sehen.',
-  'view.hoverHintSelectable': 'Mit dem Zeiger über ein Widget fahren, um Name und Maße zu ' +
-    'sehen; anklicken, um seine Einstellungen zu lesen.',
+  'view.pointHint': 'Mit dem Finger oder der Maus auf ein Widget zeigen, um Name und Maße zu sehen.',
+  'view.pointHintSelectable': 'Mit dem Finger oder der Maus auf ein Widget zeigen, um Name ' +
+    'und Maße zu sehen; es auswählen, um seine Einstellungen zu lesen.',
 
   'view.selectedPin': 'ausgewählt',
 
@@ -171,8 +171,8 @@ const app: DomainCatalog<'app'> = {
   'landing.dropOrPick': 'oder klicken, um sie zu wählen — .xcfg oder .xczfg',
 
   'landing.stepDeviceTitle': 'Auf dem Gerät',
-  'landing.stepDeviceText': 'Einstellungen, dann „Konfiguration exportieren“. Die Datei landet ' +
-    'auf der SD-Karte.',
+  'landing.stepDeviceText': '„Einstellungen“, dann „Konfiguration exportieren“. Die Datei ' +
+    'landet auf der SD-Karte.',
   'landing.stepHereTitle': 'Hier',
   'landing.stepHereText': 'Die Seiten erscheinen nummeriert, in der Reihenfolge, in der ' +
     '„nächste Seite“ sie im Flug durchblättert.',
@@ -210,7 +210,10 @@ const app: DomainCatalog<'app'> = {
 
   'app.overviewTitle': 'Seiten der Konfiguration',
 
-  'app.seeDetail': 'Einzelheiten ansehen ({count})',
+  'app.seeDetail': {
+    one: 'Einzelheit ansehen ({count})',
+    other: 'Einzelheiten ansehen ({count})'
+  },
   'app.attentionTitle': 'In dieser Datei zu prüfen',
   'app.revealsTitle': 'Was diese Datei über Sie verrät',
 
@@ -320,8 +323,8 @@ const app: DomainCatalog<'app'> = {
     'Menü „Datei“ oben rechts wählen.',
 
   'app.unreadableTitle': 'Diese Datei ließ sich nicht lesen',
-  'app.unreadableMessage': 'Prüfen Sie, ob es die .xcfg- oder .xczfg-Datei ist, die ' +
-    '„Einstellungen → Konfiguration exportieren“ auf dem Gerät erzeugt, und ob sie vollständig ist.',
+  'app.unreadableMessage': 'Prüfen Sie, ob es die .xcfg- oder .xczfg-Datei ist, die auf dem ' +
+    'Gerät „Einstellungen“, dann „Konfiguration exportieren“ erzeugt, und ob sie vollständig ist.',
   'app.unreadableHint': 'Ihre Bytes bleiben unversehrt: „Kopie speichern“ gibt sie Ihnen genau ' +
     'so zurück, wie sie hereinkam, ohne die geringste Neuschreibung.',
   'app.unreadableIncoming': '„{incoming}“ ergab nichts Brauchbares. „{kept}“ bleibt geöffnet, ' +

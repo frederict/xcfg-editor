@@ -677,8 +677,8 @@ export function buildDetail(options: DetailOptions): HTMLElement {
       readout.append(el(
         'span', 'readout__hint',
         inspecting === undefined
-          ? tr.t('view.hoverHint')
-          : tr.t('view.hoverHintSelectable')
+          ? tr.t('view.pointHint')
+          : tr.t('view.pointHintSelectable')
       ))
       return
     }

@@ -52,9 +52,9 @@ const app: DomainCatalog<'app'> = {
 
   'view.rulerCentimeters': '{value} cm',
 
-  'view.hoverHint': 'Ga met de muis over een widget voor de naam en de afmetingen.',
-  'view.hoverHintSelectable': 'Ga met de muis over een widget voor de naam en de afmetingen; ' +
-    'klik erop om de instellingen te zien.',
+  'view.pointHint': 'Wijs een widget aan, met de vinger of de muis, voor de naam en de afmetingen.',
+  'view.pointHintSelectable': 'Wijs een widget aan, met de vinger of de muis, voor de naam en ' +
+    'de afmetingen; kies hem om de instellingen te zien.',
 
   'view.selectedPin': 'geselecteerd',
 
@@ -168,8 +168,8 @@ const app: DomainCatalog<'app'> = {
   'landing.dropOrPick': 'of klik om het te kiezen — .xcfg of .xczfg',
 
   'landing.stepDeviceTitle': 'Op het instrument',
-  'landing.stepDeviceText': 'Instellingen, dan ‘Configuratie exporteren’. Het bestand belandt ' +
-    'op de SD-kaart.',
+  'landing.stepDeviceText': '‘Instellingen’, dan ‘Configuratie exporteren’. Het bestand ' +
+    'belandt op de SD-kaart.',
   'landing.stepHereTitle': 'Hier',
   'landing.stepHereText': 'De pagina’s verschijnen genummerd, in de volgorde waarin ‘volgende ' +
     'pagina’ ze tijdens de vlucht doorloopt.',
@@ -205,7 +205,10 @@ const app: DomainCatalog<'app'> = {
 
   'app.overviewTitle': 'Pagina’s van de configuratie',
 
-  'app.seeDetail': 'Details bekijken ({count})',
+  'app.seeDetail': {
+    one: 'Detail bekijken ({count})',
+    other: 'Details bekijken ({count})'
+  },
   'app.attentionTitle': 'Na te kijken in dit bestand',
   'app.revealsTitle': 'Wat dit bestand over jou prijsgeeft',
 
@@ -315,8 +318,8 @@ const app: DomainCatalog<'app'> = {
     '‘Bestand’ rechtsboven.',
 
   'app.unreadableTitle': 'Dit bestand kon niet worden gelezen',
-  'app.unreadableMessage': 'Ga na of dit het .xcfg- of .xczfg-bestand is dat ‘Instellingen → ' +
-    'Configuratie exporteren’ op het instrument maakt, en of het volledig is.',
+  'app.unreadableMessage': 'Ga na of dit het .xcfg- of .xczfg-bestand is dat op het instrument ' +
+    'wordt gemaakt door ‘Instellingen’, dan ‘Configuratie exporteren’, en of het volledig is.',
   'app.unreadableHint': 'De bytes blijven ongeschonden bewaard: ‘Een kopie opslaan’ geeft het ' +
     'bestand terug zoals het erin ging, zonder ook maar iets te herschrijven.',
   'app.unreadableIncoming': '‘{incoming}’ leverde niets bruikbaars op. ‘{kept}’ blijft open, ' +

@@ -114,9 +114,14 @@ const app = {
   /** Graduation de la règle posée le long de la page, tous les cinq centimètres. */
   'view.rulerCentimeters': '{value} cm',
 
-  'view.hoverHint': 'Survolez un gadget pour son nom et ses dimensions.',
-  'view.hoverHintSelectable': 'Survolez un gadget pour son nom et ses dimensions ; ' +
-    'cliquez-le pour voir ses réglages.',
+  /**
+   * **Ni « survolez », ni « cliquez ».** Cet outil sert aussi sur la tablette qu'on emporte
+   * — le survol n'y existe pas, et la phrase n'y disait rien de faisable. « Au doigt ou à
+   * la souris » est déjà le tour employé par l'accueil pour le déplacement d'un gadget.
+   */
+  'view.pointHint': 'Désignez un gadget, au doigt ou à la souris, pour son nom et ses dimensions.',
+  'view.pointHintSelectable': 'Désignez un gadget, au doigt ou à la souris, pour son nom et ' +
+    'ses dimensions ; choisissez-le pour voir ses réglages.',
 
   /** Le relevé décrit le gadget choisi et non celui qui est sous le curseur. */
   'view.selectedPin': 'sélectionné',
@@ -190,6 +195,13 @@ const app = {
 
   /* ------------------------------------------------ ce que le calque annonce à voix haute */
 
+  /**
+   * Le même texte que `dock.noSelection`, au point final près, et le doublon est **voulu** :
+   * celui-ci est une **annonce vocale** — la zone d'annonce du calque d'édition —, l'autre
+   * est le **titre** du bandeau. Le point donne sa pause au lecteur d'écran ; un titre n'en
+   * porte pas. Les fondre en une clé obligerait l'un des deux à porter la ponctuation de
+   * l'autre, et les deux textes ne suivront pas forcément le même chemin ensuite.
+   */
   'editor.noSelection': 'Aucun gadget sélectionné.',
   'editor.selected': '{name} sélectionné, {size}.',
 
@@ -298,7 +310,13 @@ const app = {
   'landing.dropOrPick': 'ou cliquez pour le choisir — .xcfg ou .xczfg',
 
   'landing.stepDeviceTitle': 'Sur l’instrument',
-  'landing.stepDeviceText': 'Réglages, puis « Exporter la configuration ». Le fichier ' +
+  /**
+   * Le chemin sur l'instrument s'écrit **d'une seule façon** dans toute l'application —
+   * ici et dans `app.unreadableMessage`. La flèche « Réglages → … » qu'employait l'écran
+   * d'erreur ne se dit pas à voix haute et ne se cherche pas ; les deux noms de menu, eux,
+   * se lisent sur l'appareil.
+   */
+  'landing.stepDeviceText': '« Réglages », puis « Exporter la configuration ». Le fichier ' +
     'atterrit sur la carte SD.',
   'landing.stepHereTitle': 'Ici',
   'landing.stepHereText': 'Les pages apparaissent numérotées dans l’ordre où « page ' +
@@ -350,7 +368,10 @@ const app = {
    * des fichiers ou des lignes du fichier. Le titre de la carte, juste au-dessus, dit déjà
    * de quoi il s'agit ; il ne manque que le nombre.
    */
-  'app.seeDetail': 'Voir le détail ({count})',
+  'app.seeDetail': {
+    one: 'Voir le détail ({count})',
+    other: 'Voir les détails ({count})'
+  },
   'app.attentionTitle': 'À vérifier dans ce fichier',
   'app.revealsTitle': 'Ce que ce fichier révèle de vous',
 
@@ -382,7 +403,7 @@ const app = {
 
   'dock.gripLabel': 'Hauteur du bandeau de réglages',
   'dock.gripHint': 'Glissez pour changer la hauteur du bandeau — au clavier, flèches haut et ' +
-    'bas, Page↑ et Page↓ par crans larges, Origine et Fin aux extrêmes.',
+    'bas, Page↑ et Page↓ par crans larges, Début et Fin aux extrêmes.',
   /** Ce que le lecteur d'écran dit de la hauteur courante. */
   'dock.heightPixels': {
     one: '{count} pixel',
@@ -400,6 +421,7 @@ const app = {
   'dock.showList': 'Afficher la liste',
   'dock.hideList': 'Masquer la liste',
 
+  /** Titre du bandeau, sans point final ; l'annonce vocale est `editor.noSelection`. */
   'dock.noSelection': 'Aucun gadget sélectionné',
   'dock.selectionRank': '{name} — rang {index} sur {total}',
   /** Sans sélection, la barre de tête n'annonce pas un manque : elle dit le geste à faire. */
@@ -496,8 +518,8 @@ const app = {
     'menu « Fichier », en haut à droite.',
 
   'app.unreadableTitle': 'Ce fichier n’a pas pu être lu',
-  'app.unreadableMessage': 'Vérifiez que c’est bien le fichier .xcfg ou .xczfg produit par ' +
-    '« Réglages → Exporter la configuration » sur l’instrument, et qu’il est entier.',
+  'app.unreadableMessage': 'Vérifiez que c’est bien le fichier .xcfg ou .xczfg produit sur ' +
+    'l’instrument par « Réglages », puis « Exporter la configuration », et qu’il est entier.',
   'app.unreadableHint': 'Ses octets sont conservés intacts : « Enregistrer une copie » vous ' +
     'le rend tel qu’il est entré, sans la moindre réécriture.',
   'app.unreadableIncoming': '« {incoming} » n’a rien donné d’exploitable. « {kept} » reste ouvert, et tout ce que vous y avez changé est toujours là.',

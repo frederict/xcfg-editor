@@ -52,9 +52,9 @@ const app: DomainCatalog<'app'> = {
 
   'view.rulerCentimeters': '{value} cm',
 
-  'view.hoverHint': 'Pasa el cursor por un widget para ver su nombre y sus dimensiones.',
-  'view.hoverHintSelectable': 'Pasa el cursor por un widget para ver su nombre y sus ' +
-    'dimensiones; haz clic para ver sus ajustes.',
+  'view.pointHint': 'Señala un widget, con el dedo o el ratón, para ver su nombre y sus dimensiones.',
+  'view.pointHintSelectable': 'Señala un widget, con el dedo o el ratón, para ver su nombre ' +
+    'y sus dimensiones; elígelo para ver sus ajustes.',
 
   'view.selectedPin': 'seleccionado',
 
@@ -166,7 +166,7 @@ const app: DomainCatalog<'app'> = {
   'landing.dropOrPick': 'o haz clic para elegirlo — .xcfg o .xczfg',
 
   'landing.stepDeviceTitle': 'En el instrumento',
-  'landing.stepDeviceText': 'Ajustes, y luego « Exportar la configuración ». El archivo cae ' +
+  'landing.stepDeviceText': '«Ajustes», y luego «Exportar la configuración». El archivo cae ' +
     'en la tarjeta SD.',
   'landing.stepHereTitle': 'Aquí',
   'landing.stepHereText': 'Las páginas aparecen numeradas en el orden en que « página ' +
@@ -203,7 +203,10 @@ const app: DomainCatalog<'app'> = {
 
   'app.overviewTitle': 'Páginas de la configuración',
 
-  'app.seeDetail': 'Ver el detalle ({count})',
+  'app.seeDetail': {
+    one: 'Ver el detalle ({count})',
+    other: 'Ver los detalles ({count})'
+  },
   'app.attentionTitle': 'Conviene revisar en este archivo',
   'app.revealsTitle': 'Lo que este archivo revela de ti',
 
@@ -310,8 +313,8 @@ const app: DomainCatalog<'app'> = {
     'menú « Archivo », arriba a la derecha.',
 
   'app.unreadableTitle': 'Este archivo no se ha podido leer',
-  'app.unreadableMessage': 'Comprueba que sea el archivo .xcfg o .xczfg que produce « Ajustes ' +
-    '→ Exportar la configuración » en el instrumento, y que esté completo.',
+  'app.unreadableMessage': 'Comprueba que sea el archivo .xcfg o .xczfg que produce en el ' +
+    'instrumento «Ajustes», y luego «Exportar la configuración», y que esté completo.',
   'app.unreadableHint': 'Sus bytes se conservan intactos: « Guardar una copia » te lo devuelve ' +
     'tal como entró, sin la menor reescritura.',
   'app.unreadableIncoming': '« {incoming} » no ha dado nada aprovechable. « {kept} » sigue ' +
