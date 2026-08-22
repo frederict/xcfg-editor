@@ -227,7 +227,7 @@ const sharing: DomainCatalog<'sharing'> = {
   'warnings.assumedUnits': 'Hoogte: {altitude} · Snelheid: {speed} · Vario: {vario}',
   'warnings.assumedTitles': 'Titels: {percent} %, {font}',
   'warnings.assumedLanguageTitle': 'Taal van de opschriften onbepaald',
-  'warnings.assumedLanguageDetail': 'Dit bestand geeft geen weergavetaal aan (`Display.Language` leeg of sectie `preferences` afwezig): op het toestel volgt XCTrack dan de taal van het Android-systeem — nooit het Engels als terugval. Bij gebrek aan beter worden de opschriften hier getoond in de taal van uw browser ({language}).',
+  'warnings.assumedLanguageDetail': 'Dit bestand geeft geen weergavetaal aan (`Display.Language` leeg of sectie `preferences` afwezig): op het toestel volgt XCTrack dan de taal van het Android-systeem — nooit het Engels als terugval. Bij gebrek aan beter worden de opschriften hier getoond in {language} — de taal die u voor deze interface hebt gekozen, of anders die van uw browser.',
 
   'warnings.personalLayoutTitle': 'Uw pagina’s dragen teksten van u',
   'warnings.personalTitle': 'Dit bestand noemt u bij naam',

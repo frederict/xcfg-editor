@@ -232,9 +232,9 @@ author can check is worth nothing.
   interface, the manual, this README — exists in five languages: French, English, Dutch,
   German, Spanish. The names and descriptions *of XCTrack* are the application's own,
   extracted from the APK — 33 languages for the widgets, 34 for their options, 35 for the
-  labels of the general settings — and they follow the language of the file you opened,
-  not that of the interface. Those three figures are not a choice of ours: they are what
-  the APK carries.
+  labels of the general settings — and they follow the language of the file you opened;
+  only for a file that declares none do they take that of the interface. Those three
+  figures are not a choice of ours: they are what the APK carries.
 - **Explain itself on the spot**: a user manual in thirteen chapters opens from the
   welcome screen and from the “File” menu, without leaving the page — **in all five
   languages**, and only the one on display is downloaded. It is written for a pilot, not
@@ -323,7 +323,8 @@ Better said straight away.
   redoing them in five languages would mean thirty screenshots to retake every time a
   screen moves, and they would age. The geometry and the gestures read just as well.
   XCTrack's own labels — widget names, option names, preference names — do not follow the
-  interface language choice but **that of the file**: these are two distinct axes, and
+  interface language choice but **that of the file**; only failing that, when the file
+  declares none, do they take the interface language. These are two distinct axes, and
   confusing them would make a Czech pilot read widget names in English while the
   instrument shows them in Czech.
 

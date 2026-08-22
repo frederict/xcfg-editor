@@ -373,7 +373,7 @@ const sharing = {
   'warnings.assumedUnits': 'Altitude : {altitude} · Vitesse : {speed} · Vario : {vario}',
   'warnings.assumedTitles': 'Titres : {percent} %, {font}',
   'warnings.assumedLanguageTitle': 'Langue des libellés indéterminée',
-  'warnings.assumedLanguageDetail': 'Ce fichier ne déclare aucune langue d’affichage (`Display.Language` vide ou section `preferences` absente) : sur l’appareil, XCTrack suit alors la langue du système Android — jamais l’anglais par défaut. Faute de mieux, les libellés sont affichés ici dans la langue de votre navigateur ({language}).',
+  'warnings.assumedLanguageDetail': 'Ce fichier ne déclare aucune langue d’affichage (`Display.Language` vide ou section `preferences` absente) : sur l’appareil, XCTrack suit alors la langue du système Android — jamais l’anglais par défaut. Faute de mieux, les libellés sont affichés ici en {language} — la langue que vous avez choisie pour cette interface, ou à défaut celle de votre navigateur.',
 
   /* -------------------------------------------------------- 3. données personnelles */
 

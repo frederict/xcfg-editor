@@ -255,8 +255,9 @@ Absicht — ein Treueversprechen, das nur der Autor nachprüfen kann, ist nichts
   Französisch, Englisch, Niederländisch, Deutsch, Spanisch. Die Namen und Beschreibungen
   *von XCTrack* sind die der Anwendung selbst, aus dem APK gelesen — 33 Sprachen für die
   Widgets, 34 für ihre Optionen, 35 für die Beschriftungen der allgemeinen Einstellungen —,
-  und sie richten sich nach der Sprache der geöffneten Datei, nicht nach der der
-  Oberfläche. Diese drei Zahlen sind keine Wahl von uns: es ist das, was das APK enthält.
+  und sie richten sich nach der Sprache der geöffneten Datei; nur bei einer Datei, die
+  keine angibt, übernehmen sie die der Oberfläche. Diese drei Zahlen sind keine Wahl von
+  uns: es ist das, was das APK enthält.
 - **Sich an Ort und Stelle erklären**: ein Handbuch in dreizehn Kapiteln öffnet sich vom
   Startbildschirm und aus dem Menü „Datei“, ohne die Seite zu verlassen — **in allen fünf
   Sprachen**, und heruntergeladen wird nur die angezeigte. Es ist für Pilotinnen und
@@ -346,8 +347,9 @@ Sagen wir es gleich.
   Änderung an einem Bildschirm dreißig Bildschirmfotos zu wiederholen, und sie würden
   veralten. Geometrie und Handgriffe lassen sich trotzdem ablesen. Die Beschriftungen von
   XCTrack — Namen von Widgets, Optionen, Einstellungen — folgen nicht der Sprachwahl der
-  Oberfläche, sondern **der der Datei**: das sind zwei verschiedene Achsen, und sie zu
-  verwechseln hieße, einer tschechischen Pilotin englische Widget-Namen vorzusetzen,
+  Oberfläche, sondern **der der Datei**; erst wenn die Datei keine angibt, übernehmen sie
+  die Sprache der Oberfläche. Das sind zwei verschiedene Achsen, und sie zu verwechseln
+  hieße, einer tschechischen Pilotin englische Widget-Namen vorzusetzen,
   während ihr Gerät sie ihr auf Tschechisch zeigt.
 
 ## Ihre Meinung sagen, melden, was nicht stimmt

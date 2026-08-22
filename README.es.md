@@ -243,8 +243,9 @@ de fidelidad que solo el autor puede comprobar no vale nada.
   manual, este README — existe en cinco idiomas: francés, inglés, neerlandés, alemán,
   español. Los nombres y descripciones *de XCTrack* son los de la propia aplicación,
   extraídos del APK — 33 idiomas para los widgets, 34 para sus opciones, 35 para los rótulos
-  de los ajustes generales —, y siguen el idioma del archivo abierto, no el de la interfaz.
-  Estas tres cifras no son una elección nuestra: es lo que el APK lleva.
+  de los ajustes generales —, y siguen el idioma del archivo abierto; solo para un archivo
+  que no indica ninguno toman el de la interfaz. Estas tres cifras no son una elección
+  nuestra: es lo que el APK lleva.
 - **Explicarse en el sitio**: un manual de uso en trece capítulos se abre desde la pantalla
   de inicio y desde el menú «Archivo», sin salir de la página — **en los cinco idiomas**, y
   solo se descarga el que se muestra. Está escrito para un piloto, no para un informático, y
@@ -330,7 +331,8 @@ Mejor decirlo de entrada.
   en cinco idiomas serían treinta capturas que retomar cada vez que una pantalla se mueve, y
   envejecerían. La geometría y los gestos se leen igual. Los rótulos de XCTrack — nombres de
   widgets, de opciones, de preferencias — no siguen la elección de idioma de la interfaz sino
-  **la del archivo**: son dos ejes distintos, y confundirlos haría leer a un piloto checo
+  **la del archivo**; solo en su defecto, cuando el archivo no indica ninguno, toman el
+  idioma de la interfaz. Son dos ejes distintos, y confundirlos haría leer a un piloto checo
   nombres de widgets en inglés cuando su instrumento se los muestra en checo.
 
 ## Dar su opinión, avisar de lo que falla

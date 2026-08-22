@@ -185,9 +185,9 @@ const app: DomainCatalog<'app'> = {
 
   'app.uiLanguage': 'Idioma de la interfaz',
   'app.uiLanguageNamed': 'Idioma de la interfaz: {name}',
-  'app.uiLanguageHint': 'Elegir el idioma de esta interfaz. Las etiquetas de XCTrack no cambian.',
+  'app.uiLanguageHint': 'Elegir el idioma de esta interfaz. Las etiquetas de XCTrack siguen el archivo abierto.',
   'app.uiLanguageLead': 'Las palabras de esta interfaz: títulos, explicaciones, avisos. Este navegador recuerda la elección.',
-  'app.labelsAxisLead': 'Los nombres de widgets, opciones y ajustes, tal como los muestra su instrumento. Vienen del archivo abierto, y esta elección no los cambia.',
+  'app.labelsAxisLead': 'Los nombres de widgets, opciones y ajustes, tal como los muestra su instrumento. Vienen del archivo abierto; cuando este no indica ninguno, siguen el idioma elegido arriba.',
   'app.languageDialogTitle': 'Idiomas',
   'app.languageFailedTitle': 'No se ha podido cargar el idioma',
 
@@ -198,6 +198,7 @@ const app: DomainCatalog<'app'> = {
   'app.notDeclared': 'no indicado',
   'app.metaLabels': 'Etiquetas de XCTrack',
   'app.labelsFromBrowser': '{language} (idioma del navegador)',
+  'app.labelsFromUi': '{language} (idioma de la interfaz)',
   'app.labelsFromFile': '{language} (indicado por el archivo)',
   'app.metaRenderSettings': 'Ajustes de dibujo',
   'app.renderSettingsAssumed': 'valores supuestos, ausentes del archivo',

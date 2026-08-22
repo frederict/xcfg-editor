@@ -248,8 +248,9 @@ een belofte van getrouwheid die alleen de auteur kan nagaan, is niets waard.
   handleiding, deze README — bestaat in vijf talen: Frans, Engels, Nederlands, Duits, Spaans.
   De namen en beschrijvingen *van XCTrack* zijn die van de toepassing zelf, uit de APK
   gehaald — 33 talen voor de widgets, 34 voor hun opties, 35 voor de opschriften van de
-  algemene instellingen —, en ze volgen de taal van het geopende bestand, niet die van de
-  interface. Die drie getallen zijn geen keuze van ons: het is wat de APK draagt.
+  algemene instellingen —, en ze volgen de taal van het geopende bestand; alleen voor een
+  bestand dat er geen vermeldt nemen ze die van de interface over. Die drie getallen zijn
+  geen keuze van ons: het is wat de APK draagt.
 - **Zichzelf ter plaatse uitleggen**: een handleiding in dertien hoofdstukken opent vanaf het
   startscherm en vanuit het menu ‘Bestand’, zonder de pagina te verlaten — **in de vijf
   talen**, en alleen de taal die wordt getoond, wordt gedownload. Ze is voor een piloot
@@ -337,9 +338,11 @@ Dat kan net zo goed meteen gezegd worden.
   talen opnieuw maken zou dertig schermafbeeldingen betekenen die bij elk gewijzigd scherm
   opnieuw gemaakt moeten worden, en ze zouden verouderen. De meetkunde en de handelingen zijn
   er evengoed op af te lezen. De opschriften van XCTrack — namen van widgets, van opties, van
-  voorkeuren — volgen niet de taalkeuze van de interface maar **die van het bestand**: dat
-  zijn twee verschillende assen, en ze verwarren zou een Tsjechische piloot widgetnamen in
-  het Engels laten lezen terwijl zijn instrument ze hem in het Tsjechisch toont.
+  voorkeuren — volgen niet de taalkeuze van de interface maar **die van het bestand**;
+  alleen bij gebrek daaraan, wanneer het bestand er geen vermeldt, nemen ze de taal van de
+  interface over. Dat zijn twee verschillende assen, en ze verwarren zou een Tsjechische
+  piloot widgetnamen in het Engels laten lezen terwijl zijn instrument ze hem in het
+  Tsjechisch toont.
 
 ## Uw mening geven, melden wat er mis is
 

@@ -129,11 +129,41 @@ function languageOf(preferences: JsonNode): LanguagePreference {
 }
 
 /**
- * Résout une préférence de langue en code concret pour l'affichage. `systemLanguage`
- * est fourni par l'appelant — typiquement `navigator.language`, côté `src/ui/` — plutôt
- * que lu ici : ce module décrit des fichiers XCTrack, il ne connaît pas le DOM et ne
- * doit jamais appeler `navigator` lui-même.
+ * Résout une préférence de langue en code concret pour l'affichage. Le repli est
+ * **fourni par l'appelant** — `labelFallbackLanguage` ci-dessous, côté `src/ui/` — plutôt
+ * que lu ici : ce module décrit des fichiers XCTrack, il ne connaît ni le DOM ni le
+ * sélecteur de langue, et ne doit jamais appeler `navigator` lui-même.
+ *
+ * ⚠️ Le fichier reste prioritaire, et c'est toute la promesse de l'outil : un pilote doit
+ * lire les libellés **comme son instrument les affiche**. Le repli ne sert qu'aux fichiers
+ * qui ne déclarent rien.
  */
-export function resolveLanguage(preference: LanguagePreference, systemLanguage: string): string {
-  return preference.kind === 'explicit' ? preference.code : systemLanguage
+export function resolveLanguage(preference: LanguagePreference, fallbackLanguage: string): string {
+  return preference.kind === 'explicit' ? preference.code : fallbackLanguage
+}
+
+/**
+ * # Le repli des libellés, quand le fichier ne déclare aucune langue
+ *
+ * Le choix **explicite** du pilote passe avant le navigateur. C'est un correctif, et le
+ * défaut qu'il répare se voyait au premier essai du sélecteur : un fichier sans
+ * `Display.Language` laissait les 217 noms de réglages dans la langue du navigateur quoi
+ * que le pilote choisisse — et comme ces noms occupent l'essentiel de l'écran, la page
+ * paraissait n'avoir pas changé de langue du tout.
+ *
+ * Les deux valeurs sont des suppositions sur l'appareil du pilote, puisque le fichier se
+ * tait. Entre deux suppositions, celle qu'il a **posée lui-même dans cet outil** vaut
+ * mieux qu'un réglage de système qu'il n'a pas réglé pour cet usage.
+ *
+ * ⚠️ `chosenUiLanguage` est le choix mémorisé (`readUiLanguage`), **jamais** la langue
+ * d'interface courante. Les deux diffèrent chez qui n'a rien choisi : notre prose n'existe
+ * qu'en cinq langues et retombe sur le français, quand les catalogues de XCTrack en
+ * portent 33 à 36. Passer la langue courante ferait lire des libellés **français** à un
+ * pilote tchèque dont le navigateur annonce `cs` — le catalogue tchèque existe, et c'est
+ * exactement celui que son instrument lui montre.
+ */
+export function labelFallbackLanguage(
+  chosenUiLanguage: string | undefined, systemLanguage: string
+): string {
+  return chosenUiLanguage ?? systemLanguage
 }

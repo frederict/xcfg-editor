@@ -192,9 +192,9 @@ const app: DomainCatalog<'app'> = {
 
   'app.uiLanguage': 'Sprache der Oberfläche',
   'app.uiLanguageNamed': 'Sprache der Oberfläche: {name}',
-  'app.uiLanguageHint': 'Die Sprache dieser Oberfläche wählen. Die Beschriftungen von XCTrack ändern sich dadurch nicht.',
+  'app.uiLanguageHint': 'Die Sprache dieser Oberfläche wählen. Die Beschriftungen von XCTrack folgen der geöffneten Datei.',
   'app.uiLanguageLead': 'Die Wörter dieser Oberfläche: Überschriften, Erklärungen, Warnungen. Diese Wahl merkt sich der Browser.',
-  'app.labelsAxisLead': 'Die Namen von Widgets, Optionen und Einstellungen, so wie Ihr Gerät sie anzeigt. Sie stammen aus der geöffneten Datei, und diese Wahl ändert sie nicht.',
+  'app.labelsAxisLead': 'Die Namen von Widgets, Optionen und Einstellungen, so wie Ihr Gerät sie anzeigt. Sie stammen aus der geöffneten Datei; gibt diese keine an, folgen sie der oben gewählten Sprache.',
   'app.languageDialogTitle': 'Sprachen',
   'app.languageFailedTitle': 'Die Sprache konnte nicht geladen werden',
 
@@ -205,6 +205,7 @@ const app: DomainCatalog<'app'> = {
   'app.notDeclared': 'nicht angegeben',
   'app.metaLabels': 'XCTrack-Beschriftungen',
   'app.labelsFromBrowser': '{language} (Sprache des Browsers)',
+  'app.labelsFromUi': '{language} (Sprache der Oberfläche)',
   'app.labelsFromFile': '{language} (von der Datei angegeben)',
   'app.metaRenderSettings': 'Zeicheneinstellungen',
   'app.renderSettingsAssumed': 'angenommene Werte, in der Datei nicht vorhanden',

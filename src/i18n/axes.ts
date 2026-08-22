@@ -10,9 +10,9 @@ import { UI_FALLBACK_LANGUAGE, type UiLanguage } from './languages'
  * | Axe | Ce qu'il gouverne | D'où il vient |
  * |---|---|---|
  * | `ui` | **notre prose** : intitulés, remarques, explications, avertissements | le choix du pilote, mémorisé (`src/i18n/preference.ts`) ; à défaut le navigateur ; à défaut le français |
- * | `labels` | **les mots de XCTrack** : noms de gadgets, options, préférences | `Display.Language` du fichier ouvert, à défaut `navigator.language` (`resolveLanguage`, `src/model/preferences.ts`) |
+ * | `labels` | **les mots de XCTrack** : noms de gadgets, options, préférences | `Display.Language` du fichier ouvert ; à défaut la langue choisie au globe, sinon `navigator.language` (`resolveLanguage` et `labelFallbackLanguage`, `src/model/preferences.ts`) |
  *
- * ## Le cas qui décide
+ * ## Ce que le fichier déclare ne se discute pas
  *
  * Un pilote belge dont l'AIR³ est réglé en anglais doit lire l'interface **en français**
  * et les libellés **en anglais**. Pas parce que c'est élégant : parce qu'il tient son
@@ -24,6 +24,26 @@ import { UI_FALLBACK_LANGUAGE, type UiLanguage } from './languages'
  * C'est aussi pourquoi les libellés extraits de l'APK ne se traduisent jamais — y compris
  * leur « widget » incohérent avec le « Gadget » de la chrome de XCTrack. Ce n'est pas
  * notre parole, c'est la sienne.
+ *
+ * ## Le repli, quand le fichier ne déclare rien
+ *
+ * Beaucoup d'exports ne portent pas de `Display.Language` : sur l'appareil, XCTrack y suit
+ * la langue du système Android, qu'un fichier ne consigne pas. Il faut alors supposer, et
+ * **la supposition suit le choix du pilote au globe** — à défaut seulement
+ * `navigator.language`.
+ *
+ * Ce n'est pas une confusion des deux axes, c'est ce qu'ils font quand l'un des deux n'a
+ * rien à dire. Le repli précédent était le navigateur seul, et le défaut se voyait au
+ * premier essai du sélecteur : le pilote passait à l'anglais, les 217 noms de réglages
+ * restaient dans la langue de son navigateur — l'essentiel de l'écran —, et la page
+ * paraissait n'avoir pas changé de langue. Entre deux suppositions, celle qu'il a posée
+ * lui-même dans cet outil vaut mieux qu'un réglage de système qu'il n'a pas réglé pour
+ * cet usage.
+ *
+ * ⚠️ « Choisi » veut dire **explicitement**, jamais la langue d'interface courante : notre
+ * prose n'existe qu'en cinq langues et retombe sur le français, quand les catalogues de
+ * XCTrack en portent 33 à 36. Un pilote tchèque qui n'a rien choisi garde ses libellés
+ * tchèques (voir `labelFallbackLanguage`).
  *
  * ## Ce que ce module garantit, structurellement
  *
@@ -84,8 +104,9 @@ export function withLabelLanguage(axes: LanguageAxes, labels: string): LanguageA
 
 /**
  * Les axes au tout premier écran, avant qu'un fichier soit ouvert : notre prose dans la
- * langue mémorisée ou détectée, les libellés dans celle du navigateur — c'est ce que
- * l'écran annonce déjà par « LIBELLÉS — fr (langue du navigateur) ».
+ * langue mémorisée ou détectée, les libellés dans celle que l'appelant a résolue —
+ * langue choisie s'il y en a une, navigateur sinon —, c'est ce que l'écran annonce déjà
+ * par « LIBELLÉS — fr (langue du navigateur) ».
  *
  * `labels` est ici la langue **brute** du navigateur : c'est à chaque catalogue de la
  * replier sur ce qu'il porte, et le repli n'est pas le même d'un catalogue à l'autre.

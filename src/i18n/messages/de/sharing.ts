@@ -229,7 +229,7 @@ const sharing: DomainCatalog<'sharing'> = {
   'warnings.assumedUnits': 'Höhe: {altitude} · Geschwindigkeit: {speed} · Vario: {vario}',
   'warnings.assumedTitles': 'Titel: {percent} %, {font}',
   'warnings.assumedLanguageTitle': 'Sprache der Beschriftungen unbestimmt',
-  'warnings.assumedLanguageDetail': 'Diese Datei gibt keine Anzeigesprache an (`Display.Language` leer oder Abschnitt `preferences` fehlt): auf dem Gerät folgt XCTrack dann der Sprache des Android-Systems — niemals ersatzweise dem Englischen. In Ermangelung von Besserem werden die Beschriftungen hier in der Sprache Ihres Browsers angezeigt ({language}).',
+  'warnings.assumedLanguageDetail': 'Diese Datei gibt keine Anzeigesprache an (`Display.Language` leer oder Abschnitt `preferences` fehlt): auf dem Gerät folgt XCTrack dann der Sprache des Android-Systems — niemals ersatzweise dem Englischen. In Ermangelung von Besserem werden die Beschriftungen hier in {language} angezeigt — der Sprache, die Sie für diese Oberfläche gewählt haben, sonst der Ihres Browsers.',
 
   'warnings.personalLayoutTitle': 'Ihre Seiten enthalten Texte von Ihnen',
   'warnings.personalTitle': 'Diese Datei nennt Sie beim Namen',

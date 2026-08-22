@@ -226,7 +226,7 @@ const sharing: DomainCatalog<'sharing'> = {
   'warnings.assumedUnits': 'Altitud: {altitude} · Velocidad: {speed} · Vario: {vario}',
   'warnings.assumedTitles': 'Títulos: {percent} %, {font}',
   'warnings.assumedLanguageTitle': 'Idioma de las etiquetas indeterminado',
-  'warnings.assumedLanguageDetail': 'Este archivo no declara ningún idioma de visualización (`Display.Language` vacío o sección `preferences` ausente): en el aparato, XCTrack sigue entonces el idioma del sistema Android — nunca el inglés como reserva. A falta de algo mejor, las etiquetas se muestran aquí en el idioma de su navegador ({language}).',
+  'warnings.assumedLanguageDetail': 'Este archivo no declara ningún idioma de visualización (`Display.Language` vacío o sección `preferences` ausente): en el aparato, XCTrack sigue entonces el idioma del sistema Android — nunca el inglés como reserva. A falta de algo mejor, las etiquetas se muestran aquí en {language} — el idioma que ha elegido para esta interfaz, o en su defecto el de su navegador.',
 
   'warnings.personalLayoutTitle': 'Sus páginas llevan textos suyos',
   'warnings.personalTitle': 'Este archivo le nombra',

@@ -748,14 +748,25 @@ describe('assemblage — un document modifié ne se fait pas remplacer sans un m
 /**
  * # Le sélecteur de langue de l'interface
  *
- * Deux réglages de langue cohabitent dans cet outil et **un seul** agit sur les mots qu'on
- * lit ici (`src/i18n/axes.ts`). Ces garde-fous portent sur les trois endroits où la
- * confusion se glisserait sans qu'aucun test d'exécution ne bronche.
+ * Deux axes de langue cohabitent dans cet outil (`src/i18n/axes.ts`), et la frontière
+ * entre eux tient en une phrase : **le fichier décide des libellés ; le globe décide de
+ * notre prose, et des libellés seulement quand le fichier se tait.**
+ *
+ * Les deux moitiés de cette phrase se cassent différemment, et aucune ne fait broncher un
+ * test d'exécution. Oublier la première rendrait à un pilote belge des libellés français
+ * là où son AIR³ en anglais lui montre des mots anglais ; oublier la seconde — c'est ce
+ * qui est arrivé — laisse les 217 noms de réglages dans la langue du navigateur quoi que
+ * le pilote choisisse, et la page paraît n'avoir pas changé de langue du tout.
  */
-describe('assemblage — changer la langue de l’interface, et rien d’autre', () => {
+describe('assemblage — le globe, et jusqu’où il va', () => {
   const choose = main.slice(
     main.indexOf('function chooseUiLanguage'),
     main.indexOf('/* ------------------------------------------- 1. les préférences générales')
+  )
+  /** L'autre moitié de l'axe des libellés : ce qu'un fichier fraîchement ouvert reçoit. */
+  const buildSession = main.slice(
+    main.indexOf('function buildSession'),
+    main.indexOf("/** L'échec d'ouverture en pleine page")
   )
 
   it('le globe est dans la barre, muet, et n’est jamais éteint', () => {
@@ -790,15 +801,47 @@ describe('assemblage — changer la langue de l’interface, et rien d’autre',
     expect(app['app.metaLabels']).toContain('XCTrack')
   })
 
-  it('choisir une langue ne touche jamais à l’axe des libellés', () => {
-    // `session.language` vient du fichier ouvert et n'a rien à faire ici : un pilote belge
-    // dont l'AIR³ est en anglais lit cette interface en français ET ses libellés en
-    // anglais. C'est la promesse centrale de l'outil.
-    expect(choose).not.toContain('session.language =')
-    expect(choose).not.toContain('resolveLanguage')
-    expect(choose).not.toContain('languageFromBrowser =')
-    // Le recalcul des avertissements repasse la langue du fichier telle quelle.
+  it('un fichier qui déclare sa langue garde ses libellés, quoi qu’on choisisse', () => {
+    // La promesse centrale de l'outil : un pilote belge dont l'AIR³ est en anglais lit
+    // cette interface en français ET ses libellés en anglais. Le seul chemin par lequel
+    // `session.language` peut bouger passe donc par `resolveLanguage`, qui rend la langue
+    // du fichier telle quelle dès qu'elle est déclarée. Y écrire la langue d'interface
+    // directement casserait la promesse sans qu'aucun test d'exécution ne bronche.
+    expect(choose).toContain(
+      'session.language = resolveLanguage(session.settings.language, fallback.language)'
+    )
+    expect(choose).not.toContain('session.language = language')
+    expect(choose).not.toContain('session.language = currentUiLanguage')
+    expect(choose).not.toContain('session.language = chosenUiLanguage')
+    // Le recalcul des avertissements repasse la langue résolue, jamais celle du globe.
     expect(choose).toContain('language: session.language')
+  })
+
+  it('un fichier muet suit le choix du pilote, et la vue est refaite avec', () => {
+    // Le défaut signalé au premier essai du sélecteur : les 217 noms de réglages venaient
+    // du catalogue dans la langue du NAVIGATEUR, pas dans celle qu'on venait de choisir.
+    // Comme ils occupent l'essentiel de l'écran, la page paraissait n'avoir pas changé de
+    // langue du tout. Il ne suffit pas de corriger le repli à l'ouverture : la bascule
+    // doit rebrancher l'axe du fichier déjà ouvert, sa mention et ses avertissements.
+    expect(choose).toContain('const fallback = labelFallback()')
+    expect(choose).toContain('session.labelSource =')
+    expect(choose).toContain('session.warnings = computeWarnings({')
+    expect(choose).toContain('render()')
+  })
+
+  it('le repli des libellés est le choix mémorisé, jamais le navigateur seul', () => {
+    // Deux suppositions se présentent quand le fichier ne déclare rien ; celle que le
+    // pilote a posée lui-même dans cet outil vaut mieux qu'un réglage de système qu'il n'a
+    // pas réglé pour cet usage.
+    expect(main).toContain('labelFallbackLanguage(chosenUiLanguage, navigator.language)')
+    // ⚠ Le choix MÉMORISÉ, jamais `currentUiLanguage` — qui vaut toujours quelque chose et
+    // retombe sur le français. Le passer ferait lire des libellés français à un pilote
+    // tchèque dont le catalogue tchèque existe : voir `labelFallbackLanguage`.
+    expect(main).toContain('let chosenUiLanguage: UiLanguage | undefined = readUiLanguage(')
+    expect(main).not.toContain('labelFallbackLanguage(currentUiLanguage')
+    // Et plus aucun chemin ne fabrique le repli à la main à partir du seul navigateur.
+    expect(buildSession).not.toContain('catalogLanguage(navigator.language)')
+    expect(buildSession).toContain('resolveLanguage(settings.language, fallback.language)')
   })
 
   it('le choix n’est mémorisé qu’une fois le catalogue arrivé', () => {

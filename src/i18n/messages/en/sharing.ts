@@ -220,7 +220,7 @@ const sharing: DomainCatalog<'sharing'> = {
   'warnings.assumedUnits': 'Altitude: {altitude} · Speed: {speed} · Vario: {vario}',
   'warnings.assumedTitles': 'Titles: {percent} %, {font}',
   'warnings.assumedLanguageTitle': 'Label language undetermined',
-  'warnings.assumedLanguageDetail': 'This file declares no display language (`Display.Language` empty or `preferences` section absent): on the device, XCTrack then follows the Android system language — never English as a fallback. For want of better, the labels are shown here in the language of your browser ({language}).',
+  'warnings.assumedLanguageDetail': 'This file declares no display language (`Display.Language` empty or `preferences` section absent): on the device, XCTrack then follows the Android system language — never English as a fallback. For want of better, the labels are shown here in {language} — the language you chose for this interface, or failing that your browser’s.',
 
   'warnings.personalLayoutTitle': 'Your pages carry texts of yours',
   'warnings.personalTitle': 'This file names you',

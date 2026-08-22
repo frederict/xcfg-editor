@@ -350,9 +350,9 @@ const app = {
    */
   'app.uiLanguage': 'Langue de l’interface',
   'app.uiLanguageNamed': 'Langue de l’interface : {name}',
-  'app.uiLanguageHint': 'Choisir la langue de cette interface. Les libellés de XCTrack, eux, ne changent pas.',
+  'app.uiLanguageHint': 'Choisir la langue de cette interface. Les libellés de XCTrack, eux, suivent le fichier ouvert.',
   'app.uiLanguageLead': 'Les mots de cette interface : intitulés, explications, avertissements. Le choix est retenu par ce navigateur.',
-  'app.labelsAxisLead': 'Les noms de gadgets, d’options et de réglages, tels que votre instrument les affiche. Ils viennent du fichier ouvert, et ce choix-ci ne les change pas.',
+  'app.labelsAxisLead': 'Les noms de gadgets, d’options et de réglages, tels que votre instrument les affiche. Ils viennent du fichier ouvert ; quand il n’en déclare aucune, ils suivent la langue choisie ci-dessus.',
   'app.languageDialogTitle': 'Langues',
   'app.languageFailedTitle': 'La langue n’a pas pu être chargée',
 
@@ -365,6 +365,7 @@ const app = {
   'app.notDeclared': 'non déclaré',
   'app.metaLabels': 'Libellés de XCTrack',
   'app.labelsFromBrowser': '{language} (langue du navigateur)',
+  'app.labelsFromUi': '{language} (langue de l’interface)',
   'app.labelsFromFile': '{language} (déclaré par le fichier)',
   'app.metaRenderSettings': 'Réglages de rendu',
   'app.renderSettingsAssumed': 'valeurs supposées, absentes du fichier',

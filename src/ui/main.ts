@@ -13,7 +13,9 @@ import { gridFor } from '../model/grid'
 import { createHistory, type EditHistory } from '../model/history'
 import { readLayout, type Layout, type Page } from '../model/layout'
 import { insertWidget } from '../model/mutations'
-import { readRenderSettings, resolveLanguage, type RenderSettings } from '../model/preferences'
+import {
+  labelFallbackLanguage, readRenderSettings, resolveLanguage, type RenderSettings
+} from '../model/preferences'
 import { readWidget, type Widget } from '../model/widget'
 import { renderPage } from '../render/canvas'
 import { buildDeviceSelector } from './deviceSelector'
@@ -52,10 +54,25 @@ import type { VersionPanel } from './versionDiagnostic'
 import type { CleanupEvent } from './cleanupPanel'
 import type { Library } from '../library/library'
 import {
-  initialUiLanguage, loadTranslator, writeUiLanguage,
+  initialUiLanguage, loadTranslator, readUiLanguage, writeUiLanguage,
   UI_LANGUAGES, UI_LANGUAGE_ENDONYMS,
   type Translator, type UiLanguage
 } from '../i18n'
+
+/**
+ * D'où vient la langue des **libellés de XCTrack** — les trois sources, dans l'ordre où
+ * elles l'emportent (`labelFallbackLanguage`, `src/model/preferences.ts`) :
+ *
+ * - `file` — le fichier déclare sa `Display.Language`. **Rien ne passe devant** : c'est la
+ *   promesse centrale de l'outil, le pilote lit les libellés comme son instrument les
+ *   affiche.
+ * - `ui` — le fichier se tait, et le pilote a choisi une langue d'interface au globe.
+ * - `browser` — le fichier se tait et le pilote n'a rien choisi : reste `navigator.language`.
+ *
+ * Chacune a sa mention, parce que le pilote qui se demande « pourquoi ces mots-là ? » a
+ * besoin de la réponse et non d'un code de langue seul.
+ */
+type LabelSource = 'file' | 'ui' | 'browser'
 
 interface Session {
   container: Container
@@ -66,8 +83,8 @@ interface Session {
   /** Nom de l'appareil que le fichier déclare, s'il en désigne un — `deviceIsDeclared`. */
   declaredDevice: string | undefined
   language: string
-  /** Vrai si la langue vient du navigateur, faute d'indication dans le fichier. */
-  languageFromBrowser: boolean
+  /** D'où `language` a été tirée — c'est ce que le bandeau et la boîte des langues disent. */
+  labelSource: LabelSource
   /**
    * `info.versionCode` et `info.versionName`, tels que le fichier les déclare. Ils ne
    * servent qu'à **dater** ce qu'on lui compare : le relevé des valeurs par défaut
@@ -133,6 +150,18 @@ let uiTranslator: Translator | undefined
 let currentUiLanguage: UiLanguage = initialUiLanguage(
   window.localStorage, [...navigator.languages]
 )
+
+/**
+ * Ce que le pilote a **explicitement** choisi au globe, ou `undefined` s'il n'a jamais
+ * choisi. À ne pas confondre avec `currentUiLanguage`, qui vaut toujours quelque chose :
+ * quand rien n'a été choisi, celle-ci est détectée au navigateur, et retombe sur le
+ * français si aucune des cinq ne convient.
+ *
+ * La distinction n'est pas de la coquetterie : c'est elle qui décide de la langue des
+ * **libellés** pour un fichier qui n'en déclare aucune — voir `labelFallbackLanguage`
+ * (`src/model/preferences.ts`), qui dit pourquoi la langue courante n'y conviendrait pas.
+ */
+let chosenUiLanguage: UiLanguage | undefined = readUiLanguage(window.localStorage)
 
 /**
  * # Le traducteur, et comment un écran le reçoit
@@ -301,6 +330,21 @@ const REGIONAL_LABEL_CODES = ['zh-TW']
 function catalogLanguage(tag: string): string {
   if (REGIONAL_LABEL_CODES.includes(tag)) return tag
   return tag.split('-')[0] ?? tag
+}
+
+/**
+ * La langue des libellés quand le fichier n'en déclare aucune, et la source qu'il faudra
+ * nommer à l'écran. Une seule fonction pour les deux, parce qu'elles répondent à la même
+ * question et divergeraient à la première retouche.
+ *
+ * C'est ici que l'interface fournit au modèle ce qu'il ne peut pas connaître : le choix
+ * mémorisé du pilote et la langue du navigateur.
+ */
+function labelFallback(): { language: string; source: LabelSource } {
+  return {
+    language: catalogLanguage(labelFallbackLanguage(chosenUiLanguage, navigator.language)),
+    source: chosenUiLanguage === undefined ? 'browser' : 'ui'
+  }
 }
 
 /**
@@ -2444,16 +2488,23 @@ function tellProblem(title: string, message: string, detail?: string): void {
  * langues. Deux formulations pour un même fait seraient l'ambiguïté même qu'on cherche à
  * lever ici, et elles divergeraient à la première retouche.
  *
- * Sans fichier ouvert, c'est le navigateur qui décide — comme `initialAxes` l'annonce :
- * l'axe existe avant qu'un fichier arrive, et la boîte s'ouvre dès l'écran d'accueil.
+ * Trois formulations parce qu'il y a **trois sources** (`LabelSource`), et que dire
+ * « langue du navigateur » d'une langue venue du sélecteur laisserait le pilote croire que
+ * son choix n'a rien fait — c'est précisément le doute que cette mention existe pour
+ * lever.
+ *
+ * Sans fichier ouvert, l'axe existe déjà — comme `initialAxes` l'annonce : la boîte
+ * s'ouvre dès l'écran d'accueil.
  */
 function labelLanguageMention(tr: Translator, current: Session | undefined): string {
-  const language = current?.language ?? catalogLanguage(navigator.language)
-  const fromBrowser = current?.languageFromBrowser ?? true
+  const fallback = labelFallback()
+  const language = current?.language ?? fallback.language
+  const source = current?.labelSource ?? fallback.source
   // `language` est un code de langue, donc un identifiant : il se passe en `string`.
-  return fromBrowser
-    ? tr.t('app.labelsFromBrowser', { language })
-    : tr.t('app.labelsFromFile', { language })
+  if (source === 'file') return tr.t('app.labelsFromFile', { language })
+  return source === 'ui'
+    ? tr.t('app.labelsFromUi', { language })
+    : tr.t('app.labelsFromBrowser', { language })
 }
 
 let languageDialog: HTMLDialogElement | undefined
@@ -2584,12 +2635,17 @@ function openLanguageDialog(): void {
 let languagePending = false
 
 /**
- * Changer la langue de **notre prose**, et rien d'autre.
+ * Changer la langue de **notre prose** — et, pour un fichier muet, celle des libellés.
  *
- * `session.language` n'est pas touché — c'est l'autre axe, celui des libellés de XCTrack,
- * qui suit le fichier ouvert. Un pilote belge dont l'AIR³ est en anglais lit donc cette
- * interface en français **et** ses libellés en anglais, ce qui est tout l'objet de la
- * séparation (`src/i18n/axes.ts`).
+ * **Le fichier garde la main.** S'il déclare une `Display.Language`, `session.language` ne
+ * bouge pas d'un iota : un pilote belge dont l'AIR³ est en anglais lit cette interface en
+ * français **et** ses libellés en anglais, ce qui est tout l'objet de la séparation des
+ * axes (`src/i18n/axes.ts`).
+ *
+ * **Un fichier qui ne déclare rien, en revanche, suit ce choix-ci.** Le repli était
+ * `navigator.language`, que le pilote n'a pas réglé pour cet usage : il choisissait
+ * l'anglais et voyait les 217 noms de réglages rester en français, soit l'essentiel de
+ * l'écran. Voir `labelFallbackLanguage` (`src/model/preferences.ts`).
  *
  * **Le choix n'est mémorisé qu'une fois le catalogue arrivé.** L'écrire avant exposerait
  * au pire : l'amorçage attend le catalogue de la langue mémorisée et n'affiche rien tant
@@ -2610,11 +2666,19 @@ function chooseUiLanguage(language: UiLanguage): void {
   void loadTranslator(language)
     .then((loaded) => {
       currentUiLanguage = language
+      chosenUiLanguage = language
       uiTranslator = loaded
       writeUiLanguage(window.localStorage, language)
       closeLanguageDialog()
       installChromeProse(loaded)
       if (session !== undefined) {
+        // Le fichier reste maître de l'axe des libellés : `resolveLanguage` ne prend le
+        // repli que pour un fichier qui ne déclare rien. Un AIR³ réglé en anglais garde
+        // donc ses libellés anglais quelle que soit la langue lue ici.
+        const fallback = labelFallback()
+        session.language = resolveLanguage(session.settings.language, fallback.language)
+        session.labelSource =
+          session.settings.language.kind === 'explicit' ? 'file' : fallback.source
         installDeviceSelector(session.device)
         session.warnings = computeWarnings({
           tr: loaded,
@@ -3576,9 +3640,9 @@ function buildSession(container: Container): Session {
   const info = getMember(container.document, 'info')
   const declaredDevice = info ? readString(info, 'device') : undefined
   const device = deviceFor(declaredDevice)
-  // C'est l'interface qui connaît le navigateur : `resolveLanguage` reçoit la langue
-  // système en paramètre, le modèle ne la lit jamais lui-même.
-  const systemLanguage = catalogLanguage(navigator.language)
+  // C'est l'interface qui connaît le navigateur ET le choix du pilote : `resolveLanguage`
+  // reçoit le repli en paramètre, le modèle ne va jamais le chercher lui-même.
+  const fallback = labelFallback()
   // L'historique prend le document en charge dès l'ouverture, et le conteneur adopte
   // SON document : les deux ne peuvent alors plus diverger, et `container.modified`
   // reste faux tant que rien n'a été enregistré — un fichier seulement consulté ressort
@@ -3586,7 +3650,7 @@ function buildSession(container: Container): Session {
   const history = createHistory(container.document)
   container.document = history.current()
   const layout = readLayout(container.document)
-  const language = resolveLanguage(settings.language, systemLanguage)
+  const language = resolveLanguage(settings.language, fallback.language)
   return {
     container,
     layout,
@@ -3595,7 +3659,7 @@ function buildSession(container: Container): Session {
     device,
     declaredDevice: deviceIsDeclared(declaredDevice, device) ? device.label : undefined,
     language,
-    languageFromBrowser: settings.language.kind === 'system',
+    labelSource: settings.language.kind === 'explicit' ? 'file' : fallback.source,
     versionCode: info ? readNumber(info, 'versionCode') : undefined,
     versionName: info ? readString(info, 'versionName') : undefined,
     warnings: computeWarnings({

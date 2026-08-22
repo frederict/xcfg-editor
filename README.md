@@ -260,8 +260,9 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
   néerlandais, allemand, espagnol. Les noms et descriptions *de XCTrack* sont ceux de
   l'application elle-même, extraits de l'APK — 33 langues pour les gadgets, 34 pour leurs
   options, 35 pour les libellés des réglages généraux —, et ils suivent la langue du
-  fichier ouvert, pas celle de l'interface. Ces trois chiffres ne sont pas un choix de
-  notre part : c'est ce que l'APK porte.
+  fichier ouvert ; ce n'est que pour un fichier qui n'en déclare aucune qu'ils prennent
+  celle de l'interface. Ces trois chiffres ne sont pas un choix de notre part : c'est ce
+  que l'APK porte.
 - **S'expliquer sur place** : un manuel d'utilisation en treize chapitres s'ouvre depuis
   l'écran d'accueil et depuis le menu « Fichier », sans quitter la page — **dans les cinq
   langues**, et seule celle qui est affichée est téléchargée. Il est écrit pour un
@@ -485,8 +486,9 @@ Autant le dire tout de suite.
   reprendre à chaque écran qui bouge, et elles vieilliraient. La géométrie et les gestes
   se lisent quand même. Les libellés de XCTrack — noms de gadgets, d'options, de
   préférences — ne suivent pas le choix de langue de l'interface mais **celui du
-  fichier** : ce sont deux axes distincts, et les confondre ferait lire à un pilote
-  tchèque des noms de gadgets en anglais alors que son instrument les lui montre en
+  fichier** ; ce n'est qu'à défaut, quand le fichier n'en déclare aucune, qu'ils prennent
+  la langue de l'interface. Ce sont deux axes distincts, et les confondre ferait lire à un
+  pilote tchèque des noms de gadgets en anglais alors que son instrument les lui montre en
   tchèque.
 
 ## Donner votre avis, signaler ce qui cloche
