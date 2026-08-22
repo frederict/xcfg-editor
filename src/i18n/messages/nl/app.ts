@@ -381,6 +381,7 @@ const app: DomainCatalog<'app'> = {
   'changes.noneWhy': 'Het document is, teken voor teken, wat het bestand heeft geleverd: nu opgeslagen komt het er met dezelfde SHA-256-vingerafdruk weer uit.',
   'changes.lead': 'Tussen ‘{name}’, het bestand dat u hebt geopend, en het document dat u voor u hebt: {what}.',
   'changes.caveat': 'Deze opgave vergelijkt twee toestanden; ze telt uw handelingen niet. Wat u hebt gedaan en weer ongedaan gemaakt, staat er niet in, en een rang die alleen is opgeschoven is geen verplaatsing.',
+  'changes.beforeSaving': 'Deze opgave zegt wat er aan uw document is gewijzigd. Wat het gemaakte bestand meer of minder meeneemt, hangt af van de uitkomst die u hieronder kiest, en elk daarvan zegt het onder zijn eigen kop.',
 
   'changes.pagesAdded': { one: '{count} pagina toegevoegd', other: '{count} pagina’s toegevoegd' },
   'changes.pagesRemoved': { one: '{count} pagina verwijderd', other: '{count} pagina’s verwijderd' },

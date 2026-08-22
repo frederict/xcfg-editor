@@ -595,6 +595,23 @@ export interface SharingDialogOptions {
    * avertissements ont leur propre chaîne, et la dupliquer les ferait diverger.
    */
   notice?: HTMLElement
+  /**
+   * Le relevé de ce que le pilote a changé depuis l'ouverture, à poser sous
+   * l'introduction — replié, pour que le bouton reste sous les yeux.
+   *
+   * Il arrive **fabriqué**, comme `notice` : ce module ne calcule rien et ne connaît
+   * même pas le relevé. C'est ce qui garantit que l'écran consultable
+   * (« Ce que vous avez changé », dans le menu) et cette boîte-ci montrent la **même**
+   * liste — un seul calcul (`computeChanges`), un seul dessin (`buildChangeSummary`).
+   * Deux comptes qui se contrediraient d'un écran à l'autre vaudraient moins que pas de
+   * compte du tout.
+   *
+   * ⚠️ Il dit ce que **le document** a changé, jamais ce que **le fichier produit**
+   * emportera : cette seconde question est celle des trois issues, et chacune y répond
+   * sous son propre intitulé. Les confondre ferait lire « 7 réglages » à un pilote dont
+   * la version partageable n'en emporte aucun.
+   */
+  changes?: HTMLElement
   /** Appelé après la fermeture, avec ce que le pilote a choisi. */
   onConfirm: (result: SharingResult) => void
   /** Appelé après la fermeture, quand le pilote renonce — bouton, « Échap » ou « Fermer ». */
@@ -1081,6 +1098,9 @@ export function renderSharingDialog(options: SharingDialogOptions): SharingDialo
 
   box.append(el('p', 'modal__lead', tr.t('sharing.lead')))
   if (options.notice) box.append(options.notice)
+  // Ce que le pilote a changé depuis l'ouverture, juste avant de donner le fichier — et
+  // avant les trois issues, parce qu'il parle du document et non du fichier produit.
+  if (options.changes) box.append(options.changes)
 
   /* --- les trois issues, chacune suivie de son inventaire --- */
 

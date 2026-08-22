@@ -374,6 +374,7 @@ const app: DomainCatalog<'app'> = {
   'changes.noneWhy': 'El documento es, carácter por carácter, el que entregó el archivo: guardado ahora, saldrá con la misma huella SHA-256.',
   'changes.lead': 'Entre «{name}», el archivo que abrió, y el documento que tiene delante: {what}.',
   'changes.caveat': 'Este recuento compara dos estados; no cuenta sus gestos. Lo que hizo y luego deshizo no figura aquí, y un rango que solo se ha desplazado no es un movimiento.',
+  'changes.beforeSaving': 'Este recuento dice lo que ha cambiado en su documento. Lo que el archivo producido llevará de más o de menos depende de la salida que elija abajo, y cada una lo dice bajo su propio título.',
 
   'changes.pagesAdded': { one: '{count} página añadida', other: '{count} páginas añadidas' },
   'changes.pagesRemoved': { one: '{count} página retirada', other: '{count} páginas retiradas' },

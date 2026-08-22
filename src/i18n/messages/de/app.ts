@@ -387,6 +387,7 @@ const app: DomainCatalog<'app'> = {
   'changes.noneWhy': 'Das Dokument ist Zeichen für Zeichen das, was die Datei geliefert hat: jetzt gespeichert, kommt es mit demselben SHA-256-Fingerabdruck wieder heraus.',
   'changes.lead': 'Zwischen „{name}“, der von Ihnen geöffneten Datei, und dem Dokument vor Ihnen: {what}.',
   'changes.caveat': 'Diese Aufstellung vergleicht zwei Zustände; sie zählt nicht Ihre Handgriffe. Was Sie getan und wieder rückgängig gemacht haben, steht nicht darin, und ein Rang, der nur nachgerückt ist, ist keine Verschiebung.',
+  'changes.beforeSaving': 'Diese Aufstellung sagt, was sich an Ihrem Dokument geändert hat. Was die erzeugte Datei mehr oder weniger mitnimmt, hängt von dem unten gewählten Ausgang ab, und jeder von ihnen sagt es unter seiner eigenen Überschrift.',
 
   'changes.pagesAdded': { one: '{count} Seite hinzugefügt', other: '{count} Seiten hinzugefügt' },
   'changes.pagesRemoved': { one: '{count} Seite entfernt', other: '{count} Seiten entfernt' },

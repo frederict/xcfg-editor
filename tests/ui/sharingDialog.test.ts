@@ -1303,3 +1303,42 @@ describe('choisir ses pages : le geste que le pilote d’essai ne trouvait nulle
     expect(await sha256Hex(await exportContainer(container))).toBe(await sha256Hex(bytes))
   })
 })
+
+/**
+ * Le relevé des changements arrive **fabriqué**, comme l'avertissement d'export : cette
+ * boîte ne calcule rien et ne connaît pas le relevé. C'est ce qui garantit que l'écran
+ * consultable et la boîte d'enregistrement montrent la même liste — un seul calcul, un
+ * seul dessin — et que deux comptes ne peuvent pas se contredire d'un écran à l'autre.
+ */
+describe('ce que vous avez changé, avant de donner le fichier', () => {
+  function openWith(changes?: HTMLElement) {
+    const document = parseJson(readFileSync(BACKUP_2026, 'utf8'))
+    const handle = renderSharingDialog({
+      source: { document, fileName: 'b.xcfg', kind: 'xcfg', modified: true },
+      tr,
+      now: () => WHEN,
+      ...(changes === undefined ? {} : { changes }),
+      onConfirm: () => {}
+    })
+    handle.open()
+    return handle
+  }
+
+  it('pose le bloc reçu sous l’introduction, avant les trois issues', () => {
+    const block = window.document.createElement('div')
+    block.className = 'test-changes'
+    block.textContent = '1 page modifiée'
+    const handle = openWith(block)
+
+    const posed = handle.element.querySelector('.test-changes')
+    expect(posed).not.toBeNull()
+    const order = [...handle.element.querySelectorAll('.modal__lead, .test-changes, .sharing__choices')]
+      .map((one) => one.className.split(' ')[0])
+    expect(order).toEqual(['modal__lead', 'test-changes', 'sharing__choices'])
+  })
+
+  it('n’en fabrique aucun de son côté quand on ne lui en donne pas', () => {
+    const handle = openWith()
+    expect(handle.element.querySelector('.changes')).toBeNull()
+  })
+})

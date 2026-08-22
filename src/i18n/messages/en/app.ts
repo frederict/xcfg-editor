@@ -371,6 +371,7 @@ const app: DomainCatalog<'app'> = {
   'changes.noneWhy': 'The document is, character for character, the one the file delivered: saved now, it comes back out with the same SHA-256 fingerprint.',
   'changes.lead': 'Between “{name}”, the file you opened, and the document in front of you: {what}.',
   'changes.caveat': 'This compares two states; it does not count your actions. Anything you did and then undid is not here, and a rank that merely shifted is not a move.',
+  'changes.beforeSaving': 'This list says what your document changed. What the file you produce will carry more or less of depends on the outcome you pick below, and each of them says so under its own title.',
 
   'changes.pagesAdded': { one: '{count} page added', other: '{count} pages added' },
   'changes.pagesRemoved': { one: '{count} page removed', other: '{count} pages removed' },

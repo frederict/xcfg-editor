@@ -3101,6 +3101,34 @@ function documentChanges(): DocumentChanges | undefined {
   return computeChanges(session.original, session.container.document)
 }
 
+/**
+ * Le même relevé, replié, pour la boîte d'enregistrement.
+ *
+ * Il passe par `documentChanges()` et `buildChangeSummary` — le calcul et le dessin de
+ * l'écran consultable, sans une ligne de rechange : c'est ce qui rend la divergence des
+ * deux comptes impossible plutôt qu'improbable.
+ *
+ * ⚠️ La phrase ajoutée dessous n'appartient pas au relevé et ne le contredit pas : elle
+ * dit la **frontière**. Le relevé parle du document ; ce que le fichier produit emportera
+ * en plus ou en moins dépend de l'issue choisie, et chacune des trois le dit déjà sous son
+ * intitulé.
+ */
+function changeSummaryForSaving(): HTMLElement | undefined {
+  const changes = documentChanges()
+  if (changes === undefined || session === undefined) return undefined
+  const tr = translator()
+  const block = el('div', 'changes__beforeSaving')
+  block.append(buildChangeSummary({
+    changes,
+    fileName: session.container.fileName,
+    language: session.language,
+    tr,
+    folded: true
+  }))
+  block.append(el('p', 'changes__note', tr.t('changes.beforeSaving')))
+  return block
+}
+
 function fillChangesDialog(dialog: HTMLDialogElement): void {
   if (!session) return
   const current = session
@@ -4028,11 +4056,15 @@ function askBeforeExport(current: Session): void {
   exportButton.disabled = true
   void import('./sharingDialog')
     .then((module) => {
+      // Fabriqué ici, comme l'avertissement : la boîte de partage ne calcule rien et ne
+      // connaît pas le relevé — les deux écrans montrent donc la même liste.
+      const changesBlock = changeSummaryForSaving()
       const handle = module.renderSharingDialog({
         tr: translator(),
         source: sharingSource(current),
         language: current.language,
         ...(notice === undefined ? {} : { notice }),
+        ...(changesBlock === undefined ? {} : { changes: changesBlock }),
         onConfirm: (result: SharingResult) => {
           // `sharingBytes` rend `undefined` pour un export ordinaire : c'est le signal de
           // réémettre le conteneur, jamais de sérialiser.

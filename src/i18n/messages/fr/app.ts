@@ -707,6 +707,7 @@ const app = {
   'changes.noneWhy': 'Le document est, au caractère près, celui que le fichier a livré : enregistré maintenant, il ressortira avec la même empreinte SHA-256.',
   'changes.lead': 'Entre « {name} », le fichier que vous avez ouvert, et le document que vous avez sous les yeux : {what}.',
   'changes.caveat': 'Ce relevé compare deux états ; il ne compte pas vos gestes. Ce que vous avez fait puis défait n’y figure pas, et un rang qui a seulement glissé n’est pas un déplacement.',
+  'changes.beforeSaving': 'Ce relevé dit ce que votre document a changé. Ce que le fichier produit emportera en plus ou en moins dépend de l’issue que vous choisirez ci-dessous, et chacune le dit sous son intitulé.',
 
   'changes.pagesAdded': { one: '{count} page ajoutée', other: '{count} pages ajoutées' },
   'changes.pagesRemoved': { one: '{count} page retirée', other: '{count} pages retirées' },
