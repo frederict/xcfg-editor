@@ -159,8 +159,14 @@ littéral de `src/ui/` ou d'ajouter de la prose sous l'interface.
   cette propriété, et le prouver par un test.
 - **Rien ne partage la largeur avec le rendu de la page** : la page est dessinée à sa taille
   physique réelle et le pilote travaille au-delà de 100 % de zoom. Ce qui n'est pas la page
-  passe au-dessus (modale) ou en dessous (bandeau).
+  passe au-dessus (modale) ou en dessous (bandeau). Corollaire : **le document, lui, ne
+  défile jamais en travers** — le débordement appartient à `.stage`, et à elle seule.
 - **Le rendu d'une page reste toujours clair**, même en thème sombre : c'est l'écran d'un
-  instrument.
+  instrument. Ce qui l'entoure, en revanche, est un **carnet de préparation de vol** —
+  papier chaud, titres en serif, ambre structurante, pastilles arrondies et phrases
+  entières plutôt que badges en capitales. Les deux ne peuvent pas se toucher : entre le
+  papier et le blanc de l'écran vient la **plaque** (`.bed` d'`app.css`), qui dit ce
+  qu'elle est, le support de la page. Toute la direction tient dans les jetons `--app-*`
+  et `--font-*` en tête d'`app.css` ; une couleur écrite en dur ailleurs est une tache.
 - Interface et prose en **français**, identifiants en **anglais**.
 - `git add` nominatif, jamais `-A`. `dist/` n'est jamais commité.
