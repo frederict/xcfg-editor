@@ -1,7 +1,7 @@
 import type { Widget } from '../../model/widget'
 import type { RenderSettings } from '../../model/preferences'
 import { readBoolean, readString } from '../../core/access'
-import { readRotation } from './rotation'
+import { widgetString } from '../defaults'
 
 /**
  * `WCompass` — « Boussole et vent » (libellé officiel `fr`, `docs/reference/edition-
@@ -149,8 +149,56 @@ import { readRotation } from './rotation'
  * n'est donc constante ni en pixels ni en fraction du cadran, et deux mesures ne suffisent
  * pas à trancher entre les deux lectures possibles.
  *
- * **Le N appartient à la couronne et tourne avec elle** sous `rotation: "HEADING"`.
- * Aucune donnée réelle n'étant modélisée ici, tous les angles sont illustratifs.
+ * ## `rotation` — mesuré le 2026-08-22, et notre repli était une valeur qui n'existe pas
+ *
+ * Le rejeu de `2026-07-09-XCT-FTE-01.igc` sur AIR³ 7.2 a tranché en montrant les DEUX
+ * modes au même instant : la configuration du propriétaire porte `"NORTH"` sur sa page 1
+ * et `"HEADING"` sur sa page 4. Même appareil, même seconde, seule la clé diffère.
+ *
+ * | page | `rotation` | l'appareil |
+ * |---|---|---|
+ * | 1 | `"NORTH"` | le N reste en haut, l'aiguille tourne |
+ * | 4 | `"HEADING"` | **le cadran entier tourne**, N compris |
+ *
+ * Deux instants datés par l'altitude affichée, le N localisé sur le cadran :
+ *
+ * | | 12:44:34 UTC | 12:55:25 UTC |
+ * |---|---|---|
+ * | azimut du N sur le cadran | 244° | 22,5° |
+ * | haut du cadran (360 − azimut) | 116° | 337,5° |
+ * | **cap corrigé de la dérive** | 113,5° | 340,3° |
+ * | écart au cap | **2,5°** | **2,8°** |
+ * | route GPS | 85,5° | 345,9° |
+ * | écart à la route | 30° | 8,4° |
+ *
+ * **Le cadran suit le CAP, pas la route GPS** — le résidu de ~3° tient à l'arrondi du
+ * vent affiché. Comparer le relevé à la route ferait passer une mesure juste pour fausse.
+ *
+ * ### Les quatre valeurs, et ce qui est mesuré de chacune
+ *
+ * Le catalogue extrait de l'APK (`rotation@WCompass`, `src/catalog/widgetOptions/
+ * base.json`) donne **quatre** valeurs et un défaut :
+ *
+ * | valeur | statut |
+ * |---|---|
+ * | `NORTH` | **mesuré** : le cadran ne bouge pas |
+ * | `HEADING` | **mesuré** : le cadran tourne avec le cap. C'est le **défaut d'usine** |
+ * | `BEARING` | **jamais observé** — libellé `widgetSettingsRotationBearingAtTop` |
+ * | `TRAVEL_DIRECTION` | **jamais observé** — libellé `widgetSettingsRotationTravelDirAtTop` |
+ *
+ * Les deux dernières font tourner le cadran ici, et c'est une **déduction de l'APK**, pas
+ * une mesure : leur libellé annonce autre chose que le nord en haut, donc une couronne
+ * qui a quitté sa position droite. De quel angle, la séance ne le dit pas — mais nos
+ * angles sont illustratifs de toute façon, aucune donnée de cap n'étant modélisée.
+ * (Le compte rendu du rejeu n'en cite que trois ; le catalogue en porte quatre, et c'est
+ * lui qui fait foi sur l'énumération.)
+ *
+ * **`NORTH_AT_TOP` n'a jamais été une valeur de ce gadget.** Nous y retombions par
+ * `readRotation`, qui lit la forme OBJET des cartes (rotation.ts) : une boussole sans clé
+ * `rotation` gardait donc le nord en haut alors que son défaut est `HEADING`. La clé se
+ * lit désormais par `widgetString`, c'est-à-dire avec le défaut du relevé des 75 gadgets.
+ *
+ * **Le N appartient à la couronne et tourne avec elle.**
  */
 
 const SVG_NS = 'http://www.w3.org/2000/svg'
@@ -351,6 +399,8 @@ function buildWindSock(windFrom: number): SVGGElement {
 const NAVIGATION_ANGLE = 213
 const TRACK_ANGLE = 168
 const HEADING_ANGLE = 190
+/** Rotation du cadran hors `NORTH`. Illustrative, comme les trois angles ci-dessus : le
+ * cadran suit le cap corrigé du vent sur l'appareil, et rien ici ne modélise un cap. */
 const DIAL_HEADING_ANGLE = -35
 /** Direction D'OÙ vient le vent : `ARC` s'ouvre dessus, `ARROW` et la manche pointent à l'opposé. */
 const WIND_FROM_ANGLE = 145
@@ -378,6 +428,16 @@ function navigates(widget: Widget): boolean {
   return (readString(widget.node, 'navigation_target') ?? 'OPTIMIZED') !== 'NONE'
 }
 
+/**
+ * Vrai quand la couronne quitte sa position droite — voir le tableau des quatre valeurs
+ * dans le commentaire de tête. `NORTH` est le seul mode où le N reste en haut ; tout le
+ * reste tourne, y compris la clé absente, dont `widgetString` donne le défaut d'usine
+ * (`HEADING`), et une valeur hors catalogue, qu'aucune mesure ne couvre.
+ */
+function dialRotates(widget: Widget): boolean {
+  return (widgetString(widget, 'rotation') ?? 'HEADING') !== 'NORTH'
+}
+
 export function drawCompass(widget: Widget, _settings: RenderSettings, _language: string): HTMLElement {
   const element = document.createElement('div')
   element.className = 'xc-compass'
@@ -395,8 +455,8 @@ export function drawCompass(widget: Widget, _settings: RenderSettings, _language
   // XCTrack (§ 3 de la planche), et la majorité du corpus.
   if (shown(widget, 'showBackground', true)) {
     const dial = buildDial()
-    // Le cadran — graduations ET lettre N — tourne d'un bloc avec le cap.
-    if (readRotation(widget.node).value === 'HEADING') {
+    // Le cadran — graduations ET lettre N — tourne d'un bloc.
+    if (dialRotates(widget)) {
       dial.setAttribute('transform', `rotate(${DIAL_HEADING_ANGLE} ${CENTER} ${CENTER})`)
     }
     svg.append(dial)

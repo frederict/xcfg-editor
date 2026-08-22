@@ -200,6 +200,28 @@ describe('WCompass', () => {
       expect((el.querySelector('.xc-compass__dial') as SVGGElement).hasAttribute('transform')).toBe(false)
     })
 
+    // Rejeu du 2026-08-22 : le défaut d'usine de `rotation` sur WCompass est "HEADING"
+    // (catalogue extrait de l'APK, `widgetDefaults.json`). La clé absente fait donc
+    // TOURNER le cadran. Nous retombions sur "NORTH_AT_TOP", qui n'est pas une valeur de
+    // ce gadget mais de la forme objet des cartes (rotation.ts) : le nord restait en haut.
+    it('rotation absente : le cadran tourne, comme sous le défaut "HEADING"', () => {
+      const el = drawCompass(widget({}), settings, language)
+      expect((el.querySelector('.xc-compass__dial') as SVGGElement).getAttribute('transform'))
+        .toBe('rotate(-35 100 100)')
+    })
+
+    // `BEARING` et `TRAVEL_DIRECTION` complètent l'énumération du catalogue et n'ont
+    // JAMAIS été observés : leur libellé annonce autre chose que le nord en haut, donc un
+    // cadran qui a tourné. C'est une déduction de l'APK, pas une mesure — l'angle, lui,
+    // est illustratif comme partout dans ce dessin.
+    it('rotation "BEARING" et "TRAVEL_DIRECTION" font tourner le cadran (déduit de l\'APK)', () => {
+      for (const value of ['"BEARING"', '"TRAVEL_DIRECTION"']) {
+        const el = drawCompass(widget({ rotation: value }), settings, language)
+        expect((el.querySelector('.xc-compass__dial') as SVGGElement).getAttribute('transform'))
+          .toBe('rotate(-35 100 100)')
+      }
+    })
+
     it('les flèches ne suivent pas la rotation du cadran — le rejeu les montre indépendants', () => {
       const heading = drawCompass(widget({ rotation: '"HEADING"' }), settings, language)
       const north = drawCompass(widget({ rotation: '"NORTH"' }), settings, language)

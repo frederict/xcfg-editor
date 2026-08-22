@@ -27,9 +27,13 @@ describe('lecture normalisée de `rotation`', () => {
     expect(readRotation(node)).toEqual({ value: 'TRAVEL_DIRECTION_AT_TOP', showCompass: false })
   })
 
-  it('lit la forme chaîne nue — WCompass, hors périmètre mais déjà acceptée', () => {
-    const node = objectNode([['"rotation"', { kind: 'string', raw: '"NORTH_AT_TOP"' }]])
-    expect(readRotation(node)).toEqual({ value: 'NORTH_AT_TOP', showCompass: false })
+  // Une chaîne nue là où le corpus donne un objet : aucune carte connue n'en porte. La
+  // valeur d'exemple est prise dans le vocabulaire des CARTES, le seul que cette lecture
+  // sert — `WCompass` a le sien (`NORTH`/`HEADING`/`BEARING`/`TRAVEL_DIRECTION`) et ne
+  // passe plus par ici, voir `compass.ts`.
+  it('lit une chaîne nue là où le corpus donne un objet', () => {
+    const node = objectNode([['"rotation"', { kind: 'string', raw: '"TRAVEL_DIRECTION_AT_TOP"' }]])
+    expect(readRotation(node)).toEqual({ value: 'TRAVEL_DIRECTION_AT_TOP', showCompass: false })
   })
 
   it('retombe sur NORTH_AT_TOP / showCompass false quand la clé est absente', () => {
