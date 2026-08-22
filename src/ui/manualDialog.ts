@@ -1,20 +1,41 @@
 import '../../docs-app/manuel.css'
-import manual from '../../docs-app/manuel.fr.html?raw'
+import { UI_FALLBACK_LANGUAGE, type Translator, type UiLanguage } from '../i18n'
 
 /**
- * Le manuel d'utilisation, en modale.
+ * Le manuel d'utilisation, en modale, dans la langue du pilote.
  *
  * Le fragment est importé en `?raw` : c'est du **texte du projet**, figé au moment de la
  * construction, dans lequel rien de ce que le pilote ouvre n'entre jamais. C'est ce qui
  * rend `innerHTML` sans danger ici — et ce qui le rendrait dangereux ailleurs.
  *
- * Le module entier n'est atteint que par `import()` : ses 16 ko compressés ne pèsent rien
- * sur le premier écran, comme les cinq autres morceaux chargés à la demande.
+ * ## Un morceau par langue, un seul téléchargé
+ *
+ * `import.meta.glob` **sans `eager`** rend un objet de chargeurs, pas des contenus : Vite
+ * émet un morceau par fragment, et seul celui qu'on appelle part sur le réseau. Les cinq
+ * manuels pèsent ensemble 80 ko compressés ; un pilote qui ouvre l'aide en télécharge
+ * **un**. Un `eager: true` les collerait tous les cinq dans ce module — pour une
+ * application qu'on ouvre parfois en 3G au décollage, l'écart n'est pas un détail.
+ *
+ * Le module entier n'est de toute façon atteint que par `import()`, comme les cinq autres
+ * morceaux chargés à la demande : le premier écran ne paie rien.
  */
-export function openManualDialog(): void {
+const MANUALS = import.meta.glob<string>('../../docs-app/manuel.*.html', {
+  query: '?raw', import: 'default'
+})
+
+/** Le chargeur de la langue demandée, ou celui du repli si elle n'a pas de manuel. */
+function manualLoader(language: UiLanguage): (() => Promise<string>) | undefined {
+  return MANUALS[`../../docs-app/manuel.${language}.html`]
+    ?? MANUALS[`../../docs-app/manuel.${UI_FALLBACK_LANGUAGE}.html`]
+}
+
+export async function openManualDialog(tr: Translator): Promise<void> {
+  const load = manualLoader(tr.language)
+  if (load === undefined) throw new Error(`aucun manuel pour ${tr.language}`)
+  const manual = await load()
   const dialog = document.createElement('dialog')
   dialog.className = 'modal modal--manual'
-  dialog.setAttribute('aria-label', 'Manuel d’utilisation')
+  dialog.setAttribute('aria-label', tr.t('app.manualTitle'))
 
   const box = document.createElement('div')
   box.className = 'modal__box'
@@ -24,11 +45,11 @@ export function openManualDialog(): void {
   // reste continue pour qui parcourt la page au lecteur d'écran.
   const title = document.createElement('h1')
   title.className = 'modal__title'
-  title.textContent = 'Manuel d’utilisation'
+  title.textContent = tr.t('app.manualTitle')
   const close = document.createElement('button')
   close.type = 'button'
   close.className = 'btn'
-  close.textContent = 'Fermer'
+  close.textContent = tr.t('app.close')
   const dismiss = (): void => { dialog.close(); dialog.remove() }
   close.addEventListener('click', dismiss)
   head.append(title, close)

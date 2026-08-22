@@ -2731,7 +2731,7 @@ function openManual(): void {
   if (manualPending) return
   manualPending = true
   void import('./manualDialog')
-    .then((module) => { module.openManualDialog() })
+    .then(async (module) => { await module.openManualDialog(translator()) })
     .catch((error: unknown) => {
       tellProblem(
         translator().t('app.manualFailedTitle'),

@@ -438,6 +438,7 @@ const app = {
 
   /* ================================= `main.ts` — les boîtes, et ce qu'elles chargent */
 
+  'app.manualTitle': 'Manuel d’utilisation',
   'app.close': 'Fermer',
   'app.loading': 'Chargement…',
 

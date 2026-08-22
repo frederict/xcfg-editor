@@ -275,6 +275,7 @@ const app: DomainCatalog<'app'> = {
   'app.pageOperationFailed': 'Diese Änderung war nicht möglich: Ihre Seiten sind unverändert. ' +
     'Technische Einzelheit: {detail}',
 
+  'app.manualTitle': 'Handbuch',
   'app.close': 'Schließen',
   'app.loading': 'Wird geladen…',
 

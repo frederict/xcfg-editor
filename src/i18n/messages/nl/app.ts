@@ -270,6 +270,7 @@ const app: DomainCatalog<'app'> = {
   'app.pageOperationFailed': 'Deze wijziging kon niet worden doorgevoerd: je pagina’s zijn ' +
     'niet verschoven. Technisch detail: {detail}',
 
+  'app.manualTitle': 'Handleiding',
   'app.close': 'Sluiten',
   'app.loading': 'Laden…',
 
