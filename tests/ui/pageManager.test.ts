@@ -840,3 +840,72 @@ describe('le carrousel', () => {
       .toEqual({ kind: 'insert', index: 0, className: 'WPThermalAssistant' })
   })
 })
+
+/**
+ * **Rouvrir une page que rien n'appelle.**
+ *
+ * Jusqu'au 22 août 2026, ce module savait dire qu'une page ne s'afficherait jamais et
+ * n'offrait rien pour y remédier : « il m'apprend que 15 gadgets sont perdus et me renvoie
+ * à l'instrument ». Un seul geste répare, et il n'écrit qu'une valeur mesurée — `"all"`,
+ * celle que XCTrack pose lui-même sur une page neuve et quand ses cinq icônes sont actives.
+ */
+describe('le geste qui rouvre une page', () => {
+  it('n’apparaît que sur les pages qu’aucune navigation n’affiche', () => {
+    const { root } = build()
+    const enables = query<HTMLButtonElement>(root, '.pagecard__enable')
+    // Une seule des cinq pages paysage du corpus porte `navigations: "none"` : la 2.
+    expect(enables).toHaveLength(1)
+    const cards = query<HTMLElement>(root, '.pages__slot')
+    expect(cards[1]!.querySelector('.pagecard__enable')).not.toBeNull()
+    expect(cards[0]!.querySelector('.pagecard__enable')).toBeNull()
+  })
+
+  it('n’a pas de contraire : rien ne propose de désactiver une page', () => {
+    const { root } = build()
+    const labels = query<HTMLButtonElement>(root, 'button').map((node) => node.textContent)
+    expect(labels).toContain('Activer pour toutes les navigations')
+    expect(labels.some((label) => (label ?? '').includes('Désactiver'))).toBe(false)
+  })
+
+  it('demande l’opération sur le bon rang, avec sa description d’historique', () => {
+    const { root, captured } = build()
+    query<HTMLButtonElement>(root, '.pagecard__enable')[0]!.click()
+    expect(captured).toHaveLength(1)
+    expect(captured[0]!.operation).toEqual({ kind: 'enableAllNavigations', index: 1 })
+    expect(captured[0]!.description)
+      .toBe('Activer la page 2 pour toutes les navigations (paysage)')
+  })
+
+  it('écrit « all » et ne touche à rien d’autre du fichier', () => {
+    const document = load()
+    applyPageOperation(document, 'landscape', { kind: 'enableAllNavigations', index: 1 })
+    expect(serializeJson(document))
+      .toBe(backupSource.replace('"navigations": "none"', '"navigations": "all"'))
+  })
+
+  it('fait remonter le compte de pages navigables, et la ligne de la carte avec', () => {
+    const document = load()
+    const before = pagesOf(document, 'landscape')
+    expect(navigablePageCount(before)).toBe(4)
+    applyPageOperation(document, 'landscape', { kind: 'enableAllNavigations', index: 1 })
+    const after = pagesOf(document, 'landscape')
+    expect(navigablePageCount(after)).toBe(5)
+    expect(navigationsLabel(after[1]!, tr, LABELS)).toBe('Affichée pour toutes les navigations')
+  })
+
+  it('ne décale aucun rang : l’opération ne rend que la page qu’elle a touchée', () => {
+    const document = load()
+    const result = applyPageOperation(
+      document, 'landscape', { kind: 'enableAllNavigations', index: 1 }
+    )
+    expect(result).toEqual({ index: 1 })
+    expect(pagesOf(document, 'landscape')).toHaveLength(5)
+  })
+
+  it('refuse un rang qui n’existe pas, plutôt que d’écrire à côté', () => {
+    const document = load()
+    expect(() => applyPageOperation(
+      document, 'landscape', { kind: 'enableAllNavigations', index: 9 }
+    )).toThrow(/index 9/)
+  })
+})

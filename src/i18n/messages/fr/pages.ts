@@ -129,6 +129,20 @@ const pages = {
   'pages.describeRemove': 'Supprimer la page {rank} ({orientation})',
   'pages.describeReorder': 'Déplacer la page {rank} au rang {target} ({orientation})',
   'pages.describeSetClass': 'Changer le type de la page {rank} : « {before} » → « {after} » ({orientation})',
+  'pages.describeEnableNavigations': 'Activer la page {rank} pour toutes les navigations ({orientation})',
+
+  /**
+   * Le seul geste de ce module qui écrit la ligne « navigations » d'une page existante.
+   * Le libellé dit la destination, pas le réglage : « Activer » seul se lirait comme un
+   * interrupteur dont on ne saurait pas ce qu'il allume.
+   *
+   * ⚠️ Le même libellé existe sous « view.enableAllNavigations », pour la page ouverte en
+   * édition. Deux clés voisines dans deux domaines plutôt qu'un mot versé au vocabulaire
+   * partagé : c'est la règle du socle, et un test vérifie que les deux disent la même
+   * chose.
+   */
+  'pages.enableAllNavigations': 'Activer pour toutes les navigations',
+  'pages.enableAllNavigationsFor': 'Activer la page {rank} pour toutes les navigations',
 
   /**
    * Ce que la zone d'annonce dit une fois le geste fait : le pas d'historique, puis la

@@ -318,6 +318,26 @@ describe('catalogues de messages', () => {
     expect(three.size).toBe(3)
   })
 
+  /**
+   * Le même geste, deux écrans, deux clés — c'est la règle du socle : un mot n'entre dans
+   * le vocabulaire partagé que s'il y est déjà nécessaire, et deux clés voisines coûtent
+   * moins cher qu'un conflit sur `common.ts`. Le prix de cette règle est la dérive
+   * possible, et c'est ce test qui la paie : « Activer pour toutes les navigations » doit
+   * dire exactement la même chose sur la page ouverte et dans le carrousel, sans quoi le
+   * pilote croira à deux commandes différentes.
+   *
+   * La prose du modèle **cite** ce libellé pour annoncer ce que le geste fera : elle doit
+   * donc le citer au caractère près, dans les cinq langues.
+   */
+  it('nomment le geste de réouverture d’une page du même mot partout', () => {
+    for (const language of UI_LANGUAGES) {
+      const catalog = CATALOGS[language]
+      const label = catalog['view.enableAllNavigations']
+      expect(label, `${language}`).toBe(catalog['pages.enableAllNavigations'])
+      expect(catalog['reachability.enableAllRemedy'], `${language}`).toContain(label)
+    }
+  })
+
   it('emploient, dans chaque langue, le mot que la chrome de XCTrack emploie', () => {
     // Ce test gardait auparavant une **absence** : le mot n'entrait dans aucune langue,
     // faute de mesure hors du français. La mesure est faite — 55 relevés, ressources de

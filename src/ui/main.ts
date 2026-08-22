@@ -13,6 +13,7 @@ import { gridFor } from '../model/grid'
 import { createHistory, type EditHistory } from '../model/history'
 import { readLayout, type Layout, type Page } from '../model/layout'
 import { insertWidget } from '../model/mutations'
+import { pageReachability } from '../model/reachability'
 import {
   labelFallbackLanguage, readRenderSettings, resolveLanguage, type RenderSettings
 } from '../model/preferences'
@@ -24,7 +25,8 @@ import {
   type Editor, type Viewport, type WidgetEdit, type WidgetStructureEdit
 } from './editor'
 import {
-  applyPageOperation, operationAnnouncement, renderPageManager, type PageOperation
+  applyPageOperation, describeOperation, operationAnnouncement, renderPageManager,
+  type PageOperation
 } from './pageManager'
 import type { PropertyField, PropertyForm } from './properties'
 import {
@@ -2432,6 +2434,8 @@ function remapPageIndex(operation: PageOperation, index: number): number | undef
       return index
     }
     case 'setClass':
+    // Rouvrir une page ne touche ni son rang ni le nombre de pages : rien ne glisse.
+    case 'enableAllNavigations':
       return index
   }
 }
@@ -3564,6 +3568,7 @@ function render(): void {
       // Le calque n'est construit qu'en édition. En consultation, la page reste celle du
       // jalon 1 — zones de survol comprises —, et le bandeau vient DESSOUS : la sélection
       // n'y ouvre que la lecture des réglages.
+      const current = session
       const editing = editMode ? buildEditing(session, page, orientation) : undefined
       // Une page sans widget n'a rien à consulter : le bandeau serait un meuble vide.
       const inspection = editMode || page.widgets.length === 0
@@ -3589,6 +3594,30 @@ function render(): void {
         // ici qu'on le lui dit. Le placement de la barre d'outils se juge en pixels — sa
         // hauteur à l'écran contre la place restante —, et ces pixels viennent de changer.
         onZoom: (factor) => { zoom = factor; editor?.refresh() },
+        // Pourquoi cette page ne s'affichera pas, dit là où le pilote pose ses gadgets.
+        // Le document entier, et pas seulement la mise en page : une des trois raisons
+        // se lit dans les réglages généraux (`Display.Orientation`).
+        reachability: pageReachability({
+          page, orientation, document: current.container.document
+        }),
+        // Le geste n'est offert qu'en édition : hors édition, rien n'écrit dans le
+        // document, et un bouton qui modifierait le fichier en consultation trahirait la
+        // promesse « vous pouvez tout ouvrir, tout lire, rien n'est écrit ».
+        ...(editMode
+          ? {
+            onEnableAllNavigations: () => {
+              const operation: PageOperation = {
+                kind: 'enableAllNavigations', index: view.kind === 'detail' ? view.index : 0
+              }
+              runPageOperation(
+                orientation, operation,
+                describeOperation(
+                  current.layout[orientation], operation, orientation, tr, current.language
+                )
+              )
+            }
+          }
+          : {}),
         ...(editing === undefined ? {} : { editing }),
         ...(inspection === undefined ? {} : { inspecting: inspection })
       }))

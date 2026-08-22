@@ -167,9 +167,32 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
   revient bel et bien dans le défilement au sol, et la seule page sautée est celle
   qu'aucune navigation n'active. La marque et le compte sont partis ; ce qui décide
   vraiment, la clé `navigations`, se lit page par page dans « Gérer les pages ».
+
+  Ce qui a été **ajouté** le 22 août 2026, pour la même raison : le constat descend sur la
+  **page ouverte**. Un pilote d'essai avait posé un gadget sur une page morte sans que
+  rien ne l'en prévienne — le diagnostic vivait dans une liste repliée de la vue
+  d'ensemble et dans une fenêtre annexe, jamais sur l'écran où l'on travaille. Un bandeau
+  discret y dit maintenant **pourquoi cette page-ci** ne s'affichera pas, et il en
+  distingue trois raisons, parce qu'elles ne se réparent pas de la même façon :
+
+  - la page porte le réglage **« Désactivé »** de XCTrack — c'est le cas mesuré, celui que le
+    défilement saute ;
+  - sa **liste de navigations est vide** — même conséquence, autre écriture, jamais
+    observée sur l'appareil, et l'outil le dit ;
+  - les **réglages généraux tiennent l'écran** dans l'autre orientation
+    (`Display.Orientation`) : toutes les pages de cette orientation sont hors d'atteinte,
+    quelles que soient leurs navigations.
+
+  Les deux premières se réparent ici : « Activer pour toutes les navigations » écrit la
+  valeur que XCTrack écrit lui-même quand les cinq navigations sont actives, sur la page
+  ouverte comme dans « Gérer les pages », avec annulation. **Choisir lesquelles** reste
+  l'affaire de l'instrument : sa boîte à cinq icônes n'est pas reproduite, et écrire une
+  liste qu'on ne saurait pas composer serait pire que de ne rien offrir. La troisième ne
+  se répare pas sur la page — c'est un réglage de tout l'instrument —, et l'éditeur se
+  contente d'indiquer où il vit.
 - **Éditer** : déplacer, redimensionner, ajouter, supprimer et réordonner des gadgets ;
-  régler leurs options ; gérer les pages (insérer, dupliquer, supprimer, réordonner).
-  Annuler / rétablir.
+  régler leurs options ; gérer les pages (insérer, dupliquer, supprimer, réordonner,
+  rouvrir une page qu'aucune navigation n'active). Annuler / rétablir.
 - **Régler les réglages généraux** — les 217 préférences qui vivent hors des pages :
   unités, touches, capteurs, son, espaces aériens. Dans l'arborescence des 23 lignes du
   menu de l'instrument. En consultation, **aucun contrôle de formulaire n'est

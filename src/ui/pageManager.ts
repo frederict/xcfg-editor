@@ -11,6 +11,7 @@ import {
   removePage,
   reorderPage,
   setPageClass,
+  setPageNavigations,
   type Orientation
 } from '../model/mutations'
 import { renderPage } from '../render/canvas'
@@ -53,16 +54,27 @@ import { aspectRatioOf, pageKind, type ViewContext } from './views'
  * - **les commandes de rang doublent le glisser-déposer**. « ◀ » et « ▶ » font le même
  *   travail au clavier, ce qu'un glisser-déposer ne fait pas.
  *
- * Ce qui n'est **pas** offert : la modification de `navigations`. La boîte des cinq
- * icônes de l'appareil (§ 5.4) demanderait une primitive d'écriture que
- * `model/mutations.ts` n'a pas — `createPage` sait poser des navigations, rien ne sait
- * les changer ensuite. Elles sont donc affichées, jamais éditées.
+ * **Un seul geste écrit `navigations`, et un seul :** rouvrir une page que rien n'appelle,
+ * en l'activant pour **toutes** les navigations. C'est la valeur `"all"`, celle que XCTrack
+ * écrit lui-même quand les cinq icônes de sa boîte sont actives (§ 5.4) et celle qu'il pose
+ * sur une page neuve (§ 5.2) : on n'invente donc rien. Ce qui n'est **pas** offert, et ne
+ * doit pas l'être tant que la boîte des cinq icônes n'est pas reproduite : choisir
+ * *lesquelles*, et désactiver une page — l'outil répare, il ne casse pas.
+ *
+ * Le carrousel n'est pas le bon endroit pour l'apprendre, seulement pour le faire : c'est
+ * la page **ouverte en édition** qui dit pourquoi elle ne s'affichera pas
+ * (`model/reachability.ts`, `views.ts`). Un pilote d'essai a posé un gadget sur une page
+ * morte sans être prévenu, le 22 août 2026, parce que le constat ne vivait que dans une
+ * liste repliée de la vue d'ensemble et dans cette fenêtre-ci.
  */
 
 /* ======================================================== le modèle des opérations */
 
-/** Une page neuve est activée pour toutes les navigations, comme sur l'appareil (§ 5.2). */
-const NEW_PAGE_NAVIGATIONS = { kind: 'all' } as const
+/**
+ * Une page neuve est activée pour toutes les navigations, comme sur l'appareil (§ 5.2) —
+ * et c'est la même valeur que le geste de réouverture écrit sur une page existante.
+ */
+const ALL_NAVIGATIONS = { kind: 'all' } as const
 
 /**
  * La classe dont XCTrack fait la cible de son basculement automatique en spirale —
@@ -108,6 +120,13 @@ export type PageOperation =
   | { kind: 'remove'; index: number }
   | { kind: 'reorder'; from: number; to: number }
   | { kind: 'setClass'; index: number; className: string }
+  /**
+   * Rouvrir une page que rien n'appelle : `navigations` passe à `"all"`. La seule
+   * opération de ce module qui ne touche ni au rang, ni au nombre de pages — elle ne
+   * décale donc rien, et `operationAdvice` n'a rien à en dire de plus que ce que la page
+   * ouverte dit déjà.
+   */
+  | { kind: 'enableAllNavigations'; index: number }
 
 /** Le nom court d'une classe de page : `…wp.WPEmpty` → `WPEmpty`. */
 export function shortClassName(className: string): string {
@@ -184,6 +203,10 @@ export function describeOperation(
     case 'reorder':
       return tr.t('pages.describeReorder', {
         rank: operation.from + 1, target: operation.to + 1, orientation: where
+      })
+    case 'enableAllNavigations':
+      return tr.t('pages.describeEnableNavigations', {
+        rank: operation.index + 1, orientation: where
       })
     case 'setClass':
       return tr.t('pages.describeSetClass', {
@@ -447,7 +470,7 @@ export function applyPageOperation(
   switch (operation.kind) {
     case 'insert': {
       const at = insertPage(
-        document, orientation, createPage(operation.className, NEW_PAGE_NAVIGATIONS), operation.index
+        document, orientation, createPage(operation.className, ALL_NAVIGATIONS), operation.index
       )
       return { index: at }
     }
@@ -476,6 +499,16 @@ export function applyPageOperation(
         throw new Error(`setPageClass : index ${operation.index} hors de [0, ${items.length - 1}]`)
       }
       setPageClass(page, operation.className)
+      return { index: operation.index }
+    }
+    case 'enableAllNavigations': {
+      const page = items[operation.index]
+      if (page === undefined) {
+        throw new Error(
+          `setPageNavigations : index ${operation.index} hors de [0, ${items.length - 1}]`
+        )
+      }
+      setPageNavigations(page, ALL_NAVIGATIONS)
       return { index: operation.index }
     }
   }
@@ -721,6 +754,21 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
     )
     card.append(meta)
     card.append(el('p', 'pagecard__nav', navigationsLabel(page, tr, ctx.language)))
+
+    /*
+     * Le geste qui rouvre la page, juste sous la ligne qui dit qu'elle est fermée. Il
+     * n'apparaît que là où il sert, et il n'a pas de contraire : cet éditeur ne propose
+     * nulle part de désactiver une page. Le pilote qui le veut a la boîte des cinq icônes
+     * sur son instrument, avec le choix fin que nous n'avons pas.
+     */
+    if (isShownForNoNavigation(page)) {
+      const enable = button(
+        'btn pagecard__enable', tr.t('pages.enableAllNavigations'),
+        tr.t('pages.enableAllNavigationsFor', { rank: index + 1 })
+      )
+      enable.addEventListener('click', () => request({ kind: 'enableAllNavigations', index }))
+      card.append(enable)
+    }
 
     // La cible du basculement automatique se dit sur la page concernée, là où le pilote
     // la cherche — et non seulement dans le bandeau du haut.

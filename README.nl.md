@@ -127,9 +127,33 @@ een belofte van getrouwheid die alleen de auteur kan nagaan, is niets waard.
   pagina die wordt overgeslagen is die welke door geen enkele navigatie wordt ingeschakeld.
   Het merkteken en de telling zijn verdwenen; wat werkelijk beslist, de sleutel
   `navigations`, is pagina per pagina te lezen in ‘Pagina’s beheren’.
+
+  Wat op 22 augustus 2026 om dezelfde reden is **toegevoegd**: de vaststelling daalt af
+  naar de **geopende pagina**. Een testpiloot had een widget op een dode pagina geplaatst
+  zonder dat iets hem waarschuwde — de diagnose leefde in een dichtgeklapte lijst van het
+  overzicht en in een apart venster, nooit op het scherm waar men werkt. Een ingetogen
+  band zegt daar nu **waarom juist deze pagina** niet verschijnt, en onderscheidt drie
+  redenen, want ze worden niet op dezelfde manier hersteld:
+
+  - de pagina draagt de instelling **‘Uitgeschakeld’** van XCTrack — het gemeten geval,
+    dat het bladeren overslaat;
+  - haar **navigatielijst is leeg** — hetzelfde gevolg, andere schrijfwijze, nooit op het
+    instrument waargenomen, en het gereedschap zegt dat;
+  - de **algemene instellingen houden het scherm** in de andere stand
+    (`Display.Orientation`): elke pagina van die stand is onbereikbaar, welke navigaties
+    ze ook draagt.
+
+  De eerste twee worden hier hersteld: ‘Voor alle navigaties inschakelen’ schrijft de
+  waarde die XCTrack zelf schrijft wanneer alle vijf navigaties actief zijn, op de
+  geopende pagina zowel als in ‘Pagina’s beheren’, met ongedaan maken. **Kiezen welke**
+  blijft de zaak van het instrument: zijn kader met vijf pictogrammen is niet nagebouwd,
+  en een lijst schrijven die we niet zouden kunnen samenstellen zou erger zijn dan niets
+  aanbieden. De derde wordt niet op de pagina hersteld — het is een instelling van het
+  hele instrument — en de editor geeft alleen aan waar ze woont.
 - **Bewerken**: widgets verplaatsen, van formaat veranderen, toevoegen, verwijderen en van
   volgorde wisselen; hun opties instellen; de pagina’s beheren (invoegen, dupliceren,
-  verwijderen, herordenen). Ongedaan maken / opnieuw doen.
+  verwijderen, herordenen, een pagina heropenen die geen enkele navigatie activeert).
+  Ongedaan maken / opnieuw doen.
 - **De algemene instellingen instellen** — de 217 voorkeuren die buiten de pagina’s leven:
   eenheden, knoppen, sensoren, geluid, luchtruim. In de boomstructuur van de 23 regels van
   het instrumentmenu. In kijkmodus wordt er **geen enkel formulierveld gebouwd**; in

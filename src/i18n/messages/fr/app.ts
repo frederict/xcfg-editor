@@ -102,6 +102,15 @@ const app = {
 
   'view.backToOverview': '← Vue d’ensemble',
 
+  /**
+   * Le geste qui rouvre une page que rien n'appelle, sur la page ouverte elle-même.
+   *
+   * ⚠️ Le même libellé existe sous « pages.enableAllNavigations », pour le carrousel : deux
+   * clés voisines dans deux domaines plutôt qu'un mot versé au vocabulaire partagé, et un
+   * test vérifie qu'elles disent la même chose dans les cinq langues.
+   */
+  'view.enableAllNavigations': 'Activer pour toutes les navigations',
+
   /** « Paysage · Page libre » : l'orientation et la classe, dans le titre de la vue. */
   'view.detailLabel': '{orientation} · {kind}',
 

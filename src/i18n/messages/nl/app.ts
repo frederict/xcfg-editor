@@ -43,6 +43,8 @@ const app: DomainCatalog<'app'> = {
 
   'view.backToOverview': '← Alle pagina’s',
 
+  'view.enableAllNavigations': 'Voor alle navigaties inschakelen',
+
   'view.detailLabel': '{orientation} · {kind}',
 
   'view.previousPage': 'Vorige pagina',

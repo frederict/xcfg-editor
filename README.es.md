@@ -125,9 +125,32 @@ de fidelidad que solo el autor puede comprobar no vale nada.
   aparecer al pasar páginas en tierra, y la única página saltada es aquella que ninguna
   navegación activa. La marca y la cuenta se han ido; lo que de verdad decide, la clave
   `navigations`, se lee página por página en «Gestionar las páginas».
+
+  Lo que se **añadió** el 22 de agosto de 2026, por la misma razón: la constatación baja a
+  la **página abierta**. Un piloto de pruebas había colocado un widget en una página
+  muerta sin que nada le avisara: el diagnóstico vivía en una lista plegada de la vista
+  general y en una ventana aparte, nunca en la pantalla donde se trabaja. Una banda
+  discreta dice ahora **por qué esta página** no se mostrará, y distingue tres razones,
+  porque no se reparan de la misma manera:
+
+  - la página lleva el ajuste **«Desactivado»** de XCTrack: el caso medido, el que el
+    desplazamiento salta;
+  - su **lista de navegaciones está vacía**: misma consecuencia, otra escritura, nunca
+    observada en el instrumento, y la herramienta lo dice;
+  - los **ajustes generales mantienen la pantalla** en la otra orientación
+    (`Display.Orientation`): todas las páginas de esa orientación quedan fuera de alcance,
+    sean cuales sean sus navegaciones.
+
+  Las dos primeras se reparan aquí: «Activar para todas las navegaciones» escribe el valor
+  que el propio XCTrack escribe cuando las cinco navegaciones están activas, tanto en la
+  página abierta como en «Gestionar las páginas», con deshacer. **Elegir cuáles** sigue
+  siendo cosa del instrumento: su cuadro de cinco iconos no está reproducido, y escribir
+  una lista que no sabríamos componer sería peor que no ofrecer nada. La tercera no se
+  repara en la página —es un ajuste de todo el instrumento— y el editor se limita a
+  indicar dónde vive.
 - **Editar**: mover, redimensionar, añadir, eliminar y reordenar widgets; ajustar sus
-  opciones; gestionar las páginas (insertar, duplicar, eliminar, reordenar). Deshacer /
-  rehacer.
+  opciones; gestionar las páginas (insertar, duplicar, eliminar, reordenar, reabrir una
+  página que ninguna navegación activa). Deshacer / rehacer.
 - **Ajustar los ajustes generales** — las 217 preferencias que viven fuera de las páginas:
   unidades, botones, sensores, sonido, espacios aéreos. En el árbol de las 23 líneas del
   menú del instrumento. En consulta, **no se construye ningún control de formulario**; en

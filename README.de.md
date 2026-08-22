@@ -127,9 +127,34 @@ Absicht — ein Treueversprechen, das nur der Autor nachprüfen kann, ist nichts
   einzige übersprungene Seite ist die, die keine Navigation aktiviert. Kennzeichnung und
   Zählung sind weg; was wirklich entscheidet, der Schlüssel `navigations`, ist Seite für
   Seite in „Seiten verwalten“ nachzulesen.
+
+  Was am 22. August 2026 aus demselben Grund **hinzugekommen** ist: Der Befund steigt auf
+  die **geöffnete Seite** hinab. Ein Testpilot hatte ein Widget auf einer toten Seite
+  abgelegt, ohne dass ihn irgendetwas gewarnt hätte — die Diagnose lebte in einer
+  zugeklappten Liste der Übersicht und in einem Nebenfenster, nie auf dem Bildschirm, auf
+  dem man arbeitet. Ein unaufdringliches Band sagt dort nun, **warum gerade diese Seite**
+  nicht erscheint, und es unterscheidet drei Gründe, denn sie werden nicht auf dieselbe
+  Weise behoben:
+
+  - die Seite trägt die Einstellung **„Deaktiviert“** von XCTrack — der gemessene Fall,
+    den das Blättern überspringt;
+  - ihre **Navigationsliste ist leer** — dieselbe Folge, andere Schreibweise, am Gerät nie
+    beobachtet, und das Werkzeug sagt es;
+  - die **allgemeinen Einstellungen halten den Bildschirm** in der anderen Ausrichtung
+    (`Display.Orientation`): Jede Seite dieser Ausrichtung ist unerreichbar, gleich welche
+    Navigationen sie trägt.
+
+  Die ersten beiden werden hier behoben: „Für alle Navigationen aktivieren“ schreibt den
+  Wert, den XCTrack selbst schreibt, wenn alle fünf Navigationen aktiv sind — auf der
+  geöffneten Seite wie in „Seiten verwalten“, mit Rückgängigmachen. **Auszuwählen, welche**,
+  bleibt Sache des Geräts: Sein Kasten mit fünf Symbolen ist nicht nachgebaut, und eine
+  Liste zu schreiben, die wir nicht zusammenstellen könnten, wäre schlimmer, als nichts
+  anzubieten. Der dritte Grund wird nicht auf der Seite behoben — es ist eine Einstellung
+  des ganzen Geräts —, und der Editor sagt nur, wo sie wohnt.
 - **Bearbeiten**: Widgets verschieben, in der Größe ändern, hinzufügen, löschen und
   umordnen; ihre Optionen einstellen; die Seiten verwalten (einfügen, duplizieren, löschen,
-  umordnen). Rückgängig machen / wiederholen.
+  umordnen, eine Seite wieder öffnen, die keine Navigation aktiviert). Rückgängig machen /
+  wiederholen.
 - **Die allgemeinen Einstellungen setzen** — die 217 Einstellungen, die außerhalb der
   Seiten leben: Einheiten, Tasten, Sensoren, Ton, Lufträume. In der Baumstruktur der
   23 Zeilen des Gerätemenüs. Beim Ansehen wird **kein einziges Formularelement gebaut**;

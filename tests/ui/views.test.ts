@@ -5,6 +5,7 @@ import { readableName } from '../../src/catalog/widgetNames'
 import { parseJson } from '../../src/core/parseJson'
 import { serializeJson } from '../../src/core/serializeJson'
 import { readLayout, type Page } from '../../src/model/layout'
+import { pageReachability } from '../../src/model/reachability'
 import { readRenderSettings } from '../../src/model/preferences'
 import {
   DOCK_HEIGHT_DEFAULT,
@@ -446,5 +447,143 @@ describe('la classe d’une page, dite dans la langue du pilote', () => {
     const note = pageKind('org.xcontest.XCTrack.Pages.WPEmpty', tr).note
     expect(note).toContain('gadgets')
     expect(note.toLowerCase()).not.toContain('widget')
+  })
+})
+
+/**
+ * **La page ouverte dit pourquoi elle ne s'affichera pas.**
+ *
+ * C'est la correction du 22 août 2026 : trois écrans parlaient de la page morte du pilote
+ * — la vue d'ensemble dans une liste repliée, « Gérer les pages » dans une fenêtre
+ * annexe — et le seul qui se taisait était celui où l'on pose les gadgets. « J'y ai posé
+ * un gadget sans être prévenu que je travaillais pour rien. »
+ */
+describe('ce que la page ouverte dit de son propre sort', () => {
+  const AIR3_PAGE = DEVICES.find((device) => device.id === 'air3-7.2')!
+
+  function opened(navigations: string, options: {
+    orientation?: 'landscape' | 'portrait'
+    preferences?: string
+    onEnable?: () => void
+  } = {}): HTMLElement {
+    const orientation = options.orientation ?? 'landscape'
+    const doc = parseJson(`{
+      ${options.preferences === undefined ? '' : `"preferences": ${options.preferences},`}
+      "layout": {
+        "landscape": [${orientation === 'landscape' ? pageSource(navigations) : ''}],
+        "portrait": [${orientation === 'portrait' ? pageSource(navigations) : ''}]
+      }
+    }`)
+    const page = readLayout(doc)[orientation][0]!
+    const ctx: ViewContext = {
+      device: AIR3_PAGE, settings: readRenderSettings(doc), language: 'fr'
+    }
+    return buildDetail({
+      page,
+      index: 0,
+      pageCount: 1,
+      orientation,
+      ctx,
+      tr,
+      zoom: 1,
+      onBack: () => {},
+      onGo: () => {},
+      onZoom: () => {},
+      reachability: pageReachability({ page, orientation, document: doc }),
+      ...(options.onEnable === undefined ? {} : { onEnableAllNavigations: options.onEnable })
+    })
+  }
+
+  function pageSource(navigations: string): string {
+    return `{
+      "CLASS": "org.xcontest.XCTrack.page.WPCompetition",
+      "navigations": ${navigations},
+      "widgets": []
+    }`
+  }
+
+  const bands = (root: HTMLElement): HTMLElement[] =>
+    [...root.querySelectorAll('.editnote')] as HTMLElement[]
+
+  it('ne dit rien quand rien n’empêche la page de s’afficher', () => {
+    expect(bands(opened('"all"'))).toHaveLength(0)
+  })
+
+  it('dit POURQUOI, et pas seulement que la page est morte', () => {
+    const text = bands(opened('"none"'))[0]!.textContent ?? ''
+    expect(text).toContain('Désactivé')
+    expect(text).toContain('aucune navigation')
+  })
+
+  it('distingue la liste vide du réglage « Désactivé »', () => {
+    const text = bands(opened('[]'))[0]!.textContent ?? ''
+    expect(text).toContain('liste de navigations vide')
+    expect(text).not.toContain('Désactivé de XCTrack')
+  })
+
+  /**
+   * Le bandeau doit devancer le geste qu'il concerne — poser un gadget. Lu après la
+   * page, il n'aurait rien évité au pilote du 22 août.
+   */
+  it('vient AVANT la page, jamais après', () => {
+    const root = opened('"none"')
+    const children = [...root.children]
+    const band = children.findIndex((node) => node.classList.contains('editnote'))
+    const stage = children.findIndex((node) => node.classList.contains('stage'))
+    expect(band).toBeGreaterThanOrEqual(0)
+    expect(band).toBeLessThan(stage)
+  })
+
+  it('offre le geste qui rouvre la page, et l’appelle', () => {
+    const clicks: number[] = []
+    const root = opened('"none"', { onEnable: () => clicks.push(1) })
+    const button = root.querySelector('.editnote .btn') as HTMLButtonElement
+    expect(button.textContent).toBe('Activer pour toutes les navigations')
+    button.click()
+    expect(clicks).toHaveLength(1)
+  })
+
+  it('dit la raison même quand l’appelant n’offre aucun geste', () => {
+    const root = opened('"none"')
+    expect(bands(root)).toHaveLength(1)
+    expect(root.querySelector('.editnote .btn')).toBeNull()
+  })
+
+  /**
+   * L'écran tenu dans l'autre orientation est une raison d'une autre nature : elle se lit
+   * dans les réglages généraux, elle vaut pour toutes les pages de l'orientation, et
+   * **aucun geste de cet éditeur ne la répare**. Offrir ici le bouton de réouverture
+   * ferait écrire une ligne qui ne changerait rien au sort de la page.
+   */
+  it('dit l’écran tenu ailleurs, et n’offre alors aucun geste', () => {
+    const root = opened('"all"', {
+      orientation: 'portrait',
+      preferences: '{ "Display.Orientation": "LANDSCAPE" }',
+      onEnable: () => { throw new Error('aucun geste ne doit être offert ici') }
+    })
+    const text = bands(root)[0]!.textContent ?? ''
+    expect(text).toContain('tiennent l’écran en paysage')
+    expect(text).toContain('Display.Orientation: LANDSCAPE')
+    expect(root.querySelector('.editnote .btn')).toBeNull()
+  })
+
+  it('empile les deux raisons, et n’offre le geste que sur celle qui se répare ici', () => {
+    const root = opened('"none"', {
+      orientation: 'portrait',
+      preferences: '{ "Display.Orientation": "LANDSCAPE" }',
+      onEnable: () => {}
+    })
+    expect(bands(root)).toHaveLength(2)
+    expect(root.querySelectorAll('.editnote .btn')).toHaveLength(1)
+  })
+
+  /**
+   * Un renseignement, pas une alarme : une page désactivée l'est souvent volontairement.
+   * Le bandeau ne doit donc porter aucune des classes que l'outil réserve à ce qui cloche.
+   */
+  it('renseigne sans alarmer', () => {
+    const band = bands(opened('"none"'))[0]!
+    expect(band.className).toBe('editnote')
+    expect(band.getAttribute('role')).toBe('note')
   })
 })

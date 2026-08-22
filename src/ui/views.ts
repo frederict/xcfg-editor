@@ -1,6 +1,9 @@
 import { physicalSize, type Device } from '../catalog/devices'
 import { readableName } from '../catalog/widgetNames'
 import type { Layout, Page } from '../model/layout'
+import {
+  isRepairableHere, reachabilityMessage, reachabilityRemedy, type ReachabilityReason
+} from '../model/reachability'
 import type { RenderSettings } from '../model/preferences'
 import type { Widget } from '../model/widget'
 import { renderPage } from '../render/canvas'
@@ -563,6 +566,28 @@ export interface DetailOptions {
   onBack: () => void
   onGo: (index: number) => void
   onZoom: (zoom: number) => void
+  /**
+   * Pourquoi cette page-ci ne s'affichera pas sur l'instrument — vide quand rien de ce que
+   * cet éditeur sait lire ne l'en empêche.
+   *
+   * ## Pourquoi ce renseignement descend ici, et pas seulement dans la vue d'ensemble
+   *
+   * Le contrôle avant vol le disait déjà, dans une liste **repliée**, deux écrans plus
+   * haut ; la fenêtre « Gérer les pages » le disait aussi. L'écran où l'on pose les
+   * gadgets était le seul à se taire, et c'est celui-là qu'un pilote d'essai avait sous
+   * les yeux le 22 août 2026 quand il a posé un gadget sur une page morte : « j'y ai posé
+   * un gadget sans être prévenu que je travaillais pour rien ».
+   *
+   * Le calcul appartient à `model/reachability.ts` et l'appelant le passe déjà fait : la
+   * raison « l'écran est tenu dans l'autre orientation » se lit dans les réglages
+   * généraux, que cette couche n'a pas — elle ne connaît que la mise en page.
+   */
+  reachability?: readonly ReachabilityReason[]
+  /**
+   * Le geste qui rouvre la page, quand l'appelant sait l'appliquer. Absent, la raison est
+   * dite quand même : savoir sans pouvoir vaut mieux que ne pas savoir.
+   */
+  onEnableAllNavigations?: () => void
   /** Défini uniquement en mode édition. */
   editing?: DetailEditing
   /** Défini uniquement en consultation, et seulement quand la page porte des widgets. */
@@ -664,6 +689,36 @@ export function buildDetail(options: DetailOptions): HTMLElement {
   )
   root.append(facts)
   root.append(el('p', 'detail__note', kind.note))
+
+  /*
+   * ⚠️ Ce bandeau **renseigne**, il n'alarme pas : filet discret, phrases entières, aucun
+   * liséré d'alerte. Une page désactivée l'est souvent volontairement — la page de
+   * compétition du propriétaire est gardée prête entre deux manches —, et crier au loup
+   * sur un montage voulu est exactement ce que cet outil a déjà fait une fois, avec son
+   * badge « masquée hors vol » retiré le 22 août 2026.
+   *
+   * Il vient AVANT la page, jamais après : le geste qu'il doit devancer est le dépôt d'un
+   * gadget, et un avertissement lu après coup n'a rien évité.
+   */
+  for (const reason of options.reachability ?? []) {
+    const band = el('div', 'editnote')
+    band.setAttribute('role', 'note')
+    const body = el('div', 'editnote__body')
+    body.append(
+      el('p', 'editnote__text', reachabilityMessage(reason, tr)),
+      // Deux phrases, deux éléments : le constat et ce qu'il y a à en faire ne se
+      // concatènent pas — l'espace qui sépare deux phrases appartient à la langue.
+      el('p', 'editnote__text', reachabilityRemedy(reason, tr))
+    )
+    band.append(body)
+    if (isRepairableHere(reason) && options.onEnableAllNavigations) {
+      const enable = el('button', 'btn btn--primary', tr.t('view.enableAllNavigations'))
+      enable.type = 'button'
+      enable.addEventListener('click', options.onEnableAllNavigations)
+      band.append(enable)
+    }
+    root.append(band)
+  }
 
   /* --- scène : règle, page à l'échelle, zones de survol --- */
   const stage = el('div', 'stage')

@@ -51,6 +51,10 @@ const pages: DomainCatalog<'pages'> = {
   'pages.describeRemove': 'Eliminar la página {rank} ({orientation})',
   'pages.describeReorder': 'Mover la página {rank} a la posición {target} ({orientation})',
   'pages.describeSetClass': 'Cambiar el tipo de la página {rank}: «{before}» → «{after}» ({orientation})',
+  'pages.describeEnableNavigations': 'Activar la página {rank} para todas las navegaciones ({orientation})',
+
+  'pages.enableAllNavigations': 'Activar para todas las navegaciones',
+  'pages.enableAllNavigationsFor': 'Activar la página {rank} para todas las navegaciones',
 
   'pages.announcement': '{done}.',
   'pages.announcementWithAdvice': '{done}. {advice}',

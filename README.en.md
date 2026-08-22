@@ -120,8 +120,31 @@ author can check is worth nothing.
   into the scroll on the ground, and the only page skipped is the one no navigation
   activates. The mark and the count are gone; what really decides, the `navigations` key,
   is read page by page in “Manage the pages”.
+
+  What was **added** on 22 August 2026, for the same reason: the finding comes down onto
+  the **open page**. A test pilot had placed a widget on a dead page with nothing warning
+  him — the diagnosis lived in a folded list on the overview and in a side window, never
+  on the screen where you work. A discreet band now says **why this particular page** will
+  not be shown, and it tells three reasons apart, because they are not repaired the same
+  way:
+
+  - the page carries XCTrack's **“Disabled”** setting — the measured case, the one paging
+    skips;
+  - its **list of navigations is empty** — same consequence, different writing, never
+    observed on the device, and the tool says so;
+  - the **general settings hold the screen** in the other orientation
+    (`Display.Orientation`): every page of that orientation is out of reach, whatever its
+    navigations.
+
+  The first two are repaired here: “Enable for all navigations” writes the value XCTrack
+  itself writes when all five navigations are active, on the open page as in “Manage the
+  pages”, with undo. **Choosing which ones** remains the instrument's business: its
+  five-icon box is not reproduced, and writing a list we could not compose would be worse
+  than offering nothing. The third is not repaired on the page — it is a setting for the
+  whole instrument — and the editor merely says where it lives.
 - **Edit**: move, resize, add, delete and reorder widgets; set their options; manage the
-  pages (insert, duplicate, delete, reorder). Undo / redo.
+  pages (insert, duplicate, delete, reorder, reopen a page no navigation activates).
+  Undo / redo.
 - **Set the general settings** — the 217 preferences that live outside the pages: units,
   buttons, sensors, sound, airspaces. In the tree of the 23 lines of the instrument's
   menu. In view-only mode, **no form control is built at all**; in editing mode, 77 of
