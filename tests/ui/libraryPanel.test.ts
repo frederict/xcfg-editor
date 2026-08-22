@@ -1030,6 +1030,164 @@ describe('libraryPanel — supprimer nomme ce qui va être perdu', () => {
   })
 })
 
+/* ================================================== effacer toute la bibliothèque */
+
+/**
+ * La commande la plus destructrice de l'application : elle emporte les octets, et il n'y a
+ * ni corbeille ni copie ailleurs. Ce bloc surveille les quatre garde-fous que le panneau
+ * s'impose — le chiffre plutôt que le « êtes-vous sûr », l'archive offerte avant la porte,
+ * le focus qui ne se pose jamais sur l'effacement, et l'absence du bouton quand il n'y a
+ * rien à effacer — plus celui qu'on ne voit pas : un export en échec n'efface rien.
+ */
+describe('libraryPanel — effacer toute la bibliothèque', () => {
+  const CLEAR_ALL = 'Effacer toute la bibliothèque'
+
+  it('n’est pas proposé quand il n’y a rien à effacer', async () => {
+    const { library } = bibliotheque()
+    const harness = await mount({ library })
+
+    const labels = [...harness.panel.querySelectorAll('button')].map((b) => b.textContent)
+    expect(labels).not.toContain(CLEAR_ALL)
+
+    // Et il apparaît dès qu'il y a quelque chose : le pied se redessine tout seul.
+    await library.add({ name: 'Comp Annecy', bytes: PAGES, fileName: 'comp.xcfg' })
+    await settle()
+    expect(findButton(harness.panel, CLEAR_ALL)).toBeDefined()
+  })
+
+  it('une entrée illisible seule suffit à le proposer', async () => {
+    const { library, store } = bibliotheque()
+    store.injectRaw('cassee', { id: 'cassee' })
+    const harness = await mount({ library })
+
+    expect(findButton(harness.panel, CLEAR_ALL)).toBeDefined()
+  })
+
+  it('chiffre ce qui part — compte, place, entrées illisibles — et dit son étendue', async () => {
+    const { library, store } = bibliotheque()
+    await library.add({ name: 'Comp Annecy', bytes: PAGES, fileName: 'comp.xcfg' })
+    await library.add({ name: 'Vol-biv Alpes', bytes: BACKUP, fileName: 'biv.xcfg' })
+    store.injectRaw('cassee', { id: 'cassee' })
+    const harness = await mount({ library })
+
+    click(harness.panel, CLEAR_ALL)
+    await settle()
+
+    const view = currentView()
+    expect(viewTitle()).toBe('Effacer toute la bibliothèque ?')
+    // Des chiffres, pas un « êtes-vous sûr » : combien, quelle place, et le reste illisible.
+    expect(text(view)).toContain('2 configurations rangées quittent ce navigateur')
+    expect(text(view)).toContain(tr.format.byteSize(PAGES.byteLength + BACKUP.byteLength))
+    expect(text(view)).toContain('1 entrée illisible')
+    // Les octets partent avec, et rien n'a jamais été envoyé ailleurs : aucune copie.
+    expect(text(view)).toContain('n’a pas de corbeille')
+    expect(text(view)).toContain('aucune copie à récupérer')
+    // L'étendue est nommée à l'écran, pas seulement dans le code.
+    expect(text(view)).toContain('efface la bibliothèque, et elle seule')
+    expect(text(view)).toContain('la langue de l’interface')
+    expect(text(view)).toContain('videz les données de ce site')
+    // Rien n'est parti tant que rien n'a été choisi.
+    expect((await library.read()).entries).toHaveLength(2)
+  })
+
+  it('s’ouvre sur la sortie : le focus ne se pose jamais sur l’effacement', async () => {
+    const { library } = bibliotheque()
+    await library.add({ name: 'Comp Annecy', bytes: PAGES, fileName: 'comp.xcfg' })
+    const harness = await mount({ library })
+
+    click(harness.panel, CLEAR_ALL)
+    await settle()
+
+    expect(currentView().className).toContain('library__viewFrame--grave')
+    // La doctrine du panneau, à l'endroit où elle coûte le plus cher : la barre d'espace
+    // au mauvais moment ne doit pas vider la bibliothèque.
+    expect((document.activeElement as HTMLElement).className).toContain('library__back')
+  })
+
+  it('« Annuler » ne touche à rien', async () => {
+    const { library } = bibliotheque()
+    await library.add({ name: 'Comp Annecy', bytes: PAGES, fileName: 'comp.xcfg' })
+    const harness = await mount({ library })
+
+    click(harness.panel, CLEAR_ALL)
+    await settle()
+    click(currentView(), 'Annuler')
+    await settle()
+
+    expect(openViews()).toHaveLength(0)
+    expect((await library.read()).entries).toHaveLength(1)
+    expect(harness.downloads).toHaveLength(0)
+  })
+
+  it('offre l’archive d’abord, et cette archive rétablit tout ailleurs', async () => {
+    const { library } = bibliotheque()
+    await library.add({ name: 'Comp Annecy', bytes: PAGES, fileName: 'comp.xcfg' })
+    await library.add({ name: 'Vol-biv Alpes', bytes: BACKUP, fileName: 'biv.xcfg' })
+    const harness = await mount({ library })
+
+    click(harness.panel, CLEAR_ALL)
+    await settle()
+    // Le premier choix est celui qui ne perd rien — même forme que « Ranger d'abord ».
+    click(currentView(), 'Exporter l’archive d’abord, puis tout effacer')
+    await waitFor(() => harness.downloads.length === 1, 'archive produite')
+    await settle()
+
+    expect((await library.read()).entries).toHaveLength(0)
+    expect(flashText(harness.panel)).toContain('L’archive est téléchargée')
+    expect(flashText(harness.panel)).toContain('2 configurations effacées')
+
+    // La sortie tient vraiment : l'archive remonte les deux entrées, octets identiques.
+    const { library: ailleurs } = bibliotheque()
+    const report = await importLibrary(ailleurs, harness.downloads[0]!.bytes)
+    expect(report.results.map((r) => r.outcome)).toEqual(['imported', 'imported'])
+    const snapshot = await ailleurs.read()
+    const comp = snapshot.entries.find((e) => e.name === 'Comp Annecy')!
+    expect(Buffer.from(await ailleurs.bytesOf(comp.id)).equals(Buffer.from(PAGES))).toBe(true)
+  })
+
+  it('un export qui échoue n’efface rien', async () => {
+    const { library } = bibliotheque()
+    await library.add({ name: 'Comp Annecy', bytes: PAGES, fileName: 'comp.xcfg' })
+    const harness = await mount({
+      library,
+      // Le navigateur refuse la livraison. C'est exactement le cas où effacer derrière
+      // ferait tout perdre à quelqu'un qui croit avoir sauvegardé.
+      download: () => { throw new Error('téléchargement refusé') }
+    })
+
+    click(harness.panel, CLEAR_ALL)
+    await settle()
+    click(currentView(), 'Exporter l’archive d’abord, puis tout effacer')
+    await waitFor(() => flashText(harness.panel).includes('Export de la bibliothèque'), 'échec dit')
+    await settle()
+
+    expect((await library.read()).entries).toHaveLength(1)
+    expect(flashText(harness.panel)).toContain('téléchargement refusé')
+  })
+
+  it('« Tout effacer sans exporter » vide, et le dit avec ses chiffres', async () => {
+    const { library, store } = bibliotheque()
+    await library.add({ name: 'Comp Annecy', bytes: PAGES, fileName: 'comp.xcfg' })
+    store.injectRaw('cassee', { id: 'cassee' })
+    const harness = await mount({ library })
+
+    click(harness.panel, CLEAR_ALL)
+    await settle()
+    click(currentView(), 'Tout effacer sans exporter')
+    await settle()
+
+    const snapshot = await library.read()
+    expect(snapshot.entries).toEqual([])
+    expect(snapshot.broken).toEqual([])
+    expect(harness.downloads).toHaveLength(0)
+    expect(flashText(harness.panel)).toContain('La bibliothèque est vide')
+    expect(flashText(harness.panel)).toContain('1 configuration effacée')
+    // Le bouton disparaît avec ce qu'il effaçait.
+    const labels = [...harness.panel.querySelectorAll('button')].map((b) => b.textContent)
+    expect(labels).not.toContain(CLEAR_ALL)
+  })
+})
+
 /* ============================================== le panneau dans la modale de l'assembleur */
 
 describe('openLibraryDialog — une couche, et Échap qui fait ce qu’on attend', () => {

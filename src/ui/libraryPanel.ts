@@ -68,7 +68,11 @@ import type { Translator } from '../i18n'
  * - un **conflit** entre onglets propose un rechargement, jamais un écrasement ;
  * - les **données personnelles** d'une entrée sont comptées sur la carte et signalées dans
  *   la liste, avec la distinction qui compte : celles du `layout` **voyagent avec les
- *   pages**, un export « pages » n'est donc pas sûr par construction.
+ *   pages**, un export « pages » n'est donc pas sûr par construction ;
+ * - **l'effacement complet** existe — le pilote qui prête son ordinateur ne doit pas avoir
+ *   à supprimer ses entrées une à une — et il est nommé par son **étendue**, chiffré, et
+ *   précédé de l'archive : voir `askClearAll`, qui dit aussi ce qui reste dans ce
+ *   navigateur après lui.
  */
 
 /* ============================================================ ce que l'assembleur donne */
@@ -1213,17 +1217,133 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
     })
   }
 
-  const doExport = async (): Promise<void> => {
+  /**
+   * Rend **`true` seulement si l'archive a été livrée**. Ce n'est pas une coquetterie de
+   * signature : « Exporter d'abord, puis tout effacer » enchaîne les deux gestes, et
+   * `guard` avale l'échec pour l'afficher. Sans ce verdict, un export refusé — quota,
+   * octets altérés, magasin illisible — serait suivi de l'effacement quand même, et le
+   * pilote perdrait tout en croyant avoir sauvegardé. Les trois autres appelants
+   * l'ignorent, et c'est très bien.
+   */
+  const doExport = async (): Promise<boolean> => {
+    let delivered = false
     await guard(tr.t('library.contextExporting'), async () => {
       const when = now()
       const { archive, exported, skipped } = await exportLibrary(library, when)
       download(archive, `xctrack-bibliotheque-${fileStamp(when)}.zip`)
+      delivered = true
       // La phrase de fin est une phrase entière, ou rien : elle ne s'ajoute pas au message
       // par une concaténation, elle y entre par son repère.
       const tail = skipped.length === 0
         ? ''
         : tr.t('library.exportSkipped', { count: skipped.length })
       say(tr.t('library.exported', { count: exported, tail }))
+    })
+    return delivered
+  }
+
+  const doClearAll = async (afterExport: boolean): Promise<void> => {
+    /*
+     * Relu à l'instant de l'effacement, non au moment où la boîte s'est ouverte : un autre
+     * onglet a pu ranger ou supprimer entre les deux, et le compte annoncé APRÈS coup doit
+     * être celui de ce qui est réellement parti. Ce que le pilote a lu AVANT reste, lui,
+     * l'état qu'il avait sous les yeux quand il a décidé — les deux sont justes, chacun à
+     * son moment.
+     */
+    const snapshot = await library.read()
+    const total = snapshot.entries.reduce((sum, entry) => sum + entry.byteLength, 0)
+    await library.clear()
+    const count = snapshot.entries.length
+    const size = count === 0
+      ? ''
+      : tr.t('library.clearedBytes', { size: tr.format.byteSize(total) })
+    say(afterExport
+      ? tr.t('library.clearedAfterExport', { count, size })
+      : tr.t('library.cleared', { count, size }))
+  }
+
+  /**
+   * Effacer toute la bibliothèque — le geste qu'un pilote fait avant de rendre un
+   * ordinateur prêté, ou de changer de machine.
+   *
+   * ## Ce que « tout » recouvre, et pourquoi il s'arrête là
+   *
+   * **Ce bouton efface la bibliothèque, et elle seule** : les fiches et les octets, dans
+   * IndexedDB. Il ne touche pas aux trois réglages que cet éditeur garde dans
+   * `localStorage` — `xcfg-editor.ui-language`, `xcfg-editor.dock-height`,
+   * `xcfg-editor.devices`. (Il n'y a pas de quatrième clé : `xcfg-editor.library` est le
+   * nom du canal `BroadcastChannel` entre onglets et l'identifiant du format d'archive,
+   * pas un enregistrement — rien n'en survit à la fermeture de l'onglet.)
+   *
+   * Trois raisons, dans cet ordre :
+   *
+   * 1. **Une commande destructrice ne doit pas dépasser la portée de l'issue qu'elle
+   *    offre.** L'issue est ici l'archive, et `exportLibrary` sauvegarde exactement la
+   *    bibliothèque. Emporter aussi les appareils ajoutés par le pilote détruirait des
+   *    données que la sortie proposée juste au-dessus ne sait pas rendre : le geste aurait
+   *    l'air réversible et ne le serait qu'à moitié.
+   * 2. **Les trois clés restantes ne sont pas des données de vol.** Un choix de langue,
+   *    une hauteur en pixels, et des mesures d'écran avec le nom que le pilote leur a
+   *    donné. Aucune ne porte de configuration, de page, de waypoint ni de nom de
+   *    compétition — c'est ce que la bibliothèque, elle, porte entièrement.
+   * 3. **L'étendue doit être lisible dans l'intitulé.** « Tout effacer » seul aurait laissé
+   *    deviner ; « Effacer toute la bibliothèque » se lit sans ouvrir la boîte, et la boîte
+   *    nomme ensuite ce qui reste **et** le geste qui l'emporte — vider les données du site
+   *    depuis le navigateur. C'est la seule voie honnête vers « toute trace de moi » : elle
+   *    existe, elle est hors de cette application, et on la dit plutôt que de la mimer.
+   *
+   * ## Ce que la boîte doit contenir
+   *
+   * Des chiffres, pas un « êtes-vous sûr » : combien de configurations, quelle place,
+   * combien d'entrées illisibles. Puis le fait que **les octets partent avec** — rien n'a
+   * jamais été envoyé ailleurs, il n'existe donc aucune copie à récupérer. Puis l'étendue.
+   * Et l'export en **premier choix**, avant la porte.
+   *
+   * Le niveau est `grave` : `createViewStack` y met alors le focus sur le RETOUR, jamais
+   * sur l'action. Le geste le plus destructeur de l'application ne doit pas être celui qui
+   * demande le moins d'intention — et ici même le premier bouton est celui qui sauvegarde
+   * avant d'effacer.
+   */
+  const askClearAll = (snapshot: LibrarySnapshot): void => {
+    const total = snapshot.entries.reduce((sum, entry) => sum + entry.byteLength, 0)
+
+    const body = el('div', 'library__confirm')
+    /*
+     * Deux queues de phrase, ou rien — même mécanique qu'au pied : une bibliothèque qui ne
+     * porte que des entrées illisibles ne dit pas « 0 o d'octets partent avec ».
+     */
+    body.append(el('p', 'library__note', tr.t('library.clearAllBody', {
+      count: snapshot.entries.length,
+      size: snapshot.entries.length === 0
+        ? ''
+        : tr.t('library.clearAllBytes', { size: tr.format.byteSize(total) }),
+      broken: snapshot.broken.length === 0
+        ? ''
+        : tr.t('library.clearAllBroken', { count: snapshot.broken.length })
+    })))
+    body.append(el('p', 'library__caveat', tr.t('library.clearAllCaveat')))
+    body.append(el('p', 'library__caveat', tr.t('library.clearAllScope')))
+
+    views.open({
+      title: tr.t('library.clearAllTitle'),
+      body,
+      tone: 'grave',
+      choices: [
+        {
+          label: tr.t('library.exportThenClear'),
+          primary: true,
+          run: async () => {
+            // L'export d'abord, et l'effacement SEULEMENT s'il a abouti : un échec est déjà
+            // dit par `guard`, et rien ne doit partir derrière lui.
+            if (!await doExport()) return
+            await guard(tr.t('library.contextClearing'), () => doClearAll(true))
+          }
+        },
+        {
+          label: tr.t('library.clearWithoutExport'),
+          run: () => guard(tr.t('library.contextClearing'), () => doClearAll(false))
+        }
+      ]
     })
   }
 
@@ -1454,6 +1574,22 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
           usage: tr.format.byteSize(estimate.usage),
           quota: tr.format.byteSize(estimate.quota)
         })))
+    }
+
+    /*
+     * L'effacement complet vit au PIED, en bout de ligne, et non dans la tête avec les
+     * quatre gestes courants : il n'a rien à faire à côté de « Ranger la configuration
+     * ouverte », que le pilote clique sans réfléchir. Et il n'existe **que s'il y a
+     * quelque chose à effacer** — une bibliothèque vide n'a pas besoin qu'on lui propose
+     * de se vider.
+     */
+    if (snapshot.entries.length > 0 || snapshot.broken.length > 0) {
+      const wipe = button(tr.t('library.clearAll'), 'btn btn--ghost library__clearAll')
+      wipe.addEventListener('click', () => {
+        clearFlash()
+        askClearAll(snapshot)
+      })
+      foot.append(wipe)
     }
   }
 

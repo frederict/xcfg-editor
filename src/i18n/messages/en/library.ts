@@ -304,6 +304,39 @@ const library: DomainCatalog<'library'> = {
     'If you are not sure: take the file back out first, or export the whole library.',
   'library.removed': '“{name}” has been deleted.',
 
+  /* --------------------------------------------------- erasing the whole library */
+
+  'library.clearAll': 'Erase the whole library',
+  'library.clearAllTitle': 'Erase the whole library?',
+  'library.clearAllConfirm': 'Erase everything',
+
+  'library.clearAllBody': {
+    one: '{count} stored configuration leaves this browser{size}{broken}.',
+    other: '{count} stored configurations leave this browser{size}{broken}.'
+  },
+  'library.clearAllBytes': ' — {size} of bytes go with them',
+  'library.clearAllBroken': {
+    one: ', along with {count} unreadable entry',
+    other: ', along with {count} unreadable entries'
+  },
+  'library.clearAllCaveat':
+    'The bytes go too: it is your own file that is erased, and this library has no wastebasket. Nothing was ever sent anywhere — so there is no copy to get back, not here and not from anyone.',
+  'library.clearAllScope':
+    'This gesture erases the library, and nothing but the library. Three settings of this editor stay in this browser: the language of the interface, the height of the settings bar, and the devices you added yourself. None of the three carries a configuration, a page or a waypoint file — they are a choice of language and screen measurements. To leave nothing at all behind, clear this site’s data from your browser: that is the only gesture that takes those too.',
+
+  'library.exportThenClear': 'Export the archive first, then erase everything',
+  'library.clearWithoutExport': 'Erase everything without exporting',
+
+  'library.cleared': {
+    one: 'The library is empty: {count} configuration erased{size}.',
+    other: 'The library is empty: {count} configurations erased{size}.'
+  },
+  'library.clearedAfterExport': {
+    one: 'The archive has been downloaded, then the library was emptied: {count} configuration erased{size}.',
+    other: 'The archive has been downloaded, then the library was emptied: {count} configurations erased{size}.'
+  },
+  'library.clearedBytes': ', {size} of bytes freed',
+
   /* --------------------------------------------------------------- unreadable entry */
 
   'library.brokenName': 'Unreadable entry',
@@ -363,6 +396,7 @@ const library: DomainCatalog<'library'> = {
   'library.contextVerifying': 'Checking',
   'library.contextRenaming': 'Renaming',
   'library.contextExporting': 'Library export',
+  'library.contextClearing': 'Library erasure',
   'library.contextImporting': 'Library import',
   'library.contextReading': 'Library read',
 

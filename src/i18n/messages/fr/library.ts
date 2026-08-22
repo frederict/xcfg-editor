@@ -349,6 +349,49 @@ const library = {
     'Si vous n’en êtes pas sûr : ressortez d’abord le fichier, ou exportez la bibliothèque entière.',
   'library.removed': '« {name} » a été supprimée.',
 
+  /* -------------------------------------------------- effacer toute la bibliothèque */
+
+  /**
+   * Le geste porte son étendue dans son intitulé. « Tout effacer » seul aurait laissé au
+   * pilote le soin de deviner ce que « tout » recouvre — la bibliothèque, ou toute trace
+   * de lui dans ce navigateur. `library.clearAllScope` dit ce qui reste, et par quel
+   * geste l'emporter.
+   */
+  'library.clearAll': 'Effacer toute la bibliothèque',
+  'library.clearAllTitle': 'Effacer toute la bibliothèque ?',
+  'library.clearAllConfirm': 'Tout effacer',
+
+  /**
+   * `{size}` et `{broken}` sont des sous-phrases **ou rien**, comme au pied : une
+   * bibliothèque qui ne porte que des entrées illisibles ne dit pas « 0 o d'octets ».
+   */
+  'library.clearAllBody': {
+    one: '{count} configuration rangée quitte ce navigateur{size}{broken}.',
+    other: '{count} configurations rangées quittent ce navigateur{size}{broken}.'
+  },
+  'library.clearAllBytes': ' — {size} d’octets partent avec',
+  'library.clearAllBroken': {
+    one: ', ainsi que {count} entrée illisible',
+    other: ', ainsi que {count} entrées illisibles'
+  },
+  'library.clearAllCaveat':
+    'Les octets partent avec : c’est votre fichier lui-même qui est effacé, et cette bibliothèque n’a pas de corbeille. Rien n’a jamais été envoyé ailleurs — il n’existe donc aucune copie à récupérer, ni ici ni chez personne.',
+  'library.clearAllScope':
+    'Ce geste efface la bibliothèque, et elle seule. Trois réglages de cet éditeur restent dans ce navigateur : la langue de l’interface, la hauteur du bandeau de réglages, et les appareils que vous avez ajoutés vous-même. Aucun des trois ne porte de configuration, de page ni de fichier de waypoints — ce sont un choix de langue et des mesures d’écran. Pour ne plus rien laisser du tout, videz les données de ce site depuis votre navigateur : c’est le seul geste qui les emporte aussi.',
+
+  'library.exportThenClear': 'Exporter l’archive d’abord, puis tout effacer',
+  'library.clearWithoutExport': 'Tout effacer sans exporter',
+
+  'library.cleared': {
+    one: 'La bibliothèque est vide : {count} configuration effacée{size}.',
+    other: 'La bibliothèque est vide : {count} configurations effacées{size}.'
+  },
+  'library.clearedAfterExport': {
+    one: 'L’archive est téléchargée, puis la bibliothèque a été vidée : {count} configuration effacée{size}.',
+    other: 'L’archive est téléchargée, puis la bibliothèque a été vidée : {count} configurations effacées{size}.'
+  },
+  'library.clearedBytes': ', {size} d’octets libérés',
+
   /* ------------------------------------------------------------------ l'entrée illisible */
 
   'library.brokenName': 'Entrée illisible',
@@ -416,6 +459,7 @@ const library = {
   'library.contextVerifying': 'Vérification',
   'library.contextRenaming': 'Renommage',
   'library.contextExporting': 'Export de la bibliothèque',
+  'library.contextClearing': 'Effacement de la bibliothèque',
   'library.contextImporting': 'Import de la bibliothèque',
   'library.contextReading': 'Lecture de la bibliothèque',
 

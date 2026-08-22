@@ -48,6 +48,16 @@
   padding-top: 0.6rem;
 }
 
+/*
+ * L'effacement complet, en bout de pied. `margin-inline-start: auto` le pousse à l'opposé
+ * du compte et de la jauge : sur une ligne qui ne parle que de mesures, le seul bouton qui
+ * détruit ne doit pas être à un pixel de « Empêcher le navigateur d'effacer ma
+ * bibliothèque », qui fait exactement l'inverse. Aucune couleur n'est introduite — le
+ * cadre reste achromatique, et c'est le filet ambre du niveau `grave` qui alerte une fois
+ * la boîte ouverte.
+ */
+.library__clearAll { margin-inline-start: auto; }
+
 .library__empty {
   margin: 0;
   padding: 1.4rem;

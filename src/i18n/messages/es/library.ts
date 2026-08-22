@@ -304,6 +304,39 @@ const library: DomainCatalog<'library'> = {
     'Si no está seguro: saque primero el archivo, o exporte la biblioteca entera.',
   'library.removed': '«{name}» ha sido eliminada.',
 
+  /* --------------------------------------------- borrar toda la biblioteca */
+
+  'library.clearAll': 'Borrar toda la biblioteca',
+  'library.clearAllTitle': '¿Borrar toda la biblioteca?',
+  'library.clearAllConfirm': 'Borrarlo todo',
+
+  'library.clearAllBody': {
+    one: '{count} configuración guardada sale de este navegador{size}{broken}.',
+    other: '{count} configuraciones guardadas salen de este navegador{size}{broken}.'
+  },
+  'library.clearAllBytes': ' — {size} de bytes se van con ellas',
+  'library.clearAllBroken': {
+    one: ', además de {count} entrada ilegible',
+    other: ', además de {count} entradas ilegibles'
+  },
+  'library.clearAllCaveat':
+    'Los bytes se van con ellas: se borra su propio archivo, y esta biblioteca no tiene papelera. Nunca se ha enviado nada a ninguna parte, así que no hay copia que recuperar, ni aquí ni en casa de nadie.',
+  'library.clearAllScope':
+    'Este gesto borra la biblioteca, y solo la biblioteca. Tres ajustes de este editor permanecen en este navegador: el idioma de la interfaz, la altura de la barra de ajustes y los dispositivos que usted mismo ha añadido. Ninguno de los tres lleva una configuración, una página ni un archivo de waypoints: son una elección de idioma y unas medidas de pantalla. Para no dejar absolutamente nada, borre los datos de este sitio desde su navegador: es el único gesto que se los lleva también.',
+
+  'library.exportThenClear': 'Exportar primero el archivo comprimido y luego borrarlo todo',
+  'library.clearWithoutExport': 'Borrarlo todo sin exportar',
+
+  'library.cleared': {
+    one: 'La biblioteca está vacía: {count} configuración borrada{size}.',
+    other: 'La biblioteca está vacía: {count} configuraciones borradas{size}.'
+  },
+  'library.clearedAfterExport': {
+    one: 'El archivo comprimido se ha descargado y luego la biblioteca se ha vaciado: {count} configuración borrada{size}.',
+    other: 'El archivo comprimido se ha descargado y luego la biblioteca se ha vaciado: {count} configuraciones borradas{size}.'
+  },
+  'library.clearedBytes': ', {size} de bytes liberados',
+
   /* --------------------------------------------------------- la entrada ilegible */
 
   'library.brokenName': 'Entrada ilegible',
@@ -363,6 +396,7 @@ const library: DomainCatalog<'library'> = {
   'library.contextVerifying': 'Comprobación',
   'library.contextRenaming': 'Cambio de nombre',
   'library.contextExporting': 'Exportación de la biblioteca',
+  'library.contextClearing': 'Borrado de la biblioteca',
   'library.contextImporting': 'Importación de la biblioteca',
   'library.contextReading': 'Lectura de la biblioteca',
 

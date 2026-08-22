@@ -305,6 +305,39 @@ const library: DomainCatalog<'library'> = {
     'Wenn Sie unsicher sind: Geben Sie zuerst die Datei heraus, oder exportieren Sie die ganze Bibliothek.',
   'library.removed': '„{name}“ wurde gelöscht.',
 
+  /* ------------------------------------------- die ganze Bibliothek löschen */
+
+  'library.clearAll': 'Die ganze Bibliothek löschen',
+  'library.clearAllTitle': 'Die ganze Bibliothek löschen?',
+  'library.clearAllConfirm': 'Alles löschen',
+
+  'library.clearAllBody': {
+    one: '{count} abgelegte Konfiguration verlässt diesen Browser{size}{broken}.',
+    other: '{count} abgelegte Konfigurationen verlassen diesen Browser{size}{broken}.'
+  },
+  'library.clearAllBytes': ' — {size} an Bytes gehen mit',
+  'library.clearAllBroken': {
+    one: ', sowie {count} unlesbarer Eintrag',
+    other: ', sowie {count} unlesbare Einträge'
+  },
+  'library.clearAllCaveat':
+    'Die Bytes gehen mit: Gelöscht wird Ihre Datei selbst, und diese Bibliothek hat keinen Papierkorb. Nichts wurde je irgendwohin gesendet — es gibt also keine Kopie zurückzuholen, weder hier noch bei irgendjemandem.',
+  'library.clearAllScope':
+    'Diese Handlung löscht die Bibliothek, und nur sie. Drei Einstellungen dieses Editors bleiben in diesem Browser: die Sprache der Oberfläche, die Höhe der Einstellungsleiste und die Geräte, die Sie selbst hinzugefügt haben. Keine der drei trägt eine Konfiguration, eine Seite oder eine Wegpunktdatei — es sind eine Sprachwahl und Bildschirmmaße. Um gar nichts zurückzulassen, löschen Sie die Daten dieser Website in Ihrem Browser: Nur diese Handlung nimmt auch sie mit.',
+
+  'library.exportThenClear': 'Erst das Archiv exportieren, dann alles löschen',
+  'library.clearWithoutExport': 'Alles löschen, ohne zu exportieren',
+
+  'library.cleared': {
+    one: 'Die Bibliothek ist leer: {count} Konfiguration gelöscht{size}.',
+    other: 'Die Bibliothek ist leer: {count} Konfigurationen gelöscht{size}.'
+  },
+  'library.clearedAfterExport': {
+    one: 'Das Archiv ist heruntergeladen, dann wurde die Bibliothek geleert: {count} Konfiguration gelöscht{size}.',
+    other: 'Das Archiv ist heruntergeladen, dann wurde die Bibliothek geleert: {count} Konfigurationen gelöscht{size}.'
+  },
+  'library.clearedBytes': ', {size} an Bytes freigegeben',
+
   /* --------------------------------------------------------- der unlesbare Eintrag */
 
   'library.brokenName': 'Unlesbarer Eintrag',
@@ -364,6 +397,7 @@ const library: DomainCatalog<'library'> = {
   'library.contextVerifying': 'Prüfung',
   'library.contextRenaming': 'Umbenennen',
   'library.contextExporting': 'Export der Bibliothek',
+  'library.contextClearing': 'Löschen der Bibliothek',
   'library.contextImporting': 'Import der Bibliothek',
   'library.contextReading': 'Lesen der Bibliothek',
 

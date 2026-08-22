@@ -305,6 +305,39 @@ const library: DomainCatalog<'library'> = {
     'Als u niet zeker bent: haal eerst het bestand eruit, of exporteer de hele bibliotheek.',
   'library.removed': '‘{name}’ is verwijderd.',
 
+  /* ------------------------------------------- de hele bibliotheek wissen */
+
+  'library.clearAll': 'De hele bibliotheek wissen',
+  'library.clearAllTitle': 'De hele bibliotheek wissen?',
+  'library.clearAllConfirm': 'Alles wissen',
+
+  'library.clearAllBody': {
+    one: '{count} opgeborgen configuratie verlaat deze browser{size}{broken}.',
+    other: '{count} opgeborgen configuraties verlaten deze browser{size}{broken}.'
+  },
+  'library.clearAllBytes': ' — {size} aan bytes gaan mee',
+  'library.clearAllBroken': {
+    one: ', evenals {count} onleesbaar item',
+    other: ', evenals {count} onleesbare items'
+  },
+  'library.clearAllCaveat':
+    'De bytes gaan mee: het is uw eigen bestand dat gewist wordt, en deze bibliotheek heeft geen prullenbak. Er is nooit iets ergens naartoe gestuurd — er valt dus geen kopie terug te halen, hier niet en bij niemand anders.',
+  'library.clearAllScope':
+    'Dit gebaar wist de bibliotheek, en niets anders. Drie instellingen van deze editor blijven in deze browser: de taal van de interface, de hoogte van de instellingenbalk, en de apparaten die u zelf hebt toegevoegd. Geen van de drie draagt een configuratie, een pagina of een waypointbestand — het zijn een taalkeuze en schermafmetingen. Om helemaal niets achter te laten, wist u de gegevens van deze site vanuit uw browser: dat is het enige gebaar dat ook die meeneemt.',
+
+  'library.exportThenClear': 'Eerst het archief exporteren, dan alles wissen',
+  'library.clearWithoutExport': 'Alles wissen zonder te exporteren',
+
+  'library.cleared': {
+    one: 'De bibliotheek is leeg: {count} configuratie gewist{size}.',
+    other: 'De bibliotheek is leeg: {count} configuraties gewist{size}.'
+  },
+  'library.clearedAfterExport': {
+    one: 'Het archief is gedownload, daarna is de bibliotheek geleegd: {count} configuratie gewist{size}.',
+    other: 'Het archief is gedownload, daarna is de bibliotheek geleegd: {count} configuraties gewist{size}.'
+  },
+  'library.clearedBytes': ', {size} aan bytes vrijgemaakt',
+
   /* --------------------------------------------------------- het onleesbare item */
 
   'library.brokenName': 'Onleesbaar item',
@@ -364,6 +397,7 @@ const library: DomainCatalog<'library'> = {
   'library.contextVerifying': 'Nakijken',
   'library.contextRenaming': 'Hernoemen',
   'library.contextExporting': 'Export van de bibliotheek',
+  'library.contextClearing': 'Wissen van de bibliotheek',
   'library.contextImporting': 'Import van de bibliotheek',
   'library.contextReading': 'Lezen van de bibliotheek',
 
