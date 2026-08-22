@@ -231,7 +231,7 @@ een belofte van getrouwheid die alleen de auteur kan nagaan, is niets waard.
   (`tests/fixtures/exports/2026-08-20_backup-00.xcfg`, geschreven door XCTrack 1.0.3-beta):
   **6 voorgestelde en 3 laten staan instellingen, op 4 widgets, op 1 059 onderzochte
   widgetinstellingen.** U ziet de lijst — elke instelling met de laatste versie van XCTrack
-  die ze nog schreef —, u vinkt
+  die ze nog schreef, en wat het toestel met haar en zonder haar heeft teruggelezen —, u vinkt
   af wat u liever houdt, u handelt met een uitdrukkelijk gebaar, en u kunt er meteen daarna op
   terugkomen: teruggezet komt het bestand er **byte voor byte** uit. Het opruimen staat onder
   de versiediagnose, en alleen in bewerkmodus.
@@ -247,7 +247,10 @@ een belofte van getrouwheid die alleen de auteur kan nagaan, is niets waard.
   niets. Een verwijdering wordt daarom alleen voorgesteld wanneer een heen en weer op het
   toestel heeft getoond dat het met en zonder **hetzelfde** afleidt
   (`src/catalog/legacyMigrations.json`, een gedateerde en begrensde opname). De andere worden
-  genoemd, uitgelegd en laten staan — de piloot hoeft niets te doen, ze verdwijnen vanzelf.
+  genoemd en laten staan, elk met haar reden **voluit geschreven in het paneel waar men
+  beslist** — ‘de windpijl zou van dit kompas verdwijnen’ — en de meting er vlak onder, in
+  de woorden die het toestel heeft geschreven. De piloot hoeft niets te doen: ze verdwijnen
+  vanzelf.
 - **Zeggen wat uw bestand over u prijsgeeft** voordat u het deelt. Een `backup`-export draagt
   uw naam, uw scherm, uw gekoppelde sensoren, uw waypointbestanden — tot en met de naam van
   de wedstrijd waaraan u deelneemt. Bij het opslaan biedt het gereedschap daarom **drie

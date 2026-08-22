@@ -219,7 +219,7 @@ author can check is worth nothing.
   (`tests/fixtures/exports/2026-08-20_backup-00.xcfg`, written by XCTrack 1.0.3-beta):
   **6 settings offered and 3 left in place, across 4 widgets, out of 1,059 widget settings
   examined.** You see the list — each setting with the last XCTrack release that still
-  wrote it — you
+  wrote it, and what the device read back with it and without it — you
   untick what you would rather keep, you act with one explicit gesture, and you can go
   back on it right afterwards: put back, the file comes out **byte for byte**. The
   cleanup sits under the version diagnosis, and only in editing mode.
@@ -235,8 +235,10 @@ author can check is worth nothing.
   takes the widget from the wind arrow to nothing at all. So a removal is only offered
   when a round trip on the device has shown that the instrument derives **the same thing**
   with and without it (`src/catalog/legacyMigrations.json`, a dated and bounded survey).
-  The others are named, explained and left in place — there is nothing for the pilot to
-  do, they will go on their own.
+  The others are named and left in place, each with its reason **written in plain words in
+  the panel where you decide** — “the wind arrow would disappear from this compass” — and
+  the measurement right below, in the words the device wrote. There is nothing for the
+  pilot to do: they will go on their own.
 - **Say what your file reveals about you** before you share it. A `backup` export carries
   your name, your glider, your paired sensors, your waypoint files — down to the name of
   the competition you are flying. So when you save, the tool offers **three outcomes**,

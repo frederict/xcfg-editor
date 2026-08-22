@@ -66,12 +66,30 @@ const versions = {
    * AIR³ 7.2. Voir `cleanup.calm` et `catalog/legacyMigrations.ts`.
    */
   'versions.titleLegacy': 'Réglages périmés : la version visée ne les écrit plus',
-  'versions.evidenceLegacy': 'Nous lisons ces réglages dans des versions plus anciennes, plus dans celle-ci — et de vrais fichiers écrits par cette version-là les portent quand même. XCTrack garde sans les lire les réglages qu’il ne connaît plus : ici, nous l’avons vu se produire, nous ne le supposons pas.',
-  'versions.verdictLegacy': 'Une suppression se défend ici. C’est le seul cas qu’un vrai fichier vient confirmer.',
+  /**
+   * ⚠️ « XCTrack garde sans les lire les réglages qu'il ne connaît plus » a tenu ici
+   * jusqu'au 22 août 2026, et c'est exactement ce que l'aller-retour sur l'AIR³ 7.2 a
+   * démenti : l'instrument les lit. Ce qu'il garde, c'est le **texte d'une page** tant
+   * qu'il ne l'a pas affichée — et c'est cela, et cela seul, qui explique qu'un fichier
+   * de 2026 porte encore des réglages de 2022.
+   */
+  'versions.evidenceLegacy': 'Nous lisons ces réglages dans des versions plus anciennes, plus dans celle-ci — et de vrais fichiers écrits par cette version-là les portent quand même. XCTrack garde le texte d’une page tant qu’il ne l’a pas affichée : ici, nous l’avons vu se produire, nous ne le supposons pas.',
+  /**
+   * ⚠️ « Une suppression se défend ici. C'est le seul cas qu'un vrai fichier vient
+   * confirmer. » — un pilote-testeur n'a pas su la lire, le 22 août 2026 : « ici » ne
+   * disait pas s'il s'agissait du bloc, du fichier ou du réglage, et « le seul cas » ne
+   * disait pas parmi quoi. Pire, restée en tête après le nettoyage, elle se lisait comme
+   * une invitation à supprimer les réglages que l'outil venait de refuser de toucher. Ce
+   * qu'elle voulait dire est ici en toutes lettres : parmi les remarques du diagnostic,
+   * celle-ci est la seule qu'un vrai fichier atteste, donc la seule où l'outil s'autorise
+   * à proposer un retrait — et il le pèse encore réglage par réglage.
+   */
+  'versions.verdictLegacy': 'C’est la seule remarque de ce diagnostic qu’un vrai fichier vient confirmer, et la seule où un retrait se défende. Chaque réglage est ensuite pesé un par un : ceux dont le retrait changerait ce que votre instrument affiche restent en place.',
 
   'versions.titlePastOnly': 'Lus par des versions plus anciennes seulement',
   'versions.evidencePastOnly': 'Nous lisons ces réglages dans des versions plus anciennes, plus dans celle qui est visée. Mais aucun vrai fichier ne vient le confirmer : nous n’avons ici que notre lecture des versions, sans l’exemple qui la vérifie.',
-  'versions.verdictPastOnly': 'Une suppression se défend, sur notre seule lecture. Rien ne dit que XCTrack les ait retirés : nous ne les y lisons plus, c’est tout.',
+  /** Même défaut que `verdictLegacy` : la formule invitait là où l'outil ne propose rien. */
+  'versions.verdictPastOnly': 'Notre seule lecture les dirait périmés, et aucun vrai fichier ne vient la confirmer : l’outil ne propose donc rien ici. Rien ne dit que XCTrack les ait retirés — nous ne les y lisons plus, c’est tout.',
 
   'versions.titleFutureOnly': 'Apparus après la version visée',
   'versions.evidenceFutureOnly': 'Nous ne lisons ces réglages que dans des versions plus récentes que celle qui est visée. Ce fichier vient donc d’une version plus récente que celle choisie ici.',
@@ -275,6 +293,18 @@ const versions = {
   },
 
   /**
+   * Le raccord entre les deux comptes. Le diagnostic annonce neuf réglages périmés, le
+   * nettoyage en propose six : un pilote-testeur a dû faire la soustraction lui-même, le
+   * 22 août 2026, et remarquer à deux blocs d'écart qu'un même nom figurait dans les
+   * deux listes. Cette phrase ne paraît que lorsqu'il y a bien des réglages laissés en
+   * place, et elle dit où ils sont.
+   */
+  'cleanup.leadHeld': {
+    one: '{count} autre réglage a été trouvé et n’est pas proposé : il est nommé plus bas, avec la raison.',
+    other: '{count} autres réglages ont été trouvés et ne sont pas proposés : ils sont nommés plus bas, avec la raison.'
+  },
+
+  /**
    * ⚠️ Cette phrase a affirmé deux choses fausses jusqu'au 22 août 2026 — « XCTrack les
    * transporte sans les lire » et « les enlever allège le fichier, c'est tout ». Un
    * aller-retour sur un AIR³ 7.2 a montré l'inverse : l'instrument les lit, en tire ses
@@ -296,12 +326,52 @@ const versions = {
     one: '{count} réglage trouvé, et laissé en place',
     other: '{count} réglages trouvés, et laissés en place'
   },
-  'cleanup.heldLead': 'Ceux-là ne sont pas proposés. XCTrack les lit une dernière fois à l’ouverture pour en tirer ses réglages d’aujourd’hui : les enlever avant qu’il ne l’ait fait changerait ce que votre instrument affiche, ou nous ne savons pas dire que non. Vous n’avez rien à faire : ils partiront d’eux-mêmes dès que votre appareil aura lu ce fichier.',
+  'cleanup.heldLead': 'Ceux-là ne sont pas proposés. XCTrack les lit une dernière fois à l’ouverture pour en tirer ses réglages d’aujourd’hui : les enlever avant qu’il ne l’ait fait changerait ce que votre instrument affiche — ou bien personne ne l’a mesuré, et nous ne devinons pas. Vous n’avez rien à faire : ils partiront d’eux-mêmes dès que votre appareil aura lu ce fichier.',
+
+  /**
+   * ## La raison se dit deux fois : ce que ça fait, puis ce qui a été relevé
+   *
+   * Jusqu'au 22 août 2026 l'écran n'avait que `cleanup.heldLive` à montrer, et il
+   * s'écrivait « mesuré sur l'appareil : sans lui, windStyle passe de ARROW à NONE ». Un
+   * pilote-testeur l'a jugée illisible, et il avait raison : `windStyle`, `ARROW` et
+   * `NONE` ne sont des mots ni de son instrument ni de son vocabulaire. La phrase humaine
+   * existait — dans le manuel, au chapitre 9 —, c'est-à-dire là où l'on ne décide rien.
+   *
+   * Elle est donc ici, en tête, et **la mesure reste dessous** : c'est elle la preuve,
+   * c'est par elle qu'on retrouve la ligne dans le fichier, et une phrase rassurante qui
+   * l'aurait remplacée aurait refait la faute que ce module vient de corriger.
+   */
+  'cleanup.heldLive': 'Si vous l’enleviez, {effect}.',
   /** `{successor}`, `{present}` et `{absent}` sont des noms et des valeurs de XCTrack : recopiés tels quels. */
-  'cleanup.heldLive': 'mesuré sur l’appareil : sans lui, {successor} passe de {present} à {absent}',
-  'cleanup.heldUnmeasured': 'ce qu’il deviendrait sans lui n’a jamais été mesuré sur un appareil',
+  'cleanup.heldMeasure': 'Mesuré sur l’appareil : sans lui, {successor} passe de {present} à {absent}.',
+  'cleanup.heldUnmeasured': 'Personne n’a mesuré ce que son retrait changerait sur un appareil. Nous ne devinons pas : il reste en place.',
+
+  /**
+   * ## Les conséquences mesurées, une clé par cas
+   *
+   * Famille de valeurs fermée, donc préfixe à elle — voir `src/i18n/CLAUDE.md`, § 2. Les
+   * identifiants (`windArrowGone`) viennent de `catalog/legacyMigrations.json`, qui les
+   * pose à côté de la mesure qui les fonde ; un test refuse une mesure « vivante » sans
+   * conséquence nommée, et une conséquence nommée sans phrase dans les cinq langues.
+   *
+   * Chacune s'insère dans `cleanup.heldLive` : elle commence donc en minuscule et ne
+   * porte pas son point final.
+   */
+  'removalEffect.windArrowGone': 'la flèche de vent disparaîtrait de ce compas',
+  'removalEffect.terrainShadingGone': 'l’ombrage du relief s’éteindrait sur cette carte',
+  /** Le repli : une mesure dit qu'un retrait change quelque chose sans dire quoi. */
+  'removalEffect.unnamed': 'ce gadget n’afficherait plus la même chose',
 
   /* ------------------------------------------- ce que porte chaque réglage périmé */
+
+  /**
+   * La contrepartie de `cleanup.heldMeasure`, sur les réglages **proposés**. Elle existe
+   * parce que deux réglages voisins du même gadget — `newWindArrow`, proposé, et
+   * `showWind`, laissé en place — recevaient deux sorts opposés sans que rien à l'écran
+   * ne dise pourquoi. Mises côte à côte, les deux mesures le disent : l'une fait passer
+   * `windStyle` de `ARROW` à `NONE`, l'autre le laisse à `ARROW`.
+   */
+  'cleanup.inertMeasure': 'Mesuré sur l’appareil : avec ou sans lui, {successor} vaut {value}.',
 
   'cleanup.usedUntil': 'écrit par XCTrack jusqu’à la version {release}',
   'cleanup.noLongerRead': 'remplacé depuis, sans qu’on sache dire quand',
@@ -317,19 +387,26 @@ const versions = {
 
   /* ------------------------------------------------------------- décocher, puis agir */
 
+  /**
+   * ⚠️ Ces trois phrases ont dit « retenu » jusqu'au 22 août 2026, à deux centimètres du
+   * bouton qui enlève — et « retenu » veut dire *gardé* en français courant, soit
+   * l'inverse exact. Le mot est celui de la case : **coché**. L'espagnol et le néerlandais
+   * disaient déjà « marcado » et « aangevinkt » ; c'étaient le français, l'anglais et
+   * l'allemand qui portaient l'ambiguïté.
+   */
   'cleanup.allSelected': {
-    one: '{count} réglage retenu.',
-    other: '{count} réglages retenus.'
+    one: '{count} réglage coché : il sera enlevé.',
+    other: '{count} réglages cochés : ils seront enlevés.'
   },
   'cleanup.someSelected': {
-    one: '{count} retenu sur {total} — {left}.',
-    other: '{count} retenus sur {total} — {left}.'
+    one: '{count} coché sur {total} — {left}.',
+    other: '{count} cochés sur {total} — {left}.'
   },
   'cleanup.remaining': {
     one: '{count} réglage restera en place',
     other: '{count} réglages resteront en place'
   },
-  'cleanup.noneSelected': 'Aucun réglage retenu',
+  'cleanup.noneSelected': 'Aucun réglage coché',
 
   /**
    * Le cas qu'aucun `s` collé n'aurait su rendre : le nombre se glisse **entre** le

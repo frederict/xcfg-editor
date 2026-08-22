@@ -846,7 +846,10 @@
     flecha de viento a nada en absoluto.</p>
     <p>Por eso la herramienta solo propone quitar algo cuando una ida y vuelta en el aparato ha
     mostrado que el instrumento deriva <strong>lo mismo</strong>, esté el ajuste o no. A los
-    demás los nombra y los deja donde están.</p>
+    demás los nombra y los deja donde están — <strong>y le dice cuáles, con todas las letras,
+    en el panel donde usted decide</strong>. No tiene que volver aquí para entender lo que se
+    le propone: este capítulo dice de dónde viene ese saber y en qué aparato se tomó, la
+    pantalla dice lo que le haría al suyo.</p>
   </div>
 
   <p>Empieza por tranquilizarle, y la frase ya solo promete lo que se ha medido: «XCTrack lee
@@ -875,10 +878,18 @@
   <p>Bajo la lista, un segundo bloque —
   <span class="manual__ui">Lo que dejó una versión antigua</span> cuando está solo — nombra los
   ajustes <strong>encontrados y dejados donde están</strong>. No tienen casilla, y cada uno dice
-  por qué: o bien la medida muestra lo que cambiaría sin él («sin él, <code>windStyle</code>
-  pasa de <code>ARROW</code> a <code>NONE</code>»), o bien nadie lo ha medido nunca. En ambos
+  por qué <strong>en dos líneas</strong>: primero lo que haría su retirada, en sus palabras
+  («la flecha de viento desaparecería de esta brújula») y, justo debajo, la medida que lo
+  prueba: «sin él, <code>windStyle</code> pasa de <code>ARROW</code> a <code>NONE</code>».
+  Cuando nadie lo ha medido, la pantalla también lo dice, y no inventa nada. En ambos
   casos usted no tiene nada que hacer: se irán solos en cuanto su aparato haya leído este
   archivo.</p>
+
+  <p>Los ajustes que <em>sí</em> se proponen llevan la medida simétrica («con él o sin él,
+  <code>windStyle</code> vale <code>ARROW</code>»). Eso explica que dos ajustes vecinos del
+  mismo widget puedan correr suertes opuestas: en una brújula, <code>newWindArrow</code> se
+  propone y <code>showWind</code> no, y las dos medidas juntas dicen por qué sin comentario
+  alguno.</p>
 
   <!-- =================================================================== 10 -->
 

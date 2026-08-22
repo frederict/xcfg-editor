@@ -225,7 +225,7 @@ de fidelidad que solo el autor puede comprobar no vale nada.
   (`tests/fixtures/exports/2026-08-20_backup-00.xcfg`, escrita por XCTrack 1.0.3-beta):
   **6 ajustes propuestos y 3 dejados donde están, en 4 widgets, sobre 1 059 ajustes de
   widgets examinados.** Usted ve la lista — cada ajuste con la última versión de XCTrack que
-  aún lo escribía —, desmarca lo que
+  aún lo escribía, y lo que el aparato ha releído con él y sin él —, desmarca lo que
   prefiere conservar, actúa con un gesto explícito, y puede volver atrás justo después:
   devueltos, el archivo sale **byte a byte igual**. La limpieza está bajo el diagnóstico de
   versión, y solo en modo edición.
@@ -241,8 +241,10 @@ de fidelidad que solo el autor puede comprobar no vale nada.
   flecha de viento a nada en absoluto. Por eso solo se propone quitar algo cuando una ida y
   vuelta en el aparato ha mostrado que el instrumento deriva **lo mismo** con él y sin él
   (`src/catalog/legacyMigrations.json`, un registro fechado y acotado). A los demás se los
-  nombra, se los explica y se los deja donde están — el piloto no tiene nada que hacer, se
-  irán solos.
+  nombra y se los deja donde están, cada uno con su motivo **escrito con todas las letras
+  en el panel donde se decide** — «la flecha de viento desaparecería de esta brújula» — y
+  la medida justo debajo, en las palabras que ha escrito el aparato. El piloto no tiene
+  nada que hacer: se irán solos.
 - **Decir lo que su archivo revela de usted** antes de que lo comparta. Una exportación
   `backup` lleva su nombre, su vela, sus sensores emparejados, sus archivos de waypoints —
   hasta el nombre de la competición en la que participa. Al guardar, la herramienta propone

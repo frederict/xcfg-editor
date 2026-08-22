@@ -30,12 +30,12 @@ const versions: DomainCatalog<'versions'> = {
 
   /** ⚠️ Voir le commentaire du français : « ya no los lee » était faux. */
   'versions.titleLegacy': 'Ajustes obsoletos: la versión elegida ya no los escribe',
-  'versions.evidenceLegacy': 'Leemos estos ajustes en versiones más antiguas, ya no en esta — y archivos reales escritos por esa misma versión los llevan de todos modos. XCTrack conserva sin leerlos los ajustes que ya no conoce: aquí lo hemos visto ocurrir, no lo suponemos.',
-  'versions.verdictLegacy': 'Aquí quitarlos se sostiene. Es el único caso que un archivo real viene a confirmar.',
+  'versions.evidenceLegacy': 'Leemos estos ajustes en versiones más antiguas, ya no en esta — y archivos reales escritos por esa misma versión los llevan de todos modos. XCTrack conserva el texto de una página mientras no la haya mostrado: aquí lo hemos visto ocurrir, no lo suponemos.',
+  'versions.verdictLegacy': 'Es la única observación de este diagnóstico que un archivo real viene a confirmar, y la única donde quitarlos se sostiene. Después cada ajuste se sopesa uno por uno: los que al quitarse cambiarían lo que muestra su instrumento se quedan en su sitio.',
 
   'versions.titlePastOnly': 'Leídos solo por versiones más antiguas',
   'versions.evidencePastOnly': 'Leemos estos ajustes en versiones más antiguas, ya no en la que se ha elegido. Pero ningún archivo real viene a confirmarlo: aquí solo tenemos nuestra lectura de las versiones, sin el ejemplo que la comprueba.',
-  'versions.verdictPastOnly': 'Quitarlos se sostiene, solo con nuestra lectura. Nada dice que XCTrack los haya retirado: simplemente ya no los leemos ahí.',
+  'versions.verdictPastOnly': 'Solo nuestra lectura los llamaría obsoletos, y ningún archivo real lo viene a confirmar: la herramienta no propone nada aquí. Nada dice que XCTrack los haya retirado — simplemente ya no los leemos ahí.',
 
   'versions.titleFutureOnly': 'Aparecidos después de la versión elegida',
   'versions.evidenceFutureOnly': 'Solo leemos estos ajustes en versiones más recientes que la elegida. Este archivo viene pues de una versión más reciente que la escogida aquí.',
@@ -206,6 +206,11 @@ const versions: DomainCatalog<'versions'> = {
     other: '{count} ajustes de este archivo vienen de una versión más antigua de XCTrack, repartidos en {instances}: {list}.'
   },
 
+  'cleanup.leadHeld': {
+    one: 'Se ha encontrado {count} ajuste más que no se propone: está nombrado más abajo, con el motivo.',
+    other: 'Se han encontrado {count} ajustes más que no se proponen: están nombrados más abajo, con el motivo.'
+  },
+
   /**
    * ⚠️ Esta frase afirmó dos cosas falsas hasta el 22 de agosto de 2026 — «XCTrack los
    * transporta sin leerlos» y «quitarlos aligera el archivo, nada más». Una ida y vuelta
@@ -228,12 +233,19 @@ const versions: DomainCatalog<'versions'> = {
     one: '{count} ajuste encontrado, y dejado donde está',
     other: '{count} ajustes encontrados, y dejados donde están'
   },
-  'cleanup.heldLead': 'Estos no se proponen. XCTrack los lee una última vez al abrir el archivo, para derivar de ellos sus ajustes de hoy: quitarlos antes de que lo haya hecho cambiaría lo que muestra su instrumento, o no sabemos decir que no. No tiene nada que hacer: se irán solos en cuanto su aparato haya leído este archivo.',
+  'cleanup.heldLead': 'Estos no se proponen. XCTrack los lee una última vez al abrir el archivo, para derivar de ellos sus ajustes de hoy: quitarlos antes de que lo haya hecho cambiaría lo que muestra su instrumento — o bien nadie lo ha medido, y no adivinamos. No tiene nada que hacer: se irán solos en cuanto su aparato haya leído este archivo.',
   /** `{successor}`, `{present}` y `{absent}` son nombres y valores de XCTrack: copiados tal cual. */
-  'cleanup.heldLive': 'medido en el aparato: sin él, {successor} pasa de {present} a {absent}',
-  'cleanup.heldUnmeasured': 'lo que sería sin él nunca se ha medido en un aparato',
+  'cleanup.heldLive': 'Si lo quitara, {effect}.',
+  'cleanup.heldMeasure': 'Medido en el aparato: sin él, {successor} pasa de {present} a {absent}.',
+  'cleanup.heldUnmeasured': 'Nadie ha medido lo que su retirada cambiaría en un aparato. No adivinamos: se queda en su sitio.',
+
+  'removalEffect.windArrowGone': 'la flecha de viento desaparecería de esta brújula',
+  'removalEffect.terrainShadingGone': 'el sombreado del relieve se apagaría en este mapa',
+  'removalEffect.unnamed': 'este widget ya no mostraría lo mismo',
 
   /* ------------------------------------------- ce que porte chaque réglage périmé */
+
+  'cleanup.inertMeasure': 'Medido en el aparato: con él o sin él, {successor} vale {value}.',
 
   'cleanup.usedUntil': 'escrito por XCTrack hasta la versión {release}',
   'cleanup.noLongerRead': 'reemplazado desde entonces, sin que sepamos decir cuándo',

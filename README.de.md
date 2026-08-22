@@ -238,7 +238,8 @@ Absicht — ein Treueversprechen, das nur der Autor nachprüfen kann, ist nichts
   (`tests/fixtures/exports/2026-08-20_backup-00.xcfg`, geschrieben von XCTrack 1.0.3-beta):
   **6 vorgeschlagene und 3 stehen gelassene Einstellungen, auf 4 Widgets, bei 1 059
   untersuchten Widget-Einstellungen.** Sie sehen die Liste — jede Einstellung mit der
-  letzten XCTrack-Version, die sie noch schrieb —, Sie wählen ab, was Sie lieber behalten, Sie handeln
+  letzten XCTrack-Version, die sie noch schrieb, und was das Gerät mit ihr und ohne sie
+  zurückgelesen hat —, Sie wählen ab, was Sie lieber behalten, Sie handeln
   mit einem ausdrücklichen Klick, und Sie können gleich danach zurück: zurückgelegt kommt
   die Datei **bis aufs Byte** wieder heraus. Das Aufräumen steht unter der
   Versionsdiagnose, und nur im Bearbeitungsmodus.
@@ -254,8 +255,10 @@ Absicht — ein Treueversprechen, das nur der Autor nachprüfen kann, ist nichts
   das Widget vom Windpfeil zu gar nichts. Ein Entfernen wird daher nur angeboten, wenn ein
   Hin und Zurück auf dem Gerät gezeigt hat, dass es mit und ohne **dasselbe** ableitet
   (`src/catalog/legacyMigrations.json`, ein datiertes und begrenztes Protokoll). Die
-  anderen werden genannt, erklärt und stehen gelassen — der Pilot muss nichts tun, sie
-  verschwinden von selbst.
+  anderen werden genannt und stehen gelassen, jede mit ihrem Grund **ausgeschrieben in dem
+  Bereich, wo man entscheidet** — „der Windpfeil würde von diesem Kompass verschwinden“ —
+  und der Messung gleich darunter, in den Worten, die das Gerät geschrieben hat. Der Pilot
+  muss nichts tun: sie verschwinden von selbst.
 - **Sagen, was Ihre Datei über Sie verrät**, bevor Sie sie weitergeben. Ein
   `backup`-Export enthält Ihren Namen, Ihren Schirm, Ihre gekoppelten Sensoren, Ihre
   Wegpunktdateien — bis hin zum Namen des Wettkampfs, an dem Sie teilnehmen. Beim Speichern

@@ -272,7 +272,7 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
   (`tests/fixtures/exports/2026-08-20_backup-00.xcfg`, écrite par XCTrack 1.0.3-beta) :
   **6 réglages proposés et 3 laissés en place, sur 4 gadgets, pour 1 059 réglages de
   gadgets examinés.** Vous voyez la liste — chaque réglage avec la dernière version de
-  XCTrack qui l'écrivait encore —, vous décochez ce que vous préférez garder, vous agissez d'un geste explicite, et vous
+  XCTrack qui l'écrivait encore, et ce que l'appareil en a relu avec lui et sans lui —, vous décochez ce que vous préférez garder, vous agissez d'un geste explicite, et vous
   pouvez revenir en arrière juste après : remis, le fichier ressort **à l'octet près**. Le
   nettoyage se trouve sous le diagnostic de version, et seulement en mode édition.
 
@@ -286,8 +286,10 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
   `showWind` : enlever ce réglage à *oui* fait passer le gadget de la flèche de vent à
   rien du tout. Un retrait n'est donc proposé que lorsqu'un aller-retour sur l'appareil a
   montré que l'instrument en tire **la même chose** avec et sans
-  (`src/catalog/legacyMigrations.json`, un relevé daté et borné). Les autres sont nommés,
-  expliqués et laissés en place — le pilote n'a rien à en faire, ils partiront d'eux-mêmes.
+  (`src/catalog/legacyMigrations.json`, un relevé daté et borné). Les autres sont nommés et laissés
+  en place, chacun avec sa raison **écrite en français dans le panneau où l'on décide** —
+  « la flèche de vent disparaîtrait de ce compas » — et la mesure juste dessous, dans les
+  mots que l'appareil a écrits. Le pilote n'a rien à en faire : ils partiront d'eux-mêmes.
 - **Dire ce que votre fichier révèle de vous** avant que vous ne le partagiez. Un export
   `backup` porte votre nom, votre voile, vos capteurs appairés, vos fichiers de waypoints
   — jusqu'au nom de la compétition à laquelle vous participez. Au moment d'enregistrer,
@@ -677,6 +679,23 @@ trois laissés en place, sur quatre gadgets.*
   3. La marque d'état ne s'écrit plus en capitales : c'est une pastille arrondie qui dit
      « périmé » en bas de casse, sous le titre « Réglages périmés ». Les légendes citaient
      « PÉRIMÉ » ; elles citent maintenant le titre, qui est ce que le lecteur cherchera.
+
+  DETTE OUVERTE le 2026-08-22, après l'essai pilote nº 5 : LES CINQ IMAGES SONT PÉRIMÉES,
+  et elles n'ont pas été refaites — un autre travail tenait les captures au même moment.
+  Ce qui a changé dans le cadre, et rien d'autre :
+    · chaque réglage porte maintenant DEUX lignes au lieu d'une. Sous le nom vient la
+      raison en français (« la flèche de vent disparaîtrait de ce compas ») et, sous elle,
+      la mesure qui la prouve (« sans lui, windStyle passe de ARROW à NONE »). Les six
+      réglages proposés portent la mesure symétrique (« avec ou sans lui, windStyle vaut
+      ARROW ») ;
+    · une phrase de plus sous l'annonce : « 3 autres réglages ont été trouvés et ne sont
+      pas proposés : ils sont nommés plus bas, avec la raison. » ;
+    · « 6 réglages retenus » se lit maintenant « 6 réglages cochés : ils seront enlevés »,
+      et le bouton inerte dit « Aucun réglage coché » ;
+    · dans le diagnostic au-dessus, le verdict du bloc ambre a changé de phrase entière.
+  ⚠ LE CADRAGE EST À REMESURER, pas à deviner : une dizaine de lignes de texte s'ajoutent
+  à la boîte et 1 960 points ne suffiront pas. Reprendre la méthode ci-dessus — mesurer le
+  contenu dans les cinq langues, diviser par 0,88, l'allemand commande.
 -->
 
 

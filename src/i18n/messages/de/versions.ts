@@ -28,12 +28,12 @@ const versions: DomainCatalog<'versions'> = {
 
   /** ⚠️ Voir le commentaire du français : « liest sie nicht mehr » était faux. */
   'versions.titleLegacy': 'Veraltete Einstellungen: die angepeilte Version schreibt sie nicht mehr',
-  'versions.evidenceLegacy': 'Wir lesen diese Einstellungen in älteren Versionen, in dieser nicht mehr — und echte Dateien, die von eben dieser Version geschrieben wurden, tragen sie trotzdem. XCTrack behält Einstellungen, die es nicht mehr kennt, ohne sie zu lesen: hier haben wir es geschehen sehen, wir vermuten es nicht.',
-  'versions.verdictLegacy': 'Ein Entfernen lässt sich hier vertreten. Das ist der einzige Fall, den eine echte Datei bestätigt.',
+  'versions.evidenceLegacy': 'Wir lesen diese Einstellungen in älteren Versionen, in dieser nicht mehr — und echte Dateien, die von eben dieser Version geschrieben wurden, tragen sie trotzdem. XCTrack behält den Text einer Seite, solange es sie nicht angezeigt hat: hier haben wir es geschehen sehen, wir vermuten es nicht.',
+  'versions.verdictLegacy': 'Das ist die einzige Feststellung dieser Diagnose, die eine echte Datei bestätigt, und die einzige, bei der sich ein Entfernen vertreten lässt. Jede Einstellung wird danach einzeln abgewogen: die, deren Entfernen ändern würde, was Ihr Gerät anzeigt, bleiben bestehen.',
 
   'versions.titlePastOnly': 'Nur von älteren Versionen gelesen',
   'versions.evidencePastOnly': 'Wir lesen diese Einstellungen in älteren Versionen, in der angepeilten nicht mehr. Aber keine echte Datei bestätigt es: wir haben hier nur unsere Lesung der Versionen, ohne das Beispiel, das sie prüft.',
-  'versions.verdictPastOnly': 'Ein Entfernen lässt sich vertreten, allein auf unsere Lesung hin. Nichts sagt, dass XCTrack sie entfernt hätte: wir lesen sie dort bloß nicht mehr.',
+  'versions.verdictPastOnly': 'Allein unsere Lesung würde sie veraltet nennen, und keine echte Datei bestätigt das: das Werkzeug bietet hier also nichts an. Nichts sagt, dass XCTrack sie entfernt hätte — wir lesen sie dort bloß nicht mehr.',
 
   'versions.titleFutureOnly': 'Nach der angepeilten Version erschienen',
   'versions.evidenceFutureOnly': 'Wir lesen diese Einstellungen nur in Versionen, die neuer sind als die angepeilte. Diese Datei stammt also aus einer neueren Version als der hier gewählten.',
@@ -204,6 +204,11 @@ const versions: DomainCatalog<'versions'> = {
     other: '{count} Einstellungen dieser Datei stammen aus einer älteren Version von XCTrack, verteilt auf {instances}: {list}.'
   },
 
+  'cleanup.leadHeld': {
+    one: '{count} weitere Einstellung wurde gefunden und wird nicht angeboten: sie ist unten benannt, mit dem Grund.',
+    other: '{count} weitere Einstellungen wurden gefunden und werden nicht angeboten: sie sind unten benannt, mit dem Grund.'
+  },
+
   /**
    * ⚠️ Dieser Satz hat bis zum 22. August 2026 zwei falsche Dinge behauptet — „XCTrack
    * schleppt sie mit, ohne sie zu lesen“ und „sie zu entfernen macht die Datei kleiner,
@@ -227,12 +232,19 @@ const versions: DomainCatalog<'versions'> = {
     one: '{count} Einstellung gefunden und stehen gelassen',
     other: '{count} Einstellungen gefunden und stehen gelassen'
   },
-  'cleanup.heldLead': 'Diese werden nicht angeboten. XCTrack liest sie beim Öffnen ein letztes Mal, um daraus seine heutigen Einstellungen abzuleiten: sie vorher zu entfernen würde ändern, was Ihr Gerät anzeigt — oder wir können nicht sagen, dass es das nicht täte. Sie müssen nichts tun: sie verschwinden von selbst, sobald Ihr Gerät diese Datei gelesen hat.',
+  'cleanup.heldLead': 'Diese werden nicht angeboten. XCTrack liest sie beim Öffnen ein letztes Mal, um daraus seine heutigen Einstellungen abzuleiten: sie vorher zu entfernen würde ändern, was Ihr Gerät anzeigt — oder niemand hat es gemessen, und wir raten nicht. Sie müssen nichts tun: sie verschwinden von selbst, sobald Ihr Gerät diese Datei gelesen hat.',
   /** `{successor}`, `{present}` und `{absent}` sind Namen und Werte von XCTrack: unverändert übernommen. */
-  'cleanup.heldLive': 'auf dem Gerät gemessen: ohne sie springt {successor} von {present} auf {absent}',
-  'cleanup.heldUnmeasured': 'was ohne sie daraus würde, wurde nie auf einem Gerät gemessen',
+  'cleanup.heldLive': 'Wenn Sie sie entfernen würden: {effect}.',
+  'cleanup.heldMeasure': 'Auf dem Gerät gemessen: ohne sie springt {successor} von {present} auf {absent}.',
+  'cleanup.heldUnmeasured': 'Niemand hat gemessen, was ihr Entfernen auf einem Gerät ändern würde. Wir raten nicht: sie bleibt bestehen.',
+
+  'removalEffect.windArrowGone': 'der Windpfeil würde von diesem Kompass verschwinden',
+  'removalEffect.terrainShadingGone': 'die Geländeschattierung würde auf dieser Karte erlöschen',
+  'removalEffect.unnamed': 'dieses Widget würde nicht mehr dasselbe anzeigen',
 
   /* ------------------------------------------- ce que porte chaque réglage périmé */
+
+  'cleanup.inertMeasure': 'Auf dem Gerät gemessen: mit ihr wie ohne sie steht {successor} auf {value}.',
 
   'cleanup.usedUntil': 'von XCTrack bis Version {release} geschrieben',
   'cleanup.noLongerRead': 'seither ersetzt, ohne dass wir sagen könnten wann',
@@ -247,18 +259,18 @@ const versions: DomainCatalog<'versions'> = {
   /* ------------------------------------------------------------- décocher, puis agir */
 
   'cleanup.allSelected': {
-    one: '{count} Einstellung behalten.',
-    other: '{count} Einstellungen behalten.'
+    one: '{count} Einstellung angehakt: sie wird entfernt.',
+    other: '{count} Einstellungen angehakt: sie werden entfernt.'
   },
   'cleanup.someSelected': {
-    one: '{count} von {total} behalten — {left}.',
-    other: '{count} von {total} behalten — {left}.'
+    one: '{count} von {total} angehakt — {left}.',
+    other: '{count} von {total} angehakt — {left}.'
   },
   'cleanup.remaining': {
     one: '{count} Einstellung bleibt bestehen',
     other: '{count} Einstellungen bleiben bestehen'
   },
-  'cleanup.noneSelected': 'Keine Einstellung behalten',
+  'cleanup.noneSelected': 'Keine Einstellung angehakt',
 
   'cleanup.removeButton': {
     one: 'Diese Einstellung entfernen',

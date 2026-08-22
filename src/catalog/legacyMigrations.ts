@@ -40,7 +40,13 @@ import { tierInRange } from './widgetVersions'
  *   `widgetDefaults.json` sur un gadget posé nu.
  *
  * Égales, le retrait est sans effet (`inert`). Différentes, il change ce que le pilote
- * verra (`live`). **Absent de la table, il n'y a pas de verdict** : `unmeasured`, et le
+ * verra (`live`) — et la valeur porte alors un troisième renseignement, `effect` : le
+ * **nom de ce que le pilote verrait changer** (`windArrowGone`), un identifiant et non
+ * une phrase. La phrase, elle, vit au catalogue de messages sous `removalEffect.*`, dans
+ * les cinq langues : ce fichier est un relevé, il ne porte pas la prose de l'interface.
+ * Sans ce chaînon, l'écran de nettoyage n'avait que `windStyle: ARROW → NONE` à montrer,
+ * et un pilote-testeur a dit le 22 août 2026 qu'il cliquait « par confiance, pas par
+ * compréhension ». **Absent de la table, il n'y a pas de verdict** : `unmeasured`, et le
  * nettoyage s'abstient. C'est la même règle que partout ailleurs dans ce projet — notre
  * silence ne conclut rien —, appliquée cette fois à la seule question qui compte pour un
  * outil qui efface : *que se passe-t-il si je l'enlève ?*
@@ -77,12 +83,26 @@ export interface RemovalCase {
   present?: string
   /** Ce qu'il écrit **sans** lui — la valeur d'usine du successeur. */
   absent?: string
+  /**
+   * **Ce que le pilote verrait changer**, sous forme d'identifiant : `windArrowGone`.
+   * L'interface le traduit (`removalEffect.*`) pour dire en français ce que
+   * `windStyle: ARROW → NONE` veut dire sur un compas. Porté par les seules valeurs dont
+   * le retrait change quelque chose ; `undefined` partout ailleurs.
+   */
+  effect?: string
 }
 
 export interface MeasuredValue {
   present: string
   absent: string
   verdict: 'inert' | 'live'
+  /**
+   * L'identifiant de la conséquence, obligatoire dès que `verdict` vaut `'live'` — un
+   * test le vérifie. Un relevé qui sait qu'un retrait change quelque chose sans savoir le
+   * dire au pilote laisserait l'interface le montrer en langage de machine, ce qui est
+   * exactement le défaut relevé le 22 août 2026.
+   */
+  effect?: string
 }
 
 export interface Migration {
@@ -173,7 +193,8 @@ export class MigrationTable {
       verdict: measured.verdict,
       successor: migration.successor,
       present: measured.present,
-      absent: measured.absent
+      absent: measured.absent,
+      ...(measured.effect === undefined ? {} : { effect: measured.effect })
     }
     // Un danger mesuré vaut partout : ni le palier visé ni le voisinage ne l'effacent.
     if (measured.verdict === 'live') return known

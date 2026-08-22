@@ -186,7 +186,34 @@ describe('il refuse de conclure là où rien n’a été mesuré', () => {
   it('rend de quoi expliquer un « vivant » au pilote : le successeur, avec et sans', () => {
     const wind = MEASURED_MIGRATIONS.removalVerdict('WCompass', 'showWind', 'true', 20, nowhere)
     expect(wind).toEqual({
-      verdict: 'live', successor: 'windStyle', present: 'ARROW', absent: 'NONE'
+      verdict: 'live', successor: 'windStyle', present: 'ARROW', absent: 'NONE',
+      effect: 'windArrowGone'
     })
+  })
+
+  /**
+   * Le relevé sait qu'un retrait change quelque chose ; encore faut-il qu'il sache le
+   * **dire**. Sans `effect`, l'écran de nettoyage retombe sur sa phrase de repli et le
+   * pilote relit « windStyle passe de ARROW à NONE » — exactement ce qu'il a dit ne pas
+   * savoir lire, le 22 août 2026. Une mesure « vivante » ajoutée demain sans sa
+   * conséquence nommée s'arrête donc ici, et pas devant lui.
+   */
+  it('nomme la conséquence de tout retrait qui change quelque chose', () => {
+    let live = 0
+    for (const key of MEASURED_MIGRATIONS.measuredKeys()) {
+      const migration = MEASURED_MIGRATIONS.migrationOf(key)
+      for (const [value, measure] of Object.entries(migration?.values ?? {})) {
+        if (measure.verdict !== 'live') {
+          // La symétrie : un retrait sans effet n'a aucune conséquence à nommer, et lui
+          // en prêter une donnerait à lire un danger là où la mesure dit qu'il n'y en a
+          // pas.
+          expect(measure.effect, `${key}=${value}`).toBeUndefined()
+          continue
+        }
+        expect(measure.effect, `${key}=${value}`).toBeTruthy()
+        live += 1
+      }
+    }
+    expect(live).toBeGreaterThan(0)
   })
 })

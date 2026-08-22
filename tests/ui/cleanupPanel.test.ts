@@ -163,7 +163,7 @@ describe('le geste', () => {
     const boxes = panel.boxes()
     boxes[0]!.checked = false
     boxes[0]!.dispatchEvent(new Event('change'))
-    expect(panel.text()).toContain('5 retenus sur 6')
+    expect(panel.text()).toContain('5 cochés sur 6')
     expect(panel.text()).toContain('1 réglage restera en place')
     expect(panel.button(/Enlever/)?.textContent).toContain('5')
   })
@@ -187,7 +187,7 @@ describe('le geste', () => {
       box.checked = false
       box.dispatchEvent(new Event('change'))
     }
-    const button = panel.button(/Aucun réglage retenu/)
+    const button = panel.button(/Aucun réglage coché/)
     expect(button?.disabled).toBe(true)
     button?.click()
     expect(panel.events).toEqual([])
@@ -272,6 +272,53 @@ describe('le geste', () => {
     expect(text).toContain('sans lui, windStyle passe de ARROW à NONE')
     expect(text).toContain('sans lui, mapWidget_mapAppearance.terrain passe de Light à None')
     expect(text).toContain('showWind')
+  })
+
+  /**
+   * **Le défaut central de l'essai pilote nº 5**, et il ne portait pas sur ce que l'outil
+   * fait : « la raison est en langage machine ; la phrase humaine n'existe que dans le
+   * manuel, chapitre 9 ». Le panneau est l'endroit où l'on décide — une explication juste
+   * rangée ailleurs n'aide personne qui a la case sous les yeux.
+   */
+  it('dit en français ce que le retrait ferait, avant de dire ce qu’on a mesuré', () => {
+    const text = harnessOf(BACKUP_2026, 20).text()
+    expect(text).toContain('la flèche de vent disparaîtrait de ce compas')
+    expect(text).toContain('l’ombrage du relief s’éteindrait sur cette carte')
+    // L'ordre : la conséquence d'abord, la mesure ensuite. L'inverse remettrait le pilote
+    // devant `windStyle` avant de lui avoir dit de quoi on parle.
+    expect(text.indexOf('la flèche de vent disparaîtrait'))
+      .toBeLessThan(text.indexOf('sans lui, windStyle passe de ARROW à NONE'))
+  })
+
+  /**
+   * ⚠️ La faute symétrique, et elle serait pire : remplacer la mesure par la phrase
+   * française. `windStyle: ARROW → NONE` est ce que l'appareil a **relu** — c'est la
+   * preuve, et c'est par elle que le pilote retrouve la ligne dans son fichier. Le projet
+   * vient précisément de se faire prendre à rassurer sans montrer.
+   */
+  it('n’escamote jamais la mesure derrière la phrase française', () => {
+    const text = harnessOf(BACKUP_2026, 20).text()
+    for (const measured of ['windStyle', 'ARROW', 'NONE', 'mapWidget_mapAppearance.terrain']) {
+      expect(text, measured).toContain(measured)
+    }
+  })
+
+  /**
+   * Sur le **même** compas, `newWindArrow` est proposé et `showWind` ne l'est pas. Le
+   * pilote-testeur a « parié que l'outil s'était trompé de sens ». Les deux mesures, dites
+   * chacune à sa ligne, tranchent sans commentaire : l'un laisse `windStyle` à `ARROW`,
+   * l'autre l'y fait renoncer.
+   */
+  it('dit aussi ce qu’on a mesuré des réglages qu’il PROPOSE', () => {
+    const text = harnessOf(BACKUP_2026, 20).text()
+    expect(text).toContain('avec ou sans lui, windStyle vaut ARROW')
+    expect(text).toContain('avec ou sans lui, nav_label vaut DISTANCE_BRACKETS')
+  })
+
+  /** 9 = 6 + 3, dit par l'écran plutôt que laissé à la soustraction du pilote. */
+  it('raccorde son compte à celui du diagnostic', () => {
+    const text = harnessOf(BACKUP_2026, 20).text()
+    expect(text).toContain('3 autres réglages ont été trouvés et ne sont pas proposés')
   })
 
   it('laisse les trois sous les yeux même après le retrait des six autres', () => {
@@ -424,6 +471,27 @@ describe('le nettoyage dans les cinq langues', () => {
       for (const word of ['réglage', 'gadget', 'Enlever', 'ancienne version', 'palier', 'clé']) {
         expect(text, `${language} — ${word}`).not.toContain(word)
       }
+    }
+  })
+
+  /**
+   * La raison en toutes lettres n'est pas un ornement français : sans elle, un pilote
+   * néerlandophone relit `ARROW` et `NONE` comme le pilote français les relisait. Les cinq
+   * phrases sont distinctes — une traduction oubliée se verrait ici, et nulle part ailleurs.
+   */
+  it('dit la conséquence dans la langue du pilote, dans les cinq', () => {
+    const said = {
+      fr: 'la flèche de vent disparaîtrait de ce compas',
+      en: 'the wind arrow would disappear from this compass',
+      de: 'der Windpfeil würde von diesem Kompass verschwinden',
+      es: 'la flecha de viento desaparecería de esta brújula',
+      nl: 'de windpijl zou van dit kompas verdwijnen'
+    }
+    for (const language of Object.keys(CATALOGS) as UiLanguage[]) {
+      expect(textIn(language), language).toContain(said[language])
+      // Et la mesure reste sous la phrase, dans les cinq : elle n'est pas de la prose.
+      expect(textIn(language), `${language} — la mesure`).toContain('windStyle')
+      expect(textIn(language), `${language} — la mesure`).toContain('ARROW')
     }
   })
 

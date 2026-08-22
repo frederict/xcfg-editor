@@ -27,12 +27,12 @@ const versions: DomainCatalog<'versions'> = {
 
   /** ⚠️ Voir le commentaire du français : « leest ze niet meer » était faux. */
   'versions.titleLegacy': 'Verouderde instellingen: de gekozen versie schrijft ze niet meer',
-  'versions.evidenceLegacy': 'Wij lezen deze instellingen in oudere versies, niet meer in deze — en echte bestanden die door die versie zijn geschreven, dragen ze toch. XCTrack bewaart de instellingen die het niet meer kent zonder ze te lezen: hier hebben wij het zien gebeuren, wij veronderstellen het niet.',
-  'versions.verdictLegacy': 'Ze verwijderen is hier te verdedigen. Dit is het enige geval dat een echt bestand komt bevestigen.',
+  'versions.evidenceLegacy': 'Wij lezen deze instellingen in oudere versies, niet meer in deze — en echte bestanden die door die versie zijn geschreven, dragen ze toch. XCTrack bewaart de tekst van een pagina zolang het die niet heeft getoond: hier hebben wij het zien gebeuren, wij veronderstellen het niet.',
+  'versions.verdictLegacy': 'Dit is de enige bevinding van deze diagnose die een echt bestand komt bevestigen, en de enige waar weghalen te verdedigen is. Elke instelling wordt daarna één voor één gewogen: die waarvan het weghalen zou veranderen wat uw toestel toont, blijven staan.',
 
   'versions.titlePastOnly': 'Alleen door oudere versies gelezen',
   'versions.evidencePastOnly': 'Wij lezen deze instellingen in oudere versies, niet meer in de gekozen versie. Maar geen enkel echt bestand komt dat bevestigen: wij hebben hier alleen onze lezing van de versies, zonder het voorbeeld dat ze toetst.',
-  'versions.verdictPastOnly': 'Ze verwijderen is te verdedigen, op onze lezing alleen. Niets zegt dat XCTrack ze heeft geschrapt: wij lezen ze er alleen niet meer.',
+  'versions.verdictPastOnly': 'Alleen onze lezing zou ze verouderd noemen, en geen enkel echt bestand bevestigt dat: het gereedschap biedt hier dus niets aan. Niets zegt dat XCTrack ze heeft geschrapt — wij lezen ze er alleen niet meer.',
 
   'versions.titleFutureOnly': 'Verschenen na de gekozen versie',
   'versions.evidenceFutureOnly': 'Wij lezen deze instellingen alleen in versies die nieuwer zijn dan de gekozen versie. Dit bestand komt dus uit een nieuwere versie dan de hier gekozen versie.',
@@ -203,6 +203,11 @@ const versions: DomainCatalog<'versions'> = {
     other: '{count} instellingen van dit bestand komen uit een oudere versie van XCTrack, verspreid over {instances}: {list}.'
   },
 
+  'cleanup.leadHeld': {
+    one: '{count} andere instelling is gevonden en wordt niet voorgesteld: zij staat hieronder, met de reden.',
+    other: '{count} andere instellingen zijn gevonden en worden niet voorgesteld: zij staan hieronder, met de reden.'
+  },
+
   /**
    * ⚠️ Deze zin beweerde tot 22 augustus 2026 twee onwaarheden — ‘XCTrack sleept ze mee
    * zonder ze te lezen’ en ‘ze weghalen maakt het bestand lichter, meer niet’. Een heen
@@ -225,12 +230,19 @@ const versions: DomainCatalog<'versions'> = {
     one: '{count} instelling gevonden, en laten staan',
     other: '{count} instellingen gevonden, en laten staan'
   },
-  'cleanup.heldLead': 'Deze worden niet voorgesteld. XCTrack leest ze bij het openen een laatste keer om er zijn huidige instellingen uit af te leiden: ze weghalen voordat dat gebeurd is zou veranderen wat uw toestel toont, of wij kunnen niet zeggen dat het dat niet doet. U hoeft niets te doen: ze verdwijnen vanzelf zodra uw toestel dit bestand heeft gelezen.',
+  'cleanup.heldLead': 'Deze worden niet voorgesteld. XCTrack leest ze bij het openen een laatste keer om er zijn huidige instellingen uit af te leiden: ze weghalen voordat dat gebeurd is zou veranderen wat uw toestel toont — of niemand heeft het gemeten, en wij gokken niet. U hoeft niets te doen: ze verdwijnen vanzelf zodra uw toestel dit bestand heeft gelezen.',
   /** `{successor}`, `{present}` en `{absent}` zijn namen en waarden van XCTrack: onveranderd overgenomen. */
-  'cleanup.heldLive': 'op het toestel gemeten: zonder haar springt {successor} van {present} naar {absent}',
-  'cleanup.heldUnmeasured': 'wat er zonder haar van zou worden is nooit op een toestel gemeten',
+  'cleanup.heldLive': 'Als u haar weghaalt: {effect}.',
+  'cleanup.heldMeasure': 'Op het toestel gemeten: zonder haar springt {successor} van {present} naar {absent}.',
+  'cleanup.heldUnmeasured': 'Niemand heeft gemeten wat het weghalen ervan op een toestel zou veranderen. Wij gokken niet: zij blijft staan.',
+
+  'removalEffect.windArrowGone': 'de windpijl zou van dit kompas verdwijnen',
+  'removalEffect.terrainShadingGone': 'de reliëfschaduw zou op deze kaart uitgaan',
+  'removalEffect.unnamed': 'deze widget zou niet meer hetzelfde tonen',
 
   /* ------------------------------------------- ce que porte chaque réglage périmé */
+
+  'cleanup.inertMeasure': 'Op het toestel gemeten: met of zonder haar staat {successor} op {value}.',
 
   'cleanup.usedUntil': 'door XCTrack geschreven tot versie {release}',
   'cleanup.noLongerRead': 'sindsdien vervangen, zonder dat we kunnen zeggen wanneer',

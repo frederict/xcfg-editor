@@ -129,7 +129,7 @@ export const DOMAIN_PREFIXES: Readonly<Record<Domain, readonly string[]>> = {
   preferences: ['preferences'],
   library: ['library'],
   widgets: ['palette', 'properties', 'widgets'],
-  versions: ['cleanup', 'versions'],
+  versions: ['cleanup', 'removalEffect', 'versions'],
   sharing: ['sharing', 'warnings'],
   // ⚠️ Pas de préfixe `navigation` ici, et il ne doit pas y revenir : les cinq noms de
   // navigation sont des **libellés de XCTrack**, ils suivent l'axe `labels` et vivent

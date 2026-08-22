@@ -21,7 +21,7 @@ import './cleanupPanel.css'
  * calcul et le retrait sont ailleurs (`src/model/cleanup.ts`) : ce module ne décide de
  * rien, il fait décider.
  *
- * ## Quatre décisions, et leurs raisons
+ * ## Cinq décisions, et leurs raisons
  *
  * 1. **Rien ne s'affiche quand il n'y a rien à enlever.** Pas de « aucun réglage périmé »,
  *    pas de coche verte : un pilote dont la configuration va bien n'a pas à lire un
@@ -58,6 +58,19 @@ import './cleanupPanel.css'
  *    chaîne, jamais le contenu d'une structure : un texte peut porter un nom, un numéro
  *    de téléphone, le nom d'une compétition (voir `src/model/personalData.ts`). Un
  *    interrupteur oublié se lit très bien sans cela.
+ *
+ * 5. **Une raison se dit deux fois : ce que ça ferait, puis ce qu'on a relevé.** La
+ *    phrase française passe devant — « la flèche de vent disparaîtrait de ce compas » —,
+ *    et la mesure suit à la ligne, dans les mots que l'appareil a écrits :
+ *    « sans lui, `windStyle` passe de `ARROW` à `NONE` ».
+ *
+ *    ⚠️ **Ni l'une sans l'autre.** L'écran n'a longtemps porté que la seconde, et un
+ *    pilote-testeur a dit le 22 août 2026 cliquer « par confiance, pas par compréhension » :
+ *    la phrase humaine n'existait que dans le manuel, c'est-à-dire là où l'on ne décide
+ *    rien. Mais la retirer *elle* au profit de la phrase française serait la faute
+ *    symétrique, et c'est celle que ce module a déjà commise : parler de l'appareil sans
+ *    montrer ce qu'on en a lu. La mesure est la preuve, et c'est par elle que le pilote
+ *    retrouve la ligne dans son fichier.
  *
  * ## La prose est au catalogue, la ligne de repérage aussi
  *
@@ -209,17 +222,63 @@ function gadgetSummary(tr: Translator, entries: CleanupEntry[], language: string
 }
 
 /**
- * Pourquoi ce réglage-là n'est pas proposé, dans les mots du pilote. Les noms et valeurs
- * de XCTrack (`windStyle`, `ARROW`) sont recopiés tels quels : ce sont des identifiants,
- * et le pilote les retrouvera dans son fichier.
+ * Les conséquences mesurées, de l'identifiant que porte le relevé à la clé du catalogue.
+ *
+ * Deux tables auraient pu s'en charger — un troisième segment de clé, ou une
+ * concaténation — et aucune n'aurait été vérifiable : `t()` refuse une clé calculée, et
+ * c'est ce refus qu'on veut ici. Une mesure « vivante » qui arriverait de l'appareil sans
+ * sa phrase se verrait donc au premier essai, jamais à l'écran d'un pilote.
+ * `cleanupPanel.test.ts` compare cette table à `legacyMigrations.json`.
  */
-function heldReason(tr: Translator, entry: CleanupEntry): string {
-  const { verdict, successor, present, absent } = entry.removal
+const EFFECT_KEYS = {
+  windArrowGone: 'removalEffect.windArrowGone',
+  terrainShadingGone: 'removalEffect.terrainShadingGone'
+} as const
+
+/**
+ * **Ce que le retrait ferait, dit au pilote** — puis la mesure qui le prouve, à la ligne.
+ *
+ * L'ordre n'est pas décoratif. Cet écran n'a longtemps montré que la seconde ligne
+ * (« sans lui, windStyle passe de ARROW à NONE ») et un pilote-testeur a dit, le 22 août
+ * 2026, cliquer « par confiance, pas par compréhension » : `windStyle`, `ARROW` et `NONE`
+ * ne sont des mots ni de son instrument ni de sa langue. La phrase française passe donc
+ * devant.
+ *
+ * ⚠️ **Elle ne remplace pas la mesure, elle la porte.** Les noms et valeurs de XCTrack
+ * sont ce que l'appareil a relu : c'est la preuve, et c'est par elle que le pilote
+ * retrouve la ligne dans son fichier. Les escamoter referait, à l'envers, la faute que ce
+ * module vient de corriger — parler de l'appareil sans montrer ce qu'on en a lu.
+ */
+function heldReason(tr: Translator, entry: CleanupEntry): readonly string[] {
+  const { verdict, successor, present, absent, effect } = entry.removal
   if (verdict === 'live' && successor !== undefined
     && present !== undefined && absent !== undefined) {
-    return tr.t('cleanup.heldLive', { successor, present, absent })
+    const key = effect !== undefined && effect in EFFECT_KEYS
+      ? EFFECT_KEYS[effect as keyof typeof EFFECT_KEYS]
+      : 'removalEffect.unnamed'
+    return [
+      tr.t('cleanup.heldLive', { effect: tr.t(key) }),
+      tr.t('cleanup.heldMeasure', { successor, present, absent })
+    ]
   }
-  return tr.t('cleanup.heldUnmeasured')
+  return [tr.t('cleanup.heldUnmeasured')]
+}
+
+/**
+ * La mesure d'un réglage **proposé** : avec ou sans lui, l'appareil en tire la même chose.
+ *
+ * C'est la contrepartie exacte de `cleanup.heldMeasure`, et elle existe pour une raison
+ * précise : sur le même compas, `newWindArrow` est proposé et `showWind` ne l'est pas.
+ * Rien à l'écran ne disait pourquoi, et le pilote-testeur a « parié que l'outil s'était
+ * trompé de sens ». Les deux mesures côte à côte le disent sans commentaire.
+ *
+ * `null` quand le relevé ne porte pas les deux colonnes : on n'écrit pas une preuve qu'on
+ * n'a pas.
+ */
+function inertMeasure(tr: Translator, entry: CleanupEntry): string | null {
+  const { successor, absent } = entry.removal
+  if (successor === undefined || absent === undefined) return null
+  return tr.t('cleanup.inertMeasure', { successor, value: absent })
 }
 
 /**
@@ -343,6 +402,11 @@ export function buildCleanupSection(options: CleanupSectionOptions): CleanupSect
     label.append(box)
     label.append(el('span', 'vclean__key', entry.key))
     label.append(el('span', 'vclean__note', noteOf(tr, db, entry)))
+    // La preuve, à la ligne : ce que l'appareil a relu avec ce réglage et sans lui. Elle
+    // répond à la question que la liste posait sans y répondre — pourquoi celui-ci part
+    // et pas son voisin du même gadget.
+    const measure = inertMeasure(tr, entry)
+    if (measure !== null) label.append(el('span', 'vclean__measure', measure))
     item.append(label)
     return item
   }
@@ -383,7 +447,11 @@ export function buildCleanupSection(options: CleanupSectionOptions): CleanupSect
       const item = el('li', 'vclean__held-item')
       item.append(el('p', 'vclean__place', placeOf(tr, entry, language)))
       item.append(el('span', 'vclean__key', entry.key))
-      item.append(el('span', 'vclean__note', heldReason(tr, entry)))
+      const [said, measured] = heldReason(tr, entry)
+      if (said !== undefined) item.append(el('span', 'vclean__note', said))
+      if (measured !== undefined) {
+        item.append(el('span', 'vclean__measure', measured))
+      }
       list.append(item)
     }
     block.append(list)
@@ -413,6 +481,16 @@ export function buildCleanupSection(options: CleanupSectionOptions): CleanupSect
       root.append(lead)
 
       root.append(el('p', 'vclean__calm', tr.t('cleanup.calm')))
+
+      // Le diagnostic vient d'annoncer neuf réglages périmés et cet écran en propose six :
+      // sans cette ligne, c'est au pilote de faire la soustraction et de retrouver les
+      // trois autres deux blocs plus bas. Elle ne paraît que s'il y en a — et elle vient
+      // APRÈS la phrase d'apaisement, dont le « Ceux-ci ont été mesurés » désigne les
+      // réglages proposés : s'intercaler la ferait porter sur les autres.
+      if (plan.held.length > 0) {
+        root.append(el('p', 'vclean__bridge',
+          tr.t('cleanup.leadHeld', { count: plan.held.length })))
+      }
 
       root.append(renderList())
       action.append(go, tally)

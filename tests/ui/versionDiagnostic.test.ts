@@ -531,7 +531,7 @@ describe('le panneau', () => {
     const text = panel.element.textContent ?? ''
     expect(text).toContain('Réglages périmés')
     expect(text).toContain('mapWidget_showTerrain')
-    expect(text).toContain('Une suppression se défend')
+    expect(text).toContain('la seule où un retrait se défende')
     // Le mot du pilote est « gadget », jamais « widget ».
     expect(text).toContain('gadget')
     expect(text).not.toContain('widget ')

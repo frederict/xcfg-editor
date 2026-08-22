@@ -29,12 +29,12 @@ const versions: DomainCatalog<'versions'> = {
 
   /** ⚠️ Voir le commentaire du français : « no longer reads them » était faux. */
   'versions.titleLegacy': 'Outdated settings: the release you are targeting no longer writes them',
-  'versions.evidenceLegacy': 'We read these settings in older releases, no longer in this one — and real files written by that very release carry them anyway. XCTrack keeps the settings it no longer knows without reading them: here we have seen it happen, we are not assuming it.',
-  'versions.verdictLegacy': 'Removing them is defensible here. This is the only case a real file comes to confirm.',
+  'versions.evidenceLegacy': 'We read these settings in older releases, no longer in this one — and real files written by that very release carry them anyway. XCTrack keeps the text of a page for as long as it has not shown it: here we have seen it happen, we are not assuming it.',
+  'versions.verdictLegacy': 'This is the only finding in this diagnosis that a real file comes to confirm, and the only one where removing is defensible. Each setting is then weighed one by one: those whose removal would change what your instrument shows stay in place.',
 
   'versions.titlePastOnly': 'Read by older releases only',
   'versions.evidencePastOnly': 'We read these settings in older releases, no longer in the one you are targeting. But no real file comes to confirm it: all we have here is our reading of the releases, without the example that checks it.',
-  'versions.verdictPastOnly': 'Removing them is defensible, on our reading alone. Nothing says XCTrack dropped them: we simply no longer read them there.',
+  'versions.verdictPastOnly': 'Our reading alone would call them outdated, and no real file comes to confirm it: so the tool offers nothing here. Nothing says XCTrack dropped them — we simply no longer read them there.',
 
   'versions.titleFutureOnly': 'Appeared after the release you are targeting',
   'versions.evidenceFutureOnly': 'We only read these settings in releases newer than the one you are targeting. So this file comes from a release newer than the one chosen here.',
@@ -205,6 +205,11 @@ const versions: DomainCatalog<'versions'> = {
     other: '{count} settings in this file come from an older release of XCTrack, across {instances}: {list}.'
   },
 
+  'cleanup.leadHeld': {
+    one: '{count} more setting was found and is not offered: it is named below, with the reason.',
+    other: '{count} more settings were found and are not offered: they are named below, with the reason.'
+  },
+
   /**
    * ⚠️ This sentence stated two false things until 22 August 2026 — “XCTrack carries them
    * along without reading them” and “removing them makes the file smaller, that is all”.
@@ -227,12 +232,19 @@ const versions: DomainCatalog<'versions'> = {
     one: '{count} setting found, and left in place',
     other: '{count} settings found, and left in place'
   },
-  'cleanup.heldLead': 'These are not offered. XCTrack reads them one last time when it opens the file, to derive its present-day settings: removing them before it has done so would change what your instrument shows, or we cannot say that it would not. There is nothing for you to do: they will go on their own as soon as your device has read this file.',
+  'cleanup.heldLead': 'These are not offered. XCTrack reads them one last time when it opens the file, to derive its present-day settings: removing them before it has done so would change what your instrument shows — or nobody has measured it, and we do not guess. There is nothing for you to do: they will go on their own as soon as your device has read this file.',
   /** `{successor}`, `{present}` and `{absent}` are XCTrack names and values: copied as they stand. */
-  'cleanup.heldLive': 'measured on the device: without it, {successor} goes from {present} to {absent}',
-  'cleanup.heldUnmeasured': 'what it would become without it has never been measured on a device',
+  'cleanup.heldLive': 'If you removed it, {effect}.',
+  'cleanup.heldMeasure': 'Measured on the device: without it, {successor} goes from {present} to {absent}.',
+  'cleanup.heldUnmeasured': 'Nobody has measured what removing it would change on a device. We do not guess: it stays in place.',
+
+  'removalEffect.windArrowGone': 'the wind arrow would disappear from this compass',
+  'removalEffect.terrainShadingGone': 'the terrain shading would go out on this map',
+  'removalEffect.unnamed': 'this widget would no longer show the same thing',
 
   /* ------------------------------------------- ce que porte chaque réglage périmé */
+
+  'cleanup.inertMeasure': 'Measured on the device: with it or without it, {successor} is {value}.',
 
   'cleanup.usedUntil': 'written by XCTrack up to release {release}',
   'cleanup.noLongerRead': 'replaced since, without our being able to say when',
@@ -247,18 +259,18 @@ const versions: DomainCatalog<'versions'> = {
   /* ------------------------------------------------------------- décocher, puis agir */
 
   'cleanup.allSelected': {
-    one: '{count} setting kept in.',
-    other: '{count} settings kept in.'
+    one: '{count} setting ticked: it will be removed.',
+    other: '{count} settings ticked: they will be removed.'
   },
   'cleanup.someSelected': {
-    one: '{count} kept in out of {total} — {left}.',
-    other: '{count} kept in out of {total} — {left}.'
+    one: '{count} ticked out of {total} — {left}.',
+    other: '{count} ticked out of {total} — {left}.'
   },
   'cleanup.remaining': {
     one: '{count} setting will stay in place',
     other: '{count} settings will stay in place'
   },
-  'cleanup.noneSelected': 'No setting kept in',
+  'cleanup.noneSelected': 'No setting ticked',
 
   'cleanup.removeButton': {
     one: 'Remove this setting',

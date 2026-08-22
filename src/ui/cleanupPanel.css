@@ -60,8 +60,13 @@
   font-weight: 600;
 }
 
-/* La phrase qui désamorce : rien n'est cassé, rien ne presse. */
+/*
+ * La phrase qui désamorce : rien n'est cassé, rien ne presse. Et le raccord entre les
+ * deux comptes — « 3 autres réglages ont été trouvés et ne sont pas proposés » —, qui
+ * renvoie au bloc du bas plutôt que de laisser le pilote faire la soustraction.
+ */
 .vclean__calm,
+.vclean__bridge,
 .vclean__caveat {
   margin: 0;
   font-size: 0.82rem;
@@ -132,6 +137,27 @@
   font-size: 0.76rem;
   font-style: italic;
   opacity: 0.85;
+}
+
+/*
+ * La mesure, sous la phrase qui la porte : « sans lui, windStyle passe de ARROW à NONE ».
+ *
+ * Elle prend la ligne entière et le pas de retrait de la ligne du dessus — c'est ce qui
+ * la donne à lire comme une pièce jointe à la raison, et non comme une seconde raison.
+ * Elle est plus petite et plus pâle que la phrase, jamais absente : c'est la preuve, et
+ * un écran qui affirme sans montrer est exactement le défaut d'où vient ce bloc.
+ */
+.vclean__measure {
+  flex-basis: 100%;
+  margin-left: 0.9rem;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  opacity: 0.72;
+}
+
+.vclean__choice > .vclean__measure {
+  /* Sous la case à cocher, l'aplomb se prend sur le nom du réglage, pas sur la case. */
+  margin-left: 1.6rem;
 }
 
 /*
