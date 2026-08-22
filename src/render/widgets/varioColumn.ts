@@ -68,19 +68,32 @@ import type { RenderSettings } from '../../model/preferences'
  * tracé de `WVerticalGraph` et les marqueurs de thermique de la carte. Le document est
  * corrigé.
  *
- * **Seuils** — les 40 captures du rejeu donnent : vert observé de 2 à 10 barres, jaune de
- * 10 à 15, rose de 15 à 20. Les bornes se recouvrent d'une graduation : deux captures à
- * 10 barres exactement, l'une verte et l'autre jaune, séparées de quelques secondes, avec
- * la même longueur de barre. La couleur suit donc l'amplitude **avec du retard** — elle
- * n'est pas fonction de la seule valeur instantanée. Les seuils codés ici (2,0 et
- * 3,0 m/s) sont les milieux des recouvrements ; l'inertie, elle, n'est **pas** modélisée
- * (l'éditeur ne montre qu'un instant figé) et reste **NON TRANCHÉE**.
+ * **Le seuil de bascule n'est PAS déterminé, et ce module n'en porte plus.** Il a codé
+ * deux seuils (2,0 et 3,0 m/s) présentés comme les milieux de recouvrements observés. Le
+ * rejeu du 2026-08-22 les réfute : deux captures de la même séance montrent **exactement
+ * la même hauteur de barre — 181 px, soit 15 bandes — avec deux familles différentes**,
+ * verte sur l'une, jaune sur l'autre. Aucune fonction de la valeur instantanée ne produit
+ * ça. Deviner un seuil affirmerait une règle que la mesure contredit.
  *
- * ## Ce que l'éditeur affiche
+ * ## Ce que l'éditeur affiche : une paire mesurée, et rien d'autre
  *
- * Une valeur d'exemple statique, `EXAMPLE_CLIMB`, égale à celle de `WVerticalSpeed`
- * (`numeric.ts`) pour qu'une page portant les deux se lise sans contradiction. Rien n'est
- * simulé : c'est une illustration de la jauge, comme la trace fixe de `map.ts`.
+ * Deux captures seulement montrent la valeur du vario et la famille de teinte **dans la
+ * même image** :
+ *
+ * | capture | vario affiché | colonne |
+ * |---|---|---|
+ * | `vol-numeriques-boussole-variocolumn.png` | **+3,5 m/s** | 17 barres, famille **rose** (`#ffdfdf`, accent `#ffa0a0`, filets `#5f0000`, relevés au pixel) |
+ * | `vol-page3.png` | **−1,0 m/s** | 5 barres, famille **bleue** |
+ *
+ * `EXAMPLE_CLIMB` et `EXAMPLE_TONE` sont la première de ces deux lignes, prises ensemble :
+ * la teinte n'est pas déduite de la valeur, elle est **lue à côté d'elle**. La valeur
+ * d'exemple de `WVerticalSpeed` (`numeric.ts`) vient de la même image, au même instant,
+ * pour qu'une page portant les deux gadgets se lise sans contradiction.
+ *
+ * Les familles verte et jaune existent — elles sont mesurées §  « Les couleurs » — mais
+ * **aucune capture ne les montre à côté d'une valeur** : l'éditeur ne peut donc pas les
+ * afficher sans affirmer un seuil. Ce qu'il faudrait : une série de captures avec le vario
+ * numérique lisible dans la même image que la colonne, sur une montée continue.
  */
 
 const SVG_NS = 'http://www.w3.org/2000/svg'
@@ -105,23 +118,26 @@ export const BARS_PER_HALF = 20
 /** Une barre sur cinq est accentuée : une graduation majeure tous les 1,0 m/s. */
 const ACCENT_PERIOD = 5
 
-/** Seuils de famille de teinte, en m/s — milieux des recouvrements observés sur les 40
- * captures du rejeu (voir le commentaire de tête). */
-const MEDIUM_CLIMB = 2.0
-const STRONG_CLIMB = 3.0
-
-/** Valeur d'exemple, alignée sur celle de `WVerticalSpeed` (`numeric.ts`). */
-const EXAMPLE_CLIMB = 2.1
-
+/**
+ * Les quatre familles de teinte, telles que style.css les nomme. Aucune fonction ne les
+ * choisit : rien de mesuré ne relie une valeur de vario à une famille, sauf pour les deux
+ * couples du commentaire de tête, qui sont des LECTURES et non une règle.
+ */
 export type VarioTone = 'sink' | 'climb-weak' | 'climb-medium' | 'climb-strong'
 
-/** Famille de teinte pour une valeur de vario, en m/s. La descente n'en a qu'une. */
-export function varioTone(value: number): VarioTone {
-  if (value < 0) return 'sink'
-  if (value >= STRONG_CLIMB) return 'climb-strong'
-  if (value >= MEDIUM_CLIMB) return 'climb-medium'
-  return 'climb-weak'
-}
+/**
+ * L'état d'exemple, lu d'un bloc sur `vol-numeriques-boussole-variocolumn.png` : la
+ * valeur et la famille viennent de la même image, au même instant. Les changer séparément
+ * ferait de la teinte une déduction, ce qu'elle n'est pas.
+ *
+ * **3,4 et non 3,5** : l'appareil affiche « +3,5 m/s » et dessine **17** barres ; avec
+ * l'arrondi de `barCount`, 3,5 en donnerait 18 et 3,4 en donne 17. La colonne dessinée est
+ * donc celle de la capture, à la barre près. Ce que l'appareil fait exactement de la
+ * dernière fraction de barre — troncature ou arrondi — n'est **pas tranché** : son
+ * affichage est lui-même arrondi au dixième, et 3,45 comme 3,5 donneraient ce qu'on voit.
+ */
+const EXAMPLE_CLIMB = 3.4
+const EXAMPLE_TONE: VarioTone = 'climb-strong'
 
 /** Nombre de barres pour une valeur de vario, borné par l'échelle de ±4 m/s. */
 export function barCount(value: number): number {
@@ -142,7 +158,7 @@ export function drawVarioColumn(_widget: Widget, _settings: RenderSettings, _lan
   // Vario nul : la colonne reste entièrement blanche, comme au sol sur l'appareil. On ne
   // dessine même pas le filet de mi-hauteur — la capture n'en montre aucun.
   if (bars > 0) {
-    const tone = varioTone(value)
+    const tone = EXAMPLE_TONE
     const climbing = value > 0
     const barHeight = MIDDLE / BARS_PER_HALF
     const group = svgEl('g', { class: `xc-variocol__gauge xc-variocol__gauge--${tone}` })

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BARS_PER_HALF, STEP_MS, barCount, drawVarioColumn, varioTone } from '../../../src/render/widgets/varioColumn'
+import { BARS_PER_HALF, STEP_MS, barCount, drawVarioColumn } from '../../../src/render/widgets/varioColumn'
 import type { RenderSettings } from '../../../src/model/preferences'
 import type { Widget } from '../../../src/model/widget'
 
@@ -79,29 +79,25 @@ describe('WVarioColumn — une jauge, pas une échelle', () => {
     })
   })
 
-  describe('quatre familles de teintes, par amplitude — la descente n’en a qu’une', () => {
-    it('toute descente est bleue', () => {
-      expect(varioTone(-0.2)).toBe('sink')
-      expect(varioTone(-3.9)).toBe('sink')
-    })
-
-    it('montée : vert en dessous de 2 m/s, jaune de 2 à 3, rose au-delà', () => {
-      // Seuils = milieux des recouvrements observés sur les 40 captures du rejeu : vert
-      // vu de 2 à 10 barres, jaune de 10 à 15, rose de 15 à 20.
-      expect(varioTone(0.4)).toBe('climb-weak')
-      expect(varioTone(1.9)).toBe('climb-weak')
-      expect(varioTone(2.0)).toBe('climb-medium')
-      expect(varioTone(2.9)).toBe('climb-medium')
-      expect(varioTone(3.0)).toBe('climb-strong')
-      expect(varioTone(4.0)).toBe('climb-strong')
-    })
-
+  describe('la famille de teinte est LUE, pas calculée', () => {
     it('la famille est portée par un groupe, pas par chaque barre', () => {
       const el = drawVarioColumn(widget(), settings, 'fr')
       const gauge = el.querySelector('.xc-variocol__gauge')
       expect(gauge).not.toBeNull()
-      // La valeur d'exemple (+2,1 m/s, alignée sur WVerticalSpeed) tombe en jaune.
-      expect(gauge?.classList.contains('xc-variocol__gauge--climb-medium')).toBe(true)
+      // L'état d'exemple vient d'une seule image : `vol-numeriques-boussole-variocolumn`
+      // montre « +3,5 m/s » et 17 barres de la famille ROSE au même instant. La teinte
+      // n'est pas déduite de la valeur — aucun seuil n'est établi, et le rejeu du
+      // 2026-08-22 en réfute l'idée même : deux captures à 15 bandes exactement, l'une
+      // verte, l'autre jaune.
+      expect(gauge?.classList.contains('xc-variocol__gauge--climb-strong')).toBe(true)
+    })
+
+    it('les quatre familles restent celles de style.css, sans règle qui les choisisse', () => {
+      const el = drawVarioColumn(widget(), settings, 'fr')
+      const gauge = el.querySelector('.xc-variocol__gauge')!
+      const familles = ['sink', 'climb-weak', 'climb-medium', 'climb-strong']
+        .filter((tone) => gauge.classList.contains(`xc-variocol__gauge--${tone}`))
+      expect(familles).toEqual(['climb-strong'])
     })
   })
 
