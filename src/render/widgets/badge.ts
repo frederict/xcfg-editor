@@ -16,29 +16,49 @@
  * | `WOptiResult` | ligne brisée (une trace libre) |
  * | `WOptiUnfinishedTriangle` | triangle ouvert, plus une **croix rouge** |
  *
- * ## La couleur, et pourquoi elle est fixée ici plutôt que déduite
+ * ## La couleur nomme la FORME optimisée — tranché le 2026-08-22
  *
- * Trois états capturés, **trois couleurs différentes** pour la même paire de gadgets :
+ * Ce commentaire lisait les trois états capturés comme trois contextes (« orange au sol,
+ * vert en vol, bleu en compétition ») et supposait un barème de distance. **Le rejeu de
+ * `2026-07-09-XCT-FTE-01.igc` réfute cette lecture** par un contre-exemple direct : en
+ * plein vol, après **106,5 km parcourus**, le badge de `WOptiResult` est **orange** —
+ * exactement comme au sol à 64 m.
  *
- * | capture | `WOptiResult` | `WOptiUnfinishedTriangle` |
+ * Ce qui change avec la couleur, c'est le **glyphe**, et le glyphe nomme la forme que
+ * l'optimiseur XContest retient à cet instant :
+ *
+ * | couleur | glyphe | forme |
  * |---|---|---|
- * | `planche-sol-3` (au sol, 64 m et 128 m) | orange `#C45300` | vert `#009B21` |
- * | `planche-vol-3` (en vol, 1,2 km et 1,3 km) | vert | vert |
- * | `planche-competition-3` (2,0 km et 2,3 km) | bleu | bleu |
+ * | **orange** `#c45300` | zigzag à points | distance libre |
+ * | **vert** | triangle **ouvert** | triangle plat |
+ * | **bleu** | triangle **fermé** | triangle FAI |
  *
- * La couleur suit donc **quelque chose que le fichier de pages ne porte pas** — le
- * barème XContest, très probablement, la distance croissant d'une capture à l'autre.
- * Aucune règle n'est établie, et un rendu statique n'a de toute façon aucune distance à
- * classer. On reprend donc **l'état au sol**, celui d'où viennent nos autres valeurs
- * d'exemple (`SPECS`, numeric.ts), et on écrit la réserve plutôt que d'inventer un
- * seuil.
+ * Couleur et glyphe vont donc ensemble, et c'est ainsi qu'ils sont écrits ci-dessous : un
+ * `BadgeKind` est un couple, pas une teinte posée sur un dessin quelconque.
+ *
+ * **Ce que cela impose à un rendu statique.** Le badge n'est pas une constante par type de
+ * gadget : la forme retenue change en vol, et le fichier de pages ne la porte pas. Il faut
+ * donc **choisir une forme et l'assumer** — c'est `track`, la distance libre, le cas le
+ * plus fréquent et celui de nos autres valeurs d'exemple (`SPECS`, numeric.ts).
+ *
+ * **`WOptiUnfinishedTriangle` garde son glyphe** (triangle barré d'une croix rouge) et
+ * change lui aussi de couleur — vert au sol et en vol, bleu sur la planche « compétition ».
+ * Sa couleur suit la **discipline XContest en cours de calcul**, et rien du fichier ne la
+ * donne : le vert des deux tiers des observations est retenu, et c'est une réserve, pas
+ * une règle.
  */
 
 const SVG_NS = 'http://www.w3.org/2000/svg'
 
 export type BadgeKind = 'track' | 'triangle'
 
-/** Couleurs relevées au pixel sur `planche-sol-3`, état au sol. */
+/**
+ * Couleurs relevées au pixel sur `planche-sol-3`. `track` est l'orange de la **distance
+ * libre**, confirmé en vol le 2026-08-22 à 106,5 km parcourus — il ne dit pas « au sol »,
+ * il dit quelle forme l'optimiseur retient. `triangle` est le vert de
+ * `WOptiUnfinishedTriangle`, dont la couleur reste non expliquée (voir le commentaire de
+ * tête).
+ */
 const BADGE_COLORS: Record<BadgeKind, string> = {
   track: '#c45300',
   triangle: '#009b21'
