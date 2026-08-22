@@ -277,12 +277,13 @@ nuevo, y la razón del reemplazo.](captures/enregistrer-et-partager.png)
 *Al guardar, lo que el archivo revela y lo que puede reemplazarse — mostrado antes de la
 descarga, no después.*
 
-![El manual de uso abierto sobre la pantalla de inicio: un aviso enmarcado «Léalo antes de
-dar su archivo a nadie», y después el índice de sus trece
-capítulos.](captures/manuel.png)
+![El manual de uso a página completa: a la izquierda el índice de sus trece capítulos, a
+la derecha un aviso enmarcado «Léalo antes de dar su archivo a nadie», y después el
+comienzo del capítulo 1.](captures/manuel.png)
 
-*El manual se abre encima de la pantalla, sin salir de nada. Empieza por el aviso en lugar
-de por la visita guiada.*
+*El manual ocupa una página del ancho del editor. Empieza por el aviso en lugar de por la
+visita guiada, y su índice permanece a la izquierda durante toda la lectura — con un filete
+en el capítulo en el que uno se encuentra.*
 
 ## Lo que no sabe hacer, y lo que sigue siendo incierto
 

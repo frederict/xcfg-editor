@@ -408,27 +408,31 @@ montré avant le téléchargement, pas après.*
                réelle ne doit apparaître ici : le vérifier à chaque reprise.
 -->
 
-![Le manuel d'utilisation ouvert par-dessus l'écran d'accueil : un avertissement encadré
-« À lire avant de donner votre fichier à qui que ce soit », puis le sommaire de ses
-treize chapitres.](captures/manuel.png)
+![Le manuel d'utilisation en pleine page : à gauche le sommaire de ses treize chapitres,
+à droite l'avertissement encadré « À lire avant de donner votre fichier à qui que ce
+soit », puis le début du chapitre 1.](captures/manuel.png)
 
-*Le manuel s'ouvre par-dessus l'écran, sans rien quitter. Il commence par
-l'avertissement plutôt que par la visite guidée.*
+*Le manuel occupe une page de la largeur de l'éditeur. Il commence par l'avertissement
+plutôt que par la visite guidée, et son sommaire reste à gauche pendant toute la lecture
+— avec le chapitre où l'on se trouve marqué d'un filet.*
 
 <!--
   REFAIRE CETTE CAPTURE — captures/manuel.png (1200 × 1110)
-  Écran ...... la modale « Manuel d'utilisation », en haut de son contenu.
+  Écran ...... la page « Manuel d'utilisation », en haut de son contenu.
   Fichier .... aucun — c'est l'écran d'accueil, avant tout dépôt de fichier. Rien à
                anonymiser, donc, et rien à révéler.
-  État ....... l'encadré « À lire avant de donner votre fichier à qui que ce soit », le
-               sommaire des treize chapitres entier, et le début du chapitre 1 ; aucun
-               bouton au focus (le contour bleu de « Fermer » se voit sinon).
+  État ....... le sommaire des treize chapitres entier dans sa colonne de gauche, avec le
+               filet ambre sur le chapitre 1 ; à droite l'encadré « À lire avant de donner
+               votre fichier à qui que ce soit » et le début du chapitre 1 ; aucun bouton
+               au focus (le contour bleu de « Fermer le manuel » se voit sinon).
+               ⚠ 1 200 points de large : sous 1 024, la colonne se replie dans le fil et
+               la capture ne montrerait plus le sommaire latéral.
   Refaire .... npm run dev -- --port 5179, puis « Lire le manuel d'utilisation » en bas
                de l'accueil — ou, un fichier ouvert, menu « Fichier » puis
                « Manuel d'utilisation… ».
-  Cadrage .... viewport de 1200 × 1110 points CSS : la boîte coupe alors juste après le
-               premier paragraphe du chapitre 1, ce qui se lit comme une page qui
-               continue et non comme une phrase tranchée.
+  Cadrage .... viewport de 1200 × 1110 points CSS : la page coupe alors au milieu du
+               chapitre 1, ce qui se lit comme une page qui continue et non comme une
+               phrase tranchée.
 
   CAPTURE AJOUTÉE — le manuel est arrivé après l'écriture des cinq recettes d'origine et
   n'en avait aucune. C'est le premier écran qu'un lecteur du README voudra reconnaître :

@@ -2,8 +2,13 @@
   Le manuel d'utilisation, en français.
 
   Ce fichier est un FRAGMENT : ni <html>, ni <head>, ni <body>. Il est destiné à être
-  posé dans le corps d'une boîte modale de l'application, qui porte déjà son titre de
-  premier niveau. Le manuel commence donc à <h2>.
+  posé dans le corps d'une page de l'application, qui porte déjà son titre de premier
+  niveau. Le manuel commence donc à <h2>.
+
+  ⚠ C'est UN SEUL FIL : l'avertissement, le sommaire, puis les treize chapitres. C'est ce
+  qui fait que Ctrl+F trouve le manuel entier. Les deux colonnes de l'écran — le sommaire
+  à gauche, le texte à droite — sont construites à l'ouverture par src/ui/manualPage.ts :
+  ne les écrivez pas ici, elles figeraient la mise en page dans cinq fichiers.
 
   Pourquoi du HTML nu plutôt que du Markdown : le manuel s'ouvre DEPUIS l'application,
   qui se charge parfois en 3G au décollage. Du Markdown demanderait un analyseur —

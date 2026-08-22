@@ -290,12 +290,13 @@ dem neuen und dem Grund der Ersetzung.](captures/enregistrer-et-partager.png)
 *Beim Speichern: was die Datei verrät und was ersetzt werden kann — gezeigt vor dem
 Herunterladen, nicht danach.*
 
-![Das Handbuch über dem Startbildschirm geöffnet: ein eingerahmter Warnhinweis „Zu lesen,
-bevor Sie Ihre Datei irgendjemandem geben“, dann das Inhaltsverzeichnis seiner dreizehn
-Kapitel.](captures/manuel.png)
+![Das Handbuch als ganze Seite: links das Inhaltsverzeichnis seiner dreizehn Kapitel,
+rechts ein eingerahmter Warnhinweis „Zu lesen, bevor Sie Ihre Datei irgendjemandem geben“,
+dann der Anfang von Kapitel 1.](captures/manuel.png)
 
-*Das Handbuch öffnet sich über dem Bildschirm, ohne dass man irgendetwas verlässt. Es
-beginnt mit dem Warnhinweis statt mit der Führung.*
+*Das Handbuch nimmt eine Seite in der Breite des Editors ein. Es beginnt mit dem
+Warnhinweis statt mit der Führung, und sein Inhaltsverzeichnis bleibt während der ganzen
+Lektüre links stehen — mit einem Strich bei dem Kapitel, in dem man sich befindet.*
 
 ## Was es nicht kann, und was ungewiss bleibt
 

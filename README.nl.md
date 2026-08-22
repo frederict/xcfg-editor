@@ -282,12 +282,13 @@ nieuwe, en de reden van de vervanging.](captures/enregistrer-et-partager.png)
 *Bij het opslaan: wat het bestand prijsgeeft en wat kan worden vervangen — getoond vóór de
 download, niet erna.*
 
-![De handleiding geopend boven op het startscherm: een omkaderde waarschuwing ‘Lees dit
-voordat u uw bestand aan wie dan ook geeft’, en daarna de inhoudsopgave van de dertien
-hoofdstukken.](captures/manuel.png)
+![De handleiding als volledige pagina: links de inhoudsopgave van de dertien
+hoofdstukken, rechts een omkaderde waarschuwing ‘Lees dit voordat u uw bestand aan wie dan
+ook geeft’, en daarna het begin van hoofdstuk 1.](captures/manuel.png)
 
-*De handleiding opent boven op het scherm, zonder iets te verlaten. Ze begint met de
-waarschuwing en niet met de rondleiding.*
+*De handleiding beslaat een pagina zo breed als de editor. Ze begint met de waarschuwing
+en niet met de rondleiding, en haar inhoudsopgave blijft tijdens het hele lezen links
+staan — met een streepje bij het hoofdstuk waar u bent.*
 
 ## Wat het niet kan, en wat onzeker blijft
 

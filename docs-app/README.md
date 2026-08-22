@@ -22,8 +22,11 @@ charge parfois en 3G au décollage. Trois formats étaient possibles :
 - **Une page HTML autonome ouverte dans un autre onglet** — il faudrait l'ajouter aux entrées
   de `vite.config.ts` ou passer par un répertoire `public/`, et le pilote quitterait
   l'application au moment précis où il a besoin d'aide.
-- **Un fragment HTML injecté dans une modale** — retenu. Pas d'analyseur, pas d'entrée de
-  construction supplémentaire, et le pilote garde son fichier ouvert derrière la boîte.
+- **Un fragment HTML injecté dans une vue de l'application** — retenu. Pas d'analyseur, pas
+  d'entrée de construction supplémentaire, et le pilote garde son fichier ouvert derrière.
+  Ce fut d'abord une modale ; treize chapitres ne se lisent pas dans une boîte, et c'est
+  aujourd'hui une **page** : le défilement revient au navigateur, donc la position se garde,
+  la recherche du navigateur fonctionne, et l'impression aussi.
 
 **Le poids.** Le fragment est du texte : il se compresse comme du texte. Importé en `?raw`
 depuis un module chargé par `import()`, il part dans un morceau à part que Vite n'émet qu'au
@@ -32,8 +35,22 @@ les catalogues de langue et les cinq modules déjà branchés à la demande dans
 
 ## Le manuel commence à `<h2>`
 
-La boîte modale porte le `<h1>`. Un second premier niveau dans le fragment casserait la
-navigation par titres d'un lecteur d'écran, qui est le sommaire réel de ce document.
+La page porte le `<h1>`. Un second premier niveau dans le fragment casserait la navigation
+par titres d'un lecteur d'écran, qui est le sommaire réel de ce document.
+
+## Le fil du fragment, les deux colonnes de l'écran
+
+Le fragment est **un seul fil** : l'avertissement, le sommaire, puis les treize chapitres.
+C'est ce qui fait que `Ctrl+F` trouve le manuel entier et que l'impression sort d'un bloc.
+
+À l'ouverture, `src/ui/manualPage.ts` range ce fil en trois boîtes — `.manual__lead`
+(l'avertissement), `.manual__side` (le sommaire) et `.manual__text` (les chapitres) — que
+`manuel.css` met en deux colonnes au-dessus de 64 rem : le sommaire à gauche, collant, avec
+le chapitre courant marqué ; le texte à droite, borné à 640 px. En dessous, tout retombe
+dans le fil, dans l'ordre du document, et une pastille fixe ramène au sommaire.
+
+**Ces trois classes ne s'écrivent jamais dans le HTML** : elles n'existent qu'à l'écran. Un
+fragment qui les porterait figerait la mise en page dans cinq fichiers de mille lignes.
 
 ## Les classes du fragment
 
@@ -43,7 +60,7 @@ raison :
 | Classe | Usage |
 |---|---|
 | `.manual` | La racine du fragment. **Toute** règle de style descend d'elle. |
-| `.manual__toc` | Le sommaire, en tête. Des liens d'ancre, pas un accordéon : `Ctrl+F` doit trouver le manuel entier. |
+| `.manual__toc` | Le sommaire, en tête du fragment — l'écran le déplace ensuite dans sa colonne. Des liens d'ancre, pas un accordéon : `Ctrl+F` doit trouver le manuel entier. |
 | `.manual__rank` | Le numéro d'un chapitre, devant son titre. |
 | `.manual__ui` | Un intitulé **recopié de l'écran**. Pas du gras, pas du code : un fond discret qui dit « cherchez ce mot-là à l'écran ». |
 | `.manual__file` | Un nom de fichier ou une extension, en chasse fixe — le pilote va le comparer caractère par caractère. |

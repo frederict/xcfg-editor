@@ -269,11 +269,13 @@ one, and the reason for the replacement.](captures/enregistrer-et-partager.png)
 *When you save, what the file reveals and what can be replaced — shown before the
 download, not after.*
 
-![The user manual open over the welcome screen: a boxed warning “Read this before giving
-your file to anyone”, then the contents of its thirteen chapters.](captures/manuel.png)
+![The user manual as a full page: its thirteen chapters listed on the left, and on the
+right a boxed warning “Read this before giving your file to anyone”, then the beginning of
+chapter 1.](captures/manuel.png)
 
-*The manual opens over the screen, without leaving anything. It starts with the warning
-rather than with the guided tour.*
+*The manual takes up a page as wide as the editor. It starts with the warning rather than
+with the guided tour, and its contents stay on the left throughout the reading — with the
+chapter you are in marked by a rule.*
 
 ## What it cannot do, and what remains uncertain
 
