@@ -569,6 +569,12 @@ réglages restent français dans les cinq captures — seule notre prose change.
   à mi-course. Ces chantiers sont clos ; les cinq images ont été reprises sur un arbre
   propre, servi depuis un export figé de HEAD (`git archive`).
 
+  VÉRIFIÉE ET GARDÉE le 2026-08-22, au soir : l'écran des touches a gagné deux phrases —
+  d'où vient le nom d'une touche pressée et où elle se trouve sur le boîtier, et le bouton
+  qui ne produit rien. Elles ne peuvent PAS entrer dans ce cadre : il montre l'écran
+  « Intégration Android », et ces phrases-là ne s'écrivent que sous un bloc portant des
+  liaisons de touche. Aucun intitulé, aucune hauteur, aucune couleur ne bouge ici.
+
   DETTE PAYÉE le 2026-08-22, en fin de journée, POUR TROIS AUTRES RAISONS ENCORE. Les
   images reprises à midi montraient un écran que le code ne produit plus :
 
@@ -1002,6 +1008,14 @@ plutôt que par la visite guidée, et son sommaire reste à gauche pendant toute
 
 <!--
   REFAIRE CETTE CAPTURE — captures/manuel.<langue>.png (1200 × 1110)
+
+  VÉRIFIÉE ET GARDÉE POUR LE CHAPITRE 8 le 2026-08-22, au soir : il a gagné deux
+  paragraphes — le bouton sous l'appareil qui émet le code 27, et le second qui n'émet
+  rien — et deux phrases y ont changé (« trois touches » devenu « quatre »). AUCUN titre :
+  `<h2>` et `<h3>` comptés dans les cinq manuels, 15 et 55 partout, les mêmes qu'avant.
+  Aucun `<span class="manual__ui">` ajouté ni retiré. Et surtout : tout cela est au
+  chapitre 8, quand le cadre s'arrête au milieu du chapitre 1. Le sommaire, lui, ne liste
+  que les `<h2>` : il ne bouge pas.
 
   VÉRIFIÉE ET GARDÉE UNE TROISIÈME FOIS le 2026-08-22, au soir : le chapitre 5 a gagné un
   paragraphe — « Gérer les pages » renvoie désormais vers l'issue qui n'envoie qu'une
@@ -1475,10 +1489,14 @@ n'existe pas : le parc n'est pas homogène et le relevé ne couvre qu'un boîtie
 l'écran dit lequel s'applique à chaque code :
 
 1. **une touche pressée à la main**, son code lu à l'arrivée — `keyCodes.hardwareKeys[].keys`,
-   `basis: "measured"`. Le seul cran qui prouve qu'un bouton existe. Trois touches sur
-   l'AIR³ 7.2 : les codes 24, 25 et 26. ⚠️ Ce relevé ne porte **aucun nom** : ce qui a été
-   mesuré, c'est qu'une touche pressée émet le code 24, pas la façon de l'appeler — le nom
-   vient de XCTrack, voir plus bas ;
+   `basis: "measured"`. Le seul cran qui prouve qu'un bouton existe. **Quatre** touches sur
+   l'AIR³ 7.2 depuis le 2026-08-22 au soir : les codes 24, 25, 26 — et **27**, le premier
+   des deux boutons **sous l'appareil**, que le propriétaire a pressé pendant que
+   `getevent` écoutait les quatre périphériques d'entrée. La **place** du bouton voyage
+   avec la mesure (`where`), parce que seul un doigt pouvait l'établir et que c'est elle
+   qui permet à un pilote de retrouver sa touche. ⚠️ Ce relevé ne porte **aucun nom** : ce
+   qui a été mesuré, c'est qu'une touche pressée émet le code 24, pas la façon de
+   l'appeler — le nom vient de XCTrack, voir plus bas ;
 2. **un code déclaré par le noyau du boîtier** — `keyCodes.hardwareKeys[].kernelDeclaration`,
    relevé le 2026-08-22 par `getevent -pl`, `dumpsys input` pour savoir quel fichier de
    disposition Android applique réellement à chaque périphérique, puis lecture de ce
@@ -1488,7 +1506,8 @@ l'écran dit lequel s'applique à chaque code :
    traduit `CAMERA` 212 en **27** plus quatre codes de croix directionnelle), la dalle
    tactile (`mtk-tpd`, 3/4/82/84) et la prise casque (`ACCDET`). Un code déclaré est
    **possible** sur ce matériel ; il n'est pas prouvé, une puce de clavier déclarant
-   souvent plus de codes que le boîtier n'a de boutons ;
+   souvent plus de codes que le boîtier n'a de boutons. ⚠️ Le 27 a quitté ce cran le soir
+   même, sous un doigt ; les quatre codes de croix directionnelle y restent ;
 3. **rien** — le code n'est déclaré nulle part sur ce modèle. C'est une ignorance, pas une
    absence.
 
@@ -1503,7 +1522,16 @@ plausible, et ce qui manquerait pour trancher — un appui, ou la lecture de l'a
 
 Jusqu'au 2026-08-22, l'écran écrasait les crans 2 et 3 dans la même phrase, qui déclarait
 qu'aucune touche mesurée sur l'AIR³ 7.2 n'émettait le code 27 — d'un code que le noyau du
-même boîtier déclare.
+même boîtier déclare. Le soir du même jour, un appui a tranché : le 27 est passé au
+premier cran, et le bouton « qui ne semblait servir à rien » sert.
+
+**Un bouton pressé dont rien n'est sorti est une mesure, pas un trou.** Le *second* des
+deux boutons sous l'appareil a été pressé dans la même capture et n'a produit **aucun
+événement**, les quatre périphériques d'entrée étant à l'écoute. `hardwareKeys[].silentKeys`
+le range, avec sa date et ce qui écoutait — sans quoi « rien » ne serait pas un résultat.
+⚠️ Ce n'est pas « cette touche n'existe pas » : le bouton existe et s'enfonce, il ne
+produit rien **sur ce boîtier-là**. La page des réglages le dit au pilote, parce que celui
+qui l'appuie sans rien voir bouger se demandera si son instrument est cassé.
 
 Le diagnostic « Version et compatibilité », lui, ne consulte toujours ni l'une ni l'autre
 de ces deux bases.
@@ -1534,7 +1562,7 @@ néerlandais lit « Live pilot » des deux côtés. Rien n'est traduit maiso
 trou ; `hasNavigationLabel()` permet de savoir que le repli a joué.
 
 **`src/catalog/hardwareKeyLabels.json` est le second de ces catalogues transcrits**, et il
-existe pour la même raison, découverte le même jour. L'écran des touches nommait les trois
+existe pour la même raison, découverte le même jour. L'écran des touches nommait les
 touches physiques de l'AIR³ 7.2 « volume haut », « volume bas » et
 « marche/arrêt » : des mots **de nous**, écrits en français dans le relevé matériel,
 servis tels quels aux cinq interfaces — et introuvables sur l'appareil du pilote, dont
@@ -1548,18 +1576,46 @@ déjà un — mais d'aller chercher le sien : `keyVolumeUp`, `keyVolumeDown` et 
 32 langues, que les 55 relevés d'APK portent tous. Ils suivent l'axe des libellés, donc la
 langue du fichier ouvert.
 
-Deux réserves, là encore :
+⚠️ **Ce catalogue a longtemps porté trois codes, et il en porte vingt et un depuis le
+2026-08-22 au soir.** Sa réserve disait : « aucune mesure ne dit lequel de ces mots l'écran
+de XCTrack choisit pour un code donné, et le bytecode est obfusqué ». La seconde moitié
+était fausse, et c'est ce qui bloquait la première : **l'obfuscation renomme les classes et
+les méthodes, elle ne cache pas les entiers.** Le code d'une touche et l'identifiant de la
+ressource qui la nomme sont deux entiers littéraux posés côte à côte, et un `dexdump` les
+rend lisibles.
 
-- **l'appariement code ↔ clé de ressource est mesuré pour 24, déduit pour 25 et 26.**
-  Mesuré, parce que l'écran natif affiche « Appui long : Augmenter le volume » sur la
-  ligne portant `16777240` (= 24 | 0x1000000) — c'est l'observation qui fonde déjà
-  `longPressBitBasis` ; déduit pour les deux autres, par la seule correspondance des noms ;
-- **trois codes, et trois seulement.** XCTrack nomme une trentaine de touches
-  (`keyBack`, `keyCamera`, `keyMenu`…) et porte même de quoi nommer celles qu'il ignore
-  (`keyExtShort`, le mot qu'il emploie pour une touche externe qu'il ne sait
-  pas nommer). Aucune mesure ne dit lequel de ces mots son
-  écran choisit pour un code donné, et le bytecode est obfusqué : au-delà de trois, ce
-  serait deviner. Un code non apparié garde son nom Android, `KEYCODE_STEM_2`.
+Dans l'APK installé sur l'AIR³ 7.2 — `1.0.3-beta`, `versionCode` 100 030, celui-là même
+dont le relevé de textes était déjà au catalogue — la classe `th4` construit une table de
+**24 paires** `(code, ressource)`, et sa méthode `a(Integer)` est ce qui nomme une touche à
+l'écran : elle ôte d'abord le bit `0x01000000` et préfixera le texte `keyLongPress` ; elle
+consulte une première table qui rend un **caractère** pour les touches de clavier ; puis
+celle-ci ; et **à défaut de tout, elle affiche le nombre nu** — c'est ce que le pilote voit
+pour 266. Les 21 codes Android de cette table sont donc **lus**, et non plus devinés.
+
+Deux contrôles, et trois réserves :
+
+- **les 21 paires tombent une à une sur la constante `KEYCODE_*` que leur nom annonce** —
+  3 sur `keyHome`, 19 sur `keyUp`, 64 (`KEYCODE_EXPLORER`) sur `keyBrowser`. Une lecture
+  fautive du bytecode n'aurait pas produit vingt et une coïncidences ;
+- **le 24 est mesuré deux fois** : l'écran natif affiche « Appui long : Augmenter le
+  volume » sur la ligne portant `16777240` (= 24 | 0x1000000) — l'observation qui fonde
+  déjà `longPressBitBasis` — et le bytecode dit la même chose. Deux mesures indépendantes
+  qui concordent ;
+- **trois entrées de la table restent dehors** : `-2`, `-3` et `-4` ne sont pas des codes
+  Android mais des valeurs propres à XCTrack (`keyProximity`, `keyExtShort`, `keyExtLong`),
+  et aucun fichier du corpus n'en porte. Deux plages de codes négatifs, lues dans la même
+  méthode, nomment de la même façon les télécommandes AeroRemote et MipFly ;
+- **les touches de clavier gardent leur nom Android.** Pour le code 51, XCTrack affiche
+  « W » — le caractère de sa première table, consultée avant celle-ci. Aucun boîtier relevé
+  n'en porte ; le jour où l'un en portera, il faudra lire cette table-là aussi ;
+- **un seul APK, une seule version.** Cette table est celle de `1.0.3-beta` ; une autre
+  version peut la changer, comme le reste du format.
+
+⚠️ **Le mot de XCTrack n'est pas ce que le boîtier porte.** « Caméra » nomme le code 27, et
+sur l'AIR³ 7.2 ce code sort du premier des deux boutons sous l'appareil — qui n'est pas un
+déclencheur photo. C'est pourquoi la page dit aussi *où* la touche se trouve : le nom seul
+n'apprend pas au pilote laquelle presser. Un code non apparié garde, lui, son nom Android :
+`KEYCODE_STEM_2`.
 
 Ce que le **noyau** déclare a fait le chemin inverse. « la prise casque »,
 « la dalle tactile » étaient également écrits en français dans le relevé — mais ceux-là

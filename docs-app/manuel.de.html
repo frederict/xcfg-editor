@@ -825,7 +825,7 @@
     den <strong>XCTrack der Taste gibt</strong>: es ist das Wort, das Sie auf dem
     Tastenbildschirm Ihres Geräts lesen, und es folgt der Sprache der geöffneten Datei wie
     alle anderen Namen von XCTrack. Er erscheint nur für die Tasten, die wir am Modell
-    Ihrer Datei <strong>von Hand gedrückt</strong> haben; am AIR³ 7.2 sind es drei
+    Ihrer Datei <strong>von Hand gedrückt</strong> haben; am AIR³ 7.2 sind es vier
     Tasten;</li>
     <li><strong>ein Name mit <code>KEYCODE_</code></strong> — <code>KEYCODE_STEM_2</code>,
     Code 266 — stammt aus der Tastentabelle von Android. Diese Tabelle benennt einen
@@ -844,13 +844,28 @@
     <li><strong>eine von Hand gedrückte Taste</strong>, deren ankommender Code gelesen
     wurde. Nur diese Stufe beweist, dass eine Taste vorhanden ist;</li>
     <li><strong>ein vom Kernel des Geräts angegebener Code</strong>, am 22. August 2026 am
-    AIR³ 7.2 erhoben. Der Tastatur-Controller dieses Gehäuses gibt unter anderem den Code
-    27 und vier Codes des Steuerkreuzes an, obwohl nur drei Tasten je gedrückt wurden. Ein
-    angegebener Code ist auf dieser Hardware <em>möglich</em>; bewiesen ist er nicht, denn
-    ein Tastatur-Chip gibt oft mehr Codes an, als das Gehäuse Tasten hat;</li>
+    AIR³ 7.2 erhoben. Der Tastatur-Controller dieses Gehäuses gibt unter anderem vier
+    Codes des Steuerkreuzes an, die keine bekannte Taste sendet. Ein angegebener Code ist
+    auf dieser Hardware <em>möglich</em>; bewiesen ist er nicht, denn ein Tastatur-Chip
+    gibt oft mehr Codes an, als das Gehäuse Tasten hat;</li>
     <li><strong>nichts</strong> — der Code wird auf diesem Modell nirgends angegeben. Das
     ist Unwissen, kein Fehlen.</li>
   </ol>
+
+  <p>Der <strong>Code 27</strong> ist am Abend des 22. August 2026 von der zweiten auf
+  die erste Stufe gewechselt. Bis dahin gab ihn nur der Tastatur-Controller an; dann
+  drückte der Besitzer des AIR³ 7.2 die Tasten seines Gehäuses eine nach der anderen, und
+  die <strong>erste der beiden Tasten an der Unterseite des Geräts</strong> sendet ihn.
+  XCTrack nennt sie „Kamera“ — das ist sein Wort, nicht unseres, und diese Taste ist
+  offensichtlich kein Auslöser. Deshalb sagt der Editor auch, <em>wo</em> die Taste am
+  Gehäuse sitzt: der Name allein würde Ihnen nicht sagen, welche zu drücken ist.</p>
+
+  <p>Die <strong>zweite</strong> Taste an der Unterseite wurde ebenfalls gedrückt, in
+  derselben Messung, und erzeugte <strong>kein einziges Ereignis</strong> — obwohl die vier
+  Eingabegeräte des Gehäuses mithörten. Das ist keine fehlende Taste: der Knopf ist da und
+  lässt sich drücken. Er erzeugt auf genau diesem Gehäuse nur nichts, und wenn Sie ihn
+  drücken und nichts geschieht, ist Ihr Instrument nicht defekt. Der Editor sagt es Ihnen
+  unter dem Tastenblock, statt Sie suchen zu lassen.</p>
 
   <p>Der Code 266 gehört zu diesem dritten Fall, und es ist der, den viele Piloten im
   Wettkampf am häufigsten drücken. Keines der vier Eingabegeräte des AIR³ 7.2 kann ihn

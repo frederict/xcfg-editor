@@ -780,7 +780,7 @@
     <strong>XCTrack gives the key</strong>: it is the word you read on your device’s key
     binding screen, and it follows the language of the open file, like every other XCTrack
     name. It is shown only for the keys we have <strong>pressed by hand</strong> on the
-    model your file declares; on the AIR³ 7.2, three keys;</li>
+    model your file declares; on the AIR³ 7.2, four keys;</li>
     <li><strong>a name in <code>KEYCODE_</code></strong> — <code>KEYCODE_STEM_2</code>,
     code 266 — comes from Android’s key table. That table names a <em>code</em>, not a
     button: it does not say which of your keys emits it.</li>
@@ -798,13 +798,28 @@
     <li><strong>a key pressed by hand</strong>, the incoming code read. This is the only
     rung that proves a button exists;</li>
     <li><strong>a code declared by the device’s kernel</strong>, surveyed on 22 August 2026
-    on the AIR³ 7.2. That unit’s keyboard controller declares, among others, code 27 and
-    four directional-pad codes, while only three keys were ever pressed. A declared code is
+    on the AIR³ 7.2. That unit’s keyboard controller declares, among others, four
+    directional-pad codes that no known button emits. A declared code is
     <em>possible</em> on this hardware; it is not proved, because a keyboard chip often
     declares more codes than the case has buttons;</li>
     <li><strong>nothing</strong> — the code is declared nowhere on this model. That is
     ignorance, not absence.</li>
   </ol>
+
+  <p><strong>Code 27</strong> moved from the second rung to the first on the evening of
+  22 August 2026. Until then the keyboard controller merely declared it; then the owner of
+  the AIR³ 7.2 pressed the buttons of the case one by one, and the <strong>first of the
+  two buttons underneath the device</strong> emits it. XCTrack calls it “Camera” — that is
+  its word, not ours, and the button is obviously not a shutter release. This is why the
+  editor also says <em>where</em> the key sits on the case: the name alone would not tell
+  you which one to press.</p>
+
+  <p>The <strong>second</strong> button underneath the device was pressed too, in the same
+  measurement, and produced <strong>no event at all</strong> — even though the unit’s four
+  input devices were listening. This is not a missing key: the button is there and it
+  clicks. It simply produces nothing on that particular case, and if you press it and see
+  nothing move, your instrument is not broken. The editor tells you so below the key
+  block, rather than leaving you to wonder.</p>
 
   <p>Code 266 belongs to that third case, and it is the one many pilots press most in
   competition. None of the AIR³ 7.2’s four input devices can produce it. The simplest

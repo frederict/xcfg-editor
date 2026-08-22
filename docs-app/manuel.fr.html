@@ -818,7 +818,7 @@
     c’est le mot que vous lisez sur l’écran de réglage des touches de votre appareil, et il
     suit la langue du fichier ouvert, comme tous les autres noms de XCTrack. Il ne
     s’affiche que pour les touches que nous avons <strong>pressées à la main</strong> sur
-    le modèle que votre fichier déclare ; sur l’AIR³ 7.2, trois touches ;</li>
+    le modèle que votre fichier déclare ; sur l’AIR³ 7.2, quatre touches ;</li>
     <li><strong>un nom en <code>KEYCODE_</code></strong> — <code>KEYCODE_STEM_2</code>,
     code 266 — vient de la table des touches d’Android. Cette table nomme un
     <em>code</em>, pas un bouton : elle ne dit pas laquelle de vos touches l’émet.</li>
@@ -837,13 +837,27 @@
     seul cran qui prouve qu’un bouton existe ;</li>
     <li><strong>un code déclaré par le noyau de l’appareil</strong>, relevé le
     22 août 2026 sur l’AIR³ 7.2. Le contrôleur de clavier de ce boîtier déclare, entre
-    autres, le code 27 et quatre codes de croix directionnelle, alors que trois touches
-    seulement ont été pressées. Un code déclaré est <em>possible</em> sur ce matériel ; il
-    n’est pas prouvé, car une puce de clavier déclare souvent plus de codes que le boîtier
-    n’a de boutons ;</li>
+    autres, quatre codes de croix directionnelle qu’aucun bouton connu n’émet. Un code
+    déclaré est <em>possible</em> sur ce matériel ; il n’est pas prouvé, car une puce de
+    clavier déclare souvent plus de codes que le boîtier n’a de boutons ;</li>
     <li><strong>rien</strong> — le code n’est déclaré nulle part sur ce modèle. C’est une
     ignorance, pas une absence.</li>
   </ol>
+
+  <p>Le <strong>code 27</strong> a fait le chemin du deuxième cran au premier le
+  22 août 2026 au soir. Il n’était jusque-là que déclaré par le contrôleur de clavier ;
+  le propriétaire de l’AIR³ 7.2 a alors pressé les boutons de son boîtier un à un, et le
+  <strong>premier des deux boutons qui sont sous l’appareil</strong> l’émet. XCTrack le
+  nomme « Caméra » — c’est son mot, pas le nôtre, et ce bouton n’est évidemment pas un
+  déclencheur photo. C’est pour cela que l’éditeur dit aussi <em>où</em> la touche se
+  trouve sur le boîtier : le nom seul ne vous dirait pas laquelle presser.</p>
+
+  <p>Le <strong>second</strong> bouton sous l’appareil a été pressé lui aussi, dans la
+  même mesure, et n’a produit <strong>aucun événement</strong> — les quatre périphériques
+  d’entrée du boîtier étaient pourtant à l’écoute. Ce n’est pas une touche absente : le
+  bouton existe et s’enfonce. Il ne produit simplement rien sur ce boîtier-là, et si vous
+  l’appuyez sans rien voir bouger, votre instrument n’est pas cassé. L’éditeur vous le dit
+  sous le bloc des touches, plutôt que de vous laisser chercher.</p>
 
   <p>Le code 266 relève de ce troisième cas, et c’est celui que beaucoup de pilotes
   pressent le plus en compétition. Aucun des quatre périphériques d’entrée de l’AIR³ 7.2

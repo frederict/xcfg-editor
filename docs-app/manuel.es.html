@@ -779,7 +779,7 @@
     <strong>XCTrack da a la tecla</strong>: es la palabra que usted lee en la pantalla de
     asignación de teclas de su aparato, y sigue el idioma del archivo abierto, como todos
     los demás nombres de XCTrack. Solo aparece para las teclas que hemos <strong>pulsado a
-    mano</strong> en el modelo que su archivo declara; en el AIR³ 7.2, tres teclas;</li>
+    mano</strong> en el modelo que su archivo declara; en el AIR³ 7.2, cuatro teclas;</li>
     <li><strong>un nombre en <code>KEYCODE_</code></strong> — <code>KEYCODE_STEM_2</code>,
     código 266 — viene de la tabla de teclas de Android. Esa tabla nombra un
     <em>código</em>, no un botón: no dice cuál de sus teclas lo emite.</li>
@@ -798,12 +798,27 @@
     único nivel que prueba que existe un botón;</li>
     <li><strong>un código declarado por el núcleo del aparato</strong>, medido el 22 de
     agosto de 2026 en el AIR³ 7.2. El controlador de teclado de esa carcasa declara, entre
-    otros, el código 27 y cuatro códigos de cruceta, cuando solo se pulsaron tres teclas.
-    Un código declarado es <em>posible</em> en este material; no está probado, porque un
-    chip de teclado declara a menudo más códigos que botones tiene la carcasa;</li>
+    otros, cuatro códigos de cruceta que ningún botón conocido emite. Un código declarado
+    es <em>posible</em> en este material; no está probado, porque un chip de teclado
+    declara a menudo más códigos que botones tiene la carcasa;</li>
     <li><strong>nada</strong> — el código no se declara en ninguna parte en este modelo. Es
     ignorancia, no ausencia.</li>
   </ol>
+
+  <p>El <strong>código 27</strong> pasó del segundo nivel al primero la tarde del 22 de
+  agosto de 2026. Hasta entonces solo lo declaraba el controlador de teclado; luego el
+  propietario del AIR³ 7.2 pulsó los botones de su carcasa uno a uno, y la
+  <strong>primera de las dos teclas bajo el aparato</strong> lo emite. XCTrack la llama
+  «Cámara» — es su palabra, no la nuestra, y ese botón no es, evidentemente, un disparador
+  de fotos. Por eso el editor dice también <em>dónde</em> se encuentra la tecla en la
+  carcasa: el nombre solo no le diría cuál pulsar.</p>
+
+  <p>La <strong>segunda</strong> tecla bajo el aparato se pulsó también, en la misma
+  medición, y no produjo <strong>ningún evento</strong> — aunque los cuatro dispositivos de
+  entrada de la carcasa estaban a la escucha. No es una tecla ausente: el botón existe y se
+  hunde. Simplemente no produce nada en esa carcasa concreta, y si usted lo pulsa sin ver
+  nada moverse, su instrumento no está averiado. El editor se lo dice bajo el bloque de
+  teclas, en lugar de dejarle buscar.</p>
 
   <p>El código 266 pertenece a ese tercer caso, y es el que muchos pilotos pulsan más en
   competición. Ninguno de los cuatro dispositivos de entrada del AIR³ 7.2 puede
