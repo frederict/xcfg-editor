@@ -407,6 +407,39 @@ describe('deux types, un seul libellé', () => {
       .toEqual(['WBrightnessInfo', 'WButtonBrightness'])
     expect(rows.every((row) => row.dataset.ambiguous === 'true')).toBe(true)
   })
+
+  /**
+   * L'autre bord du même arbitrage, et c'est lui qui a manqué le plus longtemps : le nom
+   * court s'écrivait sur **chaque** ligne. Un pilote-testeur l'a compté le 2026-08-22 —
+   * « soixante-quinze fois » —, sous un nom officiel qui lui donnait déjà la réponse.
+   * Deux lignes en ont besoin ; les autres non. Ce test tient les deux bords ensemble :
+   * le retirer partout perdrait le seul moyen de départager les homonymes.
+   */
+  it('et lui seul : aucune autre ligne de la palette n’écrit de nom court', () => {
+    const view = palette(EMPTY)
+    const rows = [...view.element.querySelectorAll<HTMLElement>('.palette__entry')]
+    const withShort = rows.filter((row) => row.querySelector('.palette__short') !== null)
+
+    expect(rows.length).toBeGreaterThan(50)
+    expect(withShort.map((row) => row.dataset.widget))
+      .toEqual(['WBrightnessInfo', 'WButtonBrightness'])
+    // Et l'assistance vocale entend exactement ce que l'œil voit — ni plus, ni moins.
+    const spoken = (shortName: string): string =>
+      rows.find((row) => row.dataset.widget === shortName)!.getAttribute('aria-label') ?? ''
+    expect(spoken('WBrightnessInfo')).toContain('WBrightnessInfo')
+    expect(spoken('WCompass')).not.toContain('WCompass')
+  })
+
+  /**
+   * Ce qui n'est pas perdu en chemin : la recherche accepte toujours le nom du fichier,
+   * et le champ le promet en toutes lettres. Sans ce test, retirer le nom court de la vue
+   * pourrait un jour emporter la seule façon de retrouver un gadget par ce nom-là.
+   */
+  it('la recherche accepte toujours le nom court, même quand la ligne ne le montre plus', () => {
+    const view = palette(EMPTY)
+    view.filter('WCompassDigital')
+    expect(visibleEntries(view.element)).toEqual(['WCompassDigital'])
+  })
 })
 
 describe('la recherche', () => {

@@ -409,8 +409,9 @@ export interface PaletteEntry {
    * Vrai si un autre type porte exactement le même libellé. Le cas est attesté :
    * « Luminosité de l'écran » désigne `WBrightnessInfo` (Système) **et** `WButtonBrightness`
    * (Boutons d'actions), deux widgets distincts (§ 3.2). Une palette indexée par libellé se
-   * casserait dessus ; celle-ci est indexée par nom court, et affiche ce nom court sur chaque
-   * ligne — ce qui suffit à les distinguer à l'œil comme au test.
+   * casserait dessus ; celle-ci est indexée par nom court, et c'est ce drapeau qui décide
+   * d'**afficher** ce nom court — sur ces deux lignes-là et sur elles seules, où il est le
+   * seul moyen de choisir la bonne. Voir `buildRow`.
    */
   ambiguousLabel: boolean
 }
@@ -932,7 +933,12 @@ function spokenCopy(entry: PaletteEntry, tr: Translator): string {
 }
 
 function spokenLabel(entry: PaletteEntry, familyLabel: string, tr: Translator): string {
-  const parts = [entry.label, entry.shortName, familyLabel]
+  // Le nom court suit ce que la ligne montre : sur les homonymes seulement. L'assistance
+  // vocale ne doit ni en dire moins — les deux « Luminosité de l'écran » seraient alors
+  // indiscernables à l'oreille —, ni en dire plus que l'œil ne voit.
+  const parts = entry.ambiguousLabel
+    ? [entry.label, entry.shortName, familyLabel]
+    : [entry.label, familyLabel]
   if (entry.pro) parts.push(tr.t('palette.spokenPro'))
   if (entry.onPageCount > 0) {
     parts.push(entry.onPageCount > 1
@@ -994,9 +1000,16 @@ function buildRow(
 
   const text = el('span', 'palette__text')
   text.append(el('span', 'palette__name', entry.label))
-  // Le nom court est affiché sur CHAQUE ligne, pas seulement sur les homonymes : c'est lui
-  // qu'on retrouve dans le fichier, et le pilote qui compare deux sauvegardes le cherche.
-  text.append(el('span', 'palette__short', entry.shortName))
+  // Le nom court ne s'écrit que sur les **homonymes**, et c'est un revirement mesuré.
+  // Il s'écrivait sur chaque ligne — 75 fois, sous le nom officiel et au-dessus de la
+  // description, coupant la ligne en deux —, au motif que le pilote qui compare deux
+  // sauvegardes le cherche. Un pilote-testeur a compté le 2026-08-22 : « soixante-quinze
+  // fois ». Sur 75 lignes, 2 en ont besoin — « Luminosité de l'écran » désigne à la fois
+  // `WBrightnessInfo` et `WButtonBrightness` —, et sur ces deux-là il est le SEUL moyen de
+  // choisir la bonne. Les 73 autres le donnaient à un lecteur qui avait déjà la réponse.
+  // Ce qui n'est pas perdu : `haystack` cherche toujours sur le nom court, et la palette
+  // le dit — « Rechercher un gadget par son nom, ou par le nom qu'il porte dans le fichier ».
+  if (entry.ambiguousLabel) text.append(el('span', 'palette__short', entry.shortName))
   if (entry.description !== undefined) {
     text.append(el('span', 'palette__desc', entry.description))
   }
