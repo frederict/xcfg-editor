@@ -200,6 +200,17 @@ const versions = {
   'versions.noVersionChosen': 'Aucune version choisie : rien n’est comparé, et rien n’est diagnostiqué.',
 
   'versions.deltaDetails': 'Le détail de ces changements',
+  /**
+   * La phrase de cadrage du volet, ouverte avant les listes.
+   *
+   * ⚠️ Elle existe parce qu'un pilote-testeur a buté le 2026-08-22 sur quatorze noms
+   * techniques d'affilée — « mapWidget_showSkySightForecast, … » — sans une ligne
+   * disant ce qu'il regardait, alors que les gadgets de la même liste, eux, sont
+   * nommés en toutes lettres. L'asymétrie n'est pas un oubli : les gadgets ont un
+   * libellé dans l'APK, les réglages d'un gadget n'en ont aucun. C'est cela qu'elle
+   * dit — et elle ne promet donc pas un nom que nous n'avons pas.
+   */
+  'versions.deltaCaveat': 'Ce qui suit est ce que la version visée lit de plus, ou de moins, que la précédente. Les gadgets y portent le nom que XCTrack leur donne ; les réglages, non — l’application ne les montre nulle part, et ce sont les noms qu’elle écrit dans le fichier.',
   'versions.detailWidgetsAdded': 'Gadgets ajoutés',
   'versions.detailWidgetsRemoved': 'Gadgets retirés',
   'versions.detailSettingsAdded': 'Réglages ajoutés sur des gadgets existants',

@@ -100,6 +100,19 @@
   padding: 0.4rem 0 0.2rem;
 }
 
+/*
+ * La phrase qui dit au lecteur ce que les listes suivantes montrent. Même voix que
+ * `.vdiag__scope` — un cadrage, pas un titre — et une marge basse qui la détache de la
+ * première rubrique sans la coller au bord du volet.
+ */
+.vdiag__detail-caveat {
+  margin: 0 0 0.2rem;
+  max-width: 78ch;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--app-ink-soft, #59616a);
+}
+
 .vdiag__detail-title {
   margin: 0.6rem 0 0.2rem;
   font-family: var(--font-title, Georgia, serif);
@@ -262,6 +275,7 @@
   .vdiag__scope,
   .vdiag__unstable,
   .vdiag__details > summary,
+  .vdiag__detail-caveat,
   .vdiag__detail-title {
     color: var(--app-ink-soft, #98a1a9);
   }

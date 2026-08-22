@@ -154,6 +154,7 @@ const versions: DomainCatalog<'versions'> = {
   'versions.noVersionChosen': 'Keine Version gewählt: es wird nichts verglichen und nichts diagnostiziert.',
 
   'versions.deltaDetails': 'Die Einzelheiten dieser Änderungen',
+  'versions.deltaCaveat': 'Was folgt, ist das, was die angezielte Version mehr oder weniger liest als die vorige. Die Widgets tragen dabei den Namen, den XCTrack ihnen gibt; die Einstellungen nicht — die Anwendung zeigt sie nirgends, und dies sind die Namen, die sie in die Datei schreibt.',
   'versions.detailWidgetsAdded': 'Hinzugefügte Widgets',
   'versions.detailWidgetsRemoved': 'Entfernte Widgets',
   'versions.detailSettingsAdded': 'Einstellungen, die auf bestehenden Widgets hinzugekommen sind',

@@ -1210,6 +1210,12 @@ export async function buildVersionPanel(
     delta.textContent = change.summary
 
     deltaBody.textContent = ''
+    // La phrase de cadrage ouvre le volet, avant la première liste. Sans elle, le volet
+    // s'ouvre sur quatorze noms techniques d'affilée et le lecteur ne sait pas ce qu'il
+    // regarde ni pourquoi les gadgets, eux, y sont nommés en toutes lettres — un
+    // pilote-testeur l'a relevé le 2026-08-22. Elle n'est appendue que si quelque chose
+    // suit : `shown` décide, plus bas, et le volet reste caché quand il est vide.
+    const caveat = el('p', 'vdiag__detail-caveat', tr.t('versions.deltaCaveat'))
     // Les noms de réglages sont ce que XCTrack écrit : une colonne de données, jointe par
     // « , » et non par `format.list`, qui en ferait une phrase.
     const keyLine = (entry: { widget: string; keys: string[] }): string =>
@@ -1227,6 +1233,7 @@ export async function buildVersionPanel(
     for (const [title, items] of lists) {
       if (items.length === 0) continue
       shown += 1
+      if (shown === 1) deltaBody.append(caveat)
       deltaBody.append(el('h4', 'vdiag__detail-title', title))
       const list = el('ul', 'vdiag__list')
       for (const item of items) list.append(el('li', undefined, item))

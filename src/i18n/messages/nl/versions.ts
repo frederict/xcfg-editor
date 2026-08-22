@@ -153,6 +153,7 @@ const versions: DomainCatalog<'versions'> = {
   'versions.noVersionChosen': 'Geen versie gekozen: er wordt niets vergeleken en niets gediagnosticeerd.',
 
   'versions.deltaDetails': 'De details van deze wijzigingen',
+  'versions.deltaCaveat': 'Wat volgt is wat de beoogde versie meer, of minder, leest dan de vorige. De widgets dragen daarbij de naam die XCTrack hun geeft; de instellingen niet — de toepassing toont ze nergens, en dit zijn de namen die zij in het bestand schrijft.',
   'versions.detailWidgetsAdded': 'Toegevoegde widgets',
   'versions.detailWidgetsRemoved': 'Verwijderde widgets',
   'versions.detailSettingsAdded': 'Instellingen toegevoegd op bestaande widgets',

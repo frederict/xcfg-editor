@@ -537,6 +537,22 @@ describe('le panneau', () => {
     expect(text).not.toContain('widget ')
   })
 
+  it('dit ce que le détail des changements montre, avant de le montrer', async () => {
+    // Le volet s'ouvrait sur quatorze noms techniques d'affilée — « Carte de la manche :
+    // mapWidget_showSkySightForecast, … » — sans une ligne disant ce qu'on regardait, et
+    // sans expliquer pourquoi les gadgets de la même liste, eux, sont nommés en toutes
+    // lettres. Un pilote-testeur l'a relevé le 2026-08-22 : « c'est incohérent avec le
+    // reste ». La phrase de cadrage vient donc AVANT la première rubrique.
+    const panel = await buildVersionPanel({ document: documentOf(BACKUP_2026), database: db, tr })
+    const body = panel.element.querySelector('.vdiag__details-body')
+    expect(body).not.toBeNull()
+    const caveat = body?.querySelector('.vdiag__detail-caveat')
+    expect(caveat?.textContent).toContain('l’application ne les montre nulle part')
+    // Avant la première rubrique, et pas ailleurs : c'est le premier enfant du volet.
+    expect(body?.firstElementChild).toBe(caveat)
+    expect(body?.querySelectorAll('.vdiag__detail-caveat')).toHaveLength(1)
+  })
+
   it('ouvre le menu sur la version du fichier, avant toutes les autres', async () => {
     const panel = await buildVersionPanel({ document: documentOf(BACKUP_2026), database: db, tr })
     const groups = [...panel.select.querySelectorAll('optgroup')]
