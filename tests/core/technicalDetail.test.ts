@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
 import { openContainer } from '../../src/core/container'
-import { formatTechnicalDetail } from '../../src/core/technicalDetail'
+import { formatTechnicalDetail, technicalDetail } from '../../src/core/technicalDetail'
+import { makeTranslator } from '../../src/i18n/translate'
+import frenchMessages from '../../src/i18n/messages/fr'
+import dutchMessages from '../../src/i18n/messages/nl'
+
+const tr = makeTranslator('fr', frenchMessages)
 
 /**
  * Le défaut mesuré : en déposant un `.png`, le pilote lisait
@@ -13,27 +18,42 @@ import { formatTechnicalDetail } from '../../src/core/technicalDetail'
  */
 describe('le détail technique ne montre plus le mot « Error »', () => {
   it('rend le message d’une panne, sans le préfixe du moteur', () => {
-    expect(formatTechnicalDetail(new Error('données résiduelles à 6')))
+    expect(formatTechnicalDetail(new Error('données résiduelles à 6'), tr))
       .toBe('données résiduelles à 6')
-    expect(formatTechnicalDetail(new TypeError('x n’est pas une fonction')))
+    expect(formatTechnicalDetail(new TypeError('x n’est pas une fonction'), tr))
       .toBe('x n’est pas une fonction')
   })
 
   it('ôte le préfixe même quand la panne arrive déjà en chaîne', () => {
-    expect(formatTechnicalDetail('Error: données résiduelles à 6'))
+    expect(formatTechnicalDetail('Error: données résiduelles à 6', tr))
       .toBe('données résiduelles à 6')
-    expect(formatTechnicalDetail('RangeError: index 7 hors de [0, 4]'))
+    expect(formatTechnicalDetail('RangeError: index 7 hors de [0, 4]', tr))
       .toBe('index 7 hors de [0, 4]')
   })
 
   it('laisse intact ce qui n’est pas préfixé', () => {
-    expect(formatTechnicalDetail('transaction avortée')).toBe('transaction avortée')
-    expect(formatTechnicalDetail(42)).toBe('42')
+    expect(formatTechnicalDetail('transaction avortée', tr)).toBe('transaction avortée')
+    expect(formatTechnicalDetail(42, tr)).toBe('42')
   })
 
   it('rend une phrase plutôt que le vide : une ligne ouverte sur rien est une porte sur un mur', () => {
-    expect(formatTechnicalDetail(new Error(''))).toBe('la panne n’a laissé aucun message')
-    expect(formatTechnicalDetail('Error:')).toBe('la panne n’a laissé aucun message')
+    expect(formatTechnicalDetail(new Error(''), tr)).toBe('la panne n’a laissé aucun message')
+    expect(formatTechnicalDetail('Error:', tr)).toBe('la panne n’a laissé aucun message')
+  })
+
+  it('et cette phrase-là suit la langue du pilote', () => {
+    // C'est la moitié qui compte : le détail technique n'est pas traduisible, la phrase
+    // qui le remplace quand il n'y en a pas l'est.
+    const dutch = makeTranslator('nl', dutchMessages)
+    expect(formatTechnicalDetail(new Error(''), dutch))
+      .toBe('de storing heeft geen bericht nagelaten')
+    expect(formatTechnicalDetail(new Error('reste 6'), dutch)).toBe('reste 6')
+  })
+
+  it('la moitié sans langue rend le vide, pour les couches qui rangent le détail', () => {
+    // `src/library/` n'a pas de traducteur : elle range `''` et l'écran comble.
+    expect(technicalDetail(new Error(''))).toBe('')
+    expect(technicalDetail(new Error('reste 6'))).toBe('reste 6')
   })
 
   it('c’est ce qu’un fichier illisible dépose dans le conteneur', async () => {

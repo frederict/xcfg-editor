@@ -719,7 +719,7 @@ describe('assemblage — un document modifié ne se fait pas remplacer sans un m
     // souris ne se confirme pas, et un fichier corrompu remplaçait un document valide par
     // un cul-de-sac. Les deux échecs — l'exception et le contenu inanalysable — comptent.
     expect(loadBytes).toContain('unreadable = container.parseError')
-    expect(loadBytes).toContain('unreadable = formatTechnicalDetail(error)')
+    expect(loadBytes).toContain('unreadable = formatTechnicalDetail(error, translator())')
     expect(loadBytes).toMatch(
       /if \(unreadable !== undefined && work !== undefined\) \{\s*\n\s*tellUnreadable\(name, work\.fileName, unreadable\)\s*\n\s*return/
     )

@@ -2200,7 +2200,7 @@ function runPageOperation(
     pagesMessage = {
       orientation,
       text: translator().t('app.pageOperationFailed', {
-        detail: formatTechnicalDetail(error)
+        detail: formatTechnicalDetail(error, translator())
       })
     }
     syncPagesDialog()
@@ -2562,7 +2562,7 @@ function chooseUiLanguage(language: UiLanguage): void {
       tellProblem(
         translator().t('app.languageFailedTitle'),
         translator().t('app.fileUntouchedRetry'),
-        formatTechnicalDetail(error)
+        formatTechnicalDetail(error, translator())
       )
     })
     .finally(() => { languagePending = false })
@@ -2694,7 +2694,7 @@ function buildPreferencesView(current: Session): HTMLElement {
         tr.t('app.settingsFailedTitle'),
         tr.t('app.settingsFailedMessage'),
         tr.t('app.fileNotAtFault'),
-        formatTechnicalDetail(error)
+        formatTechnicalDetail(error, tr)
       ))
       const again = el('button', 'btn', tr.t('app.backToPages'))
       again.type = 'button'
@@ -2777,7 +2777,7 @@ function buildManualView(): HTMLElement {
       host.textContent = ''
       host.append(problem(
         tr.t('app.manualFailedTitle'), tr.t('app.manualFailedMessage'),
-        undefined, formatTechnicalDetail(error)
+        undefined, formatTechnicalDetail(error, tr)
       ))
     })
   return host
@@ -2857,7 +2857,7 @@ function openVersionDialog(): void {
         tr.t('app.versionFailedTitle'),
         tr.t('app.versionFailedMessage'),
         tr.t('app.fileNotAtFault'),
-        formatTechnicalDetail(error)
+        formatTechnicalDetail(error, tr)
       ))
     })
 }
@@ -2998,7 +2998,7 @@ function openLibrary(): void {
       tellProblem(
         translator().t('app.libraryFailedTitle'),
         translator().t('app.libraryFailedMessage'),
-        formatTechnicalDetail(error)
+        formatTechnicalDetail(error, translator())
       )
     })
     .finally(() => {
@@ -3133,7 +3133,7 @@ function askBeforeExport(current: Session): void {
       tellProblem(
         translator().t('app.exportDialogFailedTitle'),
         translator().t('app.exportDialogFailedMessage'),
-        formatTechnicalDetail(error)
+        formatTechnicalDetail(error, translator())
       )
     })
     .finally(() => {
@@ -3549,7 +3549,7 @@ function adopt(container: Container): void {
   } catch (error) {
     // Rien n'a encore été démonté : le document ouvert survit à cet échec-là aussi.
     const work = unsavedWork()
-    const detail = formatTechnicalDetail(error)
+    const detail = formatTechnicalDetail(error, translator())
     if (work) tellUnreadable(container.fileName, work.fileName, detail)
     else failToOpen(detail)
     return
@@ -3606,7 +3606,7 @@ async function loadBytes(
     // cul-de-sac — la vue qu'il donne ne sait rien montrer.
     unreadable = container.parseError
   } catch (error) {
-    unreadable = formatTechnicalDetail(error)
+    unreadable = formatTechnicalDetail(error, translator())
   }
 
   // Un fichier illisible ne prend jamais la place d'un travail non enregistré : ce serait

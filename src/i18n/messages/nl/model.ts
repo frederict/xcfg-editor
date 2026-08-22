@@ -239,7 +239,57 @@ const model: DomainCatalog<'model'> = {
   'inspection.obsoleteKey': {
     one: '‘{name}’ draagt een instelling die door een eerdere versie van XCTrack is geschreven ({detail}). Er gaat niets verloren: XCTrack 1.0.3 zet ze bij het lezen om — dat is op het toestel nagegaan — en zal ze onder haar nieuwe naam terugschrijven zodra deze widget de volgende keer wordt ingesteld.',
     other: '‘{name}’ draagt instellingen die door een eerdere versie van XCTrack zijn geschreven ({detail}). Er gaat niets verloren: XCTrack 1.0.3 zet ze bij het lezen om — dat is op het toestel nagegaan — en zal ze onder hun nieuwe namen terugschrijven zodra deze widget de volgende keer wordt ingesteld.'
-  }
+  },
+
+  /* -------- storingen van de bibliotheek en de technische bijzonderheid — zie `fr/model.ts` */
+
+  'model.noErrorMessage': 'de storing heeft geen bericht nagelaten',
+
+  'libraryError.duringOpen': 'Openen van de bibliotheek',
+  'libraryError.duringReadAll': 'Lezen van de bibliotheek',
+  'libraryError.duringReadEntry': 'Lezen van een vermelding',
+  'libraryError.duringReadBytes': 'Lezen van een configuratie',
+  'libraryError.duringWrite': 'Schrijven van een vermelding',
+  'libraryError.duringDelete': 'Verwijderen van een vermelding',
+  'libraryError.duringClear': 'Legen van de bibliotheek',
+
+  'libraryError.quota': '{operation}: de browser heeft geweigerd te schrijven, de ruimte die aan deze site is toegekend is vol. Voer uw bibliotheek uit en verwijder daarna vermeldingen om ruimte te maken.',
+  'libraryError.storageFailed': '{operation}: de browser kon niet antwoorden. {detail}',
+  'libraryError.noIndexedDb': 'Deze browser biedt geen IndexedDB: de bibliotheek kan niets ' +
+    'bewaren.',
+  'libraryError.blockedByTab': 'Een ander tabblad verhindert het bijwerken van de ' +
+    'bibliotheek. Sluit het en laad opnieuw.',
+
+  'libraryError.notFound': 'Geen vermelding {id} in de bibliotheek.',
+  'libraryError.corrupt': 'Vermelding {id} is onleesbaar: {reason}.',
+  'libraryError.duplicateId': 'Een vermelding draagt de identificatie {id} al.',
+  'libraryError.changedElsewhere': 'Vermelding {id} is sinds het lezen veranderd — een ander tabblad heeft ze gewijzigd of verwijderd. Laad de bibliotheek opnieuw voordat u het nog eens probeert.',
+  'libraryError.notReadable': '‘{name}’ kon niet worden geopend: het is geen leesbare XCTrack-configuratie. {detail}',
+  'libraryError.bytesMissing': 'De bytes van ‘{name}’ zijn onvindbaar: de vermelding is onvolledig.',
+  'libraryError.digestChanged': '‘{name}’ geeft haar oorspronkelijke vingerafdruk niet meer terug: de opgeslagen bytes zijn gewijzigd. De vermelding wordt niet teruggegeven.',
+
+  'libraryError.recordNotObject': 'de opslag is geen object',
+  'libraryError.recordNoId': 'identificatie ontbreekt of is leeg',
+  'libraryError.recordBadFields': {
+    one: 'onleesbaar veld: {fields}',
+    other: 'onleesbare velden: {fields}'
+  },
+  'libraryError.legacyPersonalDatum': 'opgemerkt door een eerdere versie van deze editor, ' +
+    'die de aard ervan niet vermeldde. Laad deze vermelding opnieuw voor de volledige ' +
+    'inventaris.',
+
+  'libraryError.manifestUnreadable': 'De inhoudsopgave van het archief is onleesbaar.',
+  'libraryError.manifestEmpty': 'De inhoudsopgave van het archief is leeg.',
+  'libraryError.notALibrary': 'Dit bestand is geen door deze editor uitgevoerde bibliotheek.',
+  'libraryError.futureFormat': 'Deze bibliotheek is geschreven door een latere versie van de editor (formaat {version}). Werk de editor bij voordat u ze invoert.',
+  'libraryError.manifestNoItems': 'De inhoudsopgave van het archief noemt geen enkele configuratie.',
+  'libraryError.notAnArchive': 'Dit bestand is geen bibliotheekarchief, of het is beschadigd. {detail}',
+  'libraryError.manifestMissing': 'Het archief bevat geen {file}: het is geen uitgevoerde bibliotheek.',
+
+  'libraryError.itemManifestUnreadable': 'onleesbare inhoudsopgave in het archief',
+  'libraryError.itemMemberMissing': 'onderdeel {file} ontbreekt in het archief',
+  'libraryError.itemDigestMismatch': 'de bytes van het archief geven niet de aangekondigde vingerafdruk',
+  'libraryError.importedSuffix': ' (ingevoerd)'
 }
 
 export default model

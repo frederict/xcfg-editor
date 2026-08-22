@@ -1,8 +1,8 @@
 import { readZip, writeZip, type ZipEntry } from '../core/zip'
-import { formatTechnicalDetail } from '../core/technicalDetail'
+import { technicalDetail } from '../core/technicalDetail'
 import { sameDigest, sha256Hex } from './digest'
-import { LibraryError } from './errors'
-import type { Library, LibraryEntry } from './library'
+import { LibraryError, type LibraryProse } from './errors'
+import { UNKNOWN_RECORD_ID, type Library, type LibraryEntry } from './library'
 
 /**
  * Sortir la bibliothèque du navigateur, et l'y remettre.
@@ -166,8 +166,11 @@ export interface ImportResult {
   outcome: ImportOutcome
   /** L'identifiant réellement écrit, quand il diffère (`duplicated`). */
   id?: string
-  /** La raison, sur `rejected`. */
-  reason?: string
+  /**
+   * La raison, sur `rejected` — une **clé de message** et ses valeurs, comme celle d'une
+   * `LibraryError`. `libraryProseText(reason, tr)` en fait la phrase.
+   */
+  reason?: LibraryProse
 }
 
 export interface ImportReport {
@@ -178,7 +181,11 @@ export interface ImportReport {
 export interface ImportOptions {
   /** Générateur d'identifiants pour les entrées rétablies en double. */
   newId?: () => string
-  /** Suffixe ajouté au nom d'une entrée rétablie en double. */
+  /**
+   * Suffixe ajouté au nom d'une entrée rétablie en double. Il est **passé** par l'écran,
+   * qui seul connaît la langue du pilote : `tr.t('libraryError.importedSuffix')`. Le repli
+   * français ne sert qu'aux appels sans interface — les tests, et eux seuls.
+   */
   duplicateSuffix?: string
 }
 
@@ -187,27 +194,27 @@ function readManifest(text: string): Manifest {
   try {
     parsed = JSON.parse(text)
   } catch (error) {
-    throw new LibraryError('unreadable', 'La fiche de l’archive est illisible.', { cause: error })
+    throw new LibraryError(
+      'unreadable', { key: 'libraryError.manifestUnreadable' }, { cause: error }
+    )
   }
   if (typeof parsed !== 'object' || parsed === null) {
-    throw new LibraryError('unreadable', 'La fiche de l’archive est vide.')
+    throw new LibraryError('unreadable', { key: 'libraryError.manifestEmpty' })
   }
   const manifest = parsed as Partial<Manifest>
   if (manifest.format !== LIBRARY_FORMAT) {
-    throw new LibraryError(
-      'unreadable',
-      'Ce fichier n’est pas une bibliothèque exportée par cet éditeur.'
-    )
+    throw new LibraryError('unreadable', { key: 'libraryError.notALibrary' })
   }
   if (typeof manifest.formatVersion !== 'number' || manifest.formatVersion > LIBRARY_FORMAT_VERSION) {
-    throw new LibraryError(
-      'unreadable',
-      `Cette bibliothèque a été écrite par une version postérieure de l’éditeur ` +
-      `(format ${String(manifest.formatVersion)}). Mettez l’éditeur à jour avant de l’importer.`
-    )
+    throw new LibraryError('unreadable', {
+      key: 'libraryError.futureFormat',
+      // Le numéro de format part en `string` : c'est un identifiant de schéma, pas une
+      // quantité. « 1 000 » ne se lit dans aucune archive.
+      values: { version: String(manifest.formatVersion) }
+    })
   }
   if (!Array.isArray(manifest.items)) {
-    throw new LibraryError('unreadable', 'La fiche de l’archive ne liste aucune configuration.')
+    throw new LibraryError('unreadable', { key: 'libraryError.manifestNoItems' })
   }
   return manifest as Manifest
 }
@@ -236,8 +243,7 @@ export async function importLibrary(
   } catch (error) {
     throw new LibraryError(
       'unreadable',
-      'Ce fichier n’est pas une archive de bibliothèque, ou il est abîmé. ' +
-      `${formatTechnicalDetail(error)}`,
+      { key: 'libraryError.notAnArchive', values: { detail: technicalDetail(error) } },
       { cause: error }
     )
   }
@@ -245,10 +251,9 @@ export async function importLibrary(
   const byName = new Map(members.map((member) => [member.name, member]))
   const manifestMember = byName.get(MANIFEST_NAME)
   if (manifestMember === undefined) {
-    throw new LibraryError(
-      'unreadable',
-      `L’archive ne contient pas de ${MANIFEST_NAME} : ce n’est pas une bibliothèque exportée.`
-    )
+    throw new LibraryError('unreadable', {
+      key: 'libraryError.manifestMissing', values: { file: MANIFEST_NAME }
+    })
   }
 
   const manifest = readManifest(new TextDecoder().decode(manifestMember.data))
@@ -259,13 +264,19 @@ export async function importLibrary(
   for (const item of manifest.items) {
     const entry = item.entry
     if (typeof entry?.id !== 'string' || typeof item.file !== 'string') {
-      results.push({ sourceId: '(inconnu)', name: '', outcome: 'rejected', reason: 'fiche illisible dans l’archive' })
+      results.push({
+        sourceId: UNKNOWN_RECORD_ID, name: '', outcome: 'rejected',
+        reason: { key: 'libraryError.itemManifestUnreadable' }
+      })
       continue
     }
 
     const member = byName.get(item.file)
     if (member === undefined) {
-      results.push({ sourceId: entry.id, name: entry.name, outcome: 'rejected', reason: `membre ${item.file} absent de l’archive` })
+      results.push({
+        sourceId: entry.id, name: entry.name, outcome: 'rejected',
+        reason: { key: 'libraryError.itemMemberMissing', values: { file: item.file } }
+      })
       continue
     }
 
@@ -273,7 +284,7 @@ export async function importLibrary(
     if (!sameDigest(digest, entry.sha256)) {
       results.push({
         sourceId: entry.id, name: entry.name, outcome: 'rejected',
-        reason: 'les octets de l’archive ne rendent pas l’empreinte annoncée'
+        reason: { key: 'libraryError.itemDigestMismatch' }
       })
       continue
     }

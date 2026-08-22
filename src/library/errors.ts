@@ -9,8 +9,19 @@
  * en avait besoin.
  *
  * D'où la règle : **toute opération d'écriture rejette avec une `LibraryError` typée**,
- * jamais avec un booléen, jamais en silence. `failure` dit quoi, `message` dit quoi faire
- * en français, `cause` garde l'erreur d'origine pour le rapport de bogue.
+ * jamais avec un booléen, jamais en silence. `failure` dit quoi, `prose` dit quoi faire —
+ * dans la langue du pilote —, `cause` garde l'erreur d'origine pour le rapport de bogue.
+ *
+ * ## Ce que le pilote lit n'est pas ce que la pile porte
+ *
+ * Une `Error` doit avoir un `message`, et il est lu par la console, le rapport de bogue et
+ * le `cause` d'une erreur enveloppante : c'est une **ligne technique**, un identifiant,
+ * qui ne se traduit pas. Ce que le pilote lit est ailleurs — `prose` porte une clé de
+ * message et ses valeurs, et `libraryErrorText(error, tr)` en fait la phrase.
+ *
+ * Cette couche ne dépend pas de `src/i18n/` : elle n'en prend que des **types**, effacés à
+ * la compilation, et le traducteur lui est passé au moment de l'affichage. Même motif que
+ * `personalProse(tr)` — voir `src/i18n/CLAUDE.md` § 5.
  */
 
 /**
@@ -33,14 +44,50 @@ export type LibraryFailure =
   /** L'archive proposée à l'import n'est pas une bibliothèque lisible. */
   | 'unreadable'
 
-import { formatTechnicalDetail } from '../core/technicalDetail'
+import { technicalDetail } from '../core/technicalDetail'
+// `import type` : effacé à la compilation. Voir l'en-tête.
+import type { MessageArgs, MessageKey, MessageValues, Translator } from '../i18n'
+
+/** Les clés de message de cette couche, et elles seules. */
+export type LibraryErrorKey = Extract<MessageKey, `libraryError.${string}`>
+
+/** Les six noms d'opération — le sous-ensemble sans repère, que `t()` accepte tel quel. */
+type LibraryOperationKey = Extract<MessageKey, `libraryError.during${string}`>
+
+/**
+ * Ce que le pilote lira : une clé, et exactement les valeurs que sa phrase attend.
+ *
+ * L'appariement est fait **par le type** : `libraryError.notFound` exige `{ id }`,
+ * `libraryError.quota` exige `{ operation }`, et `libraryError.noIndexedDb` n'accepte
+ * rien. Une clé posée avec les mauvaises valeurs ne compile pas, à l'endroit exact où
+ * l'erreur est levée — et non à l'affichage, six écrans plus loin.
+ */
+export type LibraryProse = {
+  [K in LibraryErrorKey]: MessageArgs<K> extends []
+    ? { key: K; values?: undefined }
+    : { key: K; values: MessageValues<K> }
+}[LibraryErrorKey]
+
+/**
+ * La ligne technique posée dans `Error.message` : la clé, puis ses valeurs. Elle n'est pas
+ * traduite et n'a pas à l'être — c'est ce qu'on recopie dans un rapport de bogue.
+ */
+function technicalLine(prose: LibraryProse): string {
+  const values = prose.values as Readonly<Record<string, string | number>> | undefined
+  if (values === undefined) return prose.key
+  const written = Object.entries(values).map(([name, value]) => `${name}=${String(value)}`)
+  return `${prose.key} ${written.join(' ')}`
+}
 
 export class LibraryError extends Error {
   readonly failure: LibraryFailure
+  /** Ce qu'il faut dire au pilote — voir `libraryErrorText`. */
+  readonly prose: LibraryProse
 
-  constructor(failure: LibraryFailure, message: string, options?: { cause?: unknown }) {
-    super(message, options)
+  constructor(failure: LibraryFailure, prose: LibraryProse, options?: { cause?: unknown }) {
+    super(technicalLine(prose), options)
     this.failure = failure
+    this.prose = prose
     // `name` sert à l'affichage d'une pile ; le tri se fait sur `failure`, jamais sur le
     // texte du message — un message est traduit, un identifiant ne l'est pas.
     this.name = 'LibraryError'
@@ -74,25 +121,94 @@ export function isQuotaError(error: unknown): boolean {
 }
 
 /**
+ * L'opération en cours quand le stockage a lâché. Un jeu fermé, et non une phrase libre :
+ * c'est ce qui la rend traduisible sans qu'aucun appelant n'ait de prose à écrire.
+ */
+export type LibraryOperation =
+  | 'open' | 'readAll' | 'readEntry' | 'readBytes' | 'write' | 'delete' | 'clear'
+
+const OPERATION_KEYS: Readonly<Record<LibraryOperation, LibraryOperationKey>> = {
+  open: 'libraryError.duringOpen',
+  readAll: 'libraryError.duringReadAll',
+  readEntry: 'libraryError.duringReadEntry',
+  readBytes: 'libraryError.duringReadBytes',
+  write: 'libraryError.duringWrite',
+  delete: 'libraryError.duringDelete',
+  clear: 'libraryError.duringClear'
+}
+
+/**
+ * Le nom de l'opération, dans la langue du pilote. Il s'insère dans `{operation}` — donc
+ * là où la langue le veut, et non collé devant par une concaténation.
+ */
+export function libraryOperationText(
+  operation: LibraryOperation, tr: Translator
+): string {
+  return tr.t(OPERATION_KEYS[operation])
+}
+
+/**
  * Traduit une erreur de stockage brute en `LibraryError`. Le quota est distingué parce
  * que c'est la seule défaillance à laquelle le pilote peut répondre — en supprimant une
  * entrée, ou en exportant sa bibliothèque avant de faire de la place.
+ *
+ * ⚠️ `operation` est un **jeton**, pas une phrase : la prose qui va avec est au catalogue,
+ * et c'est `libraryErrorText` qui l'assemble. Cette couche n'écrit pas de français.
  */
-export function toLibraryError(error: unknown, context: string): LibraryError {
+export function toLibraryError(error: unknown, operation: LibraryOperation): LibraryError {
   if (error instanceof LibraryError) return error
   if (isQuotaError(error)) {
-    return new LibraryError(
-      'quota',
-      `${context} : le navigateur a refusé d’écrire, l’espace accordé à ce site est plein. ` +
-      'Exportez votre bibliothèque, puis supprimez des entrées pour faire de la place.',
-      { cause: error }
-    )
+    return new LibraryError('quota', { key: 'libraryError.quota', values: { operation } }, {
+      cause: error
+    })
   }
-  // Le message garde le contexte en clair et le détail technique **à la fin**, sans le
-  // « Error: » du moteur : c'est l'appelant qui décide de le replier ou non.
+  // Le détail technique est rangé **à la fin** de la phrase, sans le « Error: » du
+  // moteur : c'est l'appelant qui décide de le replier ou non.
   return new LibraryError(
     'unavailable',
-    `${context} : le navigateur n’a pas pu répondre. ${formatTechnicalDetail(error)}`,
+    { key: 'libraryError.storageFailed', values: { operation, detail: technicalDetail(error) } },
     { cause: error }
   )
+}
+
+/**
+ * La phrase à montrer au pilote, dans sa langue.
+ *
+ * ```ts
+ * catch (error) {
+ *   if (error instanceof LibraryError) say(libraryErrorText(error, tr))
+ * }
+ * ```
+ *
+ * Deux valeurs sont **finies ici** plutôt qu'à la levée, parce qu'elles n'ont de sens
+ * qu'une fois la langue connue :
+ *
+ * - `operation` est rangé comme **jeton** (`'write'`) et devient ici « Écriture d'une
+ *   entrée » ;
+ * - un `detail` vide — la panne n'a rien dit — reçoit la prose que
+ *   `formatTechnicalDetail` emploierait : une phrase qui s'arrête sur un blanc se lirait
+ *   comme un affichage raté.
+ */
+export function libraryErrorText(error: LibraryError, tr: Translator): string {
+  return libraryProseText(error.prose, tr)
+}
+
+/**
+ * La même phrase, pour une prose qui n'est pas portée par une exception : la raison d'un
+ * enregistrement illisible (`BrokenEntry`), celle d'une entrée refusée à l'import
+ * (`ImportResult`). Ces deux-là **n'interrompent rien** — la bibliothèque continue de
+ * s'afficher —, elles ont donc une prose sans erreur autour.
+ */
+export function libraryProseText(prose: LibraryProse, tr: Translator): string {
+  const values = prose.values as Readonly<Record<string, string | number>> | undefined
+  const filled: Record<string, string | number> = { ...values }
+  if (typeof filled.operation === 'string') {
+    filled.operation = libraryOperationText(filled.operation as LibraryOperation, tr)
+  }
+  if (filled.detail === '') filled.detail = tr.t('model.noErrorMessage')
+  // Même situation que dans `makeTranslator` : la clé est encore générique ici, et le
+  // compilateur ne peut pas réduire le type conditionnel de ses arguments. L'appariement,
+  // lui, a déjà été vérifié — c'est `LibraryProse` qui l'impose à la construction.
+  const translate = tr.t as (key: LibraryErrorKey, values?: unknown) => string
+  return translate(prose.key, filled)
 }

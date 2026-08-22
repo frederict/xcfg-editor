@@ -1,9 +1,18 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { createLibrary, validateRecord, type LibraryChange } from '../../src/library/library'
+import {
+  createLibrary, UNKNOWN_RECORD_ID, validateRecord, type LibraryChange
+} from '../../src/library/library'
 import { createMemoryStore, type MemoryStore } from '../../src/library/memoryStore'
 import { blobKey } from '../../src/library/store'
-import { LibraryError } from '../../src/library/errors'
+import { LibraryError, libraryProseText } from '../../src/library/errors'
+import { makeTranslator } from '../../src/i18n/translate'
+import frenchMessages from '../../src/i18n/messages/fr'
+import dutchMessages from '../../src/i18n/messages/nl'
+
+/** La bibliothèque range une clé, l'écran la traduit — voir `src/library/errors.ts`. */
+const FRENCH = makeTranslator('fr', frenchMessages)
+const DUTCH = makeTranslator('nl', dutchMessages)
 import { EXPORTS, GSON_2022 } from '../fixtures/paths'
 
 const PAGES = new Uint8Array(readFileSync(EXPORTS + '2026-08-20_pages-00.xcfg'))
@@ -164,10 +173,24 @@ describe('bibliothèque — données abîmées', () => {
 
     const snapshot = await library.read()
     expect(snapshot.entries.map((e) => e.name)).toEqual(['Saine'])
+    // La raison est une **clé** et ses valeurs : la bibliothèque ne connaît pas la langue
+    // du pilote, l'écran l'assemble par `libraryProseText`.
     expect(snapshot.broken).toEqual([
-      { id: 'cassee', reason: 'champs illisibles : byteLength, sha256, identity' },
-      { id: '(inconnu)', reason: 'l’enregistrement n’est pas un objet' }
+      {
+        id: 'cassee',
+        reason: {
+          key: 'libraryError.recordBadFields',
+          values: { count: 3, fields: 'byteLength, sha256, identity' }
+        }
+      },
+      { id: UNKNOWN_RECORD_ID, reason: { key: 'libraryError.recordNotObject' } }
     ])
+    expect(snapshot.broken.map((one) => libraryProseText(one.reason, FRENCH))).toEqual([
+      'champs illisibles : byteLength, sha256, identity',
+      'l’enregistrement n’est pas un objet'
+    ])
+    expect(libraryProseText(snapshot.broken[0]!.reason, DUTCH))
+      .toBe('onleesbare velden: byteLength, sha256, identity')
   })
 
   it('une entrée illisible reste supprimable — sans quoi la bibliothèque serait bloquée', async () => {
@@ -190,7 +213,11 @@ describe('bibliothèque — données abîmées', () => {
 
     const echec = library.bytesOf(entry.id)
     await expect(echec).rejects.toMatchObject({ failure: 'integrity' })
+    // Le `message` est la ligne technique ; la phrase du pilote passe par la prose.
     await expect(echec).rejects.toThrow(/Comp Annecy/)
+    await expect(echec).rejects.toMatchObject({
+      prose: { key: 'libraryError.digestChanged', values: { name: 'Comp Annecy' } }
+    })
   })
 
   it('des octets absents sont dits absents, et non rendus vides', async () => {
@@ -201,12 +228,19 @@ describe('bibliothèque — données abîmées', () => {
   })
 
   it('validateRecord nomme précisément ce qui manque', () => {
-    expect(validateRecord(null)).toEqual({ id: '(inconnu)', reason: 'l’enregistrement n’est pas un objet' })
-    expect(validateRecord({ revision: 1 })).toEqual({ id: '(inconnu)', reason: 'identifiant absent ou vide' })
+    expect(validateRecord(null))
+      .toEqual({ id: UNKNOWN_RECORD_ID, reason: { key: 'libraryError.recordNotObject' } })
+    expect(validateRecord({ revision: 1 }))
+      .toEqual({ id: UNKNOWN_RECORD_ID, reason: { key: 'libraryError.recordNoId' } })
     expect(validateRecord({ id: 'a', name: 'A', revision: 1, byteLength: 3, sha256: 'x', identity: {} }))
       .toMatchObject({ id: 'a', name: 'A', note: '', fileName: '' })
     expect(validateRecord({ id: 'a', name: 'A', revision: 1, byteLength: 3, sha256: '', identity: {} }))
-      .toEqual({ id: 'a', reason: 'champ illisible : sha256' })
+      .toEqual({
+        id: 'a',
+        reason: {
+          key: 'libraryError.recordBadFields', values: { count: 1, fields: 'sha256' }
+        }
+      })
   })
 })
 

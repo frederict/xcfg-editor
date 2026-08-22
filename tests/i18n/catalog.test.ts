@@ -209,7 +209,16 @@ const PLURAL_WITHOUT_VISIBLE_COUNT: ReadonlySet<string> = new Set<string>([
    *   plus de `mapWidget_showOpenStreet → mapWidget_mapAppearance,
    *   mapWidget_showTerrain → mapWidget_mapAppearance` ferait compter deux fois.
    */
-  'inspection.obsoleteKey'
+  'inspection.obsoleteKey',
+  /*
+   * Le sixième aussi :
+   *
+   * - `libraryError.recordBadFields` — « champ illisible » / « champs illisibles » : les
+   *   champs sont **nommés** juste après (`byteLength, sha256`), et écrire « 2 » devant
+   *   une liste de deux noms ferait compter deux fois. C'est une ligne technique, celle
+   *   que le pilote recopie s'il signale le problème.
+   */
+  'libraryError.recordBadFields'
 ])
 
 describe('catalogues de messages', () => {

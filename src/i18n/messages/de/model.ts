@@ -238,7 +238,57 @@ const model: DomainCatalog<'model'> = {
   'inspection.obsoleteKey': {
     one: '„{name}“ trägt eine Einstellung, die eine frühere Version von XCTrack geschrieben hat ({detail}). Nichts geht verloren: XCTrack 1.0.3 wandelt sie beim Lesen um — das ist am Gerät überprüft — und schreibt sie unter ihrem neuen Namen zurück, sobald dieses Widget das nächste Mal eingestellt wird.',
     other: '„{name}“ trägt Einstellungen, die eine frühere Version von XCTrack geschrieben hat ({detail}). Nichts geht verloren: XCTrack 1.0.3 wandelt sie beim Lesen um — das ist am Gerät überprüft — und schreibt sie unter ihren neuen Namen zurück, sobald dieses Widget das nächste Mal eingestellt wird.'
-  }
+  },
+
+  /* ------------- Störungen der Bibliothek und die technische Angabe — siehe `fr/model.ts` */
+
+  'model.noErrorMessage': 'die Störung hat keine Meldung hinterlassen',
+
+  'libraryError.duringOpen': 'Öffnen der Bibliothek',
+  'libraryError.duringReadAll': 'Lesen der Bibliothek',
+  'libraryError.duringReadEntry': 'Lesen eines Eintrags',
+  'libraryError.duringReadBytes': 'Lesen einer Konfiguration',
+  'libraryError.duringWrite': 'Schreiben eines Eintrags',
+  'libraryError.duringDelete': 'Löschen eines Eintrags',
+  'libraryError.duringClear': 'Leeren der Bibliothek',
+
+  'libraryError.quota': '{operation}: Der Browser hat das Schreiben verweigert, der dieser Website zugestandene Platz ist voll. Exportieren Sie Ihre Bibliothek und löschen Sie dann Einträge, um Platz zu schaffen.',
+  'libraryError.storageFailed': '{operation}: Der Browser konnte nicht antworten. {detail}',
+  'libraryError.noIndexedDb': 'Dieser Browser bietet kein IndexedDB: die Bibliothek kann ' +
+    'nichts aufbewahren.',
+  'libraryError.blockedByTab': 'Ein anderer Tab verhindert die Aktualisierung der ' +
+    'Bibliothek. Schließen Sie ihn und laden Sie neu.',
+
+  'libraryError.notFound': 'Kein Eintrag {id} in der Bibliothek.',
+  'libraryError.corrupt': 'Eintrag {id} ist nicht lesbar: {reason}.',
+  'libraryError.duplicateId': 'Ein Eintrag trägt die Kennung {id} bereits.',
+  'libraryError.changedElsewhere': 'Eintrag {id} hat sich seit dem Lesen geändert — ein anderer Tab hat ihn geändert oder gelöscht. Laden Sie die Bibliothek neu, bevor Sie es erneut versuchen.',
+  'libraryError.notReadable': '„{name}“ konnte nicht geöffnet werden: es ist keine lesbare XCTrack-Konfiguration. {detail}',
+  'libraryError.bytesMissing': 'Die Bytes von „{name}“ sind nicht auffindbar: der Eintrag ist unvollständig.',
+  'libraryError.digestChanged': '„{name}“ gibt seine ursprüngliche Prüfsumme nicht mehr zurück: die abgelegten Bytes wurden verändert. Der Eintrag wird nicht herausgegeben.',
+
+  'libraryError.recordNotObject': 'der Datensatz ist kein Objekt',
+  'libraryError.recordNoId': 'Kennung fehlt oder ist leer',
+  'libraryError.recordBadFields': {
+    one: 'unlesbares Feld: {fields}',
+    other: 'unlesbare Felder: {fields}'
+  },
+  'libraryError.legacyPersonalDatum': 'von einer früheren Fassung dieses Editors erkannt, ' +
+    'die ihre Art nicht angab. Laden Sie diesen Eintrag neu, um die vollständige ' +
+    'Bestandsaufnahme zu erhalten.',
+
+  'libraryError.manifestUnreadable': 'Das Verzeichnis des Archivs ist nicht lesbar.',
+  'libraryError.manifestEmpty': 'Das Verzeichnis des Archivs ist leer.',
+  'libraryError.notALibrary': 'Diese Datei ist keine von diesem Editor ausgegebene Bibliothek.',
+  'libraryError.futureFormat': 'Diese Bibliothek wurde von einer neueren Fassung des Editors geschrieben (Format {version}). Aktualisieren Sie den Editor, bevor Sie sie einlesen.',
+  'libraryError.manifestNoItems': 'Das Verzeichnis des Archivs führt keine Konfiguration auf.',
+  'libraryError.notAnArchive': 'Diese Datei ist kein Bibliotheksarchiv, oder sie ist beschädigt. {detail}',
+  'libraryError.manifestMissing': 'Das Archiv enthält kein {file}: es ist keine ausgegebene Bibliothek.',
+
+  'libraryError.itemManifestUnreadable': 'unlesbares Verzeichnis im Archiv',
+  'libraryError.itemMemberMissing': 'Element {file} fehlt im Archiv',
+  'libraryError.itemDigestMismatch': 'die Bytes des Archivs ergeben nicht die angekündigte Prüfsumme',
+  'libraryError.importedSuffix': ' (eingelesen)'
 }
 
 export default model

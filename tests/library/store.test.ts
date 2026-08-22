@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import { createMemoryStore } from '../../src/library/memoryStore'
-import { LibraryError, isQuotaError, toLibraryError } from '../../src/library/errors'
+import {
+  LibraryError, isQuotaError, libraryErrorText, toLibraryError
+} from '../../src/library/errors'
+import { makeTranslator } from '../../src/i18n/translate'
+import frenchMessages from '../../src/i18n/messages/fr'
+import dutchMessages from '../../src/i18n/messages/nl'
+
+/** La couche ne connaît aucune langue : elle range une clé, l'écran la traduit. */
+const FRENCH = makeTranslator('fr', frenchMessages)
+const DUTCH = makeTranslator('nl', dutchMessages)
 import { belongsTo, blobKey, previewKey, type StoredRecord } from '../../src/library/store'
 import { estimateStorage, openIndexedDbStore, requestPersistence } from '../../src/library/indexedDbStore'
 
@@ -132,15 +141,22 @@ describe('quota', () => {
 
   it('toute autre erreur devient « unavailable », et garde sa cause', () => {
     const cause = new Error('base fermée')
-    const traduite = toLibraryError(cause, 'Écriture')
+    const traduite = toLibraryError(cause, 'write')
     expect(traduite.failure).toBe('unavailable')
-    expect(traduite.message).toContain('Écriture')
+    // Le `message` est la **ligne technique** — la clé et ses valeurs, ce qu'on recopie
+    // dans un rapport de bogue. Ce que le pilote lit est ailleurs, et dans sa langue.
+    expect(traduite.message).toContain('libraryError.storageFailed')
+    expect(traduite.message).toContain('operation=write')
+    expect(libraryErrorText(traduite, FRENCH)).toContain('Écriture d’une entrée')
+    expect(libraryErrorText(traduite, DUTCH)).toContain('Schrijven van een vermelding')
     expect(traduite.cause).toBe(cause)
   })
 
   it('une LibraryError traverse la traduction sans être réemballée', () => {
-    const originale = new LibraryError('not-found', 'absente')
-    expect(toLibraryError(originale, 'Lecture')).toBe(originale)
+    const originale = new LibraryError('not-found', {
+      key: 'libraryError.notFound', values: { id: 'abc' }
+    })
+    expect(toLibraryError(originale, 'readEntry')).toBe(originale)
   })
 })
 

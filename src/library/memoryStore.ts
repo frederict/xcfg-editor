@@ -119,7 +119,7 @@ export function createMemoryStore(options: MemoryStoreOptions = {}): MemoryStore
         if (usedBytes() - replaced + added > options.capacityBytes) {
           // On n'écrit rien du tout : une transaction qui échoue ne laisse pas la moitié
           // de l'entrée derrière elle. Même postcondition qu'IndexedDB.
-          throw toLibraryError(quotaException(), `Écriture de « ${record.id} »`)
+          throw toLibraryError(quotaException(), 'write')
         }
       }
 

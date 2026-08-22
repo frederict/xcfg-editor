@@ -133,11 +133,7 @@ export function belongsTo(key: string, id: string): boolean {
 
 export function conflictError(id: string, expected: ExpectedRevision): LibraryError {
   if (expected.kind === 'absent') {
-    return new LibraryError('conflict', `Une entrée porte déjà l’identifiant ${id}.`)
+    return new LibraryError('conflict', { key: 'libraryError.duplicateId', values: { id } })
   }
-  return new LibraryError(
-    'conflict',
-    `L’entrée ${id} a changé depuis sa lecture — un autre onglet l’a modifiée ou ` +
-    'supprimée. Rechargez la bibliothèque avant de réessayer.'
-  )
+  return new LibraryError('conflict', { key: 'libraryError.changedElsewhere', values: { id } })
 }

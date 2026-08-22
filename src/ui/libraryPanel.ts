@@ -2,7 +2,7 @@ import './libraryPanel.css'
 import { readableName } from '../catalog/widgetNames'
 import { formatTechnicalDetail } from '../core/technicalDetail'
 import { sha256Hex } from '../library/digest'
-import { LibraryError } from '../library/errors'
+import { LibraryError, libraryErrorText, libraryProseText } from '../library/errors'
 import { personalInventoryOf, type EntryIdentity, type PersonalDatum } from '../library/identity'
 import type { BrokenEntry, Library, LibraryEntry, LibrarySnapshot } from '../library/library'
 import { exportLibrary, importLibrary, type ImportReport } from '../library/transfer'
@@ -844,16 +844,16 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
       if (error.failure === 'quota') {
         const action = button(tr.t('library.exportNow'))
         action.addEventListener('click', () => { void doExport() })
-        say(error.message, 'trouble', action)
+        say(libraryErrorText(error, tr), 'trouble', action)
         return
       }
       if (error.failure === 'conflict') {
         const action = button(tr.t('library.reloadLibrary'))
         action.addEventListener('click', () => { void refresh() })
-        say(tr.t('library.conflict', { message: error.message }), 'trouble', action)
+        say(tr.t('library.conflict', { message: libraryErrorText(error, tr) }), 'trouble', action)
         return
       }
-      say(error.message, 'trouble')
+      say(libraryErrorText(error, tr), 'trouble')
       return
     }
     // Le contexte est une phrase du pilote (« Suppression », « Rangement ») ; le détail
@@ -861,7 +861,7 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
     say(
       tr.t('library.operationFailed', {
         context,
-        detail: formatTechnicalDetail(error)
+        detail: formatTechnicalDetail(error, tr)
       }),
       'trouble'
     )
@@ -1125,7 +1125,7 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
       bytes = await library.bytesOf(entry.id)
     } catch (error) {
       if (!(error instanceof LibraryError)) throw error
-      failure = error.message
+      failure = libraryErrorText(error, tr)
     }
     const digest = bytes === undefined ? undefined : await sha256Hex(bytes)
     const same = digest === entry.sha256 && bytes?.byteLength === entry.byteLength
@@ -1197,7 +1197,9 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
     const body = el('div')
     body.append(el('p', 'library__note', tr.t('library.brokenBody')))
     body.append(el('p', 'library__note library__note--technical',
-      tr.t('library.brokenTechnical', { id: broken.id, reason: broken.reason })))
+      tr.t('library.brokenTechnical', {
+        id: broken.id, reason: libraryProseText(broken.reason, tr)
+      })))
     return body
   }
 
@@ -1372,7 +1374,9 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
         : 'library__result')
       item.append(el('span', 'library__resultName', result.name === '' ? result.sourceId : result.name))
       item.append(el('span', 'library__resultOutcome', labels[result.outcome] ?? result.outcome))
-      if (result.reason !== undefined) item.append(el('span', 'library__resultReason', result.reason))
+      if (result.reason !== undefined) {
+        item.append(el('span', 'library__resultReason', libraryProseText(result.reason, tr)))
+      }
       list.append(item)
     }
     body.append(list)
@@ -1508,7 +1512,7 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
     main.append(el('p', 'library__meta'))
     // Un identifiant interne et la raison technique, alignés comme des données : rien à
     // traduire ici, tout est déjà dit par la phrase du dessous.
-    main.append(el('p', 'library__stamp', `${broken.id} — ${broken.reason}`))
+    main.append(el('p', 'library__stamp', `${broken.id} — ${libraryProseText(broken.reason, tr)}`))
     main.append(el('p', 'library__note', tr.t('library.brokenNote')))
     const row = el('div', 'library__entryActions')
     const remove = button(tr.t('library.remove'), 'btn')
@@ -1673,7 +1677,9 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
     if (file === undefined) return
     void guard(tr.t('library.contextImporting'), async () => {
       const bytes = new Uint8Array(await file.arrayBuffer())
-      showImportReport(await importLibrary(library, bytes))
+      showImportReport(await importLibrary(library, bytes, {
+        duplicateSuffix: tr.t('libraryError.importedSuffix')
+      }))
     })
     archivePicker.value = ''
   })

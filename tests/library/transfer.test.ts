@@ -6,6 +6,11 @@ import { createMemoryStore } from '../../src/library/memoryStore'
 import { exportLibrary, importLibrary, LIBRARY_FORMAT } from '../../src/library/transfer'
 import { readZip, writeZip } from '../../src/core/zip'
 import { blobKey } from '../../src/library/store'
+import { libraryProseText } from '../../src/library/errors'
+import { makeTranslator } from '../../src/i18n/translate'
+import frenchMessages from '../../src/i18n/messages/fr'
+
+const FRENCH = makeTranslator('fr', frenchMessages)
 import { ARCHIVE, EXPORTS, FORMES_PRESERVEES } from '../fixtures/paths'
 
 /**
@@ -182,7 +187,7 @@ describe('import d’une archive abîmée', () => {
     const destination = nouvelle()
     const report = await importLibrary(destination, abimee)
     expect(report.results[0]).toMatchObject({ outcome: 'rejected' })
-    expect(report.results[0]!.reason).toContain('empreinte')
+    expect(libraryProseText(report.results[0]!.reason!, FRENCH)).toContain('empreinte')
     expect((await destination.read()).entries).toEqual([])
   })
 
@@ -198,7 +203,7 @@ describe('import d’une archive abîmée', () => {
     const report = await importLibrary(cible, trouee)
     // Le manifeste est rangé de la plus récente à la plus ancienne : `id-2` est en 3e.
     expect(report.results.map((r) => r.outcome)).toEqual(['imported', 'imported', 'rejected', 'imported'])
-    expect(report.results[2]!.reason).toContain('absent')
+    expect(libraryProseText(report.results[2]!.reason!, FRENCH)).toContain('absent')
     expect((await cible.read()).entries).toHaveLength(3)
   })
 
@@ -212,7 +217,9 @@ describe('import d’une archive abîmée', () => {
     const quelconque = await writeZip([
       { name: 'photo.png', data: new Uint8Array([1, 2, 3]), stored: true, dosTime: 0, dosDate: 0 }
     ])
-    await expect(importLibrary(cible, quelconque)).rejects.toThrow(/bibliotheque\.json/)
+    await expect(importLibrary(cible, quelconque)).rejects.toMatchObject({
+      prose: { key: 'libraryError.manifestMissing', values: { file: 'bibliotheque.json' } }
+    })
   })
 
   it('une bibliothèque écrite par une version postérieure est refusée, pas devinée', async () => {
@@ -225,7 +232,13 @@ describe('import d’une archive abîmée', () => {
     manifeste.formatVersion = 99
     membres[0]!.data = new TextEncoder().encode(JSON.stringify(manifeste))
 
-    await expect(importLibrary(nouvelle(), await writeZip(membres))).rejects.toThrow(/postérieure/)
+    // Le `message` porte la ligne technique ; la phrase du pilote vient de la prose, et
+    // le numéro de format y passe en `string` — c'est un schéma, pas une quantité.
+    const refus = importLibrary(nouvelle(), await writeZip(membres))
+    await expect(refus).rejects.toMatchObject({
+      prose: { key: 'libraryError.futureFormat', values: { version: '99' } }
+    })
+    await expect(refus).rejects.toThrow(/libraryError\.futureFormat/)
   })
 
   it('les entrées dont les octets manquent en base ne sont pas exportées en silence', async () => {

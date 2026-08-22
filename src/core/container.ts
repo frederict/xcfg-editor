@@ -1,6 +1,6 @@
 import type { JsonNode } from './jsonDocument'
 import { parseJson } from './parseJson'
-import { formatTechnicalDetail } from './technicalDetail'
+import { technicalDetail } from './technicalDetail'
 import { serializeJson } from './serializeJson'
 import { readZip, writeZip, type ZipEntry } from './zip'
 
@@ -55,8 +55,9 @@ export async function openContainer(bytes: Uint8Array, fileName: string): Promis
     return { ...base, document: parseJson(new TextDecoder().decode(json)) }
   } catch (error) {
     // Le message seul, sans le « Error: » du moteur JavaScript : cette chaîne finit
-    // sous les yeux du pilote, repliée derrière « Détail technique ».
-    return { ...base, document: emptyDocument(), parseError: formatTechnicalDetail(error) }
+    // sous les yeux du pilote, repliée derrière « Détail technique ». Vide quand la panne
+    // n'a rien dit — la prose de ce cas-là est au catalogue, pas ici.
+    return { ...base, document: emptyDocument(), parseError: technicalDetail(error) }
   }
 }
 

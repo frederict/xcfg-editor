@@ -221,7 +221,55 @@ const model: DomainCatalog<'model'> = {
   'inspection.obsoleteKey': {
     one: '“{name}” carries a setting written by an earlier release of XCTrack ({detail}). Nothing is lost: XCTrack 1.0.3 converts it on reading — that is verified on the instrument — and will rewrite it under its new name the first time this widget is configured.',
     other: '“{name}” carries settings written by an earlier release of XCTrack ({detail}). Nothing is lost: XCTrack 1.0.3 converts them on reading — that is verified on the instrument — and will rewrite them under their new names the first time this widget is configured.'
-  }
+  },
+
+  /* -------------------- library failures and the technical detail — see `fr/model.ts` */
+
+  'model.noErrorMessage': 'the failure left no message',
+
+  'libraryError.duringOpen': 'Opening the library',
+  'libraryError.duringReadAll': 'Reading the library',
+  'libraryError.duringReadEntry': 'Reading an entry',
+  'libraryError.duringReadBytes': 'Reading a configuration',
+  'libraryError.duringWrite': 'Writing an entry',
+  'libraryError.duringDelete': 'Deleting an entry',
+  'libraryError.duringClear': 'Emptying the library',
+
+  'libraryError.quota': '{operation}: the browser refused to write, the space granted to this site is full. Export your library, then delete entries to make room.',
+  'libraryError.storageFailed': '{operation}: the browser could not answer. {detail}',
+  'libraryError.noIndexedDb': 'This browser offers no IndexedDB: the library can keep nothing.',
+  'libraryError.blockedByTab': 'Another tab is preventing the library from being updated. ' +
+    'Close it, then reload.',
+
+  'libraryError.notFound': 'No entry {id} in the library.',
+  'libraryError.corrupt': 'Entry {id} cannot be read: {reason}.',
+  'libraryError.duplicateId': 'An entry already carries the identifier {id}.',
+  'libraryError.changedElsewhere': 'Entry {id} has changed since it was read — another tab modified or deleted it. Reload the library before trying again.',
+  'libraryError.notReadable': '“{name}” could not be opened: it is not a readable XCTrack configuration. {detail}',
+  'libraryError.bytesMissing': 'The bytes of “{name}” cannot be found: the entry is incomplete.',
+  'libraryError.digestChanged': '“{name}” no longer returns its original digest: the stored bytes have been altered. The entry is not given back.',
+
+  'libraryError.recordNotObject': 'the record is not an object',
+  'libraryError.recordNoId': 'identifier missing or empty',
+  'libraryError.recordBadFields': {
+    one: 'unreadable field: {fields}',
+    other: 'unreadable fields: {fields}'
+  },
+  'libraryError.legacyPersonalDatum': 'spotted by an earlier version of this editor, which ' +
+    'did not say what kind it was. Reload this entry for the full inventory.',
+
+  'libraryError.manifestUnreadable': 'The archive’s index cannot be read.',
+  'libraryError.manifestEmpty': 'The archive’s index is empty.',
+  'libraryError.notALibrary': 'This file is not a library exported by this editor.',
+  'libraryError.futureFormat': 'This library was written by a later version of the editor (format {version}). Update the editor before importing it.',
+  'libraryError.manifestNoItems': 'The archive’s index lists no configuration.',
+  'libraryError.notAnArchive': 'This file is not a library archive, or it is damaged. {detail}',
+  'libraryError.manifestMissing': 'The archive contains no {file}: it is not an exported library.',
+
+  'libraryError.itemManifestUnreadable': 'unreadable index in the archive',
+  'libraryError.itemMemberMissing': 'member {file} missing from the archive',
+  'libraryError.itemDigestMismatch': 'the archive’s bytes do not return the announced digest',
+  'libraryError.importedSuffix': ' (imported)'
 }
 
 export default model

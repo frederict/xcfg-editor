@@ -294,7 +294,76 @@ const model = {
   'inspection.obsoleteKey': {
     one: '« {name} » porte un réglage écrit par une version antérieure de XCTrack ({detail}). Rien n’est perdu : XCTrack 1.0.3 le convertit à la lecture — c’est vérifié sur l’instrument — et le réécrira sous son nouveau nom la première fois que ce gadget sera réglé.',
     other: '« {name} » porte des réglages écrits par une version antérieure de XCTrack ({detail}). Rien n’est perdu : XCTrack 1.0.3 les convertit à la lecture — c’est vérifié sur l’instrument — et les réécrira sous leur nouveau nom la première fois que ce gadget sera réglé.'
-  }
+  },
+
+  /* ============================ les pannes de la bibliothèque et du détail technique ===
+   *
+   * `src/library/` et `src/core/technicalDetail.ts`. Peu vues, et vues au pire moment :
+   * le pilote vient de confier une configuration à cet outil, ou d'essayer de la
+   * reprendre. `LibraryError` porte une **clé** et ses valeurs ; `libraryErrorText(error,
+   * tr)` en fait la phrase, et le `message` de l'erreur reste une ligne technique pour le
+   * rapport de bogue.
+   * =============================================================================== */
+
+  /** Ce qu'on écrit quand la panne n'a rien dit — voir `formatTechnicalDetail`. */
+  'model.noErrorMessage': 'la panne n’a laissé aucun message',
+
+  /* ------------- l'opération en cours, dite dans la phrase de la panne */
+
+  'libraryError.duringOpen': 'Ouverture de la bibliothèque',
+  'libraryError.duringReadAll': 'Lecture de la bibliothèque',
+  'libraryError.duringReadEntry': 'Lecture d’une entrée',
+  'libraryError.duringReadBytes': 'Lecture d’une configuration',
+  'libraryError.duringWrite': 'Écriture d’une entrée',
+  'libraryError.duringDelete': 'Suppression d’une entrée',
+  'libraryError.duringClear': 'Vidage de la bibliothèque',
+
+  /* ------------------------------------------------ le stockage lui-même */
+
+  'libraryError.quota': '{operation} : le navigateur a refusé d’écrire, l’espace accordé à ce site est plein. Exportez votre bibliothèque, puis supprimez des entrées pour faire de la place.',
+  'libraryError.storageFailed': '{operation} : le navigateur n’a pas pu répondre. {detail}',
+  'libraryError.noIndexedDb': 'Ce navigateur ne propose pas IndexedDB : la bibliothèque ne ' +
+    'peut rien conserver.',
+  'libraryError.blockedByTab': 'Un autre onglet empêche la mise à jour de la bibliothèque. ' +
+    'Fermez-le, puis rechargez.',
+
+  /* --------------------------------------------------- une entrée en particulier */
+
+  'libraryError.notFound': 'Aucune entrée {id} dans la bibliothèque.',
+  'libraryError.corrupt': 'L’entrée {id} est illisible : {reason}.',
+  'libraryError.duplicateId': 'Une entrée porte déjà l’identifiant {id}.',
+  'libraryError.changedElsewhere': 'L’entrée {id} a changé depuis sa lecture — un autre onglet l’a modifiée ou supprimée. Rechargez la bibliothèque avant de réessayer.',
+  'libraryError.notReadable': '« {name} » n’a pas pu être ouvert : ce n’est pas une configuration XCTrack lisible. {detail}',
+  'libraryError.bytesMissing': 'Les octets de « {name} » sont introuvables : l’entrée est incomplète.',
+  'libraryError.digestChanged': '« {name} » ne rend plus son empreinte d’origine : les octets rangés ont été altérés. L’entrée n’est pas restituée.',
+
+  /* ------------------ un enregistrement que la bibliothèque ne sait pas relire */
+
+  'libraryError.recordNotObject': 'l’enregistrement n’est pas un objet',
+  'libraryError.recordNoId': 'identifiant absent ou vide',
+  'libraryError.recordBadFields': {
+    one: 'champ illisible : {fields}',
+    other: 'champs illisibles : {fields}'
+  },
+  'libraryError.legacyPersonalDatum': 'repéré par une version antérieure de cet éditeur, ' +
+    'qui n’en disait pas la nature. Rechargez cette entrée pour obtenir l’inventaire complet.',
+
+  /* --------------------------------------------- l'archive proposée à l'import */
+
+  'libraryError.manifestUnreadable': 'La fiche de l’archive est illisible.',
+  'libraryError.manifestEmpty': 'La fiche de l’archive est vide.',
+  'libraryError.notALibrary': 'Ce fichier n’est pas une bibliothèque exportée par cet éditeur.',
+  'libraryError.futureFormat': 'Cette bibliothèque a été écrite par une version postérieure de l’éditeur (format {version}). Mettez l’éditeur à jour avant de l’importer.',
+  'libraryError.manifestNoItems': 'La fiche de l’archive ne liste aucune configuration.',
+  'libraryError.notAnArchive': 'Ce fichier n’est pas une archive de bibliothèque, ou il est abîmé. {detail}',
+  'libraryError.manifestMissing': 'L’archive ne contient pas de {file} : ce n’est pas une bibliothèque exportée.',
+
+  /* ------------------------- une entrée refusée pendant un import, sans arrêter le reste */
+
+  'libraryError.itemManifestUnreadable': 'fiche illisible dans l’archive',
+  'libraryError.itemMemberMissing': 'membre {file} absent de l’archive',
+  'libraryError.itemDigestMismatch': 'les octets de l’archive ne rendent pas l’empreinte annoncée',
+  'libraryError.importedSuffix': ' (importé)'
 } as const
 
 export default model

@@ -1,7 +1,7 @@
 import { openContainer, type Container } from '../core/container'
-import { formatTechnicalDetail } from '../core/technicalDetail'
+import { technicalDetail } from '../core/technicalDetail'
 import { sameDigest, sha256Hex } from './digest'
-import { LibraryError } from './errors'
+import { LibraryError, type LibraryProse } from './errors'
 import { describeContainer, type DescribeOptions, type EntryIdentity } from './identity'
 import {
   blobKey, previewKey,
@@ -76,10 +76,22 @@ export interface LibraryEntry {
   preview?: PreviewRef
 }
 
+/**
+ * L'identifiant rendu pour un enregistrement dont on n'a même pas pu lire le sien. Ce
+ * n'est pas de la prose mais un **identifiant de repli** : il apparaît dans la ligne
+ * technique que le pilote recopie s'il signale le problème, et il ne désigne aucune entrée
+ * — la suppression qu'il proposerait ne trouverait rien, ce qui est le comportement voulu.
+ */
+export const UNKNOWN_RECORD_ID = '(inconnu)'
+
 /** Ce qu'on sait d'un enregistrement qu'on n'a pas su relire. */
 export interface BrokenEntry {
   id: string
-  reason: string
+  /**
+   * Pourquoi il n'est pas relisible — une **clé de message** et ses valeurs, comme celle
+   * d'une `LibraryError`. `libraryProseText(reason, tr)` en fait la phrase.
+   */
+  reason: LibraryProse
 }
 
 /**
@@ -170,11 +182,13 @@ const isFiniteNumber = (value: unknown): value is number =>
  */
 export function validateRecord(raw: unknown): LibraryEntry | BrokenEntry {
   if (typeof raw !== 'object' || raw === null) {
-    return { id: '(inconnu)', reason: 'l’enregistrement n’est pas un objet' }
+    return { id: UNKNOWN_RECORD_ID, reason: { key: 'libraryError.recordNotObject' } }
   }
   const record = raw as Record<string, unknown>
   const id = isString(record.id) && record.id !== '' ? record.id : undefined
-  if (id === undefined) return { id: '(inconnu)', reason: 'identifiant absent ou vide' }
+  if (id === undefined) {
+    return { id: UNKNOWN_RECORD_ID, reason: { key: 'libraryError.recordNoId' } }
+  }
 
   const missing: string[] = []
   if (!isString(record.name)) missing.push('name')
@@ -183,7 +197,15 @@ export function validateRecord(raw: unknown): LibraryEntry | BrokenEntry {
   if (!isString(record.sha256) || record.sha256 === '') missing.push('sha256')
   if (typeof record.identity !== 'object' || record.identity === null) missing.push('identity')
   if (missing.length > 0) {
-    return { id, reason: `champ${missing.length > 1 ? 's' : ''} illisible${missing.length > 1 ? 's' : ''} : ${missing.join(', ')}` }
+    // Les noms de champs sont ceux du fichier — `name`, `sha256` : des identifiants, joints
+    // par `', '` et non par `format.list`, qui en ferait une énumération de prose.
+    return {
+      id,
+      reason: {
+        key: 'libraryError.recordBadFields',
+        values: { count: missing.length, fields: missing.join(', ') }
+      }
+    }
   }
 
   return {
@@ -257,11 +279,16 @@ export function createLibrary(options: LibraryOptions): Library {
   const readRecord = async (id: string): Promise<LibraryEntry> => {
     const raw = await store.read(id)
     if (raw === undefined) {
-      throw new LibraryError('not-found', `Aucune entrée ${id} dans la bibliothèque.`)
+      throw new LibraryError('not-found', { key: 'libraryError.notFound', values: { id } })
     }
     const entry = validateRecord(raw)
     if (isBroken(entry)) {
-      throw new LibraryError('corrupt', `L’entrée ${id} est illisible : ${entry.reason}.`)
+      throw new LibraryError('corrupt', {
+        key: 'libraryError.corrupt',
+        // La raison est elle-même une clé, traduite au moment de l'affichage : voir
+        // `brokenEntryText`. On la passe telle quelle ; l'écran l'assemble.
+        values: { id, reason: entry.reason.key }
+      })
     }
     return entry
   }
@@ -281,8 +308,10 @@ export function createLibrary(options: LibraryOptions): Library {
     } catch (error) {
       throw new LibraryError(
         'unreadable',
-        `« ${fileName} » n’a pas pu être ouvert : ce n’est pas une configuration ` +
-        `XCTrack lisible. ${formatTechnicalDetail(error)}`,
+        {
+          key: 'libraryError.notReadable',
+          values: { name: fileName, detail: technicalDetail(error) }
+        },
         { cause: error }
       )
     }
@@ -338,20 +367,17 @@ export function createLibrary(options: LibraryOptions): Library {
       const entry = await readRecord(id)
       const bytes = await store.readBlob(blobKey(id))
       if (bytes === undefined) {
-        throw new LibraryError(
-          'integrity',
-          `Les octets de « ${entry.name} » sont introuvables : l’entrée est incomplète.`
-        )
+        throw new LibraryError('integrity', {
+          key: 'libraryError.bytesMissing', values: { name: entry.name }
+        })
       }
       if (bytes.byteLength !== entry.byteLength || !sameDigest(await sha256Hex(bytes), entry.sha256)) {
         // On refuse de rendre des octets dont on ne peut pas garantir qu'ils sont ceux
         // rangés. Rendre « à peu près » la configuration d'un pilote est pire que ne rien
         // rendre : il volerait avec, sans savoir ce qui a changé.
-        throw new LibraryError(
-          'integrity',
-          `« ${entry.name} » ne rend plus son empreinte d’origine : les octets rangés ont ` +
-          'été altérés. L’entrée n’est pas restituée.'
-        )
+        throw new LibraryError('integrity', {
+          key: 'libraryError.digestChanged', values: { name: entry.name }
+        })
       }
       return bytes
     },

@@ -1,4 +1,4 @@
-import { LibraryError, toLibraryError } from './errors'
+import { LibraryError, toLibraryError, type LibraryOperation } from './errors'
 import {
   conflictError,
   type BlobWrite, type ExpectedRevision, type LibraryStore, type StoredRecord
@@ -72,10 +72,7 @@ export async function openIndexedDbStore(
 ): Promise<LibraryStore> {
   const factory = options.factory ?? (globalThis as { indexedDB?: IDBFactory }).indexedDB
   if (factory === undefined) {
-    throw new LibraryError(
-      'unavailable',
-      'Ce navigateur ne propose pas IndexedDB : la bibliothèque ne peut rien conserver.'
-    )
+    throw new LibraryError('unavailable', { key: 'libraryError.noIndexedDb' })
   }
 
   const name = options.databaseName ?? DATABASE_NAME
@@ -88,18 +85,17 @@ export async function openIndexedDbStore(
       if (!db.objectStoreNames.contains(BLOB_STORE)) db.createObjectStore(BLOB_STORE)
     }
     request.onsuccess = () => resolve(request.result)
-    request.onerror = () => reject(toLibraryError(request.error, 'Ouverture de la bibliothèque'))
+    request.onerror = () => reject(toLibraryError(request.error, 'open'))
     // Un autre onglet tient une version antérieure ouverte et empêche la migration. On
     // ne bloque pas indéfiniment : on le dit.
-    request.onblocked = () => reject(new LibraryError(
-      'unavailable',
-      'Un autre onglet empêche la mise à jour de la bibliothèque. Fermez-le, puis rechargez.'
-    ))
+    request.onblocked = () => reject(
+      new LibraryError('unavailable', { key: 'libraryError.blockedByTab' })
+    )
   })
 
   const run = async <T>(
     stores: string[], mode: IDBTransactionMode, body: (tx: IDBTransaction) => Promise<T>,
-    context: string
+    operation: LibraryOperation
   ): Promise<T> => {
     try {
       const transaction = database.transaction(stores, mode)
@@ -108,7 +104,7 @@ export async function openIndexedDbStore(
       await done
       return result
     } catch (error) {
-      throw toLibraryError(error, context)
+      throw toLibraryError(error, operation)
     }
   }
 
@@ -118,19 +114,19 @@ export async function openIndexedDbStore(
     readAll() {
       return run([RECORD_STORE], 'readonly',
         (tx) => promisify(tx.objectStore(RECORD_STORE).getAll() as IDBRequest<unknown[]>),
-        'Lecture de la bibliothèque')
+        'readAll')
     },
 
     read(id) {
       return run([RECORD_STORE], 'readonly',
         (tx) => promisify(tx.objectStore(RECORD_STORE).get(id) as IDBRequest<unknown>),
-        'Lecture d’une entrée')
+        'readEntry')
     },
 
     async readBlob(key) {
       const value = await run([BLOB_STORE], 'readonly',
         (tx) => promisify(tx.objectStore(BLOB_STORE).get(key) as IDBRequest<unknown>),
-        'Lecture d’une configuration')
+        'readBytes')
       // On range des `Uint8Array` ; on relit ce qu'on trouve. Un `ArrayBuffer` — rangé
       // par une version antérieure, ou par une autre implémentation — est accepté plutôt
       // que perdu : c'est le même contenu, dans une autre enveloppe.
@@ -160,7 +156,7 @@ export async function openIndexedDbStore(
         const blobStore = tx.objectStore(BLOB_STORE)
         for (const write of writes) blobStore.put(write.bytes, write.key)
         recordStore.put(record)
-      }, `Écriture de « ${record.id} »`)
+      }, 'write')
     },
 
     delete(id) {
@@ -170,14 +166,14 @@ export async function openIndexedDbStore(
         // en un seul intervalle de clés : voir `belongsTo` dans `store.ts`. `￿` est
         // le plus grand point de code d'un plan de base — aucune clé `id#…` ne le dépasse.
         tx.objectStore(BLOB_STORE).delete(IDBKeyRange.bound(id, `${id}#￿`))
-      }, `Suppression de « ${id} »`)
+      }, 'delete')
     },
 
     clear() {
       return run([RECORD_STORE, BLOB_STORE], 'readwrite', async (tx) => {
         tx.objectStore(RECORD_STORE).clear()
         tx.objectStore(BLOB_STORE).clear()
-      }, 'Vidage de la bibliothèque')
+      }, 'clear')
     },
 
     close() { database.close() }

@@ -230,7 +230,57 @@ const model: DomainCatalog<'model'> = {
   'inspection.obsoleteKey': {
     one: '«{name}» lleva un ajuste escrito por una versión anterior de XCTrack ({detail}). No se pierde nada: XCTrack 1.0.3 lo convierte al leerlo —está verificado en el dispositivo— y lo reescribirá con su nuevo nombre la primera vez que se ajuste este widget.',
     other: '«{name}» lleva ajustes escritos por una versión anterior de XCTrack ({detail}). No se pierde nada: XCTrack 1.0.3 los convierte al leerlos —está verificado en el dispositivo— y los reescribirá con sus nuevos nombres la primera vez que se ajuste este widget.'
-  }
+  },
+
+  /* -------- fallos de la biblioteca y el detalle técnico — véase `fr/model.ts` */
+
+  'model.noErrorMessage': 'el fallo no dejó ningún mensaje',
+
+  'libraryError.duringOpen': 'Apertura de la biblioteca',
+  'libraryError.duringReadAll': 'Lectura de la biblioteca',
+  'libraryError.duringReadEntry': 'Lectura de una entrada',
+  'libraryError.duringReadBytes': 'Lectura de una configuración',
+  'libraryError.duringWrite': 'Escritura de una entrada',
+  'libraryError.duringDelete': 'Borrado de una entrada',
+  'libraryError.duringClear': 'Vaciado de la biblioteca',
+
+  'libraryError.quota': '{operation}: el navegador se ha negado a escribir, el espacio concedido a este sitio está lleno. Exporte su biblioteca y luego borre entradas para hacer sitio.',
+  'libraryError.storageFailed': '{operation}: el navegador no ha podido responder. {detail}',
+  'libraryError.noIndexedDb': 'Este navegador no ofrece IndexedDB: la biblioteca no puede ' +
+    'conservar nada.',
+  'libraryError.blockedByTab': 'Otra pestaña impide la actualización de la biblioteca. ' +
+    'Ciérrela y vuelva a cargar.',
+
+  'libraryError.notFound': 'Ninguna entrada {id} en la biblioteca.',
+  'libraryError.corrupt': 'La entrada {id} es ilegible: {reason}.',
+  'libraryError.duplicateId': 'Una entrada ya lleva el identificador {id}.',
+  'libraryError.changedElsewhere': 'La entrada {id} ha cambiado desde su lectura: otra pestaña la ha modificado o borrado. Vuelva a cargar la biblioteca antes de reintentarlo.',
+  'libraryError.notReadable': '«{name}» no ha podido abrirse: no es una configuración XCTrack legible. {detail}',
+  'libraryError.bytesMissing': 'Los bytes de «{name}» no se encuentran: la entrada está incompleta.',
+  'libraryError.digestChanged': '«{name}» ya no devuelve su huella de origen: los bytes guardados han sido alterados. La entrada no se restituye.',
+
+  'libraryError.recordNotObject': 'el registro no es un objeto',
+  'libraryError.recordNoId': 'identificador ausente o vacío',
+  'libraryError.recordBadFields': {
+    one: 'campo ilegible: {fields}',
+    other: 'campos ilegibles: {fields}'
+  },
+  'libraryError.legacyPersonalDatum': 'detectado por una versión anterior de este editor, ' +
+    'que no decía de qué naturaleza era. Vuelva a cargar esta entrada para obtener el ' +
+    'inventario completo.',
+
+  'libraryError.manifestUnreadable': 'La ficha del archivo comprimido es ilegible.',
+  'libraryError.manifestEmpty': 'La ficha del archivo comprimido está vacía.',
+  'libraryError.notALibrary': 'Este archivo no es una biblioteca exportada por este editor.',
+  'libraryError.futureFormat': 'Esta biblioteca ha sido escrita por una versión posterior del editor (formato {version}). Actualice el editor antes de importarla.',
+  'libraryError.manifestNoItems': 'La ficha del archivo comprimido no lista ninguna configuración.',
+  'libraryError.notAnArchive': 'Este archivo no es un archivo comprimido de biblioteca, o está dañado. {detail}',
+  'libraryError.manifestMissing': 'El archivo comprimido no contiene ningún {file}: no es una biblioteca exportada.',
+
+  'libraryError.itemManifestUnreadable': 'ficha ilegible en el archivo comprimido',
+  'libraryError.itemMemberMissing': 'miembro {file} ausente del archivo comprimido',
+  'libraryError.itemDigestMismatch': 'los bytes del archivo comprimido no devuelven la huella anunciada',
+  'libraryError.importedSuffix': ' (importado)'
 }
 
 export default model
