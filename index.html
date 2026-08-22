@@ -5,27 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Éditeur de configuration XCTrack</title>
     <!--
-      Les deux familles du carnet : Spectral pour les titres, Public Sans pour le corps.
-      Trois précautions, parce qu'une fonte distante n'est pas gratuite au premier
-      affichage :
-      - `preconnect` sur les deux hôtes (l'un sert la feuille, l'autre les fichiers),
-        ce qui épargne une poignée de main TLS sur le chemin critique ;
-      - `display=swap` : le texte s'affiche tout de suite dans la pile de repli et se
-        rhabille à l'arrivée. Rien n'est jamais invisible en attendant ;
-      - une pile de repli réelle derrière chaque famille (`--font-title`, `--font-ui`
-        dans `app.css`) : hors ligne — et l'outil sert au décollage —, le carnet garde
-        son serif et sa linéale, celles du système.
+      Aucune ressource de cette page ne vient d'un autre hôte. C'était faux jusqu'au
+      22 août 2026 : deux `<link>` vers `fonts.googleapis.com` et `fonts.gstatic.com`
+      faisaient annoncer la visite du pilote à un tiers — IP et `Referer` — avant même
+      qu'il ait déposé un fichier, pendant que le README promettait dans cinq langues une
+      page « sans serveur à qui parler ».
 
-      Google Fonts est le seul hôte de fontes que la politique de sécurité admette : ne
-      pas en ajouter un autre, et ne pas passer par un `@import` dans la feuille, qui
-      sérialiserait le chargement derrière elle.
+      Les deux familles du carnet, Spectral pour les titres et Public Sans pour le corps,
+      sont désormais servies par le dépôt lui-même : `src/ui/fonts.css` porte les
+      `@font-face`, `src/ui/fonts/` les treize `woff2`, et `app.css` les appelle. 146 Ko,
+      une fois, et la promesse redevient littérale.
+
+      ⚠️ Ne pas rouvrir cette porte. Une fonte, une icône, une mesure d'audience prises
+      chez un tiers valent la même chose : le pilote parle à quelqu'un qu'il n'a pas
+      choisi. `tests/ui/appStyle.test.ts` refuse toute URL absolue dans la feuille et dans
+      cette page — c'est le garde-fou, pas cette phrase.
     -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Spectral:wght@500;600&display=swap"
-    />
   </head>
   <body>
     <div id="app"></div>

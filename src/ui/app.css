@@ -1,4 +1,13 @@
 /*
+ * Les deux fontes du carnet, servies par le dépôt : voir l'en-tête de `fonts.css`, qui dit
+ * pourquoi elles ne viennent plus de Google. En tête de feuille, avant toute règle, pour
+ * qu'aucune déclaration n'emploie une famille que le navigateur n'a pas encore vue
+ * déclarée. Vite replie cet `@import` dans le paquet à la construction : rien n'est
+ * sérialisé derrière une seconde requête.
+ */
+@import './fonts.css';
+
+/*
  * Le cadre, pas le sujet. Cette feuille habille l'interface qui ENTOURE le rendu d'une
  * page XCTrack ; le rendu lui-même vit dans `style.css` et n'est jamais touché ici.
  *

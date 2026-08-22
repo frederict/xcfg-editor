@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -173,5 +173,63 @@ describe('app.css — les deux axes de langue se distinguent avant d’être lus
   it('les cinq entrées s’alignent en pairs', () => {
     // Cinq boutons de largeurs différentes se liraient comme cinq commandes différentes.
     expect(rule('.lang-choice')).toContain('min-width: 8.5rem;')
+  })
+})
+
+/**
+ * # Aucune ressource d'un autre hôte, et personne pour l'oublier
+ *
+ * Le `README` promet dans cinq langues une page qui « n'a pas de serveur à qui parler ».
+ * C'était faux : `index.html` chargeait la feuille de Google Fonts, donc le navigateur du
+ * pilote annonçait sa visite — IP, `Referer` — à un tiers, dès le premier affichage et
+ * avant tout geste de sa part. Les fontes sont désormais servies par le dépôt
+ * (`src/ui/fonts.css`, `src/ui/fonts/`).
+ *
+ * Ce contrôle est là parce qu'une phrase de commentaire ne tient pas : ajouter un `<link>`
+ * vers un CDN est le geste le plus naturel du monde, et rien ne le signalerait à la
+ * relecture. Il refuse **toute URL absolue** dans la page d'entrée, dans les deux feuilles
+ * et dans les trois bancs d'essai — une fonte, une icône, une mesure d'audience valent la
+ * même chose : le pilote parle à quelqu'un qu'il n'a pas choisi.
+ *
+ * ⚠️ Ce qu'il ne voit pas : une URL construite en JavaScript, et un `fetch` du code. Il
+ * garde la porte d'entrée, pas la maison.
+ */
+describe('rien de cette page ne vient d’un autre hôte', () => {
+  const pages = ['index.html', 'src/ui/libraryPanel.demo.html',
+    'src/ui/sharingDialog.demo.html', 'src/ui/versionDiagnostic.demo.html']
+  const sheets = ['src/ui/app.css', 'src/ui/fonts.css', 'src/ui/style.css']
+
+  /** Les commentaires racontent l'histoire du tiers retiré : ils ne chargent rien. */
+  function withoutComments(source: string, html: boolean): string {
+    return html
+      ? source.replaceAll(/<!--[\s\S]*?-->/g, ' ')
+      : source.replaceAll(/\/\*[\s\S]*?\*\//g, ' ')
+  }
+
+  function read(relative: string): string {
+    return readFileSync(path.join(here, '../..', relative), 'utf8')
+  }
+
+  it.each([...pages, ...sheets])('%s ne cite aucun hôte distant', (relative) => {
+    const source = withoutComments(read(relative), relative.endsWith('.html'))
+    expect([...source.matchAll(/https?:\/\/[^\s"')]+/g)].map((m) => m[0])).toEqual([])
+  })
+
+  it('les treize fichiers de fonte que la feuille appelle sont bien là', () => {
+    // Sans cette borne, la règle ci-dessus serait verte sur une feuille qui n'appelle
+    // plus rien du tout — et le carnet aurait perdu ses fontes sans que rien ne le dise.
+    const called = [...read('src/ui/fonts.css').matchAll(/url\(\.\/fonts\/([^)]+)\)/g)]
+      .map((match) => match[1]!)
+    expect(new Set(called).size).toBe(13)
+    for (const name of new Set(called)) {
+      expect(existsSync(path.join(here, '../../src/ui/fonts', name)), name).toBe(true)
+    }
+  })
+
+  it('la licence des deux familles voyage avec elles', () => {
+    // La SIL Open Font 1.1 l'exige de qui redistribue les fichiers.
+    for (const name of ['OFL-Public-Sans.txt', 'OFL-Spectral.txt']) {
+      expect(read(`src/ui/fonts/${name}`)).toContain('SIL Open Font License, Version 1.1')
+    }
   })
 })
