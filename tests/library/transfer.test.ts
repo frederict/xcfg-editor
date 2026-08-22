@@ -5,6 +5,7 @@ import { createLibrary, type Library } from '../../src/library/library'
 import { createMemoryStore } from '../../src/library/memoryStore'
 import { exportLibrary, importLibrary, LIBRARY_FORMAT } from '../../src/library/transfer'
 import { readZip, writeZip } from '../../src/core/zip'
+import { relireSansNous, unzipTest, UNZIP_PRESENT } from '../core/zipIndependant'
 import { blobKey } from '../../src/library/store'
 import { libraryProseText } from '../../src/library/errors'
 import { makeTranslator } from '../../src/i18n/translate'
@@ -90,7 +91,15 @@ describe('export et import de la bibliothèque entière', () => {
     expect(restauree.identity.read.widgetCount).toBe(105)
   })
 
-  it('l’archive s’ouvre avec n’importe quel outil : un manifeste et un fichier par entrée', async () => {
+  /**
+   * ⚠️ Ce test s'intitulait déjà « s'ouvre avec n'importe quel outil » — et il la rouvrait
+   * avec `readZip`, c'est-à-dire avec nous. Il promettait une conformité au monde et
+   * mesurait notre cohérence avec nous-mêmes. Mesuré : `writeZip` passé à `crc = 0`, les
+   * 2 144 tests restaient verts et `unzip -t` refusait l'archive. Le contrôle extérieur
+   * est maintenant dans le test suivant ; celui-ci garde ce qu'il savait déjà dire, la
+   * composition de l'archive.
+   */
+  it('porte un manifeste et un fichier par entrée, nommés et intacts', async () => {
     // Une sauvegarde qu'on ne peut lire qu'avec l'outil qui l'a écrite n'est pas une
     // sauvegarde. On vérifie que les `.xcfg` sont là, nommés, et intacts.
     const source = await remplie()
@@ -118,6 +127,35 @@ describe('export et import de la bibliothèque entière', () => {
 
     // Une archive `.xczfg` est rangée sans être recompressée : elle l'est déjà.
     expect(membres.find((m) => m.name === 'entrees/id-3.xczfg')!.stored).toBe(true)
+  })
+
+  /**
+   * **La sauvegarde du pilote s'ouvre-t-elle ailleurs ?** C'est la seule protection qu'il
+   * ait contre la purge de son navigateur, et le manuel la lui promet extractible « avec
+   * n'importe quel décompresseur ». La preuve ne peut donc pas passer par `readZip` :
+   * elle passe par la zlib de Node et par `unzip` du système, tous deux extérieurs à
+   * `src/`. Voir `tests/core/zipIndependant.ts`.
+   */
+  it('s’ouvre pour de bon ailleurs : CRC32 juste, et unzip -t l’accepte', async () => {
+    const { archive } = await exportLibrary(await remplie())
+
+    const relus = relireSansNous(archive)
+    expect(relus.map((m) => m.name)).toContain('bibliotheque.json')
+    for (const membre of relus) {
+      // Recalculé par `zlib.crc32` sur les octets décompressés par `inflateRawSync`.
+      expect(membre.crcCentral, `${membre.name} — répertoire central`).toBe(membre.crcReel)
+      expect(membre.crcLocal, `${membre.name} — descripteur de données`).toBe(membre.crcReel)
+    }
+
+    // Et le manifeste relu sans nous est bien le nôtre : sinon le contrôle ci-dessus
+    // serait vrai de n'importe quelle archive cohérente, y compris vide.
+    const manifeste = JSON.parse(new TextDecoder().decode(relus[0]!.data)) as { items: unknown[] }
+    expect(manifeste.items).toHaveLength(4)
+  })
+
+  it.skipIf(!UNZIP_PRESENT)('unzip -t du système accepte l’archive de bibliothèque', async () => {
+    const { archive } = await exportLibrary(await remplie())
+    expect(unzipTest(archive, 'bibliotheque.zip')).toContain('No errors detected')
   })
 
   /**

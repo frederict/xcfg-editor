@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { readZip, writeZip, ZIP_LIMITS, type ZipEntry, type ZipLimits } from '../../src/core/zip'
+import { relireSansNous, unzipTest, UNZIP_PRESENT } from './zipIndependant'
 import { ARCHIVE, BACKUP_ARCHIVE } from '../fixtures/paths'
 
 describe('readZip', () => {
@@ -32,6 +33,89 @@ describe('readZip', () => {
     // deux fichiers différents, et l'empreinte SHA-256 ne voudrait plus rien dire.
     expect(Buffer.from(await writeZip(await readZip(rebuilt))).equals(Buffer.from(rebuilt)))
       .toBe(true)
+  })
+})
+
+/**
+ * # Ce qu'un outil extérieur lit dans l'archive qu'on produit
+ *
+ * Tout ce qui précède rouvre l'archive avec `readZip`, donc avec nous. Cela ne mesure que
+ * notre cohérence avec nous-mêmes, et c'est aveugle à tout ce que `readZip` n'écrit ni ne
+ * lit — au premier rang de quoi le **CRC32**. Mesuré : `writeZip` passé à `crc = 0`, la
+ * suite entière reste verte (2 144 tests, aucun tué) et `unzip -t` refuse le fichier que
+ * le pilote vient de télécharger.
+ *
+ * Les témoins d'ici sont donc extérieurs à `src/` : la zlib de Node décompresse et
+ * recalcule le CRC, `unzip` du système juge l'archive entière. `tests/core/zipIndependant.ts`
+ * dit pourquoi et comment.
+ */
+describe('writeZip — ce qu’un outil extérieur lit dans l’archive produite', () => {
+  // Un horodatage DOS quelconque mais **non nul** : c'est la seule façon de voir tomber
+  // une mutation qui écrirait 0 dans l'en-tête local.
+  const HEURE = 0x4d20
+  const DATE = 0x5915
+
+  function membres(): ZipEntry[] {
+    const encoder = new TextEncoder()
+    return [
+      // Comprimé, et assez répétitif pour que `deflate` fasse vraiment quelque chose.
+      { name: 'backup.xcfg', data: encoder.encode(`{\n  "a": 1\n}\n${'x'.repeat(4000)}`), stored: false, dosTime: HEURE, dosDate: DATE },
+      // Stocké : la branche qui ne passe pas par le déflateur, celle des `.xczfg` rangés
+      // tels quels dans l'archive de bibliothèque.
+      { name: 'entrees/déjà.xczfg', data: new Uint8Array([0x50, 0x4b, 5, 6, 0, 0]), stored: true, dosTime: HEURE, dosDate: DATE },
+      // Un membre vide : le CRC32 de rien vaut 0, et c'est justement la valeur qu'une
+      // mutation `crc = 0` produirait partout. Il est ici pour qu'on sache qu'il passe.
+      { name: 'vide.txt', data: new Uint8Array(0), stored: false, dosTime: HEURE, dosDate: DATE }
+    ]
+  }
+
+  it('le CRC32 de chaque membre est celui de ses octets, recalculé par la zlib de Node', async () => {
+    const source = membres()
+    const relus = relireSansNous(await writeZip(source))
+    expect(relus).toHaveLength(source.length)
+
+    for (const [rang, membre] of relus.entries()) {
+      const attendu = source[rang]!
+      expect(membre.name).toBe(attendu.name)
+      // Les octets d'abord : un CRC juste sur le mauvais contenu ne vaut rien.
+      expect(Buffer.from(membre.data).equals(Buffer.from(attendu.data)), membre.name).toBe(true)
+      // Puis le CRC, des deux côtés de l'entrée. `readZip` ne lit que le central ; un
+      // extracteur en mode flux lit le descripteur, derrière les octets comprimés.
+      expect(membre.crcCentral, `${membre.name} — répertoire central`).toBe(membre.crcReel)
+      expect(membre.crcLocal, `${membre.name} — descripteur de données`).toBe(membre.crcReel)
+    }
+  })
+
+  it('le côté local répète l’horodatage DOS du répertoire central', async () => {
+    // `readZip` ne relit que le répertoire central : `expect(await readZip(rebuilt))
+    // .toEqual(entries)` est aveugle à l'en-tête local, que les extracteurs lisent.
+    for (const membre of relireSansNous(await writeZip(membres()))) {
+      expect(membre.dosTimeCentral, membre.name).toBe(HEURE)
+      expect(membre.dosDateCentral, membre.name).toBe(DATE)
+      expect(membre.dosTimeLocal, `${membre.name} — en-tête local`).toBe(HEURE)
+      expect(membre.dosDateLocal, `${membre.name} — en-tête local`).toBe(DATE)
+    }
+  })
+
+  it('l’archive du corpus, réécrite, porte les mêmes CRC que ses octets', async () => {
+    // Le cas réel : ce que le pilote télécharge après avoir touché un `.xczfg`.
+    const rebuilt = await writeZip(await readZip(new Uint8Array(readFileSync(ARCHIVE))))
+    const relus = relireSansNous(rebuilt)
+    expect(relus.length).toBeGreaterThan(0)
+    for (const membre of relus) {
+      expect(membre.crcCentral, membre.name).toBe(membre.crcReel)
+      expect(membre.crcLocal, membre.name).toBe(membre.crcReel)
+    }
+    const backup = relus.find((m) => m.name === 'backup.xcfg')!
+    expect(Buffer.from(backup.data).equals(readFileSync(BACKUP_ARCHIVE))).toBe(true)
+  })
+
+  it.skipIf(!UNZIP_PRESENT)('unzip -t du système accepte l’archive', async () => {
+    // Le juge que le pilote a sous la main. Sur `crc = 0` il répond « bad CRC », code de
+    // retour 2, et `unzipTest` lève avec cette ligne-là.
+    expect(unzipTest(await writeZip(membres()), 'bibliotheque.zip')).toContain('No errors detected')
+    expect(unzipTest(await writeZip(await readZip(new Uint8Array(readFileSync(ARCHIVE)))), 'archive.xczfg'))
+      .toContain('No errors detected')
   })
 })
 
