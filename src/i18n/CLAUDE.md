@@ -186,7 +186,10 @@ disent « Widget », sur les 55 versions relevées. Voir `messages/fr/common.ts`
 **La mécanique** : `Intl.PluralRules` pour le pluriel (`PluralForms`), `Intl.NumberFormat`
 et `Intl.DateTimeFormat` pour les nombres, tailles et dates, `Intl.ListFormat` pour les
 énumérations. Les huit copies de `plural()` et les sept formateurs figés du dépôt sont
-déjà remplacés.
+déjà remplacés — **la neuvième copie, celle de `src/render/widgets/liveMessage.ts`, l'a
+été le 22 août 2026** : cette affirmation était vraie de `src/ui/` et fausse de
+`src/render/`, ce que la revue du jour a relevé. Il reste **un** formateur figé, et un
+seul : `src/render/locale.ts`, exception écrite et assumée au § 4.
 
 **Les deux axes de langue** (`src/i18n/axes.ts`) : *notre prose* suit le choix du pilote,
 *les libellés de XCTrack* suivent le fichier ouvert. Ils ne se confondent jamais.
