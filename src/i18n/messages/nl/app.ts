@@ -284,6 +284,7 @@ const app: DomainCatalog<'app'> = {
   'app.backToPages': 'Terug naar de pagina’s',
 
   'app.manualBack': 'Handleiding sluiten',
+  'app.manualToc': 'Inhoud',
   'app.loadingManual': 'Handleiding laden…',
   'app.manualFailedMessage': 'Er is niets veranderd in uw bestand. Probeer opnieuw.',
   'app.manualFailedTitle': 'De handleiding kon niet worden geopend',

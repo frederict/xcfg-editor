@@ -278,6 +278,7 @@ const app: DomainCatalog<'app'> = {
   'app.backToPages': 'Back to the pages',
 
   'app.manualBack': 'Close the manual',
+  'app.manualToc': 'Contents',
   'app.loadingManual': 'Loading the manual…',
   'app.manualFailedMessage': 'Nothing in your file has changed. Try again.',
   'app.manualFailedTitle': 'The manual could not be opened',

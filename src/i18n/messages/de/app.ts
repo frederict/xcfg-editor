@@ -289,6 +289,7 @@ const app: DomainCatalog<'app'> = {
   'app.backToPages': 'Zurück zu den Seiten',
 
   'app.manualBack': 'Handbuch schließen',
+  'app.manualToc': 'Inhalt',
   'app.loadingManual': 'Handbuch wird geladen…',
   'app.manualFailedMessage': 'An Ihrer Datei hat sich nichts geändert. Versuchen Sie es erneut.',
   'app.manualFailedTitle': 'Das Handbuch ließ sich nicht öffnen',

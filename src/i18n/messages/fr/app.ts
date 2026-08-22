@@ -457,6 +457,14 @@ const app = {
   'app.backToPages': 'Revenir aux pages',
 
   'app.manualBack': 'Fermer le manuel',
+  /**
+   * La pastille qui ramène au sommaire, en fenêtre étroite seulement.
+   *
+   * Un seul mot : elle flotte au-dessus du texte, et le sommaire qu'elle vise porte
+   * déjà son intitulé entier — « Ce que contient ce manuel », écrit dans le fragment.
+   * En fenêtre large, la colonne est là en permanence et la pastille ne paraît pas.
+   */
+  'app.manualToc': 'Sommaire',
   'app.loadingManual': 'Chargement du manuel…',
   'app.manualFailedMessage': 'Rien n’a bougé dans votre fichier. Réessayez.',
   'app.manualFailedTitle': 'Le manuel n’a pas pu s’ouvrir',

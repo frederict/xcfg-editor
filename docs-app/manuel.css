@@ -1,10 +1,10 @@
 /*
  * Le manuel d'utilisation : sa mise en page, et rien d'autre.
  *
- * Tout est porté sous `.manual`, sans exception. Le fragment est injecté dans une boîte
- * modale qui vit au milieu de l'application ; une seule règle qui déborderait — un
- * `h2 { … }` nu, un `a { … }` nu — repeindrait les vingt écrans de l'éditeur depuis un
- * fichier que personne ne penserait à ouvrir en cherchant la panne.
+ * Tout est porté sous `.manual`, sans exception. Le fragment est injecté dans une page
+ * qui vit au milieu de l'application ; une seule règle qui déborderait — un `h2 { … }` nu,
+ * un `a { … }` nu — repeindrait les vingt écrans de l'éditeur depuis un fichier que
+ * personne ne penserait à ouvrir en cherchant la panne.
  *
  * Les couleurs viennent des variables `--app-*` d'`app.css` : le manuel suit le thème
  * clair ou sombre du reste du cadre. Aucune valeur de couleur n'est écrite ici en dur,
@@ -16,14 +16,14 @@
  * XCTrack masque hors vol ; l'application n'en connaît pas d'autre, et en introduire une
  * deuxième ferait de ce fichier l'exception qui périme la règle d'`app.css`.
  *
- * Largeur de ligne : `65ch`. Le manuel est le seul texte long de l'application — partout
- * ailleurs, une phrase explique un contrôle qu'elle touche. Une prose de trois mille mots
- * en pleine largeur d'écran ne se lit pas.
+ * Largeur de ligne : 40 rem (640 px), portée par la COLONNE de texte (`.manual__text`) et
+ * non par `.manual`. Le manuel est le seul texte long de l'application — partout ailleurs,
+ * une phrase explique un contrôle qu'elle touche. Une prose de trois mille mots en pleine
+ * largeur d'écran ne se lit pas. La racine, elle, occupe toute la largeur du cadre : c'est
+ * ce qui laisse la place au sommaire latéral.
  */
 
 .manual {
-  max-width: 65ch;
-  margin: 0 auto;
   font-size: 15px;
   line-height: 1.62;
   color: var(--app-ink);
@@ -32,16 +32,22 @@
 /* -------------------------------------------------------------------------- titres */
 
 /*
- * Le manuel commence à `h2` : la boîte modale porte déjà son `h1` (« Manuel
- * d'utilisation »), et un second premier niveau casserait la navigation par titres d'un
- * lecteur d'écran, qui est ici le sommaire réel du document.
+ * Le manuel commence à `h2` : la page porte déjà son `h1` (« Manuel d'utilisation »), et
+ * un second premier niveau casserait la navigation par titres d'un lecteur d'écran, qui
+ * est ici le sommaire réel du document.
+ *
+ * `scroll-margin-top: 4.5rem` et non `1rem` : la barre de tête de l'application est
+ * collante et haute de 56 px. Avec 1 rem, un chapitre atteint depuis le sommaire arrivait
+ * DERRIÈRE elle — son titre caché, la lecture commencée au deuxième paragraphe. Le défaut
+ * ne se voyait guère tant que le sommaire ne servait qu'une fois ; il se voit à chaque
+ * saut depuis une colonne collante.
  */
 .manual h2 {
   margin: 2.4rem 0 0.2rem;
   font-size: 19px;
   font-weight: 600;
   line-height: 1.3;
-  scroll-margin-top: 1rem;
+  scroll-margin-top: 4.5rem;
 }
 
 .manual h2:first-child { margin-top: 0; }
@@ -51,7 +57,7 @@
   font-size: 16px;
   font-weight: 600;
   line-height: 1.35;
-  scroll-margin-top: 1rem;
+  scroll-margin-top: 4.5rem;
 }
 
 /* Le rang du chapitre, en gris devant son titre : il donne au sommaire de quoi désigner
@@ -81,9 +87,15 @@
  * Des liens d'ancre, et pas un repli par chapitre : le manuel entier est dans la page,
  * donc la recherche du navigateur (Ctrl+F) le trouve en entier. Un accordéon rendrait
  * introuvable tout ce qui est fermé — c'est-à-dire tout, la première fois.
+ *
+ * Le sommaire est **collant** dès qu'il y a la place (voir `.manual__side`) : un lecteur
+ * arrivé au chapitre 9 doit pouvoir sauter au 3 sans remonter treize chapitres. En tête
+ * de document et rien d'autre, il ne servait qu'à la première minute.
  */
 .manual__toc {
   margin: 0 0 1.6rem;
+  /* Même décalage que les chapitres : la pastille de retour vise cette ancre. */
+  scroll-margin-top: 4.5rem;
   padding: 0.9rem 1rem;
   border: 1px solid var(--app-line);
   border-radius: 8px;
@@ -98,12 +110,68 @@
   text-transform: none;
 }
 
+/*
+ * `padding-left: 2rem` et non `1.4rem` : la puce du `<ol>` est dessinée DEHORS, dans ce
+ * rembourrage, et le filet du chapitre courant vient se poser à gauche d'elle. Sans cette
+ * rallonge, le filet mordrait sur le numéro.
+ */
 .manual__toc ol {
   margin: 0;
-  padding-left: 1.4rem;
+  padding-left: 2rem;
 }
 
-.manual__toc li { margin: 0.2rem 0; }
+/* `relative` : le filet du chapitre courant se pose par rapport à l'entrée, y compris
+   quand son intitulé passe sur deux lignes — il en couvre alors la hauteur entière. */
+.manual__toc li { margin: 0.4rem 0; position: relative; }
+
+/*
+ * 13 px et le gris de second plan : treize entrées côte à côte du texte doivent se lire
+ * comme un appareil de navigation, pas comme un deuxième texte.
+ *
+ * Sans soulignement, contrairement aux liens du texte. Treize traits empilés dans une
+ * colonne de 232 px, dont la moitié sur deux lignes, font une grille, et le filet ambre du
+ * chapitre courant s'y perd. Ce qui dit « ce sont des liens » est ici la liste elle-même,
+ * dans une région de navigation nommée ; le soulignement revient au survol et au focus,
+ * c'est-à-dire au moment où l'on vise.
+ */
+.manual__toc a {
+  font-size: 13px;
+  color: var(--app-ink-soft);
+  text-decoration: none;
+}
+
+.manual__toc a:hover,
+.manual__toc a:focus-visible { text-decoration: underline; }
+
+/*
+ * Le chapitre où l'on se trouve, marqué par `aria-current="location"`.
+ *
+ * Le repère est posé par `manualPage.ts` au défilement, et c'est la même information pour
+ * l'œil et pour le lecteur d'écran : dans un sommaire de treize entrées toujours visible,
+ * « où suis-je » est la question que la colonne doit répondre en premier.
+ *
+ * Trois marques, parce qu'aucune ne suffit seule : l'encre pleine (les autres entrées
+ * sont en gris), le gras, et un filet de 3 px à gauche. Le filet est ambre — c'est la
+ * seule teinte que cette feuille admet, celle de `--app-flag-*`, et elle sert ici de
+ * repère et non d'alerte : rien d'autre dans cette colonne ne porte de couleur, donc
+ * rien ne peut être confondu avec lui.
+ */
+.manual__toc a[aria-current='location'] {
+  font-weight: 600;
+  color: var(--app-ink);
+}
+
+.manual__toc li:has(> a[aria-current='location'])::before {
+  content: '';
+  position: absolute;
+  /* Le bord gauche du bloc, devant la puce : voir le rembourrage du `<ol>` ci-dessus. */
+  left: -2rem;
+  top: 0.1em;
+  bottom: 0.1em;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--app-flag-line);
+}
 
 .manual a {
   color: inherit;
@@ -212,27 +280,174 @@
   border-top: 1px solid var(--app-line);
 }
 
+/* --------------------------------------------------- les deux colonnes de la page */
+
+/*
+ * Le sommaire à gauche, le texte à droite — et la largeur totale est celle de l'éditeur.
+ *
+ * Trois demandes tenaient ensemble et se règlent ici d'un seul geste :
+ *
+ * 1. **la même largeur que l'éditeur.** `.manual-page` ne borne plus rien : c'est
+ *    `.content` d'`app.css` (1180 px, rembourrage compris) qui donne la mesure, la même
+ *    boîte que la vue d'ensemble. Passer d'un écran à l'autre ne déplace plus le cadre ;
+ * 2. **une table des matières qui reste sous les yeux.** La largeur gagnée sert à une
+ *    colonne collante plutôt qu'à rallonger les lignes ;
+ * 3. **une seule page.** Le texte reste entier, donc la recherche du navigateur le
+ *    trouve entier — voir le commentaire de `.manual__toc`.
+ *
+ * ⚠ La règle « rien ne partage la largeur avec le rendu de la page » (`CLAUDE.md`) vise
+ * le dessin d'une page de vol, que le pilote regarde au-delà de 100 % de zoom. Le manuel
+ * n'en affiche aucune : rien ici ne dispute sa place à une plaque.
+ *
+ * ## L'ordre de lecture, d'abord ; les colonnes, ensuite
+ *
+ * Ce qui suit est écrit **une colonne d'abord** : sans la requête de média, le manuel est
+ * un fil unique — avertissement, sommaire, chapitres —, c'est-à-dire exactement l'ordre du
+ * document et exactement la mise en page d'avant. C'est aussi l'ordre qu'un lecteur
+ * d'écran et une tabulation suivent, quelle que soit la largeur.
+ *
+ * La colonne latérale n'est qu'un enrichissement de cet état-là, accordé quand la place
+ * existe. Écrit dans l'autre sens — deux colonnes que le mobile défait —, chaque règle du
+ * repli aurait à annuler une règle de la mise en page large, et une seule oubliée suffit
+ * à casser le téléphone, qui est justement là où personne ne regarde.
+ */
+
+/* La mesure de lecture, et le seul endroit où elle s'écrit. Le sommaire la partage tant
+   qu'il est dans le fil : sous la mesure du texte, il se lirait comme une autre colonne. */
+.manual__lead,
+.manual__text,
+.manual__side {
+  width: 100%;
+  max-width: 40rem;
+  margin-inline: auto;
+}
+
+/*
+ * Le retour au sommaire, quand le sommaire n'est plus sous les yeux.
+ *
+ * Sans elle, replier la colonne dans le fil rendrait au lecteur du chapitre 9 le défaut
+ * qu'on corrige : treize chapitres à remonter pour atteindre le chapitre 3. Elle vise
+ * l'ancre que `manualPage.ts` pose sur le sommaire, et le bouton « précédent » du
+ * navigateur ramène ensuite à la lecture.
+ */
+.manual-page__jump {
+  display: inline-flex;
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  /* Au-dessus du texte, sous la barre de tête (20) et sous toute modale (50). */
+  z-index: 18;
+  align-items: center;
+  padding: 0.45rem 0.85rem;
+  font-size: 13px;
+  line-height: 1.2;
+  border: 1px solid var(--app-line-strong);
+  border-radius: 999px;
+  background: var(--app-panel);
+  color: var(--app-ink);
+  text-decoration: none;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.18);
+}
+
+/* ------------------------------------------------- deux colonnes, quand il y a la place */
+
+/*
+ * 64 rem : 14,5 rem de sommaire plus 40 rem de texte plus l'écart et les rembourrages
+ * demandent environ 1 060 px. En dessous, ce serait la mesure de lecture qui paierait la
+ * colonne — or le sommaire est un service rendu au texte, pas l'inverse.
+ *
+ * Les trois mesures viennent de la maquette validée (`CManuel.dc.html`) : colonne de
+ * 232 px, écart de 34 px, texte borné à 640 px. Écrites en `rem` et non en pixels — elles
+ * suivent alors la taille de police du navigateur, qu'un pilote qui lit mal augmente.
+ *
+ * 640 px remplacent les `65ch` d'avant. C'est la même mesure de lecture à trois caractères
+ * près, mais elle ne bougera pas le jour où la police du corps changera : `ch` dépend de
+ * la police, et une colonne de sommaire fixe en face d'un texte qui s'élargit tout seul
+ * finirait par ne plus tenir.
+ */
+@media (min-width: 64rem) {
+  .manual__cols {
+    display: grid;
+    grid-template-columns: 14.5rem minmax(0, 1fr);
+    column-gap: 2.125rem;
+    align-items: start;
+  }
+
+  /*
+   * Placement explicite, parce que l'ordre du document et l'ordre des colonnes n'ont
+   * aucune raison de coïncider : le sommaire est le deuxième bloc du fil — après
+   * l'avertissement, qui doit rester premier —, et sa colonne est la première.
+   */
+  .manual__lead { grid-column: 2; grid-row: 1; }
+  .manual__side { grid-column: 1; grid-row: 1 / span 2; }
+  .manual__text { grid-column: 2; grid-row: 2; }
+
+  /*
+   * Le texte se cale à GAUCHE de sa colonne, et non au milieu.
+   *
+   * C'est ce qui donne les 34 px d'écart de la maquette : centré dans une colonne plus
+   * large que lui, il s'en éloignerait de 147 px et le sommaire cesserait de se lire
+   * comme sa marge. Le blanc qui reste va à droite, où il ne sépare rien.
+   */
+  .manual__lead,
+  .manual__text { margin-inline: 0; }
+
+  /*
+   * `top: 4.5rem` : la barre de tête de l'application est elle-même collante et haute de
+   * 56 px (mesurée au navigateur, fenêtre 1400 × 950). Sans ce décalage, le sommaire se
+   * collerait DERRIÈRE elle et ses premières entrées seraient inatteignables.
+   *
+   * Le plafond de hauteur et son `overflow` sont là pour la fenêtre courte : treize
+   * entrées tiennent dans 950 px, pas dans 600. `overscroll-behavior: contain` évite
+   * qu'un défilement arrivé au bout du sommaire n'emporte la page derrière.
+   */
+  .manual__side {
+    position: sticky;
+    top: 4.5rem;
+    max-width: none;
+    max-height: calc(100vh - 6rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  /*
+   * Dans la colonne, le sommaire perd son cadre.
+   *
+   * L'encadré servait à le délimiter quand il était un bloc posé au milieu du fil ; une
+   * colonne à part est déjà délimitée par sa place. Le cadre y ferait de la navigation un
+   * quatrième encadré, à côté des trois que cette feuille s'autorise (note, mesuré,
+   * avertissement) — et le filet ambre du chapitre courant se lirait comme une décoration
+   * de boîte plutôt que comme un repère.
+   */
+  .manual__side .manual__toc {
+    margin-bottom: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+
+  /* Le sommaire est là, à demeure : la pastille ne serait qu'un doublon flottant. */
+  .manual-page__jump { display: none; }
+}
+
 /* -------------------------------------------------------------------------- écrans étroits */
 
 /*
- * Un pilote consulte le manuel sur le téléphone qu'il a en main au décollage. La boîte
- * modale y occupe presque tout l'écran, la largeur de ligne n'a plus lieu d'être limitée,
- * et un intitulé cité ne doit plus refuser de se couper : `nowrap` sur « Rétablir la
- * valeur d'usine » déborderait la fenêtre plutôt que de passer à la ligne.
+ * Un pilote consulte le manuel sur le téléphone qu'il a en main au décollage. La page y
+ * occupe tout l'écran, la largeur de ligne n'a plus lieu d'être limitée, et un intitulé
+ * cité ne doit plus refuser de se couper : `nowrap` sur « Rétablir la valeur d'usine »
+ * déborderait la fenêtre plutôt que de passer à la ligne.
  */
 @media (max-width: 30rem) {
   .manual { font-size: 15.5px; }
   .manual__ui { white-space: normal; }
   .manual h2 { font-size: 18px; }
+  /* 13 px valent pour une colonne latérale qu'on survole à la souris. Sur le téléphone,
+     le sommaire est le bloc principal de l'écran et se vise au doigt : 14 px, ce qui
+     porte aussi la hauteur de chaque entrée au-delà de la cible minimale. */
+  .manual__toc a { font-size: 14px; }
 }
 
-/*
- * La modale qui porte le manuel.
- *
- * Écrite ici plutôt que dans `app.css` : elle n'a de sens qu'avec ce fragment, et cette
- * feuille voyage déjà avec lui dans le même morceau chargé à la demande. La largeur est
- * celle de la bibliothèque — un texte suivi se lit mal au-delà.
- */
 /*
  * La page qui porte le manuel.
  *
@@ -240,10 +455,11 @@
  * défilement revient au navigateur — donc la position se garde, la recherche du navigateur
  * fonctionne, et l'impression aussi.
  *
- * La largeur reste bornée : un texte suivi se lit mal au-delà d'une cinquantaine de
- * caractères par ligne, quelle que soit la place disponible.
+ * Ni largeur ni rembourrage latéral : `.content` d'`app.css` porte déjà les deux, et les
+ * redoubler ici rendrait le manuel plus étroit que l'éditeur de quelques pixels — soit
+ * précisément le défaut qu'on corrige, en plus discret.
  */
-.manual-page { max-width: 52rem; margin: 0 auto; padding: 0 1rem 4rem; }
+.manual-page { padding: 0 0 4rem; }
 
 .manual-page__head {
   display: flex;
