@@ -1,0 +1,43 @@
+RECTIFICATIF — ce commit porte le message d'un autre.
+
+Le 2026-08-22, deux chantiers parallèles ont commité à quelques secondes
+d'intervalle. Un « git commit --amend » destiné à corriger le message de
+9f8cec2 a atterri sur celui-ci, qui venait de se glisser entre-temps : le
+sujet et le corps que ce commit affiche appartiennent à 9f8cec2 (le filet
+rendu aux commandes discrètes), pas à ses fichiers.
+
+L'histoire n'a délibérément PAS été réécrite : le rapport de validation sur
+l'AIR³ du 2026-08-22 cite cette empreinte comme celle du code éprouvé sur
+l'appareil. Rompre ce lien pour corriger un message coûterait plus cher que
+le message ne vaut.
+
+Voici le message qui aurait dû être le sien.
+
+--------------------------------------------------------------------------
+fix(i18n): chaque touche dit d'où vient le nom qu'elle porte
+
+Le pilote-testeur du 2026-08-22 a lu « volume haut » deux lignes au-dessus de
+`KEYCODE_STEM_2` — la touche qu'il presse le plus en compétition — et en a
+conclu à une traduction oubliée : « pourquoi les touches de volume sont
+traduites et pas les autres ? ».
+
+Ce n'en est pas une. Les deux noms n'ont pas la même provenance, et rien ne le
+disait :
+
+- « volume haut », « marche/arrêt » viennent de `keyCodes.hardwareKeys[].label`
+  de `preferenceDomains.json` — un relevé fait à la main sur un boîtier, donc
+  une donnée de mesure, qui reste en français dans les cinq langues et n'existe
+  que pour les modèles qu'on a eus entre les mains : trois touches sur l'AIR³ 7.2 ;
+- `KEYCODE_STEM_2` vient de la table des touches d'Android, lue dans l'`android.jar`
+  du SDK (`keyCodes.source`, API 36). Elle nomme un code, pas un bouton.
+
+Un nom qui manque est donc une mesure qui manque. Aucun nom n'est inventé pour
+autant : `bindingOrigin` dit la provenance ligne par ligne en infobulle,
+`keyNamingNote` l'écrit une fois sous le bloc, en clair, et le manuel gagne la
+section sur les touches physiques qui lui manquait — avec le seul moyen sûr de
+savoir laquelle est laquelle, qui est sur l'instrument.
+
+⚠ Rien ici n'affirme qu'une touche n'existe pas : le parc n'est pas homogène.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01SZwZAQePoKsAXbJFmpV4LC
