@@ -203,7 +203,7 @@ const model: DomainCatalog<'model'> = {
   'suspectClue.letters': 'Deze tekst bevat letters met accenten of tekens buiten het ' +
     'eenvoudige Latijnse alfabet: hij is geschreven, niet uit een lijst gekozen.',
   'suspectClue.sentence': 'Deze tekst bevat een spatie: hij leest als een zin, niet als een ' +
-    'waarde die je uit een lijst kiest.',
+    'waarde die u uit een lijst kiest.',
 
   /* -------- de controle vóór het vliegen — zie `fr/model.ts` over de drie veronderstellingen */
 

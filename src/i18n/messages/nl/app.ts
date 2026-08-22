@@ -9,12 +9,12 @@ const app: DomainCatalog<'app'> = {
   'zoom.label': 'Zoom',
 
   'pageKind.free': 'Lege pagina',
-  'pageKind.freeNote': 'Leeg aangemaakt op het instrument, klaar voor je eigen widgets.',
+  'pageKind.freeNote': 'Leeg aangemaakt op het instrument, klaar voor uw eigen widgets.',
   'pageKind.competition': 'Wedstrijdpagina',
   'pageKind.competitionNote': 'Aangemaakt met de wedstrijdwidgets van het instrument.',
   'pageKind.thermalAssistant': 'Pagina thermiekassistent',
   'pageKind.thermalAssistantNote': 'Aangemaakt met de widgets van de thermiekassistent. Naar ' +
-    'dit paginatype schakelt het toestel vanzelf over zodra je gaat kringen.',
+    'dit paginatype schakelt het toestel vanzelf over zodra u gaat kringen.',
   'pageKind.xcAssistant': 'Pagina XC-assistent',
   'pageKind.xcAssistantNote': 'Aangemaakt met de widgets voor FAI-driehoek en routes.',
   'pageKind.unknown': 'Onbekend paginatype',
@@ -60,7 +60,7 @@ const app: DomainCatalog<'app'> = {
 
   'view.widgetSpoken': '{name}, {width} bij {height} millimeter',
 
-  'view.scaleAdvice': 'De pagina wordt getekend op ware grootte, zoals op het toestel. Je ' +
+  'view.scaleAdvice': 'De pagina wordt getekend op ware grootte, zoals op het toestel. Uw ' +
     'scherm heeft niet per se de pixeldichtheid die de browser aanneemt: stel de zoom bij ' +
     'tot een echte liniaal op het scherm samenvalt met de schaalverdeling.',
 
@@ -123,22 +123,22 @@ const app: DomainCatalog<'app'> = {
   'app.dropVeil': 'Laat het bestand los om het te openen',
 
   'app.settings': 'Instellingen',
-  'app.settingsHint': 'Algemene instellingen — alles wat je buiten de widgetpagina’s ' +
+  'app.settingsHint': 'Algemene instellingen — alles wat u buiten de widgetpagina’s ' +
     'instelt: eenheden, knoppen, sensoren, geluid, luchtruimen.',
 
   'menu.file': 'Bestand',
   'menu.openFile': 'Een bestand openen…',
-  'menu.openFileHint': 'Kies een .xcfg of .xczfg die je uit het instrument hebt geëxporteerd. ' +
+  'menu.openFileHint': 'Kies een .xcfg of .xczfg die u uit het instrument hebt geëxporteerd. ' +
     'Het bestand blijft op deze machine.',
   'menu.library': 'Bibliotheek…',
-  'menu.libraryHint': 'Bewaar de geopende configuratie onder een naam en vind terug wat je ' +
+  'menu.libraryHint': 'Bewaar de geopende configuratie onder een naam en vind terug wat u ' +
     'al bewaard hebt. Alles blijft in deze browser: geen server, geen account.',
   'menu.version': 'Versie en compatibiliteit…',
-  'menu.versionHint': 'Kies de XCTrack-versie die je voor ogen hebt en zie wat dit bestand ' +
+  'menu.versionHint': 'Kies de XCTrack-versie die u voor ogen hebt en zie wat dit bestand ' +
     'bevat dat die versie niet kent — of omgekeerd.',
   'menu.manual': 'Handleiding…',
-  'menu.manualHint': 'Hoe je het bestand uit het instrument haalt, je pagina’s voorbereidt, ' +
-    'en wat je nooit mag delen.',
+  'menu.manualHint': 'Hoe u het bestand uit het instrument haalt, uw pagina’s voorbereidt, ' +
+    'en wat u nooit mag delen.',
 
   'app.saveCopy': 'Een kopie opslaan',
   'app.saveChanges': 'De wijzigingen opslaan',
@@ -154,17 +154,17 @@ const app: DomainCatalog<'app'> = {
   'action.undoNothing': 'Niets ongedaan te maken',
   'action.undoNamed': 'Ongedaan maken: {what}',
 
-  'landing.title': 'Zet je XCTrack-pagina’s klaar voordat je vliegt',
-  'landing.lead': 'Open een .xcfg- of .xczfg-bestand dat je uit het instrument hebt ' +
+  'landing.title': 'Zet uw XCTrack-pagina’s klaar voordat u vliegt',
+  'landing.lead': 'Open een .xcfg- of .xczfg-bestand dat u uit het instrument hebt ' +
     'geëxporteerd: de pagina’s verschijnen precies zoals het toestel ze tekent, op ware ' +
     'grootte. Verplaats een widget, wijzig het formaat, voeg er meer toe, en neem daarna een ' +
     'verse kopie mee terug naar de SD-kaart.',
 
-  'landing.privacy': 'Je bestand verlaat deze machine niet: alles gebeurt in deze browser, ' +
-    'zonder server en zonder account. En wat je niet hebt aangeraakt, komt er precies zo uit ' +
-    'als het erin ging, zonder één herschreven komma — je instellingen blijven van jou.',
+  'landing.privacy': 'Uw bestand verlaat deze machine niet: alles gebeurt in deze browser, ' +
+    'zonder server en zonder account. En wat u niet hebt aangeraakt, komt er precies zo uit ' +
+    'als het erin ging, zonder één herschreven komma — uw instellingen blijven van u.',
 
-  'landing.dropHere': 'Laat je bestand hier los',
+  'landing.dropHere': 'Laat uw bestand hier los',
   'landing.dropOrPick': 'of klik om het te kiezen — .xcfg of .xczfg',
 
   'landing.stepDeviceTitle': 'Op het instrument',
@@ -174,15 +174,15 @@ const app: DomainCatalog<'app'> = {
   'landing.stepHereText': 'De pagina’s verschijnen genummerd, in de volgorde waarin ‘volgende ' +
     'pagina’ ze tijdens de vlucht doorloopt.',
   'landing.stepEditTitle': 'Bewerken',
-  'landing.stepEditText': 'Verplaats een widget met je vinger of de muis, verander het ' +
-    'formaat, voeg er andere toe: de pagina wordt voor je ogen op ware grootte hertekend.',
+  'landing.stepEditText': 'Verplaats een widget met uw vinger of de muis, verander het ' +
+    'formaat, voeg er andere toe: de pagina wordt voor uw ogen op ware grootte hertekend.',
   'landing.stepKnowTitle': 'Goed om te weten',
   'landing.stepKnowText': 'Het is de instelling ‘navigations’ van een pagina, en niet het ' +
     'paginatype, die bepaalt wanneer het toestel ze toont.',
 
-  'landing.returning': 'Al eens langs geweest? De configuraties die je bewaard hebt, staan in ' +
+  'landing.returning': 'Al eens langs geweest? De configuraties die u bewaard hebt, staan in ' +
     'het menu ‘Bestand’ rechtsboven, onder ‘Bibliotheek’: ze zijn deze browser nooit uit geweest.',
-  'landing.manualLead': 'Voor het eerst hier? De handleiding zegt wat dit gereedschap doet, wat op het toestel gemeten is, en wat een configuratiebestand over jou prijsgeeft.',
+  'landing.manualLead': 'Voor het eerst hier? De handleiding zegt wat dit gereedschap doet, wat op het toestel gemeten is, en wat een configuratiebestand over u prijsgeeft.',
   'landing.readManual': 'De handleiding lezen',
 
   'app.uiLanguage': 'Taal van de interface',
@@ -211,11 +211,11 @@ const app: DomainCatalog<'app'> = {
     other: 'Details bekijken ({count})'
   },
   'app.attentionTitle': 'Na te kijken in dit bestand',
-  'app.revealsTitle': 'Wat dit bestand over jou prijsgeeft',
+  'app.revealsTitle': 'Wat dit bestand over u prijsgeeft',
 
   'app.editModeNote': 'Bewerkmodus: open een pagina om er widgets aan toe te voegen, ze te ' +
     'verplaatsen en hun opties in te stellen. De pagina’s zelf — toevoegen, dupliceren, ' +
-    'verwijderen, van volgorde wisselen — beheer je hier.',
+    'verwijderen, van volgorde wisselen — beheert u hier.',
 
   'dock.settingCount': {
     one: '{count} instelling',
@@ -268,10 +268,10 @@ const app: DomainCatalog<'app'> = {
 
   'app.managePagesLead': 'Invoegen, dupliceren, verwijderen, van volgorde wisselen. Elke ' +
     'bewerking wordt vastgelegd: ‘Ongedaan maken’ draait ze terug zoals de rest. Het type ' +
-    'van een pagina kun je hier niet wijzigen — XCTrack legt het bij het aanmaken vast, en ' +
+    'van een pagina kunt u hier niet wijzigen — XCTrack legt het bij het aanmaken vast, en ' +
     'wat een wijziging achteraf doet, is niet op het toestel nagegaan.',
 
-  'app.pageOperationFailed': 'Deze wijziging kon niet worden doorgevoerd: je pagina’s zijn ' +
+  'app.pageOperationFailed': 'Deze wijziging kon niet worden doorgevoerd: uw pagina’s zijn ' +
     'niet verschoven. Technisch detail: {detail}',
 
   'app.repository': 'Het project op GitHub — een probleem melden, een verbetering voorstellen',
@@ -293,29 +293,29 @@ const app: DomainCatalog<'app'> = {
   'app.loadingManual': 'Handleiding laden…',
   'app.manualFailedMessage': 'Er is niets veranderd in uw bestand. Probeer opnieuw.',
   'app.manualFailedTitle': 'De handleiding kon niet worden geopend',
-  'app.fileUntouchedRetry': 'Je bestand is niet gewijzigd. Probeer het opnieuw.',
+  'app.fileUntouchedRetry': 'Uw bestand is niet gewijzigd. Probeer het opnieuw.',
 
   'app.versionDialogTitle': 'Beoogde versie en compatibiliteit',
   'app.versionLead': 'Het formaat van XCTrack verandert bij elke versie. Kies de versie die ' +
-    'je voor ogen hebt: de editor zegt dan wat dit bestand bevat dat die versie niet kent, en ' +
+    'u voor ogen hebt: de editor zegt dan wat dit bestand bevat dat die versie niet kent, en ' +
     'wat ze verwacht en er niet in staat. Het is een vaststelling: er verandert niets zolang ' +
-    'je er niet om vraagt.',
+    'u er niet om vraagt.',
   'app.loadingVersions': 'Versiegegevens laden…',
   'app.versionFailedTitle': 'Het versieoverzicht kon niet worden geopend',
   'app.versionFailedMessage': 'De lijst met XCTrack-versies kon niet worden geladen.',
 
   'app.libraryFailedTitle': 'De bibliotheek kon niet worden geopend',
-  'app.libraryFailedMessage': 'Je browser gaf dit gereedschap geen toegang tot zijn opslag. ' +
+  'app.libraryFailedMessage': 'Uw browser gaf dit gereedschap geen toegang tot zijn opslag. ' +
     'Het geopende bestand is niet gewijzigd.',
 
   'app.exportDialogFailedTitle': 'Het opslagvenster kon niet worden geopend',
-  'app.exportDialogFailedMessage': 'Er is niets opgeslagen en je bestand is niet gewijzigd. ' +
+  'app.exportDialogFailedMessage': 'Er is niets opgeslagen en uw bestand is niet gewijzigd. ' +
     'Probeer het opnieuw.',
 
   'app.openFailedTitle': 'Dit bestand kon niet worden geopend',
   'app.openFailedMessage': 'Dit gereedschap wist er niets mee aan te vangen. Het bestand zelf ' +
     'is niet gewijzigd.',
-  'app.openFailedHint': 'Ga na of het echt een XCTrack-export is (.xcfg of .xczfg). Je kunt ' +
+  'app.openFailedHint': 'Ga na of het echt een XCTrack-export is (.xcfg of .xczfg). U kunt ' +
     'ergens op deze pagina een ander bestand loslaten, of er een kiezen in het menu ' +
     '‘Bestand’ rechtsboven.',
 
@@ -325,13 +325,13 @@ const app: DomainCatalog<'app'> = {
   'app.unreadableHint': 'De bytes blijven ongeschonden bewaard: ‘Een kopie opslaan’ geeft het ' +
     'bestand terug zoals het erin ging, zonder ook maar iets te herschrijven.',
   'app.unreadableIncoming': '‘{incoming}’ leverde niets bruikbaars op. ‘{kept}’ blijft open, ' +
-    'en alles wat je daarin veranderd hebt, staat er nog.',
+    'en alles wat u daarin veranderd hebt, staat er nog.',
 
-  'app.unsavedTitle': 'Je wijzigingen zijn niet opgeslagen',
-  'app.replaceMessage': '‘{incoming}’ openen sluit ‘{kept}’ en alles wat je daar net ' +
+  'app.unsavedTitle': 'Uw wijzigingen zijn niet opgeslagen',
+  'app.replaceMessage': '‘{incoming}’ openen sluit ‘{kept}’ en alles wat u daar net ' +
     'veranderd hebt. Dit gereedschap bewaart uit zichzelf niets: wat niet opgeslagen is, is weg.',
   'app.lastChange': 'Laatste wijziging: ‘{change}’.',
-  'app.replaceHint': 'Om niets te verliezen: houd je wijzigingen, en gebruik dan ‘De ' +
+  'app.replaceHint': 'Om niets te verliezen: houd uw wijzigingen, en gebruik dan ‘De ' +
     'wijzigingen opslaan’ boven aan de pagina — of berg deze configuratie op in de bibliotheek.',
   'app.replaceAndLose': '‘{incoming}’ openen en ze kwijtraken',
   'app.keepChanges': 'Mijn wijzigingen houden'
