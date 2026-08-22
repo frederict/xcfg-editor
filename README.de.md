@@ -239,7 +239,17 @@ Absicht — ein Treueversprechen, das nur der Autor nachprüfen kann, ist nichts
 - **Mehrere Konfigurationen unter einem Namen ablegen**, in Ihrem Browser, und zu einer
   davon zurückkehren: eine für den Wettkampf, eine für das Biwakfliegen, eine für die
   Schule. Die abgelegten Bytes sind die Ihrer Datei, beim Wiedereinlesen anhand der
-  Prüfsumme geprüft. Nichts wird irgendwohin gesendet.
+  Prüfsumme geprüft. Nichts wird irgendwohin gesendet. Jeder Eintrag trägt eine
+  **Miniatur** — die erste Querformat-Seite, die Ihr Gerät wirklich zeigt; die von keiner
+  Navigation aufgerufene wird übersprungen, da Sie sie nie sehen; gibt es kein Querformat,
+  dann Hochformat. Der „Steckbrief“ zeigt sie groß unter der Überschrift „Vorschau“. Zwei
+  Dinge folgen daraus, und man sollte sie wissen, bevor man eine echte Konfiguration
+  ablegt: **Ihre eigenen Texte sind dort verdeckt** — eigene Titel, freier Text, Anrufkarte
+  werden zu grauen Balken, Rahmen und Platz des Widgets bleiben unversehrt, denn ein Bild
+  entgeht der Anonymisierung, die nur an der Datei arbeitet; und **das Bibliotheksarchiv
+  nimmt keine Miniatur mit**, weder das Bild noch die Zeile, die es ankündigt, ein Import
+  glaubt keine, der Editor erstellt sie hier neu. Ein Eintrag ohne Bild — vor der Funktion
+  abgelegt, aus einem Archiv zurück, unlesbar — zeigt eine ruhige Fläche, ohne ein Wort.
 - **Ihre Sprache sprechen, auf zwei Achsen, die man nicht verwechseln darf.** *Unsere*
   Prosa — die Oberfläche, das Handbuch, dieses README — gibt es in fünf Sprachen:
   Französisch, Englisch, Niederländisch, Deutsch, Spanisch. Die Namen und Beschreibungen
@@ -328,8 +338,6 @@ Sagen wir es gleich.
   Tasten, die Tabelle des akustischen Varios —, lassen sich hier nicht setzen, weil ihr
   Wertebereich nicht bekannt ist; und die acht `Unit.*`, deren Liste XCTrack im Code füllt,
   haben nur ein Textfeld statt einer erfundenen Liste.
-- **Keine Bildvorschau in der Bibliothek.** Der Platz ist in den Daten vorgesehen, die
-  Miniatur ist ein leerer Rahmen, der es sagt.
 - **Die Oberfläche gibt es in fünf Sprachen, die Bildschirmfotos dieser Datei in einer
   einzigen.** Oberfläche, Handbuch und dieses README sind auf Französisch, Englisch,
   Niederländisch, Deutsch und Spanisch übersetzt (`src/i18n/`). Die Bilder dagegen zeigen

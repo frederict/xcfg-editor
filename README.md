@@ -244,7 +244,17 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
 - **Ranger plusieurs configurations sous un nom**, dans votre navigateur, et revenir à
   l'une d'elles : une pour la compétition, une pour le vol-bivouac, une pour l'école. Les
   octets rangés sont ceux de votre fichier, vérifiés par empreinte à la relecture. Rien
-  n'est envoyé nulle part.
+  n'est envoyé nulle part. Chaque entrée porte une **vignette** — la première page paysage
+  que votre appareil affiche vraiment, celle qu'aucune navigation n'active étant sautée
+  puisque vous ne la voyez jamais ; à défaut de paysage, le portrait. La « Carte
+  d'identité » la reprend en grand sous le titre « Aperçu ». Deux choses en découlent,
+  qu'il vaut mieux savoir avant de ranger une configuration réelle : **vos textes y sont
+  masqués** — titres personnalisés, texte libre, fiche d'appel deviennent des barres
+  grises, le cadre et la place du gadget restant intacts, parce qu'une image échappe à
+  l'anonymisation, qui ne travaille que sur le fichier ; et **l'archive de bibliothèque
+  n'emporte aucune vignette**, ni l'image ni la ligne qui l'annonce, un import n'en croit
+  aucune, l'éditeur les refait ici. Une entrée qui n'en a pas — rangée avant la
+  fonctionnalité, revenue d'une archive, illisible — montre une surface calme, sans un mot.
 - **Parler votre langue, sur deux axes qui ne se confondent pas.** *Notre* prose —
   l'interface, le manuel, ce README — existe en cinq langues : français, anglais,
   néerlandais, allemand, espagnol. Les noms et descriptions *de XCTrack* sont ceux de
@@ -468,8 +478,6 @@ Autant le dire tout de suite.
   qui ouvrent une boîte sur l'appareil — les quinze touches, la table du vario sonore —
   ne se règlent pas ici, faute d'en connaître le domaine ; et les huit `Unit.*`, dont
   XCTrack remplit la liste en code, n'ont qu'un champ texte plutôt qu'une liste inventée.
-- **Aucun aperçu d'image dans la bibliothèque.** La place est réservée dans les données,
-  la vignette est un cadre vide qui le dit.
 - **L'interface existe en cinq langues, les captures d'écran de ce fichier en une
   seule.** L'interface, le manuel et ce README sont traduits en français, anglais,
   néerlandais, allemand et espagnol (`src/i18n/`). Les images, elles, montrent

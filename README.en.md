@@ -218,7 +218,16 @@ author can check is worth nothing.
 - **Store several configurations under a name**, inside your browser, and come back to
   one of them: one for competition, one for hike-and-fly, one for the school. The bytes
   stored are those of your file, checked by hash when read back. Nothing is sent
-  anywhere.
+  anywhere. Each entry carries a **thumbnail** — the first landscape page your device
+  really shows, the one no navigation ever brings up being skipped since you never see it;
+  portrait if there is no landscape. The “Identity card” shows it large under the
+  “Preview” heading. Two things follow, worth knowing before you store a real
+  configuration: **your own texts are masked there** — custom titles, free text, call card
+  become grey bars, the widget's frame and place left intact, because an image escapes the
+  anonymisation, which only works on the file; and **the library archive carries no
+  thumbnail**, neither the image nor the line announcing it, an import believes none, the
+  editor rebuilds them here. An entry without one — stored before the feature, back from an
+  archive, unreadable — shows a quiet surface, without a word.
 - **Speak your language, along two axes that must not be confused.** *Our* prose — the
   interface, the manual, this README — exists in five languages: French, English, Dutch,
   German, Spanish. The names and descriptions *of XCTrack* are the application's own,
@@ -307,8 +316,6 @@ Better said straight away.
   vario table — cannot be set here, for want of knowing their domain; and the eight
   `Unit.*`, whose list XCTrack fills in code, get a text field rather than an invented
   list.
-- **No image preview in the library.** The space is reserved in the data, the thumbnail
-  is an empty frame that says so.
 - **The interface exists in five languages, the screenshots in this file in one.** The
   interface, the manual and this README are translated into French, English, Dutch,
   German and Spanish (`src/i18n/`). The images, though, show the **French** interface:

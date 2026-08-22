@@ -228,7 +228,17 @@ de fidelidad que solo el autor puede comprobar no vale nada.
 - **Guardar varias configuraciones bajo un nombre**, en su navegador, y volver a una de
   ellas: una para la competición, una para el vivac, una para la escuela. Los bytes guardados
   son los de su archivo, comprobados por huella en cada lectura. No se envía nada a ninguna
-  parte.
+  parte. Cada entrada lleva una **miniatura**: la primera página en horizontal que su
+  aparato muestra de verdad — la que ninguna navegación activa se salta, puesto que usted
+  nunca la ve —, y en vertical si no hay ninguna en horizontal. La «Ficha de identidad» la
+  retoma en grande bajo el título «Vista previa». De ahí se siguen dos cosas, que conviene
+  saber antes de guardar una configuración real: **sus textos están ocultos ahí** — títulos
+  propios, texto libre, ficha de llamada se vuelven barras grises, y el marco y el sitio del
+  widget quedan intactos, porque una imagen escapa al anonimizado, que solo trabaja sobre el
+  archivo; y **el archivo comprimido de la biblioteca no lleva ninguna miniatura**, ni la
+  imagen ni la línea que la anuncia, y una importación no cree ninguna: el editor las rehace
+  aquí. Una entrada que no tenga — guardada antes de la función, vuelta de un archivo
+  comprimido, ilegible — muestra una superficie tranquila, sin una palabra.
 - **Hablar su idioma, en dos ejes que no se confunden.** *Nuestra* prosa — la interfaz, el
   manual, este README — existe en cinco idiomas: francés, inglés, neerlandés, alemán,
   español. Los nombres y descripciones *de XCTrack* son los de la propia aplicación,
@@ -314,8 +324,6 @@ Mejor decirlo de entrada.
   abren un cuadro en el aparato — los quince botones, la tabla del vario sonoro — no se
   ajustan aquí, por no conocer su dominio; y las ocho `Unit.*`, cuya lista XCTrack rellena en
   código, solo tienen un campo de texto en lugar de una lista inventada.
-- **Ninguna vista previa de imagen en la biblioteca.** El sitio está reservado en los datos,
-  la miniatura es un marco vacío que lo dice.
 - **La interfaz existe en cinco idiomas, las capturas de este archivo en uno solo.** La
   interfaz, el manual y este README están traducidos al francés, inglés, neerlandés, alemán y
   español (`src/i18n/`). Las imágenes, en cambio, muestran la interfaz **francesa**: rehacerlas

@@ -232,7 +232,18 @@ een belofte van getrouwheid die alleen de auteur kan nagaan, is niets waard.
 - **Meerdere configuraties onder een naam opbergen**, in uw browser, en naar een ervan
   terugkeren: een voor de wedstrijd, een voor de vliegbivak, een voor de school. De
   opgeborgen bytes zijn die van uw bestand, bij het herlezen met de vingerafdruk nagekeken.
-  Er wordt niets ergens naartoe gestuurd.
+  Er wordt niets ergens naartoe gestuurd. Elk item draagt een **miniatuur**: de eerste
+  liggende pagina die uw toestel echt toont — die welke geen enkele navigatie oproept wordt
+  overgeslagen, want u ziet haar nooit —, en staand als er geen liggende is. De
+  ‘Identiteitskaart’ toont haar groot onder de titel ‘Voorbeeld’. Daar volgen twee dingen
+  uit, die het waard zijn te weten voordat u een echte configuratie opbergt: **uw eigen
+  teksten zijn er verborgen** — eigen titels, vrije tekst, belkaart worden grijze balken,
+  terwijl het kader en de plaats van de widget ongemoeid blijven, want een beeld ontsnapt
+  aan het anonimiseren, dat alleen op het bestand werkt; en **het bibliotheekarchief neemt
+  geen enkele miniatuur mee**, noch het beeld noch de regel die het aankondigt, en een
+  invoer gelooft er geen enkele: de editor maakt ze hier opnieuw. Een item zonder beeld —
+  opgeborgen vóór de functie, terug uit een archief, onleesbaar — toont een rustig vlak,
+  zonder een woord.
 - **Uw taal spreken, langs twee assen die niet samenvallen.** *Onze* prose — de interface, de
   handleiding, deze README — bestaat in vijf talen: Frans, Engels, Nederlands, Duits, Spaans.
   De namen en beschrijvingen *van XCTrack* zijn die van de toepassing zelf, uit de APK
@@ -320,8 +331,6 @@ Dat kan net zo goed meteen gezegd worden.
   de akoestische vario — zijn hier niet instelbaar, bij gebrek aan kennis van hun
   waardenbereik; en de acht `Unit.*`, waarvan XCTrack de lijst in code vult, hebben alleen
   een tekstveld in plaats van een verzonnen lijst.
-- **Geen voorbeeldafbeelding in de bibliotheek.** De plaats is in de gegevens voorbehouden,
-  de miniatuur is een leeg kader dat het zegt.
 - **De interface bestaat in vijf talen, de schermafbeeldingen van dit bestand in één.** De
   interface, de handleiding en deze README zijn vertaald in het Frans, Engels, Nederlands,
   Duits en Spaans (`src/i18n/`). De afbeeldingen tonen de **Franse** interface: ze in vijf

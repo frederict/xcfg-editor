@@ -951,6 +951,41 @@
   <p>Cada entrada muestra además su cuenta de datos personales, con la forma «16 datos
   personales · 2 se van con las páginas». Las dos cifras se dicen siempre, incluido el cero.</p>
 
+  <h3>La miniatura: la página que se reconoce</h3>
+
+  <p>Cada entrada lleva una pequeña imagen de una de sus páginas, y la
+  <span class="manual__ui">Ficha de identidad</span> la retoma en grande bajo el título
+  <span class="manual__ui">Vista previa</span>, con el pie que dice cuál es. Es la
+  <strong>primera página en horizontal que su aparato muestra de verdad</strong>: la que
+  ninguna navegación activa se salta, puesto que usted nunca la ve. Una configuración que
+  solo tiene vertical muestra vertical, y si no hay nada que saltar, es la primera
+  página.</p>
+
+  <div class="manual__note">
+    <span class="manual__boxTitle">Lo que la miniatura oculta, y lo que no se lleva</span>
+    <p><strong>Sus textos están ocultos ahí.</strong> Títulos propios, texto libre, ficha de
+    llamada: el marco del widget, su fondo y su sitio quedan — es lo que mantiene la página
+    reconocible —, pero el contenido se sustituye por una barra gris. Una imagen escapa al
+    anonimizado, que solo trabaja sobre el archivo: un nombre escrito en píxeles se quedaría
+    ahí. Los textos ocultos son exactamente los que la ficha de identidad cuenta y los que
+    el cuadro de guardado propone reemplazar: una sola lista para los tres.</p>
+    <p><strong>El archivo comprimido no lleva ninguna miniatura</strong>, ni la imagen ni la
+    línea que la anuncia, y una importación no cree ninguna. Un archivo comprimido sale de
+    su navegador; una imagen de sus páginas, no. El editor las rehace aquí, en este aparato,
+    tras la importación.</p>
+  </div>
+
+  <p>Una entrada puede no tener ninguna imagen: guardada antes de que la miniatura
+  existiera, vuelta de un archivo comprimido, o con un archivo que el editor no sabe leer.
+  El marco queda entonces como una superficie tranquila, sin línea de puntos y sin una
+  palabra: los tres casos se parecen, y ninguno le pide nada. Las entradas sin imagen se
+  recuperan una a una, en segundo plano, en cuanto la lista aparece.</p>
+
+  <p>Por último, una miniatura <strong>no se vuelve a dibujar cuando usted cambia el idioma
+  de la interfaz</strong>: una imagen antigua conserva los nombres de los widgets en el
+  idioma que tenía el archivo cuando se hizo. Es a propósito, y sin consecuencia: una
+  configuración se reconoce por su disposición, no por la etiqueta de su altímetro.</p>
+
   <h3>Esto no es una copia de seguridad</h3>
 
   <div class="manual__warning">
@@ -1102,8 +1137,6 @@
   <h3>Lo que la interfaz todavía no hace</h3>
 
   <ul>
-    <li>La biblioteca no muestra vista previa de imagen: el sitio está reservado, la miniatura es
-    un marco vacío que lo dice.</li>
     <li>El cribado de los ajustes generales no lo propone todo: lo que el catálogo no ha
     registrado no se ofrece para ajustar, antes que ser adivinado.</li>
   </ul>
