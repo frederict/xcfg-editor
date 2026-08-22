@@ -23,17 +23,14 @@ statische Dateien ausgeliefert, sie hat keinen Server, mit dem sie sprechen kön
 
 ## Wie das aussieht
 
-> **Die Bildschirmfotos zeigen die französische Oberfläche, und das bleibt so.** Sie in
-> fünf Sprachen nachzustellen hieße, bei jeder Änderung an einem Bildschirm dreißig Bilder
-> neu aufzunehmen — sie würden an Ort und Stelle veralten. Geometrie und Handgriffe lassen
-> sich trotzdem ablesen. Die Oberfläche selbst gibt es natürlich auf Deutsch.
-
 ![Der Editor mit der ersten Querformat-Seite der Testsicherung: die Seite in
 Originalgröße gezeichnet, das Maßband darüber, die Widget-Leiste unten
 aufgeklappt.](captures/editeur-paysage.png)
 
 *Eine Seite der Testsicherung, in der Geometrie eines AIR³ 7.2 gezeichnet. Nichts teilt
-sich die Breite mit ihr: die Widget-Leiste liegt darunter.*
+sich die Breite mit ihr: die Widget-Leiste liegt darunter. **Ein einziges Bildschirmfoto
+für alle fünf Sprachen**: was es zeigt — die gezeichnete Seite, das Maßband, die Platte,
+die sie trägt — ist in allen fünf dasselbe, und darum bleibt es französisch.*
 
 ## Das Problem
 
@@ -270,41 +267,61 @@ Absicht — ein Treueversprechen, das nur der Autor nachprüfen kann, ist nichts
 aufgenommen, nie auf einer echten Konfiguration — eine angezeigte Karte kann eine Wohnung
 auf das Gebäude genau verraten.*
 
+*Die sechs folgenden Bildschirmfotos gibt es **in fünf Ausfertigungen**, eine je Sprache,
+weil dort der Text die Sache ist: dieses README zeigt die deutschen. Die Namen von Widgets
+und Einstellungen darauf folgen dagegen **der Sprache der geöffneten Datei**, sobald diese
+eine angibt — das ist die Trennung der beiden Achsen, und sie ist mit bloßem Auge auf dem
+Bildschirm der allgemeinen Einstellungen zu sehen, dessen Fixture Französisch angibt.*
+
 ![Der Einstellungsbereich des Widgets „Luftraum-Annäherung“ im Bearbeitungsmodus: drei
 Zeilen „Werkswert wiederherstellen“, die beide Werte zeigen, und unten der Block der
 Einstellung, die dieses Widget nicht schreibt, mit ihrer Schaltfläche „Diesen Wert
-festlegen“.](captures/panneau-gadget.png)
+festlegen“.](captures/panneau-gadget.de.png)
 
 *Der Bereich eines Widgets und die beiden Werkswert-Handgriffe, die er anbietet:
 wiederherstellen, was man eingestellt hat, oder festschreiben, was die Datei nicht sagt.*
 
-![Der Bildschirm „Android Integration“ der allgemeinen Einstellungen im
+![Der Bildschirm „Intégration Android“ der allgemeinen Einstellungen im
 Bearbeitungsmodus: Zeilen „Entfernen“ mit der Plakette „Werkswert“, Zeilen „Den Werkswert
 wiederherstellen“ mit der bernsteinfarbenen Plakette „von Ihnen gesetzt“, und zwei Zeilen
 „Diesen Wert schreiben“ mit der Plakette „fehlt in der
-Datei“.](captures/reglages-generaux.png)
+Datei“.](captures/reglages-generaux.de.png)
 
 *Die allgemeinen Einstellungen in der Baumstruktur des Gerätemenüs — und die drei
-Werkswert-Handgriffe auf einem einzigen Bildschirm vereint.*
+Werkswert-Handgriffe auf einem einzigen Bildschirm vereint. Hier zeigen sich auch die
+beiden Sprachachsen am deutlichsten: die Fixture gibt Französisch an, also bleiben die
+Namen der Einstellungen in allen fünf Ausfertigungen französisch — nur unsere eigene Prosa
+wechselt.*
 
-![Der Dialog „Version und Kompatibilität“: die Version 1.0.3-beta vorausgewählt, der Satz
-über die nicht unterscheidbaren Versionen, der Block VERALTET mit neun Einstellungen und
-der aufgeklappte Abschnitt „Entfernen, was eine ältere Version hinterlassen hat“ mit
-seinen neun Kästchen.](captures/version-et-nettoyage.png)
+![Der Dialog „Angepeilte Version und Kompatibilität“: die Version 1.0.3-beta
+vorausgewählt, der Satz über die nicht unterscheidbaren Versionen, der Block „Veraltete
+Einstellungen“ mit seinen neun Zeilen und der aufgeklappte Abschnitt „Entfernen, was eine
+ältere Version hinterlassen hat“ mit seinen neun
+Kästchen.](captures/version-et-nettoyage.de.png)
 
 *Die Versionswahl, die Diagnose und das Aufräumen, das sie eröffnet — neun Einstellungen
 auf vier Widgets, jede mit der letzten XCTrack-Version, die sie noch las.*
 
 ![Der Dialog „Diese Konfiguration speichern“: die drei Wege, dann das Verzeichnis der fünf
 ersetzten Texte — jeder mit seiner Seite, seinem Widget, dem durchgestrichenen alten Wert,
-dem neuen und dem Grund der Ersetzung.](captures/enregistrer-et-partager.png)
+dem neuen und dem Grund der Ersetzung.](captures/enregistrer-et-partager.de.png)
 
 *Beim Speichern: was die Datei verrät und was ersetzt werden kann — gezeigt vor dem
 Herunterladen, nicht danach.*
 
+![Der Dialog „Konfigurationsbibliothek“: zwei abgelegte Konfigurationen, jede mit ihrer
+Vorschau, ihrer Größe und ihrer Zahl persönlicher Angaben; bei der ersten sind die von
+Ihnen geschriebenen Texte durch graue Balken ersetzt. Am Fuß „Die ganze Bibliothek
+löschen“.](captures/bibliotheque.de.png)
+
+*Die Bibliothek lebt in Ihrem Browser, und nichts verlässt ihn. Jeder Eintrag sagt, was er
+an Persönlichem trägt und was mit den Seiten mitginge; seine Vorschau verdeckt Ihre Texte
+mit grauen Balken, denn ein Bild entgeht der Anonymisierung. Und „Die ganze Bibliothek
+löschen“ steht am Fuß der Liste, nicht in einer Einstellung versteckt.*
+
 ![Das Handbuch als ganze Seite: links das Inhaltsverzeichnis seiner dreizehn Kapitel,
 rechts ein eingerahmter Warnhinweis „Zu lesen, bevor Sie Ihre Datei irgendjemandem geben“,
-dann der Anfang von Kapitel 1.](captures/manuel.png)
+dann der Anfang von Kapitel 1.](captures/manuel.de.png)
 
 *Das Handbuch nimmt eine Seite in der Breite des Editors ein. Es beginnt mit dem
 Warnhinweis statt mit der Führung, und sein Inhaltsverzeichnis bleibt während der ganzen
@@ -340,17 +357,19 @@ Sagen wir es gleich.
   Tasten, die Tabelle des akustischen Varios —, lassen sich hier nicht setzen, weil ihr
   Wertebereich nicht bekannt ist; und die acht `Unit.*`, deren Liste XCTrack im Code füllt,
   haben nur ein Textfeld statt einer erfundenen Liste.
-- **Die Oberfläche gibt es in fünf Sprachen, die Bildschirmfotos dieser Datei in einer
-  einzigen.** Oberfläche, Handbuch und dieses README sind auf Französisch, Englisch,
-  Niederländisch, Deutsch und Spanisch übersetzt (`src/i18n/`). Die Bilder dagegen zeigen
-  die **französische** Oberfläche: sie in fünf Sprachen neu aufzunehmen hieße, bei jeder
-  Änderung an einem Bildschirm dreißig Bildschirmfotos zu wiederholen, und sie würden
-  veralten. Geometrie und Handgriffe lassen sich trotzdem ablesen. Die Beschriftungen von
+- **Eines der sieben Bildschirmfotos gibt es nur auf Französisch.** Oberfläche, Handbuch
+  und dieses README sind auf Französisch, Englisch, Niederländisch, Deutsch und Spanisch
+  übersetzt (`src/i18n/`), und sechs der sieben Bildschirmfotos folgen — jedes README
+  zeigt seine eigenen. Das siebte, der ganze Editor, hat nur eine Ausfertigung: seine
+  Sache ist eine gezeichnete Seite, ein Maßband und die Platte, die sie trägt, in allen
+  fünf Sprachen dieselben. Seine Bildunterschrift sagt es. Die Beschriftungen von
   XCTrack — Namen von Widgets, Optionen, Einstellungen — folgen nicht der Sprachwahl der
   Oberfläche, sondern **der der Datei**; erst wenn die Datei keine angibt, übernehmen sie
   die Sprache der Oberfläche. Das sind zwei verschiedene Achsen, und sie zu verwechseln
   hieße, einer tschechischen Pilotin englische Widget-Namen vorzusetzen,
-  während ihr Gerät sie ihr auf Tschechisch zeigt.
+  während ihr Gerät sie ihr auf Tschechisch zeigt. Das Bildschirmfoto der allgemeinen
+  Einstellungen zeigt es: seine Fixture gibt Französisch an, also bleiben seine Namen von
+  Einstellungen in allen fünf Sprachen französisch.
 
 ## Ihre Meinung sagen, melden, was nicht stimmt
 

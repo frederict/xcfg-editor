@@ -23,17 +23,14 @@ statische bestanden bediend, ze heeft geen server om tegen te praten.
 
 ## Hoe het eruitziet
 
-> De schermafbeeldingen tonen de **Franse** interface, en dat blijft zo. Ze in vijf talen
-> opnieuw maken zou dertig afbeeldingen betekenen die bij elk gewijzigd scherm opnieuw
-> gemaakt moeten worden — ze zouden ter plaatse verouderen. De meetkunde en de handelingen
-> zijn er evengoed op af te lezen; de interface zelf spreekt wel Nederlands.
-
 ![De editor geopend op de eerste liggende pagina van de testback-up: de pagina op ware
 grootte getekend, de meetlat erboven, het widgetpaneel onderaan
 uitgeklapt.](captures/editeur-paysage.png)
 
 *Een pagina uit de testback-up, getekend op de meetkunde van een AIR³ 7.2. Niets deelt de
-breedte met haar: het widgetpaneel gaat eronder door.*
+breedte met haar: het widgetpaneel gaat eronder door. **Eén enkele schermafbeelding voor
+de vijf talen**: wat zij toont — de getekende pagina, de meetlat, de plaat waarop zij
+rust — is in alle vijf hetzelfde, en daarom blijft zij in het Frans.*
 
 ## Het probleem
 
@@ -263,40 +260,58 @@ een belofte van getrouwheid die alleen de auteur kan nagaan, is niets waard.
 `tests/fixtures/`, nooit op een echte configuratie — een getoonde kaart kan een woonplaats
 tot op het gebouw verraden.*
 
+*De zes schermafbeeldingen hieronder bestaan **in vijf exemplaren**, één per taal, omdat
+de tekst er het onderwerp is: deze README toont de Nederlandse. De namen van widgets en
+instellingen die u erop leest, volgen **de taal van het geopende bestand** zodra het er
+een vermeldt — dat is de scheiding van de twee assen, en ze is met het blote oog te zien
+op het scherm van de algemene instellingen, waarvan de fixture het Frans vermeldt.*
+
 ![Het instellingenpaneel van de widget ‘Luchtruim afstand’, in bewerkmodus: drie regels
 ‘Fabriekswaarde terugzetten’ die de twee waarden tegenover elkaar tonen, en onderaan het
 blok met de instelling die deze widget niet schrijft, met zijn knop ‘Deze waarde
-vastleggen’.](captures/panneau-gadget.png)
+vastleggen’.](captures/panneau-gadget.nl.png)
 
 *Het paneel van een widget, en de twee fabriekswaardehandelingen die het biedt: terugzetten
 wat u hebt ingesteld, of vastleggen wat het bestand niet zegt.*
 
-![Het scherm ‘Android integratie’ van de algemene instellingen, in bewerkmodus: regels
+![Het scherm ‘Intégration Android’ van de algemene instellingen, in bewerkmodus: regels
 ‘Verwijderen’ met een pastille ‘fabriekswaarde’, regels ‘De fabriekswaarde terugzetten’ met
 een amberkleurige pastille ‘door u ingesteld’, en twee regels ‘Deze waarde schrijven’ met
-een pastille ‘ontbreekt in het bestand’.](captures/reglages-generaux.png)
+een pastille ‘ontbreekt in het bestand’.](captures/reglages-generaux.nl.png)
 
 *De algemene instellingen, in de boomstructuur van het instrumentmenu — en de drie
-fabriekswaardehandelingen samen op één scherm.*
+fabriekswaardehandelingen samen op één scherm. Hier zijn ook de twee taalassen het best te
+zien: de fixture vermeldt het Frans, dus blijven de namen van de instellingen Frans in
+alle vijf exemplaren — alleen onze eigen tekst verandert.*
 
 ![Het venster ‘Beoogde versie en compatibiliteit’: versie 1.0.3-beta voorgeselecteerd, de
-zin over de niet te onderscheiden versies, het blok VEROUDERD met negen instellingen, en de
-sectie ‘Weghalen wat een oudere versie heeft achtergelaten’ uitgeklapt op haar negen
-aankruisvakjes.](captures/version-et-nettoyage.png)
+zin over de niet te onderscheiden versies, het blok ‘Verouderde instellingen’ met zijn
+negen regels, en de sectie ‘Weghalen wat een oudere versie heeft achtergelaten’ uitgeklapt
+op haar negen aankruisvakjes.](captures/version-et-nettoyage.nl.png)
 
 *De versiekeuze, de diagnose, en het opruimen dat eruit voortkomt — negen instellingen, op
 vier widgets, elk met de laatste versie van XCTrack die ze nog las.*
 
 ![Het venster ‘Deze configuratie opslaan’: de drie uitwegen, en daarna de inventaris van de
 vijf vervangen teksten — elk met zijn pagina, zijn widget, de oude waarde doorstreept, de
-nieuwe, en de reden van de vervanging.](captures/enregistrer-et-partager.png)
+nieuwe, en de reden van de vervanging.](captures/enregistrer-et-partager.nl.png)
 
 *Bij het opslaan: wat het bestand prijsgeeft en wat kan worden vervangen — getoond vóór de
 download, niet erna.*
 
+![Het venster ‘Configuratiebibliotheek’: twee opgeborgen configuraties, elk met haar
+miniatuur, haar grootte en haar telling van persoonlijke gegevens; op de eerste zijn de
+teksten die u hebt geschreven vervangen door grijze balken. Onderaan ‘De hele bibliotheek
+wissen’.](captures/bibliotheque.nl.png)
+
+*De bibliotheek leeft in uw browser, en er gaat niets uit. Elke ingang zegt wat zij aan
+persoonlijks draagt en wat met de pagina’s mee zou vertrekken; haar miniatuur maskeert uw
+teksten met grijze balken, omdat een afbeelding aan de anonimisering ontsnapt. En ‘De hele
+bibliotheek wissen’ staat onderaan de lijst, niet weggestopt in een instelling.*
+
 ![De handleiding als volledige pagina: links de inhoudsopgave van de dertien
 hoofdstukken, rechts een omkaderde waarschuwing ‘Lees dit voordat u uw bestand aan wie dan
-ook geeft’, en daarna het begin van hoofdstuk 1.](captures/manuel.png)
+ook geeft’, en daarna het begin van hoofdstuk 1.](captures/manuel.nl.png)
 
 *De handleiding beslaat een pagina zo breed als de editor. Ze begint met de waarschuwing
 en niet met de rondleiding, en haar inhoudsopgave blijft tijdens het hele lezen links
@@ -332,17 +347,19 @@ Dat kan net zo goed meteen gezegd worden.
   de akoestische vario — zijn hier niet instelbaar, bij gebrek aan kennis van hun
   waardenbereik; en de acht `Unit.*`, waarvan XCTrack de lijst in code vult, hebben alleen
   een tekstveld in plaats van een verzonnen lijst.
-- **De interface bestaat in vijf talen, de schermafbeeldingen van dit bestand in één.** De
-  interface, de handleiding en deze README zijn vertaald in het Frans, Engels, Nederlands,
-  Duits en Spaans (`src/i18n/`). De afbeeldingen tonen de **Franse** interface: ze in vijf
-  talen opnieuw maken zou dertig schermafbeeldingen betekenen die bij elk gewijzigd scherm
-  opnieuw gemaakt moeten worden, en ze zouden verouderen. De meetkunde en de handelingen zijn
-  er evengoed op af te lezen. De opschriften van XCTrack — namen van widgets, van opties, van
+- **Eén van de zeven schermafbeeldingen bestaat alleen in het Frans.** De interface, de
+  handleiding en deze README zijn vertaald in het Frans, Engels, Nederlands, Duits en
+  Spaans (`src/i18n/`), en zes van de zeven schermafbeeldingen volgen — elke README toont
+  de zijne. De zevende, de hele editor, heeft één exemplaar: haar onderwerp is een
+  getekende pagina, een meetlat en de plaat waarop ze rusten, in alle vijf de talen
+  hetzelfde. Haar onderschrift zegt het. De opschriften van XCTrack — namen van widgets, van opties, van
   voorkeuren — volgen niet de taalkeuze van de interface maar **die van het bestand**;
   alleen bij gebrek daaraan, wanneer het bestand er geen vermeldt, nemen ze de taal van de
   interface over. Dat zijn twee verschillende assen, en ze verwarren zou een Tsjechische
   piloot widgetnamen in het Engels laten lezen terwijl zijn instrument ze hem in het
-  Tsjechisch toont.
+  Tsjechisch toont. De schermafbeelding van de algemene instellingen laat het zien: haar
+  fixture vermeldt het Frans, dus blijven haar namen van instellingen Frans in de vijf
+  talen.
 
 ## Uw mening geven, melden wat er mis is
 

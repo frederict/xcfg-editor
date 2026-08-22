@@ -195,19 +195,52 @@ describe('le README dans les cinq langues', () => {
     }
   })
 
-  it('montre les six captures, avec le même chemin dans les cinq langues', () => {
-    const shots = [
-      'captures/editeur-paysage.png',
-      'captures/panneau-gadget.png',
-      'captures/reglages-generaux.png',
-      'captures/version-et-nettoyage.png',
-      'captures/enregistrer-et-partager.png',
-      'captures/manuel.png'
-    ]
+  /**
+   * Les sept écrans, et lesquels sont traduits.
+   *
+   * **Six existent en cinq exemplaires** — `<nom>.<langue>.png` — parce que le texte y est
+   * le sujet : un panneau de réglages, une boîte de choix, le manuel. Chaque README montre
+   * les siens ; montrer une capture française à un lecteur allemand ferait de l'image un
+   * mensonge illustré, ce qu'aucun autre test ne verrait.
+   *
+   * **`editeur-paysage.png` n'en a qu'un.** Son sujet est une page dessinée, une règle
+   * graduée et la plaque qui la porte : la même géométrie dans les cinq langues. Les cinq
+   * légendes le disent au lecteur — c'est cette phrase-là, et non le fichier, qui empêche
+   * qu'on la prenne pour un oubli.
+   */
+  const LOCALISED_SHOTS = [
+    'panneau-gadget',
+    'reglages-generaux',
+    'version-et-nettoyage',
+    'enregistrer-et-partager',
+    'bibliotheque',
+    'manuel'
+  ]
+
+  it('montre les sept captures, chacune dans la langue de son README', () => {
     for (const language of UI_LANGUAGES) {
       const source = readme(language)
-      for (const shot of shots) {
-        expect(source, `README ${language} → ${shot}`).toContain(shot)
+      expect(source, `README ${language} → editeur-paysage`).toContain(
+        'captures/editeur-paysage.png'
+      )
+      for (const shot of LOCALISED_SHOTS) {
+        expect(source, `README ${language} → ${shot}`).toContain(
+          `captures/${shot}.${language}.png`
+        )
+      }
+    }
+  })
+
+  it('ne montre pas la capture d’une autre langue', () => {
+    for (const language of UI_LANGUAGES) {
+      const source = readme(language)
+      for (const shot of LOCALISED_SHOTS) {
+        for (const other of UI_LANGUAGES) {
+          if (other === language) continue
+          expect(source, `README ${language} → ${shot}.${other}`).not.toContain(
+            `captures/${shot}.${other}.png`
+          )
+        }
       }
     }
   })

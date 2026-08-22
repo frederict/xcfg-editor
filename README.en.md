@@ -27,11 +27,9 @@ real size, the graduated ruler above it, the widget panel unfolded at the
 bottom.](captures/editeur-paysage.png)
 
 *A page from the test backup, drawn to the geometry of an AIR³ 7.2. Nothing shares the
-width with it: the widget panel goes underneath.*
-
-**Every screenshot in this file shows the interface in French, and will keep doing so.**
-Redoing them in five languages would mean thirty images to retake every time a screen
-moves, and they would age in place. The geometry and the gestures read just as well.
+width with it: the widget panel goes underneath. **One single screenshot for all five
+languages**: what it shows — the drawn page, the graduated ruler, the bed it rests on —
+is the same in every one of them, so it is kept in French.*
 
 ## The problem
 
@@ -248,40 +246,57 @@ real configuration — a map on screen can give away a home address to within a 
 The recipe for each one is written as an HTML comment right below it in the French
 [`README.md`](README.md), so that people dare to retake it when a screen changes.*
 
+*The six screenshots below exist **in five copies**, one per language, because the text
+is what they are about: this README shows the English ones. The widget and setting names
+you read on them follow **the language of the open file** whenever it declares one — that
+is the separation of the two axes, and it is plain to see on the general-settings screen,
+whose fixture declares French.*
+
 ![The settings panel of the “Airspace proximity” widget, in editing mode: three “Restore the
 factory value” lines showing both values side by side, and at the bottom the block for
 the setting this widget does not write, with its “Set this value”
-button.](captures/panneau-gadget.png)
+button.](captures/panneau-gadget.en.png)
 
 *A widget panel, and the two factory-value gestures it offers: restore what you set, or
 pin down what the file does not say.*
 
-![The “Android integration” screen of the general settings, in editing mode: “Remove”
+![The “Intégration Android” screen of the general settings, in editing mode: “Remove”
 lines carrying a “factory value” pill, “Restore the factory value” lines carrying an amber
 “set by you” pill, and two “Write this value” lines marked “missing from the
-file”.](captures/reglages-generaux.png)
+file”.](captures/reglages-generaux.en.png)
 
 *The general settings, in the tree of the instrument's menu — and the three factory-value
-gestures brought together on one screen.*
+gestures brought together on one screen. This is also where the two language axes show
+best: the fixture declares French, so the setting names stay French in all five copies —
+only our own prose changes.*
 
-![The “Targeted release and compatibility” dialog: release 1.0.3-beta preselected, the
-sentence about indistinguishable releases, the OUTDATED block of nine settings, and the
-“Remove what an older release left behind” section unfolded on its nine
-tickboxes.](captures/version-et-nettoyage.png)
+![The “Target version and compatibility” dialog: release 1.0.3-beta preselected, the
+sentence about indistinguishable releases, the “Outdated settings” block and its nine
+lines, and the “Remove what an older release left behind” section unfolded on its nine
+tickboxes.](captures/version-et-nettoyage.en.png)
 
 *The version choice, the diagnosis, and the cleanup it opens — nine settings, across four
 widgets, each with the last XCTrack release that still read it.*
 
 ![The “Save this configuration” box: the three outcomes, then the inventory of the five
 replaced texts — each with its page, its widget, the old value struck through, the new
-one, and the reason for the replacement.](captures/enregistrer-et-partager.png)
+one, and the reason for the replacement.](captures/enregistrer-et-partager.en.png)
 
 *When you save, what the file reveals and what can be replaced — shown before the
 download, not after.*
 
+![The “Configuration library” box: two stored configurations, each with its thumbnail, its
+size and its count of personal items; on the first, the texts you wrote are replaced by
+grey bars. At the foot, “Erase the whole library”.](captures/bibliotheque.en.png)
+
+*The library lives in your browser, and nothing leaves it. Each entry says what it
+carries that is personal and what would travel with the pages; its thumbnail masks your
+texts with grey bars, because an image escapes the anonymisation. And “Erase the whole
+library” sits at the foot of the list, not hidden away in a setting.*
+
 ![The user manual as a full page: its thirteen chapters listed on the left, and on the
 right a boxed warning “Read this before giving your file to anyone”, then the beginning of
-chapter 1.](captures/manuel.png)
+chapter 1.](captures/manuel.en.png)
 
 *The manual takes up a page as wide as the editor. It starts with the warning rather than
 with the guided tour, and its contents stay on the left throughout the reading — with the
@@ -317,16 +332,17 @@ Better said straight away.
   vario table — cannot be set here, for want of knowing their domain; and the eight
   `Unit.*`, whose list XCTrack fills in code, get a text field rather than an invented
   list.
-- **The interface exists in five languages, the screenshots in this file in one.** The
-  interface, the manual and this README are translated into French, English, Dutch,
-  German and Spanish (`src/i18n/`). The images, though, show the **French** interface:
-  redoing them in five languages would mean thirty screenshots to retake every time a
-  screen moves, and they would age. The geometry and the gestures read just as well.
-  XCTrack's own labels — widget names, option names, preference names — do not follow the
-  interface language choice but **that of the file**; only failing that, when the file
-  declares none, do they take the interface language. These are two distinct axes, and
-  confusing them would make a Czech pilot read widget names in English while the
-  instrument shows them in Czech.
+- **One of the seven screenshots exists in French only.** The interface, the manual and
+  this README are translated into French, English, Dutch, German and Spanish
+  (`src/i18n/`), and six of the seven screenshots follow — each README shows its own. The
+  seventh, the whole editor, has a single copy: what it is about is a drawn page, a
+  graduated ruler and the bed they rest on, identical in all five languages. Its caption
+  says so. XCTrack's own labels — widget names, option names, preference names — do not
+  follow the interface language choice but **that of the file**; only failing that, when
+  the file declares none, do they take the interface language. These are two distinct
+  axes, and confusing them would make a Czech pilot read widget names in English while
+  the instrument shows them in Czech. The general-settings screenshot shows it: its
+  fixture declares French, so its setting names stay French in all five languages.
 
 ## Giving feedback, reporting what is wrong
 

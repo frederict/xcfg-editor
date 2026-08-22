@@ -117,9 +117,25 @@ vraie ».**
 ## Les captures d'écran
 
 Le `README.md` **doit** en porter — c'est un attendu, pas un agrément : un éditeur visuel
-qui ne montre rien demande un acte de foi. Il en porte six, dans `captures/`, chacune
-suivie de sa recette en commentaire HTML : l'écran, la fixture, l'état exact, le cadrage,
-et ce qu'il faut vérifier avant de commiter l'image.
+qui ne montre rien demande un acte de foi. Il en porte **sept écrans**, dans `captures/`,
+chacun suivi de sa recette en commentaire HTML **dans le `README.md` français** : l'écran,
+la fixture, l'état exact, le cadrage, et ce qu'il faut vérifier avant de commiter l'image.
+
+**Six de ces sept existent en cinq exemplaires**, `<nom>.<langue>.png`, un par README :
+ce sont ceux où le texte *est* le sujet — un panneau de réglages, une boîte de choix, le
+manuel. Le septième, `editeur-paysage.png`, n'a qu'un exemplaire : une page dessinée, une
+règle graduée et la plaque qui la porte sont les mêmes dans les cinq langues, et les cinq
+légendes le disent au lecteur plutôt que de le laisser buter dessus.
+
+Deux pièges de fabrication, mesurés :
+
+- **Les noms de XCTrack suivent la langue du fichier ouvert, pas celle de l'interface.**
+  Sur une fixture qui déclare `Display.Language`, ils restent dans cette langue-là dans
+  les cinq captures ; sur une fixture qui n'en déclare aucune, ils suivent le
+  **navigateur** — il faut donc changer la langue du navigateur, et pas seulement le globe
+  de la barre de tête, pour qu'une capture soit juste.
+- **L'allemand déborde.** Ses phrases sont plus longues : deux des sept écrans demandent
+  un cadre plus haut dans cette langue seule. Mesurer, ne pas supposer.
 
 Deux règles absolues :
 

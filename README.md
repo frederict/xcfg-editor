@@ -27,23 +27,29 @@ dessinée à sa taille réelle, la règle graduée au-dessus, le panneau des gad
 en bas.](captures/editeur-paysage.png)
 
 *Une page de la sauvegarde de test, dessinée à la géométrie d'un AIR³ 7.2. Rien ne
-partage la largeur avec elle : le panneau des gadgets passe en dessous.*
+partage la largeur avec elle : le panneau des gadgets passe en dessous. **Une seule
+capture pour les cinq langues** : ce qu'elle montre — la page dessinée, la règle graduée,
+la plaque qui la porte — est identique dans toutes.*
 
 <!--
-  REFAIRE CETTE CAPTURE — captures/editeur-paysage.png (1500 × 1380)
+  REFAIRE CETTE CAPTURE — captures/editeur-paysage.png (1500 × 1420)
   Écran ...... l'éditeur entier, mode consultation, panneau des gadgets ouvert.
+  Langues .... UN SEUL exemplaire, en français, employé par les cinq README. Le sujet
+               est une géométrie, pas un texte : la page, la règle, la plaque. Les
+               légendes des cinq README le disent au lecteur, pour qu'il ne bute pas
+               dessus.
   Fichier .... tests/fixtures/exports/2026-08-20_backup-00.xcfg
                (fixture anonymisée — JAMAIS une configuration réelle, voir CLAUDE.md).
   État ....... gabarit « AIR³ 7.2 », paysage, première page, aucun gadget sélectionné
-               ni survolé, zoom 200 %, bandeau à sa hauteur d'usine.
+               ni survolé, aucun bouton au focus, zoom 200 %, bandeau à sa hauteur
+               d'usine.
   Refaire .... npm run dev -- --port 5179, déposer le fichier, ouvrir
                « Page 1 » du bloc PAYSAGE, déplier « Liste des gadgets », pousser le
                curseur de zoom à 200 %, éloigner la souris de la page.
-  Cadrage .... viewport de 1500 × 1380 points CSS. L'écran physique ne monte pas si
+  Cadrage .... viewport de 1500 × 1420 points CSS. L'écran physique ne monte pas si
                haut : passer par l'émulation de viewport des outils de développement
                (Chrome DevTools, Emulation.setDeviceMetricsOverride), pas par un
                redimensionnement de fenêtre, qui plafonne à la hauteur de l'écran.
-               À cette hauteur, le bandeau collé en bas ne recouvre pas la page.
   Pièges ..... 1. le curseur de zoom porte un FACTEUR (0,4 à 2,5), pas des pourcents :
                   y écrire 200 donne 250 %.
                2. la hauteur du bandeau est mémorisée dans `localStorage` sous
@@ -52,6 +58,15 @@ partage la largeur avec elle : le panneau des gadgets passe en dessous.*
                3. les libellés de la liste des gadgets manquent parfois sur la première
                   capture prise après un changement de zoom : reprendre la capture,
                   la seconde est bonne. Toujours la relire avant de la garder.
+                  (Le défaut ne s'est pas reproduit le 22 août 2026, sur les sept
+                  écrans repris ce jour-là ; la consigne reste, il ne coûte rien de
+                  relire.)
+
+  RECETTE CORRIGÉE — le cadrage était de 1500 × 1380, et la recette affirmait qu'à cette
+  hauteur « le bandeau collé en bas ne recouvre pas la page ». Ce n'est plus vrai depuis
+  que la page repose sur la PLAQUE (`.bed` d'`app.css`) : mesuré, la plaque descend
+  jusqu'à 1 040 px quand le bandeau commence à 1 030. Dix pixels du bord inférieur de la
+  plaque passaient sous le bandeau. 1 420 points laissent 30 px d'air entre les deux.
 -->
 
 
@@ -276,17 +291,30 @@ jamais sur une configuration réelle — une carte affichée peut révéler un d
 bâtiment près. La recette de chacune est écrite en commentaire juste en dessous, pour
 qu'on ose la refaire quand l'écran change.*
 
+*Les six captures qui suivent existent **en cinq exemplaires**, un par langue, parce que
+le texte y est le sujet : ce README montre les siennes. Les noms de gadgets et de
+réglages qu'on y lit, eux, suivent **la langue du fichier ouvert** quand il en déclare
+une — c'est la séparation des deux axes, et elle se voit à l'œil nu sur l'écran des
+réglages généraux, dont la fixture déclare le français.*
+
 ![Le panneau de réglages du gadget « Espace aérien à proximité », en mode édition :
 trois lignes « Rétablir la valeur d'usine » qui montrent les deux valeurs en présence,
 et en bas le bloc du réglage que ce gadget n'écrit pas, avec son bouton « Définir cette
-valeur ».](captures/panneau-gadget.png)
+valeur ».](captures/panneau-gadget.fr.png)
 
 *Le panneau d'un gadget, et les deux gestes de valeur d'usine qu'il offre : rétablir ce
 qu'on a réglé, ou figer ce que le fichier ne dit pas.*
 
 <!--
-  REFAIRE CETTE CAPTURE — captures/panneau-gadget.png (1400 × 1650)
+  REFAIRE CETTE CAPTURE — captures/panneau-gadget.<langue>.png (1400 × 1650 ;
+                          1400 × 1750 pour l'allemand)
   Écran ...... l'éditeur en mode édition, panneau de réglages d'un gadget déplié.
+  Langues .... CINQ exemplaires : .fr, .en, .nl, .de, .es. Le texte est le sujet.
+               Ce fichier-ci ne déclare AUCUNE langue (`Display.Language` vide) : les
+               noms de XCTrack suivent donc, à défaut, celle de l'interface — le globe
+               suffit. Le gadget s'appelle « Espace aérien à proximité », “Airspace
+               proximity”, ‘Luchtruim afstand’, „Luftraum-Annäherung“, «Proximidad de
+               espacios aéreos», et chaque capture porte le nom de sa langue.
   Fichier .... tests/fixtures/exports/2026-08-20_backup-00.xcfg
   État ....... « Espace aérien à proximité », rang 12 de la 3e page PORTRAIT. Il faut
                tenir dans le même cadre les deux gestes du panneau : trois lignes
@@ -300,6 +328,12 @@ qu'on a réglé, ou figer ce que le fichier ne dit pas.*
                doit faire 590 px de haut pour que le panneau tienne sans défiler : poser
                `localStorage['xcfg-editor.dock-height'] = '530'` puis recharger, ou
                tirer la poignée du bandeau vers le haut.
+               ⚠ L'ALLEMAND ne tient pas dans ce cadre : ses phrases sont plus longues,
+               le panneau y demande 642 px de bandeau (`dock-height = '580'`) et
+               1 750 points de viewport. Sous 1 650, le bouton « Diesen Wert festlegen »
+               — celui que la légende promet — reste hors champ. À 1 750, le bandeau
+               recouvre juste la phrase de la règle graduée, ce qui évite de la couper
+               en deux.
 
   RECETTE CORRIGÉE — la précédente demandait la boussole de la 1re page PAYSAGE, « la
   seule du corpus qui porte windStyle », ET le bloc des réglages non écrits dans le même
@@ -316,14 +350,23 @@ qu'on a réglé, ou figer ce que le fichier ne dit pas.*
 ![L'écran « Intégration Android » des réglages généraux, en mode édition : des lignes
 « Retirer » marquées d'une pastille « valeur d'usine », des lignes « Rétablir la valeur
 d'usine » marquées d'une pastille d'ambre « réglé par vous », et deux lignes « Définir
-cette valeur » marquées « absente du fichier ».](captures/reglages-generaux.png)
+cette valeur » marquées « absente du fichier ».](captures/reglages-generaux.fr.png)
 
 *Les réglages généraux, dans l'arborescence du menu de l'instrument — et les trois
-gestes de valeur d'usine réunis sur un même écran.*
+gestes de valeur d'usine réunis sur un même écran. C'est aussi l'écran où les deux axes
+de langue se voient le mieux : ce fichier-ci déclare le français, donc les noms de
+réglages restent français dans les cinq captures — seule notre prose change.*
 
 <!--
-  REFAIRE CETTE CAPTURE — captures/reglages-generaux.png (1400 × 1060)
+  REFAIRE CETTE CAPTURE — captures/reglages-generaux.<langue>.png (1400 × 1060)
   Écran ...... la page « Réglages généraux », mode édition.
+  Langues .... CINQ exemplaires : .fr, .en, .nl, .de, .es.
+               ⚠ Cette fixture DÉCLARE le français (`Display.Language: "fr"`). Les noms
+               de XCTrack la suivent, quelle que soit la langue de l'interface : le titre
+               d'écran reste « Intégration Android » dans les cinq captures, et les
+               lignes gardent leurs noms français. Ce n'est pas un défaut, c'est la
+               séparation des deux axes — et les quatre README traduits le disent au
+               lecteur au lieu de promettre un titre traduit qui n'existe pas.
   Fichier .... tests/fixtures/exports/2025-07-07_backup-00.xcfg
   État ....... écran « Intégration Android » : quatre lignes « Retirer » (pastille
                « valeur d'usine »), trois lignes « Rétablir la valeur d'usine » (pastille
@@ -348,20 +391,23 @@ gestes de valeur d'usine réunis sur un même écran.*
      le seul écran de tout le corpus qui le fasse, d'où le changement de fixture.
      L'écran « Affichage » de la recette d'origine reste un bon choix pour montrer
      « Retirer » et « Rétablir » côte à côte (4 et 5 lignes sur le fichier de 2026).
+  3. L'écran se retrouve par son identifiant, pas par son titre — qui ne se traduit pas.
+     `[data-screen="preferences_tweaks"]` : c'est lui, « Intégration Android ».
 -->
 
 
 ![La modale « Version visée et compatibilité » : la version 1.0.3-beta présélectionnée,
-la phrase des versions indistinguables, le bloc PÉRIMÉ de neuf réglages, et la section
-« Enlever ce qu'une ancienne version a laissé » dépliée sur ses neuf cases à
-cocher.](captures/version-et-nettoyage.png)
+la phrase des versions indistinguables, le bloc « Réglages périmés » et ses neuf lignes,
+et la section « Enlever ce qu'une ancienne version a laissé » dépliée sur ses neuf cases
+à cocher.](captures/version-et-nettoyage.fr.png)
 
 *Le choix de version, le diagnostic, et le nettoyage qu'il ouvre — neuf réglages, sur
 quatre gadgets, chacun avec la dernière version de XCTrack qui le lisait encore.*
 
 <!--
-  REFAIRE CETTE CAPTURE — captures/version-et-nettoyage.png (1200 × 1650)
+  REFAIRE CETTE CAPTURE — captures/version-et-nettoyage.<langue>.png (1200 × 1720)
   Écran ...... la modale « Version visée et compatibilité », nettoyage déplié.
+  Langues .... CINQ exemplaires : .fr, .en, .nl, .de, .es.
   Fichier .... tests/fixtures/exports/2026-08-20_backup-00.xcfg
   État ....... version présélectionnée d'après le fichier (1.0.3-beta), la phrase des
                versions indistinguables visible, et la section « Enlever ce qu'une
@@ -370,32 +416,41 @@ quatre gadgets, chacun avec la dernière version de XCTrack qui le lisait encore
                (le nettoyage ne s'offre qu'en édition), menu « Fichier » puis
                « Version et compatibilité… », enfin déplier « Voir ces 9 réglages, et
                décocher ce que vous préférez garder ».
-  Cadrage .... viewport de 1200 × 1650 points CSS, émulation comme ci-dessus : la boîte
-               fait alors 1 452 px de contenu et ne défile plus.
+  Cadrage .... viewport de 1200 × 1720 points CSS, émulation comme ci-dessus. La boîte
+               ne défile alors dans aucune des cinq langues.
   Variante ... le banc d'essai dédié montre le même module hors de l'éditeur :
                    npm run dev -- --port 5178
                    http://localhost:5178/src/ui/versionDiagnostic.demo.html
 
-  RECETTE CORRIGÉE — la recette d'origine passait par le banc d'essai en expliquant que
-  « le nettoyage n'y apparaît que parce que la page joue l'hôte ». Ce n'est plus vrai :
-  la modale de l'éditeur porte le nettoyage dès qu'on est en mode édition, et c'est elle
-  qu'il vaut mieux montrer — le banc finit sur des phrases qui ne parlent qu'à lui
-  (« Ce qu'un hôte recevrait »), déroutantes dans un README.
+  RECETTE CORRIGÉE — trois points :
+  1. La recette d'origine passait par le banc d'essai en expliquant que « le nettoyage
+     n'y apparaît que parce que la page joue l'hôte ». Ce n'est plus vrai : la modale de
+     l'éditeur porte le nettoyage dès qu'on est en mode édition, et c'est elle qu'il vaut
+     mieux montrer — le banc finit sur des phrases qui ne parlent qu'à lui (« Ce qu'un
+     hôte recevrait »), déroutantes dans un README.
+  2. Le cadrage passe de 1 650 à 1 720 points. En français la boîte fait bien 1 452 px et
+     tenait ; en ALLEMAND elle en demande 1 497 et défilait, la fin du nettoyage restant
+     hors champ. 1 720 points suffisent aux cinq langues (mesuré : fr/en/nl/es 1 456,
+     de 1 497).
+  3. La marque d'état ne s'écrit plus en capitales : c'est une pastille arrondie qui dit
+     « périmé » en bas de casse, sous le titre « Réglages périmés ». Les légendes citaient
+     « PÉRIMÉ » ; elles citent maintenant le titre, qui est ce que le lecteur cherchera.
 -->
 
 
 ![La boîte « Enregistrer cette configuration » : les trois issues, puis l'inventaire des
 cinq textes remplacés — chacun avec sa page, son gadget, l'ancienne valeur barrée, la
-nouvelle, et la raison du remplacement.](captures/enregistrer-et-partager.png)
+nouvelle, et la raison du remplacement.](captures/enregistrer-et-partager.fr.png)
 
 *Au moment d'enregistrer, ce que le fichier révèle et ce qui peut être remplacé —
 montré avant le téléchargement, pas après.*
 
 <!--
-  REFAIRE CETTE CAPTURE — captures/enregistrer-et-partager.png (1100 × 1880)
+  REFAIRE CETTE CAPTURE — captures/enregistrer-et-partager.<langue>.png (920 × 2480)
   Écran ...... la boîte d'enregistrement, ses trois issues : « Votre configuration,
                telle qu'elle est », « Tous vos réglages, sans ce qui vous désigne » et
                « Version partageable, sans données personnelles ».
+  Langues .... CINQ exemplaires : .fr, .en, .nl, .de, .es.
   Fichier .... tests/fixtures/formes/formes-preservees.xcfg — c'est la fixture qui
                porte un téléphone et une fiche de contact, donc la seule où
                l'inventaire des remplacements a quelque chose à montrer. (Sur
@@ -403,33 +458,103 @@ montré avant le téléchargement, pas après.*
                texte à remplacer : c'est un autre état, tout aussi vrai, mais il
                n'illustre pas l'inventaire.)
   État ....... troisième issue cochée, inventaire déplié : chaque remplacement avec son
-               emplacement et sa raison, AVANT le téléchargement. (Sur cette fixture,
-               la deuxième issue n'est pas proposée : le fichier ne porte pas de
-               préférences, elle rendrait le même résultat que la troisième.)
-  Refaire .... banc d'essai dédié :
+               emplacement et sa raison, AVANT le téléchargement. Le niveau « Tout ce
+               que ce fichier porte de personnel » reste REPLIÉ — déplié, la boîte
+               double de hauteur pour dire ce que l'encadré du haut a déjà dit.
+  Refaire .... dans l'éditeur lui-même : npm run dev -- --port 5179, déposer le fichier,
+               « Enregistrer une copie », puis cocher la troisième issue.
+               Le banc d'essai dédié rend la même boîte, mais son habillage de page
+               d'essai entre dans le cadre :
                    npm run dev -- --port 5176
                    http://localhost:5176/src/ui/sharingDialog.demo.html
-               bouton « formes préservées (téléphone + contact) », puis cocher
-               « Version partageable, sans données personnelles ».
-  Cadrage .... viewport de 1100 × 1880 points CSS, émulation comme ci-dessus. ⚠ Ce
-               cadrage date de l'époque où la boîte portait deux cartes : le remesurer.
+               bouton « formes préservées (téléphone + contact) ».
+  Cadrage .... viewport de 920 × 2480 points CSS, émulation comme ci-dessus. La boîte
+               est large de 830 px quoi qu'on fasse : 920 points de large lui laissent
+               45 px de marge de chaque côté au lieu de 185, et l'image pèse d'autant
+               moins. 2 480 de haut : c'est l'allemand qui commande (2 174 px de contenu
+               contre 2 080 en français).
   À vérifier . les seuls noms et numéros qui figurent sur cette capture — « Jean
                Exemple », « +32 470 00 00 00 » — sont les valeurs anonymisées écrites
                dans la fixture, et l'écran les montre barrées, remplacées. Aucune donnée
                réelle ne doit apparaître ici : le vérifier à chaque reprise.
+
+  RECETTE CORRIGÉE — deux points :
+  1. « Sur cette fixture, la deuxième issue n'est pas proposée » : c'est faux
+     aujourd'hui. Les TROIS cartes sont là, sur cette fixture comme sur les deux
+     sauvegardes du corpus — vérifié sur les trois. La légende peut donc promettre
+     trois issues sans mentir.
+  2. Le cadrage de 1 100 × 1 880 datait de la boîte à deux cartes ; il est remesuré
+     ci-dessus.
+-->
+
+![La boîte « Bibliothèque de configurations » : deux configurations rangées, chacune avec
+sa vignette, sa taille, son compte de données personnelles ; sur la première, les textes
+du pilote sont remplacés par des barres grises. Au pied, « Effacer toute la
+bibliothèque ».](captures/bibliotheque.fr.png)
+
+*La bibliothèque vit dans votre navigateur, et rien n'en sort. Chaque entrée dit ce
+qu'elle porte de personnel et ce qui partirait avec les pages ; sa vignette masque vos
+textes par des barres grises, parce qu'une image échappe à l'anonymisation. Et
+« Effacer toute la bibliothèque » est au pied de la liste, pas caché dans un réglage.*
+
+<!--
+  RECETTE — captures/bibliotheque.<langue>.png (1100 × 700)
+  Écran ...... la boîte « Bibliothèque de configurations », sur sa liste, deux entrées.
+  Langues .... CINQ exemplaires : .fr, .en, .nl, .de, .es. Le texte est le sujet — les
+               comptes de données personnelles et le geste d'effacement.
+  Fichiers ... DEUX fixtures, rangées dans cet ordre pour que la vignette masquée soit
+               en tête (la liste montre la dernière rangée en premier) :
+                 1. tests/fixtures/exports/2026-08-20_backup-00.xcfg → « Vol-biv Alpes »
+                 2. tests/fixtures/formes/formes-preservees.xcfg     → « Comp Annecy »
+               La seconde est celle qui porte des textes écrits par le pilote : c'est la
+               SEULE dont la vignette montre les barres grises. Sans elle, la capture
+               perd son sujet.
+  État ....... la liste, pas la carte d'identité. Deux entrées, chacune avec sa vignette,
+               ses pastilles (« Sauvegarde », taille, nombre de gadgets) et son compte
+               d'ambre — « 8 données personnelles · 5 partent avec les pages » pour la
+               première, « 16 données personnelles · 0 part avec les pages » pour la
+               seconde. Aucune note : elles seraient du texte français dans les cinq
+               captures, et une note fausse dans une image est un mensonge illustré.
+               Au pied : le compte, « Empêcher le navigateur d'effacer ma bibliothèque »,
+               l'estimation d'espace, et « Effacer toute la bibliothèque ».
+  Refaire .... npm run dev -- --port 5179, déposer la 1re fixture, menu « Fichier » puis
+               « Bibliothèque… », « Ranger la configuration ouverte », donner le nom,
+               « Ranger ». Fermer, déposer la 2e fixture, recommencer. Rouvrir la
+               bibliothèque : c'est l'état de la capture.
+               Pour les quatre autres langues, la bibliothèque SURVIT au changement de
+               langue — elle vit dans l'IndexedDB de l'origine. Il suffit de recharger
+               dans la langue voulue et de rouvrir la boîte.
+               Pour repartir de zéro : effacer la base `xcfg-editor` de l'IndexedDB.
+  Cadrage .... viewport de 1100 × 700 points CSS, émulation comme ci-dessus. La boîte
+               fait 1 022 × 572 px (607 en néerlandais) et se centre : 700 points de
+               haut la serrent sans la couper dans aucune des cinq langues.
+  À vérifier . la vignette de « Comp Annecy » DOIT montrer deux barres grises au-dessus
+               du « 1234 m ». Si elle montre un texte lisible, le masquage ne s'est pas
+               fait et la capture révélerait ce que la page porte : ne pas la garder.
+               Les deux noms d'entrée — « Comp Annecy », « Vol-biv Alpes » — sont écrits
+               à la main pour la capture ; aucun nom réel ne doit figurer ici.
+
+  CAPTURE AJOUTÉE — la bibliothèque n'avait jamais eu de capture, alors qu'elle porte
+  l'argument de vie privée le plus concret du projet : la seule image du dépôt où l'on
+  voie le masquage des textes à l'œuvre, et le seul écran où l'effacement complet soit
+  offert d'un bouton.
 -->
 
 ![Le manuel d'utilisation en pleine page : à gauche le sommaire de ses treize chapitres,
 à droite l'avertissement encadré « À lire avant de donner votre fichier à qui que ce
-soit », puis le début du chapitre 1.](captures/manuel.png)
+soit », puis le début du chapitre 1.](captures/manuel.fr.png)
 
 *Le manuel occupe une page de la largeur de l'éditeur. Il commence par l'avertissement
 plutôt que par la visite guidée, et son sommaire reste à gauche pendant toute la lecture
 — avec le chapitre où l'on se trouve marqué d'un filet.*
 
 <!--
-  REFAIRE CETTE CAPTURE — captures/manuel.png (1200 × 1110)
+  REFAIRE CETTE CAPTURE — captures/manuel.<langue>.png (1200 × 1110)
   Écran ...... la page « Manuel d'utilisation », en haut de son contenu.
+  Langues .... CINQ exemplaires : .fr, .en, .nl, .de, .es. C'est la capture où le texte
+               est le plus manifestement le sujet — c'est un mur de prose. Seule la
+               langue affichée est téléchargée : la capture d'une langue exige donc que
+               le globe soit sur elle avant d'ouvrir le manuel.
   Fichier .... aucun — c'est l'écran d'accueil, avant tout dépôt de fichier. Rien à
                anonymiser, donc, et rien à révéler.
   État ....... le sommaire des treize chapitres entier dans sa colonne de gauche, avec le
@@ -479,17 +604,18 @@ Autant le dire tout de suite.
   qui ouvrent une boîte sur l'appareil — les quinze touches, la table du vario sonore —
   ne se règlent pas ici, faute d'en connaître le domaine ; et les huit `Unit.*`, dont
   XCTrack remplit la liste en code, n'ont qu'un champ texte plutôt qu'une liste inventée.
-- **L'interface existe en cinq langues, les captures d'écran de ce fichier en une
-  seule.** L'interface, le manuel et ce README sont traduits en français, anglais,
-  néerlandais, allemand et espagnol (`src/i18n/`). Les images, elles, montrent
-  l'interface **française** : les refaire dans cinq langues, ce serait trente captures à
-  reprendre à chaque écran qui bouge, et elles vieilliraient. La géométrie et les gestes
-  se lisent quand même. Les libellés de XCTrack — noms de gadgets, d'options, de
-  préférences — ne suivent pas le choix de langue de l'interface mais **celui du
-  fichier** ; ce n'est qu'à défaut, quand le fichier n'en déclare aucune, qu'ils prennent
-  la langue de l'interface. Ce sont deux axes distincts, et les confondre ferait lire à un
-  pilote tchèque des noms de gadgets en anglais alors que son instrument les lui montre en
-  tchèque.
+- **Une des sept captures n'existe qu'en français.** L'interface, le manuel et ce README
+  sont traduits en français, anglais, néerlandais, allemand et espagnol (`src/i18n/`), et
+  six des sept captures suivent — chaque README montre les siennes. La septième,
+  l'éditeur entier, n'a qu'un exemplaire : son sujet est une page dessinée, une règle
+  graduée et la plaque qui la porte, identiques dans les cinq langues. Sa légende le dit.
+  Les libellés de XCTrack — noms de gadgets, d'options, de préférences — ne suivent pas le
+  choix de langue de l'interface mais **celui du fichier** ; ce n'est qu'à défaut, quand
+  le fichier n'en déclare aucune, qu'ils prennent la langue de l'interface. Ce sont deux
+  axes distincts, et les confondre ferait lire à un pilote tchèque des noms de gadgets en
+  anglais alors que son instrument les lui montre en tchèque. La capture des réglages
+  généraux le montre : sa fixture déclare le français, donc ses noms de réglages restent
+  français dans les cinq langues.
 
 ## Donner votre avis, signaler ce qui cloche
 

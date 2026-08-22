@@ -22,17 +22,14 @@ archivos estáticos, no tiene servidor con quien hablar.
 
 ## Qué aspecto tiene
 
-> ℹ️ **Las capturas están en francés, y así seguirán.** La interfaz existe en cinco
-> idiomas, pero rehacer estas imágenes en los cinco serían treinta capturas que retomar
-> cada vez que una pantalla se mueve, y envejecerían en su sitio. La geometría y los gestos
-> se leen igual.
-
 ![El editor abierto en la primera página horizontal de la copia de seguridad de prueba: la
 página dibujada a su tamaño real, la regla graduada encima, el panel de los widgets
 desplegado abajo.](captures/editeur-paysage.png)
 
 *Una página de la copia de seguridad de prueba, dibujada con la geometría de un AIR³ 7.2.
-Nada comparte la anchura con ella: el panel de los widgets pasa por debajo.*
+Nada comparte la anchura con ella: el panel de los widgets pasa por debajo. **Una sola
+captura para los cinco idiomas**: lo que muestra — la página dibujada, la regla graduada,
+la placa que la sostiene — es idéntico en todos ellos, y por eso se queda en francés.*
 
 ## El problema
 
@@ -257,40 +254,58 @@ de fidelidad que solo el autor puede comprobar no vale nada.
 nunca sobre una configuración real — un mapa mostrado puede revelar un domicilio con
 precisión de edificio.*
 
+*Las seis capturas que siguen existen **en cinco ejemplares**, uno por idioma, porque en
+ellas el texto es el asunto: este README muestra los suyos. Los nombres de widgets y de
+ajustes que se leen en ellas, en cambio, siguen **el idioma del archivo abierto** en
+cuanto este indica uno — es la separación de los dos ejes, y se ve a simple vista en la
+pantalla de los ajustes generales, cuya fixture indica el francés.*
+
 ![El panel de ajustes del widget «Proximidad de espacios aéreos», en modo edición: tres líneas
 «Restablecer el valor de fábrica» que muestran los dos valores en presencia, y abajo el
 bloque del ajuste que este widget no escribe, con su botón «Definir este
-valor».](captures/panneau-gadget.png)
+valor».](captures/panneau-gadget.es.png)
 
 *El panel de un widget, y los dos gestos de valor de fábrica que ofrece: restablecer lo que
 se ha ajustado, o fijar lo que el archivo no dice.*
 
-![La pantalla «Integración con Android» de los ajustes generales, en modo edición: líneas
+![La pantalla «Intégration Android» de los ajustes generales, en modo edición: líneas
 «Quitar» con una pastilla «valor de fábrica», líneas «Restablecer el valor de fábrica» con
 una pastilla ámbar «ajustado por usted», y dos líneas «Escribir este valor» con una
-pastilla «ausente del archivo».](captures/reglages-generaux.png)
+pastilla «ausente del archivo».](captures/reglages-generaux.es.png)
 
 *Los ajustes generales, en el árbol del menú del instrumento — y los tres gestos de valor de
-fábrica reunidos en una misma pantalla.*
+fábrica reunidos en una misma pantalla. Es también donde mejor se ven los dos ejes de
+idioma: la fixture indica el francés, así que los nombres de los ajustes siguen en francés
+en los cinco ejemplares — solo cambia nuestra propia prosa.*
 
-![La ventana «Versión y compatibilidad»: la versión 1.0.3-beta preseleccionada, la frase de
-las versiones indistinguibles, el bloque OBSOLETO de nueve ajustes, y la sección «Quitar lo
-que dejó una versión antigua» desplegada sobre sus nueve
-casillas.](captures/version-et-nettoyage.png)
+![La ventana «Versión objetivo y compatibilidad»: la versión 1.0.3-beta preseleccionada, la
+frase de las versiones indistinguibles, el bloque «Ajustes obsoletos» y sus nueve líneas, y
+la sección «Quitar lo que dejó una versión antigua» desplegada sobre sus nueve
+casillas.](captures/version-et-nettoyage.es.png)
 
 *La elección de versión, el diagnóstico y la limpieza que abre — nueve ajustes, en cuatro
 widgets, cada uno con la última versión de XCTrack que aún lo leía.*
 
 ![El cuadro «Guardar esta configuración»: las tres salidas, y después el inventario de los
 cinco textos reemplazados — cada uno con su página, su widget, el valor antiguo tachado, el
-nuevo, y la razón del reemplazo.](captures/enregistrer-et-partager.png)
+nuevo, y la razón del reemplazo.](captures/enregistrer-et-partager.es.png)
 
 *Al guardar, lo que el archivo revela y lo que puede reemplazarse — mostrado antes de la
 descarga, no después.*
 
+![El cuadro «Biblioteca de configuraciones»: dos configuraciones guardadas, cada una con su
+miniatura, su tamaño y su recuento de datos personales; en la primera, los textos que usted
+escribió están reemplazados por barras grises. Al pie, «Borrar toda la
+biblioteca».](captures/bibliotheque.es.png)
+
+*La biblioteca vive en su navegador, y no sale nada de ella. Cada entrada dice lo que lleva
+de personal y lo que se iría con las páginas; su miniatura enmascara sus textos con barras
+grises, porque una imagen escapa a la anonimización. Y «Borrar toda la biblioteca» está al
+pie de la lista, no escondido en un ajuste.*
+
 ![El manual de uso a página completa: a la izquierda el índice de sus trece capítulos, a
 la derecha un aviso enmarcado «Léalo antes de dar su archivo a nadie», y después el
-comienzo del capítulo 1.](captures/manuel.png)
+comienzo del capítulo 1.](captures/manuel.es.png)
 
 *El manual ocupa una página del ancho del editor. Empieza por el aviso en lugar de por la
 visita guiada, y su índice permanece a la izquierda durante toda la lectura — con un filete
@@ -325,15 +340,18 @@ Mejor decirlo de entrada.
   abren un cuadro en el aparato — los quince botones, la tabla del vario sonoro — no se
   ajustan aquí, por no conocer su dominio; y las ocho `Unit.*`, cuya lista XCTrack rellena en
   código, solo tienen un campo de texto en lugar de una lista inventada.
-- **La interfaz existe en cinco idiomas, las capturas de este archivo en uno solo.** La
-  interfaz, el manual y este README están traducidos al francés, inglés, neerlandés, alemán y
-  español (`src/i18n/`). Las imágenes, en cambio, muestran la interfaz **francesa**: rehacerlas
-  en cinco idiomas serían treinta capturas que retomar cada vez que una pantalla se mueve, y
-  envejecerían. La geometría y los gestos se leen igual. Los rótulos de XCTrack — nombres de
+- **Una de las siete capturas existe solo en francés.** La interfaz, el manual y este
+  README están traducidos al francés, inglés, neerlandés, alemán y español (`src/i18n/`),
+  y seis de las siete capturas los siguen — cada README muestra las suyas. La séptima, el
+  editor entero, tiene un solo ejemplar: su asunto es una página dibujada, una regla
+  graduada y la placa que las sostiene, idénticas en los cinco idiomas. Su pie de imagen
+  lo dice. Los rótulos de XCTrack — nombres de
   widgets, de opciones, de preferencias — no siguen la elección de idioma de la interfaz sino
   **la del archivo**; solo en su defecto, cuando el archivo no indica ninguno, toman el
   idioma de la interfaz. Son dos ejes distintos, y confundirlos haría leer a un piloto checo
-  nombres de widgets en inglés cuando su instrumento se los muestra en checo.
+  nombres de widgets en inglés cuando su instrumento se los muestra en checo. La captura de
+  los ajustes generales lo enseña: su fixture indica el francés, así que sus nombres de
+  ajustes siguen en francés en los cinco idiomas.
 
 ## Dar su opinión, avisar de lo que falla
 
