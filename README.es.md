@@ -265,9 +265,9 @@ valor».](captures/panneau-gadget.png)
 se ha ajustado, o fijar lo que el archivo no dice.*
 
 ![La pantalla «Integración con Android» de los ajustes generales, en modo edición: líneas
-«Quitar» marcadas VALOR DE FÁBRICA, líneas «Restablecer el valor de fábrica» marcadas
-AJUSTADO POR USTED, y dos líneas «Escribir este valor» marcadas AUSENTE DEL
-ARCHIVO.](captures/reglages-generaux.png)
+«Quitar» con una pastilla «valor de fábrica», líneas «Restablecer el valor de fábrica» con
+una pastilla ámbar «ajustado por usted», y dos líneas «Escribir este valor» con una
+pastilla «ausente del archivo».](captures/reglages-generaux.png)
 
 *Los ajustes generales, en el árbol del menú del instrumento — y los tres gestos de valor de
 fábrica reunidos en una misma pantalla.*

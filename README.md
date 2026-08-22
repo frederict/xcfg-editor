@@ -313,9 +313,9 @@ qu'on a réglé, ou figer ce que le fichier ne dit pas.*
 
 
 ![L'écran « Intégration Android » des réglages généraux, en mode édition : des lignes
-« Retirer » marquées VALEUR D'USINE, des lignes « Rétablir la valeur d'usine » marquées
-RÉGLÉ PAR VOUS, et deux lignes « Définir cette valeur » marquées ABSENTE DU
-FICHIER.](captures/reglages-generaux.png)
+« Retirer » marquées d'une pastille « valeur d'usine », des lignes « Rétablir la valeur
+d'usine » marquées d'une pastille d'ambre « réglé par vous », et deux lignes « Définir
+cette valeur » marquées « absente du fichier ».](captures/reglages-generaux.png)
 
 *Les réglages généraux, dans l'arborescence du menu de l'instrument — et les trois
 gestes de valeur d'usine réunis sur un même écran.*
@@ -324,12 +324,12 @@ gestes de valeur d'usine réunis sur un même écran.*
   REFAIRE CETTE CAPTURE — captures/reglages-generaux.png (1400 × 1060)
   Écran ...... la page « Réglages généraux », mode édition.
   Fichier .... tests/fixtures/exports/2025-07-07_backup-00.xcfg
-  État ....... écran « Intégration Android » : quatre lignes « Retirer » (VALEUR
-               D'USINE), trois lignes « Rétablir la valeur d'usine » (RÉGLÉ PAR VOUS,
-               les deux valeurs en présence lisibles, et l'avertissement de version
-               puisque ce fichier ne vient pas de la version du relevé) et deux lignes
-               « Définir cette valeur » (ABSENTE DU FICHIER). Les trois gestes dans le
-               même cadre.
+  État ....... écran « Intégration Android » : quatre lignes « Retirer » (pastille
+               « valeur d'usine »), trois lignes « Rétablir la valeur d'usine » (pastille
+               d'ambre « réglé par vous », les deux valeurs en présence lisibles, et
+               l'avertissement de version puisque ce fichier ne vient pas de la version du
+               relevé) et deux lignes « Définir cette valeur » (pastille « absente du
+               fichier »). Les trois gestes dans le même cadre.
   Refaire .... npm run dev -- --port 5179, déposer le fichier, bouton « Réglages », puis
                « Modifier les réglages », enfin faire défiler jusqu'à « Intégration
                Android » et le caler à ~72 px sous l'en-tête collant.
@@ -437,9 +437,9 @@ plutôt que par la visite guidée, et son sommaire reste à gauche pendant toute
                au focus (le contour bleu de « Fermer le manuel » se voit sinon).
                ⚠ 1 200 points de large : sous 1 024, la colonne se replie dans le fil et
                la capture ne montrerait plus le sommaire latéral.
-  Refaire .... npm run dev -- --port 5179, puis « Lire le manuel d'utilisation » en bas
-               de l'accueil — ou, un fichier ouvert, menu « Fichier » puis
-               « Manuel d'utilisation… ».
+  Refaire .... npm run dev -- --port 5179, puis « Lire le manuel d'utilisation », dans
+               l'encadré d'ambre sous les quatre étapes de l'accueil — ou, un fichier
+               ouvert, menu « Fichier » puis « Manuel d'utilisation… ».
   Cadrage .... viewport de 1200 × 1110 points CSS : la page coupe alors au milieu du
                chapitre 1, ce qui se lit comme une page qui continue et non comme une
                phrase tranchée.

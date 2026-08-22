@@ -257,8 +257,9 @@ button.](captures/panneau-gadget.png)
 pin down what the file does not say.*
 
 ![The “Android integration” screen of the general settings, in editing mode: “Remove”
-lines marked FACTORY VALUE, “Restore the factory value” lines marked SET BY YOU, and two
-“Write this value” lines marked MISSING FROM THE FILE.](captures/reglages-generaux.png)
+lines carrying a “factory value” pill, “Restore the factory value” lines carrying an amber
+“set by you” pill, and two “Write this value” lines marked “missing from the
+file”.](captures/reglages-generaux.png)
 
 *The general settings, in the tree of the instrument's menu — and the three factory-value
 gestures brought together on one screen.*

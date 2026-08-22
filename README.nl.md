@@ -271,9 +271,9 @@ vastleggen’.](captures/panneau-gadget.png)
 wat u hebt ingesteld, of vastleggen wat het bestand niet zegt.*
 
 ![Het scherm ‘Android integratie’ van de algemene instellingen, in bewerkmodus: regels
-‘Verwijderen’ met de vermelding FABRIEKSWAARDE, regels ‘De fabriekswaarde terugzetten’ met
-de vermelding DOOR U INGESTELD, en twee regels ‘Deze waarde schrijven’ met de vermelding
-ONTBREEKT IN HET BESTAND.](captures/reglages-generaux.png)
+‘Verwijderen’ met een pastille ‘fabriekswaarde’, regels ‘De fabriekswaarde terugzetten’ met
+een amberkleurige pastille ‘door u ingesteld’, en twee regels ‘Deze waarde schrijven’ met
+een pastille ‘ontbreekt in het bestand’.](captures/reglages-generaux.png)
 
 *De algemene instellingen, in de boomstructuur van het instrumentmenu — en de drie
 fabriekswaardehandelingen samen op één scherm.*

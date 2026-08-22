@@ -278,9 +278,10 @@ festlegen“.](captures/panneau-gadget.png)
 wiederherstellen, was man eingestellt hat, oder festschreiben, was die Datei nicht sagt.*
 
 ![Der Bildschirm „Android Integration“ der allgemeinen Einstellungen im
-Bearbeitungsmodus: Zeilen „Entfernen“ mit dem Vermerk WERKSWERT, Zeilen „Den Werkswert
-wiederherstellen“ mit dem Vermerk VON IHNEN GESETZT, und zwei Zeilen „Diesen Wert
-schreiben“ mit dem Vermerk FEHLT IN DER DATEI.](captures/reglages-generaux.png)
+Bearbeitungsmodus: Zeilen „Entfernen“ mit der Plakette „Werkswert“, Zeilen „Den Werkswert
+wiederherstellen“ mit der bernsteinfarbenen Plakette „von Ihnen gesetzt“, und zwei Zeilen
+„Diesen Wert schreiben“ mit der Plakette „fehlt in der
+Datei“.](captures/reglages-generaux.png)
 
 *Die allgemeinen Einstellungen in der Baumstruktur des Gerätemenüs — und die drei
 Werkswert-Handgriffe auf einem einzigen Bildschirm vereint.*
