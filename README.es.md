@@ -323,8 +323,7 @@ seguida de los tres ajustes dejados donde
 están.](captures/version-et-nettoyage.es.png)
 
 *La elección de versión, el diagnóstico y la limpieza que abre — seis ajustes propuestos y
-tres dejados donde están, en cuatro widgets. ⚠️ **Esta imagen hay que rehacerla**: es
-anterior al tercer cerrojo y todavía muestra nueve casillas.*
+tres dejados donde están, en cuatro widgets.*
 
 ![El cuadro «Guardar esta configuración»: las tres salidas, y después el inventario de los
 cinco textos reemplazados — cada uno con su página, su widget, el valor antiguo tachado, el

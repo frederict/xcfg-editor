@@ -340,8 +340,7 @@ Einstellungen“ mit seinen neun Zeilen und der aufgeklappte Abschnitt „Entfer
 gelassenen Einstellungen.](captures/version-et-nettoyage.de.png)
 
 *Die Versionswahl, die Diagnose und das Aufräumen, das sie eröffnet — sechs vorgeschlagene
-und drei stehen gelassene Einstellungen auf vier Widgets. ⚠️ **Dieses Bild muss neu gemacht
-werden**: es stammt von vor der dritten Sperre und zeigt noch neun Kästchen.*
+und drei stehen gelassene Einstellungen auf vier Widgets.*
 
 ![Der Dialog „Diese Konfiguration speichern“: die drei Wege, dann das Verzeichnis der fünf
 ersetzten Texte — jeder mit seiner Seite, seinem Widget, dem durchgestrichenen alten Wert,

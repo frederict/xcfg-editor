@@ -34,17 +34,16 @@ la plaque qui la porte — est identique dans toutes.*
 <!--
   REFAIRE CETTE CAPTURE — captures/editeur-paysage.png (1500 × 1420)
 
-  ⚠ PÉRIMÉE DEPUIS LE 2026-08-22 : la plaque de faits sous le titre de la page
-               s'ouvrait sur le nom de classe du fichier — « WPEmpty », première pastille
-               de la ligne. Elle s'ouvre maintenant sur « 14 gadgets », et le nom de
-               classe la FERME, à la voix basse du gabarit d'écran. Rien d'autre n'a bougé
-               sur cet écran, et le cadrage ci-dessous reste bon. Non refaite le jour même,
-               et volontairement : d'autres chantiers écrivaient encore dans cet écran.
-
-  ⚠ ET POUR UNE SECONDE RAISON, le même jour : « ← Vue d'ensemble », « Zoom 100 % » et
-               « Masquer la liste » sont, sur cette image, trois mots sans contour. Les
-               commandes discrètes ont repris le filet plein de `.btn` — le cadrage ne
-               bouge pas, ces trois boutons ne changent que d'aspect.
+  DETTE PAYÉE le 2026-08-22, en fin de journée. L'image portait deux péremptions, toutes
+  deux visibles maintenant :
+  1. la plaque de faits sous le titre s'ouvrait sur le nom de classe du fichier
+     (« WPEmpty », première pastille). Elle s'ouvre désormais sur « 14 gadgets », et le
+     nom de classe la FERME, à la voix basse du gabarit d'écran ;
+  2. « ← Vue d'ensemble », « Zoom 100 % » et « Masquer la liste » étaient trois mots sans
+     contour ; les commandes discrètes ont repris le filet plein de `.btn`.
+  Le cadrage n'a pas bougé, et l'air entre la plaque et le bandeau a été REMESURÉ sur
+  l'image reprise : plaque jusqu'à 1 039,4 px, bandeau à partir de 1 069,9 — 30 px, comme
+  la dernière ligne de cette recette l'annonce.
 
   Écran ...... l'éditeur entier, mode consultation, panneau des gadgets ouvert.
   Langues .... UN SEUL exemplaire, en français, employé par les cinq README. Le sujet
@@ -357,26 +356,26 @@ qu'on a réglé, ou figer ce que le fichier ne dit pas.*
 
 <!--
   REFAIRE CETTE CAPTURE — captures/panneau-gadget.<langue>.png (1400 × 1650 ;
-                          1400 × 1750 pour l'allemand)
+                          1400 × 1730 pour l'allemand)
   Écran ...... l'éditeur en mode édition, panneau de réglages d'un gadget déplié.
-  ⚠ PÉRIMÉE DEPUIS LE 2026-08-22, pour TROIS raisons cumulées :
-               1. les marques d'origine du panneau (`.props__origin` — « valeur d'usine »,
-                  « réglé par vous ») portaient le filet PLEIN des boutons voisins sans se
-                  cliquer, et portent maintenant un filet TIRETÉ ;
-               2. la plaque de faits de la page ouverte commençait par le nom de classe
-                  (« WPThermalAssistant »), qui la ferme maintenant, en sourdine, après le
-                  gabarit d'écran ;
-               3. le bloc « 1 réglage que ce gadget n'écrit pas » disait « Valeurs d'usine
-                  relevées sur XCTrack 1.0.3-beta (versionCode 100030) » ; la parenthèse
-                  est partie, la phrase s'arrête au nom de version.
-               4. (2026-08-22, plus tard) le bouton « Masquer la liste » de la tête du
-                  bandeau — et toutes les commandes discrètes de l'outil — n'avaient
-                  AUCUN filet, pas même au survol, pendant que les marques voisines en
-                  portaient un tireté et visible. Elles reprennent le filet plein de
-                  `.btn`. Sur cette image, seul ce bouton-là change.
-               Le cadrage ci-dessous reste bon dans les trois cas. Non refaites le jour
-               même, et volontairement : trois chantiers écrivaient encore dans ces écrans,
-               et une capture prise à ce moment-là aurait figé un travail à mi-course.
+
+  DETTE PAYÉE le 2026-08-22, en fin de journée. Les cinq images portaient quatre
+  péremptions, toutes visibles maintenant :
+  1. les marques d'origine du panneau (`.props__origin`) portaient le filet PLEIN des
+     boutons voisins sans se cliquer, et portent un filet TIRETÉ ;
+  2. la plaque de faits de la page commençait par le nom de classe
+     (« WPThermalAssistant »), qui la ferme maintenant, en sourdine, après le gabarit ;
+  3. le bloc « 1 réglage que ce gadget n'écrit pas » disait « … XCTrack 1.0.3-beta
+     (versionCode 100030) » ; la parenthèse est partie, la phrase s'arrête au nom ;
+  4. « Masquer la liste » n'avait aucun filet ; les commandes discrètes ont repris celui
+     de `.btn`.
+  ET UN CINQUIÈME CHANGEMENT, qu'aucune de ces quatre lignes n'annonçait : la 3e page
+  PORTRAIT est INATTEIGNABLE sur cette fixture (`Display.Orientation: LANDSCAPE`), et
+  elle porte depuis le 2026-08-22 un bandeau d'ambre de deux paragraphes qui le dit, sous
+  la plaque de faits. Il entre dans le cadre et pousse la page dessinée vers le bas ; le
+  bandeau de réglages, lui, est collé au bas de la fenêtre et ne bouge pas d'un pixel —
+  c'est pourquoi le cadre des quatre autres langues n'a pas eu à changer.
+
   Langues .... CINQ exemplaires : .fr, .en, .nl, .de, .es. Le texte est le sujet.
                Ce fichier-ci ne déclare AUCUNE langue (`Display.Language` vide) : les
                noms de XCTrack suivent donc, à défaut, celle de l'interface — le globe
@@ -397,20 +396,31 @@ qu'on a réglé, ou figer ce que le fichier ne dit pas.*
                `localStorage['xcfg-editor.dock-height'] = '530'` puis recharger, ou
                tirer la poignée du bandeau vers le haut.
                ⚠ L'ALLEMAND ne tient pas dans ce cadre : ses phrases sont plus longues,
-               le panneau y demande 642 px de bandeau (`dock-height = '580'`) et
-               1 750 points de viewport. Sous 1 650, le bouton « Diesen Wert festlegen »
-               — celui que la légende promet — reste hors champ. À 1 750, le bandeau
-               recouvre juste la phrase de la règle graduée, ce qui évite de la couper
-               en deux.
+               et le panneau y demande 642 px de bandeau (`dock-height = '580'`). Mesuré
+               le 2026-08-22 à 1 650 avec un bandeau de 592 px : le panneau réclame
+               553 px pour 508 disponibles, et « Diesen Wert festlegen » — le bouton que
+               la légende promet — tombe à 1 667,9, hors champ. Avec 642 px de bandeau
+               il tient tout juste : 558 px pour 558.
+
+               CADRAGE ALLEMAND CORRIGÉ le 2026-08-22 : 1 750 → 1 730 points. Le
+               bandeau d'ambre de la page inatteignable (voir plus haut) a poussé la barre
+               d'actions du gadget sélectionné vers le bas. À 1 750, le haut du bandeau
+               de réglages tombe à 1 107,9 alors que cette barre commence à 1 095,5 :
+               huit pixels de boutons coupés en travers, un artefact que les quatre autres
+               langues n'ont pas. À 1 730, le bandeau commence à 1 087,9 et la couvre
+               entière, comme ailleurs ; le panneau tient toujours (558 pour 558,
+               « Diesen Wert festlegen » à 1 668,8 sur 1 730).
 
   ⚠ NE PAS RACCOURCIR LE CADRE (2026-08-22). Le bandeau porte désormais, en tête de son
   corps, une phrase qui paraît quand la page entière ne tient plus entre la barre de tête
-  et lui — elle dit ce que coûtent le repli et le zoom. À 1 650 points de viewport et
-  590 px de bandeau, la bande laissée à la plaque vaut environ 1 000 px pour une plaque
+  et lui — elle dit ce que coûtent le repli et le zoom. À 1 650 points de viewport et
+  590 px de bandeau, la bande laissée à la plaque vaut environ 1 000 px pour une plaque
   portrait de 617,7 : la phrase reste cachée et cette capture est intacte. Elle
-  apparaîtrait sous ~1 090 points de viewport, et changerait alors la hauteur du panneau
+  apparaîtrait sous ~1 090 points de viewport, et changerait alors la hauteur du panneau
   visible. Vérifié : les sept écrans du dépôt sont tous cadrés bien au-dessus de ce seuil,
-  AUCUNE capture n'est périmée par ce changement.
+  AUCUNE capture n'est périmée par ce changement. RE-VÉRIFIÉ sur les cinq reprises du
+  2026-08-22 : `.dock__cramped` est resté `display: none` dans les cinq langues,
+  l'allemand à 1 730 compris.
 
   RECETTE CORRIGÉE — la précédente demandait la boussole de la 1re page PAYSAGE, « la
   seule du corpus qui porte windStyle », ET le bloc des réglages non écrits dans le même
@@ -435,7 +445,7 @@ de langue se voient le mieux : ce fichier-ci déclare le français, donc les nom
 réglages restent français dans les cinq captures — seule notre prose change.*
 
 <!--
-  REFAIRE CETTE CAPTURE — captures/reglages-generaux.<langue>.png (1400 × 1060)
+  REFAIRE CETTE CAPTURE — captures/reglages-generaux.<langue>.png (1400 × 1120)
 
   DETTE PAYÉE le 2026-08-22 : les cinq images montraient des boutons « Retirer », qui
   disent maintenant « Retirer du fichier » — « Remove from the file », « Aus der Datei
@@ -445,43 +455,40 @@ réglages restent français dans les cinq captures — seule notre prose change.
   à mi-course. Ces chantiers sont clos ; les cinq images ont été reprises sur un arbre
   propre, servi depuis un export figé de HEAD (`git archive`).
 
-  ⚠ LES CINQ IMAGES SONT PÉRIMÉES DEPUIS LE 2026-08-22, ET POUR DEUX RAISONS. Elles
-  montrent un écran que le code ne produit plus. La recette, elle, reste bonne — il n'y a
-  que les photographies à reprendre.
+  DETTE PAYÉE le 2026-08-22, en fin de journée, POUR TROIS AUTRES RAISONS ENCORE. Les
+  images reprises à midi montraient un écran que le code ne produit plus :
 
-  ⚠ UNE TROISIÈME RAISON, LE MÊME JOUR, APRÈS LA DETTE PAYÉE CI-DESSUS : sur les images
-  reprises, « Retirer du fichier » n'a aucun filet — ni au repos ni au survol — pendant que
-  la marque inerte « valeur d'usine », juste à côté, en porte un tireté et visible. Deux
-  pilotes d'essai ont lu la marque comme la commande, et le second l'a mesuré : bouton
-  `rgba(0, 0, 0, 0)` à 11,5 px, marque `rgb(207, 156, 44)` à 12 px. Le bouton reprend
-  depuis le filet plein de `.btn`. Sa LARGEUR ne change pas d'un pixel — 109,3 px en
-  français, 166,6 en néerlandais, comme avant —, donc le cadrage et l'alignement des
-  36 lignes restent exactement ceux que cette recette décrit.
+  1. « Retirer du fichier » n'avait aucun filet — ni au repos ni au survol — pendant que la
+     marque inerte « valeur d'usine », juste à côté, en portait un tireté et visible. Deux
+     pilotes d'essai ont lu la marque comme la commande, et le second l'a mesuré : bouton
+     `rgba(0, 0, 0, 0)` à 11,5 px, marque `rgb(207, 156, 44)` à 12 px. Le bouton a repris
+     le filet plein de `.btn`.
 
-  Sur les images, le bouton de retrait passe SOUS la marque d'état. Ce n'était pas
-  l'émulation : `.prefs__aside` réservait une largeur écrite de 4,6 rem (73,6 px), taillée
-  pour « Retirer », et le renommage ne l'avait pas élargie. Relevé par l'agent qui a pris ces
-  images, à 1400, 1600 et 1920 points de large, à l'identique — le débordement ne dépendait
-  pas de la fenêtre ; reproduit au navigateur à 1400 points avant correction :
-      fr  « Retirer du fichier »          bouton 109,3 px — 24,5 px de recouvrement
-      es  « Quitar del archivo »          bouton 114,0 px — 29,2 px
-      en  « Remove from the file »        bouton 130,7 px — 45,9 px
-      de  « Aus der Datei entfernen »     bouton 146,0 px — 61,3 px
-      nl  « Uit het bestand verwijderen » bouton 166,6 px — 81,8 px (« verwijderen » barré
-                                                                     par la marque)
-  L'emplacement est désormais une colonne de la grille, large de l'intitulé lui-même — un
-  fantôme invisible le mesure, dans la langue affichée. APRÈS correction, mesuré de la même
-  façon (1400 points, et 700 pour l'autre bout) : 11,2 px de blanc entre le bouton et la
-  marque dans les cinq langues — c'est l'écart de colonnes de la grille, il ne dépend donc
-  pas de la fenêtre —, un seul bord droit pour les 157 lignes, et la liste garde ses 240 px
-  dans les cinq langues.
+  2. LES MARQUES ONT CHANGÉ DE TRAIT. « valeur d'usine », « absente du fichier »,
+     « réglé par vous » et la marque de donnée personnelle portaient le filet PLEIN des
+     deux boutons voisins sans se cliquer, et un pilote d'essai a cliqué dessus pour rien.
+     Elles portent un filet TIRETÉ ; les boutons gardent le plein. La pastille reste la
+     même forme : c'est le trait qui distingue, pas l'arrondi. VÉRIFIÉ sur les reprises,
+     ligne par ligne : `dashed 1px rgb(221, 214, 200)` pour « valeur d'usine » et
+     « absente du fichier », `dashed 1px rgb(207, 156, 44)` pour « réglé par vous ».
 
-  ⚠ ET UNE SECONDE RAISON, du même écran : LES MARQUES ONT CHANGÉ DE TRAIT.
-  « valeur d'usine », « absente du fichier », « réglé par vous » et la marque de donnée
-  personnelle portaient le filet PLEIN des deux boutons voisins — « Définir cette valeur »
-  et « Rétablir la valeur d'usine » — sans se cliquer, et un pilote d'essai a cliqué dessus
-  pour rien. Elles portent maintenant un filet TIRETÉ ; les boutons gardent le plein. La
-  pastille reste la même forme : c'est le trait qui distingue, pas l'arrondi.
+  3. Le bouton de retrait passait SOUS la marque d'état. Ce n'était pas l'émulation :
+     `.prefs__aside` réservait une largeur écrite de 4,6 rem (73,6 px), taillée pour
+     « Retirer », et le renommage ne l'avait pas élargie. Relevé à 1400, 1600 et 1920
+     points de large, à l'identique — le débordement ne dépendait pas de la fenêtre ;
+     reproduit au navigateur à 1400 points avant correction :
+         fr  « Retirer du fichier »          bouton 109,3 px — 24,5 px de recouvrement
+         es  « Quitar del archivo »          bouton 114,0 px — 29,2 px
+         en  « Remove from the file »        bouton 130,7 px — 45,9 px
+         de  « Aus der Datei entfernen »     bouton 146,0 px — 61,3 px
+         nl  « Uit het bestand verwijderen » bouton 166,6 px — 81,8 px (« verwijderen »
+                                                              barré par la marque)
+     L'emplacement est désormais une COLONNE DE LA GRILLE, large de l'intitulé lui-même —
+     un fantôme invisible le mesure, dans la langue affichée (`.prefs__aside[data-label]`).
+     APRÈS correction, remesuré à 1400 points sur les cinq reprises : 11,2 px de blanc
+     entre le bouton et la marque dans les CINQ langues — c'est l'écart de colonnes de la
+     grille, il ne dépend donc pas de la fenêtre —, et un seul bord droit pour toutes les
+     lignes.
 
   Écran ...... la page « Réglages généraux », mode édition.
   Langues .... CINQ exemplaires : .fr, .en, .nl, .de, .es.
@@ -502,14 +509,32 @@ réglages restent français dans les cinq captures — seule notre prose change.
                « Modifier les réglages », enfin faire défiler jusqu'à « Intégration
                Android » et caler le haut du bloc à 72 px du haut de la fenêtre — soit
                16 px sous la barre de tête collante, qui mesure 56 px.
-  Cadrage .... viewport de 1400 × 1060 points CSS, émulation comme ci-dessus.
-               ⚠ L'ALLEMAND NE DÉBORDE PAS SUR CET ÉCRAN, contrairement à deux des sept
-               autres : mesuré, le bloc fait 949 px dans les CINQ langues. C'est attendu
-               — les noms et les descriptions viennent du fichier, qui déclare le
-               français, et seuls les boutons et les marques changent de langue ; aucun
-               d'eux ne pousse une ligne sur un rang de plus. Un seul cadre suffit donc
-               aux cinq. Ne pas généraliser dans l'autre sens pour autant : c'est cet
-               écran-ci qui a été mesuré, pas l'application.
+  Cadrage .... viewport de 1400 × 1120 points CSS, émulation comme ci-dessus.
+
+               CADRAGE CORRIGÉ le 2026-08-22 : 1400 × 1060 → 1400 × 1120, et la phrase
+               qui suivait est devenue fausse le même jour. Elle disait « le bloc fait
+               949 px dans les CINQ langues ». Ce n'est plus vrai depuis que l'emplacement
+               du bouton de retrait est une colonne de la grille : la colonne prend la
+               largeur de l'intitulé traduit, la colonne des noms rétrécit d'autant, et
+               des lignes passent sur deux rangs. Remesuré, bloc `preferences_tweaks`,
+               largeur 1400, mode édition :
+                   fr  957,1 px   (bouton 109,3)
+                   es  957,1 px   (bouton 114,0)
+                   en  994,1 px   (bouton 130,7)
+                   de  994,1 px   (bouton 146,0)
+                   nl  1 010,0 px  (bouton 166,6)
+               À 1060 points, le néerlandais dépassait de 22 px et l'anglais comme
+               l'allemand de 6 : la dernière description était tranchée en pleine ligne.
+               1120 points suffisent aux cinq (72 + 1 010 = 1 082) et laissent paraître
+               le titre du bloc suivant, « Test et déboguage », ce qui dit au lecteur que
+               la liste continue.
+
+               ⚠ L'ALLEMAND NE DÉBORDE TOUJOURS PAS PLUS QUE LES AUTRES sur cet écran,
+               contrairement à deux des sept : il tient dans le cadre commun. C'est le
+               NÉERLANDAIS qui commande ici, et ce n'est pas la longueur des phrases mais
+               celle d'un seul intitulé de bouton. Les noms et les descriptions, eux,
+               viennent du fichier, qui déclare le français, et ne changent pas de langue.
+               Ne pas généraliser : c'est cet écran-ci qui a été mesuré, pas l'application.
 
   RECETTE CORRIGÉE — trois points, mesurés sur les fixtures :
   1. Le bouton ne s'appelle plus « Modifier les réglages » depuis la barre du haut : on
@@ -535,11 +560,10 @@ et la section « Enlever ce qu'une ancienne version a laissé » dépliée s
 place.](captures/version-et-nettoyage.fr.png)
 
 *Le choix de version, le diagnostic, et le nettoyage qu'il ouvre — six réglages proposés et
-trois laissés en place, sur quatre gadgets. ⚠️ **Cette image est à refaire** : elle date
-d'avant la troisième serrure et montre encore neuf cases à cocher.*
+trois laissés en place, sur quatre gadgets.*
 
 <!--
-  REFAIRE CETTE CAPTURE — captures/version-et-nettoyage.<langue>.png (1200 × 1720)
+  REFAIRE CETTE CAPTURE — captures/version-et-nettoyage.<langue>.png (1200 × 1960)
   Écran ...... la modale « Version visée et compatibilité », nettoyage déplié.
   Langues .... CINQ exemplaires : .fr, .en, .nl, .de, .es.
   Fichier .... tests/fixtures/exports/2026-08-20_backup-00.xcfg
@@ -551,17 +575,31 @@ d'avant la troisième serrure et montre encore neuf cases à cocher.*
                (le nettoyage ne s'offre qu'en édition), menu « Fichier » puis
                « Version et compatibilité… », enfin déplier « Voir ces 6 réglages, et
                décocher ce que vous préférez garder ».
-  Cadrage .... viewport de 1200 × 1720 points CSS, émulation comme ci-dessus. La boîte
+  Cadrage .... viewport de 1200 × 1960 points CSS, émulation comme ci-dessus. La boîte
                ne défile alors dans aucune des cinq langues.
+
+               CADRAGE CORRIGÉ le 2026-08-22 : 1 720 → 1 960 points. Le bloc des
+               réglages laissés en place a rallongé la boîte de deux cents pixels. Et le
+               calcul est moins direct qu'il n'y paraît : `.modal__box` est plafonnée à
+               **88 vh** — mesuré, `max-height` rend 1 513,6 px à 1 720 de viewport et
+               1 724,8 px à 1 960. Il faut donc `hauteur du contenu ÷ 0,88`, jamais
+               `hauteur + une marge`. Contenus remesurés, largeur 1200, nettoyage déplié :
+                   fr / nl / es  1 656 px
+                   en            1 676 px
+                   de            1 717 px  ← c'est lui qui commande
+               1 717 ÷ 0,88 = 1 951 : 1 960 passe, et laisse 121 px de fond de part
+               et d'autre en allemand, 152 en français. Piège vérifié en chemin : à
+               1 930 la boîte allemande était encore rognée de 19 px alors que le
+               contenu semblait tenir — c'est le plafond en `vh` qui mordait, pas le
+               viewport.
   Variante ... le banc d'essai dédié montre le même module hors de l'éditeur :
                    npm run dev -- --port 5178
                    http://localhost:5178/src/ui/versionDiagnostic.demo.html
 
-  ⚠️ IMAGE PÉRIMÉE — les cinq exemplaires montrent NEUF cases à cocher. Depuis le
-  22 août 2026, le nettoyage n'en propose plus que six sur cette fixture et affiche en
-  dessous un bloc « … réglages trouvés, et laissés en place » qui en nomme trois. La
-  recette ci-dessus reste bonne ; les cinq images sont à reprendre telles quelles, et le
-  cadrage est à revérifier — le bloc ajouté rallonge la boîte.
+  DETTE PAYÉE le 2026-08-22, en fin de journée : les cinq exemplaires montraient NEUF
+  cases à cocher. Le nettoyage n'en propose plus que six sur cette fixture, et affiche en
+  dessous un bloc « 3 réglages trouvés, et laissés en place » qui les nomme. Les cinq
+  images ont été reprises ; le cadrage, lui, a dû changer — voir « Cadrage » ci-dessus.
 
   RECETTE CORRIGÉE — trois points :
   1. La recette d'origine passait par le banc d'essai en expliquant que « le nettoyage
@@ -589,10 +627,15 @@ montré avant le téléchargement, pas après.*
 <!--
   REFAIRE CETTE CAPTURE — captures/enregistrer-et-partager.<langue>.png (920 × 2480)
 
-  ⚠ PÉRIMÉE DEPUIS LE 2026-08-22 : le « Fermer » en haut à droite de la boîte n'a, sur
-               ces images, aucun filet — il se lit comme un mot posé là. Toutes les
-               commandes discrètes de l'outil ont repris le filet plein de `.btn` : c'est
-               le seul objet de ce cadre qui change, et la recette ci-dessous reste bonne.
+  DETTE PAYÉE le 2026-08-22, en fin de journée : le « Fermer » en haut à droite de la
+               boîte n'avait aucun filet — il se lisait comme un mot posé là. Toutes les
+               commandes discrètes de l'outil ont repris le filet plein de `.btn` ; c'est
+               le seul objet de ce cadre qui a changé, et le cadrage n'a pas bougé.
+               Hauteurs de boîte remesurées à cette occasion, largeur 920, troisième issue
+               cochée : fr 2 080, en 2 060, es 2 099, de 2 174, nl 2 176 —
+               contre un plafond de 2 182,4 px (88 vh de 2 480). Le NÉERLANDAIS est
+               passé devant l'allemand depuis la mesure d'origine, et il ne reste que
+               6 px sous le plafond : ne pas raccourcir ce cadre sans remesurer.
 
   Écran ...... la boîte d'enregistrement, ses trois issues : « Votre configuration,
                telle qu'elle est », « Tous vos réglages, sans ce qui vous désigne » et
@@ -681,13 +724,13 @@ textes par des barres grises, parce qu'une image échappe à l'anonymisation. Et
                Les deux noms d'entrée — « Comp Annecy », « Vol-biv Alpes » — sont écrits
                à la main pour la capture ; aucun nom réel ne doit figurer ici.
 
-  ⚠ LES CINQ IMAGES SONT PÉRIMÉES DEPUIS LE 2026-08-22. Le pied de la boîte est
-  précisément ce que cette recette cadre — « Empêcher le navigateur d'effacer ma
-  bibliothèque » et « Effacer toute la bibliothèque » —, et ces deux boutons-là n'avaient
-  aucun filet : ils se lisaient comme des bouts de phrase. Ils portent maintenant le filet
-  plein de toute commande. « Supprimer », « Renommer » et « Vérifier l'empreinte », sur les
-  entrées, changent de la même façon. La recette reste bonne : ni le cadrage, ni les
-  fixtures, ni l'état ne bougent — il n'y a que les photographies à reprendre.
+  DETTE PAYÉE le 2026-08-22, en fin de journée. Le pied de la boîte est précisément ce que
+  cette recette cadre — « Empêcher le navigateur d'effacer ma bibliothèque » et « Effacer
+  toute la bibliothèque » —, et ces deux boutons-là n'avaient aucun filet : ils se lisaient
+  comme des bouts de phrase. Ils portent maintenant celui de toute commande. « Supprimer »,
+  « Renommer » et « Vérifier l'empreinte », sur les entrées, ont changé de la même façon.
+  Ni le cadrage, ni les fixtures, ni l'état n'ont bougé : la boîte fait toujours
+  1 022 × 572 px (607 en néerlandais), remesuré sur les cinq reprises.
 
   CAPTURE AJOUTÉE — la bibliothèque n'avait jamais eu de capture, alors qu'elle porte
   l'argument de vie privée le plus concret du projet : la seule image du dépôt où l'on
@@ -705,6 +748,20 @@ plutôt que par la visite guidée, et son sommaire reste à gauche pendant toute
 
 <!--
   REFAIRE CETTE CAPTURE — captures/manuel.<langue>.png (1200 × 1110)
+
+  VÉRIFIÉE ET GARDÉE le 2026-08-22, en fin de journée — la seule des sept dans ce cas.
+  Le manuel a gagné ce jour-là deux sections (« Les touches physiques… » au chapitre 8,
+  « Une fois enregistré : le reçu » au chapitre 10) et deux figures (chapitres 10 et 11) :
+  aucune n'entre dans ce cadre, qui s'arrête au milieu du chapitre 1. Le SOMMAIRE, lui,
+  ne liste que les chapitres — des `<h2>` —, et aucun chapitre n'a été ajouté : ses treize
+  entrées sont mot pour mot celles d'avant, vérifié par comparaison du bloc
+  `<nav class="manual__toc">` dans les CINQ manuels. Le bouton « Fermer le manuel » est un
+  `.btn` plein, pas une commande discrète : le filet rendu à `.btn--ghost` ne le touche
+  pas. Contrôle final, à l'image : rendu neuf comparé pixel à pixel à celui du dépôt —
+  seuls les bords des glyphes diffèrent (écart maximal de 59 sur un canal, sur les deux
+  intitulés surlignés de l'encadré), rien qui ne soit de l'anticrénelage. NE PAS refaire
+  ces cinq images « par précaution » : ce serait 470 ko de diff pour un rendu identique.
+
   Écran ...... la page « Manuel d'utilisation », en haut de son contenu.
   Langues .... CINQ exemplaires : .fr, .en, .nl, .de, .es. C'est la capture où le texte
                est le plus manifestement le sujet — c'est un mur de prose. Seule la

@@ -317,8 +317,7 @@ tickboxes, followed by the three settings left in
 place.](captures/version-et-nettoyage.en.png)
 
 *The version choice, the diagnosis, and the cleanup it opens — six settings offered and
-three left in place, across four widgets. ⚠️ **This image needs redoing**: it predates the
-third lock and still shows nine tickboxes.*
+three left in place, across four widgets.*
 
 ![The “Save this configuration” box: the three outcomes, then the inventory of the five
 replaced texts — each with its page, its widget, the old value struck through, the new

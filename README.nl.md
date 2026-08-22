@@ -330,8 +330,7 @@ op haar zes aankruisvakjes, gevolgd door de drie laten staan
 instellingen.](captures/version-et-nettoyage.nl.png)
 
 *De versiekeuze, de diagnose, en het opruimen dat eruit voortkomt — zes voorgestelde en drie
-laten staan instellingen, op vier widgets. ⚠️ **Dit beeld moet opnieuw**: het dateert van
-vóór de derde grendel en toont nog negen aankruisvakjes.*
+laten staan instellingen, op vier widgets.*
 
 ![Het venster ‘Deze configuratie opslaan’: de drie uitwegen, en daarna de inventaris van de
 vijf vervangen teksten — elk met zijn pagina, zijn widget, de oude waarde doorstreept, de
