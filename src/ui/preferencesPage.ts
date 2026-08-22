@@ -1675,6 +1675,20 @@ function buildRowElement(row: PreferenceRow, ctx: PageContext): HTMLElement {
   const cell = el('span', 'prefs__cell')
   element.append(cell)
 
+  // L'emplacement du bouton de retrait — sa **propre colonne**, et non plus un bout de la
+  // cellule. Il existe sur toutes les lignes d'une page modifiable, occupé ou non : c'est
+  // ce qui aligne les contrôles entre eux, et c'est la raison d'être de cette grille.
+  //
+  // L'intitulé est recopié en `data-label` pour la feuille de style : elle en fait un
+  // fantôme invisible, de la même boîte que le bouton, qui donne à la colonne la largeur
+  // exacte de l'intitulé dans la langue courante. Une largeur écrite en dur avait été
+  // taillée pour « Retirer » et n'a pas suivi « Retirer du fichier » — voir `.prefs__aside`.
+  const aside = ctx.edit !== undefined ? el('span', 'prefs__aside') : undefined
+  if (aside !== undefined) {
+    aside.dataset.label = tr.t('preferences.dropLabel')
+    element.append(aside)
+  }
+
   // Sur une clé d'une autre version ou sur une ligne mémorisée, « rien à comparer » se
   // répéterait à chaque ligne pour redire ce que le titre du bloc dit déjà une fois. La
   // colonne reste, vide : l'alignement des lignes voisines ne bouge pas.
@@ -1809,8 +1823,29 @@ function buildRowElement(row: PreferenceRow, ctx: PageContext): HTMLElement {
     }, restore))
   }
 
+  /**
+   * Le bouton de retrait, refait avec la cellule : l'emplacement, lui, ne bouge jamais.
+   *
+   * Une valeur écrite qui vaut le défaut peut repartir — c'est le geste inverse, et il
+   * n'a de sens que là. Sur une valeur réglée, retirer la clé changerait le comportement
+   * de l'appareil, ce que ce bouton ne doit jamais faire en un clic.
+   */
+  function fillAside(): void {
+    if (aside === undefined) return
+    aside.textContent = ''
+    if (!settable || row.state !== 'default') return
+    aside.append(buildDropButton(row, tr, () => {
+      // La ligne vient de quitter le fichier : la cellule porte maintenant le geste
+      // inverse (« Définir cette valeur »), et c'est lui qui prend le foyer — le bouton
+      // qu'on vient de cliquer, lui, n'existe plus.
+      fillCell()
+      cell.querySelector<HTMLElement>('button')?.focus()
+    }, drop))
+  }
+
   function fillCell(): void {
     cell.textContent = ''
+    fillAside()
     const context = ctx.edit
     if (!settable || context === undefined || entry === undefined) {
       // Une liaison de touche ne se règle pas ici — il y faudrait la touche pressée sur
@@ -1831,21 +1866,6 @@ function buildRowElement(row: PreferenceRow, ctx: PageContext): HTMLElement {
       return
     }
     cell.append(buildField(row, entry, id, context, commit))
-    // Un emplacement de largeur fixe, **présent sur toutes les lignes réglables** même
-    // quand il reste vide : sans lui, les lignes qui portent « Retirer » décaleraient
-    // leur contrôle de soixante pixels vers la gauche, et la colonne cesserait de
-    // s'aligner — ce que la grille de cette page existe précisément pour garantir.
-    const aside = el('span', 'prefs__aside')
-    // Une valeur écrite qui vaut le défaut peut repartir : c'est le geste inverse, et il
-    // n'a de sens que là — sur une valeur réglée, retirer la clé changerait le
-    // comportement de l'appareil, ce que ce bouton ne doit jamais faire en un clic.
-    if (row.state === 'default') {
-      aside.append(buildDropButton(row, tr, () => {
-        fillCell()
-        cell.querySelector<HTMLElement>('button')?.focus()
-      }, drop))
-    }
-    cell.append(aside)
   }
 
   fillCell()

@@ -267,12 +267,18 @@
 .prefs__row:last-child { border-bottom: 0; }
 
 /*
- * En édition, la deuxième colonne porte un contrôle **et** l'emplacement du bouton de
- * retrait : elle gagne les 4,3 rem correspondants, sans quoi les listes se
- * rétréciraient de soixante pixels au seul motif qu'un bouton peut apparaître à côté.
+ * En édition, une colonne s'ajoute entre le contrôle et la marque d'état : l'emplacement
+ * du bouton de retrait. Elle se dimensionne sur son contenu (`auto`), et son contenu est
+ * le **même sur toutes les lignes** — voir `.prefs__aside` —, donc toutes les lignes
+ * s'alignent. La place vient de la première colonne, qui est l'élastique de cette grille
+ * (`1fr`) ; le contrôle, lui, garde ses 17 rem dans les cinq langues.
+ *
+ * ⚠ L'emplacement est **hors de la cellule** depuis que sa largeur suit l'intitulé : dans
+ * la cellule, un intitulé long (« Uit het bestand verwijderen », 167 px) aurait rogné la
+ * liste de 93 px au lieu de rogner le nom du réglage.
  */
 .prefs[data-mode='edition'] .prefs__row {
-  grid-template-columns: minmax(9rem, 1fr) minmax(6rem, 22rem) 12rem 5.5rem;
+  grid-template-columns: minmax(9rem, 1fr) minmax(6rem, 17rem) auto 12rem 5.5rem;
 }
 
 .prefs__label { font-size: 14px; min-width: 0; overflow-wrap: anywhere; }
@@ -428,15 +434,44 @@
  */
 
 /*
- * L'emplacement du bouton de retrait, réservé sur **toutes** les lignes réglables, qu'il
- * soit occupé ou non. Une colonne de contrôles qui se décale d'une ligne à l'autre coûte
- * à chaque lecture ce que la grille fait gagner ; un vide de 4,3 rem ne coûte rien.
+ * L'emplacement du bouton de retrait, réservé sur **toutes** les lignes de la page
+ * modifiable, qu'il soit occupé ou non. Une colonne de contrôles qui se décale d'une
+ * ligne à l'autre coûte à chaque lecture ce que la grille fait gagner.
+ *
+ * ⚠ La largeur n'est plus écrite : elle est **prise à l'intitulé lui-même**. Une valeur
+ * en dur avait été taillée pour « Retirer » (4,6 rem, 73,6 px) ; le jour où le bouton a
+ * dit « Retirer du fichier » pour répondre à un pilote, la réservation n'a pas suivi et
+ * l'intitulé est passé sous la marque d'état — 24 px de recouvrement en français, 82 px
+ * en néerlandais, où « verwijderen » devenait illisible. Mesuré dans les cinq langues, à
+ * 1400, 1600 et 1920 points : la grille est en colonnes fixes, la fenêtre n'y était pour
+ * rien.
+ *
+ * Le fantôme ci-dessous porte le même intitulé dans la même boîte, sans être vu ni lu :
+ * la colonne mesure donc exactement le bouton, dans la langue courante, et le jour où
+ * l'intitulé change encore, elle change avec lui. Bouton et fantôme occupent la même
+ * case de grille : celle-ci vaut le plus large des deux, c'est-à-dire toujours la même
+ * chose d'une ligne à l'autre.
  */
 .prefs__aside {
-  flex: none;
-  width: 4.6rem;
-  display: flex;
-  justify-content: flex-start;
+  display: grid;
+  grid-template-columns: max-content;
+  justify-items: start;
+  align-items: baseline;
+}
+
+.prefs__aside::before,
+.prefs__aside > .prefs__drop { grid-area: 1 / 1; }
+
+/* Le fantôme : la boîte du bouton au pixel près — même corps, même rembourrage, même
+   filet — et rien d'autre. `visibility: hidden` le retire de l'arbre d'accessibilité :
+   un intitulé répété 90 fois à la synthèse vocale serait un défaut de plus. */
+.prefs__aside::before {
+  content: attr(data-label);
+  visibility: hidden;
+  font-size: 11.5px;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid transparent;
+  white-space: nowrap;
 }
 
 /*
@@ -711,9 +746,20 @@
 /* ------------------------------------------------------------------- petites largeurs */
 
 @media (max-width: 46rem) {
-  .prefs__row { grid-template-columns: 1fr auto; }
+  /* Le mode édition doit être nommé : sa règle est plus spécifique que `.prefs__row`, et
+     sans lui la page modifiable gardait ses colonnes fixes sous 46 rem alors que ses
+     marques d'état, elles, passaient déjà à la ligne. */
+  .prefs__row,
+  .prefs[data-mode='edition'] .prefs__row { grid-template-columns: 1fr auto; }
   .prefs__value { text-align: right; }
   .prefs__state { grid-column: 1 / -1; text-align: left; }
   .prefs__personal { grid-column: 1 / -1; }
   .prefs__entry-name { flex: 1 1 100%; }
+  /* Deux colonnes ne réservent plus rien : l'emplacement du retrait prend la ligne
+     entière quand il est occupé, et disparaît quand il ne l'est pas. Réserver la largeur
+     d'un intitulé sur une fenêtre étroite reviendrait à voler cette largeur au nom du
+     réglage, qui est ce qu'on vient lire. */
+  .prefs__aside { grid-column: 1 / -1; justify-items: end; }
+  .prefs__aside::before { display: none; }
+  .prefs__aside:empty { display: none; }
 }

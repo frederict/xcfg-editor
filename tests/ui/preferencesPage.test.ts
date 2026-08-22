@@ -1331,6 +1331,19 @@ describe('preferences.css habille les contrôles sans sortir du cadre', () => {
     expect(rules).not.toContain('prefers-color-scheme')
   })
 
+  it('ne réserve plus une largeur écrite, mais celle de l’intitulé', () => {
+    // Une largeur en dur ne peut pas suivre un intitulé qui change ni une langue qui
+    // s'allonge : c'est ce qui a laissé « Retirer du fichier » passer sous la marque
+    // d'état dans les cinq langues. La réservation se prend désormais au fantôme.
+    const aside = /\.prefs__aside \{[^}]*\}/.exec(css)?.[0] ?? ''
+    expect(aside).not.toMatch(/\bwidth:/)
+    expect(css).toContain('content: attr(data-label)')
+    // Et l'emplacement est une colonne de la grille en mode édition — la cinquième, qui
+    // se dimensionne sur son contenu pendant que la première, élastique, cède la place.
+    const edition = /\.prefs\[data-mode='edition'\] \.prefs__row \{[^}]*\}/.exec(css)?.[0] ?? ''
+    expect(edition).toMatch(/grid-template-columns:.*\bauto\b.*;/)
+  })
+
   it('empile les trois morceaux d’une liaison au lieu de les aligner', () => {
     // Trois morceaux côte à côte pousseraient la valeur hors de sa colonne dès le
     // premier libellé un peu long : la colonne de cette page existe pour tenir.
@@ -1510,13 +1523,45 @@ describe('rendre un défaut explicite, et le rendre à l’implicite', () => {
     // Sans emplacement réservé, les lignes qui portent « Retirer » décalent leur contrôle
     // de soixante pixels et la colonne cesse de s'aligner — mesuré au navigateur : les
     // dix listes de l'écran « Affichage » partagent le même bord droit avec, pas sans.
+    //
+    // L'emplacement est désormais une **colonne de la grille**, et non plus un bout de la
+    // cellule : il doit donc exister sur TOUTES les lignes de la page modifiable, faute
+    // de quoi les lignes qui en manqueraient décaleraient leur colonne de valeurs.
     const { page } = editable(BACKUP_2026)
-    const avecControle = [...page.element.querySelectorAll('.prefs__row')]
-      .filter((row) => row.querySelector('input:not([type="search"]), select') !== null)
-    expect(avecControle.length).toBeGreaterThan(60)
-    for (const row of avecControle) {
+    const lignes = [...page.element.querySelectorAll('.prefs__row')]
+    expect(lignes.length).toBeGreaterThan(100)
+    for (const row of lignes) {
       expect(row.querySelectorAll('.prefs__aside'), row.getAttribute('data-key') ?? '')
         .toHaveLength(1)
+    }
+    // Et il reste hors de toute cellule : dans la cellule, sa largeur se prendrait sur le
+    // contrôle au lieu de se prendre sur le nom du réglage.
+    expect(page.element.querySelectorAll('.prefs__cell .prefs__aside')).toHaveLength(0)
+  })
+
+  it('donne à l’emplacement la largeur de l’intitulé, dans les cinq langues', async () => {
+    // La régression à ne jamais refaire : la réservation était écrite en dur (4,6 rem,
+    // 73,6 px), taillée pour « Retirer ». Le jour où le bouton a dit « Retirer du
+    // fichier » — 109 px —, l'intitulé est passé sous la marque d'état : 24 px de
+    // recouvrement en français, 82 px en néerlandais, où « verwijderen » devenait
+    // illisible. Mesuré au navigateur dans les cinq langues, à 1400, 1600 et 1920 points.
+    //
+    // La largeur est maintenant prise à l'intitulé lui-même : la feuille en fait un
+    // fantôme invisible de la même boîte (`.prefs__aside::before`, `attr(data-label)`).
+    // Ce test tient l'attache — l'emplacement dit EXACTEMENT ce que le bouton dit.
+    for (const langue of ['fr', 'en', 'de', 'es', 'nl'] as const) {
+      const traducteur = await loadTranslator(langue)
+      const document = documentOf(BACKUP_2026)
+      const page = renderPreferencesPage({
+        document, catalog, tr: traducteur, domains, onEdit: () => {}
+      })
+      const asides = [...page.element.querySelectorAll<HTMLElement>('.prefs__aside')]
+      expect(asides.length, langue).toBeGreaterThan(100)
+      const intitule = traducteur.t('preferences.dropLabel')
+      for (const aside of asides) expect(aside.dataset.label, langue).toBe(intitule)
+      // Le fantôme et le bouton portent le même mot : c'est toute la garantie.
+      const bouton = page.element.querySelector('.prefs__drop')
+      expect(bouton?.textContent, langue).toBe(intitule)
     }
   })
 
