@@ -46,12 +46,71 @@ const TOC_ID = 'm-toc'
 const TOC_TITLE_ID = 'm-toc-title'
 
 /**
- * La hauteur, en pixels, sous laquelle un titre compte comme « dépassé ».
+ * La marge de confort, en pixels, sous ce que les bandeaux collants recouvrent.
  *
- * 56 px pour la barre de tête collante, plus une marge de confort : sans elle, le chapitre
- * marqué changerait alors que son titre est encore lisible à l'écran.
+ * Sans elle, le chapitre marqué changerait alors que son titre est encore lisible à
+ * l'écran. Ce qui est **au-dessus** d'elle, en revanche, ne se choisit plus : c'est la
+ * hauteur réellement occupée par la barre de tête et par la tête du manuel, mesurée
+ * (`watchStickyStack`). Une constante l'énonçait — 140 px, soit 56 pour la barre plus
+ * cette marge — et elle est devenue fausse le jour où la tête du manuel est devenue
+ * collante à son tour : le repère se posait sur un titre passé derrière elle.
  */
-const PASSED_BELOW = 140
+const PASSED_COMFORT = 84
+
+/**
+ * Ce que les bandeaux collants recouvrent en haut de la fenêtre, en pixels.
+ *
+ * La feuille de style le reçoit en deux temps — `--manual-bar` pour la tête du manuel,
+ * qui se colle sous la barre, et `--manual-stack` pour le sommaire, qui se colle sous les
+ * deux. Le code de marquage lit la même mesure ; les trois ne peuvent donc pas diverger.
+ *
+ * **Rend `undefined` quand rien n'est mesurable** — hors navigateur, ou avant la première
+ * mise en page. Les valeurs de repli de la feuille tiennent alors, et le repère de chapitre
+ * garde son ancien comportement plutôt que de se caler sur un zéro.
+ */
+function stickyStack(page: HTMLElement, head: HTMLElement): number | undefined {
+  const bar = document.querySelector<HTMLElement>('.app-bar')
+  const barHeight = bar?.getBoundingClientRect().height ?? 0
+  const headHeight = head.getBoundingClientRect().height
+  if (headHeight === 0) return undefined
+  page.style.setProperty('--manual-bar', `${barHeight}px`)
+  page.style.setProperty('--manual-stack', `${barHeight + headHeight}px`)
+  return barHeight + headHeight
+}
+
+/**
+ * Tenir cette mesure à jour, et se débrancher quand le manuel s'en va.
+ *
+ * Les deux boîtes bougent pour des raisons indépendantes : la barre de tête se replie sur
+ * deux lignes quand ses actions ne tiennent plus, et gagne encore une ligne quand le reçu
+ * d'enregistrement s'y affiche ; la tête du manuel se replie sur les fenêtres étroites.
+ * Une hauteur écrite en dur serait fausse dans trois cas sur quatre.
+ *
+ * Le débranchement suit le motif de `followCurrentChapter`, et pour la même raison :
+ * `buildManualPage` ne rend aucune poignée de fermeture, `main.ts` vide son cadre en
+ * changeant de vue, et un observateur oublié tiendrait en vie un arbre de mille nœuds.
+ * C'est la **page** qu'on observe pour ça — la barre, elle, survit au manuel et ne
+ * signalerait jamais son départ.
+ */
+function watchStickyStack(page: HTMLElement, head: HTMLElement): () => number | undefined {
+  const measure = (): number | undefined => stickyStack(page, head)
+  if (typeof ResizeObserver === 'undefined') return measure
+
+  let wasShown = false
+  const observer = new ResizeObserver(() => {
+    if (page.isConnected) {
+      wasShown = true
+      measure()
+    } else if (wasShown) {
+      observer.disconnect()
+    }
+  })
+  observer.observe(page)
+  observer.observe(head)
+  const bar = document.querySelector<HTMLElement>('.app-bar')
+  if (bar !== null) observer.observe(bar)
+  return measure
+}
 
 /**
  * Ranger le fragment en deux colonnes : le sommaire d'un côté, le texte de l'autre.
@@ -148,7 +207,9 @@ function keepInSight(entry: Element, column: HTMLElement | null): void {
  * Sans `IntersectionObserver` — un navigateur ancien, un test hors navigateur — le
  * sommaire reste un sommaire : il navigue, il ne dit simplement pas où l'on est.
  */
-function followCurrentChapter(root: HTMLElement, toc: HTMLElement): void {
+function followCurrentChapter(
+  root: HTMLElement, toc: HTMLElement, occluded: () => number | undefined
+): void {
   if (typeof IntersectionObserver === 'undefined') return
 
   const links = new Map<string, Element>()
@@ -160,9 +221,11 @@ function followCurrentChapter(root: HTMLElement, toc: HTMLElement): void {
   if (headings.length === 0) return
 
   const mark = (): void => {
+    // Repli : la hauteur de la barre seule, telle que la feuille l'écrit, plus la marge.
+    const passedBelow = (occluded() ?? 56) + PASSED_COMFORT
     let current = headings[0]
     for (const heading of headings) {
-      if (heading.getBoundingClientRect().top > PASSED_BELOW) break
+      if (heading.getBoundingClientRect().top > passedBelow) break
       current = heading
     }
     for (const [id, link] of links) {
@@ -216,11 +279,13 @@ export async function buildManualPage(
 
   page.append(head, body)
 
+  const measure = watchStickyStack(page, head)
+
   const root = body.querySelector<HTMLElement>('.manual')
   if (root !== null) {
     const toc = layOutColumns(root)
     if (toc !== undefined) {
-      followCurrentChapter(root, toc)
+      followCurrentChapter(root, toc, measure)
       // La pastille de retour au sommaire, hors de `.manual` : c'est de l'interface, et
       // dedans elle hériterait du soulignement que la feuille donne aux liens du texte.
       // Elle ne se voit qu'en une colonne — la feuille de style en décide seule.

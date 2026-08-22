@@ -190,22 +190,48 @@ describe('manuel.css — la largeur, et la colonne du sommaire', () => {
     expect(css).toMatch(/\.manual__lead,\s*\n\.manual__text,\s*\n\.manual__side \{[^}]*max-width: 40rem;/)
   })
 
-  it('colle le sommaire sous la barre de tête, sans passer dessous', () => {
+  it('colle la tête du manuel SOUS la barre, jamais derrière elle', () => {
+    const head = rule('.manual-page__head')
+    expect(head).toContain('position: sticky;')
+    // `top: 0` la cacherait derrière la barre de tête, qui est collante et au-dessus (20).
+    expect(head, 'la tête se collerait derrière la barre').not.toContain('top: 0')
+    expect(head).toContain('top: var(--manual-bar, 3.5rem);')
+    // Sans fond, le texte du manuel défilerait au travers du titre.
+    expect(head).toContain('background: var(--app-bg);')
+    expect(head).toContain('z-index: 10;')
+  })
+
+  it('colle le sommaire sous les DEUX bandeaux, sans passer dessous', () => {
     // `.manual__side` paraît trois fois : la mesure du fil, le placement dans la grille,
     // puis la colonne collante. On part d'après le placement pour lire la bonne.
     const side = rule('.manual__side', css.indexOf('grid-row: 1 / span 2;'))
     expect(side).toContain('position: sticky;')
-    // 4,5 rem = 72 px : la barre de tête est collante et haute de 56 px.
-    expect(side).toContain('top: 4.5rem;')
+    // La barre de tête PLUS la tête du manuel, toutes deux collantes. Un chiffre écrit ici
+    // serait faux dès que la barre passe à deux lignes ou que le reçu s'y affiche.
+    expect(side, 'la hauteur des bandeaux est écrite en dur')
+      .toContain('top: calc(var(--manual-stack, 3.5rem) + 1rem);')
     // Fenêtre courte : la colonne défile pour son compte plutôt que de déborder.
     expect(side).toContain('overflow-y: auto;')
-    expect(side).toContain('max-height: calc(100vh - 6rem);')
+    expect(side).toContain('max-height: calc(100vh - var(--manual-stack, 3.5rem) - 2.5rem);')
   })
 
-  it('donne aux chapitres la marge de défilement de cette même barre', () => {
-    // Sans elle, un chapitre atteint depuis le sommaire arrive DERRIÈRE la barre.
-    expect(rule('.manual h2')).toContain('scroll-margin-top: 4.5rem;')
-    expect(rule('.manual__toc')).toContain('scroll-margin-top: 4.5rem;')
+  it('donne aux chapitres la marge de défilement de ces mêmes bandeaux', () => {
+    // Sans elle, un chapitre atteint depuis le sommaire arrive DERRIÈRE eux.
+    const expected = 'scroll-margin-top: calc(var(--manual-stack, 3.5rem) + 1rem);'
+    expect(rule('.manual h2')).toContain(expected)
+    expect(rule('.manual__toc')).toContain(expected)
+    // Les trois marges bougent ensemble ou pas du tout : le titre, le sous-titre et
+    // l'ancre du sommaire visent la même fenêtre libre.
+    expect(css.split(expected).length - 1, 'une marge de défilement a divergé').toBe(3)
+  })
+
+  it('n’écrit plus aucune hauteur de bandeau en dur dans une position collante', () => {
+    // Le repli `3.5rem` reste écrit — c'est la barre seule sur une ligne, la valeur qui
+    // s'applique avant la première mesure. Ce qui est interdit, c'est 4,5 rem : l'ancienne
+    // somme, juste quand la tête du manuel ne collait pas, fausse depuis.
+    // Bornée par un non-chiffre à gauche : `14.5rem` est la largeur de la colonne du
+    // sommaire, elle n'a rien à voir.
+    expect(css, 'un reste de l’ancienne somme barre + marge').not.toMatch(/(^|[^\d.])4\.5rem/)
   })
 
   it('écrit la colonne comme un enrichissement, pas comme un état à défaire', () => {

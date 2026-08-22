@@ -36,11 +36,17 @@
  * un second premier niveau casserait la navigation par titres d'un lecteur d'écran, qui
  * est ici le sommaire réel du document.
  *
- * `scroll-margin-top: 4.5rem` et non `1rem` : la barre de tête de l'application est
- * collante et haute de 56 px. Avec 1 rem, un chapitre atteint depuis le sommaire arrivait
- * DERRIÈRE elle — son titre caché, la lecture commencée au deuxième paragraphe. Le défaut
- * ne se voyait guère tant que le sommaire ne servait qu'une fois ; il se voit à chaque
- * saut depuis une colonne collante.
+ * La marge de défilement n'est pas `1rem` : DEUX bandeaux collants se superposent en haut
+ * de la fenêtre — la barre de tête de l'application, puis la tête du manuel. Avec 1 rem, un
+ * chapitre atteint depuis le sommaire arrivait DERRIÈRE eux : son titre caché, la lecture
+ * commencée au deuxième paragraphe. Le défaut ne se voyait guère tant que le sommaire ne
+ * servait qu'une fois ; il se voit à chaque saut depuis une colonne collante.
+ *
+ * Leur somme est **mesurée** (`--manual-stack`, posée par `manualPage.ts`) : la barre gagne
+ * une ligne quand ses actions ne tiennent plus, une autre quand le reçu d'enregistrement s'y
+ * affiche, et la tête du manuel se replie sur les écrans étroits. Les 4,5 rem qu'énonçait
+ * cette feuille valaient pour la barre seule sur une ligne ; ils restent le repli, celui qui
+ * s'applique avant la première mesure.
  */
 .manual h2 {
   margin: 2.4rem 0 0.2rem;
@@ -48,7 +54,7 @@
   font-size: 21px;
   font-weight: 600;
   line-height: 1.3;
-  scroll-margin-top: 4.5rem;
+  scroll-margin-top: calc(var(--manual-stack, 3.5rem) + 1rem);
 }
 
 .manual h2:first-child { margin-top: 0; }
@@ -59,7 +65,7 @@
   font-size: 18px;
   font-weight: 600;
   line-height: 1.35;
-  scroll-margin-top: 4.5rem;
+  scroll-margin-top: calc(var(--manual-stack, 3.5rem) + 1rem);
 }
 
 /* Le rang du chapitre, en gris devant son titre : il donne au sommaire de quoi désigner
@@ -97,7 +103,7 @@
 .manual__toc {
   margin: 0 0 1.6rem;
   /* Même décalage que les chapitres : la pastille de retour vise cette ancre. */
-  scroll-margin-top: 4.5rem;
+  scroll-margin-top: calc(var(--manual-stack, 3.5rem) + 1rem);
   padding: 0.9rem 1rem;
   border: 1px solid var(--app-line);
   border-radius: 8px;
@@ -395,9 +401,15 @@
   .manual__text { margin-inline: 0; }
 
   /*
-   * `top: 4.5rem` : la barre de tête de l'application est elle-même collante et haute de
-   * 56 px (mesurée au navigateur, fenêtre 1400 × 950). Sans ce décalage, le sommaire se
-   * collerait DERRIÈRE elle et ses premières entrées seraient inatteignables.
+   * Le sommaire se colle sous DEUX bandeaux, pas un : la barre de tête de l'application,
+   * puis la tête du manuel, collante elle aussi. Sans ce décalage il se collerait DERRIÈRE
+   * eux et ses premières entrées seraient inatteignables.
+   *
+   * Leur somme est mesurée et reposée dans `--manual-stack` par `manualPage.ts` — elle
+   * varie : la barre passe à deux lignes quand ses actions ne tiennent plus, en gagne une
+   * troisième avec le reçu d'enregistrement, et la tête du manuel se replie sur les écrans
+   * étroits. Les 4,5 rem qui étaient écrits ici valaient pour la barre seule à 56 px
+   * (mesurée au navigateur, fenêtre 1400 × 950) ; ils restent le repli.
    *
    * Le plafond de hauteur et son `overflow` sont là pour la fenêtre courte : treize
    * entrées tiennent dans 950 px, pas dans 600. `overscroll-behavior: contain` évite
@@ -405,9 +417,13 @@
    */
   .manual__side {
     position: sticky;
-    top: 4.5rem;
+    /* Sous la barre ET sous la tête du manuel, toutes deux collantes : `--manual-stack`
+       porte la somme mesurée. Le repli de 4,5 rem est ce qui valait avant que la tête ne
+       colle — barre sur une ligne, plus une marge —, et il reste juste tant que la mesure
+       n'est pas arrivée. */
+    top: calc(var(--manual-stack, 3.5rem) + 1rem);
     max-width: none;
-    max-height: calc(100vh - 6rem);
+    max-height: calc(100vh - var(--manual-stack, 3.5rem) - 2.5rem);
     overflow-y: auto;
     overscroll-behavior: contain;
   }
@@ -463,7 +479,28 @@
  */
 .manual-page { padding: 0 0 4rem; }
 
+/*
+ * La tête du manuel reste sous les yeux — treize chapitres se lisent en descendant, et le
+ * moyen de refermer l'aide ne doit pas exiger de tout remonter d'abord.
+ *
+ * Elle se colle **sous la barre de tête**, pas en haut de la fenêtre : la barre est déjà
+ * collante (`z-index: 20`), et se poser à `top: 0` reviendrait à se cacher derrière elle.
+ * La hauteur de cette barre n'est pas une constante — elle passe à deux lignes quand ses
+ * actions ne tiennent plus, et en gagne une troisième quand le reçu d'enregistrement s'y
+ * affiche —, d'où `--manual-bar`, mesurée et reposée par `manualPage.ts`. Le repli de
+ * 3,5 rem est la barre sur une ligne : juste dans le cas ordinaire, et la mesure arrive
+ * avant le premier défilement.
+ *
+ * Le fond est celui de la page, et il est **indispensable** : sans lui le texte défilerait
+ * au travers du titre. Il n'ajoute aucune couleur — ce n'est pas un panneau posé sur la
+ * page, c'est la page qui garde son en-tête sous la main.
+ */
 .manual-page__head {
+  position: sticky;
+  top: var(--manual-bar, 3.5rem);
+  /* Au-dessus du texte du manuel, sous la barre de tête (20) et sous les modales. */
+  z-index: 10;
+  background: var(--app-bg);
   display: flex;
   align-items: baseline;
   justify-content: space-between;
