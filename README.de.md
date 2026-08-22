@@ -259,7 +259,7 @@ Absicht — ein Treueversprechen, das nur der Autor nachprüfen kann, ist nichts
 aufgenommen, nie auf einer echten Konfiguration — eine angezeigte Karte kann eine Wohnung
 auf das Gebäude genau verraten.*
 
-![Der Einstellungsbereich des Widgets „Luftraum in der Nähe“ im Bearbeitungsmodus: drei
+![Der Einstellungsbereich des Widgets „Luftraum-Annäherung“ im Bearbeitungsmodus: drei
 Zeilen „Werkswert wiederherstellen“, die beide Werte zeigen, und unten der Block der
 Einstellung, die dieses Widget nicht schreibt, mit ihrer Schaltfläche „Diesen Wert
 festlegen“.](captures/panneau-gadget.png)
@@ -267,7 +267,7 @@ festlegen“.](captures/panneau-gadget.png)
 *Der Bereich eines Widgets und die beiden Werkswert-Handgriffe, die er anbietet:
 wiederherstellen, was man eingestellt hat, oder festschreiben, was die Datei nicht sagt.*
 
-![Der Bildschirm „Android-Integration“ der allgemeinen Einstellungen im
+![Der Bildschirm „Android Integration“ der allgemeinen Einstellungen im
 Bearbeitungsmodus: Zeilen „Entfernen“ mit dem Vermerk WERKSWERT, Zeilen „Den Werkswert
 wiederherstellen“ mit dem Vermerk VON IHNEN GESETZT, und zwei Zeilen „Diesen Wert
 schreiben“ mit dem Vermerk FEHLT IN DER DATEI.](captures/reglages-generaux.png)

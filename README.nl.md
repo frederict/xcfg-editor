@@ -251,7 +251,7 @@ een belofte van getrouwheid die alleen de auteur kan nagaan, is niets waard.
 `tests/fixtures/`, nooit op een echte configuratie — een getoonde kaart kan een woonplaats
 tot op het gebouw verraden.*
 
-![Het instellingenpaneel van de widget ‘Luchtruim in de buurt’, in bewerkmodus: drie regels
+![Het instellingenpaneel van de widget ‘Luchtruim afstand’, in bewerkmodus: drie regels
 ‘Fabriekswaarde terugzetten’ die de twee waarden tegenover elkaar tonen, en onderaan het
 blok met de instelling die deze widget niet schrijft, met zijn knop ‘Deze waarde
 vastleggen’.](captures/panneau-gadget.png)
@@ -259,7 +259,7 @@ vastleggen’.](captures/panneau-gadget.png)
 *Het paneel van een widget, en de twee fabriekswaardehandelingen die het biedt: terugzetten
 wat u hebt ingesteld, of vastleggen wat het bestand niet zegt.*
 
-![Het scherm ‘Android-integratie’ van de algemene instellingen, in bewerkmodus: regels
+![Het scherm ‘Android integratie’ van de algemene instellingen, in bewerkmodus: regels
 ‘Verwijderen’ met de vermelding FABRIEKSWAARDE, regels ‘De fabriekswaarde terugzetten’ met
 de vermelding DOOR U INGESTELD, en twee regels ‘Deze waarde schrijven’ met de vermelding
 ONTBREEKT IN HET BESTAND.](captures/reglages-generaux.png)

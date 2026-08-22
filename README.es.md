@@ -246,7 +246,7 @@ de fidelidad que solo el autor puede comprobar no vale nada.
 nunca sobre una configuración real — un mapa mostrado puede revelar un domicilio con
 precisión de edificio.*
 
-![El panel de ajustes del widget «Espacio aéreo cercano», en modo edición: tres líneas
+![El panel de ajustes del widget «Proximidad de espacios aéreos», en modo edición: tres líneas
 «Restablecer el valor de fábrica» que muestran los dos valores en presencia, y abajo el
 bloque del ajuste que este widget no escribe, con su botón «Definir este
 valor».](captures/panneau-gadget.png)
@@ -254,7 +254,7 @@ valor».](captures/panneau-gadget.png)
 *El panel de un widget, y los dos gestos de valor de fábrica que ofrece: restablecer lo que
 se ha ajustado, o fijar lo que el archivo no dice.*
 
-![La pantalla «Integración Android» de los ajustes generales, en modo edición: líneas
+![La pantalla «Integración con Android» de los ajustes generales, en modo edición: líneas
 «Quitar» marcadas VALOR DE FÁBRICA, líneas «Restablecer el valor de fábrica» marcadas
 AJUSTADO POR USTED, y dos líneas «Escribir este valor» marcadas AUSENTE DEL
 ARCHIVO.](captures/reglages-generaux.png)
