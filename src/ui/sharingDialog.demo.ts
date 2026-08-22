@@ -59,6 +59,7 @@ async function openOn(path: string, withExtras: boolean): Promise<void> {
     onConfirm: (result) => {
       const produced = sharingBytes(result)
       say([
+        `issue       : ${result.form}`,
         `anonymisé   : ${result.anonymized}`,
         `nom         : ${result.fileName}`,
         `conteneur   : ${result.kind}`,

@@ -76,7 +76,7 @@ describe('les quatre vues d’un seul inventaire — le backup de référence', 
     const plan = planSharing(
       { document: container.document, fileName: 'b.xcfg', kind: 'xcfg' }, AT
     )
-    expect(plan.anonymous.replacements).toHaveLength(0)
+    expect(plan.pages.replacements).toHaveLength(0)
     expect(plan.personal.counts).toEqual(inventory.counts)
 
     // 4. Avertissement d'export — n'énumère que ce qui est renseigné.
@@ -111,8 +111,8 @@ describe('les quatre vues d’un seul inventaire — le fichier au bouton d’ap
       { document: container.document, fileName: 'f.xcfg', kind: 'xcfg' }, AT
     )
     const travelling = inventory.findings.filter((f) => f.home === 'layout' && f.filled)
-    expect(plan.anonymous.replacements).toHaveLength(travelling.length)
-    expect(plan.anonymous.replacements.map((r) => `${r.shortName}/${r.keyPath}`))
+    expect(plan.pages.replacements).toHaveLength(travelling.length)
+    expect(plan.pages.replacements.map((r) => `${r.shortName}/${r.keyPath}`))
       .toEqual(travelling.map((f) => f.key))
 
     const warning = warningsAt(warningsOf(FORMES_PRESERVEES), 'export')

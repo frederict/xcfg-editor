@@ -13,6 +13,8 @@ import { moveWidgetBy } from '../../src/model/mutations'
 import {
   ANNEXES_NOTE,
   ANONYMOUS_COSTS,
+  BACKUP_COSTS,
+  BACKUP_RESIDUAL_NOTE,
   describeLocation,
   displayedReplacement,
   droppedRootKeyLabel,
@@ -24,7 +26,10 @@ import {
   renderSharingDialog,
   RESIDUAL_NOTE,
   sharingBytes,
+  SUSPECTS_NONE_NOTE,
+  SUSPECTS_NOTE,
   type SharingExtra,
+  type SharingForm,
   type SharingResult,
   type SharingSource
 } from '../../src/ui/sharingDialog'
@@ -43,6 +48,12 @@ import { ARCHIVE, BACKUP_2026, FORMES_PRESERVEES, PAGES_2026 } from '../fixtures
  *    exporter : même empreinte SHA-256 qu'à l'entrée. C'est la promesse du projet, et une
  *    boîte de dialogue qui la casserait la casserait en silence ;
  * 3. **le nom produit ne reprend rien du nom d'origine**, et il diffère selon l'issue.
+ *
+ * Depuis la troisième issue — la sauvegarde entière dont les données personnelles sont
+ * remplacées — une quatrième s'y ajoute : **les trois choix se distinguent**, par leur
+ * titre, par le nom du fichier produit et par le volet qui montre ce que chacun fera. Un
+ * pilote qui confondrait `backup-anon` et `pages-anon` écraserait les préférences de son
+ * destinataire, ou lui enverrait un fichier qui ne peut pas répondre à sa question.
  */
 
 /** Le moment que porteront tous les noms de ce fichier : figé, sans quoi rien n'est stable. */
@@ -58,7 +69,7 @@ function shortName(file: string): string {
 
 /* ============================================================ le plan, hors interface */
 
-describe('planSharing — deux issues, deux noms', () => {
+describe('planSharing — trois issues, trois noms', () => {
   it('l’export ordinaire garde l’extension d’origine et ne reprend pas le radical', () => {
     const plan = planSharing(
       { document: readSource(BACKUP_2026), fileName: '2022-02-08_marie_ok.xcfg', kind: 'xcfg' },
@@ -82,8 +93,8 @@ describe('planSharing — deux issues, deux noms', () => {
       { document: readSource(BACKUP_2026), fileName: 'sauvegarde.xczfg', kind: 'xczfg' },
       WHEN
     )
-    expect(plan.anonymous.fileName).toBe('xctrack_2026-08-21-153207_pages-anon.xcfg')
-    expect(plan.anonymous.derived).toBe(true)
+    expect(plan.pages.fileName).toBe('xctrack_2026-08-21-153207_pages-anon.xcfg')
+    expect(plan.pages.derived).toBe(true)
   })
 
   it('un export « pages » n’a aucune préférence à retirer', () => {
@@ -92,9 +103,9 @@ describe('planSharing — deux issues, deux noms', () => {
       WHEN
     )
     expect(plan.exportType).toBe('pages')
-    expect(plan.anonymous.droppedRootKeys).toEqual([])
-    expect(plan.anonymous.derived).toBe(false)
-    expect(plan.anonymous.fileName).toBe('xctrack_2026-08-21-153207_pages-anon.xcfg')
+    expect(plan.pages.droppedRootKeys).toEqual([])
+    expect(plan.pages.derived).toBe(false)
+    expect(plan.pages.fileName).toBe('xctrack_2026-08-21-153207_pages-anon.xcfg')
   })
 
   it('un « backup » perd ses deux sections, et l’interface sait les nommer', () => {
@@ -102,8 +113,8 @@ describe('planSharing — deux issues, deux noms', () => {
       { document: readSource(BACKUP_2026), fileName: shortName(BACKUP_2026), kind: 'xcfg' },
       WHEN
     )
-    expect(plan.anonymous.droppedRootKeys).toEqual(['airspaceSelectedChannels', 'preferences'])
-    for (const key of plan.anonymous.droppedRootKeys) {
+    expect(plan.pages.droppedRootKeys).toEqual(['airspaceSelectedChannels', 'preferences'])
+    for (const key of plan.pages.droppedRootKeys) {
       expect(droppedRootKeyLabel(key).length).toBeGreaterThan(20)
     }
     // Le repli nomme une clé inconnue sans prétendre savoir ce qu'elle contient.
@@ -127,7 +138,7 @@ describe('l’inventaire montre ce qui part — formes-preservees.xcfg', () => {
   )
 
   it('le numéro de téléphone et le nom du contact y figurent, avec leur emplacement', () => {
-    const phone = plan.anonymous.replacements.find((r) => r.keyPath === 'contact/phoneNumber')
+    const phone = plan.pages.replacements.find((r) => r.keyPath === 'contact/phoneNumber')
     expect(phone).toBeDefined()
     expect(phone!.text).toBe('+32 470 00 00 00')
     expect(phone!.replacement).toBe(NEUTRAL_PHONE_NUMBER)
@@ -136,31 +147,31 @@ describe('l’inventaire montre ce qui part — formes-preservees.xcfg', () => {
     expect(phone!.widgetRank).toBe(2)
     expect(describeLocation(phone!, 'fr')).toBe('Paysage · page 1 · gadget 2 · Bouton téléphone')
 
-    const contact = plan.anonymous.replacements.find((r) => r.keyPath === 'contact/fullName')
+    const contact = plan.pages.replacements.find((r) => r.keyPath === 'contact/fullName')
     expect(contact!.text).toBe('Jean Exemple')
     expect(contact!.replacement).toBe('Contact 1')
   })
 
   it('les quatre textes du fichier sont inventoriés, dans l’ordre du fichier', () => {
-    expect(plan.anonymous.replacements.map((r) => r.keyPath)).toEqual([
+    expect(plan.pages.replacements.map((r) => r.keyPath)).toEqual([
       'text', 'titletext', 'contact/fullName', 'contact/phoneNumber', 'titletext'
     ])
     // Le titre portrait est bien rattaché à sa page, pas à celle du paysage.
-    const last = plan.anonymous.replacements.at(-1)!
+    const last = plan.pages.replacements.at(-1)!
     expect(last.orientation).toBe('portrait')
     expect(last.text).toBe('Sol')
   })
 
   it('chaque entrée porte une raison en français, prête à afficher', () => {
-    for (const entry of plan.anonymous.replacements) {
+    for (const entry of plan.pages.replacements) {
       expect(entry.reason.length).toBeGreaterThan(30)
       expect(entry.reason).toMatch(/remplacé|remise|remis/)
     }
   })
 
   it('aucune valeur d’origine ne survit dans le document produit', () => {
-    const produced = serializeJson(plan.anonymous.document)
-    for (const entry of plan.anonymous.replacements) {
+    const produced = serializeJson(plan.pages.document)
+    for (const entry of plan.pages.replacements) {
       expect(produced).not.toContain(entry.text)
     }
     expect(produced).not.toContain('Jean Exemple')
@@ -195,14 +206,14 @@ describe('les annexes d’une archive ne partent pas dans l’anonymisé', () =>
   )
 
   it('elles sont inventoriées, pas passées sous silence', () => {
-    expect(plan.anonymous.droppedExtras).toEqual(EXTRAS)
+    expect(plan.pages.droppedExtras).toEqual(EXTRAS)
     expect(ANNEXES_NOTE).toContain('.xcfg')
     expect(ANNEXES_NOTE).toContain('métadonnées')
   })
 
   it('le fichier anonymisé est un .xcfg nu', () => {
-    expect(plan.anonymous.fileName.endsWith('.xcfg')).toBe(true)
-    expect(plan.anonymous.fileName).not.toContain('.xczfg')
+    expect(plan.pages.fileName.endsWith('.xcfg')).toBe(true)
+    expect(plan.pages.fileName).not.toContain('.xczfg')
   })
 
   it('l’archive réelle du corpus n’en porte aucune, et le plan le dit', async () => {
@@ -217,7 +228,7 @@ describe('les annexes d’une archive ne partent pas dans l’anonymisé', () =>
       },
       WHEN
     )
-    expect(real.anonymous.droppedExtras).toEqual([])
+    expect(real.pages.droppedExtras).toEqual([])
   })
 })
 
@@ -254,16 +265,25 @@ function radios(handle: { element: HTMLDialogElement }): HTMLInputElement[] {
 }
 
 /**
- * Coche l'une des deux issues. Les boutons radio ne vivent pas dans un `<form>` — une
- * boîte modale n'en a pas besoin — et la décoche mutuelle n'est donc pas garantie par
- * l'environnement de test : on la fait à la main, comme le ferait le navigateur.
+ * Coche l'une des trois issues, **par son nom** et non par son rang : l'ordre des cartes
+ * est une décision d'interface, et un test qui l'épingle par un indice numérique se
+ * casserait au premier réagencement sans rien avoir mesuré.
+ *
+ * Les boutons radio ne vivent pas dans un `<form>` — une boîte modale n'en a pas besoin —
+ * et la décoche mutuelle n'est donc pas garantie par l'environnement de test : on la fait
+ * à la main, comme le ferait le navigateur.
  */
-function choose(handle: { element: HTMLDialogElement }, rank: 0 | 1): void {
+function choose(handle: { element: HTMLDialogElement }, form: SharingForm): void {
   const inputs = radios(handle)
   for (const input of inputs) input.checked = false
-  const chosen = inputs[rank]!
+  const chosen = inputs.find((input) => input.value === form)!
   chosen.checked = true
   chosen.dispatchEvent(new Event('change', { bubbles: true }))
+}
+
+/** Le volet d'une issue : celui qui montre ce qu'elle fera, avant qu'elle le fasse. */
+function panel(handle: { element: HTMLDialogElement }, form: SharingForm): HTMLElement {
+  return handle.element.querySelector<HTMLElement>(`.sharing__detail--${form}`)!
 }
 
 describe('la boîte : ce que le pilote voit et ce qu’il décide', () => {
@@ -286,13 +306,15 @@ describe('la boîte : ce que le pilote voit et ce qu’il décide', () => {
       { document: readSource(BACKUP_2026), fileName: shortName(BACKUP_2026), kind: 'xcfg' },
       () => {}
     )
-    const [plain, anonymous] = radios(handle)
-    expect(plain!.value).toBe('plain')
+    const [plain, backup, pages] = radios(handle)
+    // Trois issues, dans l'ordre de ce qui part : tout, tout sauf vous, les pages seules.
+    expect([plain!.value, backup!.value, pages!.value]).toEqual(['plain', 'backup', 'pages'])
     expect(plain!.checked).toBe(true)
-    expect(anonymous!.value).toBe('anonymous')
-    expect(anonymous!.checked).toBe(false)
-    // L'inventaire ne s'affiche que quand l'anonymisation est choisie.
-    expect(handle.element.querySelector<HTMLElement>('.sharing__detail')!.hidden).toBe(true)
+    expect(backup!.checked).toBe(false)
+    expect(pages!.checked).toBe(false)
+    // Aucun inventaire ne s'affiche tant qu'une issue anonymisante n'est pas choisie.
+    expect(panel(handle, 'backup').hidden).toBe(true)
+    expect(panel(handle, 'pages').hidden).toBe(true)
     handle.close()
   })
 
@@ -322,10 +344,12 @@ describe('la boîte : ce que le pilote voit et ce qu’il décide', () => {
       { document: readSource(BACKUP_2026), fileName: shortName(BACKUP_2026), kind: 'xcfg' },
       () => {}
     )
-    const [plain, anonymous] = radios(handle)
+    const [plain, backup, pages] = radios(handle)
     expect(plain!.getAttribute('aria-label')).not.toContain('Pour les curieux')
     expect(plain!.getAttribute('aria-label')).toContain('Votre configuration, telle qu’elle est')
-    expect(anonymous!.getAttribute('aria-label'))
+    expect(backup!.getAttribute('aria-label'))
+      .toContain('Tous vos réglages, sans ce qui vous désigne')
+    expect(pages!.getAttribute('aria-label'))
       .toContain('Version partageable, sans données personnelles')
     handle.close()
   })
@@ -338,8 +362,8 @@ describe('la boîte : ce que le pilote voit et ce qu’il décide', () => {
     const nameLine = (): string => handle.element.querySelector('.modal__name')!.textContent ?? ''
     expect(nameLine()).toContain('xctrack_2026-08-21-153207_backup.xcfg')
 
-    choose(handle, 1)
-    expect(handle.element.querySelector<HTMLElement>('.sharing__detail')!.hidden).toBe(false)
+    choose(handle, 'pages')
+    expect(panel(handle, 'pages').hidden).toBe(false)
     expect(nameLine()).toContain('xctrack_2026-08-21-153207_pages-anon.xcfg')
 
     const shown = handle.element.textContent ?? ''
@@ -355,7 +379,7 @@ describe('la boîte : ce que le pilote voit et ce qu’il décide', () => {
       { document: readSource(FORMES_PRESERVEES), fileName: 'formes-preservees.xcfg', kind: 'xcfg' },
       () => {}
     )
-    choose(handle, 1)
+    choose(handle, 'pages')
     const shown = handle.element.textContent ?? ''
     expect(shown).toContain('gadget')
     expect(shown.toLowerCase()).not.toContain('widget')
@@ -386,7 +410,7 @@ describe('la boîte : ce que le pilote voit et ce qu’il décide', () => {
       { document: readSource(FORMES_PRESERVEES), fileName: 'formes-preservees.xcfg', kind: 'xcfg' },
       (r) => { result = r }
     )
-    choose(handle, 1)
+    choose(handle, 'pages')
     handle.element.querySelector<HTMLButtonElement>('.btn--primary')!.click()
 
     expect(result!.anonymized).toBe(true)
@@ -441,8 +465,8 @@ describe('ouvrir la boîte, renoncer, exporter : la même empreinte', () => {
         (r) => { result = r }
       )
       // On regarde tout, y compris l'inventaire, puis on renonce.
-      choose(handle, 1)
-      choose(handle, 0)
+      choose(handle, 'pages')
+      choose(handle, 'plain')
       handle.element.querySelectorAll<HTMLButtonElement>('.modal__actions .btn')[0]!.click()
       expect(result).toBeUndefined()
 
@@ -589,8 +613,11 @@ describe('sharingDialog — les octets, dits juste dans les deux cas', () => {
     handle.open()
     const titres = [...handle.element.querySelectorAll('.sharing__choiceTitle')]
       .map((one) => one.textContent)
+    // Trois titres, et l'ordre est celui de ce qui part : tout, tout sauf ce qui vous
+    // désigne, les pages seules. Descendre d'un cran veut toujours dire « donner moins ».
     expect(titres).toEqual([
       'Votre configuration, telle qu’elle est',
+      'Tous vos réglages, sans ce qui vous désigne',
       'Version partageable, sans données personnelles'
     ])
     // La garantie technique est là, et elle est repliée.
@@ -615,5 +642,326 @@ describe('sharingDialog — les octets, dits juste dans les deux cas', () => {
       expect(texte).not.toContain(modified ? FIDELITY_UNCHANGED : FIDELITY_MODIFIED)
       handle.close()
     }
+  })
+})
+
+/* ============ la troisième issue : la sauvegarde entière, données personnelles remplacées */
+
+/**
+ * Le manque que cette issue comble, dit en une phrase : *un pilote veut demander de l'aide
+ * sur un forum à propos de ses réglages de vario, sans publier son nom.*
+ *
+ * Les deux issues d'avant ne lui répondaient pas. « Telle qu'elle est » envoie son nom,
+ * sa voile, ses capteurs et sa tâche en cours. « Version partageable » n'envoie **aucun
+ * réglage** — donc aucune question à poser.
+ */
+describe('la sauvegarde entière : les réglages restent, le pilote part', () => {
+  const plan = planSharing(
+    { document: readSource(BACKUP_2026), fileName: shortName(BACKUP_2026), kind: 'xcfg' },
+    WHEN
+  )
+
+  it('le nom du fichier dit « backup », et jamais « pages »', () => {
+    // Confondre les deux, c'est écraser les préférences du destinataire — ou lui envoyer
+    // un fichier qui ne peut pas répondre. Le format est le seul champ qui les distingue.
+    expect(plan.backup.fileName).toBe('xctrack_2026-08-21-153207_backup-anon.xcfg')
+    expect(plan.pages.fileName).toBe('xctrack_2026-08-21-153207_pages-anon.xcfg')
+    expect(plan.backup.fileName).not.toBe(plan.pages.fileName)
+  })
+
+  it('les seize réglages personnels sont traités, et les quatre chiffres sont nommés', () => {
+    expect(plan.backup.preferences).toHaveLength(16)
+    expect(plan.backup.tally).toEqual({ replaced: 3, dropped: 4, kept: 4, empty: 5 })
+    // Ce que la carte annonce avant qu'on déroule quoi que ce soit.
+    expect(plan.backup.changed).toBe(7)
+  })
+
+  it('le document produit garde les réglages et perd le pilote', () => {
+    const produced = serializeJson(plan.backup.document)
+    expect(produced).toContain('"exportType": "backup"')
+    for (const kept of ['Sound.AcousticVario.CustomProfile', 'Unit.VerticalSpeed', 'Display.Theme']) {
+      expect(produced).toContain(kept)
+    }
+    for (const gone of ['Amélie', 'coupe-exemple-2026', 'Navigation.State']) {
+      expect(produced).not.toContain(gone)
+    }
+  })
+
+  it('l’archive laisse ses annexes derrière elle, comme l’autre issue anonymisante', () => {
+    // Même raison, et elle vaut pour les deux : cet éditeur n'inspecte pas les annexes.
+    const extras: SharingExtra[] = [{ name: 'media/decollage.jpg', byteLength: 1_482_112 }]
+    const archive = planSharing(
+      {
+        document: readSource(BACKUP_2026),
+        fileName: '2026-08-20_backupwithmedia-00.xczfg',
+        kind: 'xczfg',
+        extras
+      },
+      WHEN
+    )
+    expect(archive.backup.droppedExtras).toEqual(extras)
+    expect(archive.backup.fileName.endsWith('.xcfg')).toBe(true)
+    expect(archive.backup.fileName).not.toContain('.xczfg')
+  })
+
+  it('le coût pour le destinataire est écrit, et il est plus court que celui d’un « pages »', () => {
+    // Ce que cette issue ne coûte pas, c'est ce qui la justifie : aucune ligne de
+    // `BACKUP_COSTS` n'est un réglage, alors que `ANONYMOUS_COSTS` n'énumère que cela.
+    const text = BACKUP_COSTS.join(' ')
+    for (const word of ['capteurs', 'tâche en cours', 'waypoints', 'cartes hors-ligne']) {
+      expect(text).toContain(word)
+    }
+    expect(text).not.toContain('unités')
+    expect(ANONYMOUS_COSTS.join(' ')).toContain('unités')
+  })
+
+  it('la limite de la garantie est dite : c’est une liste, et une liste se périme', () => {
+    expect(BACKUP_RESIDUAL_NOTE).toContain('44')
+    expect(BACKUP_RESIDUAL_NOTE).toContain('en clair')
+    // …et la parade est nommée : l'autre issue ne dépend d'aucune liste.
+    expect(BACKUP_RESIDUAL_NOTE).toContain('aucune liste')
+  })
+})
+
+describe('la boîte : trois cartes, trois volets, un seul ouvert', () => {
+  it('chaque issue a son volet, et seul celui de l’issue cochée est visible', () => {
+    const handle = open(
+      { document: readSource(BACKUP_2026), fileName: shortName(BACKUP_2026), kind: 'xcfg' },
+      () => {}
+    )
+    // Le volet suit sa carte : l'inventaire est à côté du choix, pas en pied de boîte.
+    const forms: SharingForm[] = ['plain', 'backup', 'pages']
+    for (const form of forms) expect(panel(handle, form)).not.toBeNull()
+
+    for (const chosen of forms) {
+      choose(handle, chosen)
+      for (const form of forms) {
+        expect(panel(handle, form).hidden).toBe(form !== chosen)
+      }
+    }
+    handle.close()
+  })
+
+  it('le volet de « telle qu’elle est » est vide : rien ne change, rien à annoncer', () => {
+    const handle = open(
+      { document: readSource(BACKUP_2026), fileName: shortName(BACKUP_2026), kind: 'xcfg' },
+      () => {}
+    )
+    expect(panel(handle, 'plain').childElementCount).toBe(0)
+    expect(panel(handle, 'backup').childElementCount).toBeGreaterThan(0)
+    handle.close()
+  })
+
+  it('le nom annoncé suit l’issue cochée, et les trois diffèrent', () => {
+    const handle = open(
+      { document: readSource(BACKUP_2026), fileName: shortName(BACKUP_2026), kind: 'xcfg' },
+      () => {}
+    )
+    const nameLine = (): string => handle.element.querySelector('.modal__name')!.textContent ?? ''
+    const seen: string[] = []
+    for (const form of ['plain', 'backup', 'pages'] as SharingForm[]) {
+      choose(handle, form)
+      seen.push(nameLine())
+    }
+    expect(seen[0]).toContain('_backup.xcfg')
+    expect(seen[1]).toContain('_backup-anon.xcfg')
+    expect(seen[2]).toContain('_pages-anon.xcfg')
+    expect(new Set(seen).size).toBe(3)
+    handle.close()
+  })
+
+  it('le volet montre chaque réglage, son verdict et sa raison', () => {
+    const handle = open(
+      { document: readSource(BACKUP_2026), fileName: shortName(BACKUP_2026), kind: 'xcfg' },
+      () => {}
+    )
+    choose(handle, 'backup')
+    const shown = panel(handle, 'backup').textContent ?? ''
+
+    // Ce qui est remplacé : la valeur d'origine, la valeur posée, et pourquoi.
+    expect(shown).toContain('Pilot.Name')
+    expect(shown).toContain('Amélie Exemple')
+    expect(shown).toContain('Pilote')
+    // Ce qui est retiré, dit comme tel plutôt que par une valeur vide.
+    expect(shown).toContain('Navigation.State')
+    expect(shown).toContain('la ligne entière est retirée')
+    // Ce qu'on a refusé de remplacer, dit aussi fort que le reste.
+    expect(shown).toContain('Conservés tels quels')
+    expect(shown).toContain('Livetrack.Enabled')
+    // Et ce qui était vide, qui n'est ni l'un ni l'autre.
+    expect(shown).toContain('Présents dans le fichier, mais vides')
+
+    // Les seize réglages sont montrés, aucun n'est passé sous silence.
+    expect(panel(handle, 'backup').querySelectorAll('.sharing__item').length).toBe(16)
+    handle.close()
+  })
+
+  it('le contenu d’une structure n’est jamais déroulé dans la boîte', () => {
+    // `Navigation.State` porte la tâche en cours et ses coordonnées. On en dit la taille.
+    const handle = open(
+      { document: readSource(BACKUP_2026), fileName: shortName(BACKUP_2026), kind: 'xcfg' },
+      () => {}
+    )
+    choose(handle, 'backup')
+    const shown = panel(handle, 'backup').textContent ?? ''
+    expect(shown).toContain('non montrée')
+    expect(shown).not.toContain('TaskBackToTakeoff')
+    handle.close()
+  })
+
+  it('confirmer la sauvegarde entière rend un « backup » sans le pilote', () => {
+    let result: SharingResult | undefined
+    const handle = open(
+      { document: readSource(BACKUP_2026), fileName: shortName(BACKUP_2026), kind: 'xcfg' },
+      (r) => { result = r }
+    )
+    choose(handle, 'backup')
+    handle.element.querySelector<HTMLButtonElement>('.btn--primary')!.click()
+
+    expect(result!.form).toBe('backup')
+    expect(result!.anonymized).toBe(true)
+    expect(result!.fileName).toBe('xctrack_2026-08-21-153207_backup-anon.xcfg')
+    const text = new TextDecoder().decode(sharingBytes(result!)!)
+    expect(text).toContain('"exportType": "backup"')
+    expect(text).toContain('"Pilot.Name": "Pilote"')
+    expect(text).not.toContain('Amélie')
+  })
+
+  it('l’issue ordinaire rend toujours `form: "plain"` et aucun document', () => {
+    let result: SharingResult | undefined
+    const handle = open(
+      { document: readSource(BACKUP_2026), fileName: shortName(BACKUP_2026), kind: 'xcfg' },
+      (r) => { result = r }
+    )
+    handle.element.querySelector<HTMLButtonElement>('.btn--primary')!.click()
+    expect(result!.form).toBe('plain')
+    expect(result!.document).toBeUndefined()
+    expect(sharingBytes(result!)).toBeUndefined()
+  })
+
+  it('le focus initial reste sur le premier choix, même avec trois cartes', () => {
+    // Une troisième issue ne doit pas ramener le défaut corrigé : la boîte s'ouvrait le
+    // clavier sur « Enregistrer », si bien qu'un Entrée réflexe exportait tout en clair.
+    const handle = open(
+      { document: readSource(BACKUP_2026), fileName: shortName(BACKUP_2026), kind: 'xcfg' },
+      () => {}
+    )
+    const [plain] = radios(handle)
+    expect(radios(handle)).toHaveLength(3)
+    expect(document.activeElement).toBe(plain)
+    expect(plain!.value).toBe('plain')
+    handle.close()
+  })
+})
+
+/* ================== l’avertissement sur ce qui a l’air écrit sans être déclaré */
+
+describe('la boîte avertit sur ce qu’elle ne remplace pas', () => {
+  it('sur un fichier réel, elle dit qu’elle n’a rien trouvé — sans crier', () => {
+    const handle = open(
+      { document: readSource(BACKUP_2026), fileName: shortName(BACKUP_2026), kind: 'xcfg' },
+      () => {}
+    )
+    choose(handle, 'backup')
+    expect(panel(handle, 'backup').textContent).toContain(SUSPECTS_NONE_NOTE)
+    handle.close()
+  })
+
+  it('sur un réglage inconnu qui a l’air écrit, elle le montre et ne le remplace pas', () => {
+    const document = parseJson([
+      '{',
+      '  "info": {',
+      '    "exportType": "backup"',
+      '  },',
+      '  "layout": {',
+      '    "landscape": [],',
+      '    "portrait": []',
+      '  },',
+      '  "preferences": {',
+      '    "Futur.Note": "Réglage de compétition d’Amélie"',
+      '  }',
+      '}'
+    ].join('\n'))
+
+    let result: SharingResult | undefined
+    const handle = open(
+      { document, fileName: 'futur.xcfg', kind: 'xcfg' }, (r) => { result = r }
+    )
+    choose(handle, 'backup')
+    const shown = panel(handle, 'backup').textContent ?? ''
+    expect(shown).toContain('Futur.Note')
+    expect(shown).toContain('Réglage de compétition d’Amélie')
+    expect(shown).toContain(SUSPECTS_NOTE)
+
+    // Averti, pas corrigé : le texte part tel quel, et c'est délibéré.
+    handle.element.querySelector<HTMLButtonElement>('.btn--primary')!.click()
+    expect(new TextDecoder().decode(sharingBytes(result!)!))
+      .toContain('Réglage de compétition d’Amélie')
+  })
+})
+
+/* ============ la preuve : passer par les trois issues ne change pas un octet */
+
+describe('ouvrir, tout regarder, renoncer : la même empreinte', () => {
+  for (const file of [BACKUP_2026, PAGES_2026, FORMES_PRESERVEES, ARCHIVE]) {
+    it(`${shortName(file)} : les trois volets se regardent sans écrire un octet`, async () => {
+      const bytes = new Uint8Array(readFileSync(file))
+      const container = await openContainer(bytes, shortName(file))
+      const before = await sha256Hex(bytes)
+
+      let result: SharingResult | undefined
+      const handle = open(
+        {
+          document: container.document,
+          fileName: container.fileName,
+          kind: container.kind,
+          extras: container.extras.map((e) => ({ name: e.name, byteLength: e.data.byteLength }))
+        },
+        (r) => { result = r }
+      )
+      // On déroule tous les inventaires proposés — dont celui qui traite les préférences —
+      // puis on renonce. Le document en mémoire ne doit pas avoir bougé d'un bit.
+      const offered = radios(handle).map((input) => input.value as SharingForm)
+      for (const form of [...offered].reverse()) choose(handle, form)
+      handle.element.querySelectorAll<HTMLButtonElement>('.modal__actions .btn')[0]!.click()
+
+      expect(result).toBeUndefined()
+      expect(container.modified).toBe(false)
+      expect(await sha256Hex(await exportContainer(container))).toBe(before)
+    })
+  }
+})
+
+/* ============ la troisième issue n'est proposée que là où elle veut dire quelque chose */
+
+describe('un export « pages » ne se voit pas proposer trois fois la même chose', () => {
+  it('sans préférences, la troisième issue rendrait le fichier de la deuxième', () => {
+    // Sur un fichier sans section « preferences », `anonymizeBackup` et
+    // `anonymizeDocument` rendent le même document, sous le même nom. Deux cartes
+    // indiscernables valent moins qu'une carte de moins : le pilote cherche la
+    // différence, ne la trouve pas, et cesse de croire le reste de la boîte.
+    const plan = planSharing(
+      { document: readSource(PAGES_2026), fileName: shortName(PAGES_2026), kind: 'xcfg' },
+      WHEN
+    )
+    expect(plan.forms).toEqual(['plain', 'pages'])
+    expect(serializeJson(plan.backup.document)).toBe(serializeJson(plan.pages.document))
+    expect(plan.backup.fileName).toBe(plan.pages.fileName)
+
+    const handle = open(
+      { document: readSource(PAGES_2026), fileName: shortName(PAGES_2026), kind: 'xcfg' },
+      () => {}
+    )
+    expect(radios(handle).map((input) => input.value)).toEqual(['plain', 'pages'])
+    handle.close()
+  })
+
+  it('avec des préférences, les trois sont là et se distinguent', () => {
+    const plan = planSharing(
+      { document: readSource(BACKUP_2026), fileName: shortName(BACKUP_2026), kind: 'xcfg' },
+      WHEN
+    )
+    expect(plan.forms).toEqual(['plain', 'backup', 'pages'])
+    expect(serializeJson(plan.backup.document)).not.toBe(serializeJson(plan.pages.document))
   })
 })

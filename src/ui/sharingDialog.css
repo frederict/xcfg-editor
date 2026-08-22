@@ -33,7 +33,7 @@
   overscroll-behavior: contain;
 }
 
-/* ------------------------------------------------------------------- les deux issues */
+/* ------------------------------------------------------------------ les trois issues */
 
 .sharing__choices {
   display: grid;
@@ -95,8 +95,6 @@
 }
 
 /* ------------------------------------------------ ce qui sera fait, montré avant de faire */
-
-.sharing__detail { display: grid; gap: 1.2rem; }
 
 .sharing__section { display: grid; gap: 0.5rem; }
 
@@ -241,3 +239,55 @@
   color: var(--app-ink-soft);
   max-width: 78ch;
 }
+
+/* ------------------------------------ le volet d'une issue, posé sous sa propre carte */
+
+/*
+ * Avec trois issues, un inventaire unique en pied de boîte obligerait à faire
+ * l'aller-retour entre le choix et sa conséquence. Chaque volet suit donc sa carte, et le
+ * filet à gauche dit à qui il appartient — le même filet que `.sharing__caveat`, parce que
+ * c'est le même geste : une précision rattachée à ce qui la précède.
+ */
+.sharing__detail {
+  display: grid;
+  gap: 1.2rem;
+  margin: 0 0 0.3rem 1.1rem;
+  padding-left: 0.9rem;
+  border-left: 2px solid var(--app-line-strong);
+}
+
+/* Le volet du premier choix n'annonce rien : rien ne change, il n'y a rien à montrer. */
+.sharing__detail:empty { display: none; }
+
+/* --------------------------------- les réglages personnels, groupés par traitement */
+
+.sharing__group { display: grid; gap: 0.4rem; margin-top: 0.5rem; }
+
+/*
+ * L'intitulé porte le verdict du groupe — « Retirés du fichier », « Conservés tels quels ».
+ * Il se lit avant la liste, de sorte qu'on sache ce qu'on regarde sans lire une ligne.
+ */
+.sharing__groupHead {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--app-ink-soft);
+}
+
+/*
+ * Ce qui ne change pas ne se barre pas. La rature dit « cette valeur ne partira pas » ;
+ * la porter sur un réglage conservé ou sur un emplacement vide dirait l'inverse de ce qui
+ * se passe, à l'endroit précis où le pilote vérifie.
+ */
+.sharing__item--keep .sharing__from,
+.sharing__item--empty .sharing__from { text-decoration: none; }
+
+/* Un emplacement vide n'est pas une valeur : son texte est une description, pas une donnée. */
+.sharing__item--empty .sharing__from { font-family: inherit; color: var(--app-ink-soft); }
+
+/*
+ * La nature du réglage — « identité », « appareil » — sur la ligne même. Elle était dans
+ * la phrase de la raison ; l'en sortir permet de dire une raison commune **une seule
+ * fois** pour tout un groupe sans perdre ce qui, lui, diffère d'une ligne à l'autre.
+ */
+.sharing__kind { font-size: 11px; color: var(--app-ink-soft); font-style: italic; }

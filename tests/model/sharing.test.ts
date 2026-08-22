@@ -10,19 +10,26 @@ import { readLayout } from '../../src/model/layout'
 import { derivePagesDocument, findFreeTexts, FREE_TEXT_KEYS } from '../../src/model/scope'
 import {
   ANONYMOUS_MARK,
+  anonymizeBackup,
   anonymizeDocument,
   buildExportFileName,
+  changedPreferenceCount,
   DEFAULT_EXTENSION,
   documentExportType,
   EXPORT_NAME_PREFIX,
   fileExtension,
+  findPersonalSuspects,
   NEUTRAL_INTENT_ACTION,
   NEUTRAL_PHONE_NUMBER,
   NEUTRAL_TEST_EVENT,
   NEUTRAL_URL,
   replaceFreeTexts,
+  RULED_PREFERENCE_KEYS,
+  SUSPECT_VALUE_LIMIT,
+  tallyPreferences,
   UNKNOWN_FORMAT
 } from '../../src/model/sharing'
+import PERSONAL_KEYS from '../../src/model/personalKeys.json'
 import {
   ARCHIVE,
   BACKUP_2025,
@@ -702,5 +709,315 @@ describe('l’export normal reste à l’octet près', () => {
     expect(await sha256Hex(innerAfter.data)).toBe(await sha256Hex(innerBefore.data))
     expect(await sha256Hex(innerBefore.data))
       .toBe(await sha256Hex(new Uint8Array(readFileSync(BACKUP_ARCHIVE))))
+  })
+})
+
+/* ============ la sauvegarde entière, données personnelles remplacées ligne par ligne */
+
+/**
+ * La troisième issue, et le manque qu'elle comble.
+ *
+ * Un pilote qui veut de l'aide sur ses réglages de vario n'avait le choix qu'entre tout
+ * envoyer avec son nom (`plain`) ou n'envoyer que ses pages (`anonymizeDocument`), donc
+ * aucun réglage — donc aucune question à poser. `anonymizeBackup` garde la sauvegarde
+ * entière et remplace ce qui désigne le pilote.
+ *
+ * Ce qui est éprouvé ici, dans cet ordre :
+ *
+ * 1. **le fichier reste un `backup`** et ses réglages traversent — sans quoi l'issue
+ *    n'aurait aucune raison d'exister ;
+ * 2. **rien de ce qui désigne le pilote ne survit**, cherché dans le texte sérialisé
+ *    complet et non dans l'inventaire ;
+ * 3. **l'inventaire dit exactement ce qui a été fait**, y compris ce qu'on a refusé de
+ *    faire ;
+ * 4. **un fichier sans rien à remplacer ressort à l'octet près.**
+ */
+describe('anonymizeBackup — les réglages traversent, le pilote non', () => {
+  const result = anonymizeBackup(parseJson(SOURCE))
+  const text = serializeJson(result.document)
+
+  it('reste un « backup » : le format, les préférences et les canaux sont là', () => {
+    // Toute la valeur de cette issue est là : un « pages » ne porte aucun réglage, donc
+    // aucune question à poser sur un réglage.
+    expect(documentExportType(result.document)).toBe('backup')
+    expect(getMember(result.document, 'preferences')).toBeDefined()
+    expect(getMember(result.document, 'airspaceSelectedChannels')).toBeDefined()
+  })
+
+  it('ne laisse survivre aucun des quatorze textes de gadget', () => {
+    for (const original of ORIGINALS) {
+      expect(SOURCE).toContain(original)
+      expect(text).not.toContain(original)
+    }
+  })
+
+  it('remplace le nom du pilote et celui de la voile par des mots neutres', () => {
+    for (const marker of ['Amélie Exemple', 'Voile d’Amélie']) {
+      expect(SOURCE).toContain(marker)
+      expect(text).not.toContain(marker)
+    }
+    expect(text).toContain('"Pilot.Name": "Pilote"')
+    expect(text).toContain('"Glider.Name": "Voile"')
+  })
+
+  it('retire la ligne entière quand la valeur est un fichier du pilote', () => {
+    expect(SOURCE).toContain('Navigation.WaypointFiles')
+    expect(text).not.toContain('Navigation.WaypointFiles')
+    expect(text).not.toContain('Comp2026.wpt')
+  })
+
+  it('ce qui n’est pas du texte libre traverse intact, pièges du sérialiseur compris', () => {
+    for (const survivor of SURVIVORS) expect(text).toContain(survivor)
+  })
+
+  it('l’inventaire porte une entrée par réglage personnel, avec sa raison', () => {
+    expect(result.preferences.map((one) => one.key))
+      .toEqual(['Pilot.Name', 'Glider.Name', 'Navigation.WaypointFiles'])
+    for (const outcome of result.preferences) {
+      expect(outcome.reason.length).toBeGreaterThan(30)
+      // Aucun réglage ne tombe sur la règle de repli : chacun a la sienne.
+      expect(outcome.reason).not.toContain('par précaution')
+    }
+    expect(result.preferences[0]).toMatchObject({
+      key: 'Pilot.Name', treatment: 'replace', before: 'Amélie Exemple', after: 'Pilote'
+    })
+    expect(result.preferences[2]).toMatchObject({
+      key: 'Navigation.WaypointFiles', treatment: 'drop'
+    })
+  })
+
+  it('anonymiser deux fois donne le même fichier', () => {
+    expect(serializeJson(anonymizeBackup(result.document).document)).toBe(text)
+  })
+
+  it('la source n’a pas bougé d’un octet', async () => {
+    const source = parseJson(SOURCE)
+    const before = await sha256Hex(new TextEncoder().encode(serializeJson(source)))
+    anonymizeBackup(source)
+    expect(await sha256Hex(new TextEncoder().encode(serializeJson(source)))).toBe(before)
+    expect(serializeJson(source)).toBe(SOURCE)
+  })
+})
+
+describe('anonymizeBackup — le fichier de référence, en chiffres', () => {
+  const text = readFileSync(BACKUP_2026, 'utf8')
+  const result = anonymizeBackup(parseJson(text))
+  const produced = serializeJson(result.document)
+
+  it('traite les seize réglages personnels du fichier, en quatre issues nommées', () => {
+    // Mesuré sur `2026-08-20_backup-00.xcfg` : 16 réglages personnels sur 136 préférences.
+    // Les quatre chiffres ne s'additionnent pas en un total qui voudrait dire quelque
+    // chose — c'est pourquoi ils sont nommés.
+    expect(result.preferences).toHaveLength(16)
+    expect(tallyPreferences(result.preferences))
+      .toEqual({ replaced: 3, dropped: 4, kept: 4, empty: 5 })
+    // Le fichier ne porte aucun texte de gadget : tout ce qui le désigne est en préférences.
+    expect(result.replacements).toHaveLength(0)
+    expect(changedPreferenceCount(result.preferences)).toBe(7)
+  })
+
+  it('rien de ce qui désignait le pilote ne survit', () => {
+    for (const marker of [
+      'Amélie', 'EXEMPLE Aile Légère 2', 'coupe-exemple-2026', 'hyperpilot',
+      'Navigation.State', 'Sensors.Configuration'
+    ]) {
+      expect(text).toContain(marker)
+      expect(produced).not.toContain(marker)
+    }
+  })
+
+  it('les réglages qu’on vient partager, eux, traversent tous', () => {
+    // La raison d'être de l'issue : le vario, ses sons, les unités et le thème restent
+    // lisibles pour celui à qui on pose la question.
+    for (const kept of [
+      'Sound.AcousticVario.CustomProfile', 'Unit.VerticalSpeed', 'Display.Theme',
+      'Airspace.Filling', 'Sounds'
+    ]) {
+      expect(text).toContain(kept)
+      expect(produced).toContain(kept)
+    }
+    // 136 préférences moins les quatre lignes retirées.
+    const preferences = getMember(result.document, 'preferences')!
+    expect(preferences.kind).toBe('object')
+    if (preferences.kind === 'object') expect(preferences.entries).toHaveLength(132)
+  })
+
+  it('les choix de diffusion Livetrack sont conservés, et l’inventaire le dit', () => {
+    // Ce qu'on a **refusé** de remplacer se dit aussi fort que ce qu'on a remplacé : un
+    // booléen de diffusion est un réglage, il ne porte ni nom, ni numéro, ni adresse.
+    const kept = result.preferences.filter((one) => one.treatment === 'keep')
+    expect(kept.map((one) => one.key)).toEqual([
+      'Livetrack.Enabled', 'Livetrack.ClaimContest', 'Livetrack.ShowPublic',
+      'Livetrack.FlightPublic'
+    ])
+    expect(produced).toContain('"Livetrack.Enabled": true')
+  })
+
+  it('le contenu d’une structure n’est jamais montré, seulement sa taille', () => {
+    // `Navigation.State` porte la tâche en cours et ses coordonnées, sur 1 332 caractères.
+    // L'inventaire en dit la taille et le danger, jamais le contenu.
+    const state = result.preferences.find((one) => one.key === 'Navigation.State')!
+    expect(state.treatment).toBe('drop')
+    expect(state.before).toContain('non montrée')
+    expect(state.before).not.toContain('lat')
+  })
+})
+
+describe('anonymizeBackup — sans rien à remplacer, le fichier ressort à l’octet près', () => {
+  for (const path of [PAGES_2026, PAGES_2025]) {
+    it(`${shortName(path)} : même empreinte SHA-256 qu’à l’entrée`, async () => {
+      // La preuve demandée : le traitement n'écrit rien quand il n'y a rien à écrire.
+      // Sans elle, « la fidélité tient » ne serait qu'une intention.
+      const text = readFileSync(path, 'utf8')
+      const result = anonymizeBackup(parseJson(text))
+      expect(result.preferences).toEqual([])
+      expect(result.replacements).toEqual([])
+      const produced = serializeJson(result.document)
+      expect(produced).toBe(text)
+      expect(await sha256Hex(new TextEncoder().encode(produced)))
+        .toBe(await sha256Hex(new TextEncoder().encode(text)))
+    })
+  }
+
+  for (const path of [BACKUP_2026, FORMES_PRESERVEES, GSON_2022]) {
+    it(`${shortName(path)} : le document ouvert n’est pas touché`, async () => {
+      const text = readFileSync(path, 'utf8')
+      const document = parseJson(text)
+      const before = await sha256Hex(new TextEncoder().encode(serializeJson(document)))
+      anonymizeBackup(document)
+      expect(await sha256Hex(new TextEncoder().encode(serializeJson(document)))).toBe(before)
+      expect(serializeJson(document)).toBe(text)
+    })
+  }
+})
+
+describe('la table des règles couvre exactement les réglages déclarés personnels', () => {
+  it('chacune des 44 clés a sa règle, et aucune règle n’est orpheline', () => {
+    // Le garde-fou qui fait tenir le reste : une clé déclarée personnelle sans règle
+    // tomberait sur le repli, et une règle sans clé serait du code mort qui ment.
+    const declared = Object.keys(PERSONAL_KEYS.keys).sort()
+    expect([...RULED_PREFERENCE_KEYS].sort()).toEqual(declared)
+    expect(declared).toHaveLength(PERSONAL_KEYS.meta.keyCount)
+  })
+})
+
+/* ================== ce qui a l'air d'une donnée personnelle sans être déclaré */
+
+/**
+ * La parade au mode de défaillance que `scope.ts` nomme sans le corriger : les 44 réglages
+ * et les onze champs de texte sont des **listes noires**, et le format de XCTrack change à
+ * chaque version. Un 45ᵉ réglage personnel partirait en clair, sans erreur ni signal.
+ *
+ * Ce qui est éprouvé : la règle est **muette sur les fichiers réels** — sans quoi elle
+ * serait une alarme de plus qu'on apprend à ignorer — et elle **parle** dès qu'un texte a
+ * été écrit plutôt que choisi.
+ */
+describe('findPersonalSuspects — muet sur le corpus, parlant sur ce qui a été écrit', () => {
+  for (const path of [BACKUP_2026, PAGES_2026, BACKUP_2025, PAGES_2025, BACKUP_ARCHIVE,
+    FORMES_PRESERVEES, GSON_2022]) {
+    it(`${shortName(path)} : aucune fausse alerte`, () => {
+      // Mesuré : ce que XCTrack écrit hors des champs de saisie du pilote est fait de
+      // jetons — `LANDSCAPE`, `WhiteHCTheme`, `m,km`, `METAR`. Jamais d'accent, jamais
+      // d'espace. Une règle qui crierait sur ces sept fichiers ne serait jamais lue.
+      expect(findPersonalSuspects(parseJson(readFileSync(path, 'utf8')))).toEqual([])
+    })
+  }
+
+  const PLANTED = [
+    '{',
+    '  "info": {',
+    '    "device": "AIR3 AIR3-7.2 8.1.0",',
+    '    "exportType": "backup"',
+    '  },',
+    '  "layout": {',
+    '    "landscape": [',
+    '      {',
+    '        "CLASS": "org.xcontest.XCTrack.widget.wp.WPEmpty",',
+    '        "widgets": [',
+    '          {',
+    '            "CLASS": "org.xcontest.XCTrack.widget.w.WFutur",',
+    '            "reglageFutur": "Ma page à moi",',
+    '            "_theme": "ClearpilotForest",',
+    '            "titletext": "Déjà traité par les règles"',
+    '          }',
+    '        ]',
+    '      }',
+    '    ],',
+    '    "portrait": []',
+    '  },',
+    '  "preferences": {',
+    '    "Pilot.Name": "Amélie Exemple",',
+    '    "Navigation.State": {',
+    '      "name": "Balise du Grand Pré"',
+    '    },',
+    '    "Futur.Contact": "amelie@exemple.test",',
+    '    "Futur.Serveur": "https://exemple.test/?jeton=SECRET",',
+    '    "Futur.Fichier": "/sdcard/mes-traces/vol.igc",',
+    '    "Futur.Capteur": "A1:B2:C3:D4:E5:F6",',
+    '    "Futur.Appel": "+32 470 12 34 56",',
+    '    "Futur.Enum": "LANDING_AUTOMATIC",',
+    '    "Futur.Nombre": "500"',
+    '  }',
+    '}'
+  ].join('\n')
+
+  const suspects = findPersonalSuspects(parseJson(PLANTED))
+  const at = (path: string): string | undefined =>
+    suspects.find((one) => one.path === path)?.clue
+
+  it('le document d’essai fait l’aller-retour à l’octet près', () => {
+    expect(serializeJson(parseJson(PLANTED))).toBe(PLANTED)
+  })
+
+  it('nomme la forme qui a mis la puce à l’oreille, la plus précise d’abord', () => {
+    expect(at('Futur.Contact')).toContain('adresse électronique')
+    expect(at('Futur.Serveur')).toContain('adresse web')
+    expect(at('Futur.Fichier')).toContain('chemin de fichier')
+    expect(at('Futur.Capteur')).toContain('Bluetooth')
+    expect(at('Futur.Appel')).toContain('numéro de téléphone')
+  })
+
+  it('trouve un réglage de gadget qu’aucune liste ne connaît', () => {
+    const found = suspects.find((one) => one.path.endsWith('reglageFutur'))!
+    expect(found.value).toBe('Ma page à moi')
+    expect(found.home).toBe('layout')
+    expect(found.clue).toMatch(/espace|accentuées/)
+  })
+
+  it('ne crie ni sur une énumération, ni sur un nombre, ni sur la carte d’identité', () => {
+    for (const quiet of ['Futur.Enum', 'Futur.Nombre']) expect(at(quiet)).toBeUndefined()
+    // `info.device` vaut « AIR3 AIR3-7.2 8.1.0 » : trois champs collés par des espaces.
+    // Le parcourir ferait une fausse alerte à chaque fichier ouvert.
+    expect(suspects.some((one) => one.path.includes('device'))).toBe(false)
+    // `_theme` est un thème livré dans l'APK, pas un texte écrit.
+    expect(suspects.some((one) => one.path.endsWith('_theme'))).toBe(false)
+  })
+
+  it('ne déballe jamais une structure déjà déclarée personnelle', () => {
+    // `Navigation.State` porte la tâche et ses coordonnées. Le parcourir pour en extraire
+    // les chaînes est précisément ce que `personalData.ts` interdit.
+    expect(suspects.some((one) => one.path.startsWith('Navigation.State'))).toBe(false)
+    expect(suspects.some((one) => one.value.includes('Grand Pré'))).toBe(false)
+    // Ni un réglage qui a déjà sa règle, ni un champ de texte déjà remplacé.
+    expect(at('Pilot.Name')).toBeUndefined()
+    expect(suspects.some((one) => one.path.endsWith('titletext'))).toBe(false)
+  })
+
+  it('avertit sans jamais remplacer : le document rendu porte encore les textes', () => {
+    // Toute l'éthique du module tient là. Remplacer sur un soupçon abîmerait des réglages
+    // légitimes ; le pilote, lui, reconnaît un texte qu'il a écrit.
+    const produced = serializeJson(anonymizeBackup(parseJson(PLANTED)).document)
+    expect(produced).toContain('Ma page à moi')
+    expect(produced).toContain('amelie@exemple.test')
+    // …et il les signale, à côté du document qu'il rend.
+    expect(anonymizeBackup(parseJson(PLANTED)).suspects.length).toBe(suspects.length)
+  })
+
+  it('montre une valeur longue tronquée, pour qu’elle soit reconnue et non lue', () => {
+    const long = 'Ceci est une phrase '.repeat(20)
+    const document = parseJson(`{\n  "preferences": {\n    "Futur.Long": ${JSON.stringify(long)}\n  }\n}`)
+    const found = findPersonalSuspects(document)[0]!
+    expect(found.value).toHaveLength(SUSPECT_VALUE_LIMIT + 1)
+    expect(found.value.endsWith('…')).toBe(true)
   })
 })
