@@ -1033,6 +1033,28 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
 
   if (pages.length === 0) {
     root.append(el('p', 'pages__empty', tr.t('pages.emptyOrientation')))
+  } else {
+    /*
+     * Le renvoi vers le geste qui n'est pas d'ici : n'envoyer qu'une page.
+     *
+     * **Pourquoi sous le rail, et pas ailleurs.** C'est ici que le pilote regarde ses
+     * pages une par une, donc ici que lui vient l'idée d'en donner une — mais la case par
+     * page vit dans la troisième issue d'« Enregistrer une copie », et cet écran ne le
+     * disait nulle part. Trois places étaient possibles, et deux sont écartées :
+     *
+     * - **dans le titre de la section** — il deviendrait une phrase, et le nom accessible
+     *   de ce `<h2>` avec lui ; un lecteur d'écran annoncerait « Paysage 5 pages pour
+     *   n'en envoyer qu'une… » à chaque saut de titre ;
+     * - **au-dessus du rail** — la zone d'annonce y est, et sa position est MESURÉE
+     *   (voir le commentaire de `live`). Rien ne s'insère entre elle et le rail.
+     *
+     * Reste le pied de section : la ligne se lit une fois les pages passées en revue,
+     * elle ne pousse rien, et elle ne s'affiche pas sur une orientation vide — où il n'y
+     * aurait rien à envoyer. C'est une phrase à voix basse, sans bouton et sans filet :
+     * ce n'est **ni une commande de cet écran ni un avertissement**, et elle ne doit
+     * emprunter la forme ni de l'un ni de l'autre.
+     */
+    root.append(el('p', 'pages__share', tr.t('pages.shareSubset')))
   }
 
   return { root, announce }

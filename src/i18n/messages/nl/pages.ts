@@ -125,6 +125,11 @@ const pages: DomainCatalog<'pages'> = {
     'pagina komt leeg: haar widgets worden daarna vanuit het palet geplaatst, of door een ' +
     'bestaande pagina te dupliceren.',
 
+  /** Voir le français : un renvoi à voix basse, jamais une promesse sur l'instrument. */
+  'pages.shareSubset': 'Om er maar één of enkele te versturen: ‘Een kopie opslaan’, dan ' +
+    '‘Deelbare versie, zonder persoonlijke gegevens’ — een vakje per pagina bepaalt wat ' +
+    'het bestand meeneemt.',
+
   'pages.insertAtRank': 'Een pagina invoegen op positie {rank}',
   'pages.insertAtEnd': 'Een pagina invoegen op de laatste positie ({rank})',
   'pages.newPageAtRank': 'Nieuwe pagina op positie {rank}',

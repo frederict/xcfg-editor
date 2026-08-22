@@ -697,3 +697,55 @@ describe('les guillemets ne se coupent pas en fin de ligne', () => {
     }
   })
 })
+
+/**
+ * # Un renvoi cite un intitulé, et l'intitulé bouge
+ *
+ * `pages.shareSubset` — la ligne de « Gérer les pages » qui dit où n'envoyer qu'une page —
+ * cite DEUX intitulés qui vivent dans deux autres domaines : le bouton `app.saveCopy` et
+ * la troisième issue `sharing.pagesTitle`. Rien ne relie ces trois valeurs : renommer
+ * « Enregistrer une copie » laisserait le renvoi désigner un bouton qui n'existe plus, en
+ * cinq langues, sans qu'aucun type ni aucun test ne bronche.
+ *
+ * C'est le motif de `personalData.test.ts` : quand deux endroits doivent dire la même
+ * chose, on l'écrit une fois dans un test plutôt que d'espérer qu'on y pensera.
+ */
+describe('le renvoi de « Gérer les pages » nomme des intitulés qui existent', () => {
+  it('cite le bouton d’enregistrement, mot pour mot, dans les cinq langues', () => {
+    for (const language of UI_LANGUAGES) {
+      const catalog = CATALOGS[language]
+      const hint = catalog['pages.shareSubset']
+      const button = catalog['app.saveCopy']
+      expect(typeof hint, language).toBe('string')
+      expect(typeof button, language).toBe('string')
+      expect(hint as string, `${language} : le renvoi doit citer app.saveCopy`)
+        .toContain(button as string)
+    }
+  })
+
+  it('cite la troisième issue, mot pour mot, dans les cinq langues', () => {
+    for (const language of UI_LANGUAGES) {
+      const catalog = CATALOGS[language]
+      const hint = catalog['pages.shareSubset'] as string
+      const issue = catalog['sharing.pagesTitle'] as string
+      expect(hint, `${language} : le renvoi doit citer sharing.pagesTitle`).toContain(issue)
+    }
+  })
+
+  it('ne promet rien sur ce que l’instrument fera du fichier', () => {
+    // Aucun fichier réduit à une partie de ses pages n'a jamais été importé sur un
+    // appareil : `sharing.pagesImportUnmeasured` le dit là où le pilote décide. Un renvoi
+    // qui parlerait d'import gommerait la distinction mesuré/supposé.
+    const forbidden: Readonly<Record<UiLanguage, RegExp>> = {
+      fr: /instrument|appareil|import/i,
+      en: /device|instrument|import/i,
+      de: /Gerät|Instrument|import/i,
+      es: /dispositivo|instrumento|import/i,
+      nl: /toestel|apparaat|import/i
+    }
+    for (const language of UI_LANGUAGES) {
+      const hint = CATALOGS[language]['pages.shareSubset'] as string
+      expect(hint, language).not.toMatch(forbidden[language])
+    }
+  })
+})

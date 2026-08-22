@@ -643,6 +643,64 @@ function build(overrides: Partial<Parameters<typeof renderPageManager>[0]> = {})
 const query = <T extends Element>(root: ParentNode, selector: string): T[] =>
   Array.from(root.querySelectorAll<T>(selector))
 
+/**
+ * # Le renvoi vers « n'envoyer qu'une page »
+ *
+ * Le geste existe — troisième issue d'« Enregistrer une copie », une case par page — et
+ * cet écran ne le disait nulle part. Il est pourtant celui où le pilote regarde ses pages
+ * une par une, donc celui où l'idée d'en donner UNE lui vient.
+ *
+ * Ce que ces tests tiennent, et qui n'est pas la présence d'une phrase : sa **discrétion**
+ * (aucun bouton, aucune classe d'avertissement), sa **place** (sous le rail, jamais entre
+ * l'annonce et le rail, dont la position est mesurée), et le fait qu'elle ne paraisse
+ * **pas** là où il n'y a rien à envoyer.
+ */
+describe('le renvoi vers l’envoi d’une seule page', () => {
+  beforeEach(resetRemovalGuard)
+
+  it('paraît une fois sous le rail, et une seule', () => {
+    const { root } = build()
+    const notes = query(root, '.pages__share')
+    expect(notes).toHaveLength(1)
+    // Sous le rail : la zone d'annonce doit rester collée au rail, sa position est mesurée.
+    const children = Array.from(root.children)
+    expect(children.indexOf(notes[0]!)).toBeGreaterThan(
+      children.indexOf(root.querySelector('.pages__rail')!)
+    )
+  })
+
+  it('nomme le chemin, et rien de plus large que ce que l’outil fait', () => {
+    const { root } = build()
+    const text = root.querySelector('.pages__share')?.textContent ?? ''
+    // Les deux intitulés cités sont ceux des autres écrans : voir `catalog.test.ts`, qui
+    // les épingle aux valeurs de `app.saveCopy` et `sharing.pagesTitle` dans les cinq
+    // langues. Ici, on vérifie que la phrase parle bien du FICHIER produit.
+    expect(text).toContain('Enregistrer une')
+    expect(text).toContain('Version partageable, sans données personnelles')
+    expect(text).toContain('le fichier emporte')
+    // Rien sur ce que l'appareil en fera : cela n'a jamais été constaté, et c'est la
+    // boîte d'enregistrement qui le dit (`sharing.pagesImportUnmeasured`).
+    expect(text).not.toMatch(/instrument|appareil|import/i)
+  })
+
+  it('n’est ni une commande de cet écran ni un avertissement', () => {
+    const { root } = build()
+    const note = root.querySelector('.pages__share')!
+    expect(note.tagName).toBe('P')
+    expect(note.querySelector('button')).toBeNull()
+    // `pages__advice-item` porte un filet gauche ambré : ce serait dire « attention ».
+    expect(note.className).not.toContain('advice')
+  })
+
+  it('ne paraît pas sur une orientation qui ne porte aucune page', () => {
+    // Rien à envoyer : la phrase serait du bruit pur, et la place appartient déjà à
+    // `pages__empty`, qui dit quoi faire d'une orientation vide.
+    const { root } = build({ pages: [] })
+    expect(query(root, '.pages__share')).toHaveLength(0)
+    expect(query(root, '.pages__empty')).toHaveLength(1)
+  })
+})
+
 describe('le carrousel', () => {
   // Le garde-fou du coup double survit aux rendus : il doit donc mourir entre deux tests.
   beforeEach(resetRemovalGuard)

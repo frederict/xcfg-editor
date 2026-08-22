@@ -1003,6 +1003,11 @@ plutôt que par la visite guidée, et son sommaire reste à gauche pendant toute
 <!--
   REFAIRE CETTE CAPTURE — captures/manuel.<langue>.png (1200 × 1110)
 
+  VÉRIFIÉE ET GARDÉE UNE TROISIÈME FOIS le 2026-08-22, au soir : le chapitre 5 a gagné un
+  paragraphe — « Gérer les pages » renvoie désormais vers l'issue qui n'envoie qu'une
+  page. AUCUN titre : ni `<h2>` ni `<h3>` ajouté dans les cinq manuels, compté à zéro dans
+  chacun. Le sommaire ne bouge pas, et le cadre s'arrête toujours au milieu du chapitre 1.
+
   VÉRIFIÉE ET GARDÉE UNE SECONDE FOIS le 2026-08-22, au soir : le manuel a gagné cinq
   paragraphes de plus, aux chapitres 5, 6 et 10 — le remède porté dans
   « Gérer les pages », la mémoire qui meurt avec l'onglet, le bouton du cran de zoom, et

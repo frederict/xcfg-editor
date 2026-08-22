@@ -287,6 +287,25 @@ const pages = {
     'arrive vide : ses gadgets se posent ensuite depuis la palette, ou en dupliquant une ' +
     'page existante.',
 
+  /**
+   * Le renvoi vers le geste qui n'appartient pas à cet écran.
+   *
+   * Le pilote regarde ici ses pages une par une : c'est là que lui vient l'idée d'en
+   * donner UNE, et l'écran ne le disait nulle part — la case par page vit dans la
+   * troisième issue d'enregistrement, à deux boîtes d'ici. Ce n'est ni une commande de
+   * cette boîte ni un avertissement : une ligne à voix basse, sous le rail, qui nomme le
+   * chemin et s'arrête là.
+   *
+   * ⚠️ Elle ne promet que ce que l'outil fait — le fichier produit n'emporte que les
+   * pages cochées, mesuré. Ce qu'un instrument fait d'un fichier ainsi réduit n'a jamais
+   * été constaté, et c'est la boîte d'enregistrement qui le dit
+   * (`sharing.pagesImportUnmeasured`) : ce renvoi n'a pas à le redire, il n'a surtout pas
+   * à laisser croire le contraire.
+   */
+  'pages.shareSubset': 'Pour n’en envoyer qu’une, ou quelques-unes : « Enregistrer une ' +
+    'copie », puis « Version partageable, sans données personnelles » — une case par ' +
+    'page y décide de ce que le fichier emporte.',
+
   'pages.insertAtRank': 'Insérer une page au rang {rank}',
   'pages.insertAtEnd': 'Insérer une page en dernier rang ({rank})',
   'pages.newPageAtRank': 'Nouvelle page au rang {rank}',

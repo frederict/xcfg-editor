@@ -125,6 +125,11 @@ const pages: DomainCatalog<'pages'> = {
     'llega vacía: sus widgets se colocan después desde la paleta, o duplicando una página ' +
     'existente.',
 
+  /** Voir le français : un renvoi à voix basse, jamais une promesse sur l'instrument. */
+  'pages.shareSubset': 'Para enviar solo una, o algunas: «Guardar una copia» y luego ' +
+    '«Versión compartible, sin datos personales» — una casilla por página decide lo que ' +
+    'lleva el archivo.',
+
   'pages.insertAtRank': 'Insertar una página en la posición {rank}',
   'pages.insertAtEnd': 'Insertar una página en la última posición ({rank})',
   'pages.newPageAtRank': 'Nueva página en la posición {rank}',

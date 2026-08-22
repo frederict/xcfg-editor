@@ -3218,6 +3218,24 @@ body.is-dragging .veil {
   max-width: 62ch;
 }
 
+/*
+ * Le renvoi vers « n'envoyer qu'une page ». Il occupe la même place que `.pages__empty` —
+ * l'un ou l'autre, jamais les deux — et se tient volontairement au registre le plus bas
+ * de la boîte : 12 px, encre douce, **aucun filet**.
+ *
+ * ⚠ Ni pastille, ni filet gauche. La pastille dirait « ceci se clique » (voir la doctrine
+ * en tête de `.btn`) et le filet gauche « attention » — c'est ce que porte
+ * `.pages__advice-item`, deux lignes plus haut dans la même section. Ce renvoi n'est ni
+ * l'un ni l'autre : il nomme un chemin, dans un écran qu'on rouvre dix fois par séance,
+ * et une aide qui reparaît dix fois ne se pardonne qu'à voix basse.
+ */
+.pages__share {
+  margin: 0.9rem 0 0;
+  color: var(--app-ink-soft);
+  font-size: 12px;
+  max-width: 78ch;
+}
+
 /* L'annonce des opérations pour les lecteurs d'écran : lisible à l'œil aussi, mais
    discrète — elle redit ce que l'utilisateur vient de faire. */
 .pages__live {
