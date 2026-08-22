@@ -191,9 +191,15 @@ const preferences = {
    * d'entrée du boîtier ne peut le produire. Le laisser nu serait pire que de le dire
    * mal ; l'expliquer serait pire encore. Ce qui est écrit ici est ce qui est su : un
    * fait, une piste, et ce qui manquerait pour trancher.
+   *
+   * ⚠️ **Elle s'écrit en clair sous le bloc, jamais en infobulle.** Elle a vécu un jour
+   * dans un `title` et le pilote-testeur du 2026-08-22 l'a jugée « inatteignable au
+   * tactile » : sur une tablette, il n'y a pas de survol du tout, et l'écran perdait
+   * alors la seule réserve qu'il porte. Elle nomme donc le code, puisqu'elle est écrite
+   * une fois par bloc et non sur la ligne.
    */
   'preferences.keyInjectionHypothesis':
-    'Hypothèse, non vérifiée : une application installée sur l’appareil peut injecter un code sans qu’aucune touche l’émette, et le paquet {addon} est présent sur ce boîtier. Rien ne le prouve — seul un appui, ou la lecture de cette application, trancherait.',
+    'Hypothèse, non vérifiée, sur le code {code} : une application installée sur l’appareil peut injecter un code sans qu’aucune touche l’émette, et le paquet {addon} est présent sur ce boîtier. Rien ne le prouve — seul un appui, ou la lecture de cette application, trancherait.',
   /**
    * ⚠️ **Notre glose, jamais un libellé réécrit.** « Lance une intention Android » est ce
    * que XCTrack affiche en français, extrait de l'APK — c'est le mot que le pilote
@@ -491,6 +497,26 @@ const preferences = {
   'preferences.pageTitle': 'Réglages généraux',
   'preferences.pageSubtitle': 'Ce que XCTrack règle hors des pages de gadgets',
   'preferences.pageSubtitleNamed': '{file} — ce que XCTrack règle hors des pages de gadgets',
+
+  /**
+   * ⚠️ **Un renseignement, jamais un avertissement.** Rien n'est en défaut : le fichier
+   * déclare une langue, l'outil la respecte, et c'est même l'une des choses que ce projet
+   * tient à montrer.
+   *
+   * Elle existe parce qu'un pilote-testeur a lu les captures allemande, néerlandaise et
+   * espagnole de cet écran comme « un écran presque entièrement en français », et en a
+   * conclu à un bug. Il n'y en avait pas — mais sur les 8 800 px de l'écran, le mot
+   * « langue » n'apparaissait pas une seule fois : l'explication vivait dans le bandeau de
+   * la vue d'ensemble et dans la boîte des langues, jamais là où le doute naît.
+   *
+   * ⚠️ Elle nomme la langue **réellement affichée**, jamais celle que le fichier déclare :
+   * XCTrack ne livre ses libellés que dans 35 langues, et une déclaration hors de cette
+   * liste retombe sur l'anglais. « Ils suivent le fichier ouvert » reste vrai des deux
+   * côtés de ce repli ; « la langue que le fichier déclare » ne le serait pas.
+   */
+  'preferences.labelsFromFile':
+    'Les noms de réglages ci-dessous sont ceux de XCTrack et s’affichent en {language} : ils suivent le fichier ouvert, jamais la langue de cette interface. C’est voulu — ce sont les mots que vous retrouverez sur votre instrument.',
+
   'preferences.menuLead':
     'Les écrans sont ceux de l’appareil, dans l’ordre de son menu de réglages.',
   'preferences.menuLeadEditable':

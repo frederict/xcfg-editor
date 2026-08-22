@@ -101,10 +101,10 @@ const preferences: DomainCatalog<'preferences'> = {
   'preferences.keyFromNowhere':
     'Code {code} staat in geen enkele toetsentabel die wij gelezen hebben. Er wordt hier geen naam aan gegeven: er een verzinnen zou de slechtste dienst zijn.',
   'preferences.keyInjectionHypothesis':
-    'Een hypothese, niet geverifieerd: een op het toestel geïnstalleerde toepassing kan ' +
-    'een code injecteren zonder dat een toets hem uitzendt, en het pakket {addon} is op ' +
-    'dit kastje aanwezig. Niets bewijst het — alleen een druk, of het lezen van die ' +
-    'toepassing, zou uitsluitsel geven.',
+    'Een hypothese, niet geverifieerd, over code {code}: een op het toestel ' +
+    'geïnstalleerde toepassing kan een code injecteren zonder dat een toets hem ' +
+    'uitzendt, en het pakket {addon} is op dit kastje aanwezig. Niets bewijst het — ' +
+    'alleen een druk, of het lezen van die toepassing, zou uitsluitsel geven.',
   'preferences.intentGloss':
     'Een ‘intent’ is het bericht waarmee de ene Android-toepassing een andere laat reageren. Deze toets bestuurt dus niet XCTrack: zij zendt een signaal uit, en het is een andere toepassing, op het toestel ingesteld, die daarop antwoordt.',
 
@@ -380,6 +380,12 @@ const preferences: DomainCatalog<'preferences'> = {
   'preferences.pageTitle': 'Algemene instellingen',
   'preferences.pageSubtitle': 'Wat XCTrack buiten de widgetpagina’s instelt',
   'preferences.pageSubtitleNamed': '{file} — wat XCTrack buiten de widgetpagina’s instelt',
+
+  'preferences.labelsFromFile':
+    'De namen van de instellingen hieronder zijn die van XCTrack en verschijnen in ' +
+    '{language}: ze volgen het geopende bestand, nooit de taal van deze interface. ' +
+    'Dat is de bedoeling — het zijn de woorden die u op uw toestel terugvindt.',
+
   'preferences.menuLead':
     'De schermen zijn die van het toestel, in de volgorde van zijn instellingenmenu.',
   'preferences.menuLeadEditable':

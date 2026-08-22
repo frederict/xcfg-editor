@@ -65,10 +65,16 @@ let domains: PreferenceDomainCatalog
  * XCTrack.
  */
 let tr: Translator
+/**
+ * Un second traducteur, en anglais : il ne sert qu'à éprouver le silence de la note
+ * d'axe quand les deux axes finissent par coïncider — voir « d'où viennent ses noms ».
+ */
+let englishTranslator: Translator
 
 beforeAll(async () => {
-  [catalog, domains, tr] = await Promise.all([
-    loadPreferenceCatalog('fr'), loadPreferenceDomains(), loadTranslator('fr')
+  [catalog, domains, tr, englishTranslator] = await Promise.all([
+    loadPreferenceCatalog('fr'), loadPreferenceDomains(),
+    loadTranslator('fr'), loadTranslator('en')
   ])
 })
 
@@ -934,19 +940,58 @@ describe('une liaison de touche se lit, et en trois morceaux', () => {
    * 266 est le code que le pilote presse le plus en compétition, et aucun des quatre
    * périphériques d'entrée du boîtier ne peut le produire. Le laisser nu serait pire que
    * de le dire mal ; l'expliquer serait pire encore.
+   *
+   * ⚠️ **Et elle s'écrit EN CLAIR, sous le bloc.** Elle a vécu un jour dans un `title`,
+   * et le pilote-testeur du 2026-08-22 l'a jugée « inatteignable au tactile » : sur une
+   * tablette il n'y a pas de survol, et l'écran perdait alors la seule réserve qu'il
+   * porte. Un statut d'interprétation ne dépend jamais d'un survol.
    */
   it('dit l’hypothèse sur 266 comme une hypothèse, jamais comme une explication', () => {
     const { page } = editable(BACKUP_2026)
-    const title = rowElement(page, 'Keys.PrevWaypoint')
-      .querySelector<HTMLElement>('.prefs__binding')?.title ?? ''
-    expect(title).toContain('Hypothèse, non vérifiée')
-    expect(title).toContain('air3.air3xctaddon')
+    const bloc = page.element
+      .querySelector('.prefs__screen[data-screen="preferences_keybindings"]')
+    const notes = bloc?.querySelectorAll('.prefs__hardware--hypothesis') ?? []
+    // Une phrase par CODE, pas par ligne : deux lignes portent 266 sur cet écran.
+    expect(notes).toHaveLength(1)
+    const said = notes[0]?.textContent ?? ''
+    expect(said).toContain('Hypothèse, non vérifiée')
+    // Elle nomme le code, puisqu'elle est écrite une fois par bloc et non sur la ligne.
+    expect(said).toContain('266')
+    expect(said).toContain('air3.air3xctaddon')
     // Ce qui manquerait pour trancher voyage avec elle.
-    expect(title).toContain('Rien ne le prouve')
-    // Et elle ne s'écrit pas sur un code que le noyau explique.
-    const declared = rowElement(pageOf(withPrevWaypoint(27)), 'Keys.PrevWaypoint')
-      .querySelector<HTMLElement>('.prefs__binding')?.title ?? ''
-    expect(declared).not.toContain('Hypothèse')
+    expect(said).toContain('Rien ne le prouve')
+  })
+
+  /**
+   * ⚠️ **Le défaut mesuré le 2026-08-22, et le test qui interdit qu'il revienne.**
+   * L'hypothèse ne vivait que dans l'attribut `title` de la ligne : sans marqueur visuel,
+   * découverte par accident au survol, et sur un écran tactile **inatteignable**. Elle est
+   * maintenant sous le bloc ; la ligne, elle, n'en dit plus rien.
+   */
+  it('ne cache l’hypothèse dans aucune infobulle', () => {
+    const { page } = editable(BACKUP_2026)
+    for (const key of ['Keys.PrevWaypoint', 'Keys.NextWaypoint']) {
+      const title = rowElement(page, key)
+        .querySelector<HTMLElement>('.prefs__binding')?.title ?? ''
+      expect(title, key).not.toContain('Hypothèse')
+      expect(title, key).not.toContain('air3.air3xctaddon')
+      // Ce qui reste dans la bulle est une glose sur ce que la ligne montre déjà, et le
+      // renvoi vers la note du bloc — où l'hypothèse est désormais lisible sans survol.
+      expect(title, key).toContain('La note sous ce bloc')
+    }
+    // Et aucune infobulle de la page entière ne la porte, pas seulement celles-là.
+    const bulles = [...page.element.querySelectorAll<HTMLElement>('[title]')]
+      .map((one) => one.title)
+    expect(bulles.filter((one) => one.includes('Hypothèse'))).toEqual([])
+  })
+
+  it('n’écrit aucune hypothèse sur un code que le noyau explique', () => {
+    // 27 est déclaré par `sn7326-key` : il n'y a rien à supposer, et la phrase se tait.
+    const bloc = pageOf(withPrevWaypoint(27)).element
+      .querySelector('.prefs__screen[data-screen="preferences_keybindings"]')
+    const said = [...(bloc?.querySelectorAll('.prefs__hardware--hypothesis') ?? [])]
+      .map((one) => one.textContent ?? '')
+    expect(said.filter((one) => one.includes('code 27'))).toEqual([])
   })
 
   it('explique sous le bloc pourquoi une touche est nommée et l’autre non', () => {
@@ -990,6 +1035,84 @@ describe('une liaison de touche se lit, et en trois morceaux', () => {
   })
 })
 
+/**
+ * # D'où viennent les noms de réglages de cet écran
+ *
+ * Un pilote-testeur a regardé `captures/reglages-generaux.{en,de,es,nl}.png` et y a vu
+ * « un écran presque entièrement en français ». Il n'y avait aucun défaut de fabrication :
+ * notre prose suivait bien le globe, et les libellés suivaient le fichier, qui déclare
+ * `Display.Language: fr`. C'est le comportement voulu.
+ *
+ * Ce qui manquait est ailleurs : sur les 8 800 px de l'écran, le mot « langue »
+ * n'apparaissait **pas une seule fois**. La mention de l'axe vivait dans le bandeau de la
+ * vue d'ensemble et dans la boîte des langues — jamais là où le doute naît. Le pilote a
+ * cherché l'explication sur l'écran qu'il avait sous les yeux, et il a conclu à un bug.
+ */
+describe('l’écran dit d’où viennent ses noms de réglages', () => {
+  /** La note d'axe de la tête de page, ou `undefined` si l'écran n'en écrit pas. */
+  function labelsNote(options: {
+    labelLanguage?: string
+    labelsFromFile?: boolean
+  }): string | undefined {
+    const page = renderPreferencesPage({
+      document: documentOf(BACKUP_2026), catalog, tr, domains, ...options
+    })
+    return page.element.querySelector('.prefs__labels')?.textContent ?? undefined
+  }
+
+  it('le dit quand les libellés suivent le fichier et pas le globe', () => {
+    // `tr` est en français, le fichier déclare `nl` : les deux axes divergent, et c'est
+    // exactement ce que le pilote avait sous les yeux, à la langue près.
+    const said = labelsNote({ labelLanguage: 'nl', labelsFromFile: true }) ?? ''
+    expect(said).toContain('XCTrack')
+    expect(said).toContain('nl')
+    expect(said).toContain('ils suivent le fichier ouvert')
+    // ⚠️ Un renseignement, jamais un avertissement : rien n'est en défaut.
+    expect(said).toContain('C’est voulu')
+    for (const alarme of ['erreur', 'défaut', 'problème', 'attention']) {
+      expect(said.toLowerCase(), alarme).not.toContain(alarme)
+    }
+    // L'interface parle AU pilote, jamais de lui.
+    expect(said).toContain('vous')
+  })
+
+  it('se tait quand le fichier ne déclare aucune langue', () => {
+    // Les libellés suivent alors le navigateur ou le sélecteur : il n'y a pas de
+    // désaccord à expliquer, et la phrase serait du bruit.
+    expect(labelsNote({ labelLanguage: 'nl' })).toBeUndefined()
+    expect(labelsNote({ labelLanguage: 'nl', labelsFromFile: false })).toBeUndefined()
+  })
+
+  it('se tait quand la langue du fichier est celle du globe', () => {
+    // Les deux axes disent la même chose : il n'y a rien à apprendre au pilote.
+    expect(labelsNote({ labelLanguage: 'fr', labelsFromFile: true })).toBeUndefined()
+  })
+
+  /**
+   * ⚠️ XCTrack ne livre ses libellés que dans 35 langues, et une déclaration hors de cette
+   * liste retombe sur l'anglais (`preferenceLanguage`). La phrase nomme donc la langue
+   * **réellement affichée**, jamais celle que le fichier déclare — sans quoi elle
+   * annoncerait de l'islandais sur un écran anglais.
+   */
+  it('nomme la langue réellement affichée, jamais celle qui a été demandée', () => {
+    // Égalité et non `toContain` : « jamais » porte les deux lettres de `is`, et un
+    // `not.toContain('is')` échouerait sur la phrase juste.
+    expect(labelsNote({ labelLanguage: 'is', labelsFromFile: true }))
+      .toBe(tr.t('preferences.labelsFromFile', { language: 'en' }))
+  })
+
+  it('se tait aussi quand le repli ramène à la langue du globe', () => {
+    // Notre prose en français et un fichier qui demande une langue que XCTrack ne livre
+    // pas : le repli est l'anglais, qui n'est pas le français — la phrase s'écrit. Mais
+    // avec un traducteur anglais, elle n'apprendrait plus rien.
+    const anglais = renderPreferencesPage({
+      document: documentOf(BACKUP_2026), catalog, tr: englishTranslator, domains,
+      labelLanguage: 'is', labelsFromFile: true
+    })
+    expect(anglais.element.querySelector('.prefs__labels')).toBeNull()
+  })
+})
+
 describe('ce que la page dit du matériel, et ce qu’elle ne dira jamais', () => {
   it('dit ce que le relevé porte, en nommant le modèle du relevé', () => {
     const { page } = editable(BACKUP_2026)
@@ -999,7 +1122,9 @@ describe('ce que la page dit du matériel, et ce qu’elle ne dira jamais', () =
       .querySelector('.prefs__screen[data-screen="preferences_keybindings"]')
     // `:not(--origin)` : la phrase qui dit d'où viennent les NOMS de touches partage
     // l'habillage de celle-ci, elle n'en est pas un second exemplaire.
-    const notes = bloc?.querySelectorAll('.prefs__hardware:not(.prefs__hardware--origin)') ?? []
+    const notes = bloc?.querySelectorAll(
+      '.prefs__hardware:not(.prefs__hardware--origin):not(.prefs__hardware--hypothesis)'
+    ) ?? []
     expect(notes).toHaveLength(1)
     const said = notes[0]?.textContent ?? ''
     expect(said).toContain('AIR³ 7.2')
@@ -1023,7 +1148,9 @@ describe('ce que la page dit du matériel, et ce qu’elle ne dira jamais', () =
     const page = pageOf(withPrevWaypoint(27))
     const bloc = page.element
       .querySelector('.prefs__screen[data-screen="preferences_keybindings"]')
-    const notes = bloc?.querySelectorAll('.prefs__hardware:not(.prefs__hardware--origin)') ?? []
+    const notes = bloc?.querySelectorAll(
+      '.prefs__hardware:not(.prefs__hardware--origin):not(.prefs__hardware--hypothesis)'
+    ) ?? []
     expect(notes).toHaveLength(1)
     const said = notes[0]?.textContent ?? ''
     expect(said).toContain('Le code 27 n’est aucune d’elles')
@@ -1041,9 +1168,20 @@ describe('ce que la page dit du matériel, et ce qu’elle ne dira jamais', () =
       // L'infobulle renvoie à la note du bloc ; elle ne la remplace pas.
       const title = rowElement(page, key).querySelector<HTMLElement>('.prefs__binding')?.title
       expect(title, key).toContain('La note sous ce bloc')
+      // ⚠️ **Et la marque se VOIT.** `data-hardware` était posé depuis le 2026-08-22 et
+      // aucune règle de style ne le lisait : mesuré au navigateur, une ligne « unattested »
+      // était pixel pour pixel identique à une ligne ordinaire, et le pilote-testeur a
+      // trouvé la bulle « par curiosité, en survolant ». Le filet pointillé l'annonce.
+      expect(rowElement(page, key).querySelector('.prefs__binding-key')?.classList
+        .contains('glossed'), key).toBe(true)
     }
     for (const key of ['Keys.ZoomIn', 'Keys.ZoomOut', 'Keys.PreviousPage', 'Keys.Menu']) {
       expect(rowElement(page, key).dataset.hardware, key).toBeUndefined()
+      // Et le filet ne se pose pas là : sur une ligne où le boîtier a répondu, la bulle
+      // ne fait que redire ce que la ligne montre déjà. Quinze pointillés d'affilée ne
+      // signaleraient plus rien.
+      expect(rowElement(page, key).querySelector('.prefs__binding-key')?.classList
+        .contains('glossed'), key).not.toBe(true)
     }
   })
 

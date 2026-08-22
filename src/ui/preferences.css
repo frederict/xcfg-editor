@@ -49,6 +49,31 @@
   overflow-wrap: anywhere;
 }
 
+/*
+ * D'où viennent les **noms de réglages** de cet écran : de XCTrack, et dans la langue que
+ * le fichier ouvert déclare.
+ *
+ * ⚠️ **Un renseignement, jamais un avertissement.** Pas d'ambre, pas d'aplat, pas de
+ * liséré : rien n'est en défaut, le fichier déclare une langue et l'outil la respecte. La
+ * même sobriété que `.prefs__summary-note`, dont elle est la voisine de lecture — un
+ * simple retrait d'encre sous le sous-titre.
+ *
+ * Elle vaut pourtant qu'on la voie : un pilote-testeur a lu les captures allemande,
+ * néerlandaise et espagnole de cet écran comme « un écran presque entièrement en
+ * français » et en a conclu à un bug. Sur 8 800 px, le mot « langue » n'y apparaissait pas
+ * une seule fois. D'où le filet gauche discret — celui des lignes de menu inertes
+ * (`.prefs__entry-quiet`), et non celui de l'ambre.
+ */
+.prefs__labels {
+  margin: 0.45rem 0 0;
+  padding-left: 0.5rem;
+  border-left: 2px solid var(--prefs-line);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--prefs-soft);
+  max-width: 78ch;
+}
+
 .prefs__actions { display: flex; align-items: center; gap: 0.6rem; flex: none; }
 
 /* ------------------------------------------------------------------------- commandes */
@@ -616,6 +641,24 @@
   line-height: 1.45;
   color: var(--prefs-soft);
   max-width: 78ch;
+}
+
+/*
+ * L'hypothèse — le seul propos de cet écran qui soit **supposé** et non mesuré.
+ *
+ * Elle a vécu un jour dans un `title`, et le pilote-testeur du 2026-08-22 l'a jugée
+ * « inatteignable au tactile » : sur une tablette il n'y a pas de survol, et l'écran
+ * perdait alors la seule réserve qu'il porte — `KEYCODE_STEM_2` se lisait avec la même
+ * autorité que `KEYCODE_VOLUME_UP`. Elle est donc en clair, sous le bloc.
+ *
+ * Un filet d'ambre à gauche, le même que celui des lignes en conflit : ce n'est pas une
+ * alarme — l'ambre du carnet signale, elle n'affole pas —, c'est ce qui la distingue des
+ * deux notes de relevé juste au-dessus, qui, elles, disent du mesuré. Pas d'aplat : deux
+ * phrases de constat et une de supposition doivent se lire à la suite, pas s'interrompre.
+ */
+.prefs__hardware--hypothesis {
+  border-left: 2px solid var(--app-flag-line, #cf9c2c);
+  padding-left: 0.5rem;
 }
 
 /* Ce que le pilote vient de renseigner de personnel, dit au moment où il le fait. */

@@ -104,10 +104,10 @@ const preferences: DomainCatalog<'preferences'> = {
   'preferences.keyFromNowhere':
     'Der Code {code} steht in keiner Tastentabelle, die wir gelesen haben. Hier wird ihm kein Name gegeben: einen zu erfinden wäre der schlechteste Dienst.',
   'preferences.keyInjectionHypothesis':
-    'Eine Hypothese, ungeprüft: eine auf dem Gerät installierte Anwendung kann einen ' +
-    'Code einspeisen, ohne dass eine Taste ihn sendet, und das Paket {addon} ist auf ' +
-    'diesem Gehäuse vorhanden. Nichts beweist es — nur ein Tastendruck oder das Lesen ' +
-    'dieser Anwendung würde es klären.',
+    'Eine Hypothese, ungeprüft, zum Code {code}: eine auf dem Gerät installierte ' +
+    'Anwendung kann einen Code einspeisen, ohne dass eine Taste ihn sendet, und das ' +
+    'Paket {addon} ist auf diesem Gehäuse vorhanden. Nichts beweist es — nur ein ' +
+    'Tastendruck oder das Lesen dieser Anwendung würde es klären.',
   'preferences.intentGloss':
     'Ein „Intent“ ist die Nachricht, mit der eine Android-Anwendung eine andere reagieren lässt. Diese Taste steuert also nicht XCTrack: sie sendet ein Signal, und es ist eine andere, auf dem Gerät eingerichtete Anwendung, die darauf antwortet.',
 
@@ -386,6 +386,13 @@ const preferences: DomainCatalog<'preferences'> = {
   'preferences.pageSubtitle': 'Was XCTrack außerhalb der Widget-Seiten einstellt',
   'preferences.pageSubtitleNamed':
     '{file} — was XCTrack außerhalb der Widget-Seiten einstellt',
+
+  'preferences.labelsFromFile':
+    'Die Namen der Einstellungen unten stammen von XCTrack und erscheinen auf ' +
+    '{language}: sie folgen der geöffneten Datei, nie der Sprache dieser ' +
+    'Oberfläche. Das ist so gewollt — es sind die Wörter, die Sie auf Ihrem ' +
+    'Gerät wiederfinden.',
+
   'preferences.menuLead':
     'Die Bildschirme sind die des Geräts, in der Reihenfolge seines Einstellungsmenüs.',
   'preferences.menuLeadEditable':

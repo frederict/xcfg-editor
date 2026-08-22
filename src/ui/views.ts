@@ -645,7 +645,9 @@ function scaleRuler(widthMm: number, tr: Translator): HTMLElement {
  * ⚠️ Le nom, lui, ne se traduit pas : c'est ce que le fichier porte, à l'octet près.
  */
 function shortNameChip(kind: PageKind, tr: Translator): HTMLElement {
-  const chip = el('span', 'chip chip--quiet', kind.shortName)
+  // `glossed` : le filet pointillé qui annonce la bulle. Une pastille inerte au milieu de
+  // pastilles inertes ne disait rien de ce qu'elle cachait — voir `.glossed` d'`app.css`.
+  const chip = el('span', 'chip chip--quiet glossed', kind.shortName)
   chip.title = tr.t('pageKind.shortNameTitle')
   return chip
 }

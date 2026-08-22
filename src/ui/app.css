@@ -214,6 +214,43 @@ body {
    `.btn` donne aux boutons, sans quoi il se poserait sur la ligne de base du texte. */
 .app-bar__repo { display: inline-flex; align-items: center; justify-content: center; }
 
+/*
+ * ------------------------------------------------------------------------- une glose
+ *
+ * Le troisième membre de la famille des filets, après le plein de ce qui se clique et le
+ * tireté des marques inertes : le **pointillé sous un mot**, qui dit « il y a une bulle
+ * à lire ici ».
+ *
+ * # La règle que ce filet sert, et qu'il ne suffit pas à tenir
+ *
+ * Une infobulle n'existe pas au doigt. Sur la tablette où travaille le pilote, il n'y a
+ * pas de survol : ce qu'un `title` porte est **absent**, pas discret. Deux conséquences,
+ * et la première prime :
+ *
+ * 1. **Un statut d'interprétation — mesuré, déduit, supposé, non vérifié — ne se met
+ *    jamais dans un `title`.** Il s'écrit en clair, une fois par bloc. C'est ce que ce
+ *    dépôt a de plus précieux, et le cacher derrière un survol revient à le supprimer
+ *    pour la moitié de ses lecteurs. Voir `hypothesisNotes` dans `preferencesPage.ts`.
+ * 2. **Ce qui reste en bulle est une glose** — l'explication d'un mot que l'écran montre
+ *    déjà — et porte alors ce filet. Un pilote-testeur a trouvé la bulle de
+ *    `KEYCODE_STEM_2` « par curiosité, en survolant » le 2026-08-22 : rien ne l'annonçait.
+ *    Une bulle qu'aucune marque ne signale n'est découverte que par accident.
+ *
+ * ⚠ Il ne se pose pas partout. Une bulle sur un **bouton** ou une **entrée de menu** ne
+ * demande rien : la commande porte déjà son intitulé, et son effet se découvre en la
+ * touchant. Le filet est réservé aux mots inertes qu'aucune autre ligne n'explique — et
+ * il se pose au compte-gouttes : quinze pointillés d'affilée ne signalent plus rien.
+ *
+ * `currentColor` en pointillé plutôt qu'une couleur propre : la glose suit l'encre du mot
+ * qu'elle marque, et ce mot est tantôt en pleine encre, tantôt en encre douce.
+ */
+.glossed {
+  text-decoration: underline dotted currentColor;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+  cursor: help;
+}
+
 /* --------------------------------------------------------------------- barre de tête */
 
 .app-bar {
@@ -329,14 +366,34 @@ body {
  * lignes. `min-width: 0` autorise le rétrécissement dans une ligne flexible ; l'ellipse
  * fait le reste, et le nom entier reste lisible en infobulle.
  *
- * ⚠️ **Ce qui cède est le DÉBUT du nom, jamais la fin.** Le nom arrive en deux morceaux —
- * `main.ts` les compose avec `fileNameParts` — et les deux `flex-shrink` ci-dessous
- * décident lequel s'efface : la tête (`2026-08-20`, commune à tous les exports du jour)
- * absorbe la quasi-totalité du manque, la queue (`_backup-00.xcfg`, qui porte le format et
- * l'extension) ne cède qu'à la toute fin. Avec une ellipse ordinaire, mesuré le
- * 2026-08-22, `2026-08-20_backup-00.xcfg` et `2026-08-20_backupwithmedia-00.xczfg`
- * s'affichaient tous deux « 2026-08-20_backu… » : la troncature mangeait précisément ce
- * qui les distingue.
+ * ⚠️ **Ce qui cède est le DÉBUT du nom, jamais la fin.** Le nom arrive en trois morceaux —
+ * `main.ts` les compose avec `fileNameParts` — et les trois `flex` ci-dessous décident
+ * l'ordre dans lequel ils s'effacent : la tête (`2026-08-20`, commune à tous les exports
+ * du jour) part la première, le corps (`_backupwithmedia`) ensuite, le rang et l'extension
+ * (`-00.xczfg`) **jamais**. Avec une ellipse ordinaire, mesuré le 2026-08-22,
+ * `2026-08-20_backup-00.xcfg` et `2026-08-20_backupwithmedia-00.xczfg` s'affichaient tous
+ * deux « 2026-08-20_backu… » : la troncature mangeait précisément ce qui les distingue.
+ *
+ * # Pourquoi deux morceaux ne suffisaient pas
+ *
+ * Le même pilote a remesuré le lendemain : `.xcfg` → `.xc…` à 1 024 px en édition, et
+ * `.xczfg` coupé même à 1 280 px. Relevé au navigateur sur
+ * `2026-08-20_backupwithmedia-00.xczfg`, la coupe en deux à l'œuvre :
+ *
+ * | fenêtre | plafond | tête | queue demandée | queue accordée |
+ * |---|---|---|---|---|
+ * | 1 280, consultation | 24ch = 173,4 px | **0 px** | 181 px | 173,4 px |
+ * | 1 024, édition | 18ch = 130,0 px | **0 px** | 181 px | 130,0 px |
+ *
+ * Le `flex-shrink: 999` faisait donc exactement ce qu'il promettait : la tête s'effaçait
+ * **entièrement**, jusqu'à 0 px de large. Il n'y avait plus rien à lui prendre — c'est la
+ * queue seule qui était trop longue, et les 7,6 px qui manquaient à 1 280 px valaient
+ * précisément `fg`.
+ *
+ * ⚠️ **Le plafond, lui, n'est pas en cause à 1 280 px** : la barre y avait 220 px de vide
+ * entre la marque et les commandes. Il l'est à 1 024 px en édition : mesuré au repli près,
+ * au-delà de 20ch la barre passe sur deux lignes. Les deux plafonds restent donc ce
+ * qu'ils étaient, et c'est la queue qui se coupe à son tour.
  */
 .app-bar__file {
   font-family: var(--font-data);
@@ -351,18 +408,48 @@ body {
   white-space: nowrap;
 }
 
-/* 999 contre 1 : la tête s'efface d'abord, et presque seule. */
+/*
+ * La tête s'efface d'abord, et **seule** jusqu'à disparaître.
+ *
+ * ⚠️ 99999 et non 999, et l'écart est mesuré. Le rétrécissement se répartit au prorata de
+ * `flex-shrink × base` : à 999 contre 1, le corps perdait encore 0,05 px du manque, et
+ * `text-overflow` n'attend pas davantage — `2026-08-20_backup-00.xcfg` s'affichait
+ * « 20…_back…-00.xcfg » à 1 100 px, une ellipse au milieu d'un mot que rien n'obligeait à
+ * couper. À 99999 la part du corps tombe sous le 1/64 de pixel où la mise en page
+ * s'arrête, et la même barre rend « 2…_backup-00.xcfg ».
+ */
 .app-bar__fileHead {
-  flex: 0 999 auto;
+  flex: 0 99999 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.app-bar__fileTail {
+/* Le genre de l'export. Il cède en second — c'est la seule part du nom dont la queue
+   redise déjà quelque chose : `.xczfg` dit « withmedia », et le dit mieux. */
+.app-bar__fileBody {
   flex: 0 1 auto;
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/*
+ * Le rang et l'extension : `flex-shrink: 0`, et c'est tout le propos de cette règle.
+ * `.xcfg` contre `.xczfg`, c'est la différence entre une configuration et une archive qui
+ * emporte les médias ; `-00` contre `-01`, deux exports du même jour et du même genre.
+ * Les laisser céder, c'est ramener le défaut que ces trois règles existent pour corriger.
+ *
+ * `max-width: 100%` n'est pas décoratif : sans lui, un nom sans aucun séparateur — donc
+ * entièrement en queue — déborderait le plafond de `.app-bar__file` et serait coupé net,
+ * sans ellipse, par l'`overflow: hidden` du parent. Avec lui, le seul cas où la queue peut
+ * céder est celui où elle est tout le nom.
+ */
+.app-bar__fileTail {
+  flex: 0 0 auto;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

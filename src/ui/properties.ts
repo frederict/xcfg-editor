@@ -1052,7 +1052,10 @@ function buildPanel(options: PropertiesPanelOptions, live: LivePanel): Propertie
     // à citer pour signaler un problème. Mais il paraissait nu : un pilote-testeur a lu
     // « WSpeed » le 2026-08-22 sans que rien ne dise ce que c'était, « aucune bulle,
     // aucune explication ». La bulle le dit, elle ne remplace rien.
-    const written = el('p', 'props__class', form.className)
+    // `glossed` : le filet pointillé qui dit qu'il y a une bulle à lire. Sans lui, la
+    // bulle posée le 2026-08-22 ne s'annonçait pas — « je l'ai trouvée par curiosité, en
+    // survolant » — et au doigt elle n'existait pas du tout. Voir `.glossed` d'`app.css`.
+    const written = el('p', 'props__class glossed', form.className)
     written.title = tr.t('properties.classTitle')
     head.append(written)
   }

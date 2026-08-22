@@ -102,10 +102,10 @@ const preferences: DomainCatalog<'preferences'> = {
   'preferences.keyFromNowhere':
     'El código {code} no figura en ninguna tabla de teclas que hayamos leído. Aquí no se le da ningún nombre: inventarlo sería el peor de los servicios.',
   'preferences.keyInjectionHypothesis':
-    'Hipótesis, no verificada: una aplicación instalada en el dispositivo puede inyectar ' +
-    'un código sin que ninguna tecla lo emita, y el paquete {addon} está presente en ' +
-    'esta caja. Nada lo prueba: solo una pulsación, o la lectura de esa aplicación, lo ' +
-    'zanjaría.',
+    'Hipótesis, no verificada, sobre el código {code}: una aplicación instalada en el ' +
+    'dispositivo puede inyectar un código sin que ninguna tecla lo emita, y el paquete ' +
+    '{addon} está presente en esta caja. Nada lo prueba: solo una pulsación, o la ' +
+    'lectura de esa aplicación, lo zanjaría.',
   'preferences.intentGloss':
     'Una «intención» (intent, en inglés) es el mensaje con el que una aplicación de Android hace reaccionar a otra. Esta tecla no gobierna pues XCTrack: envía una señal, y es otra aplicación, configurada en el aparato, la que responde.',
 
@@ -375,6 +375,12 @@ const preferences: DomainCatalog<'preferences'> = {
   'preferences.pageSubtitle': 'Lo que XCTrack ajusta fuera de las páginas de widgets',
   'preferences.pageSubtitleNamed':
     '{file} — lo que XCTrack ajusta fuera de las páginas de widgets',
+
+  'preferences.labelsFromFile':
+    'Los nombres de ajustes de abajo son los de XCTrack y aparecen en {language}: ' +
+    'siguen el archivo abierto, nunca el idioma de esta interfaz. Es intencionado: ' +
+    'son las palabras que volverá a encontrar en su instrumento.',
+
   'preferences.menuLead':
     'Las pantallas son las del dispositivo, en el orden de su menú de ajustes.',
   'preferences.menuLeadEditable':

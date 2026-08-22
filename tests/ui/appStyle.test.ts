@@ -205,6 +205,43 @@ describe('app.css — une marque d’origine ne se déguise pas en bouton', () =
 })
 
 /**
+ * # Le troisième filet : celui qui annonce une bulle
+ *
+ * Le 2026-08-22, un pilote-testeur a trouvé l'hypothèse sur `KEYCODE_STEM_2` « par
+ * curiosité, en survolant » : elle ne vivait que dans un `title`, sans le moindre marqueur
+ * visuel. Deux défauts en un, et le second est le pire — **au doigt, il n'y a pas de
+ * survol du tout**, et ce projet s'adresse à des pilotes qui travaillent sur tablette.
+ *
+ * L'hypothèse, elle, est sortie en clair (voir `preferencesPage.test.ts`). Ce qui reste
+ * en bulle est une **glose** — l'explication d'un mot que l'écran montre déjà — et porte
+ * désormais le filet pointillé, troisième membre de la famille : plein pour ce qui se
+ * clique, tireté pour les pastilles inertes, pointillé sous un mot pour « il y a quelque
+ * chose à lire ici ».
+ */
+describe('app.css — une bulle qui reste s’annonce', () => {
+  it('la glose porte un filet pointillé sous le mot, et le curseur qui va avec', () => {
+    const glossed = rule('.glossed')
+    expect(glossed).toContain('text-decoration: underline dotted currentColor;')
+    expect(glossed).toContain('cursor: help;')
+  })
+
+  it('ne se confond ni avec le filet plein des commandes ni avec le tireté des marques', () => {
+    // Un filet de BOÎTE dirait « ceci se clique » ou « ceci est une pastille » : le
+    // pointillé se pose sous le mot, et nulle part ailleurs.
+    expect(rule('.glossed')).not.toMatch(/border(-\w+)?:/)
+    expect(rule('.glossed')).not.toContain('border-radius')
+  })
+
+  it('suit l’encre du mot qu’elle marque plutôt qu’une couleur à elle', () => {
+    // La glose se pose tantôt sur de la pleine encre (`.props__class`), tantôt sur de
+    // l'encre douce (`.prefs__binding-key`) : une couleur figée jurerait avec l'une des
+    // deux, et une couleur écrite en dur serait une tache — voir l'en-tête d'`app.css`.
+    expect(rule('.glossed')).toContain('currentColor')
+    expect(rule('.glossed')).not.toMatch(/#[0-9a-fA-F]{3,6}/)
+  })
+})
+
+/**
  * L'entrée directe des réglages généraux. Elle a coûté 40 px à une barre qui repliait
  * déjà : le seuil de sa forme compacte est une mesure, et un changement de valeur doit
  * faire échouer ce test plutôt que de laisser la barre repasser sur deux lignes à

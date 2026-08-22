@@ -8,6 +8,7 @@ import { serializeJson } from '../core/serializeJson'
 import { androidColorToHex } from '../model/preferences'
 import {
   loadPreferenceCatalog,
+  preferenceLanguage,
   type PersonalData,
   type PreferenceCatalog,
   type PreferenceControl,
@@ -738,17 +739,22 @@ export function bindingOrigin(
 }
 
 /**
- * L'infobulle entière d'une liaison : d'où vient le nom, l'hypothèse quand il y en a
- * une, puis le renvoi à la note du bloc quand notre relevé n'a pas pressé ce code-là.
+ * L'infobulle entière d'une liaison : d'où vient le nom, puis le renvoi à la note du
+ * bloc quand notre relevé n'a pas pressé ce code-là.
  *
  * Une seule infobulle, sur l'élément entier, plutôt qu'une par morceau : deux `title`
  * imbriqués ne se lisent jamais tous les deux, et le survol ne dirait alors qu'une moitié
  * de ce qu'il y a à savoir.
+ *
+ * ⚠️ **Elle ne porte plus l'hypothèse.** Celle-ci s'écrit en clair sous le bloc — voir
+ * `hypothesisNotes` — parce qu'un statut d'interprétation ne peut pas dépendre d'un
+ * survol : au doigt, il n'y a pas de survol du tout. Ce qui reste ici est une glose sur
+ * ce que la ligne montre déjà, et la ligne porte désormais la marque qui l'annonce.
  */
 export function bindingTitle(
   binding: KeyBinding, keys: BindingContext | undefined, tr: Translator
 ): string | undefined {
-  const parts = [bindingOrigin(binding, keys, tr), hypothesisNote(binding, keys, tr)]
+  const parts = [bindingOrigin(binding, keys, tr)]
   const hardware = keys?.hardware
   if (!binding.unset && hardware != null && keyCodeEvidence(hardware, binding.code) !== 'pressed') {
     parts.push(tr.t('preferences.keyNoteBelow'))
@@ -758,8 +764,8 @@ export function bindingTitle(
 }
 
 /**
- * L'hypothèse que porte un code que **ni** l'appui **ni** le noyau n'expliquent, ou
- * `undefined`.
+ * Les hypothèses que portent les codes que **ni** l'appui **ni** le noyau n'expliquent —
+ * une phrase par code, **en clair sous le bloc**, jamais en infobulle.
  *
  * ⚠️ **C'est une hypothèse, et la phrase le dit avant toute chose.** 266 est le code que
  * le pilote presse le plus en compétition : le laisser nu serait pire que de le dire mal,
@@ -767,19 +773,42 @@ export function bindingTitle(
  * d'entrée du boîtier ne peut le produire — et une piste : une application installée peut
  * injecter un événement sans qu'aucune touche l'émette.
  *
+ * ## Pourquoi elle a quitté l'infobulle
+ *
+ * Elle n'a vécu qu'un jour dans un `title`, et le pilote-testeur du 2026-08-22 l'a dit
+ * en une phrase : « inatteignable au tactile ». Rien ne signalait qu'il y avait quelque
+ * chose à survoler, et sur une tablette — l'appareil de travail de ce projet — il n'y a
+ * pas de survol du tout. Sans elle, `KEYCODE_STEM_2` se lit avec exactement la même
+ * autorité que `KEYCODE_VOLUME_UP` : c'est précisément la distinction mesuré/supposé que
+ * ce dépôt existe pour tenir.
+ *
+ * Elle nomme donc le code, puisqu'elle est écrite une fois par bloc et non sur la ligne —
+ * même parti pris que `hardwareNote` et que la phrase de refus.
+ *
  * Elle ne s'écrit que sur le modèle où le constat a été fait : d'un autre boîtier, nous ne
  * savons pas quelles applications y sont posées.
  */
-function hypothesisNote(
-  binding: KeyBinding, keys: BindingContext | undefined, tr: Translator
-): string | undefined {
+export function hypothesisNotes(
+  bindings: readonly KeyBinding[], keys: BindingContext | undefined, tr: Translator
+): string[] {
   const hardware = keys?.hardware
-  if (binding.unset || hardware == null || keys?.domains === undefined) return undefined
-  if (keyCodeEvidence(hardware, binding.code) !== 'unattested') return undefined
-  const unexplained = keys.domains.unexplainedCode(binding.code)
-  if (unexplained === null || unexplained.deviceId !== hardware.deviceId) return undefined
-  if (unexplained.suspectPackage === undefined) return undefined
-  return tr.t('preferences.keyInjectionHypothesis', { addon: unexplained.suspectPackage })
+  const domains = keys?.domains
+  if (hardware == null || domains === undefined) return []
+  // Une phrase par **code**, pas par ligne : deux lignes portent 266 sur l'écran des
+  // touches, et la même phrase deux fois de suite se lit zéro fois.
+  const said = new Map<number, string>()
+  for (const binding of bindings) {
+    if (binding.unset || said.has(binding.code)) continue
+    if (keyCodeEvidence(hardware, binding.code) !== 'unattested') continue
+    const unexplained = domains.unexplainedCode(binding.code)
+    if (unexplained === null || unexplained.deviceId !== hardware.deviceId) continue
+    if (unexplained.suspectPackage === undefined) continue
+    // `code` part en **`string`** : c'est un code Android, pas un compte.
+    said.set(binding.code, tr.t('preferences.keyInjectionHypothesis', {
+      code: String(binding.code), addon: unexplained.suspectPackage
+    }))
+  }
+  return [...said.values()]
 }
 
 /** Les trois morceaux en une phrase, pour le texte de la ligne et pour le filtre. */
@@ -1594,6 +1623,34 @@ export interface PreferencesPageOptions {
   domains?: PreferenceDomainCatalog
   /** Le nom du fichier, pour la tête de page. */
   fileName?: string
+  /**
+   * La langue dans laquelle les **libellés de XCTrack** s'affichent ici — celle du
+   * catalogue chargé, donc celle que l'écran montre réellement.
+   *
+   * ⚠️ Ce n'est **pas** `tr.language`, qui est la langue de notre prose. Les deux axes ne
+   * se confondent jamais — voir `src/i18n/axes.ts`.
+   */
+  labelLanguage?: string
+  /**
+   * Vrai quand cette langue-là vient du **fichier ouvert** (`Display.Language`), et non
+   * du navigateur ni du sélecteur.
+   *
+   * ## Pourquoi la page a besoin de le savoir
+   *
+   * Un pilote-testeur a regardé les captures allemande, néerlandaise et espagnole de cet
+   * écran et y a vu un défaut : « un écran presque entièrement en français ». Il n'y en
+   * avait pas — notre prose suivait bien le globe, et les libellés suivaient le fichier,
+   * qui déclare `Display.Language: fr`. C'est le comportement voulu.
+   *
+   * Mais sur les 8 800 px de cet écran, le mot « langue » n'apparaissait **pas une seule
+   * fois** : la mention de l'axe vit dans le bandeau de faits de la vue d'ensemble
+   * (`metaStrip`) et dans la boîte des langues, jamais ici. Le pilote a cherché
+   * l'explication sur l'écran qu'il avait sous les yeux, ne l'y a pas trouvée, et en a
+   * conclu à un bug. L'écran dit donc d'où viennent ses noms.
+   *
+   * ⚠️ **C'est un renseignement, pas un avertissement** : rien n'est en défaut.
+   */
+  labelsFromFile?: boolean
   /** `info.versionName` du fichier, pour dire d'où il vient. */
   fileVersionName?: string
   /** `info.versionCode` du fichier — il ne sert qu'à situer, jamais à filtrer. */
@@ -1807,7 +1864,18 @@ function bindingValue(
   // lisible sans survol, et il l'est — trois lignes plus bas.
   const title = bindingTitle(binding, keys, tr)
   if (title !== undefined) wrap.title = title
-  wrap.append(el('span', 'prefs__binding-key', parts.key))
+  const named = el('span', 'prefs__binding-key', parts.key)
+  // ⚠️ **La marque que le code promettait et que la feuille de style ne dessinait pas.**
+  // `data-hardware` était posé sur la ligne depuis le 2026-08-22 et aucune règle ne le
+  // lisait : mesuré au navigateur, une ligne « unattested » était pixel pour pixel
+  // identique à une ligne ordinaire. Le pilote-testeur l'a dit autrement — « rien ne
+  // signale qu'il y a quelque chose à survoler ».
+  //
+  // Elle ne se pose **que** là où le nom n'a pas été relevé à la main : sur une ligne où
+  // le boîtier a répondu, l'infobulle ne fait que redire ce que la ligne montre déjà, et
+  // quinze filets pointillés d'affilée ne signaleraient plus rien.
+  if (bindingEvidence(binding, keys.hardware) !== undefined) named.classList.add('glossed')
+  wrap.append(named)
   if (parts.detail !== undefined) {
     wrap.append(el('span', 'prefs__binding-detail', parts.detail))
   }
@@ -2818,6 +2886,45 @@ function buildEmptyNote(
 }
 
 /**
+ * D'où viennent les **noms de réglages** de cet écran, ou `undefined` quand le dire
+ * n'apprendrait rien.
+ *
+ * ## Le grief, et le vrai remède
+ *
+ * Un pilote-testeur a lu les captures allemande, néerlandaise et espagnole de cet écran
+ * comme « un écran presque entièrement en français ». Aucun défaut de fabrication : notre
+ * prose suit bien le globe (`Uit het bestand verwijderen`, `Diesen Wert schreiben`), et
+ * les libellés suivent le fichier, qui déclare `Display.Language: fr`. C'est voulu, et
+ * c'est même l'une des choses que ce projet tient à montrer.
+ *
+ * Ce qui manquait est ailleurs : sur les 8 800 px de l'écran, le mot « langue » n'apparaît
+ * pas une seule fois. Le pilote a cherché l'explication là où il était, ne l'a pas
+ * trouvée, et a conclu à un bug.
+ *
+ * ## Les deux silences
+ *
+ * Elle ne s'écrit pas quand elle n'apprendrait rien — même règle que la mention de l'axe
+ * dans `metaStrip`, dont elle est le prolongement :
+ *
+ * - **le fichier ne déclare aucune langue** : les libellés suivent le navigateur ou le
+ *   sélecteur, et il n'y a pas de désaccord à expliquer ;
+ * - **la langue du fichier est celle du globe** : les deux axes disent la même chose, et
+ *   la phrase serait du bruit sur un écran qui en a déjà beaucoup.
+ *
+ * ⚠️ Elle nomme la langue **réellement affichée**, celle du catalogue chargé : XCTrack ne
+ * livre ses libellés que dans 35 langues, et une déclaration hors de cette liste retombe
+ * sur l'anglais (`preferenceLanguage`). Dire « la langue que le fichier déclare » serait
+ * alors faux ; « ils suivent le fichier ouvert » reste vrai dans les deux cas.
+ */
+function labelsNote(options: PreferencesPageOptions): string | undefined {
+  if (options.labelsFromFile !== true || options.labelLanguage === undefined) return undefined
+  // `language` est un code de langue, donc un identifiant : il se passe en `string`.
+  const language = preferenceLanguage(options.labelLanguage)
+  if (language === options.tr.language) return undefined
+  return options.tr.t('preferences.labelsFromFile', { language })
+}
+
+/**
  * Construit la page. Synchrone : le catalogue est déjà là — c'est `openPreferencesPage`
  * qui l'a chargé, ou l'appelant qui le fournit.
  */
@@ -2845,6 +2952,10 @@ export function renderPreferencesPage(options: PreferencesPageOptions): Preferen
     ? tr.t('preferences.pageSubtitle')
     : tr.t('preferences.pageSubtitleNamed', { file: options.fileName })
   titles.append(el('p', 'prefs__subtitle', subtitle))
+  // D'où viennent les noms de réglages de cet écran — en tête, avant les 8 800 px de
+  // lignes, parce que c'est là qu'on les rencontre. Voir `labelsNote`.
+  const labels = labelsNote(options)
+  if (labels !== undefined) titles.append(el('p', 'prefs__labels', labels))
   head.append(titles)
 
   const actions = el('div', 'prefs__actions')
@@ -3014,6 +3125,13 @@ function buildMenuElement(entry: PreferenceMenuEntry, ctx: PageContext): HTMLEle
     if (naming !== undefined) {
       block.append(el('p', 'prefs__hardware prefs__hardware--origin', naming))
     }
+    // L'hypothèse — le seul propos de cet écran qui soit **supposé** et non mesuré. En
+    // clair, après les deux notes qui expliquent comment lire les lignes : elle a vécu un
+    // jour en infobulle et le pilote-testeur du 2026-08-22 l'a jugée inatteignable au
+    // doigt. Un statut d'interprétation ne dépend pas d'un survol.
+    for (const said of hypothesisScopeNotes(screen, ctx)) {
+      block.append(el('p', 'prefs__hardware prefs__hardware--hypothesis', said))
+    }
 
     if (screen.neverExported > 0) {
       block.append(el('p', 'prefs__never',
@@ -3033,12 +3151,9 @@ function hardwareScopeNote(
   screen: PreferenceScreenBlock, ctx: PageContext
 ): string | undefined {
   if (ctx.domains === undefined) return undefined
-  const bindings = screen.blocks
-    .flatMap((group) => group.rows)
-    .map((row) => row.binding)
-    .filter((one): one is KeyBinding => one !== undefined)
   return hardwareNote(
-    bindings, ctx.hardware, ctx.domains.hardwareKeySurveys(), ctx.device, ctx.tr
+    screenBindings(screen), ctx.hardware, ctx.domains.hardwareKeySurveys(),
+    ctx.device, ctx.tr
   )
 }
 
@@ -3047,11 +3162,26 @@ function keyNamingScopeNote(
   screen: PreferenceScreenBlock, ctx: PageContext
 ): string | undefined {
   if (ctx.domains === undefined) return undefined
-  const bindings = screen.blocks
+  return keyNamingNote(screenBindings(screen), ctx.hardware, ctx.tr)
+}
+
+/**
+ * Les hypothèses de ce bloc. Tout le propos est dans `hypothesisNotes` : ici on ne fait
+ * que rassembler les liaisons de l'écran.
+ */
+function hypothesisScopeNotes(screen: PreferenceScreenBlock, ctx: PageContext): string[] {
+  if (ctx.domains === undefined) return []
+  return hypothesisNotes(
+    screenBindings(screen), { domains: ctx.domains, hardware: ctx.hardware }, ctx.tr
+  )
+}
+
+/** Toutes les liaisons de touche d'un écran, dans l'ordre où elles s'y lisent. */
+function screenBindings(screen: PreferenceScreenBlock): KeyBinding[] {
+  return screen.blocks
     .flatMap((group) => group.rows)
     .map((row) => row.binding)
     .filter((one): one is KeyBinding => one !== undefined)
-  return keyNamingNote(bindings, ctx.hardware, ctx.tr)
 }
 
 /**
@@ -3214,7 +3344,11 @@ export async function openPreferencesPage(
     loadPreferenceCatalog(options.language),
     loadPreferenceDomains().catch(() => undefined)
   ])
-  return renderPreferencesPage({ ...options, catalog, domains })
+  // `labelLanguage` : la langue demandée pour les LIBELLÉS, que `labelsNote` ramènera à
+  // celle que le catalogue porte vraiment. L'assembleur n'a pas à la répéter.
+  return renderPreferencesPage({
+    ...options, catalog, domains, labelLanguage: options.language
+  })
 }
 
 /**

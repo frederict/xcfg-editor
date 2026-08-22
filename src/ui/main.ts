@@ -3251,6 +3251,13 @@ function buildPreferencesView(current: Session): HTMLElement {
       document: current.container.document,
       tr: translator(),
       language: current.language,
+      // ⚠️ **L'axe des libellés, dit à l'écran qui les affiche.** Un pilote-testeur a lu
+      // les captures allemande, néerlandaise et espagnole des réglages généraux comme
+      // « un écran presque entièrement en français » et en a conclu à un bug : notre prose
+      // suivait pourtant bien le globe, et les libellés suivaient le fichier, qui déclare
+      // `Display.Language: fr`. La mention de l'axe vit ici (`metaStrip`) et dans la boîte
+      // des langues — jamais sur les 8 800 px de la page des réglages, où le doute naît.
+      labelsFromFile: current.labelSource === 'file',
       fileName: current.container.fileName,
       ...(current.versionName === undefined ? {} : { fileVersionName: current.versionName }),
       ...(current.versionCode === undefined ? {} : { fileVersionCode: current.versionCode }),
@@ -3812,16 +3819,22 @@ function render(): void {
     || session.container.parseError !== undefined
     || view.kind === 'preferences'
     || view.kind === 'manual'
-  // ⚠️ **Deux morceaux, et non un texte.** La troncature doit manger le DÉBUT : la date
+  // ⚠️ **Trois morceaux, et non un texte.** La troncature doit manger le DÉBUT : la date
   // ouvre tous les exports d'une même journée, la fin porte le format et l'extension.
   // L'ellipse ordinaire mangeait exactement la fin, et `2026-08-20_backup-00.xcfg` comme
   // `2026-08-20_backupwithmedia-00.xczfg` s'affichaient « 2026-08-20_backu… » — mesuré
-  // par un pilote-testeur le 2026-08-22. Voir `fileNameParts`, et les deux `flex-shrink`
-  // d'`app.css` qui décident lequel cède.
+  // par un pilote-testeur le 2026-08-22.
+  //
+  // ⚠️ **Trois et non deux depuis le second relevé du même jour** : la tête s'effaçait
+  // bien entièrement, et c'est la QUEUE qui manquait de place — 181 px demandés pour
+  // 173,4 accordés. L'extension tombait, c'est-à-dire la seule chose qui distingue une
+  // configuration d'une archive. Le rang et l'extension forment donc un troisième
+  // morceau, qui ne cède jamais. Voir `fileNameParts`, et les trois `flex` d'`app.css`.
   fileName.textContent = ''
   const shown = fileNameParts(session?.container.fileName ?? '')
   fileName.append(
     el('span', 'app-bar__fileHead', shown.head),
+    el('span', 'app-bar__fileBody', shown.body),
     el('span', 'app-bar__fileTail', shown.tail)
   )
   // L'infobulle que la feuille de style promet depuis toujours, et qui manquait : le nom

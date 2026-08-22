@@ -110,9 +110,10 @@ const preferences: DomainCatalog<'preferences'> = {
   'preferences.keyFromNowhere':
     'Code {code} appears in no key table we have read. No name is given to it here: inventing one would be the worst of services.',
   'preferences.keyInjectionHypothesis':
-    'A hypothesis, unverified: an app installed on the device can inject a code without ' +
-    'any key emitting it, and the package {addon} is present on this unit. Nothing ' +
-    'proves it — only a key press, or reading that app, would settle it.',
+    'A hypothesis, unverified, about code {code}: an app installed on the device can ' +
+    'inject a code without any key emitting it, and the package {addon} is present on ' +
+    'this unit. Nothing proves it — only a key press, or reading that app, would ' +
+    'settle it.',
   'preferences.intentGloss':
     'An “intent” is the message by which one Android application makes another react. This key therefore does not drive XCTrack: it sends a signal, and it is another application, set up on the device, that answers it.',
 
@@ -377,6 +378,12 @@ const preferences: DomainCatalog<'preferences'> = {
   'preferences.pageTitle': 'General settings',
   'preferences.pageSubtitle': 'What XCTrack sets outside the widget pages',
   'preferences.pageSubtitleNamed': '{file} — what XCTrack sets outside the widget pages',
+
+  'preferences.labelsFromFile':
+    'The setting names below are XCTrack’s own and appear in {language}: they '  +
+    'follow the open file, never the language of this interface. That is '  +
+    'deliberate — these are the words you will find again on your instrument.',
+
   'preferences.menuLead':
     'The screens are those of the device, in the order of its settings menu.',
   'preferences.menuLeadEditable':
