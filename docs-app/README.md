@@ -117,6 +117,18 @@ colonne sans être réduites. Fixtures anonymisées, comme partout —
 grises). La recette longue, avec l'état exact et les pièges, est celle des captures du
 `README.md` français : ces deux figures en sont des recadrages, pris au même endroit.
 
+**Le recadrage se calcule, il ne se devine pas** : `.library__entry` mesure 625,2 px de
+large et sa hauteur dépend de la langue (182 px en anglais, où les six commandes tiennent
+sur un rang, 210 dans les quatre autres, où elles passent sur deux). Prendre la boîte
+entière puis découper à la mesure relevée de l'élément — c'est ce qui garantit que le
+fichier et les attributs `width`/`height` du `<img>` restent d'accord.
+
+⚠ **`bibliotheque-entree.<langue>.png` a été refaite le 2026-08-22**, dans les cinq
+langues : « Vérifier l'empreinte », « Renommer » et « Supprimer » n'y avaient aucun filet,
+et les commandes discrètes de l'outil l'ont repris ce jour-là. `trois-issues.<langue>.png`
+a été vérifiée au même moment et **gardée** : ses trois cartes ne portent aucune commande
+discrète, et son texte est mot pour mot celui de l'écran.
+
 ## Les cinq langues
 
 Les cinq langues du socle `src/i18n/` sont `fr`, `en`, `nl`, `de`, `es`, et le manuel existe
