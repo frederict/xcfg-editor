@@ -307,10 +307,9 @@ const app: DomainCatalog<'app'> = {
   'app.exportDialogFailedTitle': 'The save dialog could not be opened',
   'app.exportDialogFailedMessage': 'Nothing has been saved and your file has not moved. Try again.',
 
-  'app.exportHandedOver': '“{name}” ({size}) has been handed over to this browser’s downloads.',
-  'app.exportRefusedHint': 'A browser sometimes refuses a second save in a row, without telling ' +
-    'this page. If the file is not among your downloads, allow them for this site, then start ' +
-    'again.',
+  'app.exportHandedOver': '“{name}” ({size}) — this tool has asked your browser to save it.',
+  'app.exportWhereToLook': 'Look for it among your downloads — this page cannot see what ' +
+    'happens there. If it is not there, allow downloads for this site, then start again.',
   'app.exportReceiptDismiss': 'Dismiss this save receipt',
 
   'app.exportFailedTitle': 'The file could not be produced',

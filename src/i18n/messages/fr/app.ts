@@ -556,27 +556,39 @@ const app = {
   /**
    * ⚠️ Ce que cette phrase dit, et ce qu'elle se garde de dire.
    *
-   * Elle ne dit **pas** « c'est enregistré » : cette page n'a aucun moyen de le savoir.
-   * Mesuré sur Chrome, trois enregistrements de suite depuis le même onglet — le premier
-   * arrive, les suivants sont refusés, et le refus n'est rapporté à la page ni par une
-   * exception, ni par un événement, ni par rien. Affirmer le succès serait donc mentir
-   * une fois sur deux.
+   * Elle ne dit **pas** « c'est enregistré », et depuis le contre-essai du 22 août elle ne
+   * dit plus non plus « est parti » : partir est un fait que cette page ne constate pas.
+   * Ce qu'elle constate, c'est ce qu'elle a fait — un fichier, ce nom-là, cette taille-là,
+   * et une demande adressée au navigateur. Le reste appartient au navigateur, qui ne rend
+   * de compte à personne.
    *
-   * Elle dit ce que l'outil a réellement fait : un fichier, ce nom-là, cette taille-là,
-   * remis au navigateur. C'est ce qui manquait au pilote d'essai — « pas un mot, pas un
-   * nom de fichier » — et c'est de quoi reconnaître le fichier dans son dossier.
+   * **Mesuré deux fois.** Le 22 août au matin, Chrome, trois enregistrements de suite
+   * depuis le même onglet : le premier arrive, les deux suivants sont refusés sans une
+   * exception, sans un événement, sans rien. Le 22 août à midi, même geste dans deux
+   * onglets : trois sur trois arrivés dans l'un, **zéro sur trois** dans l'autre — le
+   * premier compris. Le refus ne dépend donc ni du rang de l'enregistrement, ni de quoi
+   * que ce soit que cette page puisse lire.
    *
    * Un seul littéral : deux repères nommés y vivent (`src/i18n/CLAUDE.md`, § 3).
    */
-  'app.exportHandedOver': '« {name} » ({size}) est parti vers les téléchargements de ce navigateur.',
+  'app.exportHandedOver': '« {name} » ({size}) — cet outil a demandé à votre navigateur de l’enregistrer.',
   /**
-   * Servi **à partir du deuxième enregistrement seulement**. Le premier passe toujours :
-   * l'y ajouter ferait d'un avertissement utile une ligne de décor, et le pilote
-   * l'ignorerait le jour où elle compte.
+   * Servie **à chaque enregistrement**, le premier compris.
+   *
+   * Elle l'était à partir du deuxième, sur la foi d'une mesure — « le premier passe
+   * toujours » — que le contre-essai a démentie : zéro fichier sur trois, dans un onglet
+   * où le reçu avait pourtant dit trois fois que le fichier partait. Un pilote qui
+   * n'enregistre qu'une fois n'aurait jamais rien lu.
+   *
+   * ⚠ Ce n'est **pas** un avertissement, et elle ne doit jamais en prendre le ton : elle
+   * paraît sur la situation normale, et un avertissement qui alarme sur la situation
+   * normale apprend à sauter les avertissements. Elle dit **où regarder** — les
+   * téléchargements —, pourquoi c'est au pilote de le faire — cette page n'y voit rien —,
+   * et ce qu'il reste à faire dans le cas contraire. Rien d'autre.
    */
-  'app.exportRefusedHint': 'Un navigateur refuse parfois un second enregistrement de suite, ' +
-    'sans le dire à cette page. Si le fichier n’est pas dans vos téléchargements, ' +
-    'autorisez-les pour ce site, puis recommencez.',
+  'app.exportWhereToLook': 'À retrouver dans vos téléchargements — cette page ne voit pas ' +
+    'ce qui s’y passe. S’il n’y est pas, autorisez les téléchargements pour ce site, ' +
+    'puis recommencez.',
   'app.exportReceiptDismiss': 'Fermer ce reçu d’enregistrement',
 
   /**

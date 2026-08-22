@@ -316,10 +316,9 @@ const app: DomainCatalog<'app'> = {
 
   // Het Nederlands scheidt *opslaan* van *downloaden* — zie `index.ts`. Deze drie zinnen
   // gaan over de download zelf, en zeggen dat ook zo.
-  'app.exportHandedOver': '‘{name}’ ({size}) is op weg naar de downloads van deze browser.',
-  'app.exportRefusedHint': 'Een browser weigert soms een tweede download achter elkaar, zonder ' +
-    'dat aan deze pagina te melden. Staat het bestand niet bij uw downloads, sta ze dan toe ' +
-    'voor deze site en begin opnieuw.',
+  'app.exportHandedOver': '‘{name}’ ({size}) — dit gereedschap heeft uw browser gevraagd het op te slaan.',
+  'app.exportWhereToLook': 'Te vinden bij uw downloads — deze pagina ziet niet wat daar ' +
+    'gebeurt. Staat het er niet bij, sta downloads toe voor deze site en begin opnieuw.',
   'app.exportReceiptDismiss': 'Deze downloadbevestiging sluiten',
 
   'app.exportFailedTitle': 'Het bestand kon niet worden gemaakt',

@@ -26,22 +26,27 @@ import nlLabels from '../../src/catalog/preferenceCatalog/nl.json'
  * > ferme, silence. Quand mon navigateur a refusé le second téléchargement, l'outil a réagi
  * > exactement pareil. »
  *
- * **Reproduit et mesuré**, Chrome, serveur de développement, trois enregistrements de suite
- * depuis le même onglet : le premier arrive dans le dossier de téléchargements, **les deux
- * suivants n'y arrivent jamais** — ils n'apparaissent même pas dans le gestionnaire de
- * téléchargements du navigateur. Côté page, les trois sont indiscernables : même
- * `link.click()`, aucune exception, aucun événement. Un clic humain sur un vrai
- * `<a download>` est refusé de la même façon une fois l'onglet marqué : **aucun** artifice
- * de page ne rattrape le refus, et aucun ne le détecte.
+ * **Reproduit et mesuré deux fois.** Le 22 août au matin, Chrome, trois enregistrements de
+ * suite depuis le même onglet : le premier arrive dans le dossier de téléchargements, **les
+ * deux suivants n'y arrivent jamais** — ils n'apparaissent même pas dans le gestionnaire de
+ * téléchargements. Le 22 août à midi, le même geste dans deux onglets : **trois sur trois**
+ * arrivés dans l'un, **zéro sur trois** dans l'autre, le premier compris. Côté page, les
+ * six sont indiscernables : même `link.click()`, aucune exception, aucun événement. Un clic
+ * humain sur un vrai `<a download>` est refusé de la même façon : **aucun** artifice de
+ * page ne rattrape le refus, et aucun ne le détecte.
+ *
+ * Ce que cette seconde mesure a démenti : « le premier passe toujours ». Elle a démenti du
+ * même coup la phrase du reçu — « est parti vers les téléchargements » —, qui affirmait
+ * trois fois un départ dont rien n'était arrivé.
  *
  * D'où la forme retenue, et ce que ces contrôles gardent :
  *
  * - un **reçu** dans la barre de tête, qui dit ce que l'outil a fait — un fichier, ce
- *   nom-là, cette taille-là, remis au navigateur — et jamais « c'est enregistré », qui
- *   serait faux une fois sur deux ;
- * - la mise en garde **à partir du deuxième** enregistrement seulement, parce que le
- *   premier passe toujours : un avertissement servi sur la situation normale s'apprend à
- *   se sauter ;
+ *   nom-là, cette taille-là, **demandé** au navigateur — et jamais qu'il est parti ni
+ *   qu'il est enregistré, deux faits que cette page ne constate pas ;
+ * - l'indication d'**où regarder**, servie à chaque enregistrement, le premier compris ;
+ *   ce n'est pas un avertissement, et elle ne doit pas en prendre le ton — elle paraît sur
+ *   la situation normale, et un avertissement servi là s'apprend à se sauter ;
  * - l'échec que l'outil peut **constater** — la fabrication du fichier — dit dans une
  *   boîte, là où il ne produisait qu'un rejet non traité dans la console.
  *
@@ -106,30 +111,59 @@ describe('le reçu d’enregistrement — le succès se voit', () => {
     }
   })
 
+  it('dit une DEMANDE faite au navigateur, jamais un départ ni un enregistrement', () => {
+    // Le verbe est ce qui sépare le reçu du mensonge. « Est parti vers les téléchargements »
+    // a vécu deux heures et a affirmé trois fois un départ dont rien n'était arrivé : cette
+    // page ne voit pas les téléchargements, elle ne voit que ce qu'elle a demandé.
+    const REQUESTED: Readonly<Record<UiLanguage, string>> = {
+      fr: 'demandé', en: 'asked', de: 'gebeten', es: 'pedido', nl: 'gevraagd'
+    }
+    for (const language of UI_LANGUAGES) {
+      expect(
+        said(language, 'app.exportHandedOver').toLowerCase(),
+        `${language} : le reçu doit dire ce qu'il a demandé`
+      ).toContain(REQUESTED[language])
+    }
+    expect(said('fr', 'app.exportHandedOver')).not.toContain('est parti')
+  })
+
   it('la taille passe par le formateur de la langue, jamais par une unité écrite en dur', () => {
     expect(main).toContain('size: tr.format.byteSize(lastReceipt.byteLength)')
   })
 
-  it('ne sert la mise en garde qu’à partir du DEUXIÈME enregistrement', () => {
-    // Mesuré : le premier téléchargement d'un onglet passe toujours. Servir la mise en
-    // garde dès celui-là en ferait du décor, et le pilote la sauterait le jour où elle
-    // compte.
-    expect(main).toContain('if (lastReceipt.ordinal > 1)')
-    expect(main).toContain("tr.t('app.exportRefusedHint')")
+  it('dit où regarder dès le PREMIER enregistrement, sans condition', () => {
+    // Elle était réservée au deuxième, sur la foi d'un « le premier passe toujours » que le
+    // contre-essai a démenti — zéro fichier sur trois. Un pilote qui n'enregistre qu'une
+    // fois n'aurait jamais rien lu, et rien ne le lui aurait dit.
+    const rendering = main.slice(
+      main.indexOf('function renderReceipt(): void'),
+      main.indexOf('function clearReceipt(): void')
+    )
+    expect(rendering).toContain("tr.t('app.exportWhereToLook')")
+    expect(rendering).not.toContain('ordinal')
+    expect(main).not.toContain('lastReceipt.ordinal')
     for (const language of UI_LANGUAGES) {
-      expect(said(language, 'app.exportRefusedHint').length, language).toBeGreaterThan(60)
+      expect(said(language, 'app.exportWhereToLook').length, language).toBeGreaterThan(60)
     }
   })
 
-  it('le compte est celui de l’onglet, et ne repart pas à l’ouverture d’un fichier', () => {
-    // C'est l'onglet que le navigateur compte, pas le document : remettre `deliveries` à
-    // zéro en fermant un document ferait taire la mise en garde juste quand elle vaut.
+  it('ce qu’elle dit reste une indication, jamais une alarme', () => {
+    // Elle paraît sur la situation normale : un mot d'alarme y apprendrait au pilote à
+    // sauter la ligne, et il la sauterait le jour où elle compte. Le rôle ARIA dit la même
+    // chose un cran plus bas (`role="status"`), et les deux doivent rester d'accord.
+    const alarming = ['attention', 'avertissement', 'danger', 'erreur', 'échec', '⚠']
+    const text = said('fr', 'app.exportWhereToLook').toLowerCase()
+    for (const word of alarming) expect(text, `« ${word} » alarme`).not.toContain(word)
+  })
+
+  it('le reçu tombe quand le document qu’il nommait s’en va', () => {
+    // Il nommait un fichier tiré de ce document-là ; le garder au-dessus du suivant ferait
+    // lire un nom qui n'a plus rien à voir avec ce qui est ouvert.
     const closing = main.slice(
       main.indexOf('function closeDocument(): void'),
       main.indexOf('function buildSession(')
     )
     expect(closing).toContain('clearReceipt()')
-    expect(closing).not.toContain('deliveries = 0')
   })
 
   it('suit la langue du pilote après coup', () => {

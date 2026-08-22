@@ -309,10 +309,9 @@ const app: DomainCatalog<'app'> = {
   'app.exportDialogFailedMessage': 'No se ha guardado nada y su archivo no se ha movido. ' +
     'Inténtelo de nuevo.',
 
-  'app.exportHandedOver': '«{name}» ({size}) ha salido hacia las descargas de este navegador.',
-  'app.exportRefusedHint': 'Un navegador a veces rechaza un segundo guardado seguido, sin ' +
-    'decírselo a esta página. Si el archivo no está entre sus descargas, autorícelas para este ' +
-    'sitio y vuelva a empezar.',
+  'app.exportHandedOver': '«{name}» ({size}) — esta herramienta ha pedido a su navegador que lo guarde.',
+  'app.exportWhereToLook': 'Búsquelo entre sus descargas: esta página no ve lo que ocurre ' +
+    'allí. Si no está, autorice las descargas para este sitio y vuelva a empezar.',
   'app.exportReceiptDismiss': 'Cerrar este recibo de guardado',
 
   'app.exportFailedTitle': 'El archivo no se ha podido fabricar',

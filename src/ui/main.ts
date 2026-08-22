@@ -777,9 +777,12 @@ actions.append(
  * dans le gestionnaire de téléchargements. Rien, côté page, ne distingue les deux.
  *
  * **Pourquoi c'est un reçu et non une confirmation.** Cet outil ne peut pas savoir que le
- * fichier est arrivé ; il sait ce qu'il a fabriqué et ce qu'il a remis au navigateur.
- * C'est donc cela qu'il dit — le nom, la taille, la destination —, et rien de plus. Une
- * phrase qui affirmerait « c'est enregistré » serait fausse une fois sur deux.
+ * fichier est arrivé ; il sait ce qu'il a fabriqué et ce qu'il a demandé au navigateur.
+ * C'est donc cela qu'il dit — le nom, la taille, la demande —, et rien de plus. Une phrase
+ * qui affirmerait « c'est enregistré » serait fausse une fois sur deux ; « est parti », que
+ * ce reçu a portée deux heures, l'était de la même façon — plus discrètement, ce qui est
+ * pire. Contre-essai du 22 août à midi : **zéro fichier sur trois** dans un onglet où le
+ * reçu avait dit trois fois que le fichier partait.
  *
  * **Pourquoi il vit DANS la barre de tête.** La barre est collante ; une bande posée sous
  * elle serait hors champ dès que le pilote a fait défiler sa page — c'est-à-dire presque
@@ -863,16 +866,9 @@ function installChromeProse(tr: Translator): void {
 interface DeliveryReceipt {
   readonly fileName: string
   readonly byteLength: number
-  /**
-   * Le rang de cet enregistrement **dans l'onglet**, et non dans le document : c'est
-   * l'onglet que le navigateur compte. Au-delà du premier, le téléchargement peut être
-   * refusé sans que cette page l'apprenne, et le reçu le dit alors — pas avant.
-   */
-  readonly ordinal: number
 }
 
 let lastReceipt: DeliveryReceipt | undefined
-let deliveries = 0
 
 /**
  * L'URL du dernier fichier remis, gardée en vie.
@@ -898,13 +894,12 @@ function renderReceipt(): void {
     name: lastReceipt.fileName,
     size: tr.format.byteSize(lastReceipt.byteLength)
   })))
-  // ⚠ La mise en garde ne paraît qu'à partir du DEUXIÈME enregistrement, parce que c'est
-  // à partir de là que le refus est possible — mesuré : le premier passe toujours. La
-  // servir dès le premier serait crier au loup sur la situation normale, et un pilote qui
-  // apprend à sauter cette ligne la sautera le jour où elle compte.
-  if (lastReceipt.ordinal > 1) {
-    said.append(el('p', 'app-bar__receiptHint', tr.t('app.exportRefusedHint')))
-  }
+  // ⚠ Elle paraît à CHAQUE enregistrement, le premier compris. Elle était réservée au
+  // deuxième, sur la foi d'un « le premier passe toujours » que le contre-essai a démenti :
+  // trois enregistrements, zéro fichier, et le pilote qui n'en fait qu'un n'aurait rien lu.
+  // Ce n'est pas pour autant un avertissement — voir `app.exportWhereToLook` : elle dit où
+  // regarder, pas qu'il y a un problème.
+  said.append(el('p', 'app-bar__receiptHint', tr.t('app.exportWhereToLook')))
   receipt.append(said)
   const dismiss = el('button', 'btn btn--ghost app-bar__receiptClose', tr.t('app.close'))
   dismiss.type = 'button'
@@ -3302,8 +3297,7 @@ async function deliver(
   link.href = url
   link.download = fileName
   link.click()
-  deliveries += 1
-  lastReceipt = { fileName, byteLength: bytes.byteLength, ordinal: deliveries }
+  lastReceipt = { fileName, byteLength: bytes.byteLength }
   renderReceipt()
 }
 
@@ -3312,8 +3306,7 @@ async function deliver(
  *
  * C'est le seul des deux échecs que cet outil puisse **constater**. L'autre — le
  * navigateur qui refuse le téléchargement — ne lui est jamais rapporté ; le reçu s'en
- * charge à sa façon, en disant ce qu'il y a à vérifier à partir du deuxième
- * enregistrement.
+ * charge à sa façon, en disant à chaque fois où le pilote peut le constater lui-même.
  */
 function tellDeliveryFailed(error: unknown): void {
   const tr = translator()
@@ -3761,8 +3754,8 @@ function closeDocument(): void {
   // ouvert, qui se retrouverait posé au-dessus d'une vue qu'il n'a pas ouverte.
   menu.close()
   paletteQuery = ''
-  // Le reçu nommait un fichier tiré du document qu'on referme. Le **compte**, lui, ne
-  // repart pas de zéro : c'est l'onglet que le navigateur compte, pas le document.
+  // Le reçu nommait un fichier tiré du document qu'on referme : il n'a plus rien à dire du
+  // document qui s'ouvre.
   clearReceipt()
   // Les réglages généraux affichés étaient ceux de l'autre fichier, et la vue retenue
   // pour le retour désignait une page de l'autre fichier.

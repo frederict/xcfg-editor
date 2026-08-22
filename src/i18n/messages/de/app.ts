@@ -319,10 +319,10 @@ const app: DomainCatalog<'app'> = {
   'app.exportDialogFailedMessage': 'Es wurde nichts gespeichert und Ihre Datei ist ' +
     'unverändert. Versuchen Sie es erneut.',
 
-  'app.exportHandedOver': '„{name}“ ({size}) ist auf dem Weg zu den Downloads dieses Browsers.',
-  'app.exportRefusedHint': 'Ein Browser verweigert manchmal ein zweites Speichern in Folge, ' +
-    'ohne es dieser Seite mitzuteilen. Liegt die Datei nicht bei Ihren Downloads, erlauben Sie ' +
-    'sie für diese Website und beginnen Sie von vorn.',
+  'app.exportHandedOver': '„{name}“ ({size}) — dieses Werkzeug hat Ihren Browser gebeten, sie zu speichern.',
+  'app.exportWhereToLook': 'Zu finden bei Ihren Downloads — diese Seite sieht nicht, was ' +
+    'dort geschieht. Liegt sie nicht dort, erlauben Sie Downloads für diese Website und ' +
+    'beginnen Sie von vorn.',
   'app.exportReceiptDismiss': 'Diese Speicherbestätigung schließen',
 
   'app.exportFailedTitle': 'Die Datei konnte nicht erzeugt werden',

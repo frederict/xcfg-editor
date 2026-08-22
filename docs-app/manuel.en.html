@@ -808,17 +808,19 @@
   <h3>Once saved: the receipt</h3>
 
   <p>The dialog closes, and the top bar shows a line naming the file produced, its size, and
-  where it went — this browser’s downloads. It stays in front of you until you dismiss it,
-  save again, or open another file.</p>
+  what the tool did with it: it asked your browser to save it. A second line says where to
+  look for it — your downloads. The receipt stays in front of you until you dismiss it, save
+  again, or open another file.</p>
 
   <div class="manual__measured">
     <span class="manual__boxTitle">This page cannot know that the file arrived</span>
-    <p>The receipt says what the tool did — a file produced, named, and handed over to the
-    browser — never what the browser did with it afterwards. <strong>Measured on Chrome: the
-    first download of a tab arrives, the following ones may be refused</strong>, and that
-    refusal is reported to the page neither by an error, nor by an event, nor by anything at
-    all. That is why the receipt adds, <em>from the second save onward</em>, what to check —
-    and why it will never write “it is saved” for you.</p>
+    <p>The receipt says what the tool did — a file produced, named, and its saving asked of
+    the browser — never what the browser did with it afterwards. <strong>Measured on Chrome,
+    twice: three saves in a row in one tab, three files arrived; the same gesture in another
+    tab, none of the three</strong> — not even the first. That refusal is reported to the
+    page neither by an error, nor by an event, nor by anything at all. That is why the
+    receipt says <em>every time</em> where to check for yourself — and why it will never
+    write “it is saved” for you, nor even that it went.</p>
   </div>
 
   <h3>Outcome 1 — “Your configuration, exactly as it is”</h3>
