@@ -469,15 +469,19 @@
     XC assistant, competition, or blank. Those four names are XCTrack's own and appear in
     the language of the file you opened, not in yours;</li>
     <li><strong>duplicate</strong> a page: the copy lands just after it;</li>
-    <li><strong>delete</strong> a page: the first click shows the consequences and changes
-    the button into <span class="manual__ui">Confirm deletion</span>, the second one
-    deletes;</li>
+    <li><strong>delete</strong> a page: a single click, just like
+    <span class="manual__ui">Duplicate</span> right above it — and for the same reason,
+    since <span class="manual__ui">Undo</span> takes back either one. The tool writes out at
+    once what has just gone: the position, how many widgets went with it, which pages
+    shift, and the way back;</li>
     <li><strong>reorder</strong>: drag one thumbnail onto another, or use the two
     arrows.</li>
   </ul>
 
-  <p>Before each gesture, the tool says what is going to shift: “Pages 3 to 5 become 4 to
-  6”. It also warns you if you are about to create a second thermal assistant page — this
+  <p>For an insertion, the tool says <strong>beforehand</strong> what is going to shift:
+  “Pages 3 to 5 become 4 to 6” appears in the choice panel. For a deletion it says it
+  <strong>afterwards</strong>: the thumbnail is gone, and that is where the count of widgets
+  taken along is read. It also warns you if you are about to create a second thermal assistant page — this
   tool assumes that XCTrack only switches automatically to the last one, without having
   checked it — or to leave nothing but pages enabled for no navigation, in which case your
   instrument would have no page left to show in that orientation.</p>
@@ -498,6 +502,14 @@
 
   <p>One exception: the library is not covered. Deleting a stored configuration cannot be
   undone.</p>
+
+  <p><strong>This is what decides which gestures ask for confirmation.</strong> A gesture
+  those two arrows take back asks you nothing: it happens on the first click, and the tool
+  writes out at once what it did and the way back. A gesture nothing takes back — removing a
+  stored configuration, emptying the library, opening a file on top of unsaved work —
+  announces itself <strong>beforehand</strong>, in a panel that puts a figure on what it
+  costs, and its button carries an amber rule the others do not have. One more confirmation
+  on what undoes itself would spend the attention we need to keep for what does not.</p>
 
   <h3>The keyboard gestures</h3>
 

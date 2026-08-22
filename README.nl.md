@@ -154,7 +154,14 @@ een belofte van getrouwheid die alleen de auteur kan nagaan, is niets waard.
 - **Bewerken**: widgets verplaatsen, van formaat veranderen, toevoegen, verwijderen en van
   volgorde wisselen; hun opties instellen; de pagina’s beheren (invoegen, dupliceren,
   verwijderen, herordenen, een pagina heropenen die geen enkele navigatie activeert).
-  Ongedaan maken / opnieuw doen.
+  Ongedaan maken / opnieuw doen. **Geen van deze handelingen vraagt om bevestiging**: wat
+  ‘Ongedaan maken’ terugdraait gebeurt bij de eerste klik, en het gereedschap schrijft
+  meteen op wat het heeft gedaan en waar de weg terug is — inclusief hoeveel widgets een
+  verwijderde pagina meeneemt. Wat wél **vooraf** vraagt, in een luik dat becijfert, zijn de
+  drie handelingen die niets terugdraait: een opgeborgen configuratie verwijderen, de
+  bibliotheek legen, een bestand openen bovenop niet-opgeslagen werk. Eén bevestiging meer
+  op wat zich laat terugdraaien zou de aandacht opsouperen die nodig is voor wat dat niet
+  doet.
 - **De algemene instellingen instellen** — de 217 voorkeuren die buiten de pagina’s leven:
   eenheden, knoppen, sensoren, geluid, luchtruim. In de boomstructuur van de 23 regels van
   het instrumentmenu. In kijkmodus wordt er **geen enkel formulierveld gebouwd**; in

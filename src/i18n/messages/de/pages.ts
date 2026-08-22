@@ -58,8 +58,14 @@ const pages: DomainCatalog<'pages'> = {
   'pages.enableAllNavigations': 'Für alle Navigationen aktivieren',
   'pages.enableAllNavigationsFor': 'Seite {rank} für alle Navigationen aktivieren',
 
-  'pages.announcement': '{done}.',
   'pages.announcementWithAdvice': '{done}. {advice}',
+
+  'pages.undoRestores': '„Rückgängig“ in der Kopfleiste nimmt diesen Schritt zurück, solange dieser Tab geöffnet bleibt.',
+
+  'pages.removalTally': {
+    one: '{count} Widget verschwindet mit ihr.',
+    other: '{count} Widgets verschwinden mit ihr.'
+  },
 
   'pages.rankRange': '{first} bis {last}',
 
@@ -133,7 +139,6 @@ const pages: DomainCatalog<'pages'> = {
   'pages.duplicatePage': 'Seite {rank} duplizieren',
   'pages.remove': 'Löschen',
   'pages.removePage': 'Seite {rank} löschen',
-  'pages.confirmRemoval': 'Löschen bestätigen',
 
   'pages.pageTypeLabel': 'Seitentyp',
 

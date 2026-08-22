@@ -8,8 +8,9 @@
  *    collante, `.modal__actions`, `.btn`, `.chip`, `.flag`. Ce fichier ne fait que donner
  *    sa forme à la liste et à la carte d'identité ;
  * 2. **le cadre est achromatique.** Aucune couleur n'est introduite : l'ambre reste réservé
- *    à ce qui alerte — ici les données personnelles et les entrées illisibles, qui
- *    empruntent `--app-flag-*` déjà défini ; le bleu au contour de focus ;
+ *    à ce qui alerte — ici les données personnelles, les entrées illisibles et les trois
+ *    gestes que rien ne rattrape (`.library__final`), qui empruntent tous `--app-flag-*`
+ *    déjà défini ; le bleu au contour de focus ;
  * 3. **les deux thèmes sont servis par les mêmes variables.** Aucune valeur en dur : tout
  *    passe par `--app-*`, donc le mode sombre suit sans une ligne de plus.
  */
@@ -52,11 +53,46 @@
  * L'effacement complet, en bout de pied. `margin-inline-start: auto` le pousse à l'opposé
  * du compte et de la jauge : sur une ligne qui ne parle que de mesures, le seul bouton qui
  * détruit ne doit pas être à un pixel de « Empêcher le navigateur d'effacer ma
- * bibliothèque », qui fait exactement l'inverse. Aucune couleur n'est introduite — le
- * cadre reste achromatique, et c'est le filet ambre du niveau `grave` qui alerte une fois
- * la boîte ouverte.
+ * bibliothèque », qui fait exactement l'inverse.
+ *
+ * ⚠ **La place ne suffisait pas, et c'est mesuré.** « Les deux commencent par la même
+ * idée. L'une protège, l'autre détruit. Rien ne les distingue à l'œil » — pilote-testeur,
+ * 2026-08-22, sur ces deux boutons-ci. La jauge qui les sépare est une phrase grise ; sur
+ * une bibliothèque d'une entrée, elle tient sur trois centimètres. D'où `.library__final`
+ * ci-dessous, qui porte la distinction sur le bouton lui-même.
  */
 .library__clearAll { margin-inline-start: auto; }
+
+/*
+ * La marque du geste que rien ne rattrape.
+ *
+ * Elle ne dit pas « attention, c'est gros » : elle dit **« aucune annulation ne revient
+ * là-dessus »**. C'est la seule frontière que l'outil peigne, et elle passe entre trois
+ * boutons de cet écran — retirer une configuration rangée, retirer une entrée illisible,
+ * tout effacer — et tout le reste de l'application, où « Annuler » reprend chaque geste,
+ * y compris la suppression d'une page de vingt gadgets.
+ *
+ * Elle n'introduit **aucune couleur neuve** : c'est l'ambre `--app-flag-*` de ce qui
+ * alerte, déjà porté par les données personnelles, par les entrées illisibles et par le
+ * filet du niveau `grave` qui s'ouvre au clic. Le bouton emprunte donc au panneau qu'il
+ * appelle, un geste avant qu'il ne s'ouvre.
+ *
+ * ⚠ La couleur ne porte pas seule : le filet gauche passe à 3 px, une épaisseur qui se
+ * voit en niveaux de gris et sur un écran mal calibré au soleil. `box-sizing: border-box`
+ * est global (`app.css`) : la pastille ne s'élargit pas d'un pixel.
+ *
+ * ⚠ Ce que cette marque n'est PAS : un avertissement de plus. Les trois boutons qui la
+ * portent ouvrent tous un panneau qui chiffre ce qu'il coûte, et ce sont les trois seuls
+ * de l'application dans ce cas. La porter ailleurs — sur « Supprimer » une page, sur
+ * « Retirer du fichier » un réglage — la viderait de son sens en un écran.
+ */
+.library__final {
+  border-color: var(--app-flag-line);
+  border-left-width: 3px;
+  color: var(--app-flag-ink);
+}
+
+.library__final:hover:not(:disabled) { color: var(--app-flag-ink); border-color: var(--app-flag-ink); }
 
 .library__empty {
   margin: 0;

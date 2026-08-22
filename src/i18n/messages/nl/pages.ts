@@ -56,8 +56,14 @@ const pages: DomainCatalog<'pages'> = {
   'pages.enableAllNavigations': 'Voor alle navigaties inschakelen',
   'pages.enableAllNavigationsFor': 'Pagina {rank} voor alle navigaties inschakelen',
 
-  'pages.announcement': '{done}.',
   'pages.announcementWithAdvice': '{done}. {advice}',
+
+  'pages.undoRestores': '‘Ongedaan maken’ in de bovenste balk draait deze stap terug zolang dit tabblad open blijft.',
+
+  'pages.removalTally': {
+    one: '{count} widget verdwijnt ermee.',
+    other: '{count} widgets verdwijnen ermee.'
+  },
 
   'pages.rankRange': '{first} tot {last}',
 
@@ -131,7 +137,6 @@ const pages: DomainCatalog<'pages'> = {
   'pages.duplicatePage': 'Pagina {rank} dupliceren',
   'pages.remove': 'Verwijderen',
   'pages.removePage': 'Pagina {rank} verwijderen',
-  'pages.confirmRemoval': 'Verwijderen bevestigen',
 
   'pages.pageTypeLabel': 'Paginatype',
 

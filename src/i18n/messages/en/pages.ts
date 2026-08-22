@@ -58,8 +58,14 @@ const pages: DomainCatalog<'pages'> = {
   'pages.enableAllNavigations': 'Enable for all navigations',
   'pages.enableAllNavigationsFor': 'Enable page {rank} for all navigations',
 
-  'pages.announcement': '{done}.',
   'pages.announcementWithAdvice': '{done}. {advice}',
+
+  'pages.undoRestores': '“Undo”, in the top bar, takes this step back for as long as this tab stays open.',
+
+  'pages.removalTally': {
+    one: '{count} widget goes with it.',
+    other: '{count} widgets go with it.'
+  },
 
   'pages.rankRange': '{first} to {last}',
 
@@ -132,7 +138,6 @@ const pages: DomainCatalog<'pages'> = {
   'pages.duplicatePage': 'Duplicate page {rank}',
   'pages.remove': 'Delete',
   'pages.removePage': 'Delete page {rank}',
-  'pages.confirmRemoval': 'Confirm deletion',
 
   'pages.pageTypeLabel': 'Page type',
 

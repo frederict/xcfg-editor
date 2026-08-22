@@ -155,7 +155,14 @@ Absicht — ein Treueversprechen, das nur der Autor nachprüfen kann, ist nichts
 - **Bearbeiten**: Widgets verschieben, in der Größe ändern, hinzufügen, löschen und
   umordnen; ihre Optionen einstellen; die Seiten verwalten (einfügen, duplizieren, löschen,
   umordnen, eine Seite wieder öffnen, die keine Navigation aktiviert). Rückgängig machen /
-  wiederholen.
+  wiederholen. **Keiner dieser Handgriffe verlangt eine Bestätigung**: was „Rückgängig“
+  zurücknimmt, geschieht beim ersten Klick, und das Werkzeug schreibt sofort auf, was es
+  getan hat und wo der Weg zurück ist — samt der Zahl der Widgets, die eine gelöschte Seite
+  mitnimmt. **Vorher** fragen, in einem Bereich, der beziffert, nur die drei Handgriffe,
+  die nichts zurücknimmt: eine abgelegte Konfiguration entfernen, die Bibliothek leeren,
+  eine Datei über nicht gespeicherte Arbeit öffnen. Eine Bestätigung mehr auf dem, was sich
+  rückgängig machen lässt, würde die Aufmerksamkeit aufbrauchen, die für das andere
+  gebraucht wird.
 - **Die allgemeinen Einstellungen setzen** — die 217 Einstellungen, die außerhalb der
   Seiten leben: Einheiten, Tasten, Sensoren, Ton, Lufträume. In der Baumstruktur der
   23 Zeilen des Gerätemenüs. Beim Ansehen wird **kein einziges Formularelement gebaut**;

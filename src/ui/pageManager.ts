@@ -40,11 +40,31 @@ import { aspectRatioOf, pageKind, type ViewContext } from './views'
  *
  * Ce qui s'en écarte, volontairement :
  *
- * - **la suppression demande confirmation**. L'appareil supprime au premier appui, sans
- *   rien dire ; ici le bouton passe d'abord à « Confirmer », et la conséquence — le
- *   décalage de toutes les pages suivantes — s'écrit à ce moment-là, avant le geste et
- *   non après. L'annulation reste possible ensuite (`model/history.ts`), mais un pilote
- *   qui a fermé l'onglet n'annule plus rien ;
+ * - **la suppression dit ce qu'elle emporte, et par où revenir**. L'appareil supprime au
+ *   premier appui, sans rien dire, et **sans retour**. Ici le geste part au premier clic
+ *   lui aussi, mais l'outil énonce aussitôt ce qui vient de partir — le rang, le nombre
+ *   de gadgets, le décalage des pages suivantes, la navigation qu'il ne reste plus — et
+ *   il nomme le remède : « Annuler » revient sur ce geste (`model/history.ts`).
+ *
+ *   ⚠️ **Ce paragraphe disait le contraire jusqu'au 2026-08-22, et la mesure l'a démenti.**
+ *   Le bouton passait d'abord à « Confirmer la suppression » ; la feuille de style
+ *   affirmait qu'ainsi armé, « un second clic distrait est impossible ». Le second clic
+ *   tombe pourtant sur le **même bouton, aux mêmes pixels** : rien n'arrête une main qui
+ *   clique deux fois. Un pilote-testeur a supprimé une page de vingt gadgets et l'a
+ *   rapporté comme « un clic, sans aucune confirmation » — la confirmation existait, il
+ *   ne l'a jamais vue. Elle coûtait donc l'attention d'un panneau sans en rendre la
+ *   protection, sur un geste que « Annuler » reprend.
+ *
+ *   La règle de l'outil, désormais, ne suit plus le dégât apparent mais **le retour** :
+ *   ce qu'« Annuler » reprend se fait d'un clic et **se dit** à l'instant ; ce que rien
+ *   ne reprend — vider la bibliothèque, en retirer une configuration, déposer un fichier
+ *   par-dessus un travail non enregistré — demande **avant**, dans un panneau qui chiffre
+ *   ce qu'il coûte. Une confirmation de plus sur un geste réversible use l'attention
+ *   qu'il faut garder pour ceux qui ne le sont pas.
+ *
+ *   Corollaire assumé : « Dupliquer » et « Supprimer » portent la **même** pastille, et
+ *   c'est juste — le même clic sur « Annuler » les reprend tous les deux. Ce qui les
+ *   distingue est écrit, pas peint ;
  * - **la classe reste modifiable après création**. XCTrack ne le propose sur aucun de
  *   ses écrans (§ 5.2) ; ce n'est pourtant qu'une clé du fichier, et le refuser serait
  *   contraindre l'éditeur à une limite de l'appareil. C'est donc offert, mais **dit** :
@@ -218,16 +238,43 @@ export function describeOperation(
   }
 }
 
-/** Ce que l'interface annonce une fois l'opération faite, `pages` étant l'état d'AVANT. */
+/**
+ * Ce que l'interface annonce une fois l'opération faite, `pages` étant l'état d'AVANT.
+ *
+ * ⚠️ **C'est ici que se paie le clic unique.** Aucune de ces opérations ne demande de
+ * confirmation, parce que « Annuler » les reprend toutes ; en échange, l'annonce doit
+ * porter tout ce que le pilote aurait lu dans un panneau : ce qui vient d'être fait, ce
+ * qu'il en coûte, et **par où revenir**. La dernière phrase est donc la même pour les six
+ * opérations — un remède qu'on ne nomme qu'une fois sur deux n'est pas un remède.
+ *
+ * Une suppression y ajoute deux choses que le pilote ne peut plus lire une fois la
+ * vignette disparue : **combien de gadgets sont partis avec la page**, et les
+ * conséquences complètes du retrait (décalage des rangs, plus aucune page navigable,
+ * basculement de thermique). Elles vivaient jusqu'au 2026-08-22 sous le bouton armé,
+ * c'est-à-dire dans un état qu'un pilote-testeur n'a jamais vu passer.
+ */
 export function operationAnnouncement(
   pages: readonly Page[], operation: PageOperation, orientation: Orientation, tr: Translator,
   labels: string
 ): string {
   const done = describeOperation(pages, operation, orientation, tr, labels)
-  const shift = shiftAdvice(pages, operation, tr)
-  return shift === undefined
-    ? tr.t('pages.announcement', { done })
-    : tr.t('pages.announcementWithAdvice', { done, advice: shift.text })
+
+  // Des phrases entières mises bout à bout, jamais des fragments : chacune est traduite
+  // telle quelle, et l'ordre des mots à l'intérieur appartient à sa langue.
+  const said: string[] = []
+  if (operation.kind === 'remove') {
+    const page = pages[operation.index]
+    if (page !== undefined) {
+      said.push(tr.t('pages.removalTally', { count: page.widgets.length }))
+    }
+    said.push(...operationAdvice(pages, operation, tr).map((item) => item.text))
+  } else {
+    const shift = shiftAdvice(pages, operation, tr)
+    if (shift !== undefined) said.push(shift.text)
+  }
+  said.push(tr.t('pages.undoRestores'))
+
+  return tr.t('pages.announcementWithAdvice', { done, advice: said.join(' ') })
 }
 
 /* ------------------------------------------------------------------ les conséquences */
@@ -584,14 +631,47 @@ export interface PageManagerOptions {
   readonly tr: Translator
   /**
    * L'opération demandée, avec sa description prête pour l'historique. L'appelant mute le
-   * document (`applyPageOperation`), enregistre le pas et reconstruit : ce module ne
-   * garde aucun état entre deux rendus.
+   * document (`applyPageOperation`), enregistre le pas et reconstruit : ce module ne garde
+   * aucun état entre deux rendus, hormis `REPEAT_GUARD_MS`.
    */
   onOperation: (operation: PageOperation, description: string) => void
   /** Clic sur une vignette : ouvrir la page, comme l'appui simple de l'appareil. */
   onOpen?: (index: number) => void
   /** Changer la classe après création — offert par défaut, voir `classChangeAdvice`. */
   allowClassChange?: boolean
+  /**
+   * L'horloge du garde-fou du coup double (`REPEAT_GUARD_MS`). Injectable pour les tests
+   * seulement : l'application ne la passe pas et lit `Date.now`.
+   */
+  now?: () => number
+}
+
+/**
+ * Le seul état que ce module garde entre deux rendus, et il faut dire pourquoi.
+ *
+ * Depuis que la suppression part au premier clic, l'appelant reconstruit le carrousel
+ * **dans la foulée du clic** : la carte suivante vient alors occuper les pixels de celle
+ * qui part, son bouton « Supprimer » compris. Le second coup d'un double-clic tombe donc
+ * sur un bouton neuf, à la même place, et emporterait une **deuxième** page — dont une
+ * seule serait annoncée, et qui demanderait deux annulations. Le second coup est avalé.
+ *
+ * ⚠️ 500 ms est un **choix, pas une mesure** : aucun double-clic n'a été chronométré ici.
+ * Le seuil est plus long que le réglage d'usine des systèmes visés pour couvrir aussi le
+ * clic répété d'impatience — celui qui a fait croire à un pilote-testeur que la page était
+ * partie sans confirmation, alors qu'il venait d'armer puis de confirmer sans le voir. Une
+ * suppression volontairement répétée coûte une demi-seconde d'attente, ce qui est le bon
+ * sens du marché.
+ *
+ * Seule la suppression est gardée : deux duplications ou deux déplacements se voient et se
+ * défont ; deux pages disparues, non.
+ */
+export const REPEAT_GUARD_MS = 500
+
+let lastRemovalAt: number | undefined
+
+/** Remet le garde-fou à zéro — pour les tests, qui enchaînent des carrousels neufs. */
+export function resetRemovalGuard(): void {
+  lastRemovalAt = undefined
 }
 
 export interface PageManager {
@@ -614,8 +694,10 @@ function adviceList(advice: readonly Advice[], className = 'pages__advice'): HTM
  * entre chacune et aux deux extrémités.
  *
  * Rien n'est mémorisé d'un rendu à l'autre : l'appelant reconstruit après chaque
- * opération. La confirmation de suppression, elle, ne vit que le temps d'un rendu — un
- * bouton laissé en attente de confirmation redevient inoffensif dès que la liste change.
+ * opération, et aucun bouton ne garde d'état entre deux clics — il n'y a plus rien à
+ * armer depuis que le retrait se fait d'un clic et se dit dans l'annonce. La seule
+ * exception, et elle est là pour cette raison même, est le garde-fou du coup double
+ * (`REPEAT_GUARD_MS`), qui doit justement survivre à la reconstruction.
  */
 export function renderPageManager(options: PageManagerOptions): PageManager {
   const { pages, orientation, ctx, tr } = options
@@ -805,38 +887,26 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
 
     ops.append(left, right, copy)
 
-    /* --- la suppression, en deux temps : la conséquence d'abord --- */
+    /*
+     * La suppression : un clic, comme « Dupliquer » à sa gauche, et pour la même raison —
+     * « Annuler » reprend l'une comme l'autre. Ce qui part, ce qui se décale et par où
+     * revenir s'écrit dans l'annonce, en toutes lettres (`operationAnnouncement`).
+     *
+     * Le bouton garde sa ligne à lui : la carte est étroite, et « Supprimer » posé au bout
+     * de la rangée des flèches se retrouverait sous le pouce qui vise « ▶ ».
+     */
     const removal = el('div', 'pagecard__removal')
     const remove = button(
       'btn pagecard__remove', tr.t('pages.remove'),
       tr.t('pages.removePage', { rank: index + 1 })
     )
-    const consequences = adviceList(
-      operationAdvice(pages, { kind: 'remove', index }, tr), 'pagecard__consequences'
-    )
-    consequences.hidden = true
-
-    let armed = false
-    const disarm = (): void => {
-      armed = false
-      remove.textContent = tr.t('pages.remove')
-      remove.classList.remove('pagecard__remove--armed')
-      consequences.hidden = true
-    }
     remove.addEventListener('click', () => {
-      if (!armed) {
-        armed = true
-        remove.textContent = tr.t('pages.confirmRemoval')
-        remove.classList.add('pagecard__remove--armed')
-        consequences.hidden = false
-        return
-      }
-      disarm()
+      const now = (options.now ?? Date.now)()
+      if (lastRemovalAt !== undefined && now - lastRemovalAt < REPEAT_GUARD_MS) return
+      lastRemovalAt = now
       request({ kind: 'remove', index })
     })
-    remove.addEventListener('blur', disarm)
-    remove.addEventListener('keydown', (event) => { if (event.key === 'Escape') disarm() })
-    removal.append(remove, consequences)
+    removal.append(remove)
     ops.append(removal)
     card.append(ops)
 

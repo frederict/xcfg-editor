@@ -145,12 +145,36 @@ const pages = {
   'pages.enableAllNavigationsFor': 'Activer la page {rank} pour toutes les navigations',
 
   /**
-   * Ce que la zone d'annonce dit une fois le geste fait : le pas d'historique, puis la
-   * conséquence quand il y en a une. Deux clés plutôt qu'une concaténation, parce que le
-   * point final et l'espace qui sépare deux phrases appartiennent à la langue.
+   * Ce que la zone d'annonce dit une fois le geste fait : le pas d'historique, puis tout
+   * ce qui s'y ajoute — la conséquence quand il y en a une, et toujours le remède. Le
+   * point final et l'espace qui sépare deux phrases appartiennent à la langue : d'où le
+   * repère `{advice}`, et non une concaténation dans le code.
+   *
+   * ⚠️ **Il n'y a plus de forme « sans rien de plus ».** `pages.undoRestores` ferme chaque
+   * annonce, parce qu'aucun de ces six gestes ne demande de confirmation : un remède nommé
+   * une fois sur deux n'est pas un remède.
    */
-  'pages.announcement': '{done}.',
   'pages.announcementWithAdvice': '{done}. {advice}',
+
+  /**
+   * La phrase qui remplace le panneau de confirmation. Elle nomme le remède, dit **où** il
+   * se trouve et **jusqu'à quand** il vaut — les trois manquaient, et un pilote-testeur a
+   * supprimé une page de vingt gadgets sans savoir qu'elle revenait.
+   *
+   * ⚠️ « Annuler » est le **nom accessible** du bouton de la barre de tête
+   * (`action.undoNamed`), qui ne montre qu'un chevron : le citer entre guillemets est ce
+   * qui permet au pilote de faire le lien entre la phrase et le dessin.
+   */
+  'pages.undoRestores': '« Annuler », dans la barre du haut, revient sur ce geste tant que cet onglet reste ouvert.',
+
+  /**
+   * Le prix d'une suppression, compté sur la page **avant** qu'elle parte : la vignette
+   * disparue ne le dira plus, et c'est le seul endroit où le pilote peut encore le lire.
+   */
+  'pages.removalTally': {
+    one: '{count} gadget part avec elle.',
+    other: '{count} gadgets partent avec elle.'
+  },
 
   /** « 3 à 5 ». Un rang isolé s'écrit seul, sans passer par un message. */
   'pages.rankRange': '{first} à {last}',
@@ -260,7 +284,6 @@ const pages = {
   'pages.duplicatePage': 'Dupliquer la page {rank}',
   'pages.remove': 'Supprimer',
   'pages.removePage': 'Supprimer la page {rank}',
-  'pages.confirmRemoval': 'Confirmer la suppression',
 
   'pages.pageTypeLabel': 'Type de page',
 

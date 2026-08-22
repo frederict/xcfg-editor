@@ -151,7 +151,13 @@ de fidelidad que solo el autor puede comprobar no vale nada.
   indicar dónde vive.
 - **Editar**: mover, redimensionar, añadir, eliminar y reordenar widgets; ajustar sus
   opciones; gestionar las páginas (insertar, duplicar, eliminar, reordenar, reabrir una
-  página que ninguna navegación activa). Deshacer / rehacer.
+  página que ninguna navegación activa). Deshacer / rehacer. **Ninguno de estos gestos pide
+  confirmación**: lo que «Deshacer» revierte ocurre al primer clic, y la herramienta escribe
+  enseguida lo que ha hecho y por dónde volver — incluido cuántos widgets se lleva una
+  página eliminada. Lo que sí pide **antes**, en un panel que cifra, son los tres gestos que
+  nada revierte: retirar una configuración guardada, vaciar la biblioteca, abrir un archivo
+  encima de un trabajo sin guardar. Una confirmación más sobre lo que se deshace gastaría la
+  atención que hay que guardar para lo que no se deshace.
 - **Ajustar los ajustes generales** — las 217 preferencias que viven fuera de las páginas:
   unidades, botones, sensores, sonido, espacios aéreos. En el árbol de las 23 líneas del
   menú del instrumento. En consulta, **no se construye ningún control de formulario**; en

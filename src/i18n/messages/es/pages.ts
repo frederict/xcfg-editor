@@ -56,8 +56,14 @@ const pages: DomainCatalog<'pages'> = {
   'pages.enableAllNavigations': 'Activar para todas las navegaciones',
   'pages.enableAllNavigationsFor': 'Activar la página {rank} para todas las navegaciones',
 
-  'pages.announcement': '{done}.',
   'pages.announcementWithAdvice': '{done}. {advice}',
+
+  'pages.undoRestores': '«Deshacer», en la barra superior, revierte este gesto mientras esta pestaña siga abierta.',
+
+  'pages.removalTally': {
+    one: '{count} widget se va con ella.',
+    other: '{count} widgets se van con ella.'
+  },
 
   'pages.rankRange': '{first} a {last}',
 
@@ -131,7 +137,6 @@ const pages: DomainCatalog<'pages'> = {
   'pages.duplicatePage': 'Duplicar la página {rank}',
   'pages.remove': 'Eliminar',
   'pages.removePage': 'Eliminar la página {rank}',
-  'pages.confirmRemoval': 'Confirmar la eliminación',
 
   'pages.pageTypeLabel': 'Tipo de página',
 

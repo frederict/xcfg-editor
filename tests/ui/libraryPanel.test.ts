@@ -1043,6 +1043,54 @@ describe('libraryPanel — supprimer nomme ce qui va être perdu', () => {
  * le focus qui ne se pose jamais sur l'effacement, et l'absence du bouton quand il n'y a
  * rien à effacer — plus celui qu'on ne voit pas : un export en échec n'efface rien.
  */
+/*
+ * La règle de l'outil : la marque suit le RETOUR, pas le dégât apparent. Une page de vingt
+ * gadgets supprimée revient d'un clic sur « Annuler » ; une configuration rangée qui part
+ * d'ici ne revient jamais. Ces trois boutons-ci sont donc les seuls que l'application
+ * peigne — et un pilote-testeur avait relevé, le 2026-08-22, que rien à l'œil ne les
+ * distinguait de leur voisin qui fait exactement l'inverse.
+ */
+describe('libraryPanel — les gestes que rien ne rattrape se voient', () => {
+  const CLEAR_ALL = 'Effacer toute la bibliothèque'
+  const PREVENT = 'Empêcher le navigateur d’effacer ma bibliothèque'
+
+  it('marque le retrait d’une entrée, le retrait d’une illisible et l’effacement complet', async () => {
+    const { library, store } = bibliotheque()
+    await library.add({ name: 'Comp Annecy', bytes: PAGES, fileName: 'comp.xcfg' })
+    store.injectRaw('cassee', { id: 'cassee' })
+    const harness = await mount({ library })
+
+    for (const label of ['Supprimer', CLEAR_ALL]) {
+      const marked = [...harness.panel.querySelectorAll('button')]
+        .filter((node) => (node.textContent ?? '').trim() === label)
+      expect(marked.length, label).toBeGreaterThan(0)
+      for (const node of marked) expect(node.classList.contains('library__final'), label).toBe(true)
+    }
+  })
+
+  it('ne marque pas le bouton qui protège, à côté de celui qui détruit', async () => {
+    const { library } = bibliotheque(createMemoryStore({ durable: true }))
+    await library.add({ name: 'Comp Annecy', bytes: PAGES, fileName: 'comp.xcfg' })
+    const harness = await mount({ library, requestPersistence: async () => 'denied' })
+    await settle()
+
+    expect(findButton(harness.panel, PREVENT).classList.contains('library__final')).toBe(false)
+    expect(findButton(harness.panel, CLEAR_ALL).classList.contains('library__final')).toBe(true)
+  })
+
+  it('laisse sans marque les gestes que l’on refait sans rien perdre', async () => {
+    const { library } = bibliotheque()
+    await library.add({ name: 'Comp Annecy', bytes: PAGES, fileName: 'comp.xcfg' })
+    const harness = await mount({ library })
+
+    // Ressortir, renommer, vérifier l'empreinte : aucun ne coûte quoi que ce soit.
+    for (const label of ['Renommer', 'Vérifier l’empreinte']) {
+      expect(findButton(harness.panel, label).classList.contains('library__final'), label)
+        .toBe(false)
+    }
+  })
+})
+
 describe('libraryPanel — effacer toute la bibliothèque', () => {
   const CLEAR_ALL = 'Effacer toute la bibliothèque'
 
@@ -1277,6 +1325,16 @@ describe('libraryPanel.css — la fermeture d’une modale reste atteignable', (
   it('la boîte défile, et rien d’autre', () => {
     expect(css).toMatch(/\.modal--library \.modal__box \{[^}]*overflow: auto;/)
     expect(css).toMatch(/\.modal--library \.modal__box \{[^}]*overscroll-behavior: contain;/)
+  })
+
+  /*
+   * La marque du geste sans retour. Elle emprunte l'ambre de ce qui alerte, déjà défini, et
+   * ne repose PAS sur la seule couleur : le filet gauche épaissi se voit en niveaux de gris
+   * et sur un écran mal calibré au soleil — c'est le cas d'usage de cet outil.
+   */
+  it('la marque du geste sans retour ne tient pas qu’à la couleur', () => {
+    expect(css).toMatch(/\.library__final \{[^}]*border-color: var\(--app-flag-line\);/)
+    expect(css).toMatch(/\.library__final \{[^}]*border-left-width: 3px;/)
   })
 
   it('aucune couleur n’est introduite : tout passe par les variables du cadre', () => {

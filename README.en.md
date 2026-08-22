@@ -145,7 +145,13 @@ author can check is worth nothing.
   whole instrument — and the editor merely says where it lives.
 - **Edit**: move, resize, add, delete and reorder widgets; set their options; manage the
   pages (insert, duplicate, delete, reorder, reopen a page no navigation activates).
-  Undo / redo.
+  Undo / redo. **None of these gestures asks for confirmation**: whatever “Undo” takes back
+  happens on the first click, and the tool writes out at once what it did and the way back
+  — including how many widgets a deleted page took with it. What does ask **beforehand**,
+  in a panel that puts a figure on it, are the three gestures nothing takes back: removing
+  a stored configuration, emptying the library, opening a file on top of unsaved work. One
+  more confirmation on what undoes itself would spend the attention we need to keep for
+  what does not.
 - **Set the general settings** — the 217 preferences that live outside the pages: units,
   buttons, sensors, sound, airspaces. In the tree of the 23 lines of the instrument's
   menu. In view-only mode, **no form control is built at all**; in editing mode, 77 of

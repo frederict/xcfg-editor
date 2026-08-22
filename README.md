@@ -206,7 +206,14 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
   contente d'indiquer où il vit.
 - **Éditer** : déplacer, redimensionner, ajouter, supprimer et réordonner des gadgets ;
   régler leurs options ; gérer les pages (insérer, dupliquer, supprimer, réordonner,
-  rouvrir une page qu'aucune navigation n'active). Annuler / rétablir.
+  rouvrir une page qu'aucune navigation n'active). Annuler / rétablir. **Aucun de ces
+  gestes ne demande de confirmation** : ce qu'« Annuler » reprend part au premier clic, et
+  l'outil écrit aussitôt ce qu'il a fait et par où revenir — y compris le nombre de gadgets
+  qu'une page supprimée emporte. Ce qui demande **avant**, dans un panneau qui chiffre, ce
+  sont les trois gestes que rien ne reprend : retirer une configuration rangée, vider la
+  bibliothèque, ouvrir un fichier par-dessus un travail non enregistré. Une confirmation de
+  plus sur ce qui se défait userait l'attention qu'il faut garder pour ce qui ne se défait
+  pas.
 - **Régler les réglages généraux** — les 217 préférences qui vivent hors des pages :
   unités, touches, capteurs, son, espaces aériens. Dans l'arborescence des 23 lignes du
   menu de l'instrument. En consultation, **aucun contrôle de formulaire n'est
@@ -799,6 +806,16 @@ textes par des barres grises, parce qu'une image échappe à l'anonymisation. Et
   « …-preservees.xcfg ». ⚠ Le pilote-testeur du 2026-08-22 a relevé que CETTE image
   montrait elle-même le défaut — « on y lit f…-preservees.xc… » : l'extension coupée sur
   la capture qui sert d'exemple. Voir `src/ui/fileNameParts.ts`.
+
+  SECONDE PÉREMPTION SIGNALÉE le 2026-08-22 au soir, NON RÉPARÉE. Les trois gestes que rien
+  ne rattrape portent désormais une marque que les autres n'ont pas — filet ambre, bord
+  gauche à 3 px : sur cette image, « Supprimer » de chaque entrée et
+  « Effacer toute la bibliothèque » au pied. C'est exactement ce que la recette
+  cadre, et c'est la réponse au relevé du pilote-testeur : « les deux commencent par la même idée ; l'une protège, l'autre détruit ; rien ne les distingue à l'œil ».
+  « Empêcher le navigateur d'effacer ma bibliothèque », juste à côté, ne prend
+  RIEN — c'est la moitié qui porte le contraste. Ni le cadrage, ni les fixtures, ni l'état
+  ne bougent : seule la couleur de deux filets change. Voir `.library__final` dans
+  `src/ui/libraryPanel.css`.
 
   Écran ...... la boîte « Bibliothèque de configurations », sur sa liste, deux entrées.
   Langues .... CINQ exemplaires : .fr, .en, .nl, .de, .es. Le texte est le sujet — les

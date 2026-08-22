@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { DEVICES } from '../../src/catalog/devices'
 import { getMember, readNumber, setLiteral } from '../../src/core/access'
@@ -20,7 +20,9 @@ import {
   operationAdvice,
   operationAnnouncement,
   PAGE_CHOICES,
+  REPEAT_GUARD_MS,
   renderPageManager,
+  resetRemovalGuard,
   shortClassName,
   thermalAssistantRanks,
   type PageOperation
@@ -571,6 +573,45 @@ describe('la description d’une opération', () => {
     expect(message).toContain('Supprimer la page 1 (paysage)')
     expect(message).toContain('Les pages 2 à 5 deviennent 1 à 4')
   })
+
+  /*
+   * Ce que le panneau de confirmation disait avant le geste, l'annonce le dit après : il
+   * n'y a plus de panneau, et la vignette disparue ne portera plus le compte.
+   */
+  it('chiffre ce qui part avec la page, puisque la vignette ne le dira plus', () => {
+    const message = operationAnnouncement(
+      pages, { kind: 'remove', index: 0 }, 'landscape', tr, LABELS
+    )
+    expect(message).toContain(`${pages[0]!.widgets.length} gadgets partent avec elle.`)
+  })
+
+  it('dit tout ce que le retrait coûte, et non le seul décalage des rangs', () => {
+    // Une orientation réduite à une page : la supprimer ne laisse plus rien à afficher.
+    const single = pages.slice(0, 1)
+    const message = operationAnnouncement(
+      single, { kind: 'remove', index: 0 }, 'landscape', tr, LABELS
+    )
+    expect(message).toContain('C’est la dernière page de cette orientation')
+  })
+
+  /*
+   * Le remède ferme les SIX annonces, pas seulement celle du retrait : un remède nommé une
+   * fois sur deux n'apprend rien, et le pilote ne saurait pas de quels gestes il vaut.
+   */
+  it('nomme « Annuler » à la fin de chaque annonce, quel que soit le geste', () => {
+    const gestures: PageOperation[] = [
+      { kind: 'insert', index: 1, className: 'WPEmpty' },
+      { kind: 'duplicate', index: 1 },
+      { kind: 'remove', index: 1 },
+      { kind: 'reorder', from: 0, to: 2 },
+      { kind: 'setClass', index: 1, className: 'WPCompetition' },
+      { kind: 'enableAllNavigations', index: 1 }
+    ]
+    for (const gesture of gestures) {
+      expect(operationAnnouncement(pages, gesture, 'landscape', tr, LABELS))
+        .toContain('«\u202fAnnuler\u202f», dans la barre du haut, revient sur ce geste')
+    }
+  })
 })
 
 /* --------------------------------------------------------------------- le carrousel */
@@ -603,6 +644,9 @@ const query = <T extends Element>(root: ParentNode, selector: string): T[] =>
   Array.from(root.querySelectorAll<T>(selector))
 
 describe('le carrousel', () => {
+  // Le garde-fou du coup double survit aux rendus : il doit donc mourir entre deux tests.
+  beforeEach(resetRemovalGuard)
+
   it('pose un point d’insertion entre chaque page et aux deux extrémités', () => {
     const { root } = build()
     expect(query(root, '.pages__slot')).toHaveLength(5)
@@ -669,39 +713,76 @@ describe('le carrousel', () => {
     expect(gap.textContent).toContain('cet éditeur suppose la DERNIÈRE')
   })
 
-  it('demande confirmation avant de supprimer, et montre la conséquence à ce moment-là', () => {
+  /*
+   * ⚠️ Ce test disait le contraire jusqu'au 2026-08-22 : le bouton s'armait, puis
+   * confirmait. La confirmation tombait sur le même bouton, aux mêmes pixels, et un
+   * pilote-testeur a supprimé une page de vingt gadgets en la traversant sans la voir.
+   * Elle est remplacée par ce que le geste DIT, puisque « Annuler » le reprend.
+   */
+  it('supprime au premier clic, comme « Dupliquer », et sans rien armer', () => {
     const { root, captured } = build()
     const card = query<HTMLElement>(root, '.pages__slot')[1]!
     const remove = card.querySelector<HTMLButtonElement>('.pagecard__remove')!
-    const consequences = card.querySelector<HTMLElement>('.pagecard__consequences')!
 
     expect(remove.textContent).toBe('Supprimer')
-    expect(consequences.hidden).toBe(true)
-
     remove.click()
-    expect(captured).toHaveLength(0)
-    expect(remove.textContent).toBe('Confirmer la suppression')
-    expect(consequences.hidden).toBe(false)
-    expect(consequences.textContent).toContain('Les pages 3 à 5 deviennent 2 à 4')
 
-    remove.click()
     expect(captured).toHaveLength(1)
     expect(captured[0]!.operation).toEqual({ kind: 'remove', index: 1 })
     expect(captured[0]!.description).toBe('Supprimer la page 2 (paysage)')
-    // Le bouton est redevenu inoffensif.
+    // Rien ne s'est armé au passage : le libellé n'a pas bougé.
     expect(remove.textContent).toBe('Supprimer')
+    expect(card.querySelector('.pagecard__consequences')).toBeNull()
   })
 
-  it('désarme la suppression quand le bouton perd le focus', () => {
-    const { root, captured } = build()
-    const remove = query<HTMLElement>(root, '.pages__slot')[0]!
-      .querySelector<HTMLButtonElement>('.pagecard__remove')!
-    remove.click()
-    expect(remove.textContent).toBe('Confirmer la suppression')
-    remove.dispatchEvent(new Event('blur'))
-    expect(remove.textContent).toBe('Supprimer')
-    remove.click()
-    expect(captured).toHaveLength(0)
+  it('dit, à l’instant du clic, ce qui part et par où revenir', () => {
+    const { root, document } = build()
+    const page = pagesOf(document, 'landscape')[1]!
+    query<HTMLElement>(root, '.pages__slot')[1]!
+      .querySelector<HTMLButtonElement>('.pagecard__remove')!.click()
+
+    const said = root.querySelector<HTMLElement>('.pages__live')!.textContent ?? ''
+    expect(said).toContain('Supprimer la page 2 (paysage)')
+    expect(said).toContain(`${page.widgets.length} gadgets partent avec elle.`)
+    expect(said).toContain('Les pages 3 à 5 deviennent 2 à 4')
+    expect(said).toContain('«\u202fAnnuler\u202f», dans la barre du haut')
+  })
+
+  /*
+   * Le trou ouvert par le clic unique : l'appelant reconstruit dans la foulée, et la carte
+   * suivante vient occuper les pixels de celle qui part. Sans garde-fou, un double-clic
+   * emporterait deux pages pour une seule annonce.
+   */
+  it('avale le second coup d’un double-clic sur « Supprimer »', () => {
+    let clock = 10_000
+    const { root, captured } = build({ now: () => clock })
+    const slots = query<HTMLElement>(root, '.pages__slot')
+    slots[1]!.querySelector<HTMLButtonElement>('.pagecard__remove')!.click()
+    clock += REPEAT_GUARD_MS - 1
+    // Le carrousel réel aurait été reconstruit entre les deux : c'est le bouton du VOISIN
+    // qui se retrouve sous le curseur, et c'est lui qu'on clique.
+    slots[2]!.querySelector<HTMLButtonElement>('.pagecard__remove')!.click()
+    expect(captured).toHaveLength(1)
+  })
+
+  it('laisse repartir une suppression volontaire passé le délai', () => {
+    let clock = 10_000
+    const { root, captured } = build({ now: () => clock })
+    const slots = query<HTMLElement>(root, '.pages__slot')
+    slots[1]!.querySelector<HTMLButtonElement>('.pagecard__remove')!.click()
+    clock += REPEAT_GUARD_MS
+    slots[2]!.querySelector<HTMLButtonElement>('.pagecard__remove')!.click()
+    expect(captured).toHaveLength(2)
+  })
+
+  it('ne garde le coup double que pour la suppression : dupliquer reste répétable', () => {
+    let clock = 10_000
+    const { root, captured } = build({ now: () => clock })
+    const card = query<HTMLElement>(root, '.pages__slot')[3]!
+    const copy = card.querySelector<HTMLButtonElement>('.pagecard__duplicate')!
+    copy.click()
+    copy.click()
+    expect(captured).toHaveLength(2)
   })
 
   it('duplique sur un seul clic', () => {

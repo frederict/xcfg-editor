@@ -1647,7 +1647,9 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
         })
       })
     })
-    const remove = button(tr.t('library.remove'), 'btn btn--ghost')
+    // Le seul geste de cette ligne que « Annuler » ne reprend pas : la bibliothèque n'a
+    // pas de corbeille. Voir `.library__final` dans la feuille.
+    const remove = button(tr.t('library.remove'), 'btn btn--ghost library__final')
     remove.addEventListener('click', () => { askRemove(entry) })
     row.append(extract, card, verify, rename, remove)
     main.append(row)
@@ -1666,7 +1668,7 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
     main.append(el('p', 'library__stamp', `${broken.id} — ${libraryProseText(broken.reason, tr)}`))
     main.append(el('p', 'library__note', tr.t('library.brokenNote')))
     const row = el('div', 'library__entryActions')
-    const remove = button(tr.t('library.remove'), 'btn')
+    const remove = button(tr.t('library.remove'), 'btn library__final')
     remove.addEventListener('click', () => { askRemoveBroken(broken) })
     row.append(remove)
     main.append(row)
@@ -1739,7 +1741,7 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
      * de se vider.
      */
     if (snapshot.entries.length > 0 || snapshot.broken.length > 0) {
-      const wipe = button(tr.t('library.clearAll'), 'btn btn--ghost library__clearAll')
+      const wipe = button(tr.t('library.clearAll'), 'btn btn--ghost library__clearAll library__final')
       wipe.addEventListener('click', () => {
         clearFlash()
         askClearAll(snapshot)
