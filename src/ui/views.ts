@@ -744,7 +744,23 @@ export function buildDetail(options: DetailOptions): HTMLElement {
   }
 
   plate.append(editing ? editing.layer : hotspots)
-  stage.append(scaleRuler(screenSize.widthMm, tr), plate)
+
+  /*
+   * La plaque sous la page — `.bed` d'`app.css`.
+   *
+   * Le rendu d'une page reste clair même en thème sombre : c'est l'écran d'un instrument,
+   * et le teinter mentirait sur ce que l'appareil dessine. Il fallait donc que la
+   * transition se fasse DEHORS, et c'est ce que fait cette plaque gris-sable : le papier
+   * du carnet ne touche jamais le blanc froid de l'écran directement.
+   *
+   * Elle enveloppe la seule plaque, jamais la règle graduée : la règle se lit sur le
+   * papier, où elle garde son contraste, et `app.css` la décale de la largeur exacte du
+   * rembourrage de la plaque pour que sa graduation zéro reste sur le bord de la page.
+   * L'échelle 1:1 ne se négocie pas.
+   */
+  const bed = el('div', 'bed')
+  bed.append(plate)
+  stage.append(scaleRuler(screenSize.widthMm, tr), bed)
 
   /* --- zoom --- */
   const zoomBox = el('div', 'zoom')

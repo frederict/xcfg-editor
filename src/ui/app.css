@@ -896,14 +896,43 @@ body {
   min-width: 4.5ch;
 }
 
-.stage { overflow-x: auto; padding-bottom: 1rem; }
+.stage {
+  overflow-x: auto;
+  padding-bottom: 1rem;
+  /* Le rembourrage de la plaque, écrit une fois : la règle graduée s'en sert pour
+     retrouver le bord gauche de la page, qu'il déplace. */
+  --bed-pad: 14px;
+}
+
+/*
+ * LA PLAQUE, ET POURQUOI ELLE EXISTE.
+ *
+ * Le rendu d'une page reste toujours clair, thème sombre compris : c'est l'écran d'un
+ * instrument, et le teinter mentirait sur ce que l'appareil dessine (`CLAUDE.md`). Le
+ * carnet ne peut donc pas réchauffer la page — mais il peut ne pas la laisser toucher le
+ * papier. Entre les deux vient ce gris-sable, qui ne cherche pas à passer pour de la
+ * page : il dit ce qu'il est, le SUPPORT sur lequel elle est posée.
+ *
+ * `width: fit-content` : la plaque épouse la page, quel que soit le zoom. Étendue à la
+ * largeur du cadre, elle serait une bande à mi-hauteur d'écran plutôt qu'un sous-main.
+ */
+.bed {
+  width: fit-content;
+  padding: var(--bed-pad);
+  background: var(--app-bed);
+  border: 1px solid var(--app-bed-line);
+  border-radius: 6px;
+}
 
 /* La règle graduée est tracée en millimètres, comme la page, et subit le même zoom :
-   c'est ce qui rend l'échelle 1:1 vérifiable avec une vraie règle posée sur l'écran. */
+   c'est ce qui rend l'échelle 1:1 vérifiable avec une vraie règle posée sur l'écran.
+   Elle reste HORS de la plaque — sur le papier, où son trait garde son contraste —, et
+   le décalage ci-dessous la remet d'aplomb sur le bord gauche de la page : filet de la
+   plaque (1) + rembourrage + filet du cadre de la page (1). */
 .ruler {
   position: relative;
   height: 26px;
-  margin-left: 1px;   /* le filet gauche de la plaque, qui n'entre pas dans la largeur */
+  margin-left: calc(var(--bed-pad) + 2px);
   width: calc(var(--page-width) * var(--zoom));
   min-width: calc(var(--page-width) * var(--zoom));
   border-bottom: 1px solid var(--app-line-strong);
@@ -931,14 +960,19 @@ body {
 }
 
 /* `content-box` volontaire : le filet de cadre doit rester HORS de la largeur, sinon il
-   la rognerait de deux pixels et l'échelle ne serait plus tout à fait 1:1. */
+   la rognerait de deux pixels et l'échelle ne serait plus tout à fait 1:1.
+
+   Le filet est le seul gris froid du carnet, et c'est voulu : il appartient à l'écran
+   qu'il cerne, pas au papier qui l'entoure — c'est le bord du boîtier. Sur les vignettes
+   de la vue d'ensemble, où il n'y a pas de plaque, le filet redevient chaud comme le
+   reste des cartes. */
 .plate {
   position: relative;
   box-sizing: content-box;
   width: calc(var(--page-width) * var(--zoom));
   min-width: calc(var(--page-width) * var(--zoom));
   background: #ffffff;   /* l'écran de l'instrument, jamais soumis au thème */
-  border: 1px solid var(--app-line-strong);
+  border: 1px solid var(--app-screen-line);
   box-shadow: var(--app-plate-shadow);
 }
 
@@ -965,14 +999,25 @@ body {
  * fond : le rendu de la page reste ce qu'il est — c'est lui qu'on est venu voir, et une
  * teinte posée dessus mentirait sur ce que l'appareil dessine.
  *
- * `outline` et non `border` : la bordure déplacerait la zone d'un pixel et le trait ne
- * suivrait plus le rectangle du widget.
+ * **Ce trait est ambre, et c'est le même que celui du bandeau qui règle ce widget**
+ * (`.dock`). Les deux sont aux deux bouts de l'écran, l'un sur la page et l'autre en bas
+ * de la fenêtre ; la teinte commune fait le lien sans qu'on ait à le chercher.
+ *
+ * Deux anneaux plutôt qu'un : l'ambre `--app-flag-line` ne vaut que 2,4:1 sur le blanc de
+ * l'écran, sous les 3:1 qu'un état d'interface doit tenir. Le filet d'ambre sombre qui le
+ * borde à l'intérieur (6:1) porte le contraste ; l'ambre claire porte la couleur.
+ *
+ * `box-shadow` et non `border` : la bordure déplacerait la zone d'un pixel et le trait ne
+ * suivrait plus le rectangle du widget. Et `box-shadow` plutôt qu'`outline`, qui reste
+ * ainsi libre pour le liséré de focus au clavier.
  */
 .hotspot--selected,
 .hotspot--selected:hover {
   background: transparent;
-  outline: 2px solid var(--app-focus);
-  outline-offset: -2px;
+  outline: none;
+  box-shadow:
+    inset 0 0 0 3px var(--app-flag-line),
+    inset 0 0 0 4px var(--app-flag-ink);
 }
 
 .readout {
@@ -1639,16 +1684,17 @@ body.is-dragging .veil {
   font-size: 13px;
 }
 
+/* La même ambre que le filet du bandeau et que le cerne du gadget : on est en édition,
+   et les trois marques du mode se répondent. */
 .editbar__badge {
   flex: none;
-  padding: 0.05rem 0.45rem;
-  border-radius: 3px;
-  background: var(--app-ink);
-  color: var(--app-bg);
-  font-size: 11px;
+  padding: 0.1rem 0.6rem;
+  border: 1px solid var(--app-flag-line);
+  border-radius: 999px;
+  background: var(--app-flag-bg);
+  color: var(--app-flag-ink);
+  font-size: 11.5px;
   font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .editbar__selection { font-weight: 600; }
@@ -1717,6 +1763,10 @@ body.is-dragging .veil {
   z-index: 15;
   margin-top: 1.2rem;
   border: 1px solid var(--app-line-strong);
+  /* Le filet ambre du haut est la moitié basse d'un même signe : l'autre moitié cerne le
+     gadget sur la page (`.hotspot--selected`). Un bandeau et un rectangle de la même
+     teinte, à deux bouts de l'écran, se rattachent l'un à l'autre sans légende. */
+  border-top: 3px solid var(--app-flag-line);
   border-radius: 6px 6px 0 0;
   background: var(--app-panel);
   box-shadow: 0 -8px 20px rgb(0 0 0 / 0.14);
@@ -1964,8 +2014,12 @@ body.is-dragging .veil {
   outline-offset: -2px;
 }
 
+/* Le rang choisi porte la même ambre que le cerne du gadget sur la page et que le filet du
+   bandeau : trois endroits, un seul signe. Le filet gauche double l'aplat — une teinte
+   seule ne suffit jamais à dire un état. */
 .wlist__row--selected {
-  background: color-mix(in srgb, var(--app-focus) 18%, transparent);
+  background: var(--app-flag-bg);
+  box-shadow: inset 3px 0 0 var(--app-flag-line);
 }
 
 .wlist__rank {
@@ -1997,7 +2051,7 @@ body.is-dragging .veil {
   background: var(--app-ink-soft);
 }
 
-.wlist__row--selected .wlist__mark { background: var(--app-focus); }
+.wlist__row--selected .wlist__mark { background: var(--app-flag-ink); }
 
 .wlist__text {
   display: flex;
