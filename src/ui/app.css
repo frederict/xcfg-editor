@@ -2,47 +2,86 @@
  * Le cadre, pas le sujet. Cette feuille habille l'interface qui ENTOURE le rendu d'une
  * page XCTrack ; le rendu lui-même vit dans `style.css` et n'est jamais touché ici.
  *
+ * # La direction : un carnet de préparation de vol
+ *
+ * L'outil n'est pas une application, c'est le carnet qu'on ouvre avant de partir : papier
+ * chaud, titres en serif, des phrases entières plutôt que des badges en capitales, et
+ * l'ambre — déjà la teinte des avertissements — devenue la couleur qui structure.
+ *
  * Deux conséquences tenues d'un bout à l'autre :
  * 1. l'interface suit `prefers-color-scheme`, mais la page rendue reste blanche —
  *    c'est l'écran de l'instrument, il ne dépend pas des préférences de l'ordinateur.
  *    Aucune règle de ce fichier ne redéfinit une variable `--xc-*` ;
- * 2. la couleur appartient à l'instrument. Le cadre est achromatique : la seule teinte
- *    admise est l'ambre des avertissements, et le bleu du contour de focus, qui est une
- *    information et non une décoration.
+ * 2. la couleur appartient à l'instrument. Hors de l'ambre du carnet et du bleu du
+ *    contour de focus — qui est une information, pas une décoration —, le cadre
+ *    n'introduit aucune teinte qui rivaliserait avec ce que l'appareil dessine.
+ *
+ * ## Le papier ne touche jamais le blanc froid
+ *
+ * Une page de vol ne peut pas se réchauffer : c'est l'écran d'un instrument, et le
+ * `CLAUDE.md` du projet l'impose. Posée à même le papier, elle y ferait un trou blanc.
+ * Entre les deux vient donc `--app-bed` : une plaque gris-sable qui dit ce qu'elle est,
+ * le SUPPORT de la page et non la page. Voir `.bed`, plus bas.
  */
 
 :root {
   color-scheme: light dark;
 
-  --app-bg: #e7e9ec;
-  --app-panel: #f6f7f8;
-  --app-ink: #15181c;
-  --app-ink-soft: #59616a;
-  --app-line: #d3d7dc;
-  --app-line-strong: #b1b8bf;
+  --app-bg: #f4f1ea;
+  --app-panel: #fbf9f4;
+  --app-ink: #221f1a;
+  --app-ink-soft: #55503f;
+  /* Le troisième plan : un compte, une cote, une étiquette de champ. 4,64:1 sur le fond
+     et 4,98:1 sur un panneau — au-dessus des 4,5:1 exigés du texte. */
+  --app-ink-quiet: #7a6a52;
+  --app-line: #ddd6c8;
+  --app-line-strong: #cfc6b4;
   --app-flag-bg: #f7eacd;
   --app-flag-ink: #7a5410;
   --app-flag-line: #cf9c2c;
   --app-focus: #1a5fbe;
-  --app-plate-shadow: 0 1px 2px rgb(0 0 0 / 0.18), 0 10px 28px rgb(0 0 0 / 0.10);
+  /* La plaque sous la page, et son filet. */
+  --app-bed: #e9e5db;
+  --app-bed-line: #ddd6c8;
+  /* Le bord du boîtier : il cerne l'écran de l'instrument et ne suit donc pas le thème,
+     pas plus que le blanc qu'il entoure. */
+  --app-screen-line: #b1b8bf;
+  --app-plate-shadow: 0 1px 2px rgb(80 60 20 / 0.16), 0 8px 22px rgb(60 45 15 / 0.14);
 
-  --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-title: Spectral, "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --font-ui: "Public Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-data: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 }
 
+/*
+ * La contrepartie sombre du carnet — pas un thème sombre générique.
+ *
+ * Le papier ne devient pas gris : il devient le cuir sombre de la couverture, et l'encre
+ * la crème du papier vue à la lampe. Les gris bleutés d'avant ont disparu ; tout ce qui
+ * reste tire vers le brun, l'ambre comprise, qui s'éclaircit pour tenir sur un fond
+ * sombre (11,26:1 sur le fond, 8,25:1 sur son propre aplat).
+ *
+ * La plaque, elle, ne suit pas le fond. Le problème s'inverse en thème sombre — ce n'est
+ * plus la page qui fait un trou blanc dans du papier, c'est elle qui éblouit sur du
+ * presque-noir — et la réponse est la même : un ton intermédiaire, ici un sous-main
+ * gris-brun qui fait le pas entre #16130f et le blanc de l'écran.
+ */
 @media (prefers-color-scheme: dark) {
   :root {
-    --app-bg: #101315;
-    --app-panel: #191d20;
-    --app-ink: #e6eaed;
-    --app-ink-soft: #98a1a9;
-    --app-line: #282e33;
-    --app-line-strong: #3b434a;
-    --app-flag-bg: #35290f;
-    --app-flag-ink: #e6bd6b;
-    --app-flag-line: #8a6a20;
-    --app-focus: #6fa8ff;
-    --app-plate-shadow: 0 1px 2px rgb(0 0 0 / 0.6), 0 12px 32px rgb(0 0 0 / 0.45);
+    --app-bg: #16130f;
+    --app-panel: #1f1b16;
+    --app-ink: #ece4d5;
+    --app-ink-soft: #b7ac97;
+    --app-ink-quiet: #978b76;
+    --app-line: #322c23;
+    --app-line-strong: #4b4235;
+    --app-flag-bg: #3a2c10;
+    --app-flag-ink: #edc478;
+    --app-flag-line: #b58a2e;
+    --app-focus: #7fb2ff;
+    --app-bed: #4a443a;
+    --app-bed-line: #5d5548;
+    --app-plate-shadow: 0 1px 2px rgb(0 0 0 / 0.6), 0 12px 32px rgb(0 0 0 / 0.5);
   }
 }
 

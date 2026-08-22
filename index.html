@@ -4,6 +4,28 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Éditeur de configuration XCTrack</title>
+    <!--
+      Les deux familles du carnet : Spectral pour les titres, Public Sans pour le corps.
+      Trois précautions, parce qu'une fonte distante n'est pas gratuite au premier
+      affichage :
+      - `preconnect` sur les deux hôtes (l'un sert la feuille, l'autre les fichiers),
+        ce qui épargne une poignée de main TLS sur le chemin critique ;
+      - `display=swap` : le texte s'affiche tout de suite dans la pile de repli et se
+        rhabille à l'arrivée. Rien n'est jamais invisible en attendant ;
+      - une pile de repli réelle derrière chaque famille (`--font-title`, `--font-ui`
+        dans `app.css`) : hors ligne — et l'outil sert au décollage —, le carnet garde
+        son serif et sa linéale, celles du système.
+
+      Google Fonts est le seul hôte de fontes que la politique de sécurité admette : ne
+      pas en ajouter un autre, et ne pas passer par un `@import` dans la feuille, qui
+      sérialiserait le chargement derrière elle.
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Spectral:wght@500;600&display=swap"
+    />
   </head>
   <body>
     <div id="app"></div>
