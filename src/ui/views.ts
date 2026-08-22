@@ -594,8 +594,17 @@ export interface DetailOptions {
   inspecting?: DetailInspecting
 }
 
-const ZOOM_MIN = 0.4
+/**
+ * Les bornes de la glissière de zoom, et son pas.
+ *
+ * Exportées parce que `main.ts` en a besoin pour dire au pilote **à quel zoom** sa page
+ * entrerait dans une fenêtre trop courte : proposer 90,3 % serait proposer une valeur que
+ * la glissière ne sait pas prendre, et proposer 35 % serait en proposer une qu'elle
+ * refuse.
+ */
+export const ZOOM_MIN = 0.4
 const ZOOM_MAX = 2.5
+export const ZOOM_STEP = 0.05
 
 /**
  * Règle graduée le long de la page : une graduation par centimètre réel, tracée en
@@ -861,7 +870,7 @@ export function buildDetail(options: DetailOptions): HTMLElement {
   slider.type = 'range'
   slider.min = String(ZOOM_MIN)
   slider.max = String(ZOOM_MAX)
-  slider.step = '0.05'
+  slider.step = String(ZOOM_STEP)
   slider.value = String(zoom)
   slider.id = 'zoom-slider'
   zoomLabel.htmlFor = slider.id

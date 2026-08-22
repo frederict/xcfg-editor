@@ -269,6 +269,11 @@ const app: DomainCatalog<'app'> = {
   'dock.hintInspecting': 'Klicken Sie ein Widget auf der Seite an — oder wählen Sie es in der ' +
     'Liste —, um seine Einstellungen zu lesen. Hier lässt sich nichts ändern: das ist der ' +
     'Ansichtsmodus.',
+  'dock.cramped': 'Dieses Fenster ist zu niedrig, um die ganze Seite und ihre ' +
+    'Einstellungen gleichzeitig zu zeigen. „Zuklappen“ gibt der Seite den Platz der Leiste ' +
+    'zurück, nimmt Ihnen aber die Einstellungen; und keine Zoomstufe zeigt sie hier ganz.',
+  'dock.crampedZoom': 'Dieses Fenster ist zu niedrig, um die ganze Seite und ihre Einstellungen gleichzeitig zu zeigen. „Zuklappen“ gibt der Seite den Platz der Leiste zurück, nimmt Ihnen aber die Einstellungen; bei einem Zoom von {level} ist sie ganz zu sehen, dann aber nicht mehr in Originalgröße.',
+
   'dock.loadingSettings': 'Einstellungen werden geladen…',
 
   'app.addWidget': 'Widget hinzufügen',

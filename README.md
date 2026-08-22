@@ -403,6 +403,15 @@ qu'on a réglé, ou figer ce que le fichier ne dit pas.*
                recouvre juste la phrase de la règle graduée, ce qui évite de la couper
                en deux.
 
+  ⚠ NE PAS RACCOURCIR LE CADRE (2026-08-22). Le bandeau porte désormais, en tête de son
+  corps, une phrase qui paraît quand la page entière ne tient plus entre la barre de tête
+  et lui — elle dit ce que coûtent le repli et le zoom. À 1 650 points de viewport et
+  590 px de bandeau, la bande laissée à la plaque vaut environ 1 000 px pour une plaque
+  portrait de 617,7 : la phrase reste cachée et cette capture est intacte. Elle
+  apparaîtrait sous ~1 090 points de viewport, et changerait alors la hauteur du panneau
+  visible. Vérifié : les sept écrans du dépôt sont tous cadrés bien au-dessus de ce seuil,
+  AUCUNE capture n'est périmée par ce changement.
+
   RECETTE CORRIGÉE — la précédente demandait la boussole de la 1re page PAYSAGE, « la
   seule du corpus qui porte windStyle », ET le bloc des réglages non écrits dans le même
   cadre. C'est impossible : cette boussole-là écrit ses neuf réglages, elle n'a donc

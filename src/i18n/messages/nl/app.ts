@@ -264,6 +264,11 @@ const app: DomainCatalog<'app'> = {
     'volgorde waarin het instrument ze toont.',
   'dock.hintInspecting': 'Klik een widget op de pagina — of kies er een uit de lijst — om de ' +
     'instellingen te lezen. Hier valt niets te wijzigen: dit is de kijkmodus.',
+  'dock.cramped': 'Dit venster is te laag om de hele pagina en haar instellingen tegelijk ' +
+    'te tonen. ‘Inklappen’ geeft de pagina de ruimte van de balk terug, maar neemt u de ' +
+    'instellingen af; en geen enkele zoomstap toont haar hier helemaal.',
+  'dock.crampedZoom': 'Dit venster is te laag om de hele pagina en haar instellingen tegelijk te tonen. ‘Inklappen’ geeft de pagina de ruimte van de balk terug, maar neemt u de instellingen af; bij een zoom van {level} is ze helemaal te zien, maar niet meer op ware grootte.',
+
   'dock.loadingSettings': 'Instellingen laden…',
 
   'app.addWidget': 'Een widget toevoegen',

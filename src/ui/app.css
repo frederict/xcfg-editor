@@ -2135,19 +2135,64 @@ body.is-dragging .veil {
     max(7rem, calc(100dvh - var(--dock-page-room)))
   );
   /*
-   * Deux zones côte à côte — la liste des widgets, puis les réglages —, qui **partagent la
-   * hauteur bornée** au lieu de s'ajouter. Chacune défile pour son compte ; le corps, lui,
-   * ne défile pas, sinon les deux glissières se disputeraient la molette.
+   * Une colonne : la phrase qui dit que la page entière ne tient pas ici — quand elle a
+   * lieu d'être —, puis la rangée des deux zones. Ce que cette phrase dit ne concerne ni
+   * la liste ni un gadget mais l'écran entier : elle traverse donc le bandeau, et deux
+   * lignes lui suffisent là où trois lui étaient nécessaires dans la seule colonne des
+   * réglages.
    *
-   * Le partage se fait en largeur, ce qui n'entame en rien le troisième principe du
-   * projet : c'est la largeur DU BANDEAU qui est partagée, jamais celle de la page, qui
-   * reste seule dans son cadre au-dessus.
+   * Le corps ne défile pas, sinon les deux glissières se disputeraient la molette : c'est
+   * `.dock__split` qui borne, et chacune des deux zones qui défile pour son compte.
    */
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow: hidden;
+  padding: 0.6rem 0.9rem 0.8rem;
+}
+
+/*
+ * Deux zones côte à côte — la liste des widgets, puis les réglages —, qui **partagent la
+ * hauteur bornée** au lieu de s'ajouter.
+ *
+ * Le partage se fait en largeur, ce qui n'entame en rien le troisième principe du projet :
+ * c'est la largeur DU BANDEAU qui est partagée, jamais celle de la page, qui reste seule
+ * dans son cadre au-dessus.
+ *
+ * `min-height: 0` n'est pas décoratif : sans lui, un élément de colonne flexible prend au
+ * moins la hauteur de son contenu, la rangée déborderait le corps borné et les deux
+ * glissières intérieures ne serviraient plus à rien.
+ */
+.dock__split {
+  flex: 1 1 auto;
+  min-height: 0;
   display: flex;
   align-items: stretch;
   gap: 0.9rem;
   overflow: hidden;
-  padding: 0.6rem 0.9rem 0.8rem;
+}
+
+/*
+ * LA PHRASE QUI DIT QUE LA PAGE ENTIÈRE NE TIENT PAS ICI.
+ *
+ * ⚠ **Ce n'est pas une alarme** — voir `syncPlateFit` dans `main.ts`. La situation est
+ * normale sur une fenêtre courte, et elle l'est toujours sur une page en portrait : elle
+ * ne dit rien du fichier et rien d'une erreur du pilote. Ni fond, ni filet, ni ambre, ni
+ * icône : l'encre douce des remarques, la taille des mentions du bandeau. Ce qu'elle
+ * apporte tient au **texte** — le prix de chacune des deux issues —, jamais à sa mise en
+ * avant.
+ *
+ * Sa place dans le corps du bandeau, et non dans sa tête, est mesurée : le corps est déjà
+ * borné par `--dock-page-room` et il est à son plancher dès que la phrase a lieu d'être.
+ * La même phrase dans la tête prenait 44,9 px à la page, en fenêtre 1024 × 640 ; ici elle
+ * ne lui prend rien.
+ */
+.dock__cramped {
+  margin: 0;
+  flex: none;
+  color: var(--app-ink-soft);
+  font-size: 12.5px;
+  line-height: 1.4;
 }
 
 .dock__list {

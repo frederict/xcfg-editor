@@ -261,6 +261,11 @@ const app: DomainCatalog<'app'> = {
     'orden en que el instrumento los presenta.',
   'dock.hintInspecting': 'Haga clic en un widget de la página — o elíjalo en la lista — para ' +
     'leer sus ajustes. Aquí no se puede cambiar nada: esto es la consulta.',
+  'dock.cramped': 'Esta ventana es demasiado corta para mostrar la página entera y sus ' +
+    'ajustes a la vez. «Plegar» devuelve a la página el espacio del panel, pero le quita ' +
+    'los ajustes; y aquí ningún paso del zoom la muestra entera.',
+  'dock.crampedZoom': 'Esta ventana es demasiado corta para mostrar la página entera y sus ajustes a la vez. «Plegar» devuelve a la página el espacio del panel, pero le quita los ajustes; con un zoom del {level} se ve entera, pero ya no a su tamaño real.',
+
   'dock.loadingSettings': 'Cargando los ajustes…',
 
   'app.addWidget': 'Añadir un widget',

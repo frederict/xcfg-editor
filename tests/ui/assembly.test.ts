@@ -350,12 +350,15 @@ describe('assemblage — un gadget déplacé à la flèche reste sous les yeux d
  */
 describe('assemblage — la page entière est cadrée quand elle tient', () => {
   const plate = main.slice(
-    main.indexOf('function revealWholePlate(): boolean'),
+    // Depuis `plateRoom` et non depuis `revealWholePlate` : la mesure a été extraite pour
+    // que le cadrage et l'avis donné au pilote lisent le MÊME relevé.
+    main.indexOf('function plateRoom(): PlateRoom | undefined'),
     main.indexOf('function syncSelectionMarks')
   )
 
   it('la plaque passe avant le gadget, et le gadget reste le repli', () => {
-    expect(plate).toMatch(/if \(revealWholePlate\(\)\) return\s*\n\s*revealWidget\(chosen\)/)
+    expect(plate).toMatch(/const framed = revealWholePlate\(\)/)
+    expect(plate).toMatch(/if \(framed\) return\s*\n\s*revealWidget\(chosen\)/)
   })
 
   it('elle ne cadre rien quand la plaque ne tient pas dans la bande', () => {
@@ -394,6 +397,129 @@ describe('assemblage — la page entière est cadrée quand elle tient', () => {
   it('c’est la fenêtre qui défile, jamais la plaque', () => {
     expect(plate).toContain('window.scrollBy({ top: offset')
     expect(main).not.toContain('bed.scrollIntoView')
+  })
+})
+
+/**
+ * Le pilote d'essai du 22 août a trouvé les deux issues tout seul — replier le bandeau,
+ * descendre le zoom — et a constaté tout seul que chacune coûte ce qu'il était venu
+ * chercher. Ce qui lui manquait n'était pas le diagnostic : c'était **le prix**, qu'il n'a
+ * découvert qu'en le payant. L'outil le dit désormais avant lui.
+ *
+ * Relevés au navigateur, fenêtre 1024 × 640 (`innerHeight` 560), un gadget choisi sur une
+ * page paysage :
+ *
+ * | où vit la phrase | bande laissée à la plaque | plaque |
+ * |---|---|---|
+ * | nulle part (avant) | 329,8 px | 361,5 px |
+ * | dans le CORPS du bandeau | **329,8 px** | 361,5 px |
+ * | dans la TÊTE du bandeau | 284,9 px | 361,5 px |
+ *
+ * Les 44,9 px de la troisième ligne sont pris **à la page**, dans l'écran même où la
+ * hauteur manque : le corps est alors à son plancher (`DOCK_HEIGHT_MIN`) et ne peut plus
+ * rendre ce que l'enveloppe prend. C'est tout le motif de ce qui suit.
+ */
+describe('assemblage — l’outil dit ce que coûte chaque issue avant que le pilote le paie', () => {
+  const dock = main.slice(
+    main.indexOf('function buildDock(): HTMLElement'),
+    main.indexOf('* Le bandeau de **consultation**')
+  )
+
+  it('la phrase vit dans le CORPS du bandeau, jamais dans sa tête', () => {
+    // 44,9 px pris à la page si elle montait d'un cran, en fenêtre 1024 × 640.
+    expect(dock).toContain('body.append(plateFitNote, split)')
+    expect(dock).toMatch(/head\.append\([^)]*\)/)
+    expect(dock.slice(dock.indexOf('head.append('), dock.indexOf('head.append(') + 120))
+      .not.toContain('plateFitNote')
+  })
+
+  it('le panneau qui se vide à chaque sélection ne l’emporte pas', () => {
+    // `refreshPanel` fait `panelHost.textContent = ''` : une phrase posée là-dedans
+    // disparaîtrait au premier changement de gadget et il faudrait la remettre à chaque
+    // fois. Elle est sœur de la rangée, pas fille du panneau.
+    expect(dock).toContain("plateFitNote = el('p', 'dock__cramped')")
+    expect(dock).not.toMatch(/panelHost\.(append|prepend)\([^)]*plateFitNote/)
+    expect(dock).not.toContain('panelHost.prepend')
+  })
+
+  it('la liste et les réglages passent sous elle, dans une rangée à eux', () => {
+    expect(dock).toContain("const split = el('div', 'dock__split')")
+    expect(dock).toContain('split.append(widgetListHost, panelHost)')
+  })
+
+  it('elle arrive cachée : rien ne paraît tant que rien n’a été mesuré', () => {
+    expect(dock).toContain('plateFitNote.hidden = true')
+  })
+})
+
+/**
+ * Deuxième moitié : **quand** la phrase paraît. Elle ne suit pas la sélection — un état
+ * qui clignoterait à chaque clic deviendrait le bruit qu'on apprend à ne plus lire — mais
+ * la géométrie, et la géométrie change sans qu'on choisisse un gadget : le bouton
+ * d'enregistrement qui renvoie la barre de tête à la ligne (56,1 px → 100,6), le reçu qui
+ * s'ouvre, la poignée qu'on tire, la fenêtre qu'on redimensionne, le zoom qu'on descend.
+ */
+describe('assemblage — la phrase suit la géométrie, pas la sélection', () => {
+  const fit = main.slice(
+    main.indexOf('function syncPlateFit(): void'),
+    main.indexOf('function revealSelection(): void')
+  )
+
+  it('le cadrage et l’avis lisent le MÊME relevé', () => {
+    // Deux mesures séparées finiraient par dire deux choses du même écran : l'une cadrant
+    // une page que l'autre déclarerait trop haute.
+    expect(fit).toContain('const room = plateRoom()')
+    expect(main.slice(main.indexOf('function revealWholePlate(): boolean')))
+      .toMatch(/^[\s\S]{0,200}const room = plateRoom\(\)/)
+  })
+
+  it('la même comparaison décide dans les deux', () => {
+    expect(fit).toContain('room.box.height > room.band.bottom - room.band.top')
+  })
+
+  it('ce qui change la géométrie sans changer la sélection la remet d’accord', () => {
+    // Mesuré : une flèche suffit à faire passer la barre de tête sur deux lignes, la bande
+    // tombe de 329,8 à 285,3 px et le cran annoncé de 90 % à 75 % — sans qu'un seul gadget
+    // ait été choisi entre-temps.
+    expect(main).toMatch(/new ResizeObserver\(\(\) => \{[\s\S]{0,400}syncPlateFit\(\)/)
+    expect(main).toContain("window.addEventListener('resize', () => { applyDockHeight(); syncPlateFit() })")
+    // Le zoom redimensionne la plaque et rien d'autre : aucun observateur de taille ne s'en
+    // aperçoit, et la phrase resterait à réclamer un zoom que le pilote vient de poser.
+    expect(main).toMatch(/onZoom: \(factor\) => \{[^}]*syncPlateFit\(\)/)
+  })
+
+  it('le cran de zoom annoncé est un cran que la glissière sait prendre', () => {
+    // Arrondi vers le BAS : un cran au-dessus ne tiendrait pas, et le pilote qui pose la
+    // valeur annoncée doit voir sa page entière du premier coup. Mesuré en 1024 × 640 :
+    // 90 % rend une plaque de 328,5 px pour 329,8 de bande, 95 % en rend 345.
+    const zoomed = main.slice(
+      main.indexOf('function zoomThatFits'),
+      main.indexOf('function syncPlateFit')
+    )
+    expect(zoomed).toContain('Math.floor(wanted / ZOOM_STEP) * ZOOM_STEP')
+    // En dessous de la borne de la glissière, il n'y a plus d'issue par le zoom : on ne
+    // propose pas une valeur qu'elle refuserait.
+    expect(zoomed).toContain('notch < ZOOM_MIN ? undefined : notch')
+    // Le rembourrage de la plaque ne suit pas le zoom : il se retire des deux côtés.
+    expect(zoomed).toContain('const frame = room.box.height - drawn')
+  })
+
+  it('la phrase sans cran de zoom est dite quand aucun cran ne convient', () => {
+    expect(fit).toContain("tr.t('dock.cramped')")
+    expect(fit).toContain("tr.t('dock.crampedZoom', { level: tr.format.percent(notch) })")
+  })
+
+  it('c’est un renseignement, jamais une alarme', () => {
+    // Ni région vivante — qui l'annoncerait à la synthèse vocale à chaque changement de
+    // géométrie —, ni rôle d'alerte : la situation est normale sur une fenêtre courte, et
+    // permanente sur une page en portrait.
+    expect(fit).not.toContain('aria-live')
+    expect(fit).not.toContain('role')
+    const style = read('src/ui/app.css')
+    const rule = style.slice(style.indexOf('.dock__cramped {'), style.indexOf('}', style.indexOf('.dock__cramped {')))
+    expect(rule).toContain('var(--app-ink-soft)')
+    expect(rule).not.toContain('background')
+    expect(rule).not.toContain('border')
   })
 })
 
@@ -989,7 +1115,7 @@ describe('assemblage — le globe, et jusqu’où il va', () => {
     // d'enregistrement s'allonge —, et la page cessait alors d'être dégagée en 1024 × 640.
     // La feuille ne sait pas lire une hauteur : c'est ici qu'elle la reçoit.
     expect(main).toContain("document.documentElement.style.setProperty('--dock-chrome-room'")
-    expect(main).toContain('new ResizeObserver(() => publishDockChrome())')
+    expect(main).toMatch(/new ResizeObserver\(\(\) => \{\s*\n\s*publishDockChrome\(\)/)
     // Les trois boîtes dont la hauteur décide de cette place. En retirer une remet une
     // supposition à la place d'une mesure.
     for (const box of ['bar', 'head', 'body']) {

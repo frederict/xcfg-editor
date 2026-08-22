@@ -259,6 +259,11 @@ const app: DomainCatalog<'app'> = {
     'instrument presents them.',
   'dock.hintInspecting': 'Click a widget on the page — or pick it from the list — to read its ' +
     'settings. Nothing can be changed here: this is the viewing mode.',
+  'dock.cramped': 'This window is too short to show the whole page and its settings at ' +
+    'once. “Fold away” gives the page the panel’s room back, but takes your settings; and ' +
+    'here no zoom notch shows it whole.',
+  'dock.crampedZoom': 'This window is too short to show the whole page and its settings at once. “Fold away” gives the page the panel’s room back, but takes your settings; a zoom of {level} shows it whole, though no longer at its real size.',
+
   'dock.loadingSettings': 'Loading the settings…',
 
   'app.addWidget': 'Add a widget',

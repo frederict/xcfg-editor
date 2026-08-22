@@ -498,6 +498,23 @@ const app = {
     'l’ordre où l’instrument les présente.',
   'dock.hintInspecting': 'Cliquez un gadget sur la page — ou choisissez-le dans la liste — ' +
     'pour lire ses réglages. Rien n’est modifiable ici : c’est la consultation.',
+  /**
+   * ⚠ **Un renseignement, pas une alarme.** La page qui ne tient pas entière entre la barre
+   * de tête et le bandeau est la situation NORMALE d'une fenêtre courte, et celle de toute
+   * page en portrait : rien n'y est cassé, ni le fichier, ni un geste du pilote. Le ton le
+   * dit — pas de « attention », pas d'impératif, pas de coupable.
+   *
+   * Ce que le pilote d'essai du 22 août n'avait pas, ce n'est pas le diagnostic : il avait
+   * trouvé les deux issues tout seul. C'est **le prix de chacune**, qu'il n'a découvert
+   * qu'en le payant. Les deux phrases le nomment donc avant lui, et la seconde dit en plus
+   * le cran de zoom exact — celui qu'il avait dû chercher à la glissière.
+   */
+  'dock.cramped': 'Cette fenêtre est trop courte pour montrer la page entière et ses ' +
+    'réglages à la fois. « Replier » rend à la page la place du bandeau, mais vous prend ' +
+    'les réglages ; et ici, aucun cran de zoom ne la montre entière.',
+  /** ⚠ Un seul littéral : un `+` rendrait `{level}` invisible au compilateur (§ 3 bis). */
+  'dock.crampedZoom': 'Cette fenêtre est trop courte pour montrer la page entière et ses réglages à la fois. « Replier » rend à la page la place du bandeau, mais vous prend les réglages ; le zoom à {level} la montre entière, mais plus à sa taille réelle.',
+
   'dock.loadingSettings': 'Chargement des réglages…',
 
   /* ============================================== `main.ts` — la barre d'édition */

@@ -33,7 +33,7 @@ import type { PropertyField, PropertyForm } from './properties'
 import {
   aspectRatioOf, ATTENTION_WARNING_KINDS, buildDetail, buildOverview, clampDockHeight,
   dockHeightCeiling, DOCK_HEIGHT_DEFAULT, DOCK_HEIGHT_MIN, readDockHeight, remarksSummary,
-  revealOffset, splitWarnings, writeDockHeight,
+  revealOffset, splitWarnings, writeDockHeight, ZOOM_MIN, ZOOM_STEP,
   type DetailEditing, type DetailInspecting, type Orientation, type ViewContext,
   type VisibleBand
 } from './views'
@@ -312,6 +312,13 @@ let dockCount: HTMLElement | undefined
 let dockToggle: HTMLButtonElement | undefined
 let dockBody: HTMLElement | undefined
 let dockGrip: HTMLElement | undefined
+/**
+ * La phrase qui dit au pilote que la page entière ne tient pas ici, et ce que coûte chacune
+ * des deux issues. Créée une fois avec le bandeau, montrée ou cachée par `syncPlateFit` :
+ * elle ne se reconstruit pas à chaque sélection, et le panneau qui se vide en dessous ne
+ * l'emporte pas.
+ */
+let plateFitNote: HTMLElement | undefined
 let listToggle: HTMLButtonElement | undefined
 let widgetList: WidgetList | undefined
 let widgetListHost: HTMLElement | undefined
@@ -1943,7 +1950,14 @@ function publishDockChrome(): void {
  * que la hauteur du corps ne change pas. La deuxième passe repose donc la même valeur, aucun
  * style ne bouge, et l'observateur se tait.
  */
-const dockChromeWatch = new ResizeObserver(() => publishDockChrome())
+const dockChromeWatch = new ResizeObserver(() => {
+  publishDockChrome()
+  // La phrase du bandeau suit la géométrie, et c'est ici que la géométrie change : le
+  // bouton d'enregistrement qui renvoie la barre de tête à la ligne, le reçu qui s'ouvre,
+  // la poignée qu'on tire. Elle paraît et s'efface avec la cause, sans attendre le
+  // prochain clic sur un gadget.
+  syncPlateFit()
+})
 
 /** Écrit en fin de geste, jamais à chaque pixel : `localStorage` est un accès disque. */
 function saveDockHeight(): void {
@@ -2017,7 +2031,7 @@ function buildDockGrip(): HTMLElement {
 
 // La fenêtre change de taille : le plafond change avec elle, et une hauteur qui tenait
 // sur un grand écran doit se resserrer plutôt que d'avaler la page.
-window.addEventListener('resize', () => applyDockHeight())
+window.addEventListener('resize', () => { applyDockHeight(); syncPlateFit() })
 
 /**
  * Le bandeau, replié ou déployé. Replié, il ne laisse que sa barre de tête : le nom du
@@ -2196,21 +2210,116 @@ function revealWidget(index: number): void {
  * bande — fenêtre trop courte, reçu d'enregistrement ouvert, bandeau tiré haut à la
  * poignée. Dans ce cas-là on ne triche pas : l'appelant retombe sur le gadget seul.
  */
-function revealWholePlate(): boolean {
-  if (view.kind !== 'detail') return false
+interface PlateRoom {
+  /** La plaque : la page et le rembourrage qui la cerne. */
+  readonly box: DOMRect
+  /** Ce que le défilement ne peut pas dégager. */
+  readonly band: VisibleBand
+}
+
+/**
+ * La plaque et la bande incompressible, mesurées **d'un seul coup**.
+ *
+ * Deux choses lisent cette mesure : le cadrage (`revealWholePlate`), qui y va, et l'avis
+ * donné au pilote (`syncPlateFit`), qui dit ce qu'il en coûte quand on n'y va pas. Deux
+ * relevés séparés finiraient par dire deux choses différentes du même écran — l'un cadrant
+ * une page que l'autre déclarerait trop haute.
+ *
+ * `undefined` quand il n'y a rien à mesurer : vue d'ensemble, plaque pas encore dessinée.
+ */
+function plateRoom(): PlateRoom | undefined {
+  if (view.kind !== 'detail') return undefined
   const bed = content.querySelector('.bed')
-  if (!(bed instanceof HTMLElement)) return false
+  if (!(bed instanceof HTMLElement)) return undefined
   const box = bed.getBoundingClientRect()
-  if (box.height <= 0) return false
+  if (box.height <= 0) return undefined
   // Le bandeau vient d'être déplié par `openDockForSelection`, mais la place qu'il se
   // laisse (`--dock-chrome-room`) est reposée par un `ResizeObserver`, c'est-à-dire APRÈS
   // la frappe. On la repose donc à la main, avant de mesurer quoi que ce soit.
   publishDockChrome()
   const band = stickyBand()
+  return { box, band }
+}
+
+function revealWholePlate(): boolean {
+  const room = plateRoom()
+  if (room === undefined) return false
+  const { box, band } = room
   if (box.height > band.bottom - band.top) return false
   const offset = revealOffset(box, band)
   if (offset !== 0) window.scrollBy({ top: offset, behavior: revealBehavior() })
   return true
+}
+
+/**
+ * Le zoom le plus haut auquel la page entière tiendrait encore dans la bande, ramené à un
+ * cran de la glissière. `undefined` quand aucun cran n'y suffit.
+ *
+ * Le rembourrage de la plaque ne suit pas le zoom — ce sont des pixels de carnet autour
+ * d'une page en millimètres —, il se retire donc des deux côtés du calcul. Et le résultat
+ * est **arrondi vers le bas** au pas de la glissière : un cran au-dessus ne tiendrait pas,
+ * et un pilote qui pose la valeur annoncée doit voir sa page entière du premier coup.
+ */
+function zoomThatFits(room: PlateRoom): number | undefined {
+  const plate = content.querySelector('.plate')
+  if (!(plate instanceof HTMLElement)) return undefined
+  const drawn = plate.getBoundingClientRect().height
+  if (drawn <= 0) return undefined
+  const frame = room.box.height - drawn
+  const band = room.band.bottom - room.band.top
+  const wanted = zoom * (band - frame) / drawn
+  const notch = Math.floor(wanted / ZOOM_STEP) * ZOOM_STEP
+  return notch < ZOOM_MIN ? undefined : notch
+}
+
+/**
+ * **Ce que l'outil dit quand il n'a pas pu cadrer la page entière.**
+ *
+ * Le pilote d'essai du 22 août a trouvé les deux issues tout seul, et a constaté tout seul
+ * que chacune coûte ce qu'il était venu chercher : replier le bandeau lui rend la page mais
+ * lui prend les réglages, descendre le zoom la fait entrer mais lui prend la taille réelle.
+ * Ce qui lui manquait n'était pas le diagnostic — « votre fenêtre est petite », il le
+ * voyait — mais **le prix de chaque issue**, et le zoom exact auquel sa page entrerait.
+ *
+ * ## Ce n'est pas une alarme, et rien dans sa forme ne doit le laisser croire
+ *
+ * La situation est normale sur une fenêtre courte, et elle l'est toujours sur une page en
+ * portrait : elle ne dit rien du fichier, rien d'une erreur. Pas d'icône, pas de couleur
+ * d'avertissement, pas de région vivante qui l'annoncerait à la synthèse vocale à chaque
+ * clic — une phrase du bandeau, dans l'encre douce des remarques.
+ *
+ * ## Quand elle paraît
+ *
+ * **Elle ne suit pas la sélection, elle suit la géométrie.** Elle paraît dès que la plaque
+ * ne tient plus dans la bande incompressible et disparaît dès qu'elle y tient à nouveau :
+ * poignée du bandeau tirée haut, reçu d'enregistrement ouvert, fenêtre rétrécie, page en
+ * portrait. Entre deux sélections sur la même page elle ne clignote donc pas — c'est un
+ * état, pas un événement, et c'est ce qui la garde lisible.
+ *
+ * Corollaire mesuré : sur une fenêtre de portable ordinaire (790 px utiles, bande de
+ * 383,8 px) une page paysage de 361,5 px tient, et la phrase ne paraît jamais.
+ *
+ * ## Ce qu'elle coûte en hauteur : rien
+ *
+ * Elle vit **dans le corps du bandeau**, dont la hauteur est déjà bornée par
+ * `--dock-page-room` et qui défile pour son compte. Mesuré, fenêtre 1024 × 640
+ * (`innerHeight` 560), un gadget choisi : la bande laissée à la page vaut 329,8 px avec la
+ * phrase comme sans elle. La même phrase posée dans la **tête** du bandeau la ramenait à
+ * 284,9 px — 44,9 px pris à la page, dans l'écran même où la hauteur manque, parce que le
+ * corps est alors à son plancher (`DOCK_HEIGHT_MIN`) et ne peut plus rendre ce que
+ * l'enveloppe prend.
+ */
+function syncPlateFit(): void {
+  if (plateFitNote === undefined) return
+  const room = plateRoom()
+  const tight = room !== undefined && room.box.height > room.band.bottom - room.band.top
+  plateFitNote.hidden = !tight
+  if (room === undefined || !tight) return
+  const tr = translator()
+  const notch = zoomThatFits(room)
+  plateFitNote.textContent = notch === undefined
+    ? tr.t('dock.cramped')
+    : tr.t('dock.crampedZoom', { level: tr.format.percent(notch) })
 }
 
 /**
@@ -2233,7 +2342,12 @@ function revealSelection(): void {
   requestAnimationFrame(() => {
     // La sélection a changé entre-temps : c'est la nouvelle qui commande, pas celle-ci.
     if (selection !== chosen) return
-    if (revealWholePlate()) return
+    const framed = revealWholePlate()
+    // Le cadrage vient de reposer `--dock-chrome-room` et de mesurer : c'est le moment où
+    // la réponse est la plus fraîche, et le seul où l'on sait qu'un geste du pilote vient
+    // d'avoir lieu.
+    syncPlateFit()
+    if (framed) return
     revealWidget(chosen)
   })
 }
@@ -2438,7 +2552,19 @@ function buildDock(): HTMLElement {
   listToggle.setAttribute('aria-controls', widgetListHost.id)
 
   panelHost = el('div', 'dock__panel')
-  body.append(widgetListHost, panelHost)
+  // La liste et les réglages côte à côte forment désormais une rangée à eux, sous une
+  // phrase qui les traverse tous les deux : ce qu'elle dit — la page entière ne tient pas
+  // ici — ne concerne ni la liste ni un gadget, mais l'écran entier. Elle prend toute la
+  // largeur du bandeau, et deux lignes lui suffisent alors là où trois lui étaient
+  // nécessaires dans la seule colonne des réglages (35 px contre 61,5, mesurés en
+  // fenêtre 1024 × 640).
+  const split = el('div', 'dock__split')
+  split.append(widgetListHost, panelHost)
+
+  plateFitNote = el('p', 'dock__cramped')
+  plateFitNote.hidden = true
+
+  body.append(plateFitNote, split)
 
   dockGrip.setAttribute('aria-controls', body.id)
 
@@ -3652,6 +3778,7 @@ function render(): void {
   dockTitle = undefined
   dockClass = undefined
   dockCount = undefined
+  plateFitNote = undefined
   dockToggle = undefined
   dockBody = undefined
   dockGrip = undefined
@@ -3782,7 +3909,10 @@ function render(): void {
         // Le zoom redimensionne la plaque sous le calque, qui n'en est pas averti : c'est
         // ici qu'on le lui dit. Le placement de la barre d'outils se juge en pixels — sa
         // hauteur à l'écran contre la place restante —, et ces pixels viennent de changer.
-        onZoom: (factor) => { zoom = factor; editor?.refresh() },
+        // Le zoom change la hauteur de la plaque sans toucher au bandeau : aucun
+        // observateur de taille ne s'en aperçoit, et la phrase resterait à réclamer un
+        // zoom que le pilote vient de poser.
+        onZoom: (factor) => { zoom = factor; editor?.refresh(); syncPlateFit() },
         // Pourquoi cette page ne s'affichera pas, dit là où le pilote pose ses gadgets.
         // Le document entier, et pas seulement la mise en page : une des trois raisons
         // se lit dans les réglages généraux (`Display.Orientation`).

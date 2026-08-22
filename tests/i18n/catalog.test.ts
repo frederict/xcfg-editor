@@ -338,6 +338,40 @@ describe('catalogues de messages', () => {
     }
   })
 
+  /**
+   * La phrase qui dit qu'une page ne tient pas entière **cite un bouton** : celui qui
+   * replie le bandeau. Elle en nomme le prix — vous y perdez les réglages —, et ce prix
+   * ne veut rien dire si le mot cité n'est plus celui du bouton.
+   *
+   * Le piège est celui de tout intitulé écrit deux fois : `dock.collapse` se renomme un
+   * jour, dans une langue, et la phrase continue d'envoyer le pilote vers un bouton que
+   * l'écran ne porte plus. Les tests de `tests/docs/` gardent déjà cette règle pour les
+   * README et les manuels ; ici, c'est le catalogue qui se cite lui-même.
+   */
+  it('citent le bouton de repli sous le nom que ce bouton porte', () => {
+    for (const language of UI_LANGUAGES) {
+      const catalog = CATALOGS[language]
+      const collapse = catalog['dock.collapse']
+      expect(catalog['dock.cramped'], `${language} / cramped`).toContain(collapse)
+      expect(catalog['dock.crampedZoom'], `${language} / crampedZoom`).toContain(collapse)
+    }
+  })
+
+  /**
+   * Les deux phrases disent la même situation ; ce qui les sépare est **la seconde
+   * issue**. Celle qui porte `{level}` propose un cran de zoom parce qu'il en existe un ;
+   * l'autre est écrite pour le cas où il n'en existe aucun, et proposer un zoom y serait
+   * un mensonge. Un `{level}` qui s'égarerait dans la seconde ressortirait tel quel à
+   * l'écran, accolades comprises.
+   */
+  it('ne proposent un cran de zoom que dans celle qui en porte un', () => {
+    for (const language of UI_LANGUAGES) {
+      const catalog = CATALOGS[language]
+      expect(catalog['dock.crampedZoom'], `${language}`).toContain('{level}')
+      expect(catalog['dock.cramped'], `${language}`).not.toContain('{')
+    }
+  })
+
   it('emploient, dans chaque langue, le mot que la chrome de XCTrack emploie', () => {
     // Ce test gardait auparavant une **absence** : le mot n'entrait dans aucune langue,
     // faute de mesure hors du français. La mesure est faite — 55 relevés, ressources de
