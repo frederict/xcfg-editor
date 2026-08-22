@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { DEVICES } from '../../src/catalog/devices'
+import { readableName } from '../../src/catalog/widgetNames'
 import { parseJson } from '../../src/core/parseJson'
 import { serializeJson } from '../../src/core/serializeJson'
 import { readLayout, type Page } from '../../src/model/layout'
@@ -212,6 +213,23 @@ describe('le nom de classe du fichier : une fois, là où il sert', () => {
     expect(root.querySelector('.detail__label')?.textContent)
       .toContain(pageKind(page.className, tr).label)
   })
+
+  /**
+   * …mais **en dernier**, et en sourdine. Il ouvrait la ligne, juste sous un titre qui dit
+   * déjà « Page libre » : le même pilote-testeur est revenu le 2026-08-22 après-midi —
+   * « c'est maintenant la 1re pastille de la page […] toujours la deuxième chose que je
+   * lis ». Ce qu'il vient chercher passe devant : combien de gadgets, quelle taille, quel
+   * appareil. Le nom de classe ferme la ligne, à la même voix que le gabarit d'écran.
+   */
+  it('ferme la plaque de faits au lieu de l’ouvrir, et à voix basse', () => {
+    const { page, root } = scene(undefined)
+    const chips = [...root.querySelectorAll('.detail__facts .chip')]
+    const last = chips[chips.length - 1]!
+
+    expect(last.textContent).toBe(pageKind(page.className, tr).shortName)
+    expect(last.className).toContain('chip--quiet')
+    expect(chips[0]!.className).toContain('chip--count')
+  })
 })
 
 describe('le bouton du zoom dit sa destination, pas son geste', () => {
@@ -284,15 +302,29 @@ describe('consulter les réglages d’un widget sans entrer en édition', () => 
     const { page, root } = scene(1)
     const readout = root.querySelector<HTMLElement>('.readout')!
     // Ni un intitulé vide ni le nom du dernier survolé : celui qu'on lit.
-    expect(readout.querySelector('.readout__class')?.textContent)
-      .toBe(page.widgets[1]!.shortName)
+    expect(readout.querySelector('.readout__name')?.textContent)
+      .toBe(readableName(page.widgets[1]!.shortName, 'fr'))
     expect(readout.querySelector('.readout__pin')?.textContent).toBe('sélectionné')
+  })
+
+  /**
+   * Le relevé répond à « qu'est-ce que je désigne ? » : le nom et la taille. Le nom de
+   * classe y figurait en troisième mot, alors que la tête du bandeau l'écrit déjà, plus
+   * bas et en même temps — deux fois `WAltitude` à l'écran pour un seul gadget désigné.
+   * Un pilote-testeur : « à côté du nom de chaque gadget ». Il reste dans le bandeau,
+   * une fois ; ce test interdit qu'il revienne ici en doublon.
+   */
+  it('ne redit pas le nom de classe que la tête du bandeau écrit déjà', () => {
+    const { page, root } = scene(1)
+    const readout = root.querySelector<HTMLElement>('.readout')!
+    expect(readout.querySelector('.readout__class')).toBeNull()
+    expect(readout.textContent ?? '').not.toContain(page.widgets[1]!.shortName)
   })
 
   it('sans sélection, il invite au geste et ne nomme rien', () => {
     const { root } = scene(undefined)
     const readout = root.querySelector<HTMLElement>('.readout')!
-    expect(readout.querySelector('.readout__class')).toBeNull()
+    expect(readout.querySelector('.readout__name')).toBeNull()
     expect(readout.querySelector('.readout__hint')?.textContent).toContain('ses réglages')
   })
 

@@ -648,13 +648,19 @@ export function buildDetail(options: DetailOptions): HTMLElement {
   /* --- ce que la page implique --- */
   const facts = el('p', 'detail__facts')
   facts.append(
-    el('span', 'chip', kind.shortName),
     // `chip--count` : le seul de ces faits qui change sans que la vue soit reconstruite —
     // ajouter ou supprimer un widget en édition ne redessine que la page. `main.ts` le
     // retrouve par cette classe et le remet à jour, plutôt que d'afficher un compte périmé.
     el('span', 'chip chip--count', tr.t('common.widgetCount', { count: page.widgets.length })),
     el('span', 'chip', formatSizeMm(screenSize, tr.format)),
-    el('span', 'chip chip--quiet', ctx.device.label)
+    el('span', 'chip chip--quiet', ctx.device.label),
+    // Le nom de classe ferme la ligne, et il la ferme en sourdine. Il reste — c'est le seul
+    // endroit de l'outil qui relie la page qu'on regarde à ce que le fichier écrit d'elle,
+    // et le retirer tout à fait couperait ce lien. Mais il était en TÊTE, juste sous un
+    // titre qui dit déjà « Page libre » en français : un pilote-testeur l'a lu deux fois le
+    // 2026-08-22, « c'est maintenant la 1re pastille de la page ». Un fait qu'on ne cherche
+    // qu'en le cherchant se met au bout, à la même voix que le gabarit d'écran.
+    el('span', 'chip chip--quiet', kind.shortName)
   )
   root.append(facts)
   root.append(el('p', 'detail__note', kind.note))
@@ -674,6 +680,13 @@ export function buildDetail(options: DetailOptions): HTMLElement {
    * Le relevé sous la page. Il décrit ce qui est **sous le curseur** ; le curseur parti,
    * il retombe sur le widget sélectionné plutôt que sur rien — les deux ne se
    * contredisent pas, ils se relaient, et le bandeau dit la même chose plus bas.
+   *
+   * ⚠️ Il répond à « **qu'est-ce que je désigne ?** » : le nom et la taille, rien d'autre.
+   * Le nom de classe (`WAltitude`) y figurait aussi, et il figure en même temps dans la
+   * tête du bandeau, trois centimètres plus bas — deux fois le même mot à l'écran pour un
+   * seul gadget désigné. Un pilote-testeur l'a nommé le 2026-08-22 : « à côté du nom de
+   * chaque gadget ». Il reste dans le bandeau, une fois, là où on travaille ce que le
+   * fichier écrit ; il quitte le relevé, qui n'est qu'une désignation.
    */
   const describe = (widget: Widget | undefined, hovered: boolean): void => {
     readout.textContent = ''
@@ -693,8 +706,7 @@ export function buildDetail(options: DetailOptions): HTMLElement {
     const size = widgetSizeMm(shown, ctx.device, orientation)
     readout.append(
       el('span', 'readout__name', readableName(shown.shortName, ctx.language)),
-      el('span', 'readout__size', formatSizeMm(size, tr.format)),
-      el('span', 'readout__class', shown.shortName)
+      el('span', 'readout__size', formatSizeMm(size, tr.format))
     )
     if (!hovered && widget === undefined) {
       readout.append(el('span', 'readout__pin', tr.t('view.selectedPin')))
