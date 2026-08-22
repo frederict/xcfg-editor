@@ -34,8 +34,8 @@ import type { Orientation } from '../model/grid'
  *   déjà ; l'appeler ici tirerait `widgetLabels.json` — **72 541 octets** — dans le
  *   morceau de la bibliothèque, pour une information que l'appelant sait produire. La
  *   carte porte les noms de classe lus dans le fichier ; l'habillage est à l'interface.
- * - **Aucun aperçu.** `src/render/` n'est pas de ce périmètre. La place est réservée dans
- *   l'enregistrement (`LibraryEntry.preview`), l'image n'est pas produite.
+ * - **Aucune vignette.** `src/render/` n'est pas de ce périmètre. L'enregistrement en
+ *   porte la fiche (`LibraryEntry.preview`) ; l'image vient de `src/ui/libraryPreview.ts`.
  * - **Aucun jugement.** Ni « configuration de compétition », ni « prête à partager ».
  *   `src/model/inspection.ts` fait le contrôle avant vol, `src/ui/warnings.ts` les
  *   avertissements ; ici on décrit, on ne conclut pas.

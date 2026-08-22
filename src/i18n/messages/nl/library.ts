@@ -75,7 +75,6 @@ const library: DomainCatalog<'library'> = {
 
   'library.entryStamp': 'Opgeborgen op {when} · {file}',
   'library.unknownFileName': 'onbekend bestand',
-  'library.previewStored': 'Voorbeeld opgeborgen',
   'library.chipArchive': '.xczfg-archief',
   'library.personalCount': {
     one: '{count} persoonlijk gegeven',
@@ -245,8 +244,13 @@ const library: DomainCatalog<'library'> = {
   /* ------------------------------------------------------------- het voorbeeld */
 
   'library.previewHeading': 'Voorbeeld',
-  'library.previewNote':
-    'De plaats is in de bibliotheek voorbehouden, maar dit paneel maakt geen enkel beeld: het tekenen van een pagina hoort bij de tekenmotor. De dag dat die het levert, hoeft noch het opbergen noch de vorm van het item te veranderen.',
+  'library.previewOfLandscapePage': 'Pagina {rank} in liggend formaat, zoals deze editor haar tekent.',
+  'library.previewOfPortraitPage': 'Pagina {rank} in staand formaat, zoals deze editor haar tekent.',
+  'library.previewMasked':
+    'Wat u zelf hebt geschreven — eigen titels, vrije tekst, belkaart — wordt vervangen door grijze balken: een beeld ontsnapt aan het anonimiseren, dat alleen op het bestand werkt.',
+  'library.previewAbsent': 'Geen voorbeeld voor deze configuratie.',
+  'library.previewNotInArchive':
+    'Het bibliotheekarchief neemt geen enkel voorbeeld mee: een beeld zou de browser verlaten met uw getekende pagina’s erop. Het wordt hier, lokaal, opnieuw gemaakt na een invoer.',
 
   /* --------------------------------------------------------------------- opbergen */
 

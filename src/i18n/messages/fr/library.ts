@@ -100,7 +100,6 @@ const library = {
 
   'library.entryStamp': 'Rangée le {when} · {file}',
   'library.unknownFileName': 'fichier inconnu',
-  'library.previewStored': 'Aperçu rangé',
   'library.chipArchive': 'archive .xczfg',
   'library.personalCount': {
     one: '{count} donnée personnelle',
@@ -284,8 +283,18 @@ const library = {
   /* -------------------------------------------------------------------------- l'aperçu */
 
   'library.previewHeading': 'Aperçu',
-  'library.previewNote':
-    'La place est réservée dans la bibliothèque, mais aucune image n’est produite par ce panneau : le dessin d’une page appartient au moteur de rendu. Le jour où il la fournira, ni le rangement ni la forme de l’enregistrement n’auront à changer.',
+  /**
+   * `{rank}` est un rang de page — un nombre que le pilote lit et compare, il se met donc
+   * en forme comme un nombre. Les deux orientations ont chacune leur phrase : l'accord et
+   * la place du mot changent d'une langue à l'autre.
+   */
+  'library.previewOfLandscapePage': 'Page {rank} en paysage, telle que cet éditeur la dessine.',
+  'library.previewOfPortraitPage': 'Page {rank} en portrait, telle que cet éditeur la dessine.',
+  'library.previewMasked':
+    'Les textes que vous avez écrits — titres personnalisés, texte libre, fiche d’appel — sont remplacés par des barres grises : une image échappe à l’anonymisation, qui ne travaille que sur le fichier.',
+  'library.previewAbsent': 'Pas d’aperçu pour cette configuration.',
+  'library.previewNotInArchive':
+    'L’archive de bibliothèque n’emporte aucun aperçu : une image sortirait du navigateur avec vos pages dessinées dessus. Elle est refaite ici, en local, après un import.',
 
   /* --------------------------------------------------------------------------- ranger */
 

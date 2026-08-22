@@ -120,8 +120,8 @@ export interface LibraryStore {
 export const blobKey = (id: string): string => id
 
 /**
- * Clé de l'aperçu d'une entrée. Le rendu appartient à `src/render/`, qui n'est pas de ce
- * périmètre : **la place est réservée, l'image n'est pas produite ici**. Le préfixe
+ * Clé de la vignette d'une entrée. L'image est fabriquée par `src/ui/libraryPreview.ts`,
+ * hors de ce périmètre : **elle est rangée ici, elle n'est pas produite ici**. Le préfixe
  * partagé avec `blobKey` est ce qui permet à `delete` de tout retirer d'un coup.
  */
 export const previewKey = (id: string): string => `${id}#preview`

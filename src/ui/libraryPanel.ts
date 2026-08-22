@@ -4,8 +4,11 @@ import { formatTechnicalDetail } from '../core/technicalDetail'
 import { sha256Hex } from '../library/digest'
 import { LibraryError, libraryErrorText, libraryProseText } from '../library/errors'
 import { personalInventoryOf, type EntryIdentity, type PersonalDatum } from '../library/identity'
-import type { BrokenEntry, Library, LibraryEntry, LibrarySnapshot } from '../library/library'
+import type {
+  BrokenEntry, Library, LibraryEntry, LibrarySnapshot, PreviewRef
+} from '../library/library'
 import { exportLibrary, importLibrary, type ImportReport } from '../library/transfer'
+import { makeLibraryPreview, readPreviewScene } from './libraryPreview'
 import { isReadFromApk, personalProse, type PersonalProse } from '../model/personalData'
 import type { Translator } from '../i18n'
 
@@ -30,9 +33,11 @@ import type { Translator } from '../i18n'
  *
  * ## Ce que ce module ne fait pas
  *
- * - **Aucun aperçu rendu.** `src/render/` est hors périmètre : la place est réservée dans
- *   les données (`PreviewRef`, `setPreview`, `previewOf`), la vignette est ici un cadre
- *   vide qui dit ce qui viendra. Aucun pixel n'est produit.
+ * - **Aucune image fabriquée ici.** La vignette d'une entrée vient de `libraryPreview.ts`,
+ *   qui appelle le moteur de rendu et masque au passage les textes du pilote ; ce panneau
+ *   la demande, la range et l'affiche. Ce qu'il décide, en revanche, c'est **quand** :
+ *   au rangement d'une entrée, et une fois pour toutes sur les entrées plus anciennes que
+ *   la fonctionnalité (voir `fillMissingPreviews`).
  * - **Rien vers l'extérieur.** Pas de serveur, pas de réseau. L'export de la bibliothèque
  *   est un téléchargement local, l'import une lecture de fichier.
  * - **Aucun état global.** Tout arrive par `LibraryPanelOptions` : la bibliothèque, le
@@ -256,6 +261,19 @@ function versionGapText(tr: Translator, gap: string): string {
  */
 export function personalDatumWhere(tr: Translator, datum: PersonalDatum): string {
   return personalProse(tr).home(datum.home)
+}
+
+/**
+ * La page que la vignette montre, nommée au pilote : « Page 1 en paysage ».
+ *
+ * Deux clés et non une phrase à trous : l'orientation ne s'insère pas dans un repère,
+ * elle change l'accord et la place des mots dans la moitié des langues du socle. Le rang,
+ * lui, est un nombre que le pilote lit et compare — il se met en forme comme un nombre.
+ */
+export function previewCaption(tr: Translator, ref: PreviewRef): string {
+  return ref.orientation === 'landscape'
+    ? tr.t('library.previewOfLandscapePage', { rank: ref.pageRank })
+    : tr.t('library.previewOfPortraitPage', { rank: ref.pageRank })
 }
 
 /* =========================================================== la carte d'identité, pure */
@@ -949,8 +967,15 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
   const previewSection = (entry: LibraryEntry): HTMLElement => {
     const section = el('section', 'library__section')
     section.append(el('h3', 'library__heading', tr.t('library.previewHeading')))
-    section.append(previewSlot(entry))
-    section.append(el('p', 'library__note', tr.t('library.previewNote')))
+    section.append(previewSlot(entry, 'library__preview--large'))
+    section.append(el('p', 'library__note', entry.preview === undefined
+      ? tr.t('library.previewAbsent')
+      : previewCaption(tr, entry.preview)))
+    // Les deux phrases qui valent pour TOUTE vignette : ce qu'elle cache, et le fait
+    // qu'elle ne sort pas de ce navigateur. Elles se disent ici parce que c'est le seul
+    // endroit où le pilote regarde l'image en grand et se demande ce qu'elle emporte.
+    section.append(el('p', 'library__note', tr.t('library.previewMasked')))
+    section.append(el('p', 'library__caveat', tr.t('library.previewNotInArchive')))
     return section
   }
 
@@ -1007,6 +1032,71 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
     })
   }
 
+  /* --------------------------------------------------------------------- les vignettes */
+
+  /**
+   * Fabrique la vignette d'une entrée et la range à côté d'elle.
+   *
+   * Les octets passent par `bytesOf`, qui vérifie l'empreinte : on ne dessine jamais une
+   * page à partir d'octets dont on ne peut pas garantir qu'ils sont ceux rangés. Une
+   * configuration illisible ou sans page ne produit rien, et c'est un état normal —
+   * `makeLibraryPreview` rend `undefined` plutôt que de lever.
+   */
+  const storePreview = async (entry: LibraryEntry): Promise<void> => {
+    const bytes = await library.bytesOf(entry.id)
+    const preview = await makeLibraryPreview({
+      bytes,
+      fileName: entry.fileName,
+      // Le gabarit d'écran est une **supposition** de cet éditeur (`identity.assumed`) :
+      // il ne décide que des proportions du cadre, jamais du contenu de la page.
+      device: entry.identity.assumed.device,
+      language
+    })
+    if (preview === undefined) return
+    await library.setPreview(entry.id, preview.bytes, preview.ref, entry.revision)
+  }
+
+  /**
+   * Les entrées dont la vignette a déjà été tentée pendant cette session. Une
+   * configuration illisible échouerait à chaque redessin, indéfiniment : on ne réessaie
+   * pas, et l'entrée garde son cadre calme.
+   */
+  const previewAttempted = new Set<string>()
+  let fillingPreviews = false
+
+  /**
+   * Rattrape les entrées rangées **avant** que la vignette n'existe, et celles rétablies
+   * depuis une archive — qui n'en transporte aucune, à dessein (`transfer.ts`).
+   *
+   * Une par une, jamais en parallèle : chacune lit 60 à 80 ko et analyse un document, et
+   * vingt à la fois figeraient l'onglet. Pendant ce temps le redessin est suspendu — vingt
+   * écritures feraient clignoter la liste vingt fois — et un seul redessin les montre
+   * toutes à la fin.
+   */
+  const fillMissingPreviews = (snapshot: LibrarySnapshot): void => {
+    if (fillingPreviews) return
+    const missing = snapshot.entries.filter(
+      (entry) => entry.preview === undefined && !previewAttempted.has(entry.id))
+    if (missing.length === 0) return
+    fillingPreviews = true
+    void (async () => {
+      try {
+        for (const entry of missing) {
+          previewAttempted.add(entry.id)
+          try {
+            await storePreview(entry)
+          } catch {
+            // Silence délibéré : une vignette manquante n'est pas une panne du rangement,
+            // et le pilote n'a rien demandé. L'entrée reste lisible, chargeable, exportable.
+          }
+        }
+      } finally {
+        fillingPreviews = false
+        await refresh()
+      }
+    })()
+  }
+
   /* ------------------------------------------------------------------------ les gestes */
 
   const doStore = async (source: CurrentDocument, name: string, note: string): Promise<void> => {
@@ -1024,6 +1114,15 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
       // `number`, et ne se met donc pas en forme.
       digest: entry.sha256.slice(0, 12)
     }))
+    // La vignette est fabriquée **après** l'annonce du rangement : c'est un agrément, et
+    // il n'a pas à retarder la phrase qui dit au pilote que sa configuration est en
+    // sécurité. Un échec ici ne change rien à ce qui est rangé.
+    previewAttempted.add(entry.id)
+    try {
+      await storePreview(entry)
+    } catch {
+      // Voir `fillMissingPreviews` : silence délibéré.
+    }
   }
 
   const askStore = (source: CurrentDocument, then?: () => void | Promise<void>): void => {
@@ -1399,15 +1498,56 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
 
   /* ------------------------------------------------------------------------ le dessin */
 
-  function previewSlot(entry: LibraryEntry): HTMLElement {
-    const slot = el('div', 'library__preview')
+  /**
+   * Le cadre de la vignette, rendu **tout de suite**, rempli après.
+   *
+   * L'image vit dans un magasin d'octets que `read()` ne touche pas — c'est la raison
+   * d'être de la séparation des deux magasins (`store.ts`). La liste se dessine donc sans
+   * elle, et chaque cadre va chercher la sienne de son côté. Le cadre garde ses
+   * proportions dès le premier trait : sans cela, la liste sauterait sous le curseur au
+   * moment où les images arrivent.
+   *
+   * **Quand il n'y a rien, il n'y a rien à lire.** Pas de pointillés, pas de « aperçu à
+   * venir », pas de raison technique : une entrée trop ancienne, une configuration
+   * illisible et une image encore en route se ressemblent, et aucune de ces trois choses
+   * ne regarde le pilote. Le cadre reste une surface calme, à sa place, et le reste de la
+   * ligne dit déjà tout ce qu'il y a à dire.
+   */
+  function previewSlot(entry: LibraryEntry, variant?: string): HTMLElement {
+    const slot = el('div', variant === undefined ? 'library__preview' : `library__preview ${variant}`)
     slot.setAttribute('aria-hidden', 'true')
-    // Rien quand il n'y a rien : « Aperçu à venir » était une promesse affichée en
-    // permanence, et une promesse non tenue vaut moins qu'un cadre vide.
-    if (entry.preview !== undefined) {
-      slot.append(el('span', 'library__previewText', tr.t('library.previewStored')))
+    const ref = entry.preview
+    if (ref === undefined) return slot
+    if (ref.widthPx > 0 && ref.heightPx > 0) {
+      slot.style.aspectRatio = `${ref.widthPx} / ${ref.heightPx}`
     }
+    void showPreview(slot, entry)
     return slot
+  }
+
+  /**
+   * Relit la vignette rangée et la pose dans son cadre.
+   *
+   * Aucun échec ne remonte à l'écran. Une image absente — entrée rétablie depuis une
+   * archive, écriture interrompue, magasin vidé sous la pression du navigateur — laisse
+   * le cadre calme, exactement comme une entrée qui n'en a jamais eu. Un cadre `hidden`
+   * ou un message d'erreur ferait remarquer une chose que le pilote n'a pas demandée.
+   */
+  const showPreview = async (slot: HTMLElement, entry: LibraryEntry): Promise<void> => {
+    let bytes: Uint8Array | undefined
+    try {
+      bytes = await library.previewOf(entry.id)
+    } catch {
+      return
+    }
+    if (bytes === undefined) return
+    const scene = readPreviewScene(bytes)
+    // Le cadre a pu être remplacé par un redessin pendant la lecture : on ne pose rien
+    // dans un élément qui n'est plus à l'écran.
+    if (scene === undefined || !slot.isConnected) return
+    slot.textContent = ''
+    slot.classList.add('library__preview--drawn')
+    slot.append(scene)
   }
 
   const entryItem = (entry: LibraryEntry): HTMLElement => {
@@ -1600,6 +1740,7 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
   const draw = (snapshot: LibrarySnapshot): void => {
     listWrap.textContent = ''
     drawStorage(snapshot)
+    fillMissingPreviews(snapshot)
 
     if (snapshot.entries.length === 0 && snapshot.broken.length === 0) {
       listWrap.append(el('p', 'library__empty', tr.t('library.empty')))
@@ -1626,13 +1767,27 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
   /* ----------------------------------------------------------------------- le va-et-vient */
 
   let drawing = false
+  /**
+   * Un redessin demandé pendant qu'un autre est en cours n'est plus **perdu**, il est
+   * **retenu**. L'ancienne garde rendait la main sans rien noter : le dernier changement
+   * arrivé pendant une lecture ne s'affichait jamais, et le rattrapage des vignettes —
+   * qui écrit précisément pendant que la liste se lit — laissait la dernière entrée sans
+   * son image jusqu'au prochain geste du pilote.
+   */
+  let redrawWanted = false
   const refresh = async (): Promise<void> => {
-    if (drawing) return
+    if (drawing) {
+      redrawWanted = true
+      return
+    }
     drawing = true
     try {
-      const snapshot = await library.read()
-      draw(snapshot)
-      await drawFoot(snapshot)
+      do {
+        redrawWanted = false
+        const snapshot = await library.read()
+        draw(snapshot)
+        await drawFoot(snapshot)
+      } while (redrawWanted)
     } catch (error) {
       showFailure(tr.t('library.contextReading'), error)
     } finally {
@@ -1646,7 +1801,12 @@ export function renderLibraryPanel(options: LibraryPanelOptions): LibraryPanelHa
    * le même chemin — l'appelant n'a donc rien à rafraîchir lui-même, et n'oubliera pas de
    * le faire une fois.
    */
-  const unsubscribe = library.subscribe(() => { void refresh() })
+  const unsubscribe = library.subscribe(() => {
+    // Le rattrapage des vignettes écrit une fois par entrée ; redessiner à chaque écriture
+    // ferait clignoter la liste autant de fois. Il redessine lui-même, une fois, à la fin.
+    if (fillingPreviews) return
+    void refresh()
+  })
 
   storeCurrent.addEventListener('click', () => {
     clearFlash()

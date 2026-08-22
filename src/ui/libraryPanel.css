@@ -156,27 +156,46 @@
 .library__entryActions { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.25rem; }
 
 /*
- * La place de l'aperçu. Elle est **vide et le dit** : le dessin d'une page appartient au
- * moteur de rendu, hors de ce module. Le cadre est aux proportions d'une page paysage
- * d'AIR³ 7.2 (1280 × 720), pour que rien ne bouge le jour où l'image arrivera.
+ * La vignette d'une entrée : une page de la configuration, dessinée.
+ *
+ * Le cadre garde ses proportions **avant** que l'image n'arrive — 16/9, celles d'une page
+ * paysage d'AIR³ 7.2 (1280 × 720), remplacées par les proportions réelles dès que la
+ * fiche de la vignette est connue (`previewSlot` pose `aspect-ratio` en ligne, une page
+ * portrait n'a pas la même forme). Sans cela, la liste sauterait sous le curseur au moment
+ * où les images se posent.
+ *
+ * **Quand il n'y a pas d'image, il n'y a pas de cadre non plus.** Les pointillés d'avant
+ * disaient « il manque quelque chose » à propos d'une entrée qui, elle, ne manque de rien :
+ * elle est lisible, chargeable, exportable. Reste une surface calme, à la bonne place, que
+ * l'œil ne va pas chercher.
  */
 .library__preview {
   width: 7.5rem;
   aspect-ratio: 16 / 9;
-  display: grid;
-  place-items: center;
-  border: 1px dashed var(--app-line-strong);
   border-radius: 4px;
   background: var(--app-bg);
-  color: var(--app-ink-soft);
-  font-size: 10.5px;
-  text-align: center;
-  padding: 0.3rem;
+  overflow: hidden;
 }
+
+/* Le filet n'apparaît qu'avec l'image : c'est le bord de l'écran de l'instrument, pas la
+   promesse d'un contenu à venir. Le fond, lui, est celui que `.xc-page` peint elle-même —
+   toujours clair, même en thème sombre : c'est l'écran d'un instrument. */
+.library__preview--drawn {
+  border: 1px solid var(--app-line);
+}
+
+/* `renderPage` rend un `<svg viewBox>` que `style.css` fait tenir la largeur de son
+   conteneur (`.xc-page-scene`). Rien à redire ici sinon le rattachement au cadre. */
+.library__preview > svg { display: block; width: 100%; height: auto; }
+
+/* Dans la carte d'identité, la même vignette en grand : c'est le seul endroit où le pilote
+   la regarde pour elle-même, et où il peut vérifier qu'elle montre bien sa page. */
+.library__preview--large { width: 100%; max-width: 22rem; }
 
 @media (max-width: 34rem) {
   .library__entry { grid-template-columns: minmax(0, 1fr); }
   .library__preview { width: 100%; max-width: 12rem; }
+  .library__preview--large { max-width: 100%; }
 }
 
 /* ------------------------------------------------------------------- sections et textes */

@@ -38,11 +38,15 @@ import {
  */
 
 /**
- * La place réservée à l'aperçu. **Aucun aperçu n'est produit ici** : le rendu appartient à
- * `src/render/`, hors périmètre. Ce type existe pour que le jour où l'aperçu arrive, ni
- * le schéma du magasin ni la forme de l'enregistrement n'aient à changer — une migration
- * de base de données sur des configurations de pilotes est un risque qu'on peut s'épargner
- * en réservant la place aujourd'hui.
+ * La fiche d'une vignette. **Aucune image n'est produite ici** : elle vient de
+ * `src/ui/libraryPreview.ts`, qui appelle le moteur de rendu et masque au passage les
+ * textes écrits par le pilote. Cette couche ne fait que la ranger, la relire et
+ * l'effacer avec son entrée — c'est ce que dit `setPreview`, « les octets viennent
+ * d'ailleurs ».
+ *
+ * La place était réservée avant que l'image n'existe, et la réservation a tenu : rien
+ * n'a bougé ici le jour où la vignette est arrivée, ni le schéma du magasin, ni la forme
+ * de l'enregistrement. Aucune migration de base sur des configurations de pilotes.
  */
 export interface PreviewRef {
   /** `'image/png'`, `'image/svg+xml'`… déclaré par le producteur, jamais deviné. */
@@ -50,7 +54,11 @@ export interface PreviewRef {
   widthPx: number
   heightPx: number
   byteLength: number
-  /** L'orientation et le rang de la page représentée : un aperçu est celui d'une page. */
+  /**
+   * L'orientation et le rang de la page représentée : une vignette est celle d'une page.
+   * Le rang part de **1** — celui que voit le pilote, même convention que
+   * `FreeText.pageRank`.
+   */
   orientation: 'portrait' | 'landscape'
   pageRank: number
 }
@@ -150,8 +158,12 @@ export interface Library {
    * comprises. Réservé à l'import d'une bibliothèque exportée (`transfer.ts`) : c'est la
    * seule opération qui doit pouvoir rétablir un passé, et non créer un présent.
    * Refuse d'écraser un identifiant déjà présent.
+   *
+   * **Aucune vignette n'entre par ici**, et ce n'est pas un oubli : l'archive n'en
+   * transporte pas (voir `transfer.ts`, § « L'archive n'emporte AUCUNE vignette »).
+   * L'entrée rétablie n'en a donc pas, et l'éditeur la refabrique en local.
    */
-  restore(entry: LibraryEntry, bytes: Uint8Array, preview?: Uint8Array): Promise<void>
+  restore(entry: LibraryEntry, bytes: Uint8Array): Promise<void>
   /**
    * Prévient à chaque changement, **y compris ceux d'un autre onglet**. Rend la fonction
    * de désabonnement.
@@ -411,7 +423,16 @@ export function createLibrary(options: LibraryOptions): Library {
     async setPreview(id, bytes, ref, expectedRevision) {
       const entry = await readRecord(id)
       const preview: PreviewRef = { ...ref, byteLength: bytes.byteLength }
-      const updated = bumped({ ...entry, preview })
+      /*
+       * **Ni `revision` ni `updatedAt` ne bougent.** Poser une vignette n'est pas une
+       * écriture du pilote : elle est *dérivée* des octets rangés, elle ne les touche pas,
+       * et elle peut être refaite à volonté sans que rien ne change. Les incrémenter
+       * ferait dire à la carte d'identité « enregistrée 4 fois » à une entrée que le
+       * pilote a rangée une seule fois, et refuserait à un autre onglet un renommage
+       * parfaitement légitime — c'est exactement ce que le jeton anti-concurrence est
+       * censé protéger, retourné contre lui.
+       */
+      const updated: LibraryEntry = { ...entry, preview }
       await write(updated, [{ key: previewKey(id), bytes: bytes.slice() }],
         { kind: 'revision', value: expectedRevision })
       announce({ kind: 'updated', id })
@@ -422,9 +443,8 @@ export function createLibrary(options: LibraryOptions): Library {
       return store.readBlob(previewKey(id))
     },
 
-    async restore(entry, bytes, preview) {
+    async restore(entry, bytes) {
       const blobs: BlobWrite[] = [{ key: blobKey(entry.id), bytes: bytes.slice() }]
-      if (preview !== undefined) blobs.push({ key: previewKey(entry.id), bytes: preview.slice() })
       await write(entry, blobs, { kind: 'absent' })
       announce({ kind: 'imported', id: entry.id })
     },

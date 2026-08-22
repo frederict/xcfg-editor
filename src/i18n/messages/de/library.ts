@@ -75,7 +75,6 @@ const library: DomainCatalog<'library'> = {
 
   'library.entryStamp': 'Abgelegt am {when} · {file}',
   'library.unknownFileName': 'unbekannte Datei',
-  'library.previewStored': 'Vorschau abgelegt',
   'library.chipArchive': '.xczfg-Archiv',
   'library.personalCount': {
     one: '{count} persönliche Angabe',
@@ -245,8 +244,13 @@ const library: DomainCatalog<'library'> = {
   /* ------------------------------------------------------------------- die Vorschau */
 
   'library.previewHeading': 'Vorschau',
-  'library.previewNote':
-    'Der Platz ist in der Bibliothek vorgesehen, aber dieses Feld erzeugt kein Bild: Das Zeichnen einer Seite gehört der Zeichenmaschine. An dem Tag, an dem sie es liefert, muss sich weder die Ablage noch die Form des Eintrags ändern.',
+  'library.previewOfLandscapePage': 'Seite {rank} im Querformat, so wie dieser Editor sie zeichnet.',
+  'library.previewOfPortraitPage': 'Seite {rank} im Hochformat, so wie dieser Editor sie zeichnet.',
+  'library.previewMasked':
+    'Was Sie selbst geschrieben haben — eigene Titel, freier Text, Anrufkarte — wird durch graue Balken ersetzt: Ein Bild entgeht der Anonymisierung, die nur an der Datei arbeitet.',
+  'library.previewAbsent': 'Keine Vorschau für diese Konfiguration.',
+  'library.previewNotInArchive':
+    'Das Bibliotheksarchiv nimmt keine Vorschau mit: Ein Bild verließe den Browser mit Ihren gezeichneten Seiten darauf. Sie wird hier, lokal, nach einem Import neu erstellt.',
 
   /* ---------------------------------------------------------------------- ablegen */
 

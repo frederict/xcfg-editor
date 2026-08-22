@@ -74,7 +74,6 @@ const library: DomainCatalog<'library'> = {
 
   'library.entryStamp': 'Stored on {when} · {file}',
   'library.unknownFileName': 'unknown file',
-  'library.previewStored': 'Preview stored',
   'library.chipArchive': '.xczfg archive',
   'library.personalCount': {
     one: '{count} personal item',
@@ -244,8 +243,13 @@ const library: DomainCatalog<'library'> = {
   /* ------------------------------------------------------------------- the preview */
 
   'library.previewHeading': 'Preview',
-  'library.previewNote':
-    'The room is reserved in the library, but no image is produced by this panel: drawing a page belongs to the rendering engine. The day it provides one, neither the storing nor the shape of the record will have to change.',
+  'library.previewOfLandscapePage': 'Page {rank} in landscape, as this editor draws it.',
+  'library.previewOfPortraitPage': 'Page {rank} in portrait, as this editor draws it.',
+  'library.previewMasked':
+    'The text you wrote — custom titles, free text, call card — is replaced with grey bars: an image escapes the anonymising pass, which only works on the file.',
+  'library.previewAbsent': 'No preview for this configuration.',
+  'library.previewNotInArchive':
+    'The library archive carries no preview: an image would leave the browser with your pages drawn on it. It is rebuilt here, locally, after an import.',
 
   /* ---------------------------------------------------------------------- storing */
 

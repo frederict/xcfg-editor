@@ -405,11 +405,14 @@ describe('libraryPanel — le geste du pilote', () => {
     const titres = [...dialog.querySelectorAll('.library__heading')].map((n) => n.textContent)
     expect(titres).toContain('Ce que le fichier déclare')
     expect(titres).toContain('Ce que cet éditeur suppose')
-    // La place de l'aperçu est réservée, et elle reste muette : « Aperçu à venir » était
-    // une promesse affichée en permanence sur chaque entrée.
-    expect(dialog.querySelector('.library__preview')).not.toBeNull()
-    expect(text(dialog.querySelector('.library__preview'))).toBe('')
-    expect(text(dialog)).toContain('aucune image n’est produite par ce panneau')
+    // La vignette est là, et elle porte une page dessinée — pas un cadre en pointillés.
+    const vignette = dialog.querySelector('.library__preview')
+    expect(vignette).not.toBeNull()
+    expect(vignette!.querySelector('svg.xc-page-scene')).not.toBeNull()
+    // Elle dit quelle page elle montre, ce qu'elle masque, et qu'elle ne voyage pas.
+    expect(text(dialog)).toContain('Page 1 en paysage')
+    expect(text(dialog)).toContain('barres grises')
+    expect(text(dialog)).toContain('n’emporte aucun aperçu')
   })
 
   it('un niveau sans action s’ouvre sur son début, pas sur son dernier paragraphe', async () => {

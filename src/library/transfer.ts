@@ -29,12 +29,32 @@ import { UNKNOWN_RECORD_ID, type Library, type LibraryEntry } from './library'
  * ```
  * bibliotheque.json      le manifeste : format, date, une fiche par entrée
  * entrees/<id>.xcfg      les octets d'origine, intacts
- * apercus/<id>.png       l'aperçu, quand il existe
  * ```
  *
  * L'archive s'ouvre avec n'importe quel outil de décompression : un pilote qui perd
  * l'éditeur récupère ses `.xcfg` à la main. C'est délibéré — une sauvegarde qu'on ne peut
  * lire qu'avec l'outil qui l'a écrite n'est pas une sauvegarde.
+ *
+ * ## L'archive n'emporte AUCUNE vignette, et c'est une décision de vie privée
+ *
+ * Depuis que l'éditeur produit des vignettes (`src/ui/libraryPreview.ts`), chaque entrée
+ * peut porter l'**image** d'une de ses pages. Une image échappe à tout ce que le projet
+ * sait faire pour protéger le pilote : l'anonymisation opère sur le document JSON, et
+ * aucune inspection du JSON d'une archive ne verrait le nom d'un proche resté en pixels.
+ * Une archive est précisément ce qui **sort** du navigateur — on l'envoie, on la dépose
+ * sur un disque partagé, on la joint à un message.
+ *
+ * Deux raisons se rejoignent, et aucune ne suffit seule :
+ *
+ * 1. **La vie privée.** Même masquée, une vignette reste une image de la page du pilote.
+ *    Ce qu'on ne met pas dans l'archive ne peut pas fuir avec elle.
+ * 2. **Elle ne montrerait rien.** Le SVG rangé tire son habillage de `src/ui/style.css` :
+ *    hors de l'éditeur, il ne se dessine pas.
+ *
+ * La vignette n'est donc **ni écrite à l'export, ni annoncée dans le manifeste, ni crue à
+ * l'import** — une fiche qui en annoncerait une mentirait, et l'entrée rétablie afficherait
+ * un cadre vide pour toujours. L'éditeur la refabrique tout seul, en local, à partir des
+ * octets rétablis : ce qui est perdu se retrouve en une seconde, et sans voyager.
  */
 
 export const LIBRARY_FORMAT = 'xcfg-editor.library'
@@ -42,11 +62,15 @@ export const LIBRARY_FORMAT_VERSION = 1
 
 const MANIFEST_NAME = 'bibliotheque.json'
 
-/** Une fiche du manifeste : l'entrée, plus l'endroit où ses octets sont dans l'archive. */
+/**
+ * Une fiche du manifeste : l'entrée, plus l'endroit où ses octets sont dans l'archive.
+ *
+ * `entry` est écrite **sans son `preview`** : l'archive ne transporte aucune image, voir
+ * le commentaire de tête. Aucun autre champ n'est retiré.
+ */
 interface ManifestItem {
   entry: LibraryEntry
   file: string
-  previewFile?: string
 }
 
 interface Manifest {
@@ -115,16 +139,10 @@ export async function exportLibrary(
       ...stamp
     })
 
-    const item: ManifestItem = { entry, file }
-
-    const preview = await library.previewOf(entry.id)
-    if (preview !== undefined && entry.preview !== undefined) {
-      const previewFile = `apercus/${entry.id}`
-      members.push({ name: previewFile, data: preview, stored: true, ...stamp })
-      item.previewFile = previewFile
-    }
-
-    items.push(item)
+    // La fiche part sans la vignette : ni les octets de l'image, ni la ligne qui
+    // l'annonce. Voir le § « L'archive n'emporte AUCUNE vignette ».
+    const { preview: _preview, ...withoutPreview } = entry
+    items.push({ entry: withoutPreview, file })
   }
 
   const manifest: Manifest = {
@@ -295,17 +313,25 @@ export async function importLibrary(
       continue
     }
 
-    const preview = item.previewFile === undefined ? undefined : byName.get(item.previewFile)?.data
+    /*
+     * Une fiche venue d'ailleurs peut annoncer une vignette — une archive écrite à la
+     * main, ou par une version de cet éditeur qui en écrivait encore. On ne la croit
+     * pas : l'image n'est pas dans l'archive, et une entrée qui en annoncerait une sans
+     * l'avoir montrerait un cadre vide sans que rien ne l'explique.
+     */
+    const restored: LibraryEntry = { ...entry }
+    delete restored.preview
+
     if (clash === undefined) {
-      await library.restore(entry, member.data, preview)
+      await library.restore(restored, member.data)
       results.push({ sourceId: entry.id, name: entry.name, outcome: 'imported', id: entry.id })
-      existing.set(entry.id, entry)
+      existing.set(entry.id, restored)
       continue
     }
 
     const id = (options.newId ?? (() => `${entry.id}-2`))()
-    const renamed: LibraryEntry = { ...entry, id, name: `${entry.name}${suffix}` }
-    await library.restore(renamed, member.data, preview)
+    const renamed: LibraryEntry = { ...restored, id, name: `${entry.name}${suffix}` }
+    await library.restore(renamed, member.data)
     results.push({ sourceId: entry.id, name: renamed.name, outcome: 'duplicated', id })
     existing.set(id, renamed)
   }

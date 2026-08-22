@@ -26,8 +26,9 @@
  * ## Ce que ce dossier ne fait pas
  *
  * - **Rien vers l'extérieur** : pas de serveur, pas de réseau, pas de publication.
- * - **Aucun aperçu produit** : la place est réservée (`PreviewRef`, `setPreview`), l'image
- *   viendra de `src/render/`.
+ * - **Aucune vignette produite** : la place est tenue (`PreviewRef`, `setPreview`,
+ *   `previewOf`), l'image vient de `src/ui/libraryPreview.ts`. C'est ce qui garde ce
+ *   dossier indépendant de `src/render/` et de ses 22 dessins de gadgets.
  * - **Aucun nettoyage silencieux** : les données personnelles sont *montrées*
  *   (`identity.read.personalData`), jamais retirées. Le pilote décide — même éthique que
  *   `src/model/scope.ts` et `src/ui/warnings.ts`.

@@ -74,7 +74,6 @@ const library: DomainCatalog<'library'> = {
 
   'library.entryStamp': 'Guardada el {when} · {file}',
   'library.unknownFileName': 'archivo desconocido',
-  'library.previewStored': 'Vista previa guardada',
   'library.chipArchive': 'archivo .xczfg',
   'library.personalCount': {
     one: '{count} dato personal',
@@ -244,8 +243,13 @@ const library: DomainCatalog<'library'> = {
   /* ------------------------------------------------------------- la vista previa */
 
   'library.previewHeading': 'Vista previa',
-  'library.previewNote':
-    'El sitio está reservado en la biblioteca, pero este panel no produce ninguna imagen: el dibujo de una página pertenece al motor de dibujo. El día en que lo facilite, ni el guardado ni la forma del registro tendrán que cambiar.',
+  'library.previewOfLandscapePage': 'Página {rank} en horizontal, tal como la dibuja este editor.',
+  'library.previewOfPortraitPage': 'Página {rank} en vertical, tal como la dibuja este editor.',
+  'library.previewMasked':
+    'Lo que usted ha escrito — títulos propios, texto libre, ficha de llamada — se sustituye por barras grises: una imagen escapa al anonimizado, que solo trabaja sobre el archivo.',
+  'library.previewAbsent': 'Sin vista previa para esta configuración.',
+  'library.previewNotInArchive':
+    'El archivo comprimido de la biblioteca no lleva ninguna vista previa: una imagen saldría del navegador con sus páginas dibujadas encima. Se rehace aquí, en local, tras una importación.',
 
   /* ---------------------------------------------------------------------- guardar */
 

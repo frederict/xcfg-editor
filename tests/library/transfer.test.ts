@@ -120,7 +120,13 @@ describe('export et import de la bibliothèque entière', () => {
     expect(membres.find((m) => m.name === 'entrees/id-3.xczfg')!.stored).toBe(true)
   })
 
-  it('l’aperçu voyage avec son entrée', async () => {
+  /**
+   * **La décision de vie privée de ce module**, gardée par un test parce qu'elle est
+   * invisible à la relecture : une vignette est une IMAGE des pages du pilote, elle
+   * échappe donc à l'anonymisation, qui ne travaille que sur le document JSON. L'archive
+   * est ce qui sort du navigateur ; elle n'emporte ni l'image, ni la fiche qui l'annonce.
+   */
+  it('n’emporte aucune vignette — ni l’image, ni la ligne qui l’annonce', async () => {
     const source = nouvelle()
     const entry = await source.add({ name: 'X', bytes: FICHIERS[1]![2], fileName: 'p.xcfg' })
     const image = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d])
@@ -129,12 +135,46 @@ describe('export et import de la bibliothèque entière', () => {
       entry.revision)
 
     const { archive } = await exportLibrary(source)
+    const membres = await readZip(archive)
+    // Aucun membre d'image, et l'entrée du manifeste ne parle pas de vignette.
+    expect(membres.map((m) => m.name)).toEqual(['bibliotheque.json', 'entrees/id-1.xcfg'])
+    const manifeste = new TextDecoder().decode(
+      membres.find((m) => m.name === 'bibliotheque.json')!.data)
+    expect(manifeste).not.toContain('preview')
+
     const cible = nouvelle()
     await importLibrary(cible, archive)
-
     const restauree = (await cible.read()).entries[0]!
-    expect(restauree.preview).toMatchObject({ widthPx: 320, pageRank: 2, byteLength: 5 })
-    expect(Buffer.from((await cible.previewOf(restauree.id))!).equals(Buffer.from(image))).toBe(true)
+    expect(restauree.preview).toBeUndefined()
+    expect(await cible.previewOf(restauree.id)).toBeUndefined()
+  })
+
+  /**
+   * Une archive écrite à la main peut annoncer une vignette qu'elle ne porte pas. On ne
+   * la croit pas : l'entrée rétablie afficherait sinon un cadre vide pour toujours, sans
+   * que rien ne l'explique — et le rattrapage de l'interface ne repasserait pas dessus.
+   */
+  it('ne croit pas une fiche importée qui annonce une vignette', async () => {
+    const source = nouvelle()
+    await source.add({ name: 'X', bytes: FICHIERS[1]![2], fileName: 'p.xcfg' })
+    const { archive } = await exportLibrary(source)
+
+    const membres = await readZip(archive)
+    const manifeste = JSON.parse(new TextDecoder().decode(
+      membres.find((m) => m.name === 'bibliotheque.json')!.data)) as {
+      items: Array<{ entry: Record<string, unknown> }>
+    }
+    manifeste.items[0]!.entry.preview = {
+      mediaType: 'image/png', widthPx: 320, heightPx: 180, byteLength: 5,
+      orientation: 'landscape', pageRank: 2
+    }
+    const truquee = await writeZip(membres.map((m) => m.name === 'bibliotheque.json'
+      ? { ...m, data: new TextEncoder().encode(JSON.stringify(manifeste)) }
+      : m))
+
+    const cible = nouvelle()
+    await importLibrary(cible, truquee)
+    expect((await cible.read()).entries[0]!.preview).toBeUndefined()
   })
 })
 
