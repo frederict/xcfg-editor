@@ -109,7 +109,16 @@ const IDENTICAL_ON_PURPOSE: ReadonlySet<string> = new Set<string>([
   ...UI_LANGUAGES.map((language) => `${language}/palette.pro`),
   'en/properties.unitYard',
   'en/palette.typeCount',
-  'nl/palette.typeCount'
+  'nl/palette.typeCount',
+  /*
+   * Domaine `library` (`libraryPanel.ts`). Deux intitulés, une seule cause : le mot
+   * anglais se trouve être le mot français. « Pages » nomme la ligne de la carte
+   * d'identité, « Note » le champ du renommage — et la coïncidence n'existe que là :
+   * l'allemand dit « Seiten » et « Notiz », l'espagnol « Páginas » et « Nota », le
+   * néerlandais « Pagina’s » et « Notitie ».
+   */
+  'en/library.factPages',
+  'en/library.fieldNote'
 ])
 
 describe('catalogues de messages', () => {
