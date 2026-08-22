@@ -210,10 +210,16 @@ const sharing: DomainCatalog<'sharing'> = {
     'Vario-Einstellungen, Einheiten, Luftraumdateien und Sensorkonfiguration bleiben die ' +
     'des Geräts.',
   'warnings.exportBackupTitle': '„backup“-Export: die ganze Konfiguration',
+  /**
+   * ⚠️ Voir le commentaire du français : « überschreibt … die Sensorkonfiguration » était
+   * trop noir. Mesuré sur un AIR³ le 22 août 2026, un réglage absent du fichier garde sa
+   * valeur sur l'appareil.
+   */
   'warnings.exportBackupDetail': 'Diese Datei enthält die ganze Konfiguration. Wieder in ' +
-    'XCTrack eingelesen, überschreibt sie nicht nur die Bildschirme, sondern auch die ' +
+    'XCTrack eingelesen, ersetzt sie nicht nur die Bildschirme, sondern auch die ' +
     'Vario-Einstellungen, die Einheiten, die Luftraumdateien und die Sensorkonfiguration ' +
-    'des Geräts.',
+    '— die, die sie enthält. Auf einem AIR³ gemessen: eine Einstellung, die die Datei ' +
+    'nicht enthält, behält ihren Wert auf dem Gerät, sie wird nicht gelöscht.',
   'warnings.exportUnknownTitle': 'Exportart unbestimmt',
   'warnings.exportUnknownDetail': 'Diese Datei sagt nicht, ob sie nur Seiten oder die ' +
     'ganze Konfiguration enthält (info.exportType fehlt oder ist unbekannt). Was sie ' +

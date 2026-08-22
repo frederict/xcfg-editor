@@ -353,9 +353,19 @@ const sharing = {
     'unités, fichiers d’espace aérien et configuration des capteurs restent ceux de ' +
     'l’appareil.',
   'warnings.exportBackupTitle': 'Export « backup » : la configuration entière',
+  /**
+   * ⚠️ Cette phrase disait « il écrase … la configuration des capteurs de l'appareil »,
+   * sans réserve. Mesuré le 22 août 2026 sur un AIR³ : un import « Remplacer tout » n'a
+   * touché que **3 préférences sur 136** — celles que le fichier portait. Les quatre que
+   * l'anonymisation retire, dont `Sensors.Configuration`, sont ressorties de l'appareil
+   * avec leur valeur d'avant. Une ligne absente n'efface rien, et le dire faux dissuadait
+   * de partager une sauvegarde anonymisée.
+   */
   'warnings.exportBackupDetail': 'Ce fichier porte toute la configuration. Réimporté dans ' +
-    'XCTrack, il écrase non seulement les écrans, mais aussi les réglages du vario, les ' +
-    'unités, les fichiers d’espace aérien et la configuration des capteurs de l’appareil.',
+    'XCTrack, il remplace non seulement les écrans, mais aussi les réglages du vario, les ' +
+    'unités, les fichiers d’espace aérien et la configuration des capteurs — ceux qu’il ' +
+    'porte. Mesuré sur un AIR³ : un réglage absent du fichier garde sa valeur sur ' +
+    'l’appareil, il n’est pas effacé.',
   'warnings.exportUnknownTitle': 'Type d’export indéterminé',
   'warnings.exportUnknownDetail': 'Ce fichier ne dit pas s’il ne contient que des pages ou ' +
     'toute la configuration (info.exportType absent ou inconnu). Ce qu’il écrasera à la ' +

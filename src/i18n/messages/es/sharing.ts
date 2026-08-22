@@ -208,9 +208,16 @@ const sharing: DomainCatalog<'sharing'> = {
     'en XCTrack, reemplaza las pantallas y no toca nada más: ajustes del vario, unidades, ' +
     'archivos de espacio aéreo y configuración de los sensores siguen siendo los del aparato.',
   'warnings.exportBackupTitle': 'Exportación «backup»: la configuración entera',
+  /**
+   * ⚠️ Voir le commentaire du français : « aplasta … la configuración de los sensores »
+   * était trop noir. Mesuré sur un AIR³ le 22 août 2026, un réglage absent du fichier
+   * garde sa valeur sur l'appareil.
+   */
   'warnings.exportBackupDetail': 'Este archivo lleva toda la configuración. Reimportado en ' +
-    'XCTrack, aplasta no solo las pantallas, sino también los ajustes del vario, las ' +
-    'unidades, los archivos de espacio aéreo y la configuración de los sensores del aparato.',
+    'XCTrack, reemplaza no solo las pantallas, sino también los ajustes del vario, las ' +
+    'unidades, los archivos de espacio aéreo y la configuración de los sensores — los que ' +
+    'lleva. Medido en un AIR³: un ajuste que el archivo no lleva conserva su valor en el ' +
+    'aparato, no se borra.',
   'warnings.exportUnknownTitle': 'Tipo de exportación indeterminado',
   'warnings.exportUnknownDetail': 'Este archivo no dice si contiene solo páginas o toda la ' +
     'configuración (info.exportType ausente o desconocido). Lo que aplastará al ' +

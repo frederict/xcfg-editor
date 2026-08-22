@@ -150,6 +150,18 @@ describe('avertissements — type d’export', () => {
     expect(textOf(backup)).toMatch(/espace aérien/i)
     expect(textOf(backup)).toMatch(/capteurs/i)
   })
+
+  it('ne dit plus qu’un « backup » écrase ce qu’il ne porte pas', () => {
+    // ⚠️ Mesuré le 22 août 2026 sur un AIR³ : un import « Remplacer tout » n'a touché que
+    // 3 préférences sur 136, celles que le fichier portait. Les quatre que l'anonymisation
+    // retire — dont la configuration des capteurs — sont ressorties de l'appareil avec
+    // leur valeur d'avant. L'avertissement disait le contraire, et dissuadait de partager
+    // une sauvegarde anonymisée.
+    const backup = pick(warningsOfFile('2026-08-20_backup-00.xcfg'), 'export-type')
+    expect(textOf(backup)).toContain('ceux qu’il porte')
+    expect(textOf(backup)).toContain('garde sa valeur sur l’appareil')
+    expect(textOf(backup)).not.toContain('capteurs de l’appareil.')
+  })
 })
 
 describe('avertissements — valeurs supposées', () => {

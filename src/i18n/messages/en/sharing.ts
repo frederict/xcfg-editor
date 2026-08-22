@@ -203,9 +203,16 @@ const sharing: DomainCatalog<'sharing'> = {
     'XCTrack, it replaces the screens and touches nothing else: vario settings, units, ' +
     'airspace files and sensor configuration remain those of the device.',
   'warnings.exportBackupTitle': '“Backup” export: the whole configuration',
+  /**
+   * ⚠️ Voir le commentaire du français : « écrase la configuration des capteurs » était
+   * trop noir. Mesuré sur un AIR³ le 22 août 2026, un réglage absent du fichier garde sa
+   * valeur sur l'appareil.
+   */
   'warnings.exportBackupDetail': 'This file carries the whole configuration. Re-imported ' +
-    'into XCTrack, it overwrites not only the screens, but also the vario settings, the ' +
-    'units, the airspace files and the sensor configuration of the device.',
+    'into XCTrack, it replaces not only the screens, but also the vario settings, the ' +
+    'units, the airspace files and the sensor configuration — the ones it carries. ' +
+    'Measured on an AIR³: a setting the file does not carry keeps its value on the ' +
+    'device, it is not erased.',
   'warnings.exportUnknownTitle': 'Export type undetermined',
   'warnings.exportUnknownDetail': 'This file does not say whether it contains pages only or ' +
     'the whole configuration (info.exportType absent or unknown). What it will overwrite ' +
