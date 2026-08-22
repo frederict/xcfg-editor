@@ -155,21 +155,20 @@ de fidelidad que solo el autor puede comprobar no vale nada.
     cambiara ese valor de fábrica. En una preferencia general, eso es cierto en un aparato
     que nunca ha ajustado eso — y falso en un aparato ya ajustado, cuyo valor la importación
     reemplazará.
-  - **«Quitar»** hace callar al archivo sobre un ajuste: un valor escrito que **ya** vale el
-    valor de fábrica desaparece. Solo en los ajustes generales, y solo en ese estado — hacer
-    callar al archivo sobre un valor que usted ha elegido privaría a la copia de seguridad
-    de un ajuste deliberado, cosa que un botón discreto no debe hacer de un clic. **No** es
-    una vuelta al valor de fábrica: el aparato conservará el suyo.
+  - **«Quitar del archivo»** hace callar al archivo sobre un ajuste: un valor escrito que
+    **ya** vale el valor de fábrica desaparece. Solo en los ajustes generales, y solo en ese
+    estado — hacer callar al archivo sobre un valor que usted ha elegido privaría a la copia
+    de seguridad de un ajuste deliberado, cosa que un botón discreto no debe hacer de un
+    clic. **No** es una vuelta al valor de fábrica: el aparato conservará el suyo.
   - **«Restablecer el valor de fábrica»** reemplaza un valor que usted ha elegido por el que
     aplica un XCTrack nuevo. También en las dos pantallas. **Es el único de los tres que
     borra un ajuste deliberado** — los otros dos solo tocan valores que ya eran los de
     fábrica, o que no estaban escritos en absoluto. Por eso no se revela al pasar el ratón:
     ocupa su propia línea bajo el ajuste, muestra los dos valores en presencia *antes* del
-    clic, y dice en qué versión de XCTrack se registró el valor de fábrica en cuanto no es la
-    del archivo. **Escribe** el valor de fábrica en lugar de borrar la clave: la línea pasa
-    entonces al estado de fábrica, desde donde «Quitar» se ofrece. Dos clics deliberados, dos
-    efectos separados.
-
+    clic, y dice en qué versión de XCTrack se registró el valor de fábrica en cuanto no es
+    la del archivo. **Escribe** el valor de fábrica en lugar de borrar la clave: la línea
+    pasa entonces al estado de fábrica, desde donde «Quitar del archivo» se ofrece. Dos
+    clics deliberados, dos efectos separados.
   Ningún botón allí donde el valor de fábrica no está registrado, allí donde XCTrack lo
   calcula al arrancar, allí donde publica dos que se contradicen (`Sensors.ManualQnh`: 1013 y
   1013.25), ni allí donde el registro solo da un valor compuesto
@@ -269,9 +268,9 @@ valor».](captures/panneau-gadget.es.png)
 se ha ajustado, o fijar lo que el archivo no dice.*
 
 ![La pantalla «Intégration Android» de los ajustes generales, en modo edición: líneas
-«Quitar» con una pastilla «valor de fábrica», líneas «Restablecer el valor de fábrica» con
-una pastilla ámbar «ajustado por usted», y dos líneas «Escribir este valor» con una
-pastilla «ausente del archivo».](captures/reglages-generaux.es.png)
+«Quitar del archivo» con una pastilla «valor de fábrica», líneas «Restablecer el valor de
+fábrica» con una pastilla ámbar «ajustado por usted», y dos líneas «Escribir este valor» con
+una pastilla «ausente del archivo».](captures/reglages-generaux.es.png)
 
 *Los ajustes generales, en el árbol del menú del instrumento — y los tres gestos de valor de
 fábrica reunidos en una misma pantalla. Es también donde mejor se ven los dos ejes de

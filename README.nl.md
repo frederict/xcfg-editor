@@ -157,22 +157,22 @@ een belofte van getrouwheid die alleen de auteur kan nagaan, is niets waard.
     een algemene voorkeur geldt dat voor een toestel dat dit nooit heeft ingesteld — en niet
     voor een toestel dat het al heeft ingesteld, waarvan het inlezen de waarde zal
     vervangen.
-  - **‘Verwijderen’** laat het bestand over een instelling zwijgen: een geschreven waarde die
-    **al** gelijk is aan de fabriekswaarde verdwijnt. Alleen in de algemene instellingen, en
-    alleen in die toestand — het bestand laten zwijgen over een waarde die u hebt gekozen zou
-    de back-up een bewuste instelling ontnemen, en dat mag een onopvallende knop niet met één
-    klik doen. Het is **geen** terugkeer naar de fabriekswaarde: het toestel houdt de zijne.
+  - **‘Uit het bestand verwijderen’** laat het bestand over een instelling zwijgen: een
+    geschreven waarde die **al** gelijk is aan de fabriekswaarde verdwijnt. Alleen in de
+    algemene instellingen, en alleen in die toestand — het bestand laten zwijgen over een
+    waarde die u hebt gekozen zou de back-up een bewuste instelling ontnemen, en dat mag een
+    onopvallende knop niet met één klik doen. Het is **geen** terugkeer naar de
+    fabriekswaarde: het toestel houdt de zijne.
   - **‘Fabriekswaarde terugzetten’** vervangt een waarde die u hebt gekozen door de waarde
-    die een nieuwe XCTrack toepast. Eveneens op beide schermen. **Het is de enige van de drie
-    die een bewuste instelling wist** — de twee andere raken alleen waarden aan die al gelijk
-    waren aan de fabriekswaarde, of die helemaal niet geschreven waren. Ze verschijnt dus
-    niet pas bij het aanwijzen met de muis: ze neemt haar eigen regel onder de instelling in,
-    toont de twee waarden die tegenover elkaar staan *vóór* de klik, en zegt op welke versie
-    van XCTrack de fabriekswaarde is opgenomen zodra dat niet die van het bestand is. Ze
-    **schrijft** de fabriekswaarde in plaats van de sleutel te wissen: de regel gaat dan naar
-    de fabriekstoestand, van waaruit ‘Verwijderen’ wordt aangeboden. Twee bewuste klikken,
-    twee gescheiden gevolgen.
-
+    die een nieuwe XCTrack toepast. Eveneens op beide schermen. **Het is de enige van de
+    drie die een bewuste instelling wist** — de twee andere raken alleen waarden aan die al
+    gelijk waren aan de fabriekswaarde, of die helemaal niet geschreven waren. Ze verschijnt
+    dus niet pas bij het aanwijzen met de muis: ze neemt haar eigen regel onder de
+    instelling in, toont de twee waarden die tegenover elkaar staan *vóór* de klik, en zegt
+    op welke versie van XCTrack de fabriekswaarde is opgenomen zodra dat niet die van het
+    bestand is. Ze **schrijft** de fabriekswaarde in plaats van de sleutel te wissen: de
+    regel gaat dan naar de fabriekstoestand, van waaruit ‘Uit het bestand verwijderen’ wordt
+    aangeboden. Twee bewuste klikken, twee gescheiden gevolgen.
   Geen enkele knop waar de fabriekswaarde niet is opgenomen, waar XCTrack haar bij het
   opstarten berekent, waar het er twee publiceert die elkaar tegenspreken
   (`Sensors.ManualQnh`: 1013 en 1013.25), en evenmin waar de opname er maar één samengestelde
@@ -274,10 +274,10 @@ vastleggen’.](captures/panneau-gadget.nl.png)
 *Het paneel van een widget, en de twee fabriekswaardehandelingen die het biedt: terugzetten
 wat u hebt ingesteld, of vastleggen wat het bestand niet zegt.*
 
-![Het scherm ‘Intégration Android’ van de algemene instellingen, in bewerkmodus: regels
-‘Verwijderen’ met een pastille ‘fabriekswaarde’, regels ‘De fabriekswaarde terugzetten’ met
-een amberkleurige pastille ‘door u ingesteld’, en twee regels ‘Deze waarde schrijven’ met
-een pastille ‘ontbreekt in het bestand’.](captures/reglages-generaux.nl.png)
+![Het scherm ‘Intégration Android’ van de algemene instellingen, in bewerkmodus: regels ‘Uit
+het bestand verwijderen’ met een pastille ‘fabriekswaarde’, regels ‘De fabriekswaarde
+terugzetten’ met een amberkleurige pastille ‘door u ingesteld’, en twee regels ‘Deze waarde
+schrijven’ met een pastille ‘ontbreekt in het bestand’.](captures/reglages-generaux.nl.png)
 
 *De algemene instellingen, in de boomstructuur van het instrumentmenu — en de drie
 fabriekswaardehandelingen samen op één scherm. Hier zijn ook de twee taalassen het best te

@@ -147,7 +147,7 @@ author can check is worth nothing.
     setting out of reach of an XCTrack update that would change that factory value. On a
     general preference, that holds for a device that has never set it — and is false for
     a device already set, whose value the import will replace.
-  - **“Remove”** silences the file on a setting: a written value that **already** equals
+  - **“Remove from the file”** silences the file on a setting: a written value that **already** equals
     the factory value disappears. General settings only, and only in that one state —
     silencing the file on a value you chose would deprive the backup of a deliberate
     setting, and a discreet button must not do that in one click. It is **not** a return
@@ -159,8 +159,8 @@ author can check is worth nothing.
     hover: it takes its own line under the setting, shows both values side by side
     *before* the click, and says which XCTrack release the factory value was surveyed on
     as soon as that is not the file's own. It **writes** the factory value rather than
-    erasing the key: the line then moves to the factory state, from where “Remove”
-    becomes available. Two deliberate clicks, two separate effects.
+    erasing the key: the line then moves to the factory state, from where “Remove
+    from the file” becomes available. Two deliberate clicks, two separate effects.
 
   No button where the factory value has not been surveyed, where XCTrack computes it at
   start-up, where it publishes two that contradict each other (`Sensors.ManualQnh`: 1013
@@ -260,8 +260,8 @@ button.](captures/panneau-gadget.en.png)
 *A widget panel, and the two factory-value gestures it offers: restore what you set, or
 pin down what the file does not say.*
 
-![The “Intégration Android” screen of the general settings, in editing mode: “Remove”
-lines carrying a “factory value” pill, “Restore the factory value” lines carrying an amber
+![The “Intégration Android” screen of the general settings, in editing mode: “Remove
+from the file” lines carrying a “factory value” pill, “Restore the factory value” lines carrying an amber
 “set by you” pill, and two “Write this value” lines marked “missing from the
 file”.](captures/reglages-generaux.en.png)
 

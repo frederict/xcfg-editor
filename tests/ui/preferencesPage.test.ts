@@ -1446,6 +1446,33 @@ describe('rendre un défaut explicite, et le rendre à l’implicite', () => {
     expect(sha256(serializeJson(document))).toBe(sha256(source))
   })
 
+  /**
+   * L'intitulé visible **nomme son objet**. Il a dit « Retirer » seul jusqu'au
+   * 2026-08-22 ; un pilote-testeur a failli arrêter l'essai devant, croyant qu'il allait
+   * perdre son réglage — « le manuel l'explique très bien, mais le bouton est sous mes
+   * yeux et le manuel est ailleurs ».
+   *
+   * ⚠️ Ce test ne peut pas être remplacé par `tests/docs/intitules.test.ts` : celui-ci
+   * retrouve « Retirer » dans la valeur voisine `preferences.removeFromFile` et passerait
+   * au vert quel que soit l'intitulé du bouton. La forme complète ne tient donc qu'ici.
+   */
+  it('nomme ce qu’il retire, comme ses deux voisins nomment le leur', () => {
+    const { page } = editable(BACKUP_2026)
+    const retirer = controlOf<HTMLButtonElement>(page, 'Display.Fullscreen', '.prefs__drop')
+    expect(retirer.textContent).toBe('Retirer du fichier')
+    // Le nom accessible dit la même chose, avec le réglage nommé : les deux ne se
+    // contredisent plus, l'un est l'autre en plus précis.
+    expect(retirer.getAttribute('aria-label')).toBe('Retirer Plein écran du fichier')
+    // Les trois gestes de cet écran nomment tous leur objet ; aucun n'est un verbe nu.
+    const definir = controlOf<HTMLButtonElement>(
+      editable(FORMES_PRESERVEES).page, 'Tweak.VolumeUp', '.prefs__adopt'
+    )
+    for (const label of [retirer.textContent ?? '', definir.textContent ?? '',
+      tr.t(RESTORE_LABEL)]) {
+      expect(label.split(' ').length, label).toBeGreaterThan(1)
+    }
+  })
+
   it('dit à l’écran ce que l’un et l’autre changent, et ce qu’ils ne changent pas', () => {
     const { page } = editable(BACKUP_2026)
     const retirer = controlOf<HTMLButtonElement>(page, 'Display.Fullscreen', '.prefs__drop')

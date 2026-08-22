@@ -162,7 +162,7 @@ const preferences: DomainCatalog<'preferences'> = {
     'van de zijne schrijven: zolang het bestand er niets over zegt, houdt het de zijne ' +
     '(gemeten op de AIR³, import ‘Alles vervangen’).',
 
-  'preferences.dropLabel': 'Verwijderen',
+  'preferences.dropLabel': 'Uit het bestand verwijderen',
   'preferences.dropTitle':
     'Verwijdert ‘{key}’ uit het bestand: het zal niets meer over deze instelling zeggen.\n\n' +
     '{absent}\n\n' +

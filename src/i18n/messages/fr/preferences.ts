@@ -233,7 +233,23 @@ const preferences = {
 
   /* ------------------------------------------- 2. retirer une valeur égale à celle d'usine */
 
-  'preferences.dropLabel': 'Retirer',
+  /**
+   * ⚠️ **L'intitulé nomme son objet, et c'est tout ce qui manquait.** Il a dit « Retirer »
+   * seul jusqu'au 2026-08-22. Un pilote-testeur s'est arrêté devant : « je n'y ai pas
+   * touché […] le manuel l'explique très bien, mais le bouton est sous mes yeux et le
+   * manuel est ailleurs. » Il a failli abandonner l'essai là.
+   *
+   * Retirer **quoi** ? Un mot seul laissait croire au geste qu'un pilote redoute — perdre
+   * son réglage. Le vrai geste ne touche qu'au fichier, et l'appareil garde ce qu'il a :
+   * c'est exactement ce que trois mots disent, et qu'un seul ne pouvait pas dire.
+   *
+   * Ses deux voisins nommaient déjà le leur — « Définir cette valeur », « Rétablir la
+   * valeur d'usine ». Celui-ci était le seul verbe nu des trois.
+   *
+   * Le nom accessible du bouton (`preferences.removeFromFile`) disait déjà « Retirer
+   * {label} du fichier » : l'intitulé visible le rejoint, il ne le contredit plus.
+   */
+  'preferences.dropLabel': 'Retirer du fichier',
   'preferences.dropTitle':
     'Retire « {key} » du fichier : il ne dira plus rien de ce réglage.\n\n{absent}\n\nCe que ça change pour l’appareil qui n’y a jamais touché : la valeur cesse d’être figée et suivra les mises à jour de XCTrack. C’est l’inverse exact de « Définir cette valeur ».',
 

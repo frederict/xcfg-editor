@@ -159,7 +159,7 @@ const preferences: DomainCatalog<'preferences'> = {
     'del suyo: mientras el archivo no diga nada, conserva el suyo (medido en el AIR³, ' +
     'importación «Reemplazar todo»).',
 
-  'preferences.dropLabel': 'Quitar',
+  'preferences.dropLabel': 'Quitar del archivo',
   'preferences.dropTitle':
     'Quita «{key}» del archivo: ya no dirá nada de este ajuste.\n\n' +
     '{absent}\n\n' +

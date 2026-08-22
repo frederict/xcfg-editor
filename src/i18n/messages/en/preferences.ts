@@ -166,7 +166,7 @@ const preferences: DomainCatalog<'preferences'> = {
     'its own: as long as the file says nothing, it keeps its own (measured on the AIR³, ' +
     '“Replace everything” import).',
 
-  'preferences.dropLabel': 'Remove',
+  'preferences.dropLabel': 'Remove from the file',
   'preferences.dropTitle':
     'Removes “{key}” from the file: it will no longer say anything about this setting.\n\n' +
     '{absent}\n\n' +

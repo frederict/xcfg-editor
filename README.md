@@ -188,7 +188,7 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
     l'abri d'une mise à jour de XCTrack qui changerait cette valeur d'usine. Sur une
     préférence générale, c'est vrai d'un appareil qui n'a jamais réglé cela — et faux d'un
     appareil déjà réglé, dont l'import remplacera la valeur.
-  - **« Retirer »** fait taire le fichier sur un réglage : une valeur écrite qui vaut
+  - **« Retirer du fichier »** fait taire le fichier sur un réglage : une valeur écrite qui vaut
     **déjà** la valeur d'usine disparaît. Réglages généraux seulement, et sur ce seul
     état — faire taire le fichier sur une valeur que vous avez choisie priverait la
     sauvegarde d'un réglage délibéré, ce qu'un bouton discret ne doit pas faire d'un clic.
@@ -200,8 +200,8 @@ promesse de fidélité que seul l'auteur peut vérifier ne vaut rien.
     au survol : il prend sa propre ligne sous le réglage, montre les deux valeurs en
     présence *avant* le clic, et dit sur quelle version de XCTrack la valeur d'usine a été
     relevée dès que ce n'est pas celle du fichier. Il **écrit** la valeur d'usine plutôt
-    que d'effacer la clé : la ligne passe alors à l'état d'usine, d'où « Retirer » devient
-    offert. Deux clics délibérés, deux effets séparés.
+    que d'effacer la clé : la ligne passe alors à l'état d'usine, d'où « Retirer du fichier »
+    devient offert. Deux clics délibérés, deux effets séparés.
 
   Aucun bouton là où la valeur d'usine n'est pas relevée, là où XCTrack la calcule au
   démarrage, là où il en publie deux qui se contredisent (`Sensors.ManualQnh` : 1013 et
@@ -348,7 +348,7 @@ qu'on a réglé, ou figer ce que le fichier ne dit pas.*
 
 
 ![L'écran « Intégration Android » des réglages généraux, en mode édition : des lignes
-« Retirer » marquées d'une pastille « valeur d'usine », des lignes « Rétablir la valeur
+« Retirer du fichier » marquées d'une pastille « valeur d'usine », des lignes « Rétablir la valeur
 d'usine » marquées d'une pastille d'ambre « réglé par vous », et deux lignes « Définir
 cette valeur » marquées « absente du fichier ».](captures/reglages-generaux.fr.png)
 
@@ -368,7 +368,7 @@ réglages restent français dans les cinq captures — seule notre prose change.
                séparation des deux axes — et les quatre README traduits le disent au
                lecteur au lieu de promettre un titre traduit qui n'existe pas.
   Fichier .... tests/fixtures/exports/2025-07-07_backup-00.xcfg
-  État ....... écran « Intégration Android » : quatre lignes « Retirer » (pastille
+  État ....... écran « Intégration Android » : quatre lignes « Retirer du fichier » (pastille
                « valeur d'usine »), trois lignes « Rétablir la valeur d'usine » (pastille
                d'ambre « réglé par vous », les deux valeurs en présence lisibles, et
                l'avertissement de version puisque ce fichier ne vient pas de la version du
@@ -390,7 +390,7 @@ réglages restent français dans les cinq captures — seule notre prose change.
      2025-07-07_backup-00.xcfg, « Intégration Android » les réunit tous les trois : c'est
      le seul écran de tout le corpus qui le fasse, d'où le changement de fixture.
      L'écran « Affichage » de la recette d'origine reste un bon choix pour montrer
-     « Retirer » et « Rétablir » côte à côte (4 et 5 lignes sur le fichier de 2026).
+     « Retirer du fichier » et « Rétablir » côte à côte (4 et 5 lignes sur le fichier de 2026).
   3. L'écran se retrouve par son identifiant, pas par son titre — qui ne se traduit pas.
      `[data-screen="preferences_tweaks"]` : c'est lui, « Intégration Android ».
 -->

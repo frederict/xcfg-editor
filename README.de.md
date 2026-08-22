@@ -159,12 +159,12 @@ Absicht — ein Treueversprechen, das nur der Autor nachprüfen kann, ist nichts
     diesen Werkswert ändern würde. Bei einer allgemeinen Einstellung gilt das für ein
     Gerät, das dies nie eingestellt hat — und nicht für ein bereits eingestelltes Gerät,
     dessen Wert der Import ersetzen wird.
-  - **„Entfernen“** lässt die Datei zu einer Einstellung schweigen: ein geschriebener Wert,
-    der **bereits** dem Werkswert entspricht, verschwindet. Nur in den allgemeinen
-    Einstellungen, und nur in diesem einen Zustand — die Datei zu einem Wert schweigen zu
-    lassen, den Sie gewählt haben, nähme der Sicherung eine bewusste Einstellung, und das
-    darf eine unauffällige Schaltfläche nicht mit einem Klick tun. Es ist **keine** Rückkehr
-    zum Werkswert: das Gerät behält seinen eigenen.
+  - **„Aus der Datei entfernen“** lässt die Datei zu einer Einstellung schweigen: ein
+    geschriebener Wert, der **bereits** dem Werkswert entspricht, verschwindet. Nur in den
+    allgemeinen Einstellungen, und nur in diesem einen Zustand — die Datei zu einem Wert
+    schweigen zu lassen, den Sie gewählt haben, nähme der Sicherung eine bewusste
+    Einstellung, und das darf eine unauffällige Schaltfläche nicht mit einem Klick tun. Es
+    ist **keine** Rückkehr zum Werkswert: das Gerät behält seinen eigenen.
   - **„Werkswert wiederherstellen“** (in den allgemeinen Einstellungen: „Den Werkswert
     wiederherstellen“) ersetzt einen Wert, den Sie gewählt haben, durch den, den ein
     frisches XCTrack anwendet. Ebenfalls auf beiden Bildschirmen. **Es ist der einzige der
@@ -174,8 +174,8 @@ Absicht — ein Treueversprechen, das nur der Autor nachprüfen kann, ist nichts
     Einstellung ein, zeigt beide Werte *vor* dem Klick und sagt, an welcher XCTrack-Version
     der Werkswert erhoben wurde, sobald es nicht die der Datei ist. Er **schreibt** den
     Werkswert, statt den Schlüssel zu löschen: die Zeile geht damit in den Zustand
-    „Werkswert“ über, aus dem heraus „Entfernen“ angeboten wird. Zwei bewusste Klicks, zwei
-    getrennte Wirkungen.
+    „Werkswert“ über, aus dem heraus „Aus der Datei entfernen“ angeboten wird. Zwei bewusste
+    Klicks, zwei getrennte Wirkungen.
 
   Keine Schaltfläche dort, wo der Werkswert nicht erhoben ist, wo XCTrack ihn beim Start
   berechnet, wo es zwei einander widersprechende veröffentlicht (`Sensors.ManualQnh`: 1013
@@ -281,8 +281,8 @@ festlegen“.](captures/panneau-gadget.de.png)
 *Der Bereich eines Widgets und die beiden Werkswert-Handgriffe, die er anbietet:
 wiederherstellen, was man eingestellt hat, oder festschreiben, was die Datei nicht sagt.*
 
-![Der Bildschirm „Intégration Android“ der allgemeinen Einstellungen im
-Bearbeitungsmodus: Zeilen „Entfernen“ mit der Plakette „Werkswert“, Zeilen „Den Werkswert
+![Der Bildschirm „Intégration Android“ der allgemeinen Einstellungen im Bearbeitungsmodus:
+Zeilen „Aus der Datei entfernen“ mit der Plakette „Werkswert“, Zeilen „Den Werkswert
 wiederherstellen“ mit der bernsteinfarbenen Plakette „von Ihnen gesetzt“, und zwei Zeilen
 „Diesen Wert schreiben“ mit der Plakette „fehlt in der
 Datei“.](captures/reglages-generaux.de.png)
