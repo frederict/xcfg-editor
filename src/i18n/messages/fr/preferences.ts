@@ -344,8 +344,8 @@ const preferences = {
   'preferences.privacyNone':
     'Aucune donnée personnelle repérée dans les préférences de ce fichier',
   'preferences.privacyHead': {
-    one: '{count} réglage porte une donnée personnelle · {filled} renseignées, {empty} vides',
-    other: '{count} réglages portent une donnée personnelle · {filled} renseignées, {empty} vides'
+    one: '{count} réglage porte une donnée personnelle · {filled} renseignés, {empty} vides',
+    other: '{count} réglages portent une donnée personnelle · {filled} renseignés, {empty} vides'
   },
   /**
    * **Ce que cette page ne compte pas, dit ici.** Taire l'existence de l'autre moitié fait
@@ -377,7 +377,7 @@ const preferences = {
   },
   'preferences.filledPersonal': {
     one: 'Vous venez de renseigner {count} donnée personnelle — {keys}. Elle voyagera avec ce fichier : la boîte « Enregistrer » vous laisse choisir ce qui part.',
-    other: 'Vous venez de renseigner {count} données personnelles — {keys}. Elle voyagera avec ce fichier : la boîte « Enregistrer » vous laisse choisir ce qui part.'
+    other: 'Vous venez de renseigner {count} données personnelles — {keys}. Elles voyageront avec ce fichier : la boîte « Enregistrer » vous laisse choisir ce qui part.'
   },
 
   /* ========================================== ce que le fichier porte et qu'aucun écran ne montre */

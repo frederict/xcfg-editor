@@ -99,7 +99,7 @@ const widgets = {
    * nav_label » là où il n'y a qu'une liste.
    */
   'properties.surveyKeysAbsent': {
-    one: '{count} réglage du relevé ne figure pas dans ce gadget ({keys}) : XCTrack leur applique sa propre valeur, dite en fin de panneau.',
+    one: '{count} réglage du relevé ne figure pas dans ce gadget ({keys}) : XCTrack lui applique sa propre valeur, dite en fin de panneau.',
     other: '{count} réglages du relevé ne figurent pas dans ce gadget ({keys}) : XCTrack leur applique sa propre valeur, dite en fin de panneau.'
   },
 
@@ -292,8 +292,12 @@ const widgets = {
     other: '{count} exemplaires de ce type sont déjà sur la page affichée.'
   },
   'palette.elsewhere': 'ailleurs',
+  /**
+   * Le singulier écrit « une fois » en toutes lettres — « présent 1 fois » ne s'écrit pas
+   * en français. `{count}` reste dans la forme plurielle, la seule qui l'affiche.
+   */
   'palette.elsewhereHelp': {
-    one: 'Absent de cette page, mais présent {count} fois ailleurs dans le fichier : la copie partira de ce gadget-là, avec ses réglages.',
+    one: 'Absent de cette page, mais présent une fois ailleurs dans le fichier : la copie partira de ce gadget-là, avec ses réglages.',
     other: 'Absent de cette page, mais présent {count} fois ailleurs dans le fichier : la copie partira de ce gadget-là, avec ses réglages.'
   },
 

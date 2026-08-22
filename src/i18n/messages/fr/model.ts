@@ -331,7 +331,7 @@ const model = {
     'porte deux. En dupliquer une sur l’instrument, entrer en spirale et regarder quelle ' +
     'page arrive trancherait la question en un vol.',
 
-  'inspection.tooSmall': '« {name} » ne fait que {height} de haut sur cet appareil. Si le texte qu’il affiche en occupe la moitié, il mesurera environ {value} — sous les {minimum} que l’ISO 9241-303 donne pour minimum absolu à {distance} cm. Sera-t-elle encore lisible à bout de bras, en plein soleil, avec des gants ? À vérifier sur l’instrument.',
+  'inspection.tooSmall': '« {name} » ne fait que {height} de haut sur cet appareil. Si le texte qu’il affiche en occupe la moitié, il mesurera environ {value} — sous les {minimum} que l’ISO 9241-303 donne pour minimum absolu à {distance} cm. Sera-t-il encore lisible à bout de bras, en plein soleil, avec des gants ? À vérifier sur l’instrument.',
   'inspection.tooSmallToVerify': 'La part de la hauteur du gadget qu’occupe réellement le glyphe de la valeur (ici supposée {ratio}) n’a été mesurée que sur un seul gadget, une seule capture. Les captures de la planche des 75 gadgets suffiraient à la mesurer type par type, sans toucher à l’appareil.',
 
   'inspection.proWidget': '« {name} » est un gadget Pro, et ce fichier déclare « proUpTo: 0 ». Que fera XCTrack de ce gadget sur un appareil sans licence Pro : le remplacer par un cadre « gadget Pro », l’afficher normalement, ou ne rien y changer ? Nous ne le savons pas.',

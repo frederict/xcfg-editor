@@ -713,7 +713,7 @@ Il distingue quatre choses, parce que ce sont de vraies différences :
 
 Aucun chiffre commun n'est inventé : chaque écran **nomme** ce qu'il compte. Sur
 `tests/fixtures/exports/2026-08-20_backup-00.xcfg`, les réglages généraux annoncent
-16 clés de préférences (11 renseignées, 5 vides) et disent qu'ils ne comptent pas les
+16 réglages (11 renseignés, 5 vides) et disent qu'ils ne comptent pas les
 textes des gadgets ; la bibliothèque annonce « 16 données personnelles · 0 part avec les
 pages » ; la boîte d'enregistrement dit n'avoir aucun texte à remplacer **et** rappelle les
 16 réglages de préférences en jeu — écartés en bloc par la troisième issue, traités ligne
