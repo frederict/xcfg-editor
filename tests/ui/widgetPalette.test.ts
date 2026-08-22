@@ -79,8 +79,14 @@ function allWidgets(doc: JsonNode): PaletteSources {
   }
 }
 
-/** Les widgets de la configuration vus depuis une page précise. */
-function fromPage(doc: JsonNode, orientation: 'landscape' | 'portrait', index: number): PaletteSources {
+/**
+ * Les widgets de la configuration vus depuis une page précise, **sans leur provenance** :
+ * c'est la forme que `main.ts` passe aujourd'hui, et le type le dit — `elsewhere` y est un
+ * tableau de nœuds nus, que les tests parcourent comme tels.
+ */
+function fromPage(
+  doc: JsonNode, orientation: 'landscape' | 'portrait', index: number
+): { onPage: JsonNode[]; elsewhere: JsonNode[] } {
   const layout = readLayout(doc)
   const page = layout[orientation][index]!
   const onPage = page.widgets.map((w) => w.node)
