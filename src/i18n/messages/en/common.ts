@@ -12,7 +12,13 @@ const common: DomainCatalog<'common'> = {
   'factoryValue.same': 'FACTORY VALUE',
   'factoryValue.setByYou': 'SET BY YOU',
   'factoryValue.uncertain': 'FACTORY VALUE UNCERTAIN',
-  'factoryValue.neverSet': 'NEVER SET'
+  'factoryValue.neverSet': 'NEVER SET',
+
+  /** Mesuré : la chrome anglaise de XCTrack dit « Widget ». Voir `fr/common.ts`. */
+  'common.widgetCount': {
+    one: '{count} widget',
+    other: '{count} widgets'
+  }
 }
 
 export default common

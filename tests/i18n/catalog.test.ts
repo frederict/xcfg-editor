@@ -143,16 +143,31 @@ describe('catalogues de messages', () => {
     expect(three.size).toBe(3)
   })
 
-  it('n’inventent pas « gadget » ou « widget » dans une langue qu’on n’a pas mesurée', () => {
-    // La chrome française de XCTrack dit « Gadget » (mesuré sur l'AIR³). Ce que disent ses
-    // chromes allemande, néerlandaise et espagnole n'a pas été mesuré, et le catalogue de
-    // l'APK ne répond pas : il dit « widget » dans les cinq langues, y compris en français
-    // où l'appareil dit « Gadget ». Tant que la mesure manque, le mot n'entre pas.
-    for (const language of UI_LANGUAGES) {
-      for (const key of KEYS) {
+  it('emploient, dans chaque langue, le mot que la chrome de XCTrack emploie', () => {
+    // Ce test gardait auparavant une **absence** : le mot n'entrait dans aucune langue,
+    // faute de mesure hors du français. La mesure est faite — 55 relevés, ressources de
+    // chrome, `pagesetCustomizePageConfigureWidgetTitle` — et le voici qui garde un
+    // **choix** : « gadget » en français, *widget* dans les quatre autres.
+    expect(fr['common.widgetCount'].one).toContain('gadget')
+    expect(de['common.widgetCount'].one).toContain('Widget')
+    expect(en['common.widgetCount'].one).toContain('widget')
+    expect(es['common.widgetCount'].one).toContain('widget')
+    expect(nl['common.widgetCount'].one).toContain('widget')
+  })
+
+  it('ne laissent pas le mot de l’une passer dans l’autre', () => {
+    // Le vrai risque de l'extraction : un message français écrit « widget » — le dépôt
+    // dit « gadget » partout — ou un message allemand écrit « Gadget », qui n'existe nulle
+    // part dans la chrome allemande. Aucun des deux ne serait visible en relecture par
+    // quelqu'un qui ne lit pas les cinq langues.
+    for (const key of KEYS) {
+      for (const text of textsOf(fr[key])) {
+        expect(text.toLowerCase(), `fr / ${key}`).not.toContain('widget')
+      }
+      for (const language of UI_LANGUAGES) {
+        if (language === 'fr') continue
         for (const text of textsOf(CATALOGS[language][key])) {
           expect(text.toLowerCase(), `${language} / ${key}`).not.toContain('gadget')
-          expect(text.toLowerCase(), `${language} / ${key}`).not.toContain('widget')
         }
       }
     }

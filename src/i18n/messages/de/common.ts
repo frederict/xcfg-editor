@@ -12,7 +12,17 @@ const common: DomainCatalog<'common'> = {
   'factoryValue.same': 'WERKSWERT',
   'factoryValue.setByYou': 'VON IHNEN GESETZT',
   'factoryValue.uncertain': 'WERKSWERT UNSICHER',
-  'factoryValue.neverSet': 'NIE GESETZT'
+  'factoryValue.neverSet': 'NIE GESETZT',
+
+  /**
+   * Mesuré : la chrome allemande dit « Widget » — jamais *Instrument*, *Element* ni
+   * *Kachel*, tous cherchés et absents des 55 relevés. Substantif, donc capitale, y
+   * compris au milieu d'une phrase. Voir `fr/common.ts`.
+   */
+  'common.widgetCount': {
+    one: '{count} Widget',
+    other: '{count} Widgets'
+  }
 }
 
 export default common

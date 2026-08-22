@@ -12,7 +12,13 @@ const common: DomainCatalog<'common'> = {
   'factoryValue.same': 'VALOR DE FÁBRICA',
   'factoryValue.setByYou': 'AJUSTADO POR USTED',
   'factoryValue.uncertain': 'VALOR DE FÁBRICA INCIERTO',
-  'factoryValue.neverSet': 'NUNCA AJUSTADO'
+  'factoryValue.neverSet': 'NUNCA AJUSTADO',
+
+  /** Mesuré : la chrome espagnole dit « Widget » — jamais *componente*. Voir `fr/common.ts`. */
+  'common.widgetCount': {
+    one: '{count} widget',
+    other: '{count} widgets'
+  }
 }
 
 export default common

@@ -46,7 +46,49 @@ const common = {
   'factoryValue.same': 'VALEUR D’USINE',
   'factoryValue.setByYou': 'RÉGLÉ PAR VOUS',
   'factoryValue.uncertain': 'VALEUR D’USINE INCERTAINE',
-  'factoryValue.neverSet': 'JAMAIS RÉGLÉ'
+  'factoryValue.neverSet': 'JAMAIS RÉGLÉ',
+
+  /* ------------------------------------------------ le mot « gadget », enfin mesuré */
+
+  /**
+   * **Le mot que la chrome de XCTrack emploie pour ce qu'on pose sur une page**, dans
+   * chacune des cinq langues. Il était le seul mot que le socle refusait de trancher :
+   * l'AIR³ dit « Gadget » en français, c'était mesuré, mais ce que disent ses interfaces
+   * allemande, néerlandaise et espagnole ne l'était pas — et les catalogues de **noms de
+   * gadgets** extraits de l'APK ne répondent pas, puisqu'ils disent « widget » dans les
+   * cinq langues, y compris en français où l'appareil dit « Gadget ».
+   *
+   * **Mesuré le 22 août 2026** sur les 55 relevés complets, dans les ressources de chrome
+   * elles-mêmes (`strings.<locale>`, la reprise des `res/values-XX/strings.xml` de
+   * l'APK) — et non dans les catalogues de noms. La clé la plus nette est
+   * `pagesetCustomizePageConfigureWidgetTitle`, dont la valeur est le substantif seul :
+   *
+   * | | fr | en | nl | de | es |
+   * |---|---|---|---|---|---|
+   * | `pagesetCustomizePageConfigureWidgetTitle` | **Gadget** | Widget | Widget | Widget | Widget |
+   * | `editmenu_add_widget` | **Ajouter Gadget** | Add Widget | Widget toevoegen | Widget hinzufügen | Agregar Widget |
+   *
+   * **Identique sur les 55 versions relevées**, de la 0.9.6.2 à la 1.0.3-beta5 : une seule
+   * signature, rien n'a bougé. Aucune ressource allemande, néerlandaise ou espagnole ne
+   * dit autre chose que *Widget* — ni *Instrument*, ni *Element*, ni *Onderdeel*, ni
+   * *Componente*, tous cherchés et tous absents. Il n'y avait donc rien à trancher dans
+   * ces trois langues : il y avait à mesurer.
+   *
+   * **Le seul arbitrage restant était français**, et il est fait ici : la chrome française
+   * est incohérente avec elle-même — « Gadget » dans le menu d'édition de page et son
+   * dialogue (4 chaînes), « widget » dans les préférences générales et les aides (une
+   * trentaine). On garde **« gadget »** : c'est le mot que le pilote a sous les yeux au
+   * moment précis où il en pose un sur une page, donc au moment où cet éditeur lui parle.
+   *
+   * ⚠️ Ce qui reste non vérifié, et qui ne change pas la décision : les relevés donnent
+   * clé → chaîne, pas clé → écran. Que cette clé-là soit bien le titre affiché sur l'AIR³
+   * est cohérent avec l'observation directe, mais le lien code ↔ écran demanderait le
+   * `classes.dex`.
+   */
+  'common.widgetCount': {
+    one: '{count} gadget',
+    other: '{count} gadgets'
+  }
 } as const
 
 export default common
