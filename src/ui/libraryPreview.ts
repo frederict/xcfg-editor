@@ -88,7 +88,20 @@ export interface PreviewSource {
    * vignette aux mauvaises proportions est le pire qu'elle puisse coûter.
    */
   device: Device
-  /** Langue des libellés de gadgets — axe `labels`, celui du fichier ouvert. */
+  /**
+   * Langue des libellés de gadgets — axe `labels`, celui du fichier ouvert.
+   *
+   * ## La vignette n'est pas refaite quand le pilote change de langue
+   *
+   * **Décision du propriétaire, pas un oubli.** Une vieille vignette garde donc les titres
+   * de gadgets dans la langue qu'avait le fichier au moment où elle a été dessinée.
+   *
+   * Ce qu'on y perdrait à la refaire est plus grand que ce qu'on y gagnerait : redessiner
+   * toute la bibliothèque à chaque bascule de langue coûte un travail visible, pour une
+   * image qui sert à **reconnaître** une configuration parmi d'autres — et on la reconnaît
+   * à sa disposition, pas au libellé de son altimètre. Une entrée rangée à neuf prend la
+   * langue du moment ; les anciennes gardent la leur, et c'est sans conséquence.
+   */
   language: string
 }
 
