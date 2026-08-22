@@ -359,6 +359,15 @@ réglages restent français dans les cinq captures — seule notre prose change.
 
 <!--
   REFAIRE CETTE CAPTURE — captures/reglages-generaux.<langue>.png (1400 × 1060)
+
+  ⚠ LES CINQ IMAGES SONT PÉRIMÉES depuis le 2026-08-22 : elles montrent des boutons
+  « Retirer », qui disent maintenant « Retirer du fichier » — « Remove from the file »,
+  « Aus der Datei entfernen », « Quitar del archivo », « Uit het bestand verwijderen ».
+  Rien d'autre n'a bougé sur cet écran. Elles n'ont pas été refaites le jour même, et
+  c'était volontaire : deux autres chantiers avaient la feuille de style ouverte, et
+  une capture prise à ce moment-là aurait figé un travail à mi-course. À refaire sur un
+  arbre propre, avec la recette ci-dessous.
+
   Écran ...... la page « Réglages généraux », mode édition.
   Langues .... CINQ exemplaires : .fr, .en, .nl, .de, .es.
                ⚠ Cette fixture DÉCLARE le français (`Display.Language: "fr"`). Les noms
