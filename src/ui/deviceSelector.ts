@@ -1,5 +1,5 @@
 import { DEVICES, type Device } from '../catalog/devices'
-import { proseFormat } from './prose'
+import type { Translator } from '../i18n'
 
 /**
  * Choix du gabarit d'écran — un réglage d'affichage, **jamais** une donnée du fichier.
@@ -17,9 +17,22 @@ import { proseFormat } from './prose'
 /** Clé de `localStorage`. Les appareils du pilote survivent au rechargement de la page. */
 export const CUSTOM_DEVICES_KEY = 'xcfg-editor.devices'
 
+/**
+ * Les trois **marqueurs de groupe** d'un `Device`. Ce sont des valeurs de données, pas de
+ * la prose : `CUSTOM_GROUP` part dans `localStorage` avec chaque appareil du pilote, et
+ * `'Ratios courants'` est comparé pour décider quels champs afficher. Ils ne peuvent donc
+ * pas changer avec la langue — l'intitulé **affiché** du groupe, lui, vient du catalogue
+ * (`device.customGroup`, `device.commonRatiosGroup`).
+ *
+ * « AIR³ » et « Responsive » restent des **noms** : le premier est une marque, le second
+ * nomme un gabarit libre et s'écrit de même dans les cinq langues. Aucun n'est traduit,
+ * pas plus que « 16:9 ».
+ */
 export const CUSTOM_GROUP = 'Mes appareils'
 export const RESPONSIVE_GROUP = 'Responsive'
 export const RESPONSIVE_ID = 'responsive'
+const AIR3_GROUP = 'AIR³'
+const COMMON_RATIOS_GROUP = 'Ratios courants'
 
 /** Valeur d'option réservée : elle ouvre le formulaire au lieu de choisir un gabarit. */
 const ADD_VALUE = '__add__'
@@ -110,14 +123,14 @@ function freshId(name: string, taken: Device[]): string {
  * Valide un brouillon et l'ajoute au stockage. Lève une erreur au message affichable :
  * le formulaire la montre telle quelle plutôt que de deviner ce qui manquait.
  */
-export function addCustomDevice(storage: Storage, draft: DeviceDraft): Device {
+export function addCustomDevice(storage: Storage, draft: DeviceDraft, tr: Translator): Device {
   const name = draft.name.trim()
-  if (name.length === 0) throw new Error('Donnez un nom à cet appareil.')
+  if (name.length === 0) throw new Error(tr.t('device.nameRequired'))
   if (!isPositive(draft.widthPx) || !isPositive(draft.heightPx)) {
-    throw new Error('La largeur et la hauteur doivent être des nombres de pixels positifs.')
+    throw new Error(tr.t('device.sizeMustBePositive'))
   }
   if (!isPositive(draft.diagonalInches)) {
-    throw new Error('La diagonale doit être un nombre de pouces positif.')
+    throw new Error(tr.t('device.diagonalMustBePositive'))
   }
 
   const existing = readCustomDevices(storage)
@@ -183,6 +196,8 @@ function numberField(
 export interface DeviceSelectorOptions {
   /** Gabarit déduit de `info.device` — voir `deviceFor`. */
   initialDevice: Device
+  /** Notre prose, dans la langue du pilote — voir `src/i18n/CLAUDE.md` § 5. */
+  readonly tr: Translator
   storage?: Storage
   onChange: (device: Device) => void
 }
@@ -195,6 +210,7 @@ export interface DeviceSelector {
 }
 
 export function buildDeviceSelector(options: DeviceSelectorOptions): DeviceSelector {
+  const { tr } = options
   const storage = options.storage ?? window.localStorage
   let custom = readCustomDevices(storage)
   let current = options.initialDevice
@@ -205,7 +221,7 @@ export function buildDeviceSelector(options: DeviceSelectorOptions): DeviceSelec
   const root = el('div', 'picker')
   const select = el('select', 'picker__select')
   select.id = 'device-select'
-  const label = el('label', 'picker__label', 'Gabarit d’écran')
+  const label = el('label', 'picker__label', tr.t('device.templateLabel'))
   label.htmlFor = select.id
 
   const fields = el('div', 'picker__fields')
@@ -217,11 +233,16 @@ export function buildDeviceSelector(options: DeviceSelectorOptions): DeviceSelec
 
   function fillOptions(): void {
     select.textContent = ''
-    const groups = ['AIR³', 'Ratios courants']
+    // Le marqueur qui range l'appareil, et l'intitulé qui s'affiche : jamais la même
+    // chose. « AIR³ » est une marque, elle s'écrit pareil dans les cinq langues.
+    const groups = [
+      { marker: AIR3_GROUP, label: AIR3_GROUP },
+      { marker: COMMON_RATIOS_GROUP, label: tr.t('device.commonRatiosGroup') }
+    ]
     for (const group of groups) {
       const optgroup = el('optgroup')
-      optgroup.label = group
-      for (const device of DEVICES.filter((d) => d.group === group)) {
+      optgroup.label = group.label
+      for (const device of DEVICES.filter((d) => d.group === group.marker)) {
         const option = el('option', undefined, device.label)
         option.value = device.id
         optgroup.append(option)
@@ -230,7 +251,7 @@ export function buildDeviceSelector(options: DeviceSelectorOptions): DeviceSelec
     }
     if (custom.length > 0) {
       const optgroup = el('optgroup')
-      optgroup.label = CUSTOM_GROUP
+      optgroup.label = tr.t('device.customGroup')
       for (const device of custom) {
         const option = el('option', undefined, device.label)
         option.value = device.id
@@ -238,9 +259,9 @@ export function buildDeviceSelector(options: DeviceSelectorOptions): DeviceSelec
       }
       select.append(optgroup)
     }
-    const responsiveOption = el('option', undefined, 'Responsive')
+    const responsiveOption = el('option', undefined, RESPONSIVE_GROUP)
     responsiveOption.value = RESPONSIVE_ID
-    const addOption = el('option', undefined, 'Ajouter un appareil…')
+    const addOption = el('option', undefined, tr.t('device.addDevice'))
     addOption.value = ADD_VALUE
     select.append(responsiveOption, addOption)
     select.value = current.id
@@ -261,23 +282,23 @@ export function buildDeviceSelector(options: DeviceSelectorOptions): DeviceSelec
       // Deux champs seulement : la diagonale n'est pas saisie ici, elle est reprise du
       // gabarit d'où l'on vient — c'est le ratio que « Responsive » sert à explorer.
       fields.append(
-        numberField('Largeur (px)', current.widthPx, '1', (value) => {
+        numberField(tr.t('device.widthPx'), current.widthPx, '1', (value) => {
           responsive = responsiveDevice(value, responsive.heightPx, responsive.diagonalInches)
           current = responsive
           refreshNote()
           options.onChange(current)
         }),
-        numberField('Hauteur (px)', current.heightPx, '1', (value) => {
+        numberField(tr.t('device.heightPx'), current.heightPx, '1', (value) => {
           responsive = responsiveDevice(responsive.widthPx, value, responsive.diagonalInches)
           current = responsive
           refreshNote()
           options.onChange(current)
         })
       )
-    } else if (current.group === 'Ratios courants') {
+    } else if (current.group === COMMON_RATIOS_GROUP) {
       // La diagonale du catalogue n'est qu'indicative pour un ratio générique : c'est
       // elle, et non les pixels, qui décide de la taille des widgets en millimètres.
-      fields.append(numberField('Diagonale (pouces)', current.diagonalInches, '0.1', (value) => {
+      fields.append(numberField(tr.t('device.diagonalInches'), current.diagonalInches, '0.1', (value) => {
         current = { ...current, diagonalInches: value }
         refreshNote()
         options.onChange(current)
@@ -288,41 +309,42 @@ export function buildDeviceSelector(options: DeviceSelectorOptions): DeviceSelec
   }
 
   function refreshNote(): void {
-    const ratio = `${current.widthPx} × ${current.heightPx} px`
-    note.textContent =
-      `${proseFormat.inches(current.diagonalInches)} · ${ratio} — la géométrie ne dépend que du ratio, ` +
-      'la taille perçue que de la diagonale. Ce choix n’est jamais écrit dans le fichier.'
+    note.textContent = tr.t('device.note', {
+      diagonal: tr.format.inches(current.diagonalInches),
+      width: current.widthPx,
+      height: current.heightPx
+    })
   }
 
   /* --------------------------------------------------------- ajout d'un appareil */
 
   const draftName = el('input', 'picker__text')
   draftName.type = 'text'
-  draftName.placeholder = 'Nom de l’appareil'
-  draftName.setAttribute('aria-label', 'Nom de l’appareil')
+  draftName.placeholder = tr.t('device.namePlaceholder')
+  draftName.setAttribute('aria-label', tr.t('device.namePlaceholder'))
 
   const draftWidth = el('input', 'picker__number')
   draftWidth.type = 'number'
   draftWidth.min = '1'
-  draftWidth.placeholder = 'Largeur px'
-  draftWidth.setAttribute('aria-label', 'Largeur en pixels')
+  draftWidth.placeholder = tr.t('device.widthPlaceholder')
+  draftWidth.setAttribute('aria-label', tr.t('device.widthLabel'))
 
   const draftHeight = el('input', 'picker__number')
   draftHeight.type = 'number'
   draftHeight.min = '1'
-  draftHeight.placeholder = 'Hauteur px'
-  draftHeight.setAttribute('aria-label', 'Hauteur en pixels')
+  draftHeight.placeholder = tr.t('device.heightPlaceholder')
+  draftHeight.setAttribute('aria-label', tr.t('device.heightLabel'))
 
   const draftDiagonal = el('input', 'picker__number')
   draftDiagonal.type = 'number'
   draftDiagonal.min = '1'
   draftDiagonal.step = '0.1'
-  draftDiagonal.placeholder = 'Diagonale ″'
-  draftDiagonal.setAttribute('aria-label', 'Diagonale en pouces')
+  draftDiagonal.placeholder = tr.t('device.diagonalPlaceholder')
+  draftDiagonal.setAttribute('aria-label', tr.t('device.diagonalLabel'))
 
-  const submit = el('button', 'btn btn--primary', 'Ajouter')
+  const submit = el('button', 'btn btn--primary', tr.t('device.add'))
   submit.type = 'submit'
-  const cancel = el('button', 'btn btn--ghost', 'Annuler')
+  const cancel = el('button', 'btn btn--ghost', tr.t('device.cancel'))
   cancel.type = 'button'
   const error = el('p', 'picker__error')
   error.hidden = true
@@ -345,7 +367,7 @@ export function buildDeviceSelector(options: DeviceSelectorOptions): DeviceSelec
         widthPx: Number(draftWidth.value),
         heightPx: Number(draftHeight.value),
         diagonalInches: Number(draftDiagonal.value)
-      })
+      }, tr)
       custom = readCustomDevices(storage)
       current = device
       fillOptions()

@@ -12,9 +12,8 @@ import {
   type Orientation
 } from '../model/mutations'
 import { renderPage } from '../render/canvas'
-import type { PluralForms } from '../i18n'
+import type { Translator } from '../i18n'
 import { aspectRatioOf, pageKind, type ViewContext } from './views'
-import { plural } from './prose'
 
 /**
  * La gestion des pages : en insérer, en supprimer, en dupliquer, les réordonner.
@@ -71,11 +70,6 @@ const NEW_PAGE_NAVIGATIONS = { kind: 'all' } as const
  */
 export const THERMAL_ASSISTANT_CLASS = 'WPThermalAssistant'
 
-const ORIENTATION_LABELS: Record<Orientation, string> = {
-  landscape: 'paysage',
-  portrait: 'portrait'
-}
-
 export interface PageChoice {
   className: string
   label: string
@@ -90,6 +84,20 @@ export interface PageChoice {
  * ajoutaient « Masquée hors contexte de vol », ce qui était faux : la classe d'une page
  * ne décide pas du moment où l'appareil la montre, c'est sa clé `navigations` qui le
  * fait — mesuré le 22 août 2026, voir `PAGE_KINDS` dans `src/ui/views.ts`.
+ *
+ * ⚠️ **Ces huit chaînes ne sont pas versées au catalogue de `src/i18n/`, et c'est
+ * délibéré.** Ce sont des **libellés de XCTrack**, relevés dans ses ressources sous
+ * `wpThermalAssistantTitle`, `wpXCAssistantTitle`, `wpCompetitionTitle`, `wpEmptyTitle`
+ * et leurs `…Description`. Ils suivent donc l'axe `labels` — la langue du fichier
+ * ouvert — et non l'axe de notre prose (`src/i18n/axes.ts`). Les traduire ici les ferait
+ * suivre le mauvais axe, et un libellé « traduit » est un mot que le pilote ne trouve
+ * nulle part sur son appareil (`src/i18n/CLAUDE.md` § 7.1).
+ *
+ * La mesure existe pourtant dans les cinq langues : `src/catalog/widgetLabels.json`
+ * porte `WPThermalAssistant`, `WPXCAssistant`, `WPCompetition` et `WPEmpty` en 31
+ * langues. Les brancher sur `ctx.language`, comme `renderPage` le fait déjà pour les
+ * noms de gadgets, est le geste juste — mais c'est un changement de comportement, pas
+ * une extraction, et `describeOperation` ne reçoit aujourd'hui aucun axe de libellés.
  */
 export const PAGE_CHOICES: readonly PageChoice[] = [
   {
@@ -114,14 +122,24 @@ export const PAGE_CHOICES: readonly PageChoice[] = [
   }
 ]
 
-/** Les cinq navigations de la boîte de visibilité (§ 5.4), pour l'affichage seul. */
-const NAVIGATION_LABELS: Record<string, string> = {
-  TaskBackToTakeoff: 'Retour au décollage',
-  TaskTriangleClosing: 'Fermeture de triangle',
-  TaskToWaypoint: 'Vers une balise',
-  TaskCompetition: 'Compétition',
-  TaskToLivePilot: 'Vers un pilote en direct'
-}
+/**
+ * Les cinq navigations de la boîte de visibilité (§ 5.4), pour l'affichage seul.
+ *
+ * La table ne porte plus le texte mais la **clé** : ce sont nos mots, traduits dans les
+ * cinq langues, et non ceux de l'appareil — sa chrome française dit « Triangle
+ * achevant », « Balises/Navigation XC », « Manche de compétition » et « Pilote Live ».
+ * Voir `navigation.*` dans `src/i18n/messages/fr/pages.ts`.
+ *
+ * Une navigation qu'aucune version connue ne documente reste affichée sous son nom court,
+ * plutôt que de disparaître de la liste.
+ */
+const NAVIGATION_KEYS = {
+  TaskBackToTakeoff: 'navigation.backToTakeoff',
+  TaskTriangleClosing: 'navigation.triangleClosing',
+  TaskToWaypoint: 'navigation.toWaypoint',
+  TaskCompetition: 'navigation.competition',
+  TaskToLivePilot: 'navigation.toLivePilot'
+} as const
 
 export type PageOperation =
   | { kind: 'insert'; index: number; className: string }
@@ -141,58 +159,74 @@ export function creationLabel(className: string): string {
   return PAGE_CHOICES.find((choice) => choice.className === short)?.label ?? short
 }
 
-function orientationLabel(orientation: Orientation): string {
-  return ORIENTATION_LABELS[orientation]
+/**
+ * L'orientation telle qu'elle s'écrit **dans une phrase** — « (paysage) ». Le titre du
+ * carrousel emploie l'autre forme : le français la distingue par la capitale, l'allemand
+ * ne le peut pas, d'où deux clés et non une capitalisation calculée.
+ */
+function orientationInline(tr: Translator, orientation: Orientation): string {
+  return orientation === 'landscape'
+    ? tr.t('pages.landscapeInline')
+    : tr.t('pages.portraitInline')
 }
 
 /** « 3 » ou « 3 à 5 », en rangs affichés (à partir de 1). */
-function rangeLabel(firstRank: number, lastRank: number): string {
-  return firstRank === lastRank ? String(firstRank) : `${firstRank} à ${lastRank}`
+function rangeLabel(tr: Translator, firstRank: number, lastRank: number): string {
+  return firstRank === lastRank
+    ? tr.format.number(firstRank)
+    : tr.t('pages.rankRange', { first: firstRank, last: lastRank })
 }
-
-/**
- * « 3 gadgets ». Deux vignettes l'affichent, et l'intitulé d'accessibilité de la
- * troisième le redit.
- */
-const GADGET_COUNT: PluralForms = { one: '{count} gadget', other: '{count} gadgets' }
-
-/** « La page 3 devient la page 4 » — ou « Les pages 3 à 5 deviennent… ». */
-const THE_PAGES: PluralForms = { one: 'La page', other: 'Les pages' }
-const BECOMES: PluralForms = { one: 'devient', other: 'deviennent' }
 
 /**
  * La description qui part à l'historique. Elle nomme le **rang**, parce que c'est la
  * seule identité d'une page — « Supprimer la page 3 (paysage) » se relit sans ambiguïté
  * dans un menu « Annuler », ce qu'un identifiant interne ne permettrait pas.
+ *
+ * ⚠️ **Ces cinq phrases sont lues deux fois.** L'appelant les enregistre telles quelles
+ * comme pas d'historique, et elles reviennent derrière « Annuler : » — donc hors de
+ * l'écran qui les a produites. Elles nomment pour cette raison le rang en toutes lettres
+ * et rappellent l'orientation : les deux carrousels partagent un seul historique. La
+ * contrainte vaut dans les cinq langues, et `src/i18n/messages/fr/pages.ts` la redit au
+ * traducteur.
  */
 export function describeOperation(
-  pages: readonly Page[], operation: PageOperation, orientation: Orientation
+  pages: readonly Page[], operation: PageOperation, orientation: Orientation, tr: Translator
 ): string {
-  const where = ` (${orientationLabel(orientation)})`
+  const where = orientationInline(tr, orientation)
   switch (operation.kind) {
     case 'insert':
-      return `Insérer une page « ${creationLabel(operation.className)} » au rang ${operation.index + 1}${where}`
+      return tr.t('pages.describeInsert', {
+        type: creationLabel(operation.className), rank: operation.index + 1, orientation: where
+      })
     case 'duplicate':
-      return `Dupliquer la page ${operation.index + 1} au rang ${operation.index + 2}${where}`
+      return tr.t('pages.describeDuplicate', {
+        rank: operation.index + 1, target: operation.index + 2, orientation: where
+      })
     case 'remove':
-      return `Supprimer la page ${operation.index + 1}${where}`
+      return tr.t('pages.describeRemove', { rank: operation.index + 1, orientation: where })
     case 'reorder':
-      return `Déplacer la page ${operation.from + 1} au rang ${operation.to + 1}${where}`
-    case 'setClass': {
-      const before = creationLabel(pages[operation.index]?.className ?? '')
-      return `Changer le type de la page ${operation.index + 1} : ` +
-        `« ${before} » → « ${creationLabel(operation.className)} »${where}`
-    }
+      return tr.t('pages.describeReorder', {
+        rank: operation.from + 1, target: operation.to + 1, orientation: where
+      })
+    case 'setClass':
+      return tr.t('pages.describeSetClass', {
+        rank: operation.index + 1,
+        before: creationLabel(pages[operation.index]?.className ?? ''),
+        after: creationLabel(operation.className),
+        orientation: where
+      })
   }
 }
 
 /** Ce que l'interface annonce une fois l'opération faite, `pages` étant l'état d'AVANT. */
 export function operationAnnouncement(
-  pages: readonly Page[], operation: PageOperation, orientation: Orientation
+  pages: readonly Page[], operation: PageOperation, orientation: Orientation, tr: Translator
 ): string {
-  const done = describeOperation(pages, operation, orientation)
-  const shift = shiftAdvice(pages, operation)
-  return shift === undefined ? `${done}.` : `${done}. ${shift.text}`
+  const done = describeOperation(pages, operation, orientation, tr)
+  const shift = shiftAdvice(pages, operation, tr)
+  return shift === undefined
+    ? tr.t('pages.announcement', { done })
+    : tr.t('pages.announcementWithAdvice', { done, advice: shift.text })
 }
 
 /* ------------------------------------------------------------------ les conséquences */
@@ -268,19 +302,23 @@ function resultingClassName(operation: PageOperation, pages: readonly Page[]): s
  * vol par appuis longs. Insérer en 3 ne fait pas qu'ajouter une page : cela change ce que
  * montrent tous les appuis suivants.
  */
-function shiftAdvice(pages: readonly Page[], operation: PageOperation): Advice | undefined {
+function shiftAdvice(
+  pages: readonly Page[], operation: PageOperation, tr: Translator
+): Advice | undefined {
   const count = pages.length
-  const identity = 'Le rang est la seule identité d’une page : c’est lui que vous ' +
-    'parcourez en vol.'
+  const identity = tr.t('pages.rankIsIdentity')
 
   if (operation.kind === 'insert' || operation.kind === 'duplicate') {
     const first = operation.kind === 'insert' ? operation.index : operation.index + 1
     if (first >= count) return undefined
-    const moved = count - first
     return {
       kind: 'shift',
-      text: `${plural(THE_PAGES, moved)} ${rangeLabel(first + 1, count)} ` +
-        `${plural(BECOMES, moved)} ${rangeLabel(first + 2, count + 1)}. ${identity}`
+      text: tr.t('pages.rankShift', {
+        count: count - first,
+        from: rangeLabel(tr, first + 1, count),
+        to: rangeLabel(tr, first + 2, count + 1),
+        identity
+      })
     }
   }
 
@@ -289,8 +327,12 @@ function shiftAdvice(pages: readonly Page[], operation: PageOperation): Advice |
     if (moved <= 0) return undefined
     return {
       kind: 'shift',
-      text: `${plural(THE_PAGES, moved)} ${rangeLabel(operation.index + 2, count)} ` +
-        `${plural(BECOMES, moved)} ${rangeLabel(operation.index + 1, count - 1)}. ${identity}`
+      text: tr.t('pages.rankShift', {
+        count: moved,
+        from: rangeLabel(tr, operation.index + 2, count),
+        to: rangeLabel(tr, operation.index + 1, count - 1),
+        identity
+      })
     }
   }
 
@@ -299,7 +341,9 @@ function shiftAdvice(pages: readonly Page[], operation: PageOperation): Advice |
     const high = Math.max(operation.from, operation.to)
     return {
       kind: 'shift',
-      text: `Les pages ${rangeLabel(low + 1, high + 1)} changent de rang. ${identity}`
+      text: tr.t('pages.rankShiftReorder', {
+        range: rangeLabel(tr, low + 1, high + 1), identity
+      })
     }
   }
 
@@ -310,10 +354,12 @@ function shiftAdvice(pages: readonly Page[], operation: PageOperation): Advice |
  * Ce qu'il faut dire AVANT d'appliquer une opération, `pages` étant l'état courant.
  * Rien n'est corrigé, rien n'est refusé : on énonce la conséquence, le pilote décide.
  */
-export function operationAdvice(pages: readonly Page[], operation: PageOperation): Advice[] {
+export function operationAdvice(
+  pages: readonly Page[], operation: PageOperation, tr: Translator
+): Advice[] {
   const advice: Advice[] = []
 
-  const shift = shiftAdvice(pages, operation)
+  const shift = shiftAdvice(pages, operation, tr)
   if (shift) advice.push(shift)
 
   /* Une seconde page d'assistant de thermique prive la première du basculement. */
@@ -322,19 +368,15 @@ export function operationAdvice(pages: readonly Page[], operation: PageOperation
     const existing = thermalAssistantRanks(pages)
       .filter((rank) => !(operation.kind === 'setClass' && rank === operation.index + 1))
     if (existing.length > 0) {
-      const last = existing[existing.length - 1]!
       advice.push({
         kind: 'thermal',
-        text: `Ce fichier décrit déjà ${plural({
-          one: 'une page', other: 'des pages'
-        }, existing.length)} ` +
-          `d’assistant de thermique (${plural({
-            one: 'page', other: 'pages'
-          }, existing.length)} ${existing.join(', ')}). ` +
-          'XCTrack n’en vise qu’une quand il bascule tout seul en spirale ; cet éditeur ' +
-          'suppose la DERNIÈRE, sans l’avoir vérifié sur l’appareil. Si c’est bien elle, ' +
-          `en créer une autre après elle prive la page ${last} de ce basculement, sans ` +
-          'rien changer à son contenu.'
+        text: tr.t('pages.thermalAlreadyPresent', {
+          count: existing.length,
+          // Une colonne de rangs entre parenthèses, pas une énumération en prose :
+          // `format.list` y écrirait « 3 et 5 » et ferait lire une phrase.
+          ranks: existing.join(', '),
+          last: existing[existing.length - 1]!
+        })
       })
     }
   }
@@ -343,33 +385,22 @@ export function operationAdvice(pages: readonly Page[], operation: PageOperation
   if (operation.kind === 'remove') {
     const remaining = pages.filter((_, index) => index !== operation.index)
     if (remaining.length === 0) {
-      advice.push({
-        kind: 'visibility',
-        text: 'C’est la dernière page de cette orientation : le fichier n’en décrirait plus aucune.'
-      })
+      advice.push({ kind: 'visibility', text: tr.t('pages.lastPageOfOrientation') })
     } else if (navigablePageCount(pages) > 0 && navigablePageCount(remaining) === 0) {
-      advice.push({
-        kind: 'visibility',
-        text: 'Il ne resterait que des pages activées pour aucune navigation : quelle que ' +
-          'soit la navigation choisie, l’appareil n’aurait plus de page à montrer dans ' +
-          'cette orientation.'
-      })
+      advice.push({ kind: 'visibility', text: tr.t('pages.noNavigablePageLeft') })
     }
     if (shortClassName(pages[operation.index]?.className ?? '') === THERMAL_ASSISTANT_CLASS) {
       const others = thermalAssistantRanks(pages).filter((rank) => rank !== operation.index + 1)
       advice.push({
         kind: 'thermal',
         text: others.length === 0
-          ? 'C’est la seule page d’assistant de thermique : le basculement automatique en ' +
-            'spirale n’aurait plus de cible.'
-          : 'Le basculement automatique en spirale viserait alors la page ' +
-            `${others[others.length - 1]}, si c’est bien la dernière qu’il vise — cet ` +
-            'éditeur le suppose sans l’avoir vérifié.'
+          ? tr.t('pages.onlyThermalPage')
+          : tr.t('pages.autoSwitchWouldTarget', { rank: others[others.length - 1]! })
       })
     }
   }
 
-  if (operation.kind === 'setClass') advice.push(CLASS_CHANGE_ADVICE)
+  if (operation.kind === 'setClass') advice.push(classChangeAdvice(tr))
 
   return advice
 }
@@ -378,41 +409,33 @@ export function operationAdvice(pages: readonly Page[], operation: PageOperation
  * Le seul avertissement de ce module qui porte sur l'outil et non sur le fichier : nous
  * offrons une commande que XCTrack n'a pas, et nous n'avons pas pu en vérifier l'effet.
  */
-export const CLASS_CHANGE_ADVICE: Advice = {
-  kind: 'class',
-  text: 'XCTrack ne permet pas de changer le type d’une page après sa création : il s’y ' +
-    'fixe au moment du choix. Ce n’est pourtant qu’une ligne du fichier, et cet éditeur ' +
-    'l’écrit ' +
-    'volontiers — mais le comportement de l’appareil face à une page ainsi modifiée n’a PAS ' +
-    'été vérifié, et les gadgets de la page ne sont pas remplacés par ceux du nouveau type.'
+export function classChangeAdvice(tr: Translator): Advice {
+  return { kind: 'class', text: tr.t('pages.classChangeUnverified') }
 }
 
 /** Ce qu'il faut dire de l'état courant d'une orientation, indépendamment de tout geste. */
-export function layoutAdvice(pages: readonly Page[]): Advice[] {
+export function layoutAdvice(pages: readonly Page[], tr: Translator): Advice[] {
   const advice: Advice[] = []
 
   const thermal = thermalAssistantRanks(pages)
   if (thermal.length > 1) {
-    const target = thermal[thermal.length - 1]!
     const others = thermal.slice(0, -1)
     advice.push({
       kind: 'thermal',
-      text: `${thermal.length} pages d’assistant de thermique (pages ${thermal.join(', ')}). ` +
-        'XCTrack n’en vise qu’une quand il bascule tout seul en spirale ; cet éditeur ' +
-        `suppose la dernière, la page ${target}, sans l’avoir vérifié sur l’appareil. ` +
-        `${plural({ one: 'La page', other: 'Les pages' }, others.length)} ${others.join(', ')} ` +
-        `${plural({
-          one: 'reste de toute façon atteignable', other: 'restent de toute façon atteignables'
-        }, others.length)} par « page suivante ».`
+      // Deux nombres, un seul écrit : `count` accorde la dernière phrase sur les pages
+      // AUTRES que la cible supposée, `total` est celui qui s'affiche.
+      text: tr.t('pages.thermalMultiple', {
+        count: others.length,
+        total: thermal.length,
+        ranks: thermal.join(', '),
+        target: thermal[thermal.length - 1]!,
+        others: others.join(', ')
+      })
     })
   }
 
   if (pages.length > 0 && navigablePageCount(pages) === 0) {
-    advice.push({
-      kind: 'visibility',
-      text: 'Toutes les pages de cette orientation sont activées pour aucune navigation : ' +
-        'quelle que soit la navigation choisie, l’appareil n’a pas de page à montrer ici.'
-    })
+    advice.push({ kind: 'visibility', text: tr.t('pages.allPagesWithoutNavigation') })
   }
 
   return advice
@@ -513,20 +536,30 @@ function button(className: string, text: string, label?: string): HTMLButtonElem
  * d'essai a retrouvée juste, quand le badge « Masquée hors vol » posé à côté d'elle
  * disait le contraire — le badge est parti, elle est restée.
  */
-export function navigationsLabel(page: Page): string {
+export function navigationsLabel(page: Page, tr: Translator): string {
   const navigations = page.navigations
-  if (navigations.kind === 'all') return 'Affichée pour toutes les navigations'
-  if (navigations.kind === 'none') return 'Affichée pour aucune navigation'
-  if (navigations.classNames.length === 0) return 'Affichée pour aucune navigation'
-  return 'Affichée pour : ' + navigations.classNames
-    .map((name) => NAVIGATION_LABELS[shortClassName(name)] ?? shortClassName(name))
-    .join(', ')
+  if (navigations.kind === 'all') return tr.t('pages.shownForAllNavigations')
+  if (navigations.kind === 'none') return tr.t('pages.shownForNoNavigation')
+  if (navigations.classNames.length === 0) return tr.t('pages.shownForNoNavigation')
+  return tr.t('pages.shownForNavigations', {
+    // Une colonne de libellés, jointe par `', '` : `format.list` en ferait une phrase
+    // — « … et Vers une balise » — là où l'appareil énumère un réglage.
+    list: navigations.classNames
+      .map((name) => {
+        const short = shortClassName(name)
+        const key = NAVIGATION_KEYS[short as keyof typeof NAVIGATION_KEYS]
+        return key === undefined ? short : tr.t(key)
+      })
+      .join(', ')
+  })
 }
 
 export interface PageManagerOptions {
   pages: readonly Page[]
   orientation: Orientation
   ctx: ViewContext
+  /** Notre prose, dans la langue du pilote — voir `src/i18n/CLAUDE.md` § 5. */
+  readonly tr: Translator
   /**
    * L'opération demandée, avec sa description prête pour l'historique. L'appelant mute le
    * document (`applyPageOperation`), enregistre le pas et reconstruit : ce module ne
@@ -535,7 +568,7 @@ export interface PageManagerOptions {
   onOperation: (operation: PageOperation, description: string) => void
   /** Clic sur une vignette : ouvrir la page, comme l'appui simple de l'appareil. */
   onOpen?: (index: number) => void
-  /** Changer la classe après création — offert par défaut, voir `CLASS_CHANGE_ADVICE`. */
+  /** Changer la classe après création — offert par défaut, voir `classChangeAdvice`. */
   allowClassChange?: boolean
 }
 
@@ -563,11 +596,13 @@ function adviceList(advice: readonly Advice[], className = 'pages__advice'): HTM
  * bouton laissé en attente de confirmation redevient inoffensif dès que la liste change.
  */
 export function renderPageManager(options: PageManagerOptions): PageManager {
-  const { pages, orientation, ctx } = options
+  const { pages, orientation, ctx, tr } = options
   const allowClassChange = options.allowClassChange !== false
 
   const root = el('section', `pages pages--${orientation}`)
-  root.setAttribute('aria-label', `Pages ${orientationLabel(orientation)}`)
+  root.setAttribute('aria-label', tr.t('pages.regionLabel', {
+    orientation: orientationInline(tr, orientation)
+  }))
 
   const live = el('p', 'pages__live')
   live.setAttribute('aria-live', 'polite')
@@ -575,23 +610,25 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
   const announce = (message: string): void => { live.textContent = message }
 
   const request = (operation: PageOperation): void => {
-    const description = describeOperation(pages, operation, orientation)
-    announce(operationAnnouncement(pages, operation, orientation))
+    const description = describeOperation(pages, operation, orientation, tr)
+    announce(operationAnnouncement(pages, operation, orientation, tr))
     options.onOperation(operation, description)
   }
 
   /* --- en-tête : ce que l'orientation compte, et ce qu'elle implique --- */
   const heading = el('h2', 'pages__title')
   heading.append(
-    el('span', 'pages__name', orientation === 'landscape' ? 'Paysage' : 'Portrait'),
+    el('span', 'pages__name', orientation === 'landscape'
+      ? tr.t('pages.landscape')
+      : tr.t('pages.portrait')),
     el('span', 'pages__count', pages.length === 0
-      ? 'aucune page'
-      : plural({ one: '{count} page', other: '{count} pages' }, pages.length))
+      ? tr.t('pages.noPage')
+      : tr.t('pages.pageCount', { count: pages.length }))
   )
   root.append(heading)
 
-  const standing = layoutAdvice(pages)
-  if (allowClassChange) standing.push(CLASS_CHANGE_ADVICE)
+  const standing = layoutAdvice(pages, tr)
+  if (allowClassChange) standing.push(classChangeAdvice(tr))
   if (standing.length > 0) root.append(adviceList(standing))
 
   /* --- le rail : points d'insertion et vignettes en alternance --- */
@@ -604,8 +641,8 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
     const opener = button(
       'pages__insert', '+',
       at === pages.length
-        ? `Insérer une page en dernier rang (${at + 1})`
-        : `Insérer une page au rang ${at + 1}`
+        ? tr.t('pages.insertAtEnd', { rank: at + 1 })
+        : tr.t('pages.insertAtRank', { rank: at + 1 })
     )
     const choice = el('div', 'pages__choice')
     choice.hidden = true
@@ -617,7 +654,7 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
       opener.setAttribute('aria-expanded', String(open))
     })
 
-    choice.append(el('p', 'pages__choice-title', `Nouvelle page au rang ${at + 1}`))
+    choice.append(el('p', 'pages__choice-title', tr.t('pages.newPageAtRank', { rank: at + 1 })))
     const list = el('ul', 'pages__choice-list')
     for (const entry of PAGE_CHOICES) {
       const item = el('li')
@@ -638,12 +675,12 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
     // décalage se lit avant le clic, pas après.
     const shift = operationAdvice(pages, {
       kind: 'insert', index: at, className: 'WPEmpty'
-    }).filter((item) => item.kind === 'shift')
+    }, tr).filter((item) => item.kind === 'shift')
     if (shift.length > 0) choice.append(adviceList(shift, 'pages__choice-advice'))
 
     const thermal = operationAdvice(pages, {
       kind: 'insert', index: at, className: THERMAL_ASSISTANT_CLASS
-    }).filter((item) => item.kind === 'thermal')
+    }, tr).filter((item) => item.kind === 'thermal')
     if (thermal.length > 0) choice.append(adviceList(thermal, 'pages__choice-advice'))
 
     slot.append(opener, choice)
@@ -651,7 +688,7 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
   }
 
   const pageSlot = (page: Page, index: number): HTMLElement => {
-    const kind = pageKind(page.className)
+    const kind = pageKind(page.className, tr)
     const slot = el('li', 'pages__slot')
     slot.dataset.index = String(index)
     slot.draggable = true
@@ -671,8 +708,11 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
 
     const screen = button(
       'pagecard__screen', '',
-      `Ouvrir la page ${index + 1}, ${kind.label}, ` +
-      `${plural(GADGET_COUNT, page.widgets.length)}`
+      tr.t('pages.openPage', {
+        rank: index + 1,
+        kind: kind.label,
+        tally: tr.t('common.widgetCount', { count: page.widgets.length })
+      })
     )
     screen.append(renderPage(page, aspectRatioOf(ctx.device, orientation), ctx.settings, ctx.language))
     if (options.onOpen) screen.addEventListener('click', () => options.onOpen?.(index))
@@ -682,10 +722,10 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
     const meta = el('div', 'pagecard__meta')
     meta.append(
       el('span', 'pagecard__class', kind.shortName),
-      el('span', 'pagecard__widgets', plural(GADGET_COUNT, page.widgets.length))
+      el('span', 'pagecard__widgets', tr.t('common.widgetCount', { count: page.widgets.length }))
     )
     card.append(meta)
-    card.append(el('p', 'pagecard__nav', navigationsLabel(page)))
+    card.append(el('p', 'pagecard__nav', navigationsLabel(page, tr)))
 
     // La cible du basculement automatique se dit sur la page concernée, là où le pilote
     // la cherche — et non seulement dans le bandeau du haut.
@@ -694,47 +734,56 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
       card.append(el(
         'p', 'pagecard__thermal',
         target === index + 1
-          ? 'Cible supposée du basculement automatique en spirale — non vérifié sur l’appareil.'
-          : `Cet éditeur suppose que le basculement automatique vise la page ${target}, la ` +
-            'dernière page d’assistant de thermique — non vérifié sur l’appareil.'
+          ? tr.t('pages.autoSwitchTargetHere')
+          : tr.t('pages.autoSwitchTargetElsewhere', { rank: target ?? index + 1 })
       ))
     }
 
     /* --- les commandes de rang --- */
     const ops = el('div', 'pagecard__ops')
 
-    const left = button('btn btn--ghost pagecard__move', '◀', `Reculer la page ${index + 1} d’un rang`)
+    const left = button(
+      'btn btn--ghost pagecard__move', '◀', tr.t('pages.moveBack', { rank: index + 1 })
+    )
     left.disabled = index === 0
     left.addEventListener('click', () => request({ kind: 'reorder', from: index, to: index - 1 }))
 
-    const right = button('btn btn--ghost pagecard__move', '▶', `Avancer la page ${index + 1} d’un rang`)
+    const right = button(
+      'btn btn--ghost pagecard__move', '▶', tr.t('pages.moveForward', { rank: index + 1 })
+    )
     right.disabled = index >= pages.length - 1
     right.addEventListener('click', () => request({ kind: 'reorder', from: index, to: index + 1 }))
 
-    const copy = button('btn pagecard__duplicate', 'Dupliquer', `Dupliquer la page ${index + 1}`)
+    const copy = button(
+      'btn pagecard__duplicate', tr.t('pages.duplicate'),
+      tr.t('pages.duplicatePage', { rank: index + 1 })
+    )
     copy.addEventListener('click', () => request({ kind: 'duplicate', index }))
 
     ops.append(left, right, copy)
 
     /* --- la suppression, en deux temps : la conséquence d'abord --- */
     const removal = el('div', 'pagecard__removal')
-    const remove = button('btn pagecard__remove', 'Supprimer', `Supprimer la page ${index + 1}`)
+    const remove = button(
+      'btn pagecard__remove', tr.t('pages.remove'),
+      tr.t('pages.removePage', { rank: index + 1 })
+    )
     const consequences = adviceList(
-      operationAdvice(pages, { kind: 'remove', index }), 'pagecard__consequences'
+      operationAdvice(pages, { kind: 'remove', index }, tr), 'pagecard__consequences'
     )
     consequences.hidden = true
 
     let armed = false
     const disarm = (): void => {
       armed = false
-      remove.textContent = 'Supprimer'
+      remove.textContent = tr.t('pages.remove')
       remove.classList.remove('pagecard__remove--armed')
       consequences.hidden = true
     }
     remove.addEventListener('click', () => {
       if (!armed) {
         armed = true
-        remove.textContent = 'Confirmer la suppression'
+        remove.textContent = tr.t('pages.confirmRemoval')
         remove.classList.add('pagecard__remove--armed')
         consequences.hidden = false
         return
@@ -753,7 +802,7 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
       const field = el('div', 'pagecard__class-field')
       const select = el('select', 'pagecard__class-select')
       select.id = `page-class-${orientation}-${index}`
-      const label = el('label', 'pagecard__class-label', 'Type de page')
+      const label = el('label', 'pagecard__class-label', tr.t('pages.pageTypeLabel'))
       label.htmlFor = select.id
 
       const known = PAGE_CHOICES.some((choice) => choice.className === kind.shortName)
@@ -761,7 +810,9 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
         // Une classe qu'aucune version connue ne documente reste proposée telle quelle :
         // la choisir de nouveau ne change rien, mais la faire disparaître de la liste
         // ferait croire à une page d'un des quatre types.
-        const current = el('option', undefined, `${kind.shortName} (type inscrit dans le fichier)`)
+        const current = el(
+          'option', undefined, tr.t('pages.typeFromFile', { type: kind.shortName })
+        )
         current.value = kind.shortName
         select.append(current)
       }
@@ -814,11 +865,7 @@ export function renderPageManager(options: PageManagerOptions): PageManager {
   root.append(rail)
 
   if (pages.length === 0) {
-    root.append(el(
-      'p', 'pages__empty',
-      'Cette orientation ne décrit aucune page. Une page neuve arrive vide : ses gadgets ' +
-      'se posent ensuite depuis la palette, ou en dupliquant une page existante.'
-    ))
+    root.append(el('p', 'pages__empty', tr.t('pages.emptyOrientation')))
   }
 
   root.append(live)

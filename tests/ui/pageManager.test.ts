@@ -11,7 +11,7 @@ import { readRenderSettings } from '../../src/model/preferences'
 import {
   applyPageOperation,
   autoSwitchTargetRank,
-  CLASS_CHANGE_ADVICE,
+  classChangeAdvice,
   creationLabel,
   describeOperation,
   layoutAdvice,
@@ -26,7 +26,15 @@ import {
   type PageOperation
 } from '../../src/ui/pageManager'
 import type { ViewContext } from '../../src/ui/views'
+import { makeTranslator } from '../../src/i18n'
+import frenchMessages from '../../src/i18n/messages/fr'
 import { BACKUP_2026, PAGES_2026 } from '../fixtures/paths'
+
+/**
+ * Le traducteur de **notre prose**, en français : c'est la langue d'écriture, et donc
+ * celle dont les phrases sont vérifiables au caractère près dans ce fichier.
+ */
+const tr = makeTranslator('fr', frenchMessages)
 
 /**
  * Deux fichiers réels, pas un cas fabriqué : `backup-00` porte cinq pages en paysage
@@ -74,10 +82,10 @@ describe('l’état du corpus', () => {
     // Les trois formes disent le sort de la page, pas un compte de navigations — et
     // elles reprennent la phrase de l'appareil, « les types de navigations pour
     // lesquelles la page sera affichée » (mesuré sur l'AIR³, § 5.4).
-    expect(navigationsLabel(landscape[0]!)).toBe('Affichée pour toutes les navigations')
-    expect(navigationsLabel(landscape[1]!)).toBe('Affichée pour aucune navigation')
+    expect(navigationsLabel(landscape[0]!, tr)).toBe('Affichée pour toutes les navigations')
+    expect(navigationsLabel(landscape[1]!, tr)).toBe('Affichée pour aucune navigation')
     // Portrait page 1 : liste explicite de quatre classes `navig.*`.
-    expect(navigationsLabel(pagesOf(document, 'portrait')[0]!))
+    expect(navigationsLabel(pagesOf(document, 'portrait')[0]!, tr))
       .toBe('Affichée pour : Retour au décollage, Fermeture de triangle, Vers une balise, ' +
         'Vers un pilote en direct')
   })
@@ -315,7 +323,7 @@ describe('détecter plusieurs assistants de thermique', () => {
     const document = load()
     const pages = pagesOf(document, 'landscape')
     expect(autoSwitchTargetRank(pages)).toBe(4)
-    expect(layoutAdvice(pages).filter((advice) => advice.kind === 'thermal')).toHaveLength(0)
+    expect(layoutAdvice(pages, tr).filter((advice) => advice.kind === 'thermal')).toHaveLength(0)
   })
 
   it('désigne la DERNIÈRE comme cible dès qu’il y en a deux', () => {
@@ -326,7 +334,7 @@ describe('détecter plusieurs assistants de thermique', () => {
     expect(thermalAssistantRanks(pages)).toEqual([4, 5])
     expect(autoSwitchTargetRank(pages)).toBe(5)
 
-    const thermal = layoutAdvice(pages).filter((advice) => advice.kind === 'thermal')
+    const thermal = layoutAdvice(pages, tr).filter((advice) => advice.kind === 'thermal')
     expect(thermal).toHaveLength(1)
     expect(thermal[0]!.text).toContain('la page 5')
     expect(thermal[0]!.text).toContain('page suivante')
@@ -346,18 +354,18 @@ describe('détecter plusieurs assistants de thermique', () => {
     const document = load()
     const pages = pagesOf(document, 'landscape')
 
-    const onDuplicate = operationAdvice(pages, { kind: 'duplicate', index: 3 })
+    const onDuplicate = operationAdvice(pages, { kind: 'duplicate', index: 3 }, tr)
       .filter((advice) => advice.kind === 'thermal')
     expect(onDuplicate).toHaveLength(1)
     expect(onDuplicate[0]!.text).toContain('page 4')
 
     const onInsert = operationAdvice(pages, {
       kind: 'insert', index: 0, className: 'WPThermalAssistant'
-    }).filter((advice) => advice.kind === 'thermal')
+    }, tr).filter((advice) => advice.kind === 'thermal')
     expect(onInsert).toHaveLength(1)
 
     // Insérer une page ordinaire ne dit rien du basculement : pas de bruit.
-    expect(operationAdvice(pages, { kind: 'insert', index: 0, className: 'WPEmpty' })
+    expect(operationAdvice(pages, { kind: 'insert', index: 0, className: 'WPEmpty' }, tr)
       .filter((advice) => advice.kind === 'thermal')).toHaveLength(0)
   })
 
@@ -365,18 +373,18 @@ describe('détecter plusieurs assistants de thermique', () => {
     const document = load()
     const pages = pagesOf(document, 'landscape')
     // La page 4 EST l'assistant : lui redonner sa classe ne crée pas de doublon.
-    expect(operationAdvice(pages, { kind: 'setClass', index: 3, className: 'WPThermalAssistant' })
+    expect(operationAdvice(pages, { kind: 'setClass', index: 3, className: 'WPThermalAssistant' }, tr)
       .filter((advice) => advice.kind === 'thermal')).toHaveLength(0)
   })
 
   it('dit ce que la suppression de l’assistant coûte au basculement', () => {
     const document = load()
-    const single = operationAdvice(pagesOf(document, 'landscape'), { kind: 'remove', index: 3 })
+    const single = operationAdvice(pagesOf(document, 'landscape'), { kind: 'remove', index: 3 }, tr)
       .filter((advice) => advice.kind === 'thermal')
     expect(single[0]!.text).toContain('n’aurait plus de cible')
 
     applyPageOperation(document, 'landscape', { kind: 'duplicate', index: 3 })
-    const paired = operationAdvice(pagesOf(document, 'landscape'), { kind: 'remove', index: 4 })
+    const paired = operationAdvice(pagesOf(document, 'landscape'), { kind: 'remove', index: 4 }, tr)
       .filter((advice) => advice.kind === 'thermal')
     expect(paired[0]!.text).toContain('la page 4')
   })
@@ -387,7 +395,7 @@ describe('détecter plusieurs assistants de thermique', () => {
 describe('avertir du décalage des rangs', () => {
   it('nomme les pages qui changent de rang à l’insertion', () => {
     const pages = pagesOf(load(), 'landscape')
-    const advice = operationAdvice(pages, { kind: 'insert', index: 2, className: 'WPEmpty' })
+    const advice = operationAdvice(pages, { kind: 'insert', index: 2, className: 'WPEmpty' }, tr)
       .filter((item) => item.kind === 'shift')
     expect(advice).toHaveLength(1)
     expect(advice[0]!.text).toContain('Les pages 3 à 5 deviennent 4 à 6')
@@ -396,16 +404,16 @@ describe('avertir du décalage des rangs', () => {
 
   it('se tait quand l’insertion se fait en fin de liste', () => {
     const pages = pagesOf(load(), 'landscape')
-    expect(operationAdvice(pages, { kind: 'insert', index: 5, className: 'WPEmpty' })
+    expect(operationAdvice(pages, { kind: 'insert', index: 5, className: 'WPEmpty' }, tr)
       .filter((item) => item.kind === 'shift')).toHaveLength(0)
     // Dupliquer la dernière page ne décale rien non plus.
-    expect(operationAdvice(pages, { kind: 'duplicate', index: 4 })
+    expect(operationAdvice(pages, { kind: 'duplicate', index: 4 }, tr)
       .filter((item) => item.kind === 'shift')).toHaveLength(0)
   })
 
   it('accorde au singulier quand une seule page bouge', () => {
     const pages = pagesOf(load(), 'landscape')
-    const advice = operationAdvice(pages, { kind: 'remove', index: 3 })
+    const advice = operationAdvice(pages, { kind: 'remove', index: 3 }, tr)
       .filter((item) => item.kind === 'shift')
     expect(advice[0]!.text).toContain('La page 5 devient 4')
   })
@@ -421,7 +429,7 @@ describe('avertir du décalage des rangs', () => {
     const pages = pagesOf(document, 'landscape')
     expect(classesOf(document, 'landscape')).toEqual(['WPEmpty', 'WPCompetition'])
 
-    const advice = operationAdvice(pages, { kind: 'remove', index: 0 })
+    const advice = operationAdvice(pages, { kind: 'remove', index: 0 }, tr)
       .filter((item) => item.kind === 'visibility')
     expect(advice).toHaveLength(1)
     expect(advice[0]!.text).toContain('activées pour aucune navigation')
@@ -432,7 +440,7 @@ describe('avertir du décalage des rangs', () => {
     for (let index = 4; index >= 1; index -= 1) {
       applyPageOperation(document, 'landscape', { kind: 'remove', index })
     }
-    const advice = operationAdvice(pagesOf(document, 'landscape'), { kind: 'remove', index: 0 })
+    const advice = operationAdvice(pagesOf(document, 'landscape'), { kind: 'remove', index: 0 }, tr)
       .filter((item) => item.kind === 'visibility')
     expect(advice[0]!.text).toContain('dernière page')
   })
@@ -448,7 +456,7 @@ describe('avertir du décalage des rangs', () => {
     applyPageOperation(byClass, 'landscape', { kind: 'setClass', index: 0, className: 'WPCompetition' })
     applyPageOperation(byClass, 'landscape', { kind: 'setClass', index: 2, className: 'WPCompetition' })
     applyPageOperation(byClass, 'landscape', { kind: 'setClass', index: 4, className: 'WPCompetition' })
-    expect(layoutAdvice(pagesOf(byClass, 'landscape'))
+    expect(layoutAdvice(pagesOf(byClass, 'landscape'), tr)
       .filter((item) => item.kind === 'visibility')).toHaveLength(0)
 
     const byNavigations = load()
@@ -456,7 +464,7 @@ describe('avertir du décalage des rangs', () => {
       applyPageOperation(byNavigations, 'landscape', { kind: 'remove', index })
     }
     expect(classesOf(byNavigations, 'landscape')).toEqual(['WPCompetition'])
-    const advice = layoutAdvice(pagesOf(byNavigations, 'landscape'))
+    const advice = layoutAdvice(pagesOf(byNavigations, 'landscape'), tr)
       .filter((item) => item.kind === 'visibility')
     expect(advice).toHaveLength(1)
     expect(advice[0]!.text).toContain('activées pour aucune navigation')
@@ -464,9 +472,9 @@ describe('avertir du décalage des rangs', () => {
 
   it('dit toujours que le changement de classe n’est pas vérifié sur l’appareil', () => {
     const pages = pagesOf(load(), 'landscape')
-    const advice = operationAdvice(pages, { kind: 'setClass', index: 0, className: 'WPCompetition' })
-    expect(advice).toContainEqual(CLASS_CHANGE_ADVICE)
-    expect(CLASS_CHANGE_ADVICE.text).toContain('n’a PAS')
+    const advice = operationAdvice(pages, { kind: 'setClass', index: 0, className: 'WPCompetition' }, tr)
+    expect(advice).toContainEqual(classChangeAdvice(tr))
+    expect(classChangeAdvice(tr).text).toContain('n’a PAS')
   })
 })
 
@@ -475,7 +483,7 @@ describe('avertir du décalage des rangs', () => {
 describe('la description d’une opération', () => {
   const pages = pagesOf(load(), 'landscape')
   const describe1 = (operation: PageOperation): string =>
-    describeOperation(pages, operation, 'landscape')
+    describeOperation(pages, operation, 'landscape', tr)
 
   it('nomme le rang, pas un identifiant interne', () => {
     expect(describe1({ kind: 'remove', index: 2 })).toBe('Supprimer la page 3 (paysage)')
@@ -488,7 +496,7 @@ describe('la description d’une opération', () => {
   })
 
   it('distingue les deux orientations', () => {
-    expect(describeOperation(pages, { kind: 'remove', index: 0 }, 'portrait'))
+    expect(describeOperation(pages, { kind: 'remove', index: 0 }, 'portrait', tr))
       .toBe('Supprimer la page 1 (portrait)')
   })
 
@@ -501,7 +509,7 @@ describe('la description d’une opération', () => {
   })
 
   it('joint la conséquence à l’annonce faite après coup', () => {
-    const message = operationAnnouncement(pages, { kind: 'remove', index: 0 }, 'landscape')
+    const message = operationAnnouncement(pages, { kind: 'remove', index: 0 }, 'landscape', tr)
     expect(message).toContain('Supprimer la page 1 (paysage)')
     expect(message).toContain('Les pages 2 à 5 deviennent 1 à 4')
   })
@@ -526,6 +534,7 @@ function build(overrides: Partial<Parameters<typeof renderPageManager>[0]> = {})
     pages: pagesOf(document, 'landscape'),
     orientation: 'landscape',
     ctx: context(document),
+    tr,
     onOperation: (operation, description) => captured.push({ operation, description }),
     ...overrides
   })
@@ -678,6 +687,7 @@ describe('le carrousel', () => {
       pages: pagesOf(document, 'landscape'),
       orientation: 'landscape',
       ctx: context(document),
+      tr,
       onOperation: () => {}
     })
     const slots = query<HTMLElement>(manager.root, '.pages__slot')
@@ -715,6 +725,7 @@ describe('le carrousel', () => {
       pages: [],
       orientation: 'portrait',
       ctx: context(document),
+      tr,
       onOperation: (operation, description) => captured.push({ operation, description })
     })
     expect(query(manager.root, '.pages__slot')).toHaveLength(0)

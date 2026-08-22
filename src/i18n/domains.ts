@@ -131,7 +131,7 @@ export const DOMAIN_PREFIXES: Readonly<Record<Domain, readonly string[]>> = {
   widgets: ['palette', 'properties', 'widgets'],
   versions: ['cleanup', 'versions'],
   sharing: ['sharing', 'warnings'],
-  pages: ['device', 'pages'],
+  pages: ['device', 'navigation', 'pages'],
   model: ['model', 'personal', 'personalBasis', 'personalHome', 'personalKind', 'personalReason']
 }
 

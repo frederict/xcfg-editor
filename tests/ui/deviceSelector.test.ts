@@ -7,6 +7,14 @@ import {
   buildDeviceSelector,
   readCustomDevices
 } from '../../src/ui/deviceSelector'
+import { makeTranslator } from '../../src/i18n'
+import frenchMessages from '../../src/i18n/messages/fr'
+
+/**
+ * Le traducteur de **notre prose**, en français : c'est la langue d'écriture, et donc
+ * celle dont les phrases sont vérifiables au caractère près dans ce fichier.
+ */
+const tr = makeTranslator('fr', frenchMessages)
 
 /**
  * `localStorage` de happy-dom : un vrai `Storage`, partagé entre les tests d'un même
@@ -18,6 +26,7 @@ function selectorFor(device: Device): { select: HTMLSelectElement; seen: Device[
   const seen: Device[] = []
   const selector = buildDeviceSelector({
     initialDevice: device,
+    tr,
     storage,
     onChange: (chosen) => seen.push(chosen)
   })
@@ -42,7 +51,9 @@ describe('sélecteur de gabarit', () => {
   })
 
   it('conserve les appareils personnalisés d’un chargement à l’autre', () => {
-    addCustomDevice(storage, { name: 'Tablette du club', widthPx: 2000, heightPx: 1200, diagonalInches: 8 })
+    addCustomDevice(storage, {
+      name: 'Tablette du club', widthPx: 2000, heightPx: 1200, diagonalInches: 8
+    }, tr)
 
     // Relecture depuis le stockage : c'est ce que fait un rechargement de la page.
     const reloaded = readCustomDevices(storage)
@@ -58,7 +69,9 @@ describe('sélecteur de gabarit', () => {
   })
 
   it('écrit les appareils personnalisés sous la clé attendue, en JSON', () => {
-    addCustomDevice(storage, { name: 'AIR³ 7.2', widthPx: 1280, heightPx: 720, diagonalInches: 7 })
+    addCustomDevice(storage, {
+      name: 'AIR³ 7.2', widthPx: 1280, heightPx: 720, diagonalInches: 7
+    }, tr)
     const raw = storage.getItem(CUSTOM_DEVICES_KEY)
     expect(raw).not.toBeNull()
     expect(JSON.parse(raw as string)).toHaveLength(1)
@@ -73,9 +86,9 @@ describe('sélecteur de gabarit', () => {
   })
 
   it('refuse un brouillon incomplet en le disant', () => {
-    expect(() => addCustomDevice(storage, { name: '  ', widthPx: 1, heightPx: 1, diagonalInches: 1 }))
+    expect(() => addCustomDevice(storage, { name: '  ', widthPx: 1, heightPx: 1, diagonalInches: 1 }, tr))
       .toThrow(/nom/i)
-    expect(() => addCustomDevice(storage, { name: 'X', widthPx: Number.NaN, heightPx: 1, diagonalInches: 1 }))
+    expect(() => addCustomDevice(storage, { name: 'X', widthPx: Number.NaN, heightPx: 1, diagonalInches: 1 }, tr))
       .toThrow(/largeur/i)
     expect(readCustomDevices(storage)).toEqual([])
   })

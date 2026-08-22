@@ -31,19 +31,26 @@ describe('lecture d’un message', () => {
   })
 
   it('laisse le traducteur déplacer les mots autour des repères', async () => {
-    const values = { count: 2, shown: 3, total: 5 }
+    // Un pas d'historique, quatre repères : le rang, les deux types et l'orientation.
+    // L'exemple canonique était `pages.hiddenOffFlight`, une phrase que plus aucun écran
+    // n'employait et dont l'affirmation — une classe de page masquerait au sol — a été
+    // mesurée fausse le 22 août 2026. Elle est partie des cinq catalogues ; celui-ci la
+    // remplace, et il a l'avantage d'être un message que l'application affiche vraiment.
+    const values = { rank: 3, before: 'Vide', after: 'Compétition', orientation: 'Querformat' }
     const de = await loadTranslator('de')
     const es = await loadTranslator('es')
     const fr5 = await loadTranslator('fr')
 
-    // L'allemand renvoie son verbe à la fin de la subordonnée…
-    expect(de.t('pages.hiddenOffFlight', values)).toBe(
-      '2 Seiten werden außerhalb des Flugkontexts ausgeblendet: '
-      + 'am Boden zeigt das Gerät nur 3 von 5 an.'
+    // L'allemand rejette son infinitif à la fin, et écrit ses guillemets en bas puis en haut…
+    expect(de.t('pages.describeSetClass', values)).toBe(
+      'Typ von Seite 3 ändern: „Vide“ → „Compétition“ (Querformat)'
     )
-    // …et les trois nombres restent chacun à leur place dans les trois langues.
-    expect(fr5.t('pages.hiddenOffFlight', values)).toContain('que 3 sur 5')
-    expect(es.t('pages.hiddenOffFlight', values)).toContain('muestra 3 de 5')
+    // …le français garde le verbe en tête et met ses guillemets à espaces…
+    expect(fr5.t('pages.describeSetClass', { ...values, orientation: 'paysage' }))
+      .toBe('Changer le type de la page 3 : « Vide » → « Compétition » (paysage)')
+    // …et l'espagnol colle les siens au mot.
+    expect(es.t('pages.describeSetClass', { ...values, orientation: 'horizontal' }))
+      .toBe('Cambiar el tipo de la página 3: «Vide» → «Compétition» (horizontal)')
   })
 
   it('remplace les 23 accords en ternaire par deux phrases entières', async () => {
@@ -111,7 +118,7 @@ describe('lecture d’un message', () => {
     expect(() => tr.t('action.redo', { what: 'x' })).toBeDefined()
     // @ts-expect-error — un pluriel exige `count`, et il doit être un nombre
     expect(() => tr.t('preferences.settingCount', { count: 'deux' })).toBeDefined()
-    // @ts-expect-error — repère manquant dans une phrase qui en attend trois
-    expect(() => tr.t('pages.hiddenOffFlight', { count: 2, shown: 3 })).toBeDefined()
+    // @ts-expect-error — repère manquant dans une phrase qui en attend quatre
+    expect(() => tr.t('pages.describeSetClass', { rank: 2, before: 'Vide' })).toBeDefined()
   })
 })

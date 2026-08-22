@@ -118,7 +118,45 @@ const IDENTICAL_ON_PURPOSE: ReadonlySet<string> = new Set<string>([
    * néerlandais « Pagina’s » et « Notitie ».
    */
   'en/library.factPages',
-  'en/library.fieldNote'
+  'en/library.fieldNote',
+  /*
+   * Domaine `pages` (`pageManager.ts`, `deviceSelector.ts`). Trois causes, aucune
+   * traduction oubliée :
+   *
+   * - deux messages **sans un seul mot** : le pas d'historique, son point final et
+   *   l'espace qui le sépare de la conséquence ;
+   * - « Portrait » et « {count} page(s) » : l'anglais se trouve écrire ce que le
+   *   français écrit, au singulier comme au pluriel, et dans les deux graphies de
+   *   l'orientation — celle du titre et celle de l'incise « (portrait) » ;
+   * - « Diagonale » : le mot allemand se trouve être le mot français.
+   */
+  ...UI_LANGUAGES.map((language) => `${language}/pages.announcement`),
+  ...UI_LANGUAGES.map((language) => `${language}/pages.announcementWithAdvice`),
+  'en/pages.portrait',
+  'en/pages.portraitInline',
+  'de/device.diagonalPlaceholder',
+  'en/pages.pageCount'
+])
+
+/**
+ * Les messages au pluriel dont le nombre **choisit la forme sans s'écrire**. Le cas est
+ * rare et il se déclare un par un, comme les coïncidences ci-dessus : un pluriel qui
+ * n'affiche pas son nombre est presque toujours un `{count}` oublié dans la traduction.
+ *
+ * Ces trois-là ne le sont pas, et ils viennent tous du domaine `pages` :
+ *
+ * - `pages.rankShift` — « Les pages 3 à 5 deviennent 4 à 6 » ne compte rien, elle nomme
+ *   des rangs ; le nombre de pages décalées n'accorde que le verbe et l'article ;
+ * - `pages.thermalAlreadyPresent` — « une page » / « des pages », sans chiffre ;
+ * - `pages.thermalMultiple` — **deux** nombres, un seul écrit : `{total}` compte les
+ *   pages d'assistant de thermique et s'affiche, tandis que `count` accorde la dernière
+ *   phrase sur les pages **autres** que la cible supposée. Le pluriel ne peut donc pas
+ *   suivre celui qui s'écrit.
+ */
+const PLURAL_WITHOUT_VISIBLE_COUNT: ReadonlySet<string> = new Set<string>([
+  'pages.rankShift',
+  'pages.thermalAlreadyPresent',
+  'pages.thermalMultiple'
 ])
 
 describe('catalogues de messages', () => {
@@ -164,6 +202,7 @@ describe('catalogues de messages', () => {
   it('exigent « count » sur chaque message au pluriel', () => {
     for (const key of KEYS) {
       if (typeof fr[key] === 'string') continue
+      if (PLURAL_WITHOUT_VISIBLE_COUNT.has(key)) continue
       for (const language of UI_LANGUAGES) {
         expect(markersOf(CATALOGS[language][key]), `${language} / ${key}`).toContain('count')
       }
