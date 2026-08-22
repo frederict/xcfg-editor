@@ -57,6 +57,49 @@ describe('app.css — la fermeture d’une modale reste atteignable', () => {
 })
 
 /**
+ * # Le document ne défile jamais en travers
+ *
+ * Défaut signalé à l'ouverture d'un fichier : la ligne repliée des remarques dépassait le
+ * bord droit de la fenêtre, son dernier intitulé tranché en plein mot, et une barre de
+ * défilement horizontale apparaissait sur **tout le document**.
+ *
+ * La ligne sait pourtant se tronquer — `.remarks__titles` porte `min-width: 0`,
+ * `overflow: hidden` et `text-overflow: ellipsis` depuis toujours. Ce qui manquait, c'est
+ * une **borne** : `.warnings` est une grille, sa colonne implicite se dimensionne sur la
+ * taille minimale de contenu de ses enfants, et cette taille-là vaut, pour la ligne des
+ * remarques, les neuf intitulés bout à bout en `nowrap`. Mesuré au navigateur (fenêtre de
+ * 1 385 px, fixture `2026-08-20_backup-00.xcfg`) : 2 532 px de piste dans un cadre de
+ * 1 180, et 2 658 px de document. `minmax(0, 1fr)` autorise la piste à descendre sous
+ * cette taille minimale, et l'ellipse se déclenche enfin — 1 385 px de document après
+ * correction, soit exactement la fenêtre.
+ *
+ * ⚠ Ce n'est pas qu'une affaire de confort : le troisième principe du projet veut que la
+ * page dessinée soit la seule chose qui puisse dépasser la fenêtre, et qu'elle le fasse
+ * dans son propre conteneur (`.stage`, `overflow-x: auto`). Un document qui défile en
+ * travers emmène la page avec lui.
+ */
+describe('app.css — rien d’autre que la page ne dépasse la fenêtre', () => {
+  it('la grille des avertissements borne sa colonne', () => {
+    expect(rule('.warnings')).toContain('grid-template-columns: minmax(0, 1fr);')
+  })
+
+  it('la ligne repliée des remarques garde de quoi tronquer', () => {
+    const titles = rule('.remarks__titles')
+    expect(titles).toContain('min-width: 0;')
+    expect(titles).toContain('overflow: hidden;')
+    expect(titles).toContain('text-overflow: ellipsis;')
+    expect(titles).toContain('white-space: nowrap;')
+  })
+
+  it('le défilement horizontal appartient à la scène, pas au document', () => {
+    // La plaque épouse la page (`width: fit-content`) et peut donc être plus large que le
+    // cadre : c'est `.stage` qui absorbe le débordement.
+    expect(rule('.stage')).toContain('overflow-x: auto;')
+    expect(rule('.bed')).toContain('width: fit-content;')
+  })
+})
+
+/**
  * L'entrée directe des réglages généraux. Elle a coûté 40 px à une barre qui repliait
  * déjà : le seuil de sa forme compacte est une mesure, et un changement de valeur doit
  * faire échouer ce test plutôt que de laisser la barre repasser sur deux lignes à

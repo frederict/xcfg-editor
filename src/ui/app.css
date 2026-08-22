@@ -531,20 +531,35 @@ body {
    (structure, géométrie, données personnelles) porte l'ambre, celui-là même dont le
    carrousel des pages marque une page activée pour aucune navigation. Le cadre ne
    rivalise pas avec l'instrument qu'il entoure. */
+/*
+ * ⚠ `minmax(0, 1fr)` et non la colonne implicite : c'est ce qui empêche le cadre entier de
+ * déborder de la fenêtre à l'ouverture d'un fichier.
+ *
+ * Une piste d'une seule colonne `auto` se dimensionne sur le contenu **minimum** de ses
+ * enfants, et un enfant a `min-width: auto` par défaut, c'est-à-dire sa taille minimale de
+ * contenu. La ligne repliée des remarques porte `.remarks__head` en `inline-flex` dont les
+ * intitulés sont en `nowrap` : sa taille minimale de contenu, ce sont **les neuf intitulés
+ * bout à bout**. La piste prenait donc 2 532 px dans un cadre de 1 180, l'ellipse ne se
+ * déclenchait jamais faute de borne, et tout le document défilait en travers — barre de
+ * défilement horizontale comprise (mesuré à 1 385 px de fenêtre, fixture
+ * `2026-08-20_backup-00.xcfg` : 2 658 px de document).
+ *
+ * Le zéro de `minmax(0, …)` autorise la piste à descendre sous cette taille minimale. La
+ * ligne retrouve sa borne, et `text-overflow: ellipsis` fait le reste.
+ */
 .warnings {
   margin: 0 0 2.5rem;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.9rem;
 }
 
 .warnings__title {
   margin: 0;
-  font-family: var(--font-data);
-  font-size: 10.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-  font-weight: 700;
-  color: var(--app-ink-soft);
+  font-family: var(--font-title);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--app-ink);
 }
 
 .warning {
