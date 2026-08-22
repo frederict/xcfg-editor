@@ -30,6 +30,7 @@ import {
   UNKNOWN_FORMAT
 } from '../../src/model/sharing'
 import PERSONAL_KEYS from '../../src/model/personalKeys.json'
+import { collectPersonalData } from '../../src/model/personalData'
 import {
   ARCHIVE,
   BACKUP_2025,
@@ -851,6 +852,25 @@ describe('anonymizeBackup — le fichier de référence, en chiffres', () => {
       'Livetrack.FlightPublic'
     ])
     expect(produced).toContain('"Livetrack.Enabled": true')
+  })
+
+  it('relu de l’extérieur, le fichier produit ne porte plus rien qui désigne quelqu’un', () => {
+    // La preuve qui ne fait confiance à aucun inventaire : on **rouvre** le fichier
+    // produit et on redresse l'inventaire des données personnelles depuis zéro. Ce qui
+    // reste renseigné doit être exactement ce qu'on a posé — trois valeurs neutres et les
+    // quatre choix de diffusion qu'on a délibérément conservés.
+    const again = collectPersonalData(parseJson(produced))
+    expect(again.counts).toMatchObject({ layout: 0, preferences: 12, filled: 7, empty: 5 })
+    const filled = again.findings.filter((one) => one.filled)
+    expect(filled.map((one) => `${one.key}=${one.value ?? ''}`)).toEqual([
+      'Pilot.Name=Pilote',
+      'Glider.Name=Voile',
+      'Livetrack.Enabled=true',
+      'Livetrack.ClaimContest=true',
+      'Livetrack.ShowPublic=true',
+      'Livetrack.FlightPublic=true',
+      'Mapsforge.ThemeFile=DEFAULT'
+    ])
   })
 
   it('le contenu d’une structure n’est jamais montré, seulement sa taille', () => {
