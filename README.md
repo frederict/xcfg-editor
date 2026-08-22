@@ -445,7 +445,8 @@ de langue se voient le mieux : ce fichier-ci déclare le français, donc les nom
 réglages restent français dans les cinq captures — seule notre prose change.*
 
 <!--
-  REFAIRE CETTE CAPTURE — captures/reglages-generaux.<langue>.png (1400 × 1120)
+  REFAIRE CETTE CAPTURE — captures/reglages-generaux.<langue>.png
+  (1400 × 1120 — NÉERLANDAIS : 1400 × 1175, exception mesurée, voir « Cadrage »)
 
   DETTE PAYÉE le 2026-08-22 : les cinq images montraient des boutons « Retirer », qui
   disent maintenant « Retirer du fichier » — « Remove from the file », « Aus der Datei
@@ -509,7 +510,22 @@ réglages restent français dans les cinq captures — seule notre prose change.
                « Modifier les réglages », enfin faire défiler jusqu'à « Intégration
                Android » et caler le haut du bloc à 72 px du haut de la fenêtre — soit
                16 px sous la barre de tête collante, qui mesure 56 px.
+  Pièges ..... 1. ÔTER LE FOCUS AVANT DE DÉCLENCHER. La reprise néerlandaise du
+                  2026-08-22 a d'abord donné une image qui ne différait de la
+                  précédente QUE par un halo bleu autour du globe : fermer la boîte des
+                  langues rend le focus au bouton qui l'a ouverte. `blur()` sur
+                  l'élément actif, puis vérifier `document.activeElement`.
+               2. SERVIR UN EXPORT FIGÉ DE HEAD (`git archive HEAD | tar -x -C …`, puis
+                  un lien vers `node_modules`) plutôt que l'arbre de travail : d'autres
+                  chantiers ouvrent la feuille de style et les catalogues, et une
+                  capture prise sur l'arbre vivant fige un travail à mi-course.
+               3. Le navigateur n'isole pas les onglets entre agents : vérifier
+                  `location.href` EN TÊTE DE CHAQUE SCRIPT et refuser d'agir s'il ne
+                  porte pas le port qu'on a soi-même lancé. Le 2026-08-22, un autre
+                  onglet a pris la main deux fois en cours de mesure.
   Cadrage .... viewport de 1400 × 1120 points CSS, émulation comme ci-dessus.
+               NÉERLANDAIS : 1400 × 1175. Exception mesurée, comme l'allemand de
+               `panneau-gadget` — voir « CADRAGE NÉERLANDAIS » plus bas.
 
                CADRAGE CORRIGÉ le 2026-08-22 : 1400 × 1060 → 1400 × 1120, et la phrase
                qui suivait est devenue fausse le même jour. Elle disait « le bloc fait
@@ -528,6 +544,53 @@ réglages restent français dans les cinq captures — seule notre prose change.
                1120 points suffisent aux cinq (72 + 1 010 = 1 082) et laissent paraître
                le titre du bloc suivant, « Test et déboguage », ce qui dit au lecteur que
                la liste continue.
+
+               CADRAGE NÉERLANDAIS, le 2026-08-22 en fin de journée : 1120 → 1175 pour
+               CETTE LANGUE SEULE. Le calcul ci-dessus est incomplet, et un pilote
+               d'essai l'a vu avant nous : « Test et déboguage · 4 instellingen » est
+               tranché à mi-glyphe par le bord bas de l'image néerlandaise.
+
+               ⚠ LE CADRE NE DOIT PAS DÉGAGER LE BLOC, IL DOIT DÉGAGER LE TITRE SUIVANT.
+               `72 + hauteur du bloc` ne mesure que ce qu'on quitte. Ce que la recette
+               promet — « laisser paraître le titre du bloc suivant » — vit 55,4 px plus
+               bas : 25,6 px de blanc entre les deux blocs, puis un titre de 29,8 px
+               (24 px de glyphes, 4,8 px de talon, 1 px de filet). Le bon calcul est donc
+               `72 + (bas du titre suivant − haut du bloc)`. Remesuré, haut du bloc calé
+               à 72, largeur 1400, mode édition :
+
+                                        bas du bloc   titre suivant   « journalisation »
+                   fr / es                 1 029,1    1 055,0–1 084,8   1 099,1–1 117,1
+                   en                      1 066,1    1 091,9–1 121,7   1 136,1–1 154,1
+                   de                      1 066,1    1 091,6–1 121,4   1 135,8–1 153,8
+                   nl                      1 082,0    1 107,5–1 137,3   1 151,7–1 169,7
+
+               À 1120, le bord bas néerlandais tombe DANS les glyphes du titre, qui
+               descendent jusqu'à 1 131,5. L'anglais et l'allemand, eux, PASSENT : leurs
+               glyphes s'arrêtent à 1 115,9 et 1 115,6 ; seul le filet de 1 px sous le
+               titre est rasé (1,7 et 1,4 px manquants). Le titre y reste entièrement
+               lisible, c'est le critère de la recette — CES DEUX IMAGES N'ONT PAS ÉTÉ
+               REFAITES, et le contrôle systématique des 24 captures traduites ne les
+               avait pas relevées non plus.
+
+               1175 pose le bord bas 5,3 px sous la ligne de catégorie « journalisation »
+               (1 169,7) : le même bord bas qu'en français, qui s'arrête 2,9 px sous la
+               même ligne. Vérifié sur l'image reprise : au-dessus de 1120, elle est
+               IDENTIQUE À L'OCTET PRÈS à la précédente, hors les 612 pixels de
+               l'ascenseur, qui se raccourcit quand la fenêtre grandit. Ce n'est donc
+               bien qu'une question de cadre : rien du rendu n'a changé.
+
+               ⚠ AUCUNE LIGNE DE CET ÉCRAN N'EXPLIQUE POURQUOI LES NOMS RESTENT FRANÇAIS
+               — ne pas chercher à la ramener dans le cadre, elle n'existe pas ici. Le
+               même pilote d'essai a cru que le cadrage était « descendu au-delà » de la
+               mention « Libellés de XCTrack : fr (déclaré par le fichier) ». Vérifié :
+               cette mention est celle du bandeau de faits de la VUE D'ENSEMBLE
+               (`metaStrip`, `src/ui/main.ts`) et de la boîte des langues ; sur les
+               8 800 px de la page « Réglages généraux », le mot « langue » n'apparaît
+               pas une seule fois. Aucun cadrage ne peut donc la montrer. C'est la
+               LÉGENDE qui porte l'explication — elle la porte trois fois, dans les cinq
+               README : le chapeau de « En images », la légende sous l'image, et le
+               paragraphe des deux axes de langue. Si l'on veut mieux, c'est une ligne à
+               AJOUTER à l'écran, pas un cadre à remonter.
 
                ⚠ L'ALLEMAND NE DÉBORDE TOUJOURS PAS PLUS QUE LES AUTRES sur cet écran,
                contrairement à deux des sept : il tient dans le cadre commun. C'est le
