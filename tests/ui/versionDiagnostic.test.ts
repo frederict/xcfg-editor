@@ -1,4 +1,6 @@
 import { readFileSync } from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import {
   VersionDatabase,
@@ -776,5 +778,43 @@ describe('les trois statuts que le pilote lit', () => {
     expect(listed.nl).toContain('1.0.2-beta, 1.0.1-beta en 1.0.0-RC2')
     expect(listed.de).toContain('1.0.2-beta, 1.0.1-beta und 1.0.0-RC2')
     expect(listed.es).toContain('1.0.2-beta, 1.0.1-beta y 1.0.0-RC2')
+  })
+})
+
+
+/**
+ * # La pastille du constat n'est pas un bouton
+ *
+ * Même défaut que sur les réglages généraux, autre écran, et pire : `.vdiag__badge` et
+ * `.vclean__go` — qui est un BOUTON — écrivaient littéralement la même déclaration,
+ * `border: 1px solid currentcolor`, dans un bloc où `color` vaut `--app-flag-ink`.
+ * Mesuré au navigateur le 22 août 2026, fenêtre 1400 px, cette modale ouverte sur
+ * `2026-08-20_backup-00.xcfg`, nettoyage déplié : filet `rgb(122, 84, 16)` des deux
+ * côtés ; et la forme en pastille, la pastille la partageait avec le « Fermer » de la
+ * tête. Il ne restait rien pour dire lequel des deux répondait au clic.
+ *
+ * Ni happy-dom ni jsdom ne calculent la cascade d'une feuille externe : le contrôle est
+ * textuel, comme dans `appStyle.test.ts`.
+ */
+describe('versionDiagnostic.css — le constat porte un filet tireté', () => {
+  const here = path.dirname(fileURLToPath(import.meta.url))
+  const sheet = readFileSync(path.join(here, '../../src/ui/versionDiagnostic.css'), 'utf8')
+  const clean = readFileSync(path.join(here, '../../src/ui/cleanupPanel.css'), 'utf8')
+
+  /** Le corps de la règle nommée, accolades comprises. */
+  function rule(source: string, selector: string): string {
+    const start = source.indexOf(`${selector} {`)
+    expect(start, `règle absente : ${selector}`).toBeGreaterThan(-1)
+    return source.slice(start, source.indexOf('}', start) + 1)
+  }
+
+  it('la pastille du constat est tiretée', () => {
+    expect(rule(sheet, '.vdiag__badge')).toContain('border: 1px dashed currentcolor;')
+  })
+
+  it('le bouton de nettoyage, lui, garde le filet plein', () => {
+    // Si les deux redevenaient identiques, la confusion reviendrait entière — et c'est
+    // exactement de quoi elle était faite.
+    expect(rule(clean, '.vclean__go,\n.vclean__undo')).toContain('border: 1px solid currentcolor;')
   })
 })

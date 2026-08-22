@@ -455,6 +455,14 @@ qu'on a réglé, ou figer ce que le fichier ne dit pas.*
   mot, et le curseur d'aide : c'est ce qui annonce la bulle qui dit ce qu'est ce nom. Voir
   `.glossed` dans `src/ui/app.css`.
 
+  SECONDE PÉREMPTION SIGNALÉE le 2026-08-22 au soir, NON RÉPARÉE : la pastille « Édition »
+  en tête de la barre d'édition portait un FILET PLEIN et porte un filet TIRETÉ — c'est un
+  état, pas un interrupteur. L'ambre avait été jugée suffisante pour la distinguer des deux
+  boutons de la même barre ; la mesure l'a démentie, le même aplat `rgb(247, 234, 205)`
+  habille la ligne de gadget sélectionnée de la liste — visible dans cette image même, au
+  rang 12 — et celle-là répond au clic. Voir `.editbar__badge` dans `src/ui/app.css`.
+  Le cadrage ne bouge pas : la largeur du filet est inchangée.
+
   VÉRIFIÉE ET GARDÉE le 2026-08-22, au soir, pour la même raison, et celle-ci demandait
   d'aller regarder : un gadget EST sélectionné ici, la phrase du cadrage pourrait donc
   paraître. Elle ne paraît pas — vérifié sur `captures/panneau-gadget.fr.png` lui-même, où
@@ -732,6 +740,15 @@ trois laissés en place, sur quatre gadgets.*
 
 <!--
   REFAIRE CETTE CAPTURE — captures/version-et-nettoyage.<langue>.png (1200 × 1960)
+
+  PÉREMPTION SIGNALÉE le 2026-08-22 au soir, NON RÉPARÉE — la reprise en bloc des captures
+  part juste après ce chantier, et une image prise à mi-course aurait figé un travail en
+  cours. Ce qui a bougé : la pastille « périmé », en tête du bloc ambré, portait un FILET
+  PLEIN et porte un filet TIRETÉ. Elle ne se clique pas, et elle écrivait la même
+  déclaration que « Enlever ces 6 réglages », qui est un bouton — mesuré au navigateur,
+  1 px solid rgb(122, 84, 16) des deux côtés — tout en partageant la forme en pastille du
+  « Fermer » de la tête. Voir `.vdiag__badge` dans `src/ui/versionDiagnostic.css`. Le
+  cadrage ne bouge pas : seule la couleur du trait change, pas sa largeur.
   Écran ...... la modale « Version visée et compatibilité », nettoyage déplié.
   Langues .... CINQ exemplaires : .fr, .en, .nl, .de, .es.
   Fichier .... tests/fixtures/exports/2026-08-20_backup-00.xcfg

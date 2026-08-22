@@ -205,6 +205,48 @@ describe('app.css — une marque d’origine ne se déguise pas en bouton', () =
 })
 
 /**
+ * # L'ambre ne dit pas ce qui se clique
+ *
+ * `.props__badge` et `.editbar__badge` ont été laissées au filet plein le 2026-08-22 au
+ * matin, sur l'argument « aucun bouton n'est ambre plein, donc l'aplat les distingue ».
+ * L'argument n'avait jamais été mesuré, et la mesure du soir l'a démenti : l'aplat
+ * `rgb(247, 234, 205)` habille aussi `.wlist__row--selected`, la ligne de gadget
+ * sélectionnée, qui répond au clic — dans le MÊME bandeau que `.props__badge`, et
+ * 1 237 px sous `.editbar__badge`. Les relevés complets sont en tête de chaque règle.
+ *
+ * Ce qui distingue reste donc le trait, et lui seul.
+ */
+describe('app.css — les deux pastilles ambrées ne se déguisent pas en boutons', () => {
+  it('le constat « hors catalogue » du bandeau porte un filet tireté', () => {
+    expect(rule('.props__badge')).toContain('border: 1px dashed var(--app-flag-line);')
+  })
+
+  it('la marque « Édition » de la barre aussi', () => {
+    expect(rule('.editbar__badge')).toContain('border: 1px dashed var(--app-flag-line);')
+  })
+
+  it('elles gardent leur aplat d’ambre : c’est le trait qui change, pas la couleur', () => {
+    // La couleur porte l'attention — « on est en édition », « ce réglage n'est pas au
+    // catalogue ». La lui retirer réglerait l'ambiguïté en perdant le message.
+    for (const selector of ['.props__badge', '.editbar__badge']) {
+      expect(rule(selector)).toContain('background: var(--app-flag-bg);')
+      expect(rule(selector)).toContain('color: var(--app-flag-ink);')
+    }
+  })
+
+  it('l’ambre seule ne suffisait pas : elle habille une ligne qui SE CLIQUE', () => {
+    // Le fait mesuré qui a tranché. Si `.wlist__row--selected` perdait cet aplat, la
+    // démonstration tomberait — et il faudrait remesurer avant de revenir en arrière.
+    expect(rule('.wlist__row--selected')).toContain('background: var(--app-flag-bg);')
+    expect(rule('.wlist__row')).toContain('cursor: pointer;')
+  })
+
+  it('les boutons voisins, eux, gardent le filet plein', () => {
+    expect(rule('.btn')).toContain('border: 1px solid var(--app-line-strong);')
+  })
+})
+
+/**
  * # Le troisième filet : celui qui annonce une bulle
  *
  * Le 2026-08-22, un pilote-testeur a trouvé l'hypothèse sur `KEYCODE_STEM_2` « par

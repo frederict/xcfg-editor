@@ -137,10 +137,14 @@ body {
      d'une boîte et les marques d'état partagent la même forme arrondie.
      ⚠ La forme, oui ; le **trait**, non. Un filet plein n'entoure que ce qui se clique —
      les marques qui ne font que renseigner (`.props__origin`, `.prefs__state`,
-     `.prefs__personal`) portent un filet tireté. Deux pastilles identiques dont une
-     seule répondait au clic ont valu à un pilote d'essai de cliquer pour rien.
+     `.prefs__personal`, `.props__badge`, `.editbar__badge`, `.vdiag__badge`) portent un
+     filet tireté. Deux pastilles identiques dont une seule répondait au clic ont valu à
+     un pilote d'essai de cliquer pour rien.
      ⚠ La règle n'a de sens que si **tout** ce qui se clique porte ce filet plein, y
-     compris les commandes discrètes : voir `.btn--ghost`, qui n'en portait aucun. */
+     compris les commandes discrètes : voir `.btn--ghost`, qui n'en portait aucun.
+     ⚠ Elle ne s'applique pas non plus au jugé : l'ambre des trois dernières marques a été
+     tenue pour une distinction suffisante, et la mesure l'a démentie — le même aplat
+     habille `.wlist__row--selected`, qui se clique. Chaque règle porte son relevé. */
   border-radius: 999px;
   background: transparent;
   color: var(--app-ink);
@@ -1109,6 +1113,22 @@ body {
   margin: 1rem 0 0;
 }
 
+/*
+ * ⚠ **DÉFAUT MESURÉ LE 2026-08-22, NON RÉPARÉ.** Ces pastilles ne se cliquent pas, et
+ * elles portent la déclaration de filet de `.btn` — au caractère près,
+ * `1px solid var(--app-line-strong)`. Relevé au navigateur, français, fenêtre 1400 px,
+ * sur `2026-08-20_backup-00.xcfg`, page 1 en portrait ouverte en édition : les quatre
+ * pastilles de la plaque de faits (« 6 gadgets », « 87,2 × 155,0 mm », « AIR³ 7.2 »,
+ * « WPXCAssistant ») mesurent 1 px solid rgb(207, 198, 180), coins 999 px, fond
+ * transparent — c'est-à-dire un `.btn` de 11 px. Elles sont à 110 px sous la barre
+ * d'édition, dont les deux boutons portent exactement le même filet.
+ *
+ * Pourquoi ce n'est pas corrigé ici : le chantier du jour portait sur trois pastilles
+ * nommées, et cette famille-ci demande sa propre mesure — elle croise `.glossed`, dont le
+ * pointillé vit déjà sur `WPXCAssistant`, et un filet tireté sous un mot souligné de
+ * pointillés n'a pas été regardé. Elle périme en outre `editeur-paysage.png` et les cinq
+ * `panneau-gadget.<langue>.png`, dont la reprise est en cours. À traiter d'un bloc.
+ */
 .chip {
   font-family: var(--font-data);
   font-size: 11px;
@@ -1643,10 +1663,33 @@ body.is-dragging .veil {
   overflow-wrap: anywhere;
 }
 
+/*
+ * « réglage hors catalogue » : un constat sur la ligne, pas une commande.
+ *
+ * ⚠ **Tireté**, comme `.props__origin` deux règles plus bas — les deux marques du même
+ * panneau ne peuvent pas dire la même chose de deux traits différents.
+ *
+ * L'ambre a été soupçonnée de suffire à la distinguer (« aucun bouton n'est ambre
+ * plein »), et la mesure l'a démentie. Relevé au navigateur le 22 août 2026, en français,
+ * fenêtre 1400 px, sur `2026-08-20_backup-00.xcfg`, page 6 en portrait, gadget « Carte
+ * XC » — trois de ces pastilles dans le bandeau :
+ *
+ * | Objet | Filet | Fond | Coins | Taille |
+ * |---|---|---|---|---|
+ * | cette pastille, inerte | 1 px solid rgb(207, 156, 44) | rgb(247, 234, 205) | 999 px | 132 × 20 |
+ * | `.btn props__restore-btn` | 1 px solid rgb(207, 198, 180) | transparent | 999 px | 149 × 24 |
+ * | `.btn props__adopt` | 1 px solid rgb(207, 198, 180) | transparent | 999 px | 119 × 24 |
+ * | `.wlist__row--selected`, qui SE CLIQUE | — | rgb(247, 234, 205) | — | — |
+ *
+ * L'aplat d'ambre `rgb(247, 234, 205)` est donc porté, dans le même bandeau et au même
+ * instant, par cette marque inerte et par la ligne de gadget sélectionnée, qui répond au
+ * clic : il ne dit rien de ce qui s'active. Ne restait que le filet, plein, à 17 px près
+ * de la largeur des boutons voisins.
+ */
 .props__badge {
   flex: none;
   padding: 0.05rem 0.4rem;
-  border: 1px solid var(--app-flag-line);
+  border: 1px dashed var(--app-flag-line);
   border-radius: 999px;
   background: var(--app-flag-bg);
   color: var(--app-flag-ink);
@@ -1944,12 +1987,32 @@ body.is-dragging .veil {
   font-size: 13px;
 }
 
-/* La même ambre que le filet du bandeau et que le cerne du gadget : on est en édition,
-   et les trois marques du mode se répondent. */
+/*
+ * La même ambre que le filet du bandeau et que le cerne du gadget : on est en édition,
+ * et les trois marques du mode se répondent.
+ *
+ * ⚠ **Tireté** : « Édition » est un état, pas un interrupteur, et rien ne bascule si on
+ * clique dessus. Mesuré au navigateur le 22 août 2026, en français, fenêtre 1400 px, sur
+ * `2026-08-20_backup-00.xcfg`, page 1 en portrait ouverte en édition — la barre porte
+ * cette pastille et deux boutons :
+ *
+ * | Objet | Filet | Fond | Coins | Taille | x |
+ * |---|---|---|---|---|---|
+ * | cette pastille, inerte | 1 px solid rgb(207, 156, 44) | rgb(247, 234, 205) | 999 px | 59 × 22 | 36 |
+ * | `.btn` « Ajouter un gadget » | 1 px solid rgb(207, 198, 180) | transparent | 999 px | 140 × 33 | 1090 |
+ * | `.btn` « Gérer les pages » | 1 px solid rgb(207, 198, 180) | transparent | 999 px | 126 × 33 | 1238 |
+ * | `.wlist__row--selected`, qui SE CLIQUE | — | rgb(247, 234, 205) | — | — | 51 |
+ *
+ * Les mille pixels qui la séparent des deux boutons plaidaient pour la laisser telle
+ * quelle, et l'aplat d'ambre avec eux — jusqu'à la dernière ligne : le même
+ * `rgb(247, 234, 205)` habille, 1 237 px plus bas dans la même vue, la ligne de gadget
+ * sélectionnée, qui répond au clic. L'ambre ne distingue donc pas ce qui agit de ce qui
+ * renseigne ; le trait, lui, le peut.
+ */
 .editbar__badge {
   flex: none;
   padding: 0.1rem 0.6rem;
-  border: 1px solid var(--app-flag-line);
+  border: 1px dashed var(--app-flag-line);
   border-radius: 999px;
   background: var(--app-flag-bg);
   color: var(--app-flag-ink);

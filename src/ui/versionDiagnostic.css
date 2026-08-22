@@ -187,12 +187,32 @@
   font-size: 1rem;
 }
 
+/*
+ * Le constat, en un mot — et il ne se clique pas.
+ *
+ * ⚠ **Tireté, et non plein**, comme `.prefs__state` et `.props__origin` : c'est la règle
+ * d'`app.css`, plein pour ce qui agit, tireté pour ce qui renseigne. Elle n'a pas été
+ * appliquée ici par principe mais parce que la mesure était pire qu'ailleurs — relevé au
+ * navigateur le 22 août 2026, en français, fenêtre 1400 px, sur
+ * `2026-08-20_backup-00.xcfg`, cette modale ouverte et le nettoyage déplié :
+ *
+ * | Objet | Filet | Fond | Coins |
+ * |---|---|---|---|
+ * | cette pastille, inerte | 1 px solid rgb(122, 84, 16) | transparent | 999 px |
+ * | `.vclean__go`, un BOUTON | 1 px solid rgb(122, 84, 16) | transparent | 4 px |
+ * | `.btn` « Fermer », un BOUTON | 1 px solid rgb(207, 198, 180) | transparent | 999 px |
+ *
+ * Les deux règles écrivaient littéralement la même déclaration — `1px solid currentcolor`,
+ * dans un bloc où `color` vaut `--app-flag-ink` — et la pastille empruntait aux deux
+ * boutons de l'écran ce que chacun avait de distinctif : la couleur du filet à l'un, la
+ * forme à l'autre. Il ne restait rien pour la distinguer que son contenu.
+ */
 .vdiag__badge {
   flex: none;
   padding: 0.1rem 0.6rem;
   font-size: 0.78rem;
   font-weight: 600;
-  border: 1px solid currentcolor;
+  border: 1px dashed currentcolor;
   border-radius: 999px;
 }
 
