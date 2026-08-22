@@ -14,7 +14,17 @@ import { widgetAtPoint } from '../../src/ui/editor'
 import {
   coversEntirely, renderWidgetList, unreachableWidgets, widgetListEntries
 } from '../../src/ui/widgetList'
+import { makeTranslator } from '../../src/i18n'
+import frenchMessages from '../../src/i18n/messages/fr'
+import germanMessages from '../../src/i18n/messages/de'
 import { PAGES_2026 } from '../fixtures/paths'
+
+/**
+ * Les deux axes : `FRENCH` / `GERMAN` portent **notre prose**, le paramètre `language` de
+ * la liste porte les **libellés de XCTrack**. Ils divergent exprès plus bas.
+ */
+const FRENCH = makeTranslator('fr', frenchMessages)
+const GERMAN = makeTranslator('de', germanMessages)
 
 const DEVICE = deviceFor('AIR3 AIR3-7.2')
 
@@ -594,5 +604,46 @@ describe('cas limites', () => {
     expect(entries[0]?.name).toBe('Altitude GPS')
     expect(entries[1]?.name).toBe('WInconnu')
     expect(widgetListEntries(page.widgets, DEVICE, 'landscape', 'en')[0]?.name).toBe('GPS Alt')
+  })
+})
+
+/* ================================================== les deux axes de langue */
+
+describe('les deux axes de langue', () => {
+  it('traduit notre prose sans toucher aux noms de gadgets', () => {
+    const page = buildPage([['WAltitude', 0, 0, 2000, 2000]])
+    const list = renderWidgetList({
+      page, device: DEVICE, orientation: 'landscape', language: 'fr',
+      selection: undefined, onSelect: () => {}, tr: GERMAN
+    })
+
+    expect(list.element.querySelector('.wlist__title')?.textContent)
+      .toBe('Widgets der Seite')
+    // Le libellé, lui, reste celui que l'appareil du pilote affiche.
+    expect(list.element.querySelector('.wlist__name')?.textContent).toBe('Altitude GPS')
+  })
+
+  it('l’intitulé vocal mêle les deux axes sans les confondre', () => {
+    const page = buildPage([['WAltitude', 0, 0, 2000, 2000]])
+    const list = renderWidgetList({
+      page, device: DEVICE, orientation: 'landscape', language: 'en',
+      selection: undefined, onSelect: () => {}, tr: FRENCH
+    })
+    const spoken = rowsOf(list)[0]?.getAttribute('aria-label') ?? ''
+    // « Rang 1 sur 1 » est de nous, « GPS Alt » est de XCTrack.
+    expect(spoken).toContain('Rang 1 sur 1')
+    expect(spoken).toContain('GPS Alt')
+    expect(spoken).toContain('millimètres')
+  })
+
+  it('sans traducteur, dit mot pour mot ce que le catalogue français dit', () => {
+    const page = buildPage(SAMPLE)
+    const inherited = build(page)
+    const french = renderWidgetList({
+      page, device: DEVICE, orientation: 'landscape', language: 'fr',
+      selection: undefined, onSelect: () => {}, tr: FRENCH
+    })
+    expect(inherited.element.textContent).toBe(french.element.textContent)
+    expect(inherited.element.innerHTML).toBe(french.element.innerHTML)
   })
 })

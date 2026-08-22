@@ -26,12 +26,23 @@ import {
   renderWidgetPalette,
   NEW_WIDGET_CELLS,
   NOT_OFFERED_FAMILY,
-  NOT_OFFERED_LABEL,
+  notOfferedLabel,
   WIDGET_CLASS_PREFIX,
   type PaletteEntry,
   type PaletteSources
 } from '../../src/ui/widgetPalette'
+import { makeTranslator } from '../../src/i18n'
+import frenchMessages from '../../src/i18n/messages/fr'
+import germanMessages from '../../src/i18n/messages/de'
 import { BACKUP_2026 } from '../fixtures/paths'
+
+/**
+ * Les deux axes de langue, chacun avec son propre porteur : `FRENCH` / `GERMAN` sont
+ * **notre prose**, le paramètre `language` de la palette est celui des **libellés de
+ * XCTrack**. Les tests qui suivent les font diverger exprès.
+ */
+const FRENCH = makeTranslator('fr', frenchMessages)
+const GERMAN = makeTranslator('de', germanMessages)
 
 /**
  * La palette se juge sur un fichier réel : ce qu'on veut vérifier, c'est qu'un widget
@@ -227,7 +238,8 @@ describe('le groupement par famille', () => {
 
     const groups = visibleGroups(view.element)
     expect(groups[groups.length - 1]).toBe(NOT_OFFERED_FAMILY)
-    expect(texts(view.element, '.palette__group-name')).toContain(NOT_OFFERED_LABEL)
+    expect(texts(view.element, '.palette__group-name'))
+      .toContain(notOfferedLabel(FRENCH))
   })
 
   it('rend les lignes en UNE seule colonne, dans l’ordre des entrées', () => {
@@ -569,7 +581,7 @@ describe('la vignette', () => {
   })
 
   it('classe les aperçus, et n’en laisse aucun sans explication', () => {
-    // Trois sortes, trois phrases — voir PREVIEW_NOTES.
+    // Trois sortes, trois phrases — voir `previewNote`.
     expect(previewKind('WCompass')).toBe('drawn')
     expect(previewKind('WLiveMessage')).toBe('blank')
     // Cinq types seulement retombent encore sur le repli générique, et ce sont ceux que
@@ -940,5 +952,61 @@ describe('le rappel onChoose', () => {
     expect(() => {
       view.element.querySelector<HTMLElement>('.palette__entry')!.click()
     }).not.toThrow()
+  })
+})
+
+/* ================================================== les deux axes de langue */
+
+describe('les deux axes de langue', () => {
+  it('traduit notre prose sans toucher aux libellés de XCTrack', () => {
+    // Le cas qui décide : un pilote dont l'AIR³ est en français lit l'interface en
+    // allemand. Les libellés doivent rester **exactement** ceux de son appareil.
+    const view = renderWidgetPalette({
+      sources: EMPTY,
+      catalog: CATALOG,
+      device: AIR3,
+      orientation: 'landscape',
+      settings: SETTINGS,
+      language: 'fr',
+      tr: GERMAN
+    })
+
+    // Notre prose suit le pilote.
+    expect(texts(view.element, '.palette__title')).toEqual(['Widget hinzufügen'])
+    expect(view.element.querySelector<HTMLInputElement>('.palette__search')?.placeholder)
+      .toBe('Widget suchen')
+
+    // Les libellés suivent le fichier : le catalogue chargé est le français, et les noms
+    // de gadgets restent français, dans une palette dont tout le reste est allemand.
+    const names = texts(view.element, '.palette__name')
+    expect(names).toContain('Boussole et vent')
+    expect(names.join(' ')).not.toContain('Kompass')
+  })
+
+  it('la phrase d’annulation porte le libellé de XCTrack, pas sa traduction', () => {
+    const list = entries(allWidgets(document()), 'en')
+    const entry = entryFor(list, 'WCompass')
+    const bounds = newWidgetBounds(AIR3, 'landscape')
+    // Libellés en anglais, prose en allemand : chacun le sien, dans la même phrase.
+    expect(buildWidget(entry, bounds, GERMAN).description)
+      .toBe('„Compass and wind“ hinzufügen — Kopie eines Widgets dieser Seite')
+  })
+
+  it('sans traducteur, dit mot pour mot ce que le catalogue français dit', () => {
+    // Le repli hérité est là tant que `main.ts` ne passe pas `tr` : il doit être
+    // rigoureusement le catalogue français, sans quoi la bascule changerait des phrases.
+    const sources = fromPage(document(), 'landscape', 0)
+    const withoutTr = palette(sources)
+    const withFrench = renderWidgetPalette({
+      sources,
+      catalog: CATALOG,
+      device: AIR3,
+      orientation: 'landscape',
+      settings: SETTINGS,
+      tr: FRENCH
+    })
+    // Le texte, et non le HTML : les identifiants portent un compteur de palette, qui
+    // diffère forcément entre deux rendus.
+    expect(withoutTr.element.textContent).toBe(withFrench.element.textContent)
   })
 })

@@ -88,7 +88,23 @@ const IDENTICAL_ON_PURPOSE: ReadonlySet<string> = new Set<string>([
   'nl/editor.duplicateKeys',
   'es/editor.duplicateKeys',
   'en/editor.deleteKeys',
-  'nl/editor.deleteKeys'
+  'nl/editor.deleteKeys',
+  /*
+   * Domaine `widgets` (`properties.ts`, `widgetPalette.ts`, `widgetList.ts`). Onze cas,
+   * trois causes, aucune traduction oubliée :
+   *
+   * - « Pro » est le **badge de XCTrack**, écrit ainsi dans les cinq langues ; « UTM » est
+   *   un sigle international qui ne se traduit dans aucune ;
+   * - « yards (yd) » en anglais, « type » / « types » en anglais et en néerlandais : le
+   *   mot que la langue emploie réellement se trouve être celui du français ;
+   * - l'allemand et l'espagnol, eux, disent bien « Typ » / « Typen » et « tipo » /
+   *   « tipos » : la coïncidence n'est pas générale, d'où l'exception nominative.
+   */
+  ...UI_LANGUAGES.map((language) => `${language}/properties.coordUtm`),
+  ...UI_LANGUAGES.map((language) => `${language}/palette.pro`),
+  'en/properties.unitYard',
+  'en/palette.typeCount',
+  'nl/palette.typeCount'
 ])
 
 describe('catalogues de messages', () => {

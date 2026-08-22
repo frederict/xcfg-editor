@@ -11,6 +11,10 @@ import type { RenderSettings } from '../model/preferences'
 import { readWidget } from '../model/widget'
 import { renderPage, widgetHeightPx, widgetWidthPx } from '../render/canvas'
 import { isBlankAtRest, isRegistered } from '../render/registry'
+import {
+  makeTranslator, UI_FALLBACK_LANGUAGE, type MessageCatalog, type Translator
+} from '../i18n'
+import frenchWidgets from '../i18n/messages/fr/widgets'
 import { aspectRatioOf } from './views'
 
 /**
@@ -85,6 +89,31 @@ import { aspectRatioOf } from './views'
  * donnait gratuitement.
  */
 
+/* ========================================================== le traducteur, en attendant */
+
+/**
+ * Le traducteur de **notre prose**, avec son repli français — provisoire.
+ *
+ * La palette reçoit son traducteur dans ses options (`WidgetPaletteOptions.tr`), comme
+ * `src/i18n/CLAUDE.md` § 5 le prescrit. `main.ts` — qui le détient déjà, et qui appartient
+ * à un autre lot d'extraction — ne le lui passe pas encore : d'ici là, le repli monte le
+ * **catalogue français du domaine `widgets`**, c'est-à-dire exactement les phrases que ce
+ * module portait en clair jusqu'ici, et rien de plus. Le comportement est donc celui
+ * d'aujourd'hui, au caractère près, et `tests/ui/widgetPalette.test.ts` l'épingle.
+ *
+ * `tr` devient obligatoire — et ces dix lignes disparaissent — le jour où `main.ts` ajoute
+ * `tr` à son appel de `renderWidgetPalette`.
+ */
+let inheritedProse: Translator | undefined
+
+function prose(tr: Translator | undefined): Translator {
+  if (tr !== undefined) return tr
+  inheritedProse ??= makeTranslator(
+    UI_FALLBACK_LANGUAGE, frenchWidgets as unknown as MessageCatalog
+  )
+  return inheritedProse
+}
+
 /** Le préfixe des classes de widgets : les 105 widgets du corpus le portent tous. */
 export const WIDGET_CLASS_PREFIX = 'org.xcontest.XCTrack.widget.w.'
 
@@ -132,8 +161,18 @@ const NEW_WIDGET_UNIVERSALS: Array<[key: string, raw: string, kind: JsonNode['ki
  */
 export const NOT_OFFERED_FAMILY = 'xcNotOffered'
 
-/** Le libellé de ce groupe : il dit le fait, pas le jugement. */
-export const NOT_OFFERED_LABEL = 'Présents dans le fichier, non proposés par XCTrack'
+/**
+ * Le libellé de ce groupe : il dit le fait, pas le jugement.
+ *
+ * C'est **notre** phrase et non celle de XCTrack — l'écran d'ajout n'a pas de groupe à
+ * nommer, puisqu'il ne propose pas ces types. Elle suit donc l'axe `ui`, comme le reste de
+ * notre prose, là où les dix autres en-têtes viennent de `catalog.familyLabel` et suivent
+ * l'axe `labels`. Les deux se côtoient dans la même colonne, et c'est le seul endroit de
+ * la palette où cela arrive.
+ */
+export function notOfferedLabel(tr: Translator): string {
+  return tr.t('palette.notOffered')
+}
 
 /* --------------------------------------------------------------------- la géométrie */
 
@@ -379,18 +418,25 @@ export interface PaletteChoice {
  * Chaque appel rend un nœud **indépendant** — cliquer deux fois pose deux widgets, et le modèle
  * dupliqué n'est jamais partagé avec sa copie.
  */
-export function buildWidget(entry: PaletteEntry, bounds: Bounds): PaletteChoice {
+export function buildWidget(
+  entry: PaletteEntry, bounds: Bounds, tr?: Translator
+): PaletteChoice {
+  const say = prose(tr)
+  // `entry.label` est le libellé de XCTrack : il traverse la phrase par un repère nommé,
+  // dans la langue du fichier ouvert, jamais dans celle de l'interface.
   if (entry.model !== undefined) {
-    const origin = entry.modelFromPage ? 'de cette page' : 'd’une autre page'
     return {
       node: duplicateWidget(entry.model, bounds),
-      description: `Ajouter « ${entry.label} » — copie d’un gadget ${origin}`,
+      description: say.t(
+        entry.modelFromPage ? 'palette.addCopyFromPage' : 'palette.addCopyFromElsewhere',
+        { name: entry.label }
+      ),
       entry
     }
   }
   return {
     node: createWidgetNode(entry.className, bounds),
-    description: `Ajouter « ${entry.label} » — gadget neuf, réglages laissés à XCTrack`,
+    description: say.t('palette.addNew', { name: entry.label }),
     entry
   }
 }
@@ -455,17 +501,16 @@ export function previewKind(shortName: string): PreviewKind {
   return isRegistered(shortName) ? 'drawn' : 'generic'
 }
 
+/** La clé de la phrase qui accompagne chaque sorte de vignette. */
+const PREVIEW_NOTE_KEYS = {
+  drawn: 'palette.previewDrawn',
+  generic: 'palette.previewGeneric',
+  blank: 'palette.previewBlank'
+} as const
+
 /** La phrase qui accompagne chaque sorte de vignette. Aucune case vide sans explication. */
-export const PREVIEW_NOTES: Record<PreviewKind, string> = {
-  drawn:
-    'Aperçu dessiné par l’éditeur d’après les réglages du gadget. Les valeurs affichées ' +
-    'sont des exemples fixes : rien n’est calculé depuis un vol.',
-  generic:
-    'Cet éditeur n’a pas de dessin dédié pour ce type : la vignette montre son titre et un ' +
-    'tiret à la place de la valeur. Sur l’appareil, il affichera ses données de vol.',
-  blank:
-    'Ce type ne peint rien au repos sur l’appareil : la vignette est vide parce que l’écran ' +
-    'l’est aussi tant qu’aucun message n’est arrivé.'
+export function previewNote(kind: PreviewKind, tr: Translator): string {
+  return tr.t(PREVIEW_NOTE_KEYS[kind])
 }
 
 /**
@@ -532,7 +577,19 @@ export interface WidgetPaletteOptions {
   orientation: Orientation
   /** Les préférences du fichier ouvert : les vignettes se dessinent avec, comme la page. */
   settings: RenderSettings
+  /**
+   * La langue des **libellés de XCTrack** — celle du fichier ouvert. Elle nomme les types
+   * de gadgets et les familles, jamais notre prose : voir `tr`, et `src/i18n/axes.ts`.
+   */
   language?: string
+  /**
+   * Le traducteur de **notre prose**, dans la langue que le pilote a choisie. Indépendant
+   * de `language` : la légende se lit en français pendant que « Compass and wind » reste
+   * en anglais, parce que c'est ce que l'appareil affiche.
+   *
+   * Optionnel le temps que `main.ts` le passe — voir `prose` en tête de ce module.
+   */
+  tr?: Translator
   /** Appelé au choix d'un type, avec un nœud neuf prêt pour `insertWidget`. */
   onChoose?: (node: JsonNode, description: string) => void
 }
@@ -582,6 +639,7 @@ let paletteCount = 0
  */
 export function renderWidgetPalette(options: WidgetPaletteOptions): WidgetPalette {
   const language = options.language ?? 'fr'
+  const tr = prose(options.tr)
   const entries = buildPaletteEntries(options.sources, options.catalog, language)
   const id = `palette-${++paletteCount}`
   const present = entries.filter((entry) => entry.origin === 'duplicate').length
@@ -589,8 +647,8 @@ export function renderWidgetPalette(options: WidgetPaletteOptions): WidgetPalett
   const root = el('section', 'palette')
   const head = el('header', 'palette__head')
   head.append(
-    el('h2', 'palette__title', 'Ajouter un gadget'),
-    el('p', 'palette__count', `${entries.length} types`)
+    el('h2', 'palette__title', tr.t('palette.title')),
+    el('p', 'palette__count', tr.t('palette.typeCount', { count: entries.length }))
   )
   root.append(head)
 
@@ -598,11 +656,10 @@ export function renderWidgetPalette(options: WidgetPaletteOptions): WidgetPalett
   const search = el('input', 'palette__search')
   search.type = 'search'
   search.id = `${id}-search`
-  search.placeholder = 'Rechercher un gadget'
+  search.placeholder = tr.t('palette.search')
   // La recherche porte sur le nom lisible ET sur le nom technique (`WCompMap`,
   // `org.xcontest…`) : le dire ainsi, parce que « classe » est notre mot.
-  search.setAttribute('aria-label',
-    'Rechercher un gadget par son nom, ou par le nom qu’il porte dans le fichier')
+  search.setAttribute('aria-label', tr.t('palette.searchAria'))
   tools.append(search)
 
   // La case rend en un clic la liste courte que l'ancien groupement par présence donnait
@@ -614,23 +671,17 @@ export function renderWidgetPalette(options: WidgetPaletteOptions): WidgetPalett
     onlyBox.type = 'checkbox'
     onlyBox.id = `${id}-only`
     label.htmlFor = onlyBox.id
-    label.append(onlyBox, el('span', undefined, `Déjà dans le fichier (${present})`))
-    label.title =
-      'Ces types-là seront copiés d’un gadget que XCTrack a lui-même écrit : tous leurs ' +
-      'réglages sont conservés, y compris ceux que cet éditeur ne sait pas présenter.'
+    label.append(
+      onlyBox, el('span', undefined, tr.t('palette.onlyPresent', { count: present }))
+    )
+    label.title = tr.t('palette.onlyPresentHelp')
     tools.append(label)
   }
   root.append(tools)
 
-  root.append(el(
-    'p', 'palette__legend',
-    'Liseré plein : le gadget sera copié d’un exemplaire déjà présent dans le fichier, ' +
-    'avec tous ses réglages. ' +
-    'Liseré pointillé : il sera créé avec ses seuls réglages de base, XCTrack ajoutant ' +
-    'les autres à la lecture. La vignette montre, dans les deux cas, ce que le clic posera.'
-  ))
+  root.append(el('p', 'palette__legend', tr.t('palette.legend')))
 
-  const empty = el('p', 'palette__empty', 'Aucun gadget ne porte ce nom.')
+  const empty = el('p', 'palette__empty', tr.t('palette.noMatch'))
   empty.hidden = true
   empty.setAttribute('role', 'status')
   root.append(empty)
@@ -652,7 +703,9 @@ export function renderWidgetPalette(options: WidgetPaletteOptions): WidgetPalett
     groupHead.dataset.family = family
     groupHead.append(el(
       'span', 'palette__group-name',
-      family === NOT_OFFERED_FAMILY ? NOT_OFFERED_LABEL : options.catalog.familyLabel(family)
+      family === NOT_OFFERED_FAMILY
+        ? notOfferedLabel(tr)
+        : options.catalog.familyLabel(family)
     ))
     const count = el('span', 'palette__group-count', String(own.length))
     groupHead.append(count)
@@ -660,7 +713,7 @@ export function renderWidgetPalette(options: WidgetPaletteOptions): WidgetPalett
 
     const group: Group = { family, head: groupHead, count, rows: [] }
     for (const entry of own) {
-      const element = buildRow(entry, options, bounds, aspectRatio, language)
+      const element = buildRow(entry, options, bounds, aspectRatio, language, tr)
       group.rows.push({
         element,
         haystack: normalize(`${entry.label} ${entry.shortName} ${entry.className}`),
@@ -718,20 +771,27 @@ export function renderWidgetPalette(options: WidgetPaletteOptions): WidgetPalett
   return { element: root, entries, filter, showOnlyPresent }
 }
 
-/** L'intitulé lu par l'assistance vocale : tout ce que la ligne montre, en toutes lettres. */
-function spokenLabel(entry: PaletteEntry, familyLabel: string): string {
+/**
+ * L'intitulé lu par l'assistance vocale : tout ce que la ligne montre, en toutes lettres.
+ *
+ * Les trois premiers morceaux viennent de XCTrack — libellé, nom court, famille — et les
+ * suivants sont de nous : c'est la ligne où les deux axes se touchent le plus, et ils s'y
+ * juxtaposent sans jamais se mélanger. Le `', '` est celui d'une **fiche**, pas d'une
+ * énumération de prose : `format.list` y ferait lire « … et sera créé ».
+ */
+function spokenLabel(entry: PaletteEntry, familyLabel: string, tr: Translator): string {
   const parts = [entry.label, entry.shortName, familyLabel]
-  if (entry.pro) parts.push('licence Pro')
+  if (entry.pro) parts.push(tr.t('palette.spokenPro'))
   if (entry.onPageCount > 0) {
     parts.push(entry.onPageCount > 1
-      ? `déjà ${entry.onPageCount} fois sur cette page`
-      : 'déjà sur cette page')
+      ? tr.t('palette.spokenHereCount', { count: entry.onPageCount })
+      : tr.t('palette.spokenHereOnce'))
   }
   parts.push(entry.origin === 'duplicate'
     ? (entry.modelFromPage
-        ? 'sera copié avec les réglages du gadget de cette page'
-        : 'sera copié avec les réglages d’un gadget d’une autre page')
-    : 'sera créé avec ses seuls réglages de base')
+        ? tr.t('palette.spokenCopyFromPage')
+        : tr.t('palette.spokenCopyFromElsewhere'))
+    : tr.t('palette.spokenCreate'))
   return parts.join(', ')
 }
 
@@ -741,7 +801,7 @@ function spokenLabel(entry: PaletteEntry, familyLabel: string): string {
  */
 function buildRow(
   entry: PaletteEntry, options: WidgetPaletteOptions,
-  bounds: Bounds, aspectRatio: number, language: string
+  bounds: Bounds, aspectRatio: number, language: string, tr: Translator
 ): HTMLElement {
   const row = el('button', 'palette__entry')
   row.type = 'button'
@@ -754,22 +814,24 @@ function buildRow(
   row.dataset.preview = kind
   if (entry.ambiguousLabel) row.dataset.ambiguous = 'true'
   const familyLabel = entry.family === NOT_OFFERED_FAMILY
-    ? NOT_OFFERED_LABEL
+    ? notOfferedLabel(tr)
     : options.catalog.familyLabel(entry.family)
-  row.setAttribute('aria-label', spokenLabel(entry, familyLabel))
+  row.setAttribute('aria-label', spokenLabel(entry, familyLabel, tr))
 
   const thumb = el('span', 'palette__thumb')
   thumb.dataset.preview = kind
-  thumb.title = PREVIEW_NOTES[kind]
+  thumb.title = previewNote(kind, tr)
   thumb.append(renderThumbnail(entry, bounds, aspectRatio, options.settings, language))
   // « rien à voir » écrit noir sur blanc plutôt qu'un cadre vide sans explication : le titre
   // au survol dit pourquoi, le texte dit qu'il n'y a pas d'erreur.
   // Deux cases quasi vides, deux causes opposées, et un pilote ne peut pas les deviner :
   // « rien au repos » est un fait de l'appareil — rassurant —, « aperçu non dessiné » est
   // notre limite. Les confondre est exactement ce que ce projet existe pour éviter.
-  if (kind === 'blank') thumb.append(el('span', 'palette__thumb-note', 'rien au repos'))
+  if (kind === 'blank') {
+    thumb.append(el('span', 'palette__thumb-note', tr.t('palette.nothingAtRest')))
+  }
   if (kind === 'generic') {
-    thumb.append(el('span', 'palette__thumb-note', 'aperçu non dessiné'))
+    thumb.append(el('span', 'palette__thumb-note', tr.t('palette.notDrawn')))
   }
   row.append(thumb)
 
@@ -785,8 +847,8 @@ function buildRow(
 
   const marks = el('span', 'palette__marks')
   if (entry.pro) {
-    const pro = el('span', 'palette__pro', 'Pro')
-    pro.title = 'XCTrack réserve ce gadget à la licence Pro.'
+    const pro = el('span', 'palette__pro', tr.t('palette.pro'))
+    pro.title = tr.t('palette.proHelp')
     marks.append(pro)
   }
   if (entry.onPageCount > 0) {
@@ -794,24 +856,22 @@ function buildRow(
     here.append(
       el('span', 'palette__dot'),
       el('span', undefined, entry.onPageCount > 1
-        ? `déjà ici × ${entry.onPageCount}`
-        : 'déjà ici')
+        ? tr.t('palette.hereCount', { count: entry.onPageCount })
+        : tr.t('palette.hereOnce'))
     )
     here.title = entry.onPageCount > 1
-      ? `${entry.onPageCount} exemplaires de ce type sont déjà sur la page affichée.`
-      : 'Ce type est déjà sur la page affichée.'
+      ? tr.t('palette.hereCountHelp', { count: entry.onPageCount })
+      : tr.t('palette.hereOnceHelp')
     marks.append(here)
   } else if (entry.count > 0) {
-    const elsewhere = el('span', 'palette__elsewhere', 'ailleurs')
-    elsewhere.title =
-      `Absent de cette page, mais présent ${entry.count} fois ailleurs dans le fichier : ` +
-      'la copie partira de ce gadget-là, avec ses réglages.'
+    const elsewhere = el('span', 'palette__elsewhere', tr.t('palette.elsewhere'))
+    elsewhere.title = tr.t('palette.elsewhereHelp', { count: entry.count })
     marks.append(elsewhere)
   }
   if (marks.childElementCount > 0) row.append(marks)
 
   row.addEventListener('click', () => {
-    const choice = buildWidget(entry, bounds)
+    const choice = buildWidget(entry, bounds, tr)
     options.onChoose?.(choice.node, choice.description)
   })
   return row

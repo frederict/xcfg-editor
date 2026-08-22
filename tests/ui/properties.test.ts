@@ -14,12 +14,23 @@ import {
   colorToLiteral,
   loadOptionTexts,
   renderProperties,
+  RESTORE_LABEL,
   setFieldValue,
   writeMissingDefault,
   type PropertyField,
   type PropertyForm
 } from '../../src/ui/properties'
+import { makeTranslator } from '../../src/i18n'
+import frenchMessages from '../../src/i18n/messages/fr'
+import germanMessages from '../../src/i18n/messages/de'
 import { BACKUP_2025, BACKUP_2026 } from '../fixtures/paths'
+
+/**
+ * Les deux axes : `FRENCH` / `GERMAN` portent **notre prose**, le second argument de
+ * `buildPropertyForm` porte les **libellés de XCTrack**. Ils divergent exprès plus bas.
+ */
+const FRENCH = makeTranslator('fr', frenchMessages)
+const GERMAN = makeTranslator('de', germanMessages)
 import { DEFAULTS_VERSION_CODE, DEFAULTS_VERSION_NAME } from '../../src/catalog/widgetDefaults'
 
 /**
@@ -191,9 +202,14 @@ describe('description du formulaire', () => {
   })
 
   it('titre le panneau du nom lisible du widget', () => {
+    // Le formulaire ne porte que le **libellé de XCTrack** : « Gadget : » est notre
+    // phrase, elle suit la langue de l'interface et ne se compose qu'au rendu.
     const form = buildPropertyForm(compass(document()))
-    expect(form.title).toMatch(/^Gadget : /)
-    expect(form.title).not.toMatch(/WCompass/)
+    expect(form.label).not.toMatch(/WCompass/)
+    expect(form.label.length).toBeGreaterThan(0)
+    const panel = renderProperties({ form })
+    expect(panel.element.querySelector('.props__title')?.textContent)
+      .toBe(`Gadget : ${form.label}`)
   })
 
   it('suit la langue demandée, et retombe sur l’anglais', () => {
@@ -1428,5 +1444,65 @@ describe('rétablir la valeur d’usine d’un réglage que le pilote a changé'
     const title = restoreButton(panel, 'windStyle').title
     expect(title).toContain('Écrit « windStyle » : Aucun dans le fichier, à la place de Arc.')
     expect(title).toContain('celui-là laisse l’appareil se comporter exactement comme aujourd’hui, celui-ci non')
+  })
+})
+
+/* ================================================== les deux axes de langue */
+
+describe('les deux axes de langue', () => {
+  it('traduit notre prose sans toucher aux libellés du panneau', () => {
+    // Le cas qui décide : le fichier est en français, l'interface en allemand. Les deux
+    // se croisent sur chaque ligne, et aucun ne déteint sur l'autre.
+    const form = buildPropertyForm(compass(document()), 'fr', GERMAN)
+    const panel = renderProperties({ form, tr: GERMAN, readOnly: true })
+
+    expect(panel.element.querySelector('.props__title')?.textContent)
+      .toBe(`Widget: ${form.label}`)
+    expect(form.label).toBe('Boussole et vent')
+    expect(panel.element.querySelector('.props__count')?.textContent)
+      .toMatch(/Einstellungen$/)
+
+    // Les intitulés de réglages viennent de l'APK : ils restent français.
+    const labels = [...panel.element.querySelectorAll('.props__label')]
+      .map((node) => node.textContent ?? '')
+    expect(labels).toContain('Rotation du compas')
+    expect(labels.join(' ')).not.toMatch(/Kompass|Drehung/)
+  })
+
+  it('nomme les unités nues dans la langue de l’interface, jamais dans celle du fichier', () => {
+    // `UNIT_VALUE_KEYS` est le seul endroit où NOTRE mot remplace une valeur du fichier :
+    // il suit donc le pilote, pas l'appareil. Le fichier reste en français dans les deux
+    // cas — seul le traducteur change.
+    const choicesOf = (tr: typeof FRENCH): string[] =>
+      fieldAt(buildPropertyForm(withUnits(document()), 'fr', tr), '_units')
+        .choices.map((choice) => choice.label)
+
+    expect(choicesOf(FRENCH)).toContain('comme les réglages généraux')
+    expect(choicesOf(GERMAN)).toContain('wie die allgemeinen Einstellungen')
+    // Et la valeur écrite dans le fichier, elle, ne bouge pas d'un octet.
+    const values = fieldAt(buildPropertyForm(withUnits(document()), 'fr', GERMAN), '_units')
+      .choices.map((choice) => choice.value)
+    expect(values).toContain('SYS_UNIT')
+  })
+
+  it('« Rétablir la valeur d’usine » dit dans le catalogue ce que la constante dit', () => {
+    // La constante héritée est encore celle qu'emploie `ui/preferencesPage.ts`, où un test
+    // l'épingle aussi. Tant que les deux coïncident, les deux écrans disent le même mot.
+    expect(frenchMessages['properties.restoreFactoryValue']).toBe(RESTORE_LABEL)
+    expect(RESTORE_LABEL).toBe('Rétablir la valeur d’usine')
+  })
+
+  it('sans traducteur, dit mot pour mot ce que le catalogue français dit', () => {
+    // Le repli hérité est là tant que `main.ts` ne passe pas `tr` : il doit être
+    // rigoureusement le catalogue français, sans quoi la bascule changerait des phrases.
+    const inherited = renderProperties({
+      form: buildPropertyForm(oldCompass(document())), readOnly: true
+    })
+    const french = renderProperties({
+      form: buildPropertyForm(oldCompass(document()), 'fr', FRENCH), tr: FRENCH, readOnly: true
+    })
+    // Le texte, et non le HTML : les identifiants de contrôles portent un compteur de
+    // panneau, qui diffère forcément entre deux rendus.
+    expect(inherited.element.textContent).toBe(french.element.textContent)
   })
 })

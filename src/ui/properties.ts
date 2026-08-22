@@ -11,8 +11,10 @@ import {
   DEFAULTS_VERSION_NAME, formatDefault, missingDefaultKeys,
   type DefaultState, type DefaultsTrust
 } from '../catalog/widgetDefaults'
-import type { PluralForms } from '../i18n'
-import { plural } from './prose'
+import {
+  makeTranslator, UI_FALLBACK_LANGUAGE, type MessageCatalog, type Translator
+} from '../i18n'
+import frenchWidgets from '../i18n/messages/fr/widgets'
 
 /**
  * Le panneau de propriétés d'un widget : la description du formulaire, puis son rendu.
@@ -88,6 +90,37 @@ import { plural } from './prose'
  * `restorable` et `buildRestoreLine`, et le pendant côté préférences
  * (`ui/preferencesPage.ts`).
  */
+
+/* ========================================================== le traducteur, en attendant */
+
+/**
+ * Le traducteur de **notre prose**, avec son repli français — provisoire.
+ *
+ * Ce module est celui où les deux axes de langue se croisent le plus souvent : la même
+ * ligne porte « Rotation du compas », qui vient de l'APK et suit le fichier ouvert
+ * (`textsFor`, axe `labels`), et « valeur d'usine inconnue », qui est de nous et suit le
+ * choix du pilote (`tr`, axe `ui`). Les deux ne passent jamais par la même porte.
+ *
+ * Le panneau reçoit son traducteur dans ses options (`PropertiesPanelOptions.tr`) et, pour
+ * les seules valeurs d'unité qu'il nomme lui-même, en argument de `buildPropertyForm`.
+ * `main.ts` — qui le détient déjà, et qui appartient à un autre lot d'extraction — ne le
+ * lui passe pas encore : d'ici là, le repli monte le **catalogue français du domaine
+ * `widgets`**, c'est-à-dire exactement les phrases que ce module portait en clair jusqu'ici,
+ * et rien de plus. Le comportement est donc celui d'aujourd'hui, au caractère près, et
+ * `tests/ui/properties.test.ts` l'épingle.
+ *
+ * `tr` devient obligatoire — et ces dix lignes disparaissent — le jour où `main.ts` ajoute
+ * `tr` à ses appels de `buildPropertyForm` et `renderProperties`.
+ */
+let inheritedProse: Translator | undefined
+
+function prose(tr: Translator | undefined): Translator {
+  if (tr !== undefined) return tr
+  inheritedProse ??= makeTranslator(
+    UI_FALLBACK_LANGUAGE, frenchWidgets as unknown as MessageCatalog
+  )
+  return inheritedProse
+}
 
 /* ------------------------------------------------------- les textes du catalogue */
 
@@ -274,8 +307,16 @@ export interface MissingDefault {
 export interface PropertyForm {
   className: string
   shortName: string
-  /** « Gadget : Boussole », comme l'intitulé de l'activité native. */
-  title: string
+  /**
+   * Le libellé du type de gadget, tel que XCTrack le nomme — « Boussole et vent ». C'est
+   * un mot de l'APK, dans la langue du fichier ouvert : il suit l'axe `labels`.
+   *
+   * Le panneau l'encadre de **notre** phrase — « Gadget : … » —, qui suit l'axe `ui` et
+   * vit dans le catalogue (`properties.widgetTitle`). Les deux ne se composent qu'au
+   * rendu, et jamais ici : un formulaire construit une fois peut être affiché dans une
+   * autre langue d'interface sans être refait.
+   */
+  label: string
   /** La langue **demandée** par l'appelant : celle de la session, côté `main.ts`. */
   language: string
   /**
@@ -531,7 +572,7 @@ function buildField(seed: FieldSeed): PropertyField {
  */
 function expandComposite(
   shortName: string, node: JsonNode, key: string, option: WidgetOption | undefined,
-  parentLabel: string, help: string | undefined, texts: WidgetOptionTexts
+  parentLabel: string, help: string | undefined, texts: WidgetOptionTexts, tr: Translator
 ): PropertyField[] {
   const subKeys = orderedKeys(node)
   const hasMain = subKeys.includes(MAIN_FIELD)
@@ -559,7 +600,9 @@ function expandComposite(
       ...(main || option === undefined ? {} : { hint: parentLabel }),
       node: value,
       owner: node,
-      choices: main && option !== undefined ? namedChoices(texts.optionValues(option)) : [],
+      choices: main && option !== undefined
+        ? namedChoices(texts.optionValues(option), tr)
+        : [],
       ...(head && help !== undefined ? { help } : {}),
       depth: hasMain && !main ? 1 : 0
     }))
@@ -589,33 +632,42 @@ function expandComposite(
  * des noms propres et restent tels quels ; `HORIZONTAL`, `AUTO` ou `GRAPH_THERMAL`
  * demanderaient une interprétation, et une interprétation se mesure avant de s'écrire.
  */
-const UNIT_VALUE_NAMES: Record<string, string> = {
-  SYS_UNIT: 'comme les réglages généraux',
-  METER: 'mètres (m)',
-  FOOT: 'pieds (ft)',
-  YARD: 'yards (yd)',
-  KM_H: 'kilomètres par heure (km/h)',
-  M_S: 'mètres par seconde (m/s)',
-  MP_H: 'miles par heure (mph)',
-  KT: 'nœuds (kt)',
-  CELSIUS: 'degrés Celsius (°C)',
-  FAHRENHEIT: 'degrés Fahrenheit (°F)',
-  DEG: 'degrés décimaux',
-  DEG_MIN: 'degrés et minutes',
-  DEG_MIN_SEC: 'degrés, minutes et secondes',
-  UTM: 'UTM'
-}
+const UNIT_VALUE_KEYS = {
+  SYS_UNIT: 'properties.unitSystem',
+  METER: 'properties.unitMeter',
+  FOOT: 'properties.unitFoot',
+  YARD: 'properties.unitYard',
+  KM_H: 'properties.unitKmPerHour',
+  M_S: 'properties.unitMetersPerSecond',
+  MP_H: 'properties.unitMilesPerHour',
+  KT: 'properties.unitKnot',
+  CELSIUS: 'properties.unitCelsius',
+  FAHRENHEIT: 'properties.unitFahrenheit',
+  DEG: 'properties.coordDegrees',
+  DEG_MIN: 'properties.coordDegreesMinutes',
+  DEG_MIN_SEC: 'properties.coordDegreesMinutesSeconds',
+  UTM: 'properties.coordUtm'
+} as const
+
+/** Les quatorze clés de `UNIT_VALUE_KEYS`, en un type que `t()` accepte. */
+type UnitMessageKey = (typeof UNIT_VALUE_KEYS)[keyof typeof UNIT_VALUE_KEYS]
 
 /**
  * Nomme ce que le catalogue laisse nu. Une valeur déjà traduite par XCTrack n'est jamais
  * touchée : sa parole passe avant la nôtre.
+ *
+ * C'est le seul endroit du module où **notre** mot remplace une valeur du fichier — et il
+ * suit donc l'axe `ui`, alors que tout ce qui l'entoure suit l'axe `labels`. La condition
+ * `choice.label === choice.value` est exactement la frontière : tant que XCTrack a nommé
+ * la valeur, on se tait.
  */
-function namedChoices(choices: FieldChoice[]): FieldChoice[] {
-  return choices.map((choice) => (
-    choice.label === choice.value && UNIT_VALUE_NAMES[choice.value] !== undefined
-      ? { value: choice.value, label: UNIT_VALUE_NAMES[choice.value] as string }
-      : choice
-  ))
+function namedChoices(choices: FieldChoice[], tr: Translator): FieldChoice[] {
+  return choices.map((choice) => {
+    const key: UnitMessageKey | undefined =
+      UNIT_VALUE_KEYS[choice.value as keyof typeof UNIT_VALUE_KEYS]
+    if (choice.label !== choice.value || key === undefined) return choice
+    return { value: choice.value, label: tr.t(key) }
+  })
 }
 
 /**
@@ -627,7 +679,8 @@ function namedChoices(choices: FieldChoice[]): FieldChoice[] {
  * près que le type vient du relevé et non du document.
  */
 function describeMissing(
-  shortName: string, key: string, option: WidgetOption | undefined, texts: WidgetOptionTexts
+  shortName: string, key: string, option: WidgetOption | undefined,
+  texts: WidgetOptionTexts, tr: Translator
 ): MissingDefault {
   const value = defaultValueAt(shortName, key)
   const label = option === undefined ? key : texts.optionLabel(option)
@@ -653,7 +706,7 @@ function describeMissing(
   const node: JsonNode = typeof value === 'string'
     ? { kind: 'string', raw: encode(value) }
     : { kind: 'literal', raw: defaultText }
-  const choices = option === undefined ? [] : namedChoices(texts.optionValues(option))
+  const choices = option === undefined ? [] : namedChoices(texts.optionValues(option), tr)
   const pattern = option === undefined ? undefined : texts.resourceText(option.label)
 
   return {
@@ -708,8 +761,11 @@ export function writeMissingDefault(node: JsonNode, missing: MissingDefault): bo
  * formulaire est bâti dans celle qui l'est et le dit par `textLanguage` ; c'est
  * `renderProperties` qui répare.
  */
-export function buildPropertyForm(source: FormSource, language = 'fr'): PropertyForm {
+export function buildPropertyForm(
+  source: FormSource, language = 'fr', tr?: Translator
+): PropertyForm {
   const { node, shortName } = source
+  const say = prose(tr)
   const texts = textsFor(language)
   const catalog = new Map<string, WidgetOption>()
   for (const option of optionsFor(shortName)) {
@@ -733,7 +789,7 @@ export function buildPropertyForm(source: FormSource, language = 'fr'): Property
 
     const before = fields.length
     if (value.kind === 'object') {
-      fields.push(...expandComposite(shortName, value, key, option, label, help, texts))
+      fields.push(...expandComposite(shortName, value, key, option, label, help, texts, say))
     } else {
       const pattern = option === undefined ? undefined : texts.resourceText(option.label)
       fields.push(buildField({
@@ -745,7 +801,7 @@ export function buildPropertyForm(source: FormSource, language = 'fr'): Property
         ...(option === undefined ? {} : { option }),
         node: value,
         owner: node,
-        choices: option === undefined ? [] : namedChoices(texts.optionValues(option)),
+        choices: option === undefined ? [] : namedChoices(texts.optionValues(option), say),
         ...(help === undefined ? {} : { help }),
         depth: 0
       }))
@@ -762,7 +818,7 @@ export function buildPropertyForm(source: FormSource, language = 'fr'): Property
   const form: PropertyForm = {
     className,
     shortName,
-    title: `Gadget : ${readableName(shortName, language)}`,
+    label: readableName(shortName, language),
     language,
     textLanguage: texts.language,
     fields,
@@ -772,7 +828,7 @@ export function buildPropertyForm(source: FormSource, language = 'fr'): Property
     comparableCount: comparable.length,
     customizedCount: comparable.filter((one) => one.defaultState === 'custom').length,
     missingDefaults: missingDefaultKeys(shortName, orderedKeys(node))
-      .map((key) => describeMissing(shortName, key, catalog.get(key), texts))
+      .map((key) => describeMissing(shortName, key, catalog.get(key), texts, say))
   }
   // Le nœud d'origine, retenu pour pouvoir refaire le formulaire dans la bonne langue
   // sans que l'appelant ait à le redonner. Une `WeakMap` plutôt qu'un champ : le
@@ -836,6 +892,14 @@ export const FILTER_THRESHOLD = 12
 
 export interface PropertiesPanelOptions {
   form: PropertyForm
+  /**
+   * Le traducteur de **notre prose**, dans la langue que le pilote a choisie. Il ne touche
+   * jamais aux libellés du panneau, qui viennent de l'APK et suivent le fichier ouvert
+   * (`PropertyForm.language`) — voir `src/i18n/axes.ts`.
+   *
+   * Optionnel le temps que `main.ts` le passe — voir `prose` en tête de ce module.
+   */
+  tr?: Translator
   /** Appelé après chaque écriture effective, avec le champ modifié. */
   onChange?: (field: PropertyField, form: PropertyForm) => void
   /**
@@ -870,9 +934,6 @@ export interface PropertiesPanel {
   /** Vrai si le panneau est celui de la consultation — voir `readOnly`. */
   readOnly: boolean
 }
-
-/** « 12 réglages » — l'en-tête du panneau le dit, le niveau des absents le redit. */
-const SETTING_COUNT: PluralForms = { one: '{count} réglage', other: '{count} réglages' }
 
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K, className?: string, text?: string
@@ -959,7 +1020,7 @@ function repairLanguage(
   const source = formSource.get(form)
   if (source === undefined) return
   void loadOptionTexts(form.language).then(() => {
-    rebuild(live, options, buildPropertyForm(source, form.language))
+    rebuild(live, options, buildPropertyForm(source, form.language, options.tr))
   }).catch(() => {
     // Le morceau de langue n'est pas arrivé : le panneau reste dans la langue qu'il a,
     // et reste utilisable. Une langue de repli vaut mieux qu'un panneau vidé.
@@ -968,6 +1029,7 @@ function repairLanguage(
 
 function buildPanel(options: PropertiesPanelOptions, live: LivePanel): PropertiesPanel {
   const { form } = options
+  const tr = prose(options.tr)
   const readOnly = options.readOnly === true
   const prefix = `props-${++panelCount}`
 
@@ -980,8 +1042,10 @@ function buildPanel(options: PropertiesPanelOptions, live: LivePanel): Propertie
 
   const head = el('header', 'props__head')
   head.append(
-    el('h2', 'props__title', form.title),
-    el('p', 'props__count', plural(SETTING_COUNT, form.fields.length))
+    // Notre phrase autour du libellé de XCTrack : « Gadget : » suit le pilote,
+    // « Boussole et vent » suit son appareil.
+    el('h2', 'props__title', tr.t('properties.widgetTitle', { name: form.label })),
+    el('p', 'props__count', tr.t('properties.settingCount', { count: form.fields.length }))
   )
   if (form.className !== '') head.append(el('p', 'props__class', form.className))
   root.append(head)
@@ -990,14 +1054,16 @@ function buildPanel(options: PropertiesPanelOptions, live: LivePanel): Propertie
   const rows: Array<{ element: HTMLElement; haystack: string; state: DefaultState }> = []
   const rules: HTMLElement[] = []
 
-  const restore = readOnly ? undefined : restoreContext(options, live)
+  const restore = readOnly ? undefined : restoreContext(options, live, tr)
 
   form.fields.forEach((field, index) => {
     // En consultation, `changed` n'est même pas fabriqué : `buildRow` ne construit aucun
     // contrôle qui pourrait l'appeler, et il ne reçoit donc rien à appeler.
     const row = readOnly
-      ? buildReadOnlyRow(field, `${prefix}-${index}`)
-      : buildRow(field, `${prefix}-${index}`, () => options.onChange?.(field, form), restore)
+      ? buildReadOnlyRow(field, `${prefix}-${index}`, tr)
+      : buildRow(
+        field, `${prefix}-${index}`, () => options.onChange?.(field, form), tr, restore
+      )
     rows.push({
       element: row,
       haystack: normalize(`${field.label} ${field.path}`),
@@ -1023,7 +1089,7 @@ function buildPanel(options: PropertiesPanelOptions, live: LivePanel): Propertie
   const absent: Array<{ element: HTMLElement; haystack: string }> = []
   const absentBlock = form.missingDefaults.length === 0
     ? undefined
-    : buildMissingBlock(options, live, readOnly, absent)
+    : buildMissingBlock(options, live, readOnly, absent, tr)
 
   function apply(): void {
     const needle = normalize(query.trim())
@@ -1055,7 +1121,7 @@ function buildPanel(options: PropertiesPanelOptions, live: LivePanel): Propertie
   // en train de changer ces valeurs, et un compte qui se périme à chaque cran de curseur
   // ne vaut rien. Elle reste calculée dans le formulaire, disponible pour qui la veut.
   if (readOnly) {
-    root.append(buildDefaultsSummary(form, options, (value) => {
+    root.append(buildDefaultsSummary(form, options, tr, (value) => {
       onlyCustom = value
       apply()
     }))
@@ -1064,8 +1130,8 @@ function buildPanel(options: PropertiesPanelOptions, live: LivePanel): Propertie
   if (form.fields.length > FILTER_THRESHOLD) {
     const search = el('input', 'props__filter')
     search.type = 'search'
-    search.placeholder = 'Filtrer les réglages'
-    search.setAttribute('aria-label', 'Filtrer les réglages')
+    search.placeholder = tr.t('properties.filterSettings')
+    search.setAttribute('aria-label', tr.t('properties.filterSettings'))
     search.addEventListener('input', () => { filter(search.value) })
     root.append(search)
   }
@@ -1093,7 +1159,8 @@ function buildPanel(options: PropertiesPanelOptions, live: LivePanel): Propertie
  * « qu'est-ce qu'il a changé ? ».
  */
 function buildDefaultsSummary(
-  form: PropertyForm, options: PropertiesPanelOptions, onOnly: (value: boolean) => void
+  form: PropertyForm, options: PropertiesPanelOptions, tr: Translator,
+  onOnly: (value: boolean) => void
 ): HTMLElement {
   const box = el('div', 'props__defaults')
   const trust = defaultsTrust(options.fileVersionCode)
@@ -1102,23 +1169,21 @@ function buildDefaultsSummary(
   box.dataset.comparable = String(form.comparableCount)
 
   if (!form.defaultsKnown) {
-    box.append(el(
-      'p', 'props__defaults-count',
-      'Le catalogue des valeurs d’usine ne décrit pas ce type de gadget : rien à comparer.'
-    ))
-    box.append(el('p', 'props__defaults-note', defaultsNote(trust, options, form)))
+    box.append(el('p', 'props__defaults-count', tr.t('properties.noSurveyForType')))
+    box.append(el('p', 'props__defaults-note', defaultsNote(trust, options, form, tr)))
     return box
   }
 
   const count = el(
     'p', 'props__defaults-count',
     form.customizedCount === 0
-      ? `Aucun réglage ne s’écarte de ce que XCTrack pose sur un gadget neuf (${form.comparableCount} comparés).`
-      : `${plural({
-        one: '{count} réglage personnalisé',
-        other: '{count} réglages personnalisés'
-      }, form.customizedCount)} sur ` +
-        `${plural({ one: '{count} comparé', other: '{count} comparés' }, form.comparableCount)}.`
+      ? tr.t('properties.nothingCustomized', { compared: form.comparableCount })
+      // Deux comptes, deux accords : le second arrive déjà accordé, en `string`. Voir
+      // `properties.customizedRatio` dans `messages/fr/widgets.ts`.
+      : tr.t('properties.customizedRatio', {
+        count: form.customizedCount,
+        compared: tr.t('properties.comparedCount', { count: form.comparableCount })
+      })
   )
   box.append(count)
 
@@ -1127,20 +1192,43 @@ function buildDefaultsSummary(
   if (form.customizedCount > 0) {
     // Un vrai bouton bordé, pas un lien discret : c'est la commande qui répond à la
     // question principale du panneau, elle doit se voir comme telle.
-    const only = el('button', 'btn props__defaults-only', 'Seulement ce qui diffère')
+    const only = el('button', 'btn props__defaults-only', tr.t('properties.onlyDifferent'))
     only.type = 'button'
     only.setAttribute('aria-pressed', 'false')
     only.addEventListener('click', () => {
       const next = only.getAttribute('aria-pressed') !== 'true'
       only.setAttribute('aria-pressed', String(next))
-      only.textContent = next ? 'Tout afficher' : 'Seulement ce qui diffère'
+      only.textContent = next
+        ? tr.t('properties.showEverything')
+        : tr.t('properties.onlyDifferent')
       onOnly(next)
     })
     box.append(only)
   }
 
-  box.append(el('p', 'props__defaults-note', defaultsNote(trust, options, form)))
+  box.append(el('p', 'props__defaults-note', defaultsNote(trust, options, form, tr)))
   return box
+}
+
+/**
+ * D'où vient le fichier ouvert, dit comme on peut le dire : par son nom quand il en donne
+ * un, par son seul `versionCode` sinon. Les deux sont des **identifiants** — ils se passent
+ * en `string`, jamais en `number`, sinon « 100 030 » ne se retrouverait dans aucun fichier.
+ */
+function fileVersion(options: PropertiesPanelOptions, tr: Translator): string {
+  const name = options.fileVersionName
+  const code = String(options.fileVersionCode)
+  return name === undefined
+    ? tr.t('properties.fileVersionCoded', { code })
+    : tr.t('properties.fileVersionNamed', { name, code })
+}
+
+/** La référence du relevé : « Valeurs d'usine relevées sur XCTrack 1.0.3-beta (…) ». */
+function surveyReference(tr: Translator): string {
+  return tr.t('properties.surveyReference', {
+    version: DEFAULTS_VERSION_NAME,
+    code: String(DEFAULTS_VERSION_CODE)
+  })
 }
 
 /**
@@ -1152,41 +1240,42 @@ function buildDefaultsSummary(
  * où elle se dit.
  */
 function defaultsNote(
-  trust: DefaultsTrust, options: PropertiesPanelOptions, form: PropertyForm
+  trust: DefaultsTrust, options: PropertiesPanelOptions, form: PropertyForm, tr: Translator
 ): string {
   // « Défauts » sans autre mot se lit comme « anomalies » : un pilote croit qu'on a
   // trouvé quelque chose de cassé dans sa configuration. Le français ne distingue pas
-  // *default* de *fault* ; il faut donc le désambiguïser à chaque emploi.
-  const reference =
-    `Valeurs d’usine relevées sur XCTrack ${DEFAULTS_VERSION_NAME} (versionCode ${DEFAULTS_VERSION_CODE})`
+  // *default* de *fault* ; il faut donc le désambiguïser à chaque emploi — d'où
+  // « valeur d'usine » dans le catalogue, dans les cinq langues.
+  const survey = surveyReference(tr)
   // Le nombre de clés absentes ne prouve **pas** que le fichier vient d'une autre
   // version, comme on l'a d'abord écrit ici : le fichier de 2026 porte le versionCode du
   // relevé lui-même et son `WXCAssistant` ignore quand même quinze de ses clés. Une clé
   // qu'un gadget n'a jamais reçue reste absente, version pour version. Ce compte dit
   // donc ce qu'il dit, et rien de plus — le détail est en fin de panneau.
   const keys = form.missingDefaults.map((one) => one.key)
+  // Une **colonne de clés du fichier**, jointe par `', '` : ce n'est pas une énumération
+  // de prose, et `format.list` y ferait lire « windStyle et nav_label ».
   const missing = keys.length === 0
     ? ''
-    : ` ${plural({
-      one: '{count} réglage du relevé ne figure pas dans ce gadget',
-      other: '{count} réglages du relevé ne figurent pas dans ce gadget'
-    }, keys.length)} ` +
-      `(${keys.slice(0, 4).join(', ')}${keys.length > 4 ? '…' : ''}) : ` +
-      'XCTrack leur applique sa propre valeur, dite en fin de panneau.'
+    : tr.t('properties.surveyKeysAbsent', {
+      count: keys.length,
+      keys: `${keys.slice(0, 4).join(', ')}${keys.length > 4 ? '…' : ''}`
+    })
 
-  if (trust === 'exact') {
-    return `${reference} — la version même de ce fichier.${missing}`
-  }
-  if (trust === 'unstated') {
-    return `${reference}. Ce fichier ne dit pas de quelle version il vient : les valeurs ` +
-      `d’usine changent d’une version à l’autre, la comparaison est donc indicative.${missing}`
-  }
-  const name = options.fileVersionName
-  const which = name === undefined
-    ? `la version ${String(options.fileVersionCode)}`
-    : `la version ${name} (versionCode ${String(options.fileVersionCode)})`
-  return `${reference}. Ce fichier vient de ${which} : les valeurs d’usine changent ` +
-    `d’une version à l’autre, la comparaison est donc indicative.${missing}`
+  const origin = trust === 'exact'
+    ? tr.t('properties.surveyExact', { survey })
+    : trust === 'unstated'
+      ? tr.t('properties.surveyUnstated', { survey })
+      : tr.t('properties.surveyOther', { survey, which: fileVersion(options, tr) })
+
+  // Deux **phrases entières** mises bout à bout, jamais deux fragments : chacune se
+  // traduit seule, et l'ordre des mots reste celui de sa langue.
+  return joinSentences(origin, missing)
+}
+
+/** Deux phrases à la suite, l'espace en moins quand la seconde est absente. */
+function joinSentences(...parts: readonly string[]): string {
+  return parts.filter((part) => part !== '').join(' ')
 }
 
 /* ------------------------------------------ les clés que le fichier ne porte pas */
@@ -1212,7 +1301,7 @@ function defaultsNote(
  */
 function buildMissingBlock(
   options: PropertiesPanelOptions, live: LivePanel, readOnly: boolean,
-  collected: Array<{ element: HTMLElement; haystack: string }>
+  collected: Array<{ element: HTMLElement; haystack: string }>, tr: Translator
 ): HTMLElement {
   const { form } = options
   const trust = defaultsTrust(options.fileVersionCode)
@@ -1221,16 +1310,13 @@ function buildMissingBlock(
   const box = el('section', 'props__absent')
   box.dataset.trust = trust
   box.dataset.count = String(count)
-  box.append(el(
-    'h3', 'props__absent-title',
-    `${plural(SETTING_COUNT, count)} que ce gadget n’écrit pas`
-  ))
+  box.append(el('h3', 'props__absent-title', tr.t('properties.absentTitle', { count })))
   // La note vient **avant** les boutons : ce qu'on ne peut pas garantir se dit avant
   // d'offrir le geste, jamais après.
-  box.append(el('p', 'props__absent-note', missingNote(trust, options, readOnly)))
+  box.append(el('p', 'props__absent-note', missingNote(trust, options, readOnly, tr)))
 
   for (const missing of form.missingDefaults) {
-    const row = buildMissingRow(missing, options, live, readOnly)
+    const row = buildMissingRow(missing, options, live, readOnly, tr)
     collected.push({ element: row, haystack: normalize(`${missing.label} ${missing.key}`) })
     box.append(row)
   }
@@ -1239,45 +1325,26 @@ function buildMissingBlock(
 
 /** Ce que la lecture de ce bloc suppose, selon d'où vient le fichier. */
 function missingNote(
-  trust: DefaultsTrust, options: PropertiesPanelOptions, readOnly: boolean
+  trust: DefaultsTrust, options: PropertiesPanelOptions, readOnly: boolean, tr: Translator
 ): string {
-  const applied = 'Ces réglages ne sont pas écrits dans le fichier : XCTrack leur applique ' +
-    'la valeur de son propre code, celle qui est dite en regard. Ce n’est pas la même ' +
-    'chose qu’un réglage posé à cette valeur.'
-  const reference =
-    `Valeurs d’usine relevées sur XCTrack ${DEFAULTS_VERSION_NAME} (versionCode ${DEFAULTS_VERSION_CODE})`
-
-  let origin: string
-  if (trust === 'exact') {
-    origin = `${reference} — la version même de ce fichier.`
-  } else if (trust === 'unstated') {
-    origin = `${reference} ; la version de ce fichier n’est pas connue ici. Les valeurs ` +
-      'd’usine changent d’une version à l’autre : ce que votre appareil applique peut ' +
-      'donc différer de ce qui est écrit ici.'
-  } else {
-    const name = options.fileVersionName
-    const which = name === undefined
-      ? `la version ${String(options.fileVersionCode)}`
-      : `la version ${name} (versionCode ${String(options.fileVersionCode)})`
-    origin = `${reference}, et ce fichier vient de ${which} : une valeur d’usine a pu ` +
-      'changer entre les deux, et ce que votre appareil applique peut différer de ce qui ' +
-      'est écrit ici.'
-  }
+  const survey = surveyReference(tr)
+  const origin = trust === 'exact'
+    ? tr.t('properties.surveyExact', { survey })
+    : trust === 'unstated'
+      ? tr.t('properties.absentUnstated', { survey })
+      : tr.t('properties.absentOther', { survey, which: fileVersion(options, tr) })
 
   // En consultation, rien ne s'écrit : promettre un geste qu'on n'offre pas serait pire
   // que de se taire.
-  const gesture = readOnly
-    ? ''
-    : ' Les définir ne change rien à ce que fait l’appareil aujourd’hui — cela fige la ' +
-      'valeur, qui ne bougera plus le jour où une mise à jour de XCTrack changera cette ' +
-      'valeur d’usine.'
+  const gesture = readOnly ? '' : tr.t('properties.absentGesture')
 
-  return `${applied} ${origin}${gesture}`
+  return joinSentences(tr.t('properties.absentApplied'), origin, gesture)
 }
 
 /** Une ligne du bloc : intitulé, valeur appliquée, et le geste qui la fige. */
 function buildMissingRow(
-  missing: MissingDefault, options: PropertiesPanelOptions, live: LivePanel, readOnly: boolean
+  missing: MissingDefault, options: PropertiesPanelOptions, live: LivePanel,
+  readOnly: boolean, tr: Translator
 ): HTMLElement {
   const row = el('div', 'props__absent-row')
   row.dataset.key = missing.key
@@ -1289,13 +1356,12 @@ function buildMissingRow(
   row.title = missing.help === undefined ? missing.key : `${missing.key} — ${missing.help}`
 
   const label = el('span', 'props__absent-label', missing.label)
-  const value = el('span', 'props__absent-default', readableMissing(missing))
-  value.title =
-    `Ce réglage n’est pas dans le fichier : XCTrack appliquera « ${readableMissing(missing)} », ` +
-    'sa valeur d’usine. Ce n’est pas la même chose qu’une valeur réglée à cette valeur.'
+  const readable = readableMissing(missing, tr)
+  const value = el('span', 'props__absent-default', readable)
+  value.title = tr.t('properties.appliedValue', { value: readable })
 
   row.append(label, value)
-  if (!readOnly) row.append(adoptControl(missing, options, live))
+  if (!readOnly) row.append(adoptControl(missing, options, live, tr))
   return row
 }
 
@@ -1306,9 +1372,11 @@ function buildMissingRow(
  * laissée blanche se lirait « on ne sait pas », alors que c'est une valeur, et que le
  * bouton l'écrira telle quelle (`mapWidget_osmLanguage`).
  */
-function readableMissing(missing: MissingDefault): string {
-  if (missing.valueKind === 'string' && missing.defaultText === '') return '(vide)'
-  return readableDefault(missing) ?? missing.defaultText
+function readableMissing(missing: MissingDefault, tr: Translator): string {
+  if (missing.valueKind === 'string' && missing.defaultText === '') {
+    return tr.t('properties.emptyValue')
+  }
+  return readableDefault(missing, tr) ?? missing.defaultText
 }
 
 /**
@@ -1319,49 +1387,44 @@ function readableMissing(missing: MissingDefault): string {
  * n'est pas un repli poli mais un refus de conclure.
  */
 function adoptControl(
-  missing: MissingDefault, options: PropertiesPanelOptions, live: LivePanel
+  missing: MissingDefault, options: PropertiesPanelOptions, live: LivePanel, tr: Translator
 ): HTMLElement {
   const { form } = options
   const source = formSource.get(form)
 
   if (!missing.writable || missing.raw === undefined || source === undefined) {
-    const note = el('span', 'props__absent-none', 'valeur d’usine composée')
-    note.title =
-      'Le catalogue décrit ce réglage par une valeur composée : cet éditeur n’écrit que des ' +
-      'valeurs simples, et il n’en invente pas une pour la remplacer. Le réglage reste ' +
-      'modifiable une fois que XCTrack l’aura écrit lui-même.'
+    const note = el(
+      'span', 'props__absent-none', tr.t('properties.compositeFactoryValue')
+    )
+    note.title = tr.t('properties.compositeFactoryValueHelp')
     return note
   }
 
   const trust = defaultsTrust(options.fileVersionCode)
-  const button = el('button', 'btn props__adopt', 'Définir cette valeur')
+  const button = el('button', 'btn props__adopt', tr.t('properties.setValue'))
   button.type = 'button'
-  button.setAttribute('aria-label', `Définir ${missing.label} dans le fichier`)
-  button.title =
-    `Écrit « ${missing.key} » : ${readableMissing(missing)} dans le fichier.\n\n` +
-    'Votre appareil se comporte déjà ainsi aujourd’hui — écrire la valeur ne change donc ' +
-    'rien à ce qu’il fait maintenant. Ce que ça change est pour plus tard : tant que la ' +
-    'ligne est absente, l’appareil suit la valeur d’usine de la version de XCTrack ' +
-    'installée, et une mise à jour qui la change changera votre réglage sans rien vous ' +
-    'demander. ' +
-    'Une fois écrite, la valeur est figée : elle restera celle-là.' +
-    // L'avertissement dit exactement ce qu'on sait, et pas un mot de plus : « une autre
-    // version » quand on l'a lue, « on ne sait pas d'où vient ce fichier » sinon.
-    (trust === 'exact'
-      ? ''
-      : trust === 'indicative'
-        ? `\n\nCette valeur d’usine a été relevée sur XCTrack ${DEFAULTS_VERSION_NAME}, ` +
-          'qui n’est pas la version d’où vient ce fichier : vérifiez que c’est bien la ' +
-          'valeur à figer.'
-        : `\n\nCette valeur d’usine a été relevée sur XCTrack ${DEFAULTS_VERSION_NAME} ` +
-          'et la version de ce fichier n’est pas connue ici : vérifiez que c’est bien la ' +
-          'valeur à figer.')
+  // `missing.label` est le libellé de XCTrack : il entre dans notre phrase par un repère.
+  button.setAttribute('aria-label', tr.t('properties.setValueAria', { label: missing.label }))
+  // L'avertissement dit exactement ce qu'on sait, et pas un mot de plus : « une autre
+  // version » quand on l'a lue, « on ne sait pas d'où vient ce fichier » sinon. Les deux
+  // paragraphes sont séparés par une ligne vide, comme dans le message lui-même.
+  const caveat = trust === 'exact'
+    ? ''
+    : trust === 'indicative'
+      ? tr.t('properties.setCaveatOtherVersion', { version: DEFAULTS_VERSION_NAME })
+      : tr.t('properties.setCaveatUnknownVersion', { version: DEFAULTS_VERSION_NAME })
+  button.title = [
+    tr.t('properties.setValueHelp', {
+      key: missing.key, value: readableMissing(missing, tr)
+    }),
+    caveat
+  ].filter((part) => part !== '').join('\n\n')
 
   button.addEventListener('click', () => {
     if (!writeMissingDefault(source.node, missing)) return
     // Le formulaire est refait depuis le document, jamais rapiécé : la clé écrite devient
     // un contrôle comme les autres, à sa place, et le bloc perd sa ligne.
-    const fresh = rebuild(live, options, buildPropertyForm(source, form.language))
+    const fresh = rebuild(live, options, buildPropertyForm(source, form.language, options.tr))
     const field = fresh.form.fields.find((one) => one.path === missing.key)
     if (field !== undefined) options.onChange?.(field, fresh.form)
     focusRow(live.panel ?? fresh, missing.key)
@@ -1383,7 +1446,7 @@ function focusRow(panel: PropertiesPanel, key: string): void {
  * que le relevé en dit. Aucun contrôle de formulaire n'est construit ici — c'est la
  * garantie, et elle tient parce qu'il n'y a rien à désactiver.
  */
-function buildReadOnlyRow(field: PropertyField, id: string): HTMLElement {
+function buildReadOnlyRow(field: PropertyField, id: string, tr: Translator): HTMLElement {
   const row = el('div', 'props__row')
   row.dataset.key = field.path
   row.dataset.control = field.control
@@ -1409,25 +1472,30 @@ function buildReadOnlyRow(field: PropertyField, id: string): HTMLElement {
     value.classList.add('props__value--color')
     value.append(swatch, el('span', 'props__hexText', hex ?? field.text))
   } else {
-    value.textContent = readableValue(field)
+    value.textContent = readableValue(field, tr)
   }
 
-  row.append(label, value, originMark(field))
-  if (field.help !== undefined) row.append(...helpParts(field.help, id))
+  row.append(label, value, originMark(field, tr))
+  if (field.help !== undefined) row.append(...helpParts(field.help, id, tr))
   return row
 }
 
 /** La valeur telle qu'on la lit, et non telle qu'elle s'écrit dans le fichier. */
-export function readableValue(field: PropertyField): string {
-  if (field.control === 'checkbox') return field.text === 'true' ? 'Oui' : 'Non'
+export function readableValue(field: PropertyField, tr: Translator): string {
+  if (field.control === 'checkbox') {
+    return tr.t(field.text === 'true' ? 'properties.yes' : 'properties.no')
+  }
   if (field.control === 'enum') {
     const choice = field.choices.find((one) => one.value === field.text)
     // Une valeur que le catalogue ne connaît pas se montre telle quelle, dite comme telle :
-    // c'est un vestige ou une version plus récente, jamais rien à masquer.
-    return choice === undefined ? `${field.text} (hors catalogue)` : choice.label
+    // c'est un vestige ou une version plus récente, jamais rien à masquer. La constante du
+    // fichier passe en `string` — c'est ce qu'on retrouve dans le document.
+    return choice === undefined
+      ? tr.t('properties.outOfCatalogValue', { value: field.text })
+      : choice.label
   }
   if (field.valueKind === 'object' || field.valueKind === 'array') return field.raw
-  if (field.valueKind === 'string' && field.text === '') return '(vide)'
+  if (field.valueKind === 'string' && field.text === '') return tr.t('properties.emptyValue')
   return field.text
 }
 
@@ -1439,11 +1507,15 @@ export function readableValue(field: PropertyField): string {
  * faire la traduction lui-même. La constante du fichier reste dans l'infobulle.
  */
 export function readableDefault(
-  field: Pick<PropertyField, 'defaultText' | 'control' | 'choices'>
+  field: Pick<PropertyField, 'defaultText' | 'control' | 'choices'>, tr: Translator
 ): string | undefined {
   const raw = field.defaultText
   if (raw === undefined) return undefined
-  if (field.control === 'checkbox') return raw === 'true' ? 'Oui' : raw === 'false' ? 'Non' : raw
+  if (field.control === 'checkbox') {
+    if (raw === 'true') return tr.t('properties.yes')
+    if (raw === 'false') return tr.t('properties.no')
+    return raw
+  }
   if (field.control === 'enum') {
     return field.choices.find((one) => one.value === raw)?.label ?? raw
   }
@@ -1458,34 +1530,35 @@ export function readableDefault(
  * lirait « au défaut » — or `_border`, `_bg` et `_theme` sont sur **tous** les widgets et
  * le relevé n'en dit rien : trois mensonges par widget, chaque fois.
  */
-function originMark(field: PropertyField): HTMLElement {
+function originMark(field: PropertyField, tr: Translator): HTMLElement {
   if (field.defaultState === 'custom') {
-    const readable = readableDefault(field)
+    const readable = readableDefault(field, tr)
     const mark = el('span', 'props__origin props__origin--custom')
     // « ≠ défaut Blanc » posait un signe de mathématiques sur la ligne et le mot qui se
     // lit *anomalie* juste après. La valeur d'usine reste dite — c'est ce qu'on vient
     // chercher ici —, mais nommée pour ce qu'elle est.
     mark.textContent = readable === undefined
-      ? 'réglé par vous'
-      : `réglé par vous · d’usine : ${readable}`
+      ? tr.t('properties.setByYou')
+      : tr.t('properties.setByYouFactory', { value: readable })
     // L'infobulle garde la valeur **telle qu'elle s'écrit dans le fichier** : c'est celle
     // qu'on cherche quand on compare deux sauvegardes ou qu'on lit un rapport de bogue,
     // et la ligne visible, elle, doit parler la langue du pilote.
     mark.title = field.defaultText === undefined
-      ? 'Cette valeur diffère de ce que XCTrack écrit sur un gadget neuf de ce type.'
-      : `Sur un gadget neuf de ce type, XCTrack écrit « ${field.defaultText} ».`
+      ? tr.t('properties.setByYouHelp')
+      : tr.t('properties.setByYouHelpValue', { value: field.defaultText })
     return mark
   }
   if (field.defaultState === 'default') {
-    const mark = el('span', 'props__origin props__origin--same', 'valeur d’usine')
-    mark.title = 'Valeur inchangée : c’est ce que XCTrack écrit sur un gadget neuf de ce type.'
+    const mark = el(
+      'span', 'props__origin props__origin--same', tr.t('properties.factoryValue')
+    )
+    mark.title = tr.t('properties.factoryValueHelp')
     return mark
   }
-  const mark = el('span', 'props__origin props__origin--unknown', 'valeur d’usine inconnue')
-  mark.title =
-    'Le catalogue des valeurs d’usine ne décrit pas ce réglage — réglage universel écrit ' +
-    'à la main lors du relevé, réglage apparu depuis, ou valeur non comparable. Rien n’est ' +
-    'affirmé de cette ligne.'
+  const mark = el(
+    'span', 'props__origin props__origin--unknown', tr.t('properties.factoryValueUnknown')
+  )
+  mark.title = tr.t('properties.factoryValueUnknownHelp')
   return mark
 }
 
@@ -1498,6 +1571,17 @@ function originMark(field: PropertyField): HTMLElement {
  * deux premiers.
  */
 export const RESTORE_LABEL = 'Rétablir la valeur d’usine'
+
+/**
+ * Le même intitulé, dans la langue du pilote. `RESTORE_LABEL` reste la **constante
+ * française héritée** : c'est encore elle que `ui/preferencesPage.ts` emploie, et
+ * `tests/ui/properties.test.ts` vérifie que le catalogue français dit **exactement** ce
+ * qu'elle dit. Aucune dérive n'est donc possible entre les deux écrans, et le jour où
+ * l'écran des réglages généraux versera à son tour, il n'y aura rien à relire.
+ */
+function restoreLabel(tr: Translator): string {
+  return tr.t('properties.restoreFactoryValue')
+}
 
 /** Ce qu'il faut pour offrir le troisième geste, une fois par panneau. */
 interface RestoreContext {
@@ -1514,7 +1598,7 @@ interface RestoreContext {
  * sans lui, `rebuild` ne saurait pas d'où relire le formulaire.
  */
 function restoreContext(
-  options: PropertiesPanelOptions, live: LivePanel
+  options: PropertiesPanelOptions, live: LivePanel, tr: Translator
 ): RestoreContext | undefined {
   const { form } = options
   const source = formSource.get(form)
@@ -1526,7 +1610,9 @@ function restoreContext(
       if (!setFieldValue(field, field.defaultText)) return false
       // Refait depuis le document, jamais rapiécé : la ligne rétablie perd sa marque
       // « personnalisé », le compte du bandeau suit, et le geste disparaît de lui-même.
-      const fresh = rebuild(live, options, buildPropertyForm(source, form.language))
+      const fresh = rebuild(
+        live, options, buildPropertyForm(source, form.language, options.tr)
+      )
       const same = fresh.form.fields.find((one) => one.path === field.path)
       if (same !== undefined) options.onChange?.(same, fresh.form)
       focusRow(live.panel ?? fresh, field.path)
@@ -1578,27 +1664,28 @@ function restorable(field: PropertyField): boolean {
  * ailleurs par-dessus un réglage délibéré. L'avertissement est donc dans la phrase :
  * « avant le clic » exclut le survol.
  */
-function buildRestoreLine(field: PropertyField, ctx: RestoreContext): HTMLElement {
+function buildRestoreLine(
+  field: PropertyField, ctx: RestoreContext, tr: Translator
+): HTMLElement {
   const line = el('div', 'props__restore')
   line.dataset.trust = ctx.trust
-  const factory = readableDefault(field) ?? field.defaultText ?? '?'
-  const current = readableValue(field)
-  const caveat = restoreCaveat(ctx.trust)
+  const factory = readableDefault(field, tr) ?? field.defaultText ?? '?'
+  const current = readableValue(field, tr)
+  const caveat = restoreCaveat(ctx.trust, tr)
 
-  const button = el('button', 'btn props__restore-btn', RESTORE_LABEL)
+  const button = el('button', 'btn props__restore-btn', restoreLabel(tr))
   button.type = 'button'
-  button.setAttribute('aria-label', `Rétablir ${field.label} à sa valeur d’usine`)
-  button.title =
-    `Écrit « ${field.path} » : ${factory} dans le fichier, à la place de ${current}.\n\n` +
-    'Ce geste-ci n’est pas comme « Définir cette valeur » en fin de panneau : celui-là ' +
-    'laisse l’appareil se comporter exactement comme aujourd’hui, celui-ci non. Il ' +
-    'remplace un réglage que vous avez choisi par celui que XCTrack pose sur un gadget ' +
-    `neuf de ce type.${caveat}`
+  // `field.label` est le libellé de XCTrack — ou la clé brute du fichier quand le
+  // catalogue l'ignore : il entre dans notre phrase par un repère, jamais traduit.
+  button.setAttribute('aria-label', tr.t('properties.restoreAria', { label: field.label }))
+  button.title = joinSentences(
+    tr.t('properties.restoreHelp', { path: field.path, factory, current }), caveat
+  )
   button.addEventListener('click', () => { ctx.run(field) })
 
-  const note = el('span', 'props__restore-note',
-    `« ${factory} » d’usine, « ${current} » dans ce fichier. ` +
-    `Rétablir change ce que fait l’appareil en vol.${caveat}`)
+  const note = el('span', 'props__restore-note', joinSentences(
+    tr.t('properties.restoreNote', { factory, current }), caveat
+  ))
 
   line.append(button, note)
   return line
@@ -1610,19 +1697,18 @@ function buildRestoreLine(field: PropertyField, ctx: RestoreContext): HTMLElemen
  * Rien à dire quand elle coïncide : une phrase de prudence servie à tort apprend au
  * lecteur à ne plus lire les phrases de prudence.
  */
-function restoreCaveat(trust: DefaultsTrust): string {
+function restoreCaveat(trust: DefaultsTrust, tr: Translator): string {
   if (trust === 'exact') return ''
-  if (trust === 'indicative') {
-    return ` Cette valeur d’usine a été relevée sur XCTrack ${DEFAULTS_VERSION_NAME}, qui ` +
-      'n’est pas la version d’où vient ce fichier : vérifiez que c’est bien celle à rétablir.'
-  }
-  return ` Cette valeur d’usine a été relevée sur XCTrack ${DEFAULTS_VERSION_NAME} et la ` +
-    'version de ce fichier n’est pas connue ici : vérifiez que c’est bien celle à rétablir.'
+  const key = trust === 'indicative'
+    ? 'properties.restoreCaveatOtherVersion'
+    : 'properties.restoreCaveatUnknownVersion'
+  return tr.t(key, { version: DEFAULTS_VERSION_NAME })
 }
 
 /** Une ligne du panneau : intitulé, contrôle, et le `?` de l'aide quand il y en a une. */
 function buildRow(
-  field: PropertyField, id: string, changed: () => void, restore?: RestoreContext
+  field: PropertyField, id: string, changed: () => void, tr: Translator,
+  restore?: RestoreContext
 ): HTMLElement {
   const row = el('div', 'props__row')
   row.dataset.key = field.path
@@ -1652,26 +1738,27 @@ function buildRow(
     })
     row.append(box, label)
   } else {
-    row.append(label, buildControl(field, id, label, changed))
+    row.append(label, buildControl(field, id, label, changed, tr))
   }
 
   if (!field.known) {
-    const badge = el('span', 'props__badge', 'réglage hors catalogue')
+    const badge = el('span', 'props__badge', tr.t('properties.outOfCatalogSetting'))
     // « contrôle » traduisait *control* mot à mot : un pilote y lisait qu'une vérification
     // avait été faite. C'est la commande — case, menu, champ — qui a été devinée.
-    badge.title = `« ${field.path} » n’est pas décrit par le catalogue : cet outil devine ` +
-      `la commande d’après le type de la valeur.`
+    badge.title = tr.t('properties.outOfCatalogSettingHelp', { path: field.path })
     row.append(badge)
   }
 
-  if (field.help !== undefined) row.append(...helpParts(field.help, id))
+  if (field.help !== undefined) row.append(...helpParts(field.help, id, tr))
   // Après l'aide : c'est un geste, il vient une fois le réglage lu, jamais avant.
-  if (restore !== undefined && restorable(field)) row.append(buildRestoreLine(field, restore))
+  if (restore !== undefined && restorable(field)) {
+    row.append(buildRestoreLine(field, restore, tr))
+  }
   return row
 }
 
 /** Le `?` cerclé du panneau natif et l'infobulle qu'il déplie. */
-function helpParts(help: string, id: string): HTMLElement[] {
+function helpParts(help: string, id: string, tr: Translator): HTMLElement[] {
   const text = el('p', 'props__help-text', help)
   text.id = `${id}-help`
   text.hidden = true
@@ -1679,7 +1766,7 @@ function helpParts(help: string, id: string): HTMLElement[] {
   const button = el('button', 'props__help')
   button.type = 'button'
   button.textContent = '?'
-  button.setAttribute('aria-label', 'Aide sur ce réglage')
+  button.setAttribute('aria-label', tr.t('properties.helpAria'))
   button.setAttribute('aria-expanded', 'false')
   button.setAttribute('aria-controls', text.id)
   button.addEventListener('click', () => {
@@ -1690,9 +1777,9 @@ function helpParts(help: string, id: string): HTMLElement[] {
 }
 
 function buildControl(
-  field: PropertyField, id: string, label: HTMLElement, changed: () => void
+  field: PropertyField, id: string, label: HTMLElement, changed: () => void, tr: Translator
 ): HTMLElement {
-  if (field.control === 'enum') return buildSelect(field, id, changed)
+  if (field.control === 'enum') return buildSelect(field, id, changed, tr)
   if (field.control === 'color') return buildColor(field, id, changed)
   if (field.control === 'slider' || field.control === 'number') {
     return buildNumber(field, id, label, changed)
@@ -1703,11 +1790,13 @@ function buildControl(
   // règle d'or vaut aussi pour ce qu'on ne comprend pas — on ne le fait pas disparaître.
   const readonly = el('output', 'props__raw', field.raw)
   readonly.id = id
-  readonly.title = 'Valeur non modifiable ici ; elle est conservée telle quelle.'
+  readonly.title = tr.t('properties.readOnlyValue')
   return readonly
 }
 
-function buildSelect(field: PropertyField, id: string, changed: () => void): HTMLElement {
+function buildSelect(
+  field: PropertyField, id: string, changed: () => void, tr: Translator
+): HTMLElement {
   const select = el('select', 'props__select')
   select.id = id
   for (const choice of field.choices) {
@@ -1718,7 +1807,9 @@ function buildSelect(field: PropertyField, id: string, changed: () => void): HTM
   // Une valeur que le catalogue ne connaît pas — vestige, ou version plus récente que
   // l'extraction — s'ajoute à la liste plutôt que de se faire remplacer en silence.
   if (!field.choices.some((choice) => choice.value === field.text)) {
-    const extra = el('option', undefined, `${field.text} (hors catalogue)`)
+    const extra = el(
+      'option', undefined, tr.t('properties.outOfCatalogValue', { value: field.text })
+    )
     extra.value = field.text
     select.prepend(extra)
   }

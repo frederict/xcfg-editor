@@ -2219,7 +2219,7 @@ body.is-dragging .veil {
 
 /* Une vignette quasi vide laisse le pilote sans réponse : la note dit laquelle des deux
    causes s'applique — « rien au repos », qui est un fait de l'appareil, ou « aperçu non
-   dessiné », qui est notre limite. Le titre de la vignette développe (PREVIEW_NOTES). */
+   dessiné », qui est notre limite. Le titre de la vignette développe (`previewNote`). */
 .palette__thumb-note {
   position: absolute;
   inset: auto 0 0;

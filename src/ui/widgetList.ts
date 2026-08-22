@@ -4,8 +4,11 @@ import type { Orientation } from '../model/grid'
 import type { Page } from '../model/layout'
 import type { Widget } from '../model/widget'
 import { isBlankAtRest } from '../render/registry'
-import { aspectRatioOf, formatMm, formatSizeMm, widgetSizeMm, type WidgetBox } from './views'
-import { plural } from './prose'
+import {
+  makeTranslator, UI_FALLBACK_LANGUAGE, type MessageCatalog, type Translator
+} from '../i18n'
+import frenchWidgets from '../i18n/messages/fr/widgets'
+import { aspectRatioOf, widgetSizeMm, type WidgetBox } from './views'
 
 /**
  * La liste des widgets de la page, dans le bandeau.
@@ -43,6 +46,34 @@ import { plural } from './prose'
  * deux étiquettes d'extrémité, « fond » en haut et « premier plan » en bas, sans lesquelles
  * un pilote habitué à Photoshop lirait la liste à l'envers.
  */
+
+/* ========================================================== le traducteur, en attendant */
+
+/**
+ * Le traducteur de **notre prose**, avec son repli français — provisoire.
+ *
+ * Cette liste reçoit son traducteur dans ses options (`WidgetListOptions.tr`), comme
+ * `src/i18n/CLAUDE.md` § 5 le prescrit. `main.ts` — qui le détient déjà, et qui appartient
+ * à un autre lot d'extraction — ne le lui passe pas encore : d'ici là, le repli monte le
+ * **catalogue français du domaine `widgets`**, c'est-à-dire exactement les phrases que ce
+ * module portait en clair jusqu'ici, et rien de plus. Le comportement est donc celui
+ * d'aujourd'hui, au caractère près, et `tests/ui/widgetList.test.ts` l'épingle.
+ *
+ * `tr` devient obligatoire — et ces dix lignes disparaissent — le jour où `main.ts` ajoute
+ * `tr` à son appel de `renderWidgetList`.
+ *
+ * La conversion est un `as unknown as` parce que `makeTranslator` attend le catalogue
+ * **entier** : ce module ne lit que ses propres clés, et le test le vérifie clé par clé.
+ */
+let inheritedProse: Translator | undefined
+
+function prose(tr: Translator | undefined): Translator {
+  if (tr !== undefined) return tr
+  inheritedProse ??= makeTranslator(
+    UI_FALLBACK_LANGUAGE, frenchWidgets as unknown as MessageCatalog
+  )
+  return inheritedProse
+}
 
 /* ==================================================================== inatteignables */
 
@@ -151,7 +182,19 @@ export interface WidgetListOptions {
   page: Page
   device: Device
   orientation: Orientation
+  /**
+   * La langue des **libellés de XCTrack** — celle du fichier ouvert. Elle ne nomme que les
+   * types de gadgets (`readableName`), jamais notre prose : voir `tr`, et `src/i18n/axes.ts`.
+   */
   language: string
+  /**
+   * Le traducteur de **notre prose**, dans la langue que le pilote a choisie. Indépendant
+   * de `language` : un pilote belge dont l'AIR³ est en anglais lit « Gadgets de la page »
+   * en français et « GPS Alt » en anglais.
+   *
+   * Optionnel le temps que `main.ts` le passe — voir `prose` en tête de ce module.
+   */
+  tr?: Translator
   /** Le rang sélectionné à la construction, ou `undefined`. */
   selection: number | undefined
   /** Appelé quand le pilote choisit une ligne. `main.ts` décide de la suite. */
@@ -229,25 +272,21 @@ function placeMark(mark: HTMLElement, widget: Widget): void {
  * au type — mais les deux se posent au même endroit et dans le même ordre, et les séparer
  * ferait deux chemins pour une seule question.
  */
-function flagsFor(entry: WidgetListEntry): HTMLElement {
+function flagsFor(entry: WidgetListEntry, tr: Translator): HTMLElement {
   const flags = el('span', 'wlist__flags')
   if (entry.unreachable) {
-    const flag = el('span', 'wlist__flag wlist__flag--blocked', 'inatteignable ici')
-    flag.title =
-      'Dans cet éditeur, aucun clic sur la page ne peut atteindre ce gadget : les rangs ' +
-      'supérieurs le recouvrent entièrement, et cette liste est le seul chemin qui y ' +
-      'mène. Sur l’instrument, il reste à sa place — un bouton d’action ainsi recouvert ' +
-      'continue de répondre au doigt.'
+    const flag = el(
+      'span', 'wlist__flag wlist__flag--blocked', tr.t('widgets.unreachableHere')
+    )
+    flag.title = tr.t('widgets.unreachableHereHelp')
     flags.append(flag)
   }
   if (entry.blank) {
     // « sans dessin » se lisait comme une limite de cet éditeur, alors que c'est un
     // fait de l'appareil : le gadget est bien là, il ne peint rien tant qu'il n'a rien
-    // à montrer. La palette dit déjà cela avec ces mots-là ; deux écrans, un mot.
-    const flag = el('span', 'wlist__flag wlist__flag--blank', 'rien au repos')
-    flag.title =
-      'Sur l’appareil, ce type ne peint rien au repos. Il occupe pourtant sa place et ' +
-      'intercepte les clics comme n’importe quel autre gadget.'
+    // à montrer. La palette dit déjà cela avec ces mots-là ; deux écrans, une clé.
+    const flag = el('span', 'wlist__flag wlist__flag--blank', tr.t('palette.nothingAtRest'))
+    flag.title = tr.t('widgets.nothingAtRestHelp')
     flags.append(flag)
   }
   return flags
@@ -264,35 +303,49 @@ interface MutableRow {
 }
 
 function paintRow(
-  parts: MutableRow, entry: WidgetListEntry, widget: Widget, total: number
+  parts: MutableRow, entry: WidgetListEntry, widget: Widget, total: number, tr: Translator
 ): void {
   placeMark(parts.mark, widget)
-  parts.size.textContent = formatSizeMm(entry)
+  // « 48,3 × 27,2 mm » : l'unité n'est écrite qu'une fois, sur le dernier nombre, avec
+  // l'espace fine insécable que le français demande et que l'anglais ne met pas. C'est du
+  // formatage, pas de la prose — rien à verser au catalogue.
+  parts.size.textContent =
+    `${tr.format.decimal(entry.widthMm, 1)} × ${tr.format.millimeters(entry.heightMm)}`
   // Les deux faits, lisibles depuis un test ou un harnais sans dépendre du style.
   parts.row.dataset.unreachable = entry.unreachable ? 'oui' : 'non'
   parts.row.dataset.blank = entry.blank ? 'oui' : 'non'
   parts.row.classList.toggle('wlist__row--blocked', entry.unreachable)
   parts.row.classList.toggle('wlist__row--blank', entry.blank)
-  parts.row.setAttribute('aria-label', spokenLabel(entry, total))
+  parts.row.setAttribute('aria-label', spokenLabel(entry, total, tr))
 
   parts.flags?.remove()
   parts.flags = undefined
-  const flags = flagsFor(entry)
+  const flags = flagsFor(entry, tr)
   if (flags.childElementCount > 0) {
     parts.row.append(flags)
     parts.flags = flags
   }
 }
 
-/** L'intitulé lu par l'assistance vocale : tout ce que la ligne montre, en toutes lettres. */
-function spokenLabel(entry: WidgetListEntry, total: number): string {
+/**
+ * L'intitulé lu par l'assistance vocale : tout ce que la ligne montre, en toutes lettres.
+ *
+ * Les morceaux se joignent par `', '` et non par `format.list` : ce sont des **faits
+ * alignés**, pas une énumération de prose — « inatteignable au clic et ne dessine rien »
+ * ferait lire une phrase là où il y a une fiche. `entry.name` est un libellé de XCTrack,
+ * il traverse la liste sans être traduit.
+ */
+function spokenLabel(entry: WidgetListEntry, total: number, tr: Translator): string {
   const parts = [
-    `Rang ${entry.index + 1} sur ${total}`,
+    tr.t('widgets.spokenRank', { rank: entry.index + 1, total }),
     entry.name,
-    `${formatMm(entry.widthMm)} sur ${formatMm(entry.heightMm)} millimètres`
+    tr.t('widgets.spokenSize', {
+      width: tr.format.decimal(entry.widthMm, 1),
+      height: tr.format.decimal(entry.heightMm, 1)
+    })
   ]
-  if (entry.unreachable) parts.push('inatteignable au clic dans cet éditeur')
-  if (entry.blank) parts.push('ne dessine rien sur l’appareil')
+  if (entry.unreachable) parts.push(tr.t('widgets.spokenUnreachable'))
+  if (entry.blank) parts.push(tr.t('widgets.spokenNothingAtRest'))
   return parts.join(', ')
 }
 
@@ -306,6 +359,7 @@ function spokenLabel(entry: WidgetListEntry, total: number): string {
  */
 export function renderWidgetList(options: WidgetListOptions): WidgetList {
   const { page, device, orientation, language } = options
+  const tr = prose(options.tr)
   const widgets = page.widgets
   // Le tableau est **le même objet** d'un bout à l'autre de la vie de la liste : `refresh`
   // en remplace le contenu sur place, de sorte que `WidgetList.entries` ne devienne jamais
@@ -320,7 +374,7 @@ export function renderWidgetList(options: WidgetListOptions): WidgetList {
   // gagnée tient l'en-tête sur une seule ligne, soit un rang de plus à l'écran dans un
   // bandeau dont la hauteur est bornée.
   const head = el('div', 'wlist__head')
-  const title = el('h3', 'wlist__title', 'Gadgets de la page')
+  const title = el('h3', 'wlist__title', tr.t('widgets.listTitle'))
   head.append(title)
   let alert: HTMLElement | undefined
 
@@ -335,20 +389,13 @@ export function renderWidgetList(options: WidgetListOptions): WidgetList {
       alert = undefined
       return
     }
-    const text = plural({
-      one: '{count} inatteignable dans l’éditeur',
-      other: '{count} inatteignables dans l’éditeur'
-    }, blocked)
+    const text = tr.t('widgets.unreachableCount', { count: blocked })
     if (alert) {
       alert.textContent = text
       return
     }
     alert = el('span', 'wlist__alert', text)
-    alert.title =
-      'Ces gadgets sont entièrement recouverts par des rangs supérieurs : ici, aucun clic ' +
-      'sur la page ne les atteint, et cette liste est le seul chemin qui y mène. Sur ' +
-      'l’instrument, ils restent à leur place — un bouton d’action ainsi recouvert ' +
-      'continue de répondre au doigt.'
+    alert.title = tr.t('widgets.unreachableCountHelp')
     head.append(alert)
   }
 
@@ -356,17 +403,17 @@ export function renderWidgetList(options: WidgetListOptions): WidgetList {
   root.append(head)
 
   if (widgets.length === 0) {
-    root.append(el('p', 'wlist__empty', 'Cette page ne porte aucun gadget.'))
+    root.append(el('p', 'wlist__empty', tr.t('widgets.emptyPage')))
     return { element: root, select: () => {}, refresh: () => {}, entries }
   }
 
   // Les deux extrémités portent leur sens : le fichier va du fond vers l'avant, et rien
   // dans une liste numérotée ne le dit tout seul.
-  root.append(el('p', 'wlist__edge', 'Rang 1 · au fond'))
+  root.append(el('p', 'wlist__edge', tr.t('widgets.rankBack')))
 
   const list = el('ul', 'wlist__rows')
   list.setAttribute('role', 'listbox')
-  list.setAttribute('aria-label', 'Gadgets de la page, du fond vers le premier plan')
+  list.setAttribute('aria-label', tr.t('widgets.listAria'))
 
   const rows: HTMLLIElement[] = []
   let current = options.selection
@@ -399,7 +446,7 @@ export function renderWidgetList(options: WidgetListOptions): WidgetList {
     // chemin à la construction et au rafraîchissement : deux chemins finiraient par
     // diverger, et l'écart ne se verrait qu'en cours de glissé.
     const mutable: MutableRow = { row, mark, size, flags: undefined }
-    paintRow(mutable, entry, widget, widgets.length)
+    paintRow(mutable, entry, widget, widgets.length, tr)
     parts.push(mutable)
 
     row.addEventListener('click', () => choose(entry.index, false))
@@ -457,7 +504,7 @@ export function renderWidgetList(options: WidgetListOptions): WidgetList {
       ...widgetListEntries(fresh.widgets, device, orientation, language)
     )
     entries.forEach((entry, position) => {
-      paintRow(parts[position]!, entry, fresh.widgets[entry.index]!, entries.length)
+      paintRow(parts[position]!, entry, fresh.widgets[entry.index]!, entries.length, tr)
     })
     paintAlert()
     // Rien à reposer : `paintRow` ne touche ni à `aria-selected`, ni à la classe de
@@ -466,7 +513,7 @@ export function renderWidgetList(options: WidgetListOptions): WidgetList {
 
   apply(current)
   root.append(list)
-  root.append(el('p', 'wlist__edge', `Rang ${widgets.length} · au premier plan`))
+  root.append(el('p', 'wlist__edge', tr.t('widgets.rankFront', { rank: widgets.length })))
 
   return { element: root, select: apply, refresh, entries }
 }
