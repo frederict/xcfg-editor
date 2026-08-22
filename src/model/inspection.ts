@@ -3,6 +3,7 @@ import { readableName } from '../catalog/widgetNames'
 import { getMember, readBoolean, readNumber, readString } from '../core/access'
 import type { JsonNode } from '../core/jsonDocument'
 import type { Layout, Page } from './layout'
+import { navigationsBlock } from './reachability'
 import type { Orientation } from './grid'
 import type { Widget } from './widget'
 // `import type` : effacé à la compilation. Ce module **ne dépend pas** de `src/i18n/` à
@@ -332,11 +333,10 @@ export function unreachableWidgetRanks(page: Page): number[] {
 /**
  * Vrai si la page porte **explicitement** « aucun type de navigation ».
  *
- * On relit le nœud brut plutôt que `page.navigations` : `readLayout` replie sur
- * `{ kind: 'none' }` **aussi** quand la clé est absente ou d'un type non reconnu, et un
- * fichier sans clé `navigations` ne dit pas que sa page est éteinte — il ne dit rien.
- * Les 21 fichiers du corpus portent tous la clé sur toutes leurs pages ; le garde-fou
- * n'a donc jamais servi, et c'est très bien ainsi.
+ * La lecture vit dans `model/reachability.ts` (`navigationsBlock`), qui distingue en plus
+ * **laquelle** des deux écritures l'interdit — le réglage « Désactivé » ou la liste vide —
+ * parce que la page ouverte en édition a besoin de le dire au pilote. Ici, seule la
+ * conséquence compte : la règle 2 la rend d'un seul tenant.
  *
  * **Exportée** parce que c'est le seul prédicat de visibilité de page que l'appareil ait
  * confirmé : `src/ui/pageManager.ts` s'en sert pour ses avertissements de suppression,
@@ -345,11 +345,7 @@ export function unreachableWidgetRanks(page: Page): number[] {
  * de `navigations`, dont une seule avec le garde-fou ci-dessus.
  */
 export function isShownForNoNavigation(page: Page): boolean {
-  const node = getMember(page.node, 'navigations')
-  if (node === undefined) return false
-  if (node.kind === 'string') return page.navigations.kind === 'none'
-  if (node.kind === 'array') return node.items.length === 0
-  return false
+  return navigationsBlock(page) !== undefined
 }
 
 /* ======================================== 3. page d'assistant de thermique éclipsée */

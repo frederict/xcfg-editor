@@ -302,7 +302,17 @@ const model: DomainCatalog<'model'> = {
   'libraryError.itemManifestUnreadable': 'unreadable index in the archive',
   'libraryError.itemMemberMissing': 'member {file} missing from the archive',
   'libraryError.itemDigestMismatch': 'the archive’s bytes do not return the announced digest',
-  'libraryError.importedSuffix': ' (imported)'
+  'libraryError.importedSuffix': ' (imported)',
+
+  /* ======= why this particular page will never be shown, and what reopens it ======== */
+
+  'reachability.noNavigation': 'This page is enabled for no navigation at all: on the instrument, paging skips it, and nothing you place here will ever be shown. That is XCTrack’s “Disabled” setting — deliberate, or forgotten. Observed on the ground on an AIR³ 7.2.',
+  'reachability.emptyNavigationList': 'This page carries an empty list of navigations: none calls it, and nothing you place here will ever be shown. The file writes an empty list rather than the “Disabled” setting; the instrument has never been observed in that state.',
+  'reachability.heldInLandscape': 'This file’s general settings hold the screen in landscape: your portrait pages will not appear there, whatever their navigations. As it is written in the file: “Display.Orientation: {value}”.',
+  'reachability.heldInPortrait': 'This file’s general settings hold the screen in portrait: your landscape pages will not appear there, whatever their navigations. As it is written in the file: “Display.Orientation: {value}”.',
+  'reachability.enableAllRemedy': 'This editor can reopen it: “Enable for all navigations” writes the value XCTrack itself writes when all five navigations are active. The button is on this page and in “Manage the pages”, as soon as “Edit the pages” is on. To keep only some of them, you have to go through the instrument.',
+  'reachability.heldRemedy': 'This cannot be repaired on the page: it is a setting for the whole instrument, and it lives under “Settings”, on the line that fixes the screen orientation. This editor does not touch it on its own. Observed once: portrait pages imported onto an AIR³ 7.2 were never shown there while that setting held the screen in landscape.'
+
 }
 
 export default model

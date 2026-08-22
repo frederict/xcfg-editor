@@ -321,7 +321,17 @@ const model: DomainCatalog<'model'> = {
   'libraryError.itemManifestUnreadable': 'unlesbares Verzeichnis im Archiv',
   'libraryError.itemMemberMissing': 'Element {file} fehlt im Archiv',
   'libraryError.itemDigestMismatch': 'die Bytes des Archivs ergeben nicht die angekündigte Prüfsumme',
-  'libraryError.importedSuffix': ' (eingelesen)'
+  'libraryError.importedSuffix': ' (eingelesen)',
+
+  /* ==== warum genau diese Seite nie erscheint, und was sie wieder öffnet ========== */
+
+  'reachability.noNavigation': 'Diese Seite ist für keine Navigation aktiviert: Am Gerät wird sie beim Blättern übersprungen, und nichts, was Sie hier ablegen, wird je angezeigt. Das ist die Einstellung „Deaktiviert“ von XCTrack — gewollt oder vergessen. Am Boden auf einem AIR³ 7.2 beobachtet.',
+  'reachability.emptyNavigationList': 'Diese Seite trägt eine leere Navigationsliste: Keine ruft sie auf, und nichts, was Sie hier ablegen, wird je angezeigt. Die Datei schreibt eine leere Liste statt der Einstellung „Deaktiviert“; das Gerät wurde in diesem Zustand nie beobachtet.',
+  'reachability.heldInLandscape': 'Die allgemeinen Einstellungen dieser Datei halten den Bildschirm im Querformat: Ihre Hochformat-Seiten erscheinen dort nicht, gleich welche Navigationen sie tragen. So steht es in der Datei: „Display.Orientation: {value}“.',
+  'reachability.heldInPortrait': 'Die allgemeinen Einstellungen dieser Datei halten den Bildschirm im Hochformat: Ihre Querformat-Seiten erscheinen dort nicht, gleich welche Navigationen sie tragen. So steht es in der Datei: „Display.Orientation: {value}“.',
+  'reachability.enableAllRemedy': 'Dieser Editor kann sie wieder öffnen: „Für alle Navigationen aktivieren“ schreibt den Wert, den XCTrack selbst schreibt, wenn alle fünf Navigationen aktiv sind. Die Schaltfläche steht auf dieser Seite und in „Seiten verwalten“, sobald „Seiten bearbeiten“ aktiv ist. Um nur einzelne zu behalten, führt kein Weg am Gerät vorbei.',
+  'reachability.heldRemedy': 'Das lässt sich nicht auf der Seite beheben: Es ist eine Einstellung des ganzen Geräts, und sie steht unter „Einstellungen“ in der Zeile, die die Bildschirmausrichtung festlegt. Dieser Editor rührt sie nicht von sich aus an. Einmal beobachtet: Auf ein AIR³ 7.2 importierte Hochformat-Seiten wurden dort nie angezeigt, solange diese Einstellung den Bildschirm im Querformat hielt.'
+
 }
 
 export default model

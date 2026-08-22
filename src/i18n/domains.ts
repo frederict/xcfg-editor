@@ -138,7 +138,8 @@ export const DOMAIN_PREFIXES: Readonly<Record<Domain, readonly string[]>> = {
   pages: ['device', 'pages'],
   model: [
     'model', 'personal', 'personalBasis', 'personalHome', 'personalKind', 'personalReason',
-    'sharingReason', 'suspectClue', 'ruleTitle', 'ruleSummary', 'inspection', 'libraryError'
+    'sharingReason', 'suspectClue', 'ruleTitle', 'ruleSummary', 'inspection', 'libraryError',
+    'reachability'
   ]
 }
 

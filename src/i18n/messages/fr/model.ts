@@ -412,7 +412,17 @@ const model = {
   'libraryError.itemManifestUnreadable': 'fiche illisible dans l’archive',
   'libraryError.itemMemberMissing': 'membre {file} absent de l’archive',
   'libraryError.itemDigestMismatch': 'les octets de l’archive ne rendent pas l’empreinte annoncée',
-  'libraryError.importedSuffix': ' (importé)'
+  'libraryError.importedSuffix': ' (importé)',
+
+  /* ============ pourquoi cette page-ci ne s'affichera jamais, et ce qui la rouvre ==== */
+
+  'reachability.noNavigation': 'Cette page n’est activée pour aucune navigation : sur l’instrument, le défilement la saute, et rien de ce que vous y posez ne s’affichera jamais. C’est le réglage « Désactivé » de XCTrack — volontaire, ou oublié. Constaté au sol sur un AIR³ 7.2.',
+  'reachability.emptyNavigationList': 'Cette page porte une liste de navigations vide : aucune ne l’appelle, et rien de ce que vous y posez ne s’affichera jamais. Le fichier écrit une liste vide plutôt que le réglage « Désactivé » ; l’instrument n’a jamais été observé dans cet état.',
+  'reachability.heldInLandscape': 'Les réglages généraux de ce fichier tiennent l’écran en paysage : vos pages portrait n’y apparaîtront pas, quelles que soient leurs navigations. Tel qu’il s’écrit dans le fichier : « Display.Orientation: {value} ».',
+  'reachability.heldInPortrait': 'Les réglages généraux de ce fichier tiennent l’écran en portrait : vos pages paysage n’y apparaîtront pas, quelles que soient leurs navigations. Tel qu’il s’écrit dans le fichier : « Display.Orientation: {value} ».',
+  'reachability.enableAllRemedy': 'Cet éditeur sait la rouvrir : « Activer pour toutes les navigations » écrit la valeur que XCTrack écrit lui-même quand les cinq navigations sont actives. Le bouton est sur cette page et dans « Gérer les pages », dès que « Modifier les pages » est actif. Pour n’en choisir que certaines, il faut passer par l’instrument.',
+  'reachability.heldRemedy': 'Cela ne se répare pas sur la page : c’est un réglage de tout l’instrument, et il se trouve dans « Réglages », à la ligne qui fixe l’orientation de l’écran. Cet éditeur n’y touche pas de lui-même. Constaté une fois : des pages portrait importées sur un AIR³ 7.2 ne s’y sont jamais affichées tant que ce réglage tenait l’écran en paysage.'
+
 } as const
 
 export default model

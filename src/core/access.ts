@@ -81,6 +81,18 @@ export function setString(node: JsonNode, key: string, raw: string): void {
   setRaw(node, key, { kind: 'string', raw })
 }
 
+/**
+ * Remplace la valeur d'une clé existante par un **nœud entier** — un tableau, un objet.
+ *
+ * Distincte de `setLiteral` et `setString`, qui posent une feuille depuis son texte
+ * source : ici, l'appelant a déjà construit l'arbre. C'est ce dont a besoin une clé dont
+ * XCTrack écrit tantôt une chaîne, tantôt un tableau — `navigations`, la seule du format
+ * qui soit dans ce cas.
+ */
+export function setNode(node: JsonNode, key: string, value: JsonNode): void {
+  setRaw(node, key, value)
+}
+
 /** Vrai si la clé existe dans l'objet. Sert à choisir entre `set…` et `insert…`. */
 export function hasMember(node: JsonNode, key: string): boolean {
   return getMember(node, key) !== undefined
@@ -141,6 +153,11 @@ export function insertLiteral(node: JsonNode, key: string, raw: string, at?: num
 /** Insère une clé absente portant une chaîne. `raw` inclut les guillemets — voir `encode`. */
 export function insertString(node: JsonNode, key: string, raw: string, at?: number): void {
   insertRaw(node, key, { kind: 'string', raw }, at)
+}
+
+/** Insère une clé absente portant un **nœud entier** — pendant de `setNode`. */
+export function insertNode(node: JsonNode, key: string, value: JsonNode, at?: number): void {
+  insertRaw(node, key, value, at)
 }
 
 /**

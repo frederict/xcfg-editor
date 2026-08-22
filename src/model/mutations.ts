@@ -1,5 +1,7 @@
 import type { JsonNode } from '../core/jsonDocument'
-import { getMember, readNumber, setLiteral, setString } from '../core/access'
+import {
+  decode, getMember, hasMember, insertNode, readNumber, setLiteral, setNode, setString
+} from '../core/access'
 import type { Navigations } from './layout'
 
 /**
@@ -284,6 +286,50 @@ export function createPage(className: string, navigations: Navigations = { kind:
     ]
   }
   return page
+}
+
+/**
+ * Change les navigations d'une page **existante**.
+ *
+ * ## Pourquoi cette primitive n'existait pas, et pourquoi elle existe maintenant
+ *
+ * `createPage` savait poser des navigations ; rien ne savait les changer. La conséquence
+ * était visible du pilote : l'outil lui disait qu'une page ne s'afficherait jamais et ne
+ * lui offrait aucun moyen d'y remédier — « il m'apprend que 15 gadgets sont perdus et me
+ * renvoie à l'instrument », 22 août 2026.
+ *
+ * ## Ce qu'on s'autorise à écrire, et ce qui l'établit
+ *
+ * Les trois formes que `navigationsNode` produit sont **celles que XCTrack écrit**, et
+ * rien d'autre :
+ *
+ * - `"all"` et la **liste explicite** de classes : mesuré sur l'instrument. Désactiver une
+ *   des cinq icônes de la boîte « Activer / Désactiver » a transformé `"all"` en la liste
+ *   des quatre autres (`docs/reference/edition-native-exploration.md` § 5.4) ;
+ * - `"none"` : la valeur que porte la page de compétition du propriétaire, et la seule que
+ *   le défilement de l'appareil saute (`docs/reference/2026-08-22-essai-pilote.md` § 2).
+ *
+ * Aucune autre forme n'est offerte, et l'appelant n'en construit pas : le type `Navigations`
+ * les épuise. C'est ce qui garantit qu'un fichier réparé ici reste un fichier que XCTrack
+ * sait relire.
+ *
+ * ## La clé absente
+ *
+ * Aucune page des 21 fichiers du corpus n'est dans ce cas ; toutes écrivent `CLASS`, puis
+ * `navigations`, puis `widgets`. Si la clé manque, on la pose donc **juste après `CLASS`**,
+ * à la place qu'elle occupe partout ailleurs, plutôt qu'en queue derrière les widgets.
+ * XCTrack relit ses clés par nom (voir `access.ts`) : le rang ne change rien pour lui, il
+ * change ce que le pilote lira s'il ouvre son fichier.
+ */
+export function setPageNavigations(page: JsonNode, navigations: Navigations): void {
+  const value = navigationsNode(navigations)
+  if (hasMember(page, 'navigations')) {
+    setNode(page, 'navigations', value)
+    return
+  }
+  if (page.kind !== 'object') throw new Error('objet attendu')
+  const afterClass = page.entries.findIndex(([key]) => decode(key) === 'CLASS') + 1
+  insertNode(page, 'navigations', value, afterClass)
 }
 
 /** Copie indépendante d'une page et de tous ses widgets. */
