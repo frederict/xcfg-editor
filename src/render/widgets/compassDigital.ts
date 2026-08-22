@@ -19,15 +19,41 @@ import { widgetTitle } from '../title'
  * autre angle : `planche-vol-3` « ↗ 52 » en vert, `planche-competition-3` « ↗ 35 » en
  * vert.
  *
+ * ## La règle de couleur — tranchée le 2026-08-22 : c'est le CÔTÉ, jamais la valeur
+ *
+ * Ce commentaire supposait « un seuil autour du quart de tour » et le disait non établi.
+ * Le rejeu de `2026-07-09-XCT-FTE-01.igc` a produit **onze observations**, dont trois
+ * paires quasi appariées en valeur et **opposées en couleur** :
+ *
+ * | valeur | flèche | teinte |
+ * |---|---|---|
+ * | 3 | avant-**gauche** | **rose** `#ffa0a0` |
+ * | 9, 17, 35, 37, 38 | avant-**droite** | **vert** `#a0ffa0` |
+ * | **49** | avant-gauche | rose |
+ * | **52** | avant-droite | vert |
+ * | **55** | avant-gauche | rose |
+ * | **140** | arrière-gauche | rose |
+ * | **146** | arrière-droite | vert |
+ *
+ * 49 rose contre 52 vert, 55 rose contre 52 vert, 140 rose contre 146 vert : **aucun
+ * seuil sur le nombre affiché ne produit ça.**
+ *
+ * > **La flèche pointe à droite → pastille verte. À gauche → pastille rose.**
+ *
+ * C'est la **pastille signée ordinaire** de XCTrack — `#a0ffa0` positif, `#ffa0a0`
+ * négatif, la même encre que le vario — appliquée à un gisement signé, positif à droite,
+ * négatif à gauche, dont le gadget n'imprime que la **valeur absolue**. La couleur est le
+ * signe que le nombre a perdu. C'est pourquoi la teinte se déduit ici de l'angle de la
+ * flèche (`sideOf`) et non de la valeur : elles ne peuvent pas se contredire.
+ *
  * ## Ce qui n'est PAS établi, et donc pas modélisé
  *
- * - **La règle de couleur.** Vert à 52 et à 35, rose à 140. Un seuil autour du quart de
- *   tour expliquerait les trois relevés, mais trois points ne font pas une loi, et le
- *   fichier de pages ne porte rien qui permette de trancher. On reprend l'état AU SOL
- *   (rose, 140°), celui d'où viennent les autres valeurs d'exemple de ce moteur, et on
- *   écrit la réserve.
  * - **L'angle** de la flèche : 140° est la valeur affichée, pas une donnée de navigation
  *   calculée ici. Comme partout dans ce moteur, rien n'est simulé.
+ * - **La géométrie fine de la flèche.** Elle est quantifiée en quadrants — avant-gauche,
+ *   avant-droite, arrière-gauche, arrière-droite — et bascule vers l'arrière au-delà de
+ *   90° (52 devant, 140 derrière) sans distinguer 9 de 52 : elle est dessinée à ~45° pour
+ *   toutes les valeurs avant. L'angle exact DANS le quadrant reste ouvert.
  * - **Le titre** : l'appareil écrit « Boussole Point optimisé », nous écrivons le nom du
  *   catalogue. Le libellé dépend du réglage `target` et vit dans le catalogue d'options,
  *   chargé par `import()` — un dessin est synchrone et ne peut pas l'attendre. Voir le
@@ -45,6 +71,15 @@ const EXAMPLE_DEGREES = '140'
  */
 const EXAMPLE_ARROW_ANGLE = 235
 
+/**
+ * Côté vers lequel pointe la flèche, d'où la teinte de la pastille : 0–180° est la moitié
+ * DROITE du cadran, 180–360° la gauche. Les deux axes (0° et 180°) ne sont pas observés —
+ * un gisement nul n'a pas de signe, et aucune des onze captures ne le montre.
+ */
+function sideOf(angle: number): 'right' | 'left' {
+  return ((angle % 360) + 360) % 360 < 180 ? 'right' : 'left'
+}
+
 export function drawCompassDigital(widget: Widget, settings: RenderSettings, language: string): HTMLElement {
   const element = document.createElement('div')
   element.className = 'xc-compdig'
@@ -58,13 +93,20 @@ export function drawCompassDigital(widget: Widget, settings: RenderSettings, lan
   element.append(title)
 
   const row = document.createElement('div')
-  // `xc-num__row--negative` : la même teinte cernée que les valeurs négatives du vario —
-  // c'est bien la même encre sur la capture, pas une couleur propre à ce widget.
-  row.className = 'xc-compdig__row xc-num__row--negative'
+  // La même encre que les valeurs signées du vario, pas une couleur propre à ce widget :
+  // la flèche à droite prend le vert des positifs, à gauche le rose des négatifs. La
+  // flèche d'exemple pointe en bas à gauche, donc rose — comme la capture au sol.
+  const sign = sideOf(EXAMPLE_ARROW_ANGLE) === 'right' ? 'positive' : 'negative'
+  row.className = `xc-compdig__row xc-num__row--${sign}`
 
   const arrow = document.createElementNS(SVG_NS, 'svg')
   arrow.setAttribute('class', 'xc-compdig__arrow')
   arrow.setAttribute('viewBox', '0 0 24 24')
+  // La flèche prend la MÊME encre que la valeur : sur les onze captures, les deux sont
+  // toujours de la même teinte. `.xc-compdig__arrow` (style.css) la fixe au rose des
+  // négatifs, ce qui ne vaut que pour une flèche à gauche — cette ligne la fait suivre le
+  // côté, comme la pastille de la valeur.
+  arrow.style.fill = `var(--xc-value-${sign})`
   // Une seule silhouette pleine — hampe et pointe d'un seul tenant : sur la capture, la
   // flèche est un aplat rose cerné de noir, pas un trait surmonté d'un chevron.
   const shape = document.createElementNS(SVG_NS, 'polygon')

@@ -118,8 +118,17 @@ describe('« Boussole Point optimisé » (compassDigital.ts)', () => {
     expect(el.querySelector('.xc-compdig__value')?.textContent).toBe('140')
     expect(el.querySelector('.xc-compdig__degree')?.textContent).toBe('°')
     // La teinte est celle des valeurs négatives du vario — mesurée #ffa0a0 sur la même
-    // capture que la pastille « [-27] m ».
+    // capture que la pastille « [-27] m ». Elle suit le CÔTÉ de la flèche, tranché par le
+    // rejeu du 2026-08-22 (onze observations, dont 49 rose contre 52 vert) : la flèche
+    // d'exemple pointe en bas à GAUCHE, donc rose.
     expect(el.querySelector('.xc-num__row--negative')).not.toBeNull()
+    expect(el.querySelector('.xc-num__row--positive')).toBeNull()
+  })
+
+  it('la flèche prend la même encre que la valeur, et non le rose en dur de style.css', () => {
+    const el = drawCompassDigital(widget('WCompassDigital'), settings, 'fr')
+    const arrow = el.querySelector('.xc-compdig__arrow') as SVGElement
+    expect(arrow.style.fill).toBe('var(--xc-value-negative)')
   })
 
   it('la valeur reste un `.xc-num__value` : c’est ce qui lui donne le cerne de signe', () => {
