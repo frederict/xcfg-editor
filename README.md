@@ -498,8 +498,9 @@ fichiers de waypoints, parfois vos coordonnées — et une issue GitHub est publ
 fichier est indispensable pour comprendre le problème, produisez-en d'abord une version
 expurgée avec l'outil lui-même (bouton d'enregistrement), et relisez l'inventaire qu'il
 vous montre avant d'envoyer quoi que ce soit. Laquelle choisir dépend de votre question :
-**« Version partageable »** si elle porte sur vos pages, **« Tous vos réglages, sans ce
-qui vous désigne »** si elle porte sur un réglage général — vario, capteurs, unités.
+**« Version partageable, sans données personnelles »** si elle porte sur vos pages,
+**« Tous vos réglages, sans ce qui vous désigne »** si elle porte sur un réglage général
+— vario, capteurs, unités.
 
 ## Installer et lancer
 
