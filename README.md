@@ -351,6 +351,11 @@ qu'on a réglé, ou figer ce que le fichier ne dit pas.*
                3. le bloc « 1 réglage que ce gadget n'écrit pas » disait « Valeurs d'usine
                   relevées sur XCTrack 1.0.3-beta (versionCode 100030) » ; la parenthèse
                   est partie, la phrase s'arrête au nom de version.
+               4. (2026-08-22, plus tard) le bouton « Masquer la liste » de la tête du
+                  bandeau — et toutes les commandes discrètes de l'outil — n'avaient
+                  AUCUN filet, pas même au survol, pendant que les marques voisines en
+                  portaient un tireté et visible. Elles reprennent le filet plein de
+                  `.btn`. Sur cette image, seul ce bouton-là change.
                Le cadrage ci-dessous reste bon dans les trois cas. Non refaites le jour
                même, et volontairement : trois chantiers écrivaient encore dans ces écrans,
                et une capture prise à ce moment-là aurait figé un travail à mi-course.
@@ -416,6 +421,15 @@ réglages restent français dans les cinq captures — seule notre prose change.
   ⚠ LES CINQ IMAGES SONT PÉRIMÉES DEPUIS LE 2026-08-22, ET POUR DEUX RAISONS. Elles
   montrent un écran que le code ne produit plus. La recette, elle, reste bonne — il n'y a
   que les photographies à reprendre.
+
+  ⚠ UNE TROISIÈME RAISON, LE MÊME JOUR, APRÈS LA DETTE PAYÉE CI-DESSUS : sur les images
+  reprises, « Retirer du fichier » n'a aucun filet — ni au repos ni au survol — pendant que
+  la marque inerte « valeur d'usine », juste à côté, en porte un tireté et visible. Deux
+  pilotes d'essai ont lu la marque comme la commande, et le second l'a mesuré : bouton
+  `rgba(0, 0, 0, 0)` à 11,5 px, marque `rgb(207, 156, 44)` à 12 px. Le bouton reprend
+  depuis le filet plein de `.btn`. Sa LARGEUR ne change pas d'un pixel — 109,3 px en
+  français, 166,6 en néerlandais, comme avant —, donc le cadrage et l'alignement des
+  36 lignes restent exactement ceux que cette recette décrit.
 
   Sur les images, le bouton de retrait passe SOUS la marque d'état. Ce n'était pas
   l'émulation : `.prefs__aside` réservait une largeur écrite de 4,6 rem (73,6 px), taillée
@@ -624,6 +638,14 @@ textes par des barres grises, parce qu'une image échappe à l'anonymisation. Et
                fait et la capture révélerait ce que la page porte : ne pas la garder.
                Les deux noms d'entrée — « Comp Annecy », « Vol-biv Alpes » — sont écrits
                à la main pour la capture ; aucun nom réel ne doit figurer ici.
+
+  ⚠ LES CINQ IMAGES SONT PÉRIMÉES DEPUIS LE 2026-08-22. Le pied de la boîte est
+  précisément ce que cette recette cadre — « Empêcher le navigateur d'effacer ma
+  bibliothèque » et « Effacer toute la bibliothèque » —, et ces deux boutons-là n'avaient
+  aucun filet : ils se lisaient comme des bouts de phrase. Ils portent maintenant le filet
+  plein de toute commande. « Supprimer », « Renommer » et « Vérifier l'empreinte », sur les
+  entrées, changent de la même façon. La recette reste bonne : ni le cadrage, ni les
+  fixtures, ni l'état ne bougent — il n'y a que les photographies à reprendre.
 
   CAPTURE AJOUTÉE — la bibliothèque n'avait jamais eu de capture, alors qu'elle porte
   l'argument de vie privée le plus concret du projet : la seule image du dépôt où l'on
