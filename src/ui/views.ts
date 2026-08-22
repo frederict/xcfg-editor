@@ -124,59 +124,14 @@ function translatedPageKind(
 }
 
 /**
- * ⚠️ **Prose héritée, en français seulement — à retirer.**
+ * Ce que la classe d'une page dit au pilote, dans sa langue.
  *
- * `pageKind` est appelée sans traducteur par `pageManager.ts`, dont l'extraction n'est pas
- * faite. Le jour où elle lui passera le sien, ces trois constantes disparaissent avec le
- * paramètre optionnel qui les atteint.
- *
- * `tests/ui/views.test.ts` vérifie que le catalogue français dit **exactement** ce qu'elles
- * disent : aucune dérive n'est donc possible entre les deux, et la bascule n'aura rien à
- * relire.
+ * Le traducteur était **facultatif** le temps que `pageManager.ts` verse sa prose au
+ * catalogue, et trois constantes françaises tenaient le repli. Le carrousel passe
+ * maintenant le sien : le repli est mort, et il est parti avec.
  */
-const LEGACY_PAGE_KINDS: Readonly<Record<KnownPageKind, Omit<PageKind, 'shortName'>>> = {
-  WPEmpty: {
-    label: 'Page libre',
-    note: 'Créée vide sur l’instrument, prête pour vos propres gadgets.'
-  },
-  WPCompetition: {
-    label: 'Page de compétition',
-    note: 'Créée avec le jeu de gadgets de compétition de l’instrument.'
-  },
-  WPThermalAssistant: {
-    label: 'Page d’assistant de thermique',
-    note: 'Créée avec le jeu de gadgets d’assistant de thermique. C’est la classe que ' +
-      'vise le basculement automatique en thermique.'
-  },
-  WPXCAssistant: {
-    label: 'Page d’assistant XC',
-    note: 'Créée avec le jeu de gadgets d’aide FAI et routes.'
-  }
-}
-
-/** Voir `LEGACY_PAGE_KINDS`. */
-const LEGACY_PAGE_KIND_UNKNOWN: Omit<PageKind, 'shortName'> = {
-  label: 'Type de page non reconnu',
-  note: 'Ce type de page n’est pas décrit par cet éditeur ; son contenu reste affiché tel quel.'
-}
-
-/** Voir `LEGACY_PAGE_KINDS`. */
-const LEGACY_PAGE_KIND_MISSING = '(type absent)'
-
-/**
- * Ce que la classe d'une page dit au pilote. Sans traducteur — le temps que les écrans
- * restants versent leur prose au catalogue —, la réponse est la prose héritée ci-dessus.
- */
-export function pageKind(className: string, tr?: Translator): PageKind {
+export function pageKind(className: string, tr: Translator): PageKind {
   const shortName = className.split('.').pop() ?? ''
-  const known = isKnownPageKind(shortName)
-  if (tr === undefined) {
-    if (known) return { shortName, ...LEGACY_PAGE_KINDS[shortName] }
-    return {
-      shortName: shortName === '' ? LEGACY_PAGE_KIND_MISSING : shortName,
-      ...LEGACY_PAGE_KIND_UNKNOWN
-    }
-  }
   return {
     shortName: shortName === '' ? tr.t('pageKind.missing') : shortName,
     ...translatedPageKind(shortName, tr)

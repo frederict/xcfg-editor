@@ -42,7 +42,6 @@ import frenchMessages from '../../src/i18n/messages/fr'
 // Le panneau des gadgets garde son intitulé en constante française, et son propre message
 // le double par un test d'égalité (`tests/ui/properties.test.ts`). En rattachant le nôtre
 // à la même constante, les trois sont tenus ensemble — voir le test tout en bas.
-import { RESTORE_LABEL as WIDGET_PANEL_RESTORE_LABEL } from '../../src/ui/properties'
 
 /**
  * Tout se joue sur les trois fichiers réels du dépôt : la sauvegarde de la version
@@ -1753,15 +1752,16 @@ describe('rétablir la valeur d’usine d’un réglage que le pilote a changé'
     // défaut à elles seules. C'est déjà la règle des deux premiers gestes.
     //
     // Depuis que la prose est versée au catalogue, l'accord ne tient plus à ce que deux
-    // constantes portent la même chaîne : il tient à **ce test**. Le panneau des gadgets
-    // garde `RESTORE_LABEL` en français et double son propre message par une égalité ;
-    // le nôtre s'y rattache ici. Aucun des deux écrans ne peut donc dériver seul.
+    // constantes portent la même chaîne : il tient à **ce test**, que
+    // `tests/ui/properties.test.ts` double depuis l'autre bord. La constante française du
+    // panneau des gadgets a disparu avec le dernier écran qui l'employait.
     //
     // ⚠️ Volontairement **pas** dans `common.ts` : ce geste n'est partagé qu'entre deux
     // domaines, et y monter une clé ferait de ce fichier-là un point de conflit permanent
     // pour économiser trois lignes.
     expect(RESTORE_LABEL).toBe('preferences.restoreLabel')
-    expect(frenchMessages['preferences.restoreLabel']).toBe(WIDGET_PANEL_RESTORE_LABEL)
+    expect(frenchMessages['preferences.restoreLabel'])
+      .toBe(frenchMessages['properties.restoreFactoryValue'])
     expect(tr.t(RESTORE_LABEL)).toBe('Rétablir la valeur d’usine')
     const { page } = editable(BACKUP_2026)
     expect(restoreButton(page, 'Display.Theme').textContent).toBe(tr.t(RESTORE_LABEL))

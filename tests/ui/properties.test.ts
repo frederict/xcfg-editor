@@ -14,7 +14,6 @@ import {
   colorToLiteral,
   loadOptionTexts,
   renderProperties,
-  RESTORE_LABEL,
   setFieldValue,
   writeMissingDefault,
   type PropertyField,
@@ -1485,11 +1484,13 @@ describe('les deux axes de langue', () => {
     expect(values).toContain('SYS_UNIT')
   })
 
-  it('« Rétablir la valeur d’usine » dit dans le catalogue ce que la constante dit', () => {
-    // La constante héritée est encore celle qu'emploie `ui/preferencesPage.ts`, où un test
-    // l'épingle aussi. Tant que les deux coïncident, les deux écrans disent le même mot.
-    expect(frenchMessages['properties.restoreFactoryValue']).toBe(RESTORE_LABEL)
-    expect(RESTORE_LABEL).toBe('Rétablir la valeur d’usine')
+  it('« Rétablir la valeur d’usine » dit le même mot que l’écran des réglages', () => {
+    // La constante française héritée a disparu avec le dernier écran qui l'employait :
+    // l'accord entre les deux écrans tient maintenant aux deux clés du catalogue, et à ce
+    // test-ci — que `tests/ui/preferencesPage.test.ts` double depuis l'autre bord.
+    expect(frenchMessages['properties.restoreFactoryValue']).toBe('Rétablir la valeur d’usine')
+    expect(frenchMessages['preferences.restoreLabel'])
+      .toBe(frenchMessages['properties.restoreFactoryValue'])
   })
 
   it('sans traducteur, dit mot pour mot ce que le catalogue français dit', () => {

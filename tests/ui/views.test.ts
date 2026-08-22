@@ -353,12 +353,11 @@ describe('les constats du fichier, triés par ce qu’ils réclament', () => {
 })
 
 /**
- * `pageKind` porte encore sa prose française en dur, pour `pageManager.ts` qui l'appelle
- * sans traducteur — voir `LEGACY_PAGE_KINDS` dans `src/ui/views.ts`. Tant que les deux
- * chemins cohabitent, ils doivent dire **exactement** la même chose : sans ce test, la
- * bascule du jour où le carrousel passera son traducteur se ferait à l'aveugle.
+ * `pageKind` portait sa prose française en dur, pour `pageManager.ts` qui l'appelait sans
+ * traducteur. Le carrousel passe le sien depuis l'extraction du lot `pages` : le repli et
+ * ses trois constantes ont disparu, et le traducteur est devenu obligatoire.
  */
-describe('la classe d’une page, dite deux fois le temps de la bascule', () => {
+describe('la classe d’une page, dite dans la langue du pilote', () => {
   const CLASSES = [
     'org.xcontest.XCTrack.Pages.WPEmpty',
     'org.xcontest.XCTrack.Pages.WPCompetition',
@@ -368,9 +367,12 @@ describe('la classe d’une page, dite deux fois le temps de la bascule', () => 
     ''
   ]
 
-  it('dit la même chose avec et sans traducteur, en français', () => {
+  it('nomme chaque classe, connue ou non, et le type absent', () => {
     for (const className of CLASSES) {
-      expect(pageKind(className, tr), className).toEqual(pageKind(className))
+      const kind = pageKind(className, tr)
+      expect(kind.label.length, className).toBeGreaterThan(3)
+      expect(kind.note.length, className).toBeGreaterThan(10)
+      expect(kind.shortName, className).not.toBe('')
     }
   })
 

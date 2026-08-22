@@ -1565,19 +1565,17 @@ function originMark(field: PropertyField, tr: Translator): HTMLElement {
 /* ------------------------------------------------- le troisième geste : rétablir l'usine */
 
 /**
- * L'intitulé du troisième geste. **Le même mot à mot que dans l'écran des préférences**
- * (`ui/preferencesPage.ts`, `RESTORE_LABEL`) : deux formulations pour un même geste, sur
- * deux écrans du même outil, seraient un défaut à elles seules — c'est déjà la règle des
- * deux premiers.
- */
-export const RESTORE_LABEL = 'Rétablir la valeur d’usine'
-
-/**
- * Le même intitulé, dans la langue du pilote. `RESTORE_LABEL` reste la **constante
- * française héritée** : c'est encore elle que `ui/preferencesPage.ts` emploie, et
- * `tests/ui/properties.test.ts` vérifie que le catalogue français dit **exactement** ce
- * qu'elle dit. Aucune dérive n'est donc possible entre les deux écrans, et le jour où
- * l'écran des réglages généraux versera à son tour, il n'y aura rien à relire.
+ * L'intitulé du troisième geste, dans la langue du pilote.
+ *
+ * **Le même mot à mot que dans l'écran des préférences** (`preferences.restoreLabel`) :
+ * deux formulations pour un même geste, sur deux écrans du même outil, seraient un défaut
+ * à elles seules — c'est déjà la règle des deux premiers.
+ *
+ * L'accord ne tient plus à ce que deux constantes portent la même chaîne — la constante
+ * française héritée est partie avec le dernier écran qui l'employait — mais à
+ * `tests/ui/preferencesPage.test.ts`, qui compare les deux clés du catalogue français.
+ * ⚠️ Volontairement **pas** dans `common.ts` : ce geste n'est partagé qu'entre deux
+ * domaines, et y monter une clé ferait de ce fichier-là un point de conflit permanent.
  */
 function restoreLabel(tr: Translator): string {
   return tr.t('properties.restoreFactoryValue')
