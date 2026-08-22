@@ -33,6 +33,14 @@ la plaque qui la porte — est identique dans toutes.*
 
 <!--
   REFAIRE CETTE CAPTURE — captures/editeur-paysage.png (1500 × 1420)
+
+  ⚠ PÉRIMÉE DEPUIS LE 2026-08-22 : la plaque de faits sous le titre de la page
+               s'ouvrait sur le nom de classe du fichier — « WPEmpty », première pastille
+               de la ligne. Elle s'ouvre maintenant sur « 14 gadgets », et le nom de
+               classe la FERME, à la voix basse du gabarit d'écran. Rien d'autre n'a bougé
+               sur cet écran, et le cadrage ci-dessous reste bon. Non refaite le jour même,
+               et volontairement : d'autres chantiers écrivaient encore dans cet écran.
+
   Écran ...... l'éditeur entier, mode consultation, panneau des gadgets ouvert.
   Langues .... UN SEUL exemplaire, en français, employé par les cinq README. Le sujet
                est une géométrie, pas un texte : la page, la règle, la plaque. Les
@@ -309,10 +317,19 @@ qu'on a réglé, ou figer ce que le fichier ne dit pas.*
   REFAIRE CETTE CAPTURE — captures/panneau-gadget.<langue>.png (1400 × 1650 ;
                           1400 × 1750 pour l'allemand)
   Écran ...... l'éditeur en mode édition, panneau de réglages d'un gadget déplié.
-  ⚠ PÉRIMÉE DEPUIS LE 2026-08-22 : les marques d'origine du panneau (`.props__origin` —
-               « valeur d'usine », « réglé par vous ») portaient le filet PLEIN des boutons
-               voisins sans se cliquer, et portent maintenant un filet TIRETÉ. Rien d'autre
-               n'a bougé sur cet écran ; le cadrage ci-dessous reste bon.
+  ⚠ PÉRIMÉE DEPUIS LE 2026-08-22, pour TROIS raisons cumulées :
+               1. les marques d'origine du panneau (`.props__origin` — « valeur d'usine »,
+                  « réglé par vous ») portaient le filet PLEIN des boutons voisins sans se
+                  cliquer, et portent maintenant un filet TIRETÉ ;
+               2. la plaque de faits de la page ouverte commençait par le nom de classe
+                  (« WPThermalAssistant »), qui la ferme maintenant, en sourdine, après le
+                  gabarit d'écran ;
+               3. le bloc « 1 réglage que ce gadget n'écrit pas » disait « Valeurs d'usine
+                  relevées sur XCTrack 1.0.3-beta (versionCode 100030) » ; la parenthèse
+                  est partie, la phrase s'arrête au nom de version.
+               Le cadrage ci-dessous reste bon dans les trois cas. Non refaites le jour
+               même, et volontairement : trois chantiers écrivaient encore dans ces écrans,
+               et une capture prise à ce moment-là aurait figé un travail à mi-course.
   Langues .... CINQ exemplaires : .fr, .en, .nl, .de, .es. Le texte est le sujet.
                Ce fichier-ci ne déclare AUCUNE langue (`Display.Language` vide) : les
                noms de XCTrack suivent donc, à défaut, celle de l'interface — le globe
