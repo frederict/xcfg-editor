@@ -328,14 +328,41 @@ body {
  * Le nom du fichier cède la place aux commandes plutôt que de pousser la barre sur deux
  * lignes. `min-width: 0` autorise le rétrécissement dans une ligne flexible ; l'ellipse
  * fait le reste, et le nom entier reste lisible en infobulle.
+ *
+ * ⚠️ **Ce qui cède est le DÉBUT du nom, jamais la fin.** Le nom arrive en deux morceaux —
+ * `main.ts` les compose avec `fileNameParts` — et les deux `flex-shrink` ci-dessous
+ * décident lequel s'efface : la tête (`2026-08-20`, commune à tous les exports du jour)
+ * absorbe la quasi-totalité du manque, la queue (`_backup-00.xcfg`, qui porte le format et
+ * l'extension) ne cède qu'à la toute fin. Avec une ellipse ordinaire, mesuré le
+ * 2026-08-22, `2026-08-20_backup-00.xcfg` et `2026-08-20_backupwithmedia-00.xczfg`
+ * s'affichaient tous deux « 2026-08-20_backu… » : la troncature mangeait précisément ce
+ * qui les distingue.
  */
 .app-bar__file {
   font-family: var(--font-data);
   font-size: 12px;
   color: var(--app-ink-soft);
+  display: flex;
   flex: 0 1 auto;
   min-width: 0;
   max-width: 24ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 999 contre 1 : la tête s'efface d'abord, et presque seule. */
+.app-bar__fileHead {
+  flex: 0 999 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-bar__fileTail {
+  flex: 0 1 auto;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2893,6 +2920,38 @@ body.is-dragging .veil {
 
 .pagecard__thermal { border-left: 2px solid var(--app-line-strong); padding-left: 0.5rem; }
 
+/*
+ * Le geste qui rouvre une page fermée, sur sa vignette.
+ *
+ * ⚠ Ce n'est pas une marque d'état : c'est la seule commande de cette carte qui RÉPARE ce
+ * que la ligne du dessus vient d'annoncer. Elle porte donc le filet plein de `.btn`, comme
+ * tout ce qui se clique — c'est la règle qu'`app.css` tient en tête de feuille, et qu'un
+ * pilote d'essai a payée pour de bon en cliquant une étiquette inerte.
+ *
+ * `align-self: start` : sans lui, un enfant d'une colonne flexible s'étire sur toute la
+ * largeur de la carte et ne se lit plus comme un bouton mais comme une bande. Le corps de
+ * 12 px est celui des autres commandes de la carte (`.pagecard__duplicate`,
+ * `.pagecard__remove`) : elle est de leur famille, pas au-dessus.
+ *
+ * Elle reste hors de `.pagecard__ops`, en revanche, et c'est voulu : les commandes de rang
+ * sont collées au pied de la carte, celle-ci doit rester sous la phrase qu'elle répare.
+ */
+/*
+ * ⚠ `white-space: normal` défait le `nowrap` de `.btn`, et ce n'est pas une préférence :
+ * la carte fait 240 px, soit 215,6 px utiles, et l'intitulé français mesure 222,8 px d'un
+ * seul tenant. Sans autorisation de passer à la ligne, le bouton dépassait de 7,2 px —
+ * exactement le défaut que le contre-essai du 22 août avait relevé ailleurs, sous une autre
+ * forme. Mesuré dans les cinq langues après correction : plus aucun dépassement.
+ * `text-align: start` parce qu'un intitulé sur deux lignes se lit aligné à gauche, et que
+ * `.btn` centre ses enfants sans rien dire du texte.
+ */
+.pagecard__enable {
+  align-self: start;
+  font-size: 12px;
+  white-space: normal;
+  text-align: start;
+}
+
 .pagecard__ops {
   margin-top: auto;
   display: flex;
@@ -2989,6 +3048,30 @@ body.is-dragging .veil {
 }
 
 .editnote__text { margin: 0; max-width: 72ch; }
+/*
+ * Le bandeau d'une page qui ne s'affichera jamais porte DEUX phrases — le constat, puis ce
+ * qu'il y a à en faire — et, quand le geste existe, le bouton qui la rouvre.
+ *
+ * `margin: 0` sur les deux phrases (règle ci-dessus) les collait l'une à l'autre : deux
+ * paragraphes sans un souffle entre eux se lisent comme un seul, et le pilote saute le
+ * second, qui est justement celui qui lui dit quoi faire. Une grille et son écart les
+ * séparent — et non un `* + *`, qui aurait tenu son rôle sans dire lequel.
+ *
+ * `flex: 1 1 24rem` : le bloc prend la largeur restante et le bouton se pose à sa droite ;
+ * en dessous de sa base, le `flex-wrap` du bandeau renvoie le bouton à la ligne plutôt que
+ * de comprimer la phrase. `min-width: 0` autorise ce rétrécissement — sans lui, une phrase
+ * longue pousse le bouton hors du cadre.
+ */
+.editnote__body { flex: 1 1 24rem; min-width: 0; display: grid; gap: 0.35rem; }
+
+/*
+ * Deux bandeaux d'affilée : une même page peut être inatteignable pour deux raisons
+ * distinctes, et chacune a le sien. Empilés, leurs marges fusionnent à 1,6 rem — 25,6 px de
+ * blanc entre deux phrases qui parlent de la même page, avant même que la page paraisse.
+ * Le premier resserre donc sa marge basse : les deux bandeaux se lisent comme un bloc, et
+ * le dernier garde l'écart entier qui le sépare de la page.
+ */
+.editnote:has(+ .editnote) { margin-bottom: 0.5rem; }
 
 
 /* --- la palette, en boîte modale --- */

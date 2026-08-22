@@ -513,3 +513,46 @@ describe('app.css — le reçu d’enregistrement ne prend pas quatre lignes pou
     expect(rule('.app-bar__receiptSaid')).toMatch(/gap: 0\.1\d*rem;/)
   })
 })
+
+/**
+ * Le bandeau d'une page qui ne s'affichera jamais, et le geste qui la rouvre.
+ */
+describe('app.css — la note d’une page inatteignable se lit, et sa commande se voit', () => {
+  it('les deux phrases du bandeau ne sont pas collées', () => {
+    // `.editnote__text` porte `margin: 0` : sans écart au niveau du bloc, le constat et le
+    // remède se lisent comme un seul paragraphe et le second se saute.
+    const body = rule('.editnote__body')
+    expect(body).toContain('display: grid;')
+    expect(body).toMatch(/gap: 0\.\d+rem;/)
+  })
+
+  it('le bloc de phrases laisse le bouton se poser à côté, puis dessous', () => {
+    const body = rule('.editnote__body')
+    expect(body).toContain('flex: 1 1 24rem;')
+    expect(body).toContain('min-width: 0;')
+  })
+
+  it('deux bandeaux d’affilée se lisent comme un bloc', () => {
+    // Une même page peut être inatteignable pour deux raisons : leurs marges fusionnées
+    // valaient 1,6 rem de blanc entre deux phrases qui parlent de la même page.
+    expect(rule('.editnote:has(+ .editnote)')).toContain('margin-bottom: 0.5rem;')
+  })
+
+  it('le bouton de la vignette est une commande, pas une bande', () => {
+    // `align-self: start` : sans lui, un enfant d'une colonne flexible s'étire sur toute la
+    // largeur de la carte. Le filet plein, lui, vient de `.btn` — et c'est la règle du
+    // projet : tout ce qui se clique en porte un.
+    const enable = rule('.pagecard__enable')
+    expect(enable).toContain('align-self: start;')
+    expect(enable).toContain('font-size: 12px;')
+    // Elle n'est pas fantôme : ce serait la reprendre à la marque d'état.
+    expect(css).not.toContain('btn--ghost pagecard__enable')
+  })
+
+  it('un intitulé long passe à la ligne au lieu de sortir de la carte', () => {
+    // Mesuré : carte de 240 px, 215,6 px utiles, intitulé français de 222,8 px d'un seul
+    // tenant. `.btn` interdit le retour à la ligne ; ici il faut le rendre.
+    expect(rule('.pagecard__enable')).toContain('white-space: normal;')
+    expect(rule('.pagecard__enable')).toContain('text-align: start;')
+  })
+})
