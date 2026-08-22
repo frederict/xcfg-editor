@@ -1356,7 +1356,18 @@ body.is-dragging .veil {
 .props__row[data-depth="1"] { padding-left: 1.4rem; }
 
 .props__label { flex: 1 1 13rem; font-size: 14px; cursor: pointer; }
-.props__row[data-control="checkbox"] .props__label { flex: 1 1 auto; }
+
+/*
+ * `flex-basis: 0` et non `auto`. La ligne est en `flex-wrap: wrap`, et le passage à la
+ * ligne se décide **avant** la répartition, sur la taille hypothétique de chaque élément :
+ * avec `auto`, cette taille est celle de la phrase entière, et un libellé plus long que
+ * la ligne s'en va seul en dessous — la case reste orpheline au-dessus de son texte.
+ * Mesuré en allemand, la langue qui déborde : « Zeige den nächsten Luftraum, während du
+ * in einem anderen Luftraum bist » (446 px) dans un panneau de 452 px. Avec `0`, le
+ * libellé ne pèse rien au moment du découpage, reste sur la ligne de la case, puis grandit
+ * pour occuper la place restante et replie son texte à l'intérieur de sa propre boîte.
+ */
+.props__row[data-control="checkbox"] .props__label { flex: 1 1 0; }
 
 .props__checkbox {
   flex: none;

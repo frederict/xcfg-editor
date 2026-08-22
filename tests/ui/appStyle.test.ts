@@ -100,6 +100,49 @@ describe('app.css — rien d’autre que la page ne dépasse la fenêtre', () =>
 })
 
 /**
+ * # Une case à cocher ne quitte pas son libellé
+ *
+ * Défaut vu en photographiant le panneau de gadget, en **allemand** — la langue qui
+ * déborde : « Zeige den nächsten Luftraum, während du in einem anderen Luftraum bist ».
+ * La case restait seule sur sa ligne et le texte descendait dessous, ce qui laisse le
+ * pilote deviner à quel réglage la case appartient. Mesuré à la fenêtre de 1 380 px,
+ * fixture `2026-08-20_backup-00.xcfg`, page paysage 3, gadget « Luftraum-Annäherung » :
+ * 2 des 4 cases du panneau étaient dans ce cas, libellé de 446 px dans une ligne de 452.
+ *
+ * La cause n'est pas la place qui manque — le libellé sait se replier — mais l'ordre des
+ * opérations de `flex-wrap: wrap` : le **découpage en lignes** se décide avant la
+ * répartition, sur la taille hypothétique de chaque élément. Avec `flex-basis: auto`,
+ * cette taille est celle de la phrase entière ; un libellé plus long que la ligne s'en va
+ * donc en dessous, seul, et la case reste orpheline au-dessus. Avec `0`, le libellé ne
+ * pèse rien au moment du découpage, reste sur la ligne de la case, puis grandit et replie
+ * son texte à l'intérieur de sa propre boîte.
+ *
+ * Les autres lignes du panneau n'ont jamais eu le défaut : elles portent `flex: 1 1 13rem`
+ * — une base bornée, qui ne déborde qu'en dessous de 13 rem de panneau. La ligne à case
+ * était la seule à `auto`.
+ */
+describe('app.css — la case à cocher reste avec son libellé', () => {
+  it('le libellé d’une ligne à case ne pèse rien au découpage', () => {
+    expect(css).toContain('.props__row[data-control="checkbox"] .props__label { flex: 1 1 0; }')
+    // `auto` est exactement ce qui produisait le défaut : le refuser nommément.
+    expect(css).not.toContain(
+      '.props__row[data-control="checkbox"] .props__label { flex: 1 1 auto; }'
+    )
+  })
+
+  it('les autres lignes gardent leur base bornée', () => {
+    // 13 rem : la colonne des intitulés du panneau natif. Rien ici ne change pour elles.
+    expect(css).toContain('.props__label { flex: 1 1 13rem;')
+  })
+
+  it('la case, elle, ne s’étire ni ne se rétracte', () => {
+    // Sans `flex: none`, la case gagnerait la place que le libellé lui laisse et
+    // deviendrait un rectangle : c'est l'autre moitié du contrat de la ligne.
+    expect(rule('.props__checkbox')).toContain('flex: none;')
+  })
+})
+
+/**
  * L'entrée directe des réglages généraux. Elle a coûté 40 px à une barre qui repliait
  * déjà : le seuil de sa forme compacte est une mesure, et un changement de valeur doit
  * faire échouer ce test plutôt que de laisser la barre repasser sur deux lignes à
