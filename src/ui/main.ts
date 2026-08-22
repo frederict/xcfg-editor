@@ -118,7 +118,47 @@ type View =
 /** « 12 réglages » — la barre de tête le dit, et le bandeau le redit. */
 const SETTING_COUNT: PluralForms = { one: '{count} réglage', other: '{count} réglages' }
 
-let tr: Translator | undefined
+let uiTranslator: Translator | undefined
+
+/**
+ * # Le traducteur, et comment un écran le reçoit
+ *
+ * **C'est ici qu'il entre dans l'application, et nulle part ailleurs.** Aucun module ne va
+ * chercher la langue courante : `main.ts` charge le catalogue au démarrage (voir
+ * l'amorçage, tout en bas) et le passe à chaque constructeur, dans son objet d'options,
+ * sous le nom `tr` :
+ *
+ * ```ts
+ * renderWidgetList({ page, device, orientation, language, tr: translator(), … })
+ * ```
+ *
+ * Côté module, une ligne dans l'interface d'options :
+ *
+ * ```ts
+ * export interface WidgetListOptions {
+ *   readonly tr: Translator
+ *   …
+ * }
+ * ```
+ *
+ * `language` reste à côté et **ne se confond jamais avec lui** : c'est la langue des
+ * libellés de XCTrack, celle du fichier ouvert, quand `tr` porte celle de notre prose,
+ * choisie par le pilote. Voir `src/i18n/axes.ts`.
+ *
+ * ## Pourquoi une fonction et non la variable
+ *
+ * Le catalogue d'une langue est un morceau téléchargé à part : le traducteur n'existe donc
+ * pas pendant que ce fichier s'exécute de haut en bas. Il est en place avant le **premier
+ * rendu** — l'amorçage n'appelle `render()` qu'une fois qu'il est arrivé — et tout ce qui
+ * suit vient d'un geste du pilote, donc bien après. Cette fonction rend le fait
+ * vérifiable : un appel trop tôt lève au lieu d'écrire une interface muette.
+ */
+function translator(): Translator {
+  if (uiTranslator === undefined) {
+    throw new Error('traducteur demandé avant la fin de l’amorçage')
+  }
+  return uiTranslator
+}
 
 let session: Session | undefined
 let failure: string | undefined
@@ -803,7 +843,7 @@ function remarksPanel(warnings: Warning[]): HTMLElement | undefined {
   // rend la ligne atteignable par la navigation par titres d'un lecteur d'écran.
   const head = el('h2', 'remarks__head')
   head.append(
-    el('span', 'remarks__count', remarksSummary(warnings.length)),
+    el('span', 'remarks__count', remarksSummary(warnings.length, translator())),
     el('span', 'remarks__titles', warnings.map((warning) => warning.title).join(' · '))
   )
   summary.append(head)
@@ -2876,6 +2916,7 @@ function render(): void {
         pageCount: pages.length,
         orientation,
         ctx,
+        tr: translator(),
         zoom,
         onBack: () => { view = { kind: 'overview' }; selection = undefined; render() },
         onGo: (index) => {
@@ -2946,7 +2987,7 @@ function render(): void {
   if (folded) content.append(folded)
 
   content.append(
-    buildOverview(session.layout, ctx, (orientation, index) => {
+    buildOverview(session.layout, ctx, translator(), (orientation, index) => {
       view = { kind: 'detail', orientation, index }
       render()
       window.scrollTo({ top: 0 })
@@ -3416,6 +3457,6 @@ window.addEventListener('keydown', (event) => {
  */
 const uiLanguage = initialUiLanguage(window.localStorage, [...navigator.languages])
 void loadTranslator(uiLanguage).then((loaded) => {
-  tr = loaded
+  uiTranslator = loaded
   render()
 })

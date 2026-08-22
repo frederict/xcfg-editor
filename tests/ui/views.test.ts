@@ -22,8 +22,17 @@ import {
   type DetailInspecting,
   type ViewContext
 } from '../../src/ui/views'
+import { makeTranslator } from '../../src/i18n'
+import frenchMessages from '../../src/i18n/messages/fr'
+import { pageKind } from '../../src/ui/views'
 import { PAGES_2026 } from '../fixtures/paths'
 import '../../src/render/widgets'
+
+/**
+ * Le traducteur de **notre prose**, en français : c'est la langue d'écriture, et donc
+ * celle dont les phrases sont vérifiables au caractère près dans ce fichier.
+ */
+const tr = makeTranslator('fr', frenchMessages)
 
 describe('taille physique d’un widget', () => {
   const air3 = DEVICES.find((d) => d.id === 'air3-7.2')!
@@ -163,6 +172,7 @@ function scene(selection: number | undefined): {
     pageCount: 3,
     orientation: 'landscape',
     ctx,
+    tr,
     zoom: 1,
     onBack: () => {},
     onGo: () => {},
@@ -180,7 +190,10 @@ describe('le bouton du zoom dit sa destination, pas son geste', () => {
     // cherchait à le refaire avait une chance sur deux de perdre sa position de lecture.
     const { root } = scene(undefined)
     const buttons = [...root.querySelectorAll('button')].map((one) => one.textContent ?? '')
-    expect(buttons).toContain('Zoom 100 %')
+    // « 100 % » vient de `format.percent`, qui pose en français l'espace INSÉCABLE que le
+    // dépôt écrivait ordinaire — voir `src/i18n/format.ts`. On compare donc au formateur,
+    // jamais à une chaîne tapée à la main.
+    expect(buttons).toContain(`Zoom ${tr.format.percent(1)}`)
     for (const label of buttons) expect(label).not.toContain('Rétablir')
   })
 })
@@ -334,7 +347,38 @@ describe('les constats du fichier, triés par ce qu’ils réclament', () => {
   })
 
   it('accorde l’intitulé de la ligne repliée', () => {
-    expect(remarksSummary(1)).toBe('1 remarque sur ce fichier')
-    expect(remarksSummary(4)).toBe('4 remarques sur ce fichier')
+    expect(remarksSummary(1, tr)).toBe('1 remarque sur ce fichier')
+    expect(remarksSummary(4, tr)).toBe('4 remarques sur ce fichier')
+  })
+})
+
+/**
+ * `pageKind` porte encore sa prose française en dur, pour `pageManager.ts` qui l'appelle
+ * sans traducteur — voir `LEGACY_PAGE_KINDS` dans `src/ui/views.ts`. Tant que les deux
+ * chemins cohabitent, ils doivent dire **exactement** la même chose : sans ce test, la
+ * bascule du jour où le carrousel passera son traducteur se ferait à l'aveugle.
+ */
+describe('la classe d’une page, dite deux fois le temps de la bascule', () => {
+  const CLASSES = [
+    'org.xcontest.XCTrack.Pages.WPEmpty',
+    'org.xcontest.XCTrack.Pages.WPCompetition',
+    'org.xcontest.XCTrack.Pages.WPThermalAssistant',
+    'org.xcontest.XCTrack.Pages.WPXCAssistant',
+    'org.xcontest.XCTrack.Pages.WPInconnue',
+    ''
+  ]
+
+  it('dit la même chose avec et sans traducteur, en français', () => {
+    for (const className of CLASSES) {
+      expect(pageKind(className, tr), className).toEqual(pageKind(className))
+    }
+  })
+
+  it('parle bien de gadgets, et jamais de widgets', () => {
+    // Le mot est tranché et mesuré : « gadget » en français, *widget* dans les quatre
+    // autres langues. Voir `messages/fr/common.ts`.
+    const note = pageKind('org.xcontest.XCTrack.Pages.WPEmpty', tr).note
+    expect(note).toContain('gadgets')
+    expect(note.toLowerCase()).not.toContain('widget')
   })
 })

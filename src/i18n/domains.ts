@@ -125,7 +125,7 @@ export type DomainCatalog<D extends Domain> = {
  */
 export const DOMAIN_PREFIXES: Readonly<Record<Domain, readonly string[]>> = {
   common: ['common', 'provenance', 'factoryValue'],
-  app: ['action', 'app', 'editor', 'view', 'zoom'],
+  app: ['action', 'app', 'dock', 'editor', 'landing', 'menu', 'pageKind', 'view', 'zoom'],
   preferences: ['preferences'],
   library: ['library'],
   widgets: ['palette', 'properties', 'widgets'],

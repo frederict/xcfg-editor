@@ -63,7 +63,24 @@ const IDENTICAL_ON_PURPOSE: ReadonlySet<string> = new Set<string>([
   // comme le français ; l'anglais dit « position » comme lui.
   'en/personalKind.contact',
   'nl/personalKind.contact',
-  'en/personalKind.location'
+  'en/personalKind.location',
+  /*
+   * Domaine `app` (`main.ts`, `views.ts`, `editor.ts`). Trois cas seulement, et aucun
+   * n'est une traduction oubliée :
+   *
+   * - des messages **sans un seul mot** — repères, ponctuation, unité internationale ;
+   * - « Zoom », « Portrait », « Escape », « Ctrl » : le mot que la langue emploie
+   *   réellement se trouve être celui du français ;
+   * - « Configuration XCTrack », le nom que cette application se donne.
+   */
+  ...UI_LANGUAGES.map((language) => `${language}/view.detailLabel`),
+  ...UI_LANGUAGES.map((language) => `${language}/view.position`),
+  ...UI_LANGUAGES.map((language) => `${language}/view.rulerCentimeters`),
+  ...UI_LANGUAGES.map((language) => `${language}/zoom.label`),
+  ...UI_LANGUAGES.map((language) => `${language}/app.name`),
+  'en/view.portrait',
+  'en/view.pageCard',
+  'en/view.pageCount'
 ])
 
 describe('catalogues de messages', () => {

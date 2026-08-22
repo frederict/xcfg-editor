@@ -4,8 +4,7 @@ import type { Layout, Page } from '../model/layout'
 import type { RenderSettings } from '../model/preferences'
 import type { Widget } from '../model/widget'
 import { renderPage } from '../render/canvas'
-import type { PluralForms } from '../i18n'
-import { plural, proseFormat } from './prose'
+import { formatters, UI_FALLBACK_LANGUAGE, type Formatters, type Translator } from '../i18n'
 
 export type Orientation = 'portrait' | 'landscape'
 
@@ -87,8 +86,55 @@ export interface PageKind {
  * Ne reste donc ici que ce que la classe fait réellement, et qui a une source : le jeu de
  * gadgets posé à la création (§ 5.2), et — pour `WPThermalAssistant` — le fait d'être la
  * classe visée par le basculement automatique en thermique (§ 5.4).
+ *
+ * ## Où sont passés les mots
+ *
+ * Dans le catalogue, sous le préfixe `pageKind` (`src/i18n/messages/<langue>/app.ts`) : une
+ * famille de valeurs fermée y prend son propre préfixe. Ce fichier ne garde que la liste
+ * des classes connues et la correspondance vers les clés.
  */
-const PAGE_KINDS: Record<string, Omit<PageKind, 'shortName'>> = {
+const KNOWN_PAGE_KINDS = [
+  'WPEmpty', 'WPCompetition', 'WPThermalAssistant', 'WPXCAssistant'
+] as const
+
+type KnownPageKind = (typeof KNOWN_PAGE_KINDS)[number]
+
+function isKnownPageKind(shortName: string): shortName is KnownPageKind {
+  return (KNOWN_PAGE_KINDS as readonly string[]).includes(shortName)
+}
+
+function translatedPageKind(
+  shortName: string, tr: Translator
+): Omit<PageKind, 'shortName'> {
+  switch (shortName) {
+    case 'WPEmpty':
+      return { label: tr.t('pageKind.free'), note: tr.t('pageKind.freeNote') }
+    case 'WPCompetition':
+      return { label: tr.t('pageKind.competition'), note: tr.t('pageKind.competitionNote') }
+    case 'WPThermalAssistant':
+      return {
+        label: tr.t('pageKind.thermalAssistant'),
+        note: tr.t('pageKind.thermalAssistantNote')
+      }
+    case 'WPXCAssistant':
+      return { label: tr.t('pageKind.xcAssistant'), note: tr.t('pageKind.xcAssistantNote') }
+    default:
+      return { label: tr.t('pageKind.unknown'), note: tr.t('pageKind.unknownNote') }
+  }
+}
+
+/**
+ * ⚠️ **Prose héritée, en français seulement — à retirer.**
+ *
+ * `pageKind` est appelée sans traducteur par `pageManager.ts`, dont l'extraction n'est pas
+ * faite. Le jour où elle lui passera le sien, ces trois constantes disparaissent avec le
+ * paramètre optionnel qui les atteint.
+ *
+ * `tests/ui/views.test.ts` vérifie que le catalogue français dit **exactement** ce qu'elles
+ * disent : aucune dérive n'est donc possible entre les deux, et la bascule n'aura rien à
+ * relire.
+ */
+const LEGACY_PAGE_KINDS: Readonly<Record<KnownPageKind, Omit<PageKind, 'shortName'>>> = {
   WPEmpty: {
     label: 'Page libre',
     note: 'Créée vide sur l’instrument, prête pour vos propres gadgets.'
@@ -108,29 +154,53 @@ const PAGE_KINDS: Record<string, Omit<PageKind, 'shortName'>> = {
   }
 }
 
-export function pageKind(className: string): PageKind {
+/** Voir `LEGACY_PAGE_KINDS`. */
+const LEGACY_PAGE_KIND_UNKNOWN: Omit<PageKind, 'shortName'> = {
+  label: 'Type de page non reconnu',
+  note: 'Ce type de page n’est pas décrit par cet éditeur ; son contenu reste affiché tel quel.'
+}
+
+/** Voir `LEGACY_PAGE_KINDS`. */
+const LEGACY_PAGE_KIND_MISSING = '(type absent)'
+
+/**
+ * Ce que la classe d'une page dit au pilote. Sans traducteur — le temps que les écrans
+ * restants versent leur prose au catalogue —, la réponse est la prose héritée ci-dessus.
+ */
+export function pageKind(className: string, tr?: Translator): PageKind {
   const shortName = className.split('.').pop() ?? ''
-  const known = PAGE_KINDS[shortName]
-  if (known) return { shortName, ...known }
+  const known = isKnownPageKind(shortName)
+  if (tr === undefined) {
+    if (known) return { shortName, ...LEGACY_PAGE_KINDS[shortName] }
+    return {
+      shortName: shortName === '' ? LEGACY_PAGE_KIND_MISSING : shortName,
+      ...LEGACY_PAGE_KIND_UNKNOWN
+    }
+  }
   return {
-    shortName: shortName === '' ? '(type absent)' : shortName,
-    label: 'Type de page non reconnu',
-    note: 'Ce type de page n’est pas décrit par cet éditeur ; son contenu reste affiché tel quel.'
+    shortName: shortName === '' ? tr.t('pageKind.missing') : shortName,
+    ...translatedPageKind(shortName, tr)
   }
 }
 
-const ORIENTATION_LABELS: Record<Orientation, string> = {
-  landscape: 'Paysage',
-  portrait: 'Portrait'
+export function orientationLabel(orientation: Orientation, tr: Translator): string {
+  return orientation === 'landscape' ? tr.t('view.landscape') : tr.t('view.portrait')
 }
 
 /**
- * Un nombre de millimètres, au dixième près, dans la langue de la prose — virgule
- * décimale en français, point en anglais. Sans l'unité : `formatSizeMm` l'écrit une fois
- * pour un couple, et l'assistance vocale l'épelle en toutes lettres.
+ * Les formateurs employés quand l'appelant n'en fournit aucun : ceux de la langue
+ * d'écriture. ⚠️ **Repli hérité** — il ne sert plus qu'à `widgetList.ts`, dont l'extraction
+ * n'est pas faite ; il part avec le paramètre optionnel le jour où elle le sera.
  */
-export function formatMm(value: number): string {
-  return proseFormat.decimal(value, 1)
+const legacyFormat = formatters(UI_FALLBACK_LANGUAGE)
+
+/**
+ * Un nombre de millimètres, au dixième près, dans la langue du pilote — virgule décimale
+ * en français, point en anglais. Sans l'unité : `formatSizeMm` l'écrit une fois pour un
+ * couple, et l'assistance vocale l'épelle en toutes lettres.
+ */
+export function formatMm(value: number, format: Formatters = legacyFormat): string {
+  return format.decimal(value, 1)
 }
 
 /**
@@ -141,15 +211,9 @@ export function formatMm(value: number): string {
  * l'anglais ne met pas. Le premier nombre reste nu — répéter « mm » deux fois allongerait
  * une cote que le pilote lit d'un coup d'œil.
  */
-export function formatSizeMm(size: WidgetSizeMm): string {
-  return `${proseFormat.decimal(size.widthMm, 1)} × ${proseFormat.millimeters(size.heightMm)}`
+export function formatSizeMm(size: WidgetSizeMm, format: Formatters = legacyFormat): string {
+  return `${format.decimal(size.widthMm, 1)} × ${format.millimeters(size.heightMm)}`
 }
-
-/**
- * « 3 gadgets ». Écrit une fois ici parce que trois endroits l'affichent : la vignette
- * d'une page, son intitulé d'accessibilité et le bandeau de la vue détaillée.
- */
-const GADGET_COUNT: PluralForms = { one: '{count} gadget', other: '{count} gadgets' }
 
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K, className?: string, text?: string
@@ -163,20 +227,29 @@ function el<K extends keyof HTMLElementTagNameMap>(
 export interface ViewContext {
   device: Device
   settings: RenderSettings
-  /** Langue déjà résolue par l'appelant — voir `resolveLanguage`, côté `main.ts`. */
+  /**
+   * La langue des **libellés de XCTrack** — celle du fichier ouvert, jamais celle de notre
+   * prose. Déjà résolue par l'appelant : voir `resolveLanguage`, côté `main.ts`, et
+   * `src/i18n/axes.ts` pour les deux axes.
+   */
   language: string
 }
 
 /* ------------------------------------------------------------------ vue d'ensemble */
 
 function pageCard(
-  page: Page, rank: number, orientation: Orientation, ctx: ViewContext, onOpen: () => void
+  page: Page, rank: number, orientation: Orientation, ctx: ViewContext, tr: Translator,
+  onOpen: () => void
 ): HTMLElement {
-  const kind = pageKind(page.className)
+  const kind = pageKind(page.className, tr)
 
   const card = el('button', 'card')
   card.type = 'button'
-  card.setAttribute('aria-label', `Page ${rank}, ${kind.label}, ${plural(GADGET_COUNT, page.widgets.length)}`)
+  card.setAttribute('aria-label', tr.t('view.pageCard', {
+    rank,
+    kind: kind.label,
+    tally: tr.t('common.widgetCount', { count: page.widgets.length })
+  }))
   card.addEventListener('click', onOpen)
 
   const screen = el('span', 'card__screen')
@@ -191,7 +264,7 @@ function pageCard(
   const meta = el('span', 'card__meta')
   meta.append(
     el('span', 'card__class', kind.shortName),
-    el('span', 'card__count', plural(GADGET_COUNT, page.widgets.length))
+    el('span', 'card__count', tr.t('common.widgetCount', { count: page.widgets.length }))
   )
 
   card.append(head, screen, meta)
@@ -199,28 +272,29 @@ function pageCard(
 }
 
 function orientationSection(
-  pages: Page[], orientation: Orientation, ctx: ViewContext, onOpen: (index: number) => void
+  pages: Page[], orientation: Orientation, ctx: ViewContext, tr: Translator,
+  onOpen: (index: number) => void
 ): HTMLElement {
   const section = el('section', `section section--${orientation}`)
 
   const heading = el('h2', 'section__title')
   heading.append(
-    el('span', 'section__name', ORIENTATION_LABELS[orientation]),
+    el('span', 'section__name', orientationLabel(orientation, tr)),
     el('span', 'section__count', pages.length === 0
-      ? 'aucune page'
-      : plural({ one: '{count} page', other: '{count} pages' }, pages.length))
+      ? tr.t('view.noPage')
+      : tr.t('view.pageCount', { count: pages.length }))
   )
   section.append(heading)
 
   if (pages.length === 0) {
-    section.append(el('p', 'empty-note', 'Ce fichier ne décrit aucune page dans cette orientation.'))
+    section.append(el('p', 'empty-note', tr.t('view.emptyOrientation')))
     return section
   }
 
   const grid = el('ol', 'grid')
   pages.forEach((page, index) => {
     const item = el('li', 'grid__item')
-    item.append(pageCard(page, index + 1, orientation, ctx, () => onOpen(index)))
+    item.append(pageCard(page, index + 1, orientation, ctx, tr, () => onOpen(index)))
     grid.append(item)
   })
   section.append(grid)
@@ -237,12 +311,13 @@ function orientationSection(
  * l'orientation de tous les fichiers du corpus et celle des supports de cockpit.
  */
 export function buildOverview(
-  layout: Layout, ctx: ViewContext, onOpen: (orientation: Orientation, index: number) => void
+  layout: Layout, ctx: ViewContext, tr: Translator,
+  onOpen: (orientation: Orientation, index: number) => void
 ): HTMLElement {
   const root = el('div', 'overview')
   root.append(
-    orientationSection(layout.landscape, 'landscape', ctx, (index) => onOpen('landscape', index)),
-    orientationSection(layout.portrait, 'portrait', ctx, (index) => onOpen('portrait', index))
+    orientationSection(layout.landscape, 'landscape', ctx, tr, (i) => onOpen('landscape', i)),
+    orientationSection(layout.portrait, 'portrait', ctx, tr, (i) => onOpen('portrait', i))
   )
   return root
 }
@@ -296,8 +371,8 @@ export function splitWarnings<T extends { kind: string }>(
  * de ce qui s'y range n'appelle de correction, et un pilote qui lit « avertissement »
  * ouvre en s'attendant à un problème.
  */
-export function remarksSummary(count: number): string {
-  return `${plural({ one: '{count} remarque', other: '{count} remarques' }, count)} sur ce fichier`
+export function remarksSummary(count: number, tr: Translator): string {
+  return tr.t('view.remarkCount', { count })
 }
 
 /* --------------------------------------- amener la sélection sous les yeux du pilote */
@@ -519,6 +594,8 @@ export interface DetailOptions {
   pageCount: number
   orientation: Orientation
   ctx: ViewContext
+  /** Le traducteur de **notre prose**, dans la langue du pilote. Voir `src/i18n/axes.ts`. */
+  tr: Translator
   zoom: number
   onBack: () => void
   onGo: (index: number) => void
@@ -538,14 +615,16 @@ const ZOOM_MAX = 2.5
  * rend l'échelle vérifiable — une vraie règle posée sur l'écran doit tomber sur les
  * mêmes traits, sans quoi le zoom est à corriger.
  */
-function scaleRuler(widthMm: number): HTMLElement {
+function scaleRuler(widthMm: number, tr: Translator): HTMLElement {
   const ruler = el('div', 'ruler')
   ruler.setAttribute('aria-hidden', 'true')
   for (let cm = 0; cm * 10 <= widthMm; cm += 1) {
     const major = cm % 5 === 0
     const tick = el('span', major ? 'ruler__tick ruler__tick--major' : 'ruler__tick')
     tick.style.left = `calc(var(--zoom) * ${cm * 10}mm)`
-    if (major && cm > 0) tick.append(el('span', 'ruler__label', `${cm} cm`))
+    if (major && cm > 0) {
+      tick.append(el('span', 'ruler__label', tr.t('view.rulerCentimeters', { value: cm })))
+    }
     ruler.append(tick)
   }
   return ruler
@@ -558,8 +637,8 @@ function scaleRuler(widthMm: number): HTMLElement {
  * de l'utilisateur, d'où le facteur de zoom — et la règle graduée pour le régler.
  */
 export function buildDetail(options: DetailOptions): HTMLElement {
-  const { page, index, pageCount, orientation, ctx, zoom, editing, inspecting } = options
-  const kind = pageKind(page.className)
+  const { page, index, pageCount, orientation, ctx, tr, zoom, editing, inspecting } = options
+  const kind = pageKind(page.className, tr)
   const screenSize = physicalSize(ctx.device, orientation)
 
   const root = el('div', 'detail')
@@ -570,7 +649,7 @@ export function buildDetail(options: DetailOptions): HTMLElement {
   /* --- barre de navigation --- */
   const bar = el('div', 'detail__bar')
 
-  const back = el('button', 'btn btn--ghost', '← Vue d’ensemble')
+  const back = el('button', 'btn btn--ghost', tr.t('view.backToOverview'))
   back.type = 'button'
   back.addEventListener('click', options.onBack)
 
@@ -578,19 +657,26 @@ export function buildDetail(options: DetailOptions): HTMLElement {
   const identity = el('h1', 'detail__identity')
   identity.append(
     el('span', 'detail__rank', String(index + 1)),
-    el('span', 'detail__label', `${ORIENTATION_LABELS[orientation]} · ${kind.label}`)
+    el('span', 'detail__label', tr.t('view.detailLabel', {
+      orientation: orientationLabel(orientation, tr),
+      kind: kind.label
+    }))
   )
 
   const steps = el('div', 'detail__steps')
-  const previous = el('button', 'btn', 'Page précédente')
+  const previous = el('button', 'btn', tr.t('view.previousPage'))
   previous.type = 'button'
   previous.disabled = index === 0
   previous.addEventListener('click', () => options.onGo(index - 1))
-  const next = el('button', 'btn', 'Page suivante')
+  const next = el('button', 'btn', tr.t('view.nextPage'))
   next.type = 'button'
   next.disabled = index >= pageCount - 1
   next.addEventListener('click', () => options.onGo(index + 1))
-  steps.append(previous, el('span', 'detail__position', `${index + 1} / ${pageCount}`), next)
+  steps.append(
+    previous,
+    el('span', 'detail__position', tr.t('view.position', { index: index + 1, total: pageCount })),
+    next
+  )
 
   bar.append(back, identity, steps)
   root.append(bar)
@@ -603,8 +689,8 @@ export function buildDetail(options: DetailOptions): HTMLElement {
     // `chip--count` : le seul de ces faits qui change sans que la vue soit reconstruite —
     // ajouter ou supprimer un widget en édition ne redessine que la page. `main.ts` le
     // retrouve par cette classe et le remet à jour, plutôt que d'afficher un compte périmé.
-    el('span', 'chip chip--count', plural(GADGET_COUNT, page.widgets.length)),
-    el('span', 'chip', formatSizeMm(screenSize)),
+    el('span', 'chip chip--count', tr.t('common.widgetCount', { count: page.widgets.length })),
+    el('span', 'chip', formatSizeMm(screenSize, tr.format)),
     el('span', 'chip chip--quiet', ctx.device.label)
   )
   root.append(facts)
@@ -636,19 +722,19 @@ export function buildDetail(options: DetailOptions): HTMLElement {
       readout.append(el(
         'span', 'readout__hint',
         inspecting === undefined
-          ? 'Survolez un gadget pour son nom et ses dimensions.'
-          : 'Survolez un gadget pour son nom et ses dimensions ; cliquez-le pour voir ses réglages.'
+          ? tr.t('view.hoverHint')
+          : tr.t('view.hoverHintSelectable')
       ))
       return
     }
     const size = widgetSizeMm(shown, ctx.device, orientation)
     readout.append(
       el('span', 'readout__name', readableName(shown.shortName, ctx.language)),
-      el('span', 'readout__size', formatSizeMm(size)),
+      el('span', 'readout__size', formatSizeMm(size, tr.format)),
       el('span', 'readout__class', shown.shortName)
     )
     if (!hovered && widget === undefined) {
-      readout.append(el('span', 'readout__pin', 'sélectionné'))
+      readout.append(el('span', 'readout__pin', tr.t('view.selectedPin')))
     }
   }
   describe(undefined, false)
@@ -668,11 +754,11 @@ export function buildDetail(options: DetailOptions): HTMLElement {
       hotspot.style.top = `${widget.y1 / 100}%`
       hotspot.style.width = `${(widget.x2 - widget.x1) / 100}%`
       hotspot.style.height = `${(widget.y2 - widget.y1) / 100}%`
-      hotspot.setAttribute(
-        'aria-label',
-        `${readableName(widget.shortName, ctx.language)}, ` +
-        `${formatMm(size.widthMm)} sur ${formatMm(size.heightMm)} millimètres`
-      )
+      hotspot.setAttribute('aria-label', tr.t('view.widgetSpoken', {
+        name: readableName(widget.shortName, ctx.language),
+        width: formatMm(size.widthMm, tr.format),
+        height: formatMm(size.heightMm, tr.format)
+      }))
       hotspot.addEventListener('pointerenter', () => describe(widget, true))
       hotspot.addEventListener('focus', () => describe(widget, true))
       hotspot.addEventListener('blur', () => describe(undefined, false))
@@ -703,11 +789,11 @@ export function buildDetail(options: DetailOptions): HTMLElement {
   }
 
   plate.append(editing ? editing.layer : hotspots)
-  stage.append(scaleRuler(screenSize.widthMm), plate)
+  stage.append(scaleRuler(screenSize.widthMm, tr), plate)
 
   /* --- zoom --- */
   const zoomBox = el('div', 'zoom')
-  const zoomLabel = el('label', 'zoom__label', 'Zoom')
+  const zoomLabel = el('label', 'zoom__label', tr.t('zoom.label'))
   const slider = el('input', 'zoom__slider')
   slider.type = 'range'
   slider.min = String(ZOOM_MIN)
@@ -716,11 +802,13 @@ export function buildDetail(options: DetailOptions): HTMLElement {
   slider.value = String(zoom)
   slider.id = 'zoom-slider'
   zoomLabel.htmlFor = slider.id
-  const value = el('span', 'zoom__value', `${Math.round(zoom * 100)} %`)
+  // L'espace avant le signe pour-cent existe en français, en allemand et en espagnol, pas
+  // en anglais ni en néerlandais : c'est `format.percent` qui le sait, jamais ce fichier.
+  const value = el('span', 'zoom__value', tr.format.percent(zoom))
   slider.addEventListener('input', () => {
     const factor = Number(slider.value)
     stage.style.setProperty('--zoom', String(factor))
-    value.textContent = `${Math.round(factor * 100)} %`
+    value.textContent = tr.format.percent(factor)
     options.onZoom(factor)
   })
   // « Rétablir » disait trois choses dans cette application, et deux étaient visibles en
@@ -728,7 +816,9 @@ export function buildDetail(options: DetailOptions): HTMLElement {
   // remettre le zoom. Un pilote qui cherchait à refaire un déplacement avait donc une
   // chance sur deux de perdre sa position de lecture. Ce bouton-ci dit désormais sa
   // destination et non son geste — c'est l'arbitrage du socle (`i18n`, `zoom.resetTo`).
-  const reset = el('button', 'btn btn--ghost', 'Zoom 100 %')
+  const reset = el('button', 'btn btn--ghost', tr.t('zoom.resetTo', {
+    level: tr.format.percent(1)
+  }))
   reset.type = 'button'
   reset.addEventListener('click', () => {
     slider.value = '1'
@@ -736,12 +826,7 @@ export function buildDetail(options: DetailOptions): HTMLElement {
   })
   zoomBox.append(zoomLabel, slider, value, reset)
 
-  const advice = el(
-    'p', 'detail__advice',
-    'La page est dessinée à sa taille réelle sur l’appareil. Votre écran n’a pas forcément ' +
-    'la densité que le navigateur suppose : réglez le zoom jusqu’à ce qu’une règle posée ' +
-    'sur l’écran coïncide avec les graduations.'
-  )
+  const advice = el('p', 'detail__advice', tr.t('view.scaleAdvice'))
 
   root.append(zoomBox)
   // La page occupe toute la largeur, en édition comme en consultation : elle déborde en
