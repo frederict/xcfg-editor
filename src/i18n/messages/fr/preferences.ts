@@ -127,6 +127,15 @@ const preferences = {
     one: '{count} touche physique',
     other: '{count} touches physiques'
   },
+  /**
+   * ⚠️ **Une clause entière, pas un compte suivi d'un nom.** Elle entre dans « … {devices},
+   * et aucun n'a émis le moindre événement » : c'est l'accord du verbe qui la rend
+   * intraduisible en morceaux.
+   */
+  'preferences.inputDeviceCount': {
+    one: 'le seul périphérique d’entrée du boîtier était à l’écoute',
+    other: 'les {count} périphériques d’entrée du boîtier étaient à l’écoute'
+  },
 
   /**
    * ⚠️ Les phrases les plus délicates de l'écran : elles parlent de **matériel**, et le
@@ -156,6 +165,17 @@ const preferences = {
     'Le code {codes} n’est aucune d’elles, et le noyau du boîtier ne le déclare sur aucun de ses périphériques d’entrée : nous ne savons pas quelle touche l’émet.',
   'preferences.hardwareStrangerMany':
     'Les codes {codes} n’en sont aucune, et le noyau du boîtier ne les déclare sur aucun de ses périphériques d’entrée : nous ne savons pas quelles touches les émettent.',
+  /**
+   * ⚠️ **Un bouton pressé dont rien n'est sorti — et c'est un résultat.** Le second des
+   * deux boutons sous l'AIR³ 7.2 a été pressé le 2026-08-22, les quatre périphériques
+   * d'entrée du boîtier à l'écoute, et aucun n'a rien émis.
+   *
+   * ⚠️ Aucune traduction ne doit lui faire dire « cette touche n'existe pas » : le bouton
+   * existe et s'enfonce. Il ne produit rien **sur ce boîtier-là**, et le parc n'est pas
+   * homogène. Ce qu'elle sert au pilote, c'est de ne pas croire son instrument cassé.
+   */
+  'preferences.hardwareSilentKey':
+    'Sur {model}, {where} a été pressée elle aussi : {devices}, et aucun n’a émis le moindre événement. Ce n’est pas une touche absente — le bouton existe et s’enfonce —, c’est un bouton qui ne produit rien sur ce boîtier-là. Un pilote qui l’appuie sans rien voir bouger n’a donc pas un instrument cassé.',
   /** Le renvoi de l'infobulle vers la note du bloc, qui dit ce que chaque relevé vaut. */
   'preferences.keyNoteBelow': 'La note sous ce bloc dit ce que ces relevés valent.',
 
@@ -194,9 +214,28 @@ const preferences = {
   'inputDevice.keyboardController': 'le contrôleur de clavier {name}',
   'inputDevice.touchPanel': 'la dalle tactile',
   'inputDevice.headsetJack': 'la prise casque',
+  /**
+   * **Où le bouton se trouve sur le boîtier**, et c'est la mesure qui sert le plus au
+   * pilote : « Caméra » nomme le code 27, elle ne dit pas lequel de ses boutons appuyer.
+   *
+   * ⚠️ **Notre glose d'une mesure**, comme les quatre `inputDevice.*` juste au-dessus : le
+   * relevé porte une clé, le mot vient d'ici et suit la langue du pilote. Elles entrent
+   * dans « Sur {model}, … a été pressée à la main » : chaque langue doit donc porter la
+   * forme que cette phrase-là demande.
+   */
+  'keyLocation.undersideFirst': 'la première des deux touches sous l’appareil',
+  'keyLocation.undersideSecond': 'la seconde des deux touches sous l’appareil',
 
   'preferences.keyFromSurvey':
     '« {label} » est le nom que XCTrack donne à cette touche, dans la langue du fichier ouvert. Sur {model}, une touche pressée à la main émet bien le code {code}, qu’Android nomme {name}.',
+  /**
+   * La même phrase que ci-dessus, **plus la place du bouton** — le seul cas où nous
+   * l'ayons relevée. Elle n'est pas un ornement : sur un boîtier sans appareil photo,
+   * « Caméra » ne dit pas quelle touche presser, et « la première des deux touches sous
+   * l'appareil » le dit.
+   */
+  'preferences.keyFromSurveyWhere':
+    '« {label} » est le nom que XCTrack donne à cette touche, dans la langue du fichier ouvert. Sur {model}, {where} a été pressée à la main et émet bien le code {code}, qu’Android nomme {name}.',
   'preferences.keyFromKernel':
     '{name} est le nom que la table des touches d’Android donne au code {code}. Nous n’avons pressé aucune touche qui l’émette sur {model}, mais le noyau du boîtier le déclare sur {devices}. Ce code est donc possible sur ce matériel, ce qui ne prouve pas qu’un bouton lui soit soudé.',
   'preferences.keyFromNeither':

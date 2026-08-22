@@ -60,6 +60,10 @@ const preferences: DomainCatalog<'preferences'> = {
     one: '{count} physische Taste',
     other: '{count} physische Tasten'
   },
+  'preferences.inputDeviceCount': {
+    one: 'das einzige Eingabegerät des Geräts hörte mit',
+    other: 'alle {count} Eingabegeräte des Geräts hörten mit'
+  },
   'preferences.hardwareUnsurveyedUnknownDevice':
     'Wir haben die physischen Tasten nur auf {models} gemessen, und diese Datei sagt ' +
     'nicht, von welchem Gerät sie stammt: dieses Gehäuse ist ein blinder Fleck. Der Code ' +
@@ -86,6 +90,8 @@ const preferences: DomainCatalog<'preferences'> = {
   'preferences.hardwareStrangerMany':
     'Die Codes {codes} sind keine von ihnen, und der Kernel des Gehäuses gibt sie an ' +
     'keinem seiner Eingabegeräte an: wir wissen nicht, welche Tasten sie senden.',
+  'preferences.hardwareSilentKey':
+    'Auf {model} wurde {where} ebenfalls gedrückt: {devices}, und keines hat auch nur ein Ereignis gesendet. Das ist keine fehlende Taste — der Knopf ist da und lässt sich drücken —, sondern ein Knopf, der auf genau diesem Gerät nichts erzeugt. Wer ihn drückt und nichts geschehen sieht, hat deshalb kein defektes Instrument.',
   'preferences.keyNoteBelow':
     'Die Anmerkung unter diesem Block sagt, was diese Erhebungen wert sind.',
   /* ------------------------------ was der Kernel des Gehäuses angibt, in wenigen Worten */
@@ -104,9 +110,13 @@ const preferences: DomainCatalog<'preferences'> = {
   'inputDevice.keyboardController': 'dem Tastatur-Controller {name}',
   'inputDevice.touchPanel': 'dem Touchpanel',
   'inputDevice.headsetJack': 'der Kopfhörerbuchse',
+  'keyLocation.undersideFirst': 'die erste der beiden Tasten an der Unterseite des Geräts',
+  'keyLocation.undersideSecond': 'die zweite der beiden Tasten an der Unterseite des Geräts',
 
   'preferences.keyFromSurvey':
     '„{label}“ ist der Name, den XCTrack dieser Taste gibt, in der Sprache der geöffneten Datei. Auf {model} sendet eine von Hand gedrückte Taste tatsächlich den Code {code}, den Android {name} nennt.',
+  'preferences.keyFromSurveyWhere':
+    '„{label}“ ist der Name, den XCTrack dieser Taste gibt, in der Sprache der geöffneten Datei. Auf {model} wurde {where} von Hand gedrückt und sendet tatsächlich den Code {code}, den Android {name} nennt.',
   'preferences.keyFromKernel':
     '{name} ist der Name, den die Tastentabelle von Android dem Code {code} gibt. Wir ' +
     'haben auf {model} keine Taste gedrückt, die ihn sendet, aber der Kernel des ' +

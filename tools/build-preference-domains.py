@@ -74,8 +74,10 @@ touche que cet appareil-là ne porte pas.
 
 Un code de touche n'est pas une touche. `Keys.PrevWaypoint = 266` est une ligne
 parfaitement valide d'un fichier ; encore faut-il que le boîtier ait une touche qui
-émette 266. Sur l'AIR³ 7.2 relevé ici, il n'y en a que trois — voir
-`MEASURED_HARDWARE_KEYS`.
+émette 266. Sur l'AIR³ 7.2 relevé ici, quatre boutons ont été pressés et quatre codes sont
+sortis — voir `MEASURED_HARDWARE_KEYS`. Un cinquième bouton, le second de ceux qui
+sont sous l'appareil, a été pressé lui aussi et **n'a rien émis** : `silentKeys` le
+range, parce qu'un pilote qui l'enfonce sans rien voir mérite mieux qu'un silence.
 
 ⚠️ **Ce relevé ne vaut que pour ce modèle-là.** Les AIR³ plus récents portent
 davantage de touches physiques, et un réglage inerte sur l'un peut être vivant sur
@@ -89,7 +91,9 @@ Ce que nous savons d'un code de touche se range sur **trois** crans, et les conf
 est la faute que ce fichier existe pour éviter :
 
 1. **Touche pressée à la main, code lu à l'arrivée** — `MEASURED_HARDWARE_KEYS`, et
-   c'est le seul cran qui prouve qu'un bouton existe. Trois touches sur l'AIR³ 7.2.
+   c'est le seul cran qui prouve qu'un bouton existe. Quatre touches sur l'AIR³ 7.2
+   depuis le 2026-08-22 — 24, 25, 26 et **27**, le premier des deux boutons sous
+   l'appareil.
 2. **Code déclaré par le noyau du boîtier** — `KERNEL_KEY_DECLARATIONS`, relevé par
    `getevent -pl` et le fichier de disposition qu'Android applique réellement. Il
    prouve que le code est **possible sur ce matériel** ; il ne prouve pas qu'un bouton
@@ -97,12 +101,13 @@ est la faute que ce fichier existe pour éviter :
    de boutons.
 3. **Rien** — le code n'est déclaré nulle part sur ce modèle.
 
-⚠️ **Le fichier de disposition ne fait donc pas relevé, mais il ne fait pas silence
-non plus.** `sn7326-key` déclare `CAMERA` en 27 et quatre codes de croix
-directionnelle ; 27 est justement ce que `Keys.PrevWaypoint` porte dans le corpus. Un
-texte qui dirait de 27 « aucune touche mesurée ne l'émet », sans plus, contredirait le
-noyau. Un texte qui dirait « cette touche existe » irait au-delà de la mesure. Le
-premier cran seul fait foi ; le second élargit le champ des possibles.
+⚠️ **Le fichier de disposition ne fait pas relevé, mais il ne fait pas silence non
+plus.** `sn7326-key` déclare `CAMERA` en 27 et quatre codes de croix directionnelle ;
+27 est justement ce que `Keys.PrevWaypoint` porte dans le corpus. Le 2026-08-22, un
+appui a tranché pour 27 : le bouton existe, il est sous l'appareil, et le code est
+passé au premier cran. Les quatre codes de croix directionnelle, eux, restent au
+second : le contrôleur les déclare, personne ne les a pressés. Le premier cran seul
+fait foi ; le second élargit le champ des possibles.
 
 ⚠️ **266 (`KEYCODE_STEM_2`) n'est expliqué par aucun des deux crans** :
 `UNEXPLAINED_KEY_CODES` range ce qu'on en sait et l'hypothèse — **non vérifiée** —
@@ -193,6 +198,13 @@ UNIT_DOMAIN_SOURCE = {
 
 # Les touches **physiques** du boîtier, appuyées une à une, le code lu à l'arrivée.
 #
+# ⚠️ **Quatre depuis le 2026-08-22, et non trois.** Le propriétaire a pressé les boutons
+# de son AIR³ 7.2 un à un, `getevent` écoutant les quatre périphériques d'entrée : les
+# trois touches déjà relevées ont servi de témoins — elles retombent sur 24, 25 et 26,
+# donc la capture est fiable — et le premier des deux boutons **sous l'appareil** émet
+# `KEY_CAMERA`, que `Generic.kl` traduit en **27**. Ce code passe ainsi du deuxième cran
+# au premier : le noyau le déclarait, une touche l'émet.
+#
 # ⚠️ Ce n'est pas une propriété d'XCTrack ni d'Android : c'est ce que **ce
 # modèle-là** porte. Les AIR³ plus récents en ont davantage, et un réglage sans effet
 # sur celui-ci peut être parfaitement vivant sur un autre. Le `.xcfg` déclarant son
@@ -212,19 +224,47 @@ MEASURED_HARDWARE_KEYS = [
         "device": "AIR3 AIR3-7.2 8.1.0",
         "label": "AIR³ 7.2",
         "basis": "measured",
+        "surveyedOn": "2026-08-22",
+        "method": "les boutons du boîtier pressés un à un par le propriétaire, "
+                  "getevent lancé sur l'appareil même — et non à travers adb, dont le "
+                  "tampon rend la capture vide — à l'écoute des quatre périphériques "
+                  "d'entrée, la touche volume + servant de séparateur entre deux appuis",
         "keys": [
             {"code": 24},
             {"code": 25},
             {"code": 26},
+            # ⚠️ L'endroit du boîtier fait partie de la mesure : c'est ce qu'un doigt
+            # seul pouvait établir, et c'est ce qui aide un pilote à retrouver sa
+            # touche. `where` est une **clé**, pas une phrase : l'écran en dit le mot
+            # dans la langue du pilote. Les trois autres n'en portent pas — le
+            # propriétaire les désigne par leur fonction (volume +, volume −,
+            # marche/arrêt) et leur place sur le boîtier n'a pas été relevée.
+            {"code": 27, "where": "undersideFirst"},
+        ],
+        # Un bouton pressé dont **rien** n'est sorti. Ce n'est pas un trou dans le
+        # relevé : les quatre périphériques d'entrée étaient à l'écoute, et aucun n'a
+        # rien émis. ⚠️ Ce n'est pas non plus « cette touche n'existe pas » — c'est
+        # « ce bouton-ci, sur ce boîtier-ci, ne produit aucun événement au noyau ».
+        "silentKeys": [
+            {
+                "where": "undersideSecond",
+                "surveyedOn": "2026-08-22",
+                "method": "pressé pendant que getevent écoutait les quatre "
+                          "périphériques d'entrée du boîtier, entre deux appuis sur "
+                          "volume + servant de séparateur",
+            },
         ],
         "caveats": [
             "relevé sur ce modèle seul ; les AIR³ plus récents portent davantage de "
             "touches physiques",
-            "trois touches pressées ne font pas trois touches soudées : c'est ce que "
+            "quatre touches pressées ne font pas quatre touches soudées : c'est ce que "
             "nous avons pressé, pas ce que le boîtier porte",
             "le noyau du même boîtier déclare d'autres codes — voir "
             "kernelDeclaration : un code déclaré est possible sur ce matériel, sans "
             "qu'un appui l'ait prouvé",
+            "l'endroit du boîtier n'a été noté que pour la touche du dessous ; les "
+            "trois autres sont désignées par leur fonction, et leur place sur le "
+            "boîtier n'a pas été relevée",
         ],
     },
 ]
@@ -563,7 +603,11 @@ def hardware_keys(table: dict[int, str]) -> list[dict]:
                         "n'est écrit.")
     return [
         {**device,
-         "keys": [{**key, "name": table[key["code"]]} for key in device["keys"]],
+         # `code`, `name`, puis `where` s'il y en a un : l'ordre du fichier écrit est
+         # celui-là, et il ne dépend pas de l'ordre où la table ci-dessus est saisie.
+         "keys": [{"code": key["code"], "name": table[key["code"]],
+                   **({"where": key["where"]} if "where" in key else {})}
+                  for key in device["keys"]],
          # Le deuxième cran voyage avec le premier, et sous son propre nom : un texte
          # qui les confondrait dirait d'un code déclaré ce qu'un appui seul prouve.
          **({"kernelDeclaration": kernel_declaration(device["deviceId"], table)}

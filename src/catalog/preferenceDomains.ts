@@ -56,8 +56,10 @@
  * confondre est la faute que ce module existe pour éviter :
  *
  * 1. **Touche pressée à la main, code lu à l'arrivée** — `hardwareKeys[].keys`,
- *    `basis: 'measured'`. Le seul cran qui prouve qu'un bouton existe. Trois touches
- *    sur l'AIR³ 7.2 ;
+ *    `basis: 'measured'`. Le seul cran qui prouve qu'un bouton existe. **Quatre**
+ *    touches sur l'AIR³ 7.2 depuis le 2026-08-22 : 24, 25, 26, et 27 — le premier des
+ *    deux boutons **sous l'appareil**, que le propriétaire a pressé pendant que
+ *    `getevent` écoutait les quatre périphériques d'entrée ;
  * 2. **Code déclaré par le noyau du boîtier** — `hardwareKeys[].kernelDeclaration`,
  *    relevé par `getevent -pl` et le fichier de disposition qu'Android applique
  *    réellement à chaque périphérique. Il prouve que le code est **possible sur ce
@@ -67,8 +69,24 @@
  *
  * `keyCodeEvidence()` répond lequel des trois s'applique, et une interface qui parle
  * du matériel **doit** passer par lui : un code déclaré et jamais pressé ne se dit pas
- * comme un code inconnu du matériel. Le 2026-08-22, l'écran disait des deux « aucune
- * touche mesurée n'émet le code X » — et le disait de 27, que `sn7326-key` déclare.
+ * comme un code inconnu du matériel.
+ *
+ * ⚠️ **Le 27 a changé de cran le 2026-08-22, et deux fois dans la même journée.** Au
+ * matin, l'écran en disait « aucune touche mesurée n'émet le code X » — d'un code que
+ * `sn7326-key` déclare, et que `Keys.PrevWaypoint` porte dans le corpus du
+ * propriétaire ; il est passé à `'declared'`. Le soir, le propriétaire a pressé les
+ * boutons de son boîtier un à un : le premier des deux qui sont sous l'appareil émet
+ * `KEY_CAMERA`, que `Generic.kl` traduit en 27. Le voilà `'pressed'`, et le bouton
+ * « qui ne semblait servir à rien » sert.
+ *
+ * ## Un bouton pressé dont rien n'est sorti
+ *
+ * Le **second** bouton sous l'appareil a été pressé lui aussi, dans la même capture, et
+ * n'a produit **aucun événement**. `silentKeys` le range, et c'est un renseignement,
+ * pas un trou : les quatre périphériques d'entrée étaient à l'écoute. ⚠️ Cela ne dit
+ * **pas** « cette touche n'existe pas » — cela dit que ce bouton-ci, sur ce
+ * boîtier-ci, ne produit rien au noyau. Un pilote qui l'enfonce et ne voit rien bouger
+ * n'a pas un instrument cassé, et le lui dire vaut mieux que de le laisser chercher.
  *
  * ⚠️ **Ces relevés ne valent que pour ce modèle-là**, et le parc n'est pas homogène :
  * les AIR³ plus récents portent davantage de touches, et un réglage sans effet sur l'un
@@ -164,6 +182,53 @@ export interface HardwareKey {
   code: number
   /** Le nom Android du code, ajouté par l'outil depuis la table lue. */
   name: string
+  /**
+   * **Où le bouton se trouve sur le boîtier**, en une clé — quand c'est connu.
+   *
+   * ⚠️ **C'est une mesure, et une des plus utiles.** Seul un doigt pouvait l'établir, et
+   * c'est elle qui permet à un pilote de retrouver sa touche : « la première des deux
+   * touches sous l'appareil » lui dit ce que « code 27 » ne lui dira jamais. Elle voyage
+   * donc avec le code, et non dans un commentaire.
+   *
+   * Absente n'est pas « au milieu de nulle part » : c'est « la place de ce bouton-là n'a
+   * pas été relevée ». Les trois touches de l'AIR³ 7.2 relevées avant le 2026-08-22 sont
+   * dans ce cas — le propriétaire les désigne par leur fonction, pas par leur place.
+   *
+   * ⚠️ **Une clé, jamais une phrase.** L'écran en dit le mot dans la langue du pilote,
+   * comme pour `InputDeviceKind` : le relevé a porté du français jusqu'au 2026-08-22 et
+   * l'affichait tel quel dans les cinq langues.
+   */
+  where?: HardwareKeyLocation
+}
+
+/**
+ * Où un bouton se trouve sur le boîtier, en un mot d'identifiant.
+ *
+ * Deux valeurs seulement, parce que deux boutons seulement ont été situés : ceux **sous
+ * l'appareil** de l'AIR³ 7.2. Le parc n'étant pas homogène, un modèle qui en porte
+ * ailleurs demandera d'autres valeurs — et le `switch` exhaustif de l'écran refusera de
+ * compiler tant qu'aucun mot ne les dira.
+ */
+export type HardwareKeyLocation = 'undersideFirst' | 'undersideSecond'
+
+/**
+ * Un bouton du boîtier **pressé à la main dont rien n'est sorti**.
+ *
+ * ⚠️ **C'est une mesure, pas une absence de mesure.** Les quatre périphériques d'entrée
+ * du boîtier étaient à l'écoute pendant l'appui, et aucun n'a rien émis. `method` dit ce
+ * qui écoutait, sans quoi « rien » ne voudrait rien dire.
+ *
+ * ⚠️ Et ce n'est **pas** « cette touche n'existe pas » : le bouton existe, il se presse,
+ * il ne produit simplement aucun événement au noyau **sur ce boîtier-là**. Un texte qui
+ * confondrait les deux ferait perdre au projet ce qui le distingue.
+ */
+export interface SilentHardwareKey {
+  /** Où il se trouve sur le boîtier. C'est tout ce qui le désigne : il n'a pas de code. */
+  where: HardwareKeyLocation
+  /** Quand l'appui a été fait, `AAAA-MM-JJ`. */
+  surveyedOn: string
+  /** Ce qui écoutait pendant l'appui. Sans cela, « rien » n'est pas un résultat. */
+  method: string
 }
 
 /**
@@ -240,8 +305,19 @@ export interface HardwareKeySurvey {
   device: string
   label: string
   basis: 'measured'
+  /** Quand les boutons ont été pressés, `AAAA-MM-JJ`. Un boîtier ne change pas ; le
+   * relevé, si : celui-ci a gagné une touche le 2026-08-22. */
+  surveyedOn: string
+  /** Comment l'appui a été écouté, en une phrase — pour qu'on puisse le refaire. */
+  method: string
   /** Le premier cran : pressées à la main, code lu à l'arrivée. */
   keys: HardwareKey[]
+  /**
+   * Les boutons pressés dont **rien** n'est sorti. Vide ou absent n'est pas « tous les
+   * boutons parlent » : c'est « nous n'en avons trouvé aucun de muet », ce qui suppose
+   * qu'on les ait tous pressés.
+   */
+  silentKeys?: SilentHardwareKey[]
   caveats: string[]
   /**
    * Le deuxième cran, s'il a été relevé. Absent n'est pas « le noyau ne déclare

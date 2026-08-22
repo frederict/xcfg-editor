@@ -182,10 +182,18 @@ describe('les touches que le boîtier porte vraiment', () => {
     const survey = domains.hardwareKeysFor('AIR3 AIR3-7.2 8.1.0')
     expect(survey?.deviceId).toBe('air3-7.2')
     expect(survey?.basis).toBe('measured')
-    expect(survey?.keys.map((one) => one.code)).toEqual([24, 25, 26])
+    // ⚠️ **Quatre depuis le 2026-08-22**, et non trois : le propriétaire a pressé les
+    // boutons de son boîtier un à un, `getevent` écoutant les quatre périphériques
+    // d'entrée. Les trois premiers ont servi de témoins — ils retombent sur 24, 25 et
+    // 26 —, et le premier des deux boutons **sous l'appareil** émet 27.
+    expect(survey?.keys.map((one) => one.code)).toEqual([24, 25, 26, 27])
     // Le nom Android vient de la table lue, jamais de la saisie à la main.
     expect(survey?.keys.map((one) => one.name))
-      .toEqual(['KEYCODE_VOLUME_UP', 'KEYCODE_VOLUME_DOWN', 'KEYCODE_POWER'])
+      .toEqual(['KEYCODE_VOLUME_UP', 'KEYCODE_VOLUME_DOWN', 'KEYCODE_POWER', 'KEYCODE_CAMERA'])
+    // La date et la méthode voyagent avec la mesure : un boîtier ne change pas, un relevé
+    // si — celui-ci a gagné une touche ce jour-là.
+    expect(survey?.surveyedOn).toBe('2026-08-22')
+    expect(survey?.method).toContain('getevent')
     // Le relevé du premier cran ne parle plus du contrôleur de clavier : ce que la puce
     // déclare est un relevé à part, et le mélanger revenait à trancher pour l'un ce qui
     // n'était vrai que de l'autre.
@@ -205,10 +213,16 @@ describe('les touches que le boîtier porte vraiment', () => {
   it('ne porte aucun mot de nous sur une touche pressée', () => {
     for (const survey of domains.hardwareKeySurveys()) {
       for (const key of survey.keys) {
-        // Deux champs, et deux seulement : le code mesuré, et le nom que la table
-        // d'Android lui donne. Rien qui se traduise.
-        expect(Object.keys(key).sort(), `${survey.deviceId} / ${key.code}`)
-          .toEqual(['code', 'name'])
+        // Trois champs au plus, et pas un qui se traduise : le code mesuré, le nom que la
+        // table d'Android lui donne, et — quand elle a été relevée — la **place** du
+        // bouton sur le boîtier, qui est une clé et non une phrase.
+        const fields = Object.keys(key).sort()
+        expect(fields, `${survey.deviceId} / ${key.code}`)
+          .toEqual(fields.includes('where') ? ['code', 'name', 'where'] : ['code', 'name'])
+        if (key.where !== undefined) {
+          expect(['undersideFirst', 'undersideSecond'], `${survey.deviceId} / ${key.code}`)
+            .toContain(key.where)
+        }
       }
     }
   })
@@ -265,14 +279,44 @@ describe('les touches que le boîtier porte vraiment', () => {
     const survey = domains.hardwareKeysFor('AIR3 AIR3-7.2 8.1.0')
     // Pressée à la main : le seul cran qui prouve qu'un bouton existe.
     expect(keyCodeEvidence(survey, 24)).toBe('pressed')
-    // Déclarée par le noyau : possible sur ce matériel, jamais prouvée.
-    expect(keyCodeEvidence(survey, 27)).toBe('declared')
+    // ⚠️ **27 a changé de cran le 2026-08-22, et deux fois dans la journée** : déclaré par
+    // `sn7326-key` le matin, pressé le soir. Le noyau le déclare toujours — les deux crans
+    // ne se contredisent pas, le premier prime.
+    expect(keyCodeEvidence(survey, 27)).toBe('pressed')
     expect(declaringDevices(survey, 27).map((one) => one.name)).toEqual(['sn7326-key'])
+    // Déclarée par le noyau, jamais pressée : possible sur ce matériel, non prouvée.
+    expect(keyCodeEvidence(survey, 19)).toBe('declared')
+    expect(declaringDevices(survey, 19).map((one) => one.name)).toEqual(['sn7326-key'])
     // Attestée par rien — ce qui ne veut pas dire que la touche n'existe pas.
     expect(keyCodeEvidence(survey, 266)).toBe('unattested')
     expect(declaringDevices(survey, 266)).toEqual([])
     // Sans relevé, aucun des deux crans : nous ne savons rien de ce boîtier-là.
     expect(keyCodeEvidence(null, 24)).toBe('unattested')
+  })
+
+  /**
+   * ⚠️ **Un bouton pressé dont rien n'est sorti est une mesure, pas un trou.** Le second
+   * des deux boutons sous l'AIR³ 7.2 a été pressé le 2026-08-22 pendant que `getevent`
+   * écoutait les quatre périphériques d'entrée, et aucun n'a rien émis.
+   *
+   * ⚠️ Ce n'est **pas** « cette touche n'existe pas ». Le bouton existe et s'enfonce ; il
+   * ne produit rien au noyau sur ce boîtier-là. Le relevé doit dire ce qui écoutait, sans
+   * quoi « rien » ne serait pas un résultat.
+   */
+  it('range un bouton pressé dont rien n’est sorti, avec ce qui écoutait', () => {
+    const survey = domains.hardwareKeysFor('AIR3 AIR3-7.2 8.1.0')
+    const silent = survey?.silentKeys ?? []
+    expect(silent).toHaveLength(1)
+    expect(silent[0]?.where).toBe('undersideSecond')
+    expect(silent[0]?.surveyedOn).toBe('2026-08-22')
+    // Ce qui écoutait fait partie de la mesure.
+    expect(silent[0]?.method).toContain('getevent')
+    // ⚠️ Et il n'a pas de code : lui en donner un serait inventer ce qu'on a mesuré ne
+    // pas exister.
+    expect(Object.keys(silent[0] ?? {}).sort()).toEqual(['method', 'surveyedOn', 'where'])
+    // Le relevé ne le range pas parmi les touches pressées : les deux ne se mélangent pas.
+    expect(survey?.keys.some((one) => 'where' in one && one.where === 'undersideSecond'))
+      .toBe(false)
   })
 
   /**

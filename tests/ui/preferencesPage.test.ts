@@ -919,27 +919,61 @@ describe('une liaison de touche se lit, et en trois morceaux', () => {
 
   /**
    * ⚠️ **Le cran du milieu**, celui que l'écran ne connaissait pas avant le 2026-08-22.
-   * `getevent -pl` a montré que `sn7326-key` déclare `CAMERA` en 27 — le code que
-   * `Keys.PrevWaypoint` porte dans le corpus du propriétaire. L'écran en disait
-   * « aucune touche mesurée n'émet le code 27 », d'un code que le noyau déclare.
+   * `getevent -pl` a montré que `sn7326-key` déclare quatre codes de croix directionnelle
+   * que personne n'a jamais pressés.
    *
-   * Ce qu'il en dit maintenant ne va pas plus loin que la mesure : le code est
-   * **possible** sur ce matériel, et rien ne prouve qu'un bouton l'émette.
+   * ⚠️ **L'exemple a changé le soir même** : c'était 27, jusqu'à ce que le propriétaire
+   * presse le bouton qui l'émet. 19 le remplace — déclaré par le même contrôleur, et
+   * toujours sans bouton connu sous le doigt.
+   *
+   * Ce que l'écran en dit ne va pas plus loin que la mesure : le code est **possible**
+   * sur ce matériel, et rien ne prouve qu'un bouton l'émette.
    */
   it('distingue un code que le noyau déclare d’un code attesté par rien', () => {
-    const page = pageOf(withPrevWaypoint(27))
+    const page = pageOf(withPrevWaypoint(19))
     const row = rowElement(page, 'Keys.PrevWaypoint')
     // Le nom Android reste le meilleur qu'on sache dire : le noyau déclare un code, il
-    // ne nomme pas un bouton.
-    expect(row.querySelector('.prefs__binding-key')?.textContent).toBe('KEYCODE_CAMERA')
+    // ne nomme pas un bouton. Et le mot de XCTrack — « Haut » — ne s'écrit pas ici : il
+    // ne s'affiche que sur une touche pressée à la main.
+    expect(row.querySelector('.prefs__binding-key')?.textContent).toBe('KEYCODE_DPAD_UP')
     const title = row.querySelector<HTMLElement>('.prefs__binding')?.title ?? ''
     expect(title).toContain('Nous n’avons pressé aucune touche qui l’émette sur AIR³ 7.2')
     expect(title).toContain('le noyau du boîtier le déclare sur le contrôleur de clavier sn7326')
     expect(title).toContain('ne prouve pas qu’un bouton lui soit soudé')
-    // Et surtout pas la phrase du troisième cran, qui vaut pour 266 et non pour 27.
+    // Et surtout pas la phrase du troisième cran, qui vaut pour 266 et non pour 19.
     expect(title).not.toContain('nous ne savons pas d’où il vient')
     // La marque de la ligne distingue les deux crans, elle aussi.
     expect(row.dataset.hardware).toBe('declared')
+  })
+
+  /**
+   * ⚠️ **27 a changé de cran le 2026-08-22 au soir.** Le propriétaire a pressé les boutons
+   * de son boîtier un à un, `getevent` écoutant les quatre périphériques d'entrée : le
+   * premier des deux boutons **sous l'appareil** émet `KEY_CAMERA`, que `Generic.kl`
+   * traduit en 27. C'était le code que `Keys.PrevWaypoint` porte dans son corpus, et le
+   * bouton « qui ne semblait servir à rien » sert.
+   *
+   * ⚠️ **La place du bouton fait partie de la mesure.** « Caméra » est le mot de XCTrack ;
+   * il ne dit pas au pilote lequel de ses boutons appuyer, et sur un boîtier sans
+   * appareil photo il l'égarerait plutôt. « La première des deux touches sous l'appareil »
+   * le dit — et seul un doigt pouvait l'établir.
+   */
+  it('nomme la touche 27 avec le mot de XCTrack, et dit où elle est sur le boîtier', () => {
+    const page = pageOf(withPrevWaypoint(27))
+    const row = rowElement(page, 'Keys.PrevWaypoint')
+    expect(row.querySelector('.prefs__binding-key')?.textContent).toBe('Caméra')
+    // Le code et le nom Android restent lisibles à côté : le mot ne les remplace pas.
+    expect(row.querySelector('.prefs__binding-detail')?.textContent)
+      .toContain('KEYCODE_CAMERA')
+    const title = row.querySelector<HTMLElement>('.prefs__binding')?.title ?? ''
+    expect(title).toContain('est le nom que XCTrack donne à cette touche')
+    expect(title).toContain('la première des deux touches sous l’appareil')
+    expect(title).toContain('a été pressée à la main et émet bien le code 27')
+    // ⚠️ Rien du deuxième ni du troisième cran : ce code est pressé, pas seulement
+    // déclaré, et la ligne ne porte donc plus de marque.
+    expect(title).not.toContain('Nous n’avons pressé aucune touche')
+    expect(title).not.toContain('La note sous ce bloc')
+    expect(row.dataset.hardware).toBeUndefined()
   })
 
   /**
@@ -1127,17 +1161,21 @@ describe('ce que la page dit du matériel, et ce qu’elle ne dira jamais', () =
     // Une fois sous le bloc, comme la phrase de refus — pas deux fois entre deux lignes.
     const bloc = page.element
       .querySelector('.prefs__screen[data-screen="preferences_keybindings"]')
-    // `:not(--origin)` : la phrase qui dit d'où viennent les NOMS de touches partage
-    // l'habillage de celle-ci, elle n'en est pas un second exemplaire.
+    // `:not(--origin)`, `:not(--silent)` : trois phrases partagent l'habillage de
+    // celle-ci — d'où viennent les NOMS de touches, et le bouton qui ne produit rien.
+    // Aucune n'en est un second exemplaire.
     const notes = bloc?.querySelectorAll(
-      '.prefs__hardware:not(.prefs__hardware--origin):not(.prefs__hardware--hypothesis)'
+      '.prefs__hardware:not(.prefs__hardware--origin):not(.prefs__hardware--hypothesis)' +
+      ':not(.prefs__hardware--silent)'
     ) ?? []
     expect(notes).toHaveLength(1)
     const said = notes[0]?.textContent ?? ''
     expect(said).toContain('AIR³ 7.2')
     expect(said).toContain('le modèle que ce fichier déclare')
-    // Les trois touches, nommées par XCTrack dans la langue du fichier.
-    expect(said).toContain('Augmenter le volume (24), Diminuer le volume (25), Mise en route (26)')
+    // Les quatre touches, nommées par XCTrack dans la langue du fichier.
+    expect(said).toContain('4 touches physiques')
+    expect(said).toContain(
+      'Augmenter le volume (24), Diminuer le volume (25), Mise en route (26), Caméra (27)')
     expect(said).toContain('Le code 266 n’est aucune d’elles')
     expect(said).toContain('ne le déclare sur aucun de ses périphériques d’entrée')
     // Et la réserve part avec l'affirmation, pas ailleurs.
@@ -1152,21 +1190,63 @@ describe('ce que la page dit du matériel, et ce qu’elle ne dira jamais', () =
    * faisait du code 27, que `sn7326-key` déclare.
    */
   it('sépare, sous le bloc, ce que le noyau déclare de ce qu’il ignore', () => {
-    // 27 déclaré par le contrôleur, 266 par personne : les deux à l'écran en même temps.
-    const page = pageOf(withPrevWaypoint(27))
+    // 19 déclaré par le contrôleur, 266 par personne : les deux à l'écran en même temps.
+    // ⚠️ C'était 27 jusqu'au soir du 2026-08-22, où un appui l'a fait passer au premier
+    // cran ; les quatre codes de croix directionnelle, eux, restent déclarés sans appui.
+    const page = pageOf(withPrevWaypoint(19))
     const bloc = page.element
       .querySelector('.prefs__screen[data-screen="preferences_keybindings"]')
     const notes = bloc?.querySelectorAll(
-      '.prefs__hardware:not(.prefs__hardware--origin):not(.prefs__hardware--hypothesis)'
+      '.prefs__hardware:not(.prefs__hardware--origin):not(.prefs__hardware--hypothesis)' +
+      ':not(.prefs__hardware--silent)'
     ) ?? []
     expect(notes).toHaveLength(1)
     const said = notes[0]?.textContent ?? ''
-    expect(said).toContain('Le code 27 n’est aucune d’elles')
+    expect(said).toContain('Le code 19 n’est aucune d’elles')
     expect(said).toContain('le noyau du boîtier le déclare tout de même')
     expect(said).toContain('sans qu’un appui l’ait prouvé')
     // Et le 266 de `Keys.NextWaypoint` garde sa propre phrase, celle de l'ignorance.
     expect(said).toContain('Le code 266 n’est aucune d’elles')
     expect(said).toContain('nous ne savons pas quelle touche l’émet')
+  })
+
+  /**
+   * ⚠️ **Un bouton pressé dont rien n'est sorti, dit au pilote.** Le second des deux
+   * boutons sous l'AIR³ 7.2 a été pressé le 2026-08-22 pendant que les quatre
+   * périphériques d'entrée du boîtier étaient à l'écoute, et aucun n'a rien émis.
+   *
+   * Le taire laisserait le pilote qui l'enfonce sans rien voir se demander si son
+   * instrument est cassé. ⚠️ Et la phrase ne doit **jamais** dire qu'une touche n'existe
+   * pas : le bouton existe, il s'enfonce, il ne produit rien **sur ce boîtier-là**.
+   */
+  it('dit le bouton qui ne produit rien, sans dire qu’une touche n’existe pas', () => {
+    const { page } = editable(BACKUP_2026)
+    const bloc = page.element
+      .querySelector('.prefs__screen[data-screen="preferences_keybindings"]')
+    const notes = bloc?.querySelectorAll('.prefs__hardware--silent') ?? []
+    // Une phrase par bouton muet, en clair sous le bloc — jamais en infobulle : au doigt,
+    // il n'y a pas de survol.
+    expect(notes).toHaveLength(1)
+    const said = notes[0]?.textContent ?? ''
+    expect(said).toContain('AIR³ 7.2')
+    expect(said).toContain('la seconde des deux touches sous l’appareil')
+    // Ce qui écoutait fait partie de la mesure : sans lui, « rien » ne veut rien dire.
+    expect(said).toContain('les 4 périphériques d’entrée du boîtier étaient à l’écoute')
+    expect(said).toContain('aucun n’a émis le moindre événement')
+    // ⚠️ Et ce que la phrase ne dira jamais.
+    expect(said).not.toContain('n’existe pas')
+    expect(said).toContain('le bouton existe')
+  })
+
+  it('se tait sur les boutons muets d’un boîtier qu’il n’a pas relevé', () => {
+    // Le fichier déclare un AIR³ 7.3 : nous n'avons pressé aucun de ses boutons, et dire
+    // de l'un qu'il ne produit rien serait dire d'un boîtier ce qu'un autre a montré.
+    const source = readFileSync(BACKUP_2026, 'utf8')
+      .replace('AIR3 AIR3-7.2 8.1.0', 'AIR3 AIR3-7.3 11')
+    const page = renderPreferencesPage({
+      document: parseJson(source), catalog, tr, domains, onEdit: () => {}
+    })
+    expect(page.element.querySelectorAll('.prefs__hardware--silent')).toHaveLength(0)
   })
 
   it('marque les lignes concernées, et elles seules', () => {
@@ -1305,7 +1385,7 @@ describe('ce que la page dit du matériel, et ce qu’elle ne dira jamais', () =
   it('dit dans la langue du pilote ce que le noyau du boîtier déclare', async () => {
     const german = await loadTranslator('de')
     const page = renderPreferencesPage({
-      document: withPrevWaypoint(27), catalog, tr: german, domains, onEdit: () => {}
+      document: withPrevWaypoint(19), catalog, tr: german, domains, onEdit: () => {}
     })
     const title = rowElement(page, 'Keys.PrevWaypoint')
       .querySelector<HTMLElement>('.prefs__binding')?.title ?? ''

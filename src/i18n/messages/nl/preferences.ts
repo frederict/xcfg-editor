@@ -59,6 +59,10 @@ const preferences: DomainCatalog<'preferences'> = {
     one: '{count} fysieke toets',
     other: '{count} fysieke toetsen'
   },
+  'preferences.inputDeviceCount': {
+    one: 'het enige invoerapparaat van het kastje luisterde mee',
+    other: 'alle {count} invoerapparaten van het kastje luisterden mee'
+  },
   'preferences.hardwareUnsurveyedUnknownDevice':
     'Wij hebben de fysieke toetsen alleen op {models} gemeten, en dit bestand zegt niet ' +
     'van welk toestel het komt: dit kastje is een blinde vlek. De code van elke koppeling ' +
@@ -83,6 +87,8 @@ const preferences: DomainCatalog<'preferences'> = {
   'preferences.hardwareStrangerMany':
     'De codes {codes} zijn geen van deze, en de kernel van het kastje geeft ze op geen ' +
     'van zijn invoerapparaten op: wij weten niet welke toetsen ze uitzenden.',
+  'preferences.hardwareSilentKey':
+    'Op {model} is {where} eveneens ingedrukt: {devices}, en geen ervan heeft ook maar één gebeurtenis uitgezonden. Dit is geen ontbrekende toets — de knop bestaat en klikt —, het is een knop die op dit ene kastje niets voortbrengt. Wie hem indrukt en niets ziet gebeuren, heeft dus geen kapot instrument.',
   'preferences.keyNoteBelow':
     'De opmerking onder dit blok zegt wat deze metingen waard zijn.',
   /* ------------------------------ wat de kernel van het kastje opgeeft, in enkele woorden */
@@ -100,9 +106,13 @@ const preferences: DomainCatalog<'preferences'> = {
   'inputDevice.keyboardController': 'de toetsenbordcontroller {name}',
   'inputDevice.touchPanel': 'het aanraakscherm',
   'inputDevice.headsetJack': 'de koptelefoonaansluiting',
+  'keyLocation.undersideFirst': 'de eerste van de twee toetsen onder het toestel',
+  'keyLocation.undersideSecond': 'de tweede van de twee toetsen onder het toestel',
 
   'preferences.keyFromSurvey':
     '‘{label}’ is de naam die XCTrack aan deze toets geeft, in de taal van het geopende bestand. Op {model} zendt een met de hand ingedrukte toets wel degelijk code {code} uit, die Android {name} noemt.',
+  'preferences.keyFromSurveyWhere':
+    '‘{label}’ is de naam die XCTrack aan deze toets geeft, in de taal van het geopende bestand. Op {model} is {where} met de hand ingedrukt en zendt wel degelijk code {code} uit, die Android {name} noemt.',
   'preferences.keyFromKernel':
     '{name} is de naam die de toetsentabel van Android aan code {code} geeft. Wij hebben ' +
     'op {model} geen toets ingedrukt die hem uitzendt, maar de kernel van het kastje ' +

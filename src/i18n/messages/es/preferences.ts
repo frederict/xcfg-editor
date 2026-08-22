@@ -60,6 +60,10 @@ const preferences: DomainCatalog<'preferences'> = {
     one: '{count} tecla física',
     other: '{count} teclas físicas'
   },
+  'preferences.inputDeviceCount': {
+    one: 'el único periférico de entrada del aparato estaba a la escucha',
+    other: 'los {count} periféricos de entrada del aparato estaban a la escucha'
+  },
   'preferences.hardwareUnsurveyedUnknownDevice':
     'Solo hemos medido las teclas físicas en {models}, y este archivo no dice de qué ' +
     'dispositivo viene: esta caja es un punto ciego. El código de cada asignación se lee y ' +
@@ -84,6 +88,8 @@ const preferences: DomainCatalog<'preferences'> = {
   'preferences.hardwareStrangerMany':
     'Los códigos {codes} no son ninguna de ellas, y el núcleo de la caja no los declara ' +
     'en ninguno de sus dispositivos de entrada: no sabemos qué teclas los emiten.',
+  'preferences.hardwareSilentKey':
+    'En {model}, {where} también se pulsó: {devices}, y ninguno emitió el menor evento. No es una tecla ausente — el botón existe y se hunde —, es un botón que no produce nada en ese aparato concreto. Un piloto que lo pulsa sin ver nada moverse no tiene un instrumento averiado.',
   'preferences.keyNoteBelow':
     'La nota bajo este bloque dice lo que valen estas mediciones.',
   /* ------------------------------ lo que el núcleo de la caja declara, en pocas palabras */
@@ -102,9 +108,13 @@ const preferences: DomainCatalog<'preferences'> = {
   'inputDevice.keyboardController': 'el controlador de teclado {name}',
   'inputDevice.touchPanel': 'el panel táctil',
   'inputDevice.headsetJack': 'la toma de auriculares',
+  'keyLocation.undersideFirst': 'la primera de las dos teclas bajo el aparato',
+  'keyLocation.undersideSecond': 'la segunda de las dos teclas bajo el aparato',
 
   'preferences.keyFromSurvey':
     '«{label}» es el nombre que XCTrack da a esta tecla, en el idioma del archivo abierto. En {model}, una tecla pulsada a mano sí emite el código {code}, que Android llama {name}.',
+  'preferences.keyFromSurveyWhere':
+    '«{label}» es el nombre que XCTrack da a esta tecla, en el idioma del archivo abierto. En {model}, {where} se pulsó a mano y sí emite el código {code}, que Android llama {name}.',
   'preferences.keyFromKernel':
     '{name} es el nombre que la tabla de teclas de Android da al código {code}. No hemos ' +
     'pulsado ninguna tecla que lo emita en {model}, pero el núcleo de la caja lo declara ' +

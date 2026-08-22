@@ -68,6 +68,10 @@ const preferences: DomainCatalog<'preferences'> = {
     one: '{count} physical key',
     other: '{count} physical keys'
   },
+  'preferences.inputDeviceCount': {
+    one: 'the case’s only input device was listening',
+    other: 'all {count} of the case’s input devices were listening'
+  },
   'preferences.hardwareUnsurveyedUnknownDevice':
     'We have only measured the physical keys on {models}, and this file does not say ' +
     'which device it comes from: this unit is a blind spot. Every binding’s code is read ' +
@@ -92,6 +96,8 @@ const preferences: DomainCatalog<'preferences'> = {
   'preferences.hardwareStrangerMany':
     'Codes {codes} are none of them, and the unit’s kernel declares them on none of its ' +
     'input devices: we do not know which keys emit them.',
+  'preferences.hardwareSilentKey':
+    'On {model}, {where} was pressed too: {devices}, and none of them emitted a single event. This is not a missing key — the button is there and it clicks — it is a button that produces nothing on that particular case. A pilot who presses it and sees nothing move does not have a broken instrument.',
   'preferences.keyNoteBelow':
     'The note below this block says what these surveys are worth.',
   /* --------------------------------- what the unit's kernel declares, in a few words */
@@ -109,9 +115,13 @@ const preferences: DomainCatalog<'preferences'> = {
   'inputDevice.keyboardController': 'the {name} keyboard controller',
   'inputDevice.touchPanel': 'the touch panel',
   'inputDevice.headsetJack': 'the headset jack',
+  'keyLocation.undersideFirst': 'the first of the two keys underneath the device',
+  'keyLocation.undersideSecond': 'the second of the two keys underneath the device',
 
   'preferences.keyFromSurvey':
     '“{label}” is the name XCTrack gives this key, in the language of the open file. On {model}, a key pressed by hand does emit code {code}, which Android calls {name}.',
+  'preferences.keyFromSurveyWhere':
+    '“{label}” is the name XCTrack gives this key, in the language of the open file. On {model}, {where} was pressed by hand and does emit code {code}, which Android calls {name}.',
   'preferences.keyFromKernel':
     '{name} is the name Android’s key table gives code {code}. We have not pressed any ' +
     'key emitting it on {model}, but the unit’s kernel declares it on {devices}. The ' +

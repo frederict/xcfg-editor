@@ -134,7 +134,10 @@ export const DOMAIN_PREFIXES: Readonly<Record<Domain, readonly string[]>> = {
   ],
   // `inputDevice` : les quatre périphériques d'entrée que le noyau d'un boîtier déclare,
   // dits dans la langue du pilote. Une famille de valeurs fermée, donc son propre préfixe.
-  preferences: ['inputDevice', 'preferences'],
+  // `keyLocation` : où un bouton se trouve sur le boîtier — « la première des deux touches
+  // sous l'appareil ». Même nature, même raison : c'est notre glose d'une mesure, le relevé
+  // n'en porte que la clé.
+  preferences: ['inputDevice', 'keyLocation', 'preferences'],
   library: ['library'],
   widgets: ['palette', 'properties', 'widgets'],
   versions: ['cleanup', 'removalEffect', 'versions'],

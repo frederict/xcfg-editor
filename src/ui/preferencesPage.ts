@@ -20,6 +20,7 @@ import {
   keyCodeEvidence,
   loadPreferenceDomains,
   type DeclaredInputDevice,
+  type HardwareKeyLocation,
   type HardwareKeySurvey,
   type KeyBinding,
   type PreferenceDomainCatalog
@@ -714,6 +715,26 @@ function inputDeviceWord(device: DeclaredInputDevice, tr: Translator): string {
 }
 
 /**
+ * **Où le bouton se trouve sur le boîtier**, dans la langue du pilote.
+ *
+ * ⚠️ **C'est une mesure, et c'est celle qui sert le plus.** « Caméra » nomme le code 27 ;
+ * elle ne dit pas au pilote lequel de ses boutons appuyer. « La première des deux touches
+ * sous l'appareil » le dit — et seul un doigt pouvait l'établir. C'est pour cela que la
+ * place voyage avec la mesure, et non dans un commentaire.
+ *
+ * Comme `inputDeviceWord`, c'est **notre glose** d'une mesure : le relevé porte une clé,
+ * le mot vient du catalogue et suit l'axe `ui`. Le `switch` est exhaustif à la
+ * compilation : un modèle dont on situerait les boutons ailleurs ne passera pas `tsc`
+ * tant qu'aucun mot ne les dira.
+ */
+function keyLocationWord(where: HardwareKeyLocation, tr: Translator): string {
+  switch (where) {
+    case 'undersideFirst': return tr.t('keyLocation.undersideFirst')
+    case 'undersideSecond': return tr.t('keyLocation.undersideSecond')
+  }
+}
+
+/**
  * **D'où vient le nom affiché** sur cette ligne-là, en une phrase — et **lequel des trois
  * crans** de connaissance s'applique à ce code.
  *
@@ -771,8 +792,17 @@ export function bindingOrigin(
     ? null
     : hardwareKeyLabel(physical.code, keys.labels)
   if (evidence === 'pressed' && physical !== undefined && named !== null && hardware != null) {
-    // Deux choses, et la phrase les tient séparées : le **mot** est celui de XCTrack, la
-    // **mesure** est qu'une touche pressée sur ce modèle émet ce code.
+    // Trois choses, et la phrase les tient séparées : le **mot** est celui de XCTrack, la
+    // **mesure** est qu'une touche pressée sur ce modèle émet ce code, et **la place du
+    // bouton** — quand elle a été relevée — est ce qui permet au pilote de le retrouver.
+    // Sans elle, « Caméra » ne lui dit pas quel bouton presser sur un boîtier qui n'a pas
+    // d'appareil photo.
+    if (physical.where !== undefined) {
+      return tr.t('preferences.keyFromSurveyWhere', {
+        label: named, model: hardware.label, name: physical.name, code,
+        where: keyLocationWord(physical.where, tr)
+      })
+    }
     return tr.t('preferences.keyFromSurvey', {
       label: named, model: hardware.label, name: physical.name, code
     })
@@ -973,6 +1003,45 @@ export function hardwareNote(
     listed,
     missing
   })
+}
+
+/**
+ * **Les boutons de ce boîtier qui ne produisent rien** — une phrase par bouton muet.
+ *
+ * ⚠️ **C'est un résultat, pas un trou dans le relevé.** Le second des deux boutons sous
+ * l'AIR³ 7.2 a été pressé le 2026-08-22 pendant que les quatre périphériques d'entrée du
+ * boîtier étaient à l'écoute, et aucun n'a rien émis. Le taire laisserait le pilote qui
+ * l'enfonce sans rien voir se demander si son instrument est cassé : il ne l'est pas, et
+ * c'est le renseignement.
+ *
+ * ⚠️ **Elle ne dit pas qu'une touche n'existe pas.** Le bouton existe — il se presse. Il
+ * ne produit aucun événement **sur ce boîtier-là**, et le parc n'est pas homogène : sur
+ * un AIR³ plus récent, le bouton du même endroit peut parfaitement parler. La phrase
+ * nomme donc le modèle, comme toutes ses voisines.
+ *
+ * Écrite **une fois par bloc**, en clair, pour la même raison que `hardwareNote` : une
+ * infobulle est inatteignable au doigt, et c'est sur une tablette que ce projet se lit.
+ *
+ * Elle ne s'écrit que sur un écran qui porte des liaisons de touche — ailleurs, elle
+ * répondrait à une question que personne ne s'y pose.
+ */
+export function silentKeyNotes(
+  bindings: readonly KeyBinding[], hardware: HardwareKeySurvey | null | undefined,
+  tr: Translator
+): string[] {
+  if (bindings.length === 0 || hardware == null) return []
+  const silent = hardware.silentKeys ?? []
+  // Le compte des périphériques qui écoutaient **fait partie** de la mesure : sans lui,
+  // « rien n'est sorti » ne dit pas de quoi on a écouté la sortie. Il est lu sur le relevé
+  // du noyau, jamais écrit en toutes lettres dans la phrase — un chiffre en prose vieillit
+  // comme une phrase, et rien ne le garderait.
+  const listening = hardware.kernelDeclaration?.devices.length ?? 0
+  if (listening === 0) return []
+  return silent.map((one) => tr.t('preferences.hardwareSilentKey', {
+    model: hardware.label,
+    where: keyLocationWord(one.where, tr),
+    devices: tr.t('preferences.inputDeviceCount', { count: listening })
+  }))
 }
 
 /**
@@ -3196,6 +3265,13 @@ function buildMenuElement(entry: PreferenceMenuEntry, ctx: PageContext): HTMLEle
 
     const scope = hardwareScopeNote(screen, ctx)
     if (scope !== undefined) block.append(el('p', 'prefs__hardware', scope))
+    // Un bouton du boîtier qui, pressé, ne produit rien. Juste après la note de matériel :
+    // c'est le même propos — ce que ce modèle-là porte — et la même prudence.
+    // Un modificateur sans dessin, comme `--origin` : les deux notes se lisent pareil —
+    // ce sont deux constats mesurés — et le compte de l'une ne doit pas prendre l'autre.
+    for (const said of silentKeyScopeNotes(screen, ctx)) {
+      block.append(el('p', 'prefs__hardware prefs__hardware--silent', said))
+    }
     // Pourquoi une touche porte un nom et l'autre un `KEYCODE_*`. Après la note de
     // matériel, parce qu'elle explique ce que celle-ci vient de montrer.
     const naming = keyNamingScopeNote(screen, ctx)
@@ -3234,6 +3310,14 @@ function hardwareScopeNote(
     screenBindings(screen), ctx.hardware, ctx.domains.hardwareKeySurveys(),
     ctx.device, ctx.tr, ctx.labels
   )
+}
+
+/**
+ * Les boutons muets de ce boîtier, une fois sous le bloc. Tout le propos est dans
+ * `silentKeyNotes` : ici on ne fait que rassembler les liaisons de l'écran.
+ */
+function silentKeyScopeNotes(screen: PreferenceScreenBlock, ctx: PageContext): string[] {
+  return silentKeyNotes(screenBindings(screen), ctx.hardware, ctx.tr)
 }
 
 /** D'où viennent les noms de touches de ce bloc. Rassemble les liaisons, rien de plus. */
